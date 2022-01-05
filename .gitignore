@@ -9,3 +9,4 @@ build/
 # Secrets
 *.mobileprovision
 *.p12
+*.p8
