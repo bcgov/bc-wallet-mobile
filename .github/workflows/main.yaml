@@ -69,22 +69,38 @@ jobs:
         run: |
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
-      # - name: Bump Build No.
-      #   run: |
-      #     scripts/bump_build.sh ./TestBuildAndSign/Info.plist
+      - name: Install react native dependencies
+        working-directory: bifold
+        run: |
+          npm ci && \
+          git status
 
-      # - name: Build
-      #   run: |
-      #     xcodebuild \
-      #     -project TestBuildAndSign.xcodeproj \
-      #     -scheme TestBuildAndSign \
-      #     -configuration Release \
-      #     -derivedDataPath xbuild \
-      #     -xcconfig release.xcconfig \
-      #     -archivePath TestBuildAndSign.xcarchive \
-      #     -sdk iphoneos \
-      #     -verbose \
-      #     archive
+      - name: Install iOS dependencies
+        # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
+        working-directory: bifold/ios
+        run: |
+          gem install cocoapods && \
+          pod install && \
+          git status && \
+          git diff Podfile.lock
+  
+      - name: Bump Build No.
+        run: |
+          scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
+
+      - name: Build
+        working-directory: bifold/ios
+        run: |
+          xcodebuild \
+          -workspace AriesBifold.xcworkspace \
+          -scheme AriesBifold \
+          -configuration Release \
+          -derivedDataPath xbuild \
+          -xcconfig release.xcconfig \
+          -archivePath AriesBifold.xcarchive \
+          -sdk iphoneos \
+          -verbose \
+          archive
 
       # - name: Archive & Sign
       #   run: |
