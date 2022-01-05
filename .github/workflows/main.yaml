@@ -1,0 +1,108 @@
+name: Native Build & Test
+
+env:
+  cacheId: '4' # increment to expire the cache
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # This part here is cloning a second repository
+      # While cloning the repository:
+      #   - it clones the repo into the given `path`
+      #   - it checks out the branch defined at `ref`
+      - name: Fetch Aries repo
+        uses: actions/checkout@v2
+        with:
+          repository: bcgov/aries-mobile-agent-react-native
+          path: bifold
+          ref: main
+
+      - name: What XCode are we using?
+        run: |
+          xcode-select -p 
+
+      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
+      - name: Install Codemagic CLI Tools
+        run: |
+          pip3 install codemagic-cli-tools
+
+      # Watch for changes to the HEAD ref, use
+      # git for cache keys.
+      - name: Generate cache key
+        run: |
+          echo $(git rev-parse HEAD) > ./dd-cache-key.txt
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Cache derived data
+        uses: actions/cache@v1
+        with:
+          path: xbuild/Build
+          key: ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-
+
+      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      - name: Create Provisioning Profile
+        env:         
+          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        run: |
+          scripts/makepp.sh
+
+      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      - name: Build Keychain
+        env:
+          CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+        run: |
+          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
+
+      # - name: Bump Build No.
+      #   run: |
+      #     scripts/bump_build.sh ./TestBuildAndSign/Info.plist
+
+      # - name: Build
+      #   run: |
+      #     xcodebuild \
+      #     -project TestBuildAndSign.xcodeproj \
+      #     -scheme TestBuildAndSign \
+      #     -configuration Release \
+      #     -derivedDataPath xbuild \
+      #     -xcconfig release.xcconfig \
+      #     -archivePath TestBuildAndSign.xcarchive \
+      #     -sdk iphoneos \
+      #     -verbose \
+      #     archive
+
+      # - name: Archive & Sign
+      #   run: |
+      #     xcodebuild \
+      #     -exportArchive \
+      #     -archivePath TestBuildAndSign.xcarchive \
+      #     -exportPath export \
+      #     -exportOptionsPlist options.plist \
+      #     -verbose
+
+      # - name: Distribute to iTunes
+      #   env:
+      #     APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+      #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      #     APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+      #   run: |
+      #     app-store-connect publish \
+      #     --apple-id ${{ secrets.APPLE_ID }} \
+      #     --password ${{ secrets.APPLE_ID_PASSWD }} \
+      #     --path export/TestBuildAndSign.ipa \
+      #     --enable-package-validation \
+      #     --max-build-processing-wait 5
