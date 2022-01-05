@@ -5,3 +5,7 @@
 # Merge artifacts
 *.orig
 build/
+
+# Secrets
+*.mobileprovision
+*.p12
