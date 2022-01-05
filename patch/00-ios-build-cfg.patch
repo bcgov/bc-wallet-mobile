@@ -1,0 +1,78 @@
+diff --git a/ios/AriesBifold.xcodeproj/project.pbxproj b/ios/AriesBifold.xcodeproj/project.pbxproj
+index 5a07735..9c87305 100644
+--- a/ios/AriesBifold.xcodeproj/project.pbxproj
++++ b/ios/AriesBifold.xcodeproj/project.pbxproj
+@@ -517,8 +517,9 @@
+ 			buildSettings = {
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ 				CLANG_ENABLE_MODULES = YES;
++				CODE_SIGN_IDENTITY = "iPhone Distribution";
++				CODE_SIGN_STYLE = Manual;
+ 				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = 8GUD26WFN3;
+ 				ENABLE_BITCODE = NO;
+ 				FRAMEWORK_SEARCH_PATHS = (
+ 					"$(inherited)",
+@@ -533,13 +534,15 @@
+ 					"$(inherited)",
+ 					"$(SDKROOT)/usr/lib/swift",
+ 				);
++				MARKETING_VERSION = 1.0.1;
+ 				OTHER_LDFLAGS = (
+ 					"$(inherited)",
+ 					"-ObjC",
+ 					"-lc++",
+ 				);
+-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.AriesBifold;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
+ 				PRODUCT_NAME = AriesBifold;
++				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet";
+ 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+ 				SWIFT_VERSION = 5.0;
+ 				VERSIONING_SYSTEM = "apple-generic";
+@@ -552,8 +555,9 @@
+ 			buildSettings = {
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ 				CLANG_ENABLE_MODULES = YES;
++				CODE_SIGN_IDENTITY = "iPhone Distribution";
++				CODE_SIGN_STYLE = Manual;
+ 				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = 8GUD26WFN3;
+ 				ENABLE_BITCODE = NO;
+ 				FRAMEWORK_SEARCH_PATHS = (
+ 					"$(inherited)",
+@@ -568,13 +572,15 @@
+ 					"$(inherited)",
+ 					"$(SDKROOT)/usr/lib/swift",
+ 				);
++				MARKETING_VERSION = 1.0.1;
+ 				OTHER_LDFLAGS = (
+ 					"$(inherited)",
+ 					"-ObjC",
+ 					"-lc++",
+ 				);
+-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.AriesBifold;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
+ 				PRODUCT_NAME = AriesBifold;
++				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet";
+ 				SWIFT_VERSION = 5.0;
+ 				VERSIONING_SYSTEM = "apple-generic";
+ 			};
+diff --git a/ios/AriesBifold/Info.plist b/ios/AriesBifold/Info.plist
+index ce30252..e4163b8 100644
+--- a/ios/AriesBifold/Info.plist
++++ b/ios/AriesBifold/Info.plist
+@@ -17,11 +17,11 @@
+ 	<key>CFBundlePackageType</key>
+ 	<string>APPL</string>
+ 	<key>CFBundleShortVersionString</key>
+-	<string>1.0</string>
++	<string>$(MARKETING_VERSION)</string>
+ 	<key>CFBundleSignature</key>
+ 	<string>????</string>
+ 	<key>CFBundleVersion</key>
+-	<string>1</string>
++	<string>$(CURRENT_PROJECT_VERSION)</string>
+ 	<key>LSRequiresIPhoneOS</key>
+ 	<true/>
+ 	<key>NSAppTransportSecurity</key>

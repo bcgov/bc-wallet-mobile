@@ -1,0 +1,109 @@
+diff --git a/android/app/BUCK b/android/app/BUCK
+index 808ce10..e7c145e 100644
+--- a/android/app/BUCK
++++ b/android/app/BUCK
+@@ -35,12 +35,12 @@ android_library(
+ 
+ android_build_config(
+     name = "build_config",
+-    package = "com.ariesbifold",
++    package = "ca.bc.gov.BifoldWallet",
+ )
+ 
+ android_resource(
+     name = "res",
+-    package = "com.ariesbifold",
++    package = "ca.bc.gov.BifoldWallet",
+     res = "src/main/res",
+ )
+ 
+diff --git a/android/app/build.gradle b/android/app/build.gradle
+index 218851a..57f83ae 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -135,7 +135,7 @@ android {
+     }
+ 
+     defaultConfig {
+-        applicationId "com.ariesbifold"
++        applicationId "ca.bc.gov.BifoldWallet"
+         minSdkVersion rootProject.ext.minSdkVersion
+         targetSdkVersion rootProject.ext.targetSdkVersion
+         versionCode 1
+diff --git a/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java b/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java
+index 300d6ea..99a96a7 100644
+--- a/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java
++++ b/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java
+@@ -4,7 +4,7 @@
+  * <p>This source code is licensed under the MIT license found in the LICENSE file in the root
+  * directory of this source tree.
+  */
+-package com.ariesbifold;
++package ca.bc.gov.BifoldWallet;
+ import android.content.Context;
+ import com.facebook.flipper.android.AndroidFlipperClient;
+ import com.facebook.flipper.android.utils.FlipperUtils;
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index 0d48a32..a6c0055 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -1,5 +1,5 @@
+ <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+-  package="com.ariesbifold">
++  package="ca.bc.gov.BifoldWallet">
+ 
+     <uses-permission android:name="android.permission.INTERNET" />
+     <uses-permission android:name="android.permission.VIBRATE"/>
+diff --git a/android/app/src/main/java/com/ariesbifold/MainActivity.java b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
+similarity index 92%
+rename from android/app/src/main/java/com/ariesbifold/MainActivity.java
+rename to android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
+index ec79ec1..824c5fc 100644
+--- a/android/app/src/main/java/com/ariesbifold/MainActivity.java
++++ b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
+@@ -1,4 +1,4 @@
+-package com.ariesbifold;
++package ca.bc.gov.BifoldWallet;
+ import android.os.Bundle;
+ import android.system.ErrnoException;
+ import android.system.Os;
+@@ -24,6 +24,6 @@ public class MainActivity extends ReactActivity {
+     }
+   }
+   protected String getMainComponentName() {
+-    return "aries-bifold";
++    return "BifoldWallet";
+   }
+ }
+diff --git a/android/app/src/main/java/com/ariesbifold/MainApplication.java b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainApplication.java
+similarity index 95%
+rename from android/app/src/main/java/com/ariesbifold/MainApplication.java
+rename to android/app/src/main/java/ca/bc/gov/bifoldwallet/MainApplication.java
+index 22418c6..5b20247 100644
+--- a/android/app/src/main/java/com/ariesbifold/MainApplication.java
++++ b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainApplication.java
+@@ -1,4 +1,4 @@
+-package com.ariesbifold;
++package ca.bc.gov.BifoldWallet;
+ 
+ import android.app.Application;
+ import android.content.Context;
+@@ -55,7 +55,7 @@ public class MainApplication extends Application implements ReactApplication {
+          We use reflection here to pick up the class that initializes Flipper,
+         since Flipper library is not available in release mode
+         */
+-        Class<?> aClass = Class.forName("com.ariesbifold.ReactNativeFlipper");
++        Class<?> aClass = Class.forName("ca.bc.gov.bifoldwallet.ReactNativeFlipper");
+         aClass
+             .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
+             .invoke(null, context, reactInstanceManager);
+diff --git a/app.json b/app.json
+index 97ddb28..e78ef5e 100644
+--- a/app.json
++++ b/app.json
+@@ -1,4 +1,4 @@
+ {
+-  "name": "aries-bifold",
++  "name": "BifoldWallet",
+   "displayName": "Aries Bifold"
+ }
