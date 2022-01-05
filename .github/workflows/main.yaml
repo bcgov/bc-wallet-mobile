@@ -110,7 +110,12 @@ jobs:
           pod install && \
           git status && \
           git diff Podfile.lock
-  
+
+      - name: Apply patches
+        working-directory: bifold
+        run: |
+          git apply ../patch/00-ios-build-cfg.patch
+
       - name: Bump Build No.
         run: |
           scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
