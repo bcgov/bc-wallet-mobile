@@ -134,14 +134,14 @@ jobs:
           -verbose \
           archive
 
-      # - name: Archive & Sign
-      #   run: |
-      #     xcodebuild \
-      #     -exportArchive \
-      #     -archivePath TestBuildAndSign.xcarchive \
-      #     -exportPath export \
-      #     -exportOptionsPlist options.plist \
-      #     -verbose
+      - name: Archive & Sign
+        run: |
+          xcodebuild \
+          -exportArchive \
+          -archivePath AriesBifold.xcarchive \
+          -exportPath export \
+          -exportOptionsPlist options.plist \
+          -verbose
 
       # # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       # - name: Install Codemagic CLI Tools
