@@ -120,7 +120,7 @@ jobs:
         run: |
           scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
 
-      - name: Build
+      - name: Build 🛠️
         working-directory: bifold/ios
         run: |
           xcodebuild \
@@ -134,7 +134,8 @@ jobs:
           -verbose \
           archive
 
-      - name: Archive & Sign
+      - name: Archive & Sign 👮
+        working-directory: bifold/ios
         run: |
           xcodebuild \
           -exportArchive \
@@ -148,7 +149,7 @@ jobs:
       #   run: |
       #     pip3 install codemagic-cli-tools
 
-      # - name: Distribute to iTunes
+      # - name: Ship to iTunes 🚢
       #   env:
       #     APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
       #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
