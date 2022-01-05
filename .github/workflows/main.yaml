@@ -29,10 +29,16 @@ jobs:
         run: |
           xcode-select -p 
 
-      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
-      - name: Install Codemagic CLI Tools
-        run: |
-          pip3 install codemagic-cli-tools
+      - name: Configure node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6
 
       # Watch for changes to the HEAD ref, use
       # git for cache keys.
@@ -47,6 +53,27 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
             
+        # GitHub recommends not caching node_modules but rather
+        # .npm because it can break across Node versions and
+        #  won't work with npm ci.
+      - name: Cache node modules
+        uses: actions/cache@v1
+        id: npm-cache
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ env.cacheId }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ env.cacheId }}-
+
+      - name: Cache pod dependencies
+        id: pod-cache
+        uses: actions/cache@v1
+        with:
+          path: bifold/ios/Pods
+          key: ${{ runner.os }}-pods-${{ env.cacheId }}-${{ hashFiles('**/Podfile.lock ') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-${{ env.cacheId }}-
+
       - name: Cache derived data
         uses: actions/cache@v1
         with:
@@ -96,7 +123,7 @@ jobs:
           -scheme AriesBifold \
           -configuration Release \
           -derivedDataPath xbuild \
-          -xcconfig release.xcconfig \
+          -xcconfig ../../release.xcconfig \
           -archivePath AriesBifold.xcarchive \
           -sdk iphoneos \
           -verbose \
@@ -110,6 +137,11 @@ jobs:
       #     -exportPath export \
       #     -exportOptionsPlist options.plist \
       #     -verbose
+
+      # # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
+      # - name: Install Codemagic CLI Tools
+      #   run: |
+      #     pip3 install codemagic-cli-tools
 
       # - name: Distribute to iTunes
       #   env:
