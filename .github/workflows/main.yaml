@@ -120,7 +120,7 @@ jobs:
         run: |
           scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
 
-      - name: Build 🛠️
+      - name: Build
         working-directory: bifold/ios
         run: |
           xcodebuild \
@@ -134,7 +134,7 @@ jobs:
           -verbose \
           archive
 
-      - name: Archive & Sign 👮
+      - name: Archive & Sign
         working-directory: bifold/ios
         run: |
           xcodebuild \
@@ -144,20 +144,21 @@ jobs:
           -exportOptionsPlist options.plist \
           -verbose
 
-      # # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
-      # - name: Install Codemagic CLI Tools
-      #   run: |
-      #     pip3 install codemagic-cli-tools
+      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
+      - name: Install Codemagic CLI Tools
+        run: |
+          pip3 install codemagic-cli-tools
 
-      # - name: Ship to iTunes 🚢
-      #   env:
-      #     APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
-      #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-      #     APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
-      #   run: |
-      #     app-store-connect publish \
-      #     --apple-id ${{ secrets.APPLE_ID }} \
-      #     --password ${{ secrets.APPLE_ID_PASSWD }} \
-      #     --path export/TestBuildAndSign.ipa \
-      #     --enable-package-validation \
-      #     --max-build-processing-wait 5
+      - name: Ship to iTunes
+        working-directory: bifold/ios
+        env:
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+        run: |
+          app-store-connect publish \
+          --apple-id ${{ secrets.APPLE_ID }} \
+          --password ${{ secrets.APPLE_ID_PASSWD }} \
+          --path export/TestBuildAndSign.ipa \
+          --enable-package-validation \
+          --max-build-processing-wait 5
