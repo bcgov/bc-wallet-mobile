@@ -159,7 +159,6 @@ jobs:
           app-store-connect publish \
           --apple-id ${{ secrets.APPLE_ID }} \
           --password ${{ secrets.APPLE_ID_PASSWD }} \
-          --path export/AriesBifold.ipa \
           --enable-package-validation \
           --max-build-processing-wait 5 \
           --testflight \
