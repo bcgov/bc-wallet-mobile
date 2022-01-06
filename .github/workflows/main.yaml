@@ -114,7 +114,7 @@ jobs:
       - name: Apply patches
         working-directory: bifold
         run: |
-          git apply ../patch/00-ios-build-cfg.patch
+          for i in $(ls ../patch); do git apply ../patch/$i; done
 
       - name: Bump Build No.
         run: |
