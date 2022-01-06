@@ -59,10 +59,19 @@ index 5a07735..9c87305 100644
  				VERSIONING_SYSTEM = "apple-generic";
  			};
 diff --git a/ios/AriesBifold/Info.plist b/ios/AriesBifold/Info.plist
-index ce30252..e4163b8 100644
+index ce30252..914006c 100644
 --- a/ios/AriesBifold/Info.plist
 +++ b/ios/AriesBifold/Info.plist
-@@ -17,11 +17,11 @@
+@@ -2,6 +2,8 @@
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
++	<key>ITSAppUsesNonExemptEncryption</key>
++	<false/>
+ 	<key>CFBundleDevelopmentRegion</key>
+ 	<string>en</string>
+ 	<key>CFBundleDisplayName</key>
+@@ -17,11 +19,11 @@
  	<key>CFBundlePackageType</key>
  	<string>APPL</string>
  	<key>CFBundleShortVersionString</key>
