@@ -97,13 +97,3 @@ index 22418c6..5b20247 100644
          aClass
              .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
              .invoke(null, context, reactInstanceManager);
-diff --git a/app.json b/app.json
-index 97ddb28..e78ef5e 100644
---- a/app.json
-+++ b/app.json
-@@ -1,4 +1,4 @@
- {
--  "name": "aries-bifold",
-+  "name": "BifoldWallet",
-   "displayName": "Aries Bifold"
- }

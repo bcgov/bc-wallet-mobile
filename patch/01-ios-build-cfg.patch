@@ -1,13 +1,3 @@
-diff --git a/app.json b/app.json
-index 97ddb28..e78ef5e 100644
---- a/app.json
-+++ b/app.json
-@@ -1,4 +1,4 @@
- {
--  "name": "aries-bifold",
-+  "name": "BifoldWallet",
-   "displayName": "Aries Bifold"
- }
 diff --git a/ios/AriesBifold.xcodeproj/project.pbxproj b/ios/AriesBifold.xcodeproj/project.pbxproj
 index 5a07735..9c87305 100644
 --- a/ios/AriesBifold.xcodeproj/project.pbxproj
