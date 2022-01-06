@@ -1,3 +1,13 @@
+diff --git a/app.json b/app.json
+index 97ddb28..e78ef5e 100644
+--- a/app.json
++++ b/app.json
+@@ -1,4 +1,4 @@
+ {
+-  "name": "aries-bifold",
++  "name": "BifoldWallet",
+   "displayName": "Aries Bifold"
+ }
 diff --git a/ios/AriesBifold.xcodeproj/project.pbxproj b/ios/AriesBifold.xcodeproj/project.pbxproj
 index 5a07735..9c87305 100644
 --- a/ios/AriesBifold.xcodeproj/project.pbxproj
@@ -58,20 +68,33 @@ index 5a07735..9c87305 100644
  				SWIFT_VERSION = 5.0;
  				VERSIONING_SYSTEM = "apple-generic";
  			};
+diff --git a/ios/AriesBifold/AppDelegate.m b/ios/AriesBifold/AppDelegate.m
+index 0b60edb..6c4ce95 100644
+--- a/ios/AriesBifold/AppDelegate.m
++++ b/ios/AriesBifold/AppDelegate.m
+@@ -33,7 +33,7 @@ static void InitializeFlipper(UIApplication *application) {
+ 
+   RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
+-                                                   moduleName:@"aries-bifold"
++                                                   moduleName:@"BifoldWallet"
+                                             initialProperties:nil];
+ 
+   if (@available(iOS 13.0, *)) {
 diff --git a/ios/AriesBifold/Info.plist b/ios/AriesBifold/Info.plist
-index ce30252..914006c 100644
+index ce30252..31acc78 100644
 --- a/ios/AriesBifold/Info.plist
 +++ b/ios/AriesBifold/Info.plist
-@@ -2,6 +2,8 @@
- <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
- <plist version="1.0">
- <dict>
-+	<key>ITSAppUsesNonExemptEncryption</key>
-+	<false/>
+@@ -5,7 +5,7 @@
  	<key>CFBundleDevelopmentRegion</key>
  	<string>en</string>
  	<key>CFBundleDisplayName</key>
-@@ -17,11 +19,11 @@
+-	<string>AriesBifold</string>
++	<string>BCWallet</string>
+ 	<key>CFBundleExecutable</key>
+ 	<string>$(EXECUTABLE_NAME)</string>
+ 	<key>CFBundleIdentifier</key>
+@@ -17,11 +17,13 @@
  	<key>CFBundlePackageType</key>
  	<string>APPL</string>
  	<key>CFBundleShortVersionString</key>
@@ -82,6 +105,8 @@ index ce30252..914006c 100644
  	<key>CFBundleVersion</key>
 -	<string>1</string>
 +	<string>$(CURRENT_PROJECT_VERSION)</string>
++	<key>ITSAppUsesNonExemptEncryption</key>
++	<false/>
  	<key>LSRequiresIPhoneOS</key>
  	<true/>
  	<key>NSAppTransportSecurity</key>
