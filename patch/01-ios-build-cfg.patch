@@ -80,7 +80,7 @@ index ce30252..31acc78 100644
  	<string>en</string>
  	<key>CFBundleDisplayName</key>
 -	<string>AriesBifold</string>
-+	<string>BCWallet</string>
++	<string>BC Wallet</string>
  	<key>CFBundleExecutable</key>
  	<string>$(EXECUTABLE_NAME)</string>
  	<key>CFBundleIdentifier</key>
