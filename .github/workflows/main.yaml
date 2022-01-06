@@ -152,13 +152,15 @@ jobs:
       - name: Ship to iTunes
         working-directory: bifold/ios
         env:
-          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
         run: |
           app-store-connect publish \
           --apple-id ${{ secrets.APPLE_ID }} \
           --password ${{ secrets.APPLE_ID_PASSWD }} \
           --path export/AriesBifold.ipa \
           --enable-package-validation \
-          --max-build-processing-wait 5
+          --max-build-processing-wait 5 \
+          --testflight \
+          --beta-group "The Team"
