@@ -18,7 +18,7 @@ index 808ce10..e7c145e 100644
  )
  
 diff --git a/android/app/build.gradle b/android/app/build.gradle
-index 218851a..57f83ae 100644
+index 218851a..36b2728 100644
 --- a/android/app/build.gradle
 +++ b/android/app/build.gradle
 @@ -135,7 +135,7 @@ android {
@@ -30,6 +30,28 @@ index 218851a..57f83ae 100644
          minSdkVersion rootProject.ext.minSdkVersion
          targetSdkVersion rootProject.ext.targetSdkVersion
          versionCode 1
+@@ -158,6 +158,12 @@ android {
+             keyAlias 'androiddebugkey'
+             keyPassword 'android'
+         }
++        release {
++            storeFile = file("release.keystore")
++            storePassword System.getenv("PLAY_STORE_JKS_PASSWD")
++            keyAlias System.getenv("PLAY_STORE_JKS_ALIAS")
++            keyPassword System.getenv("PLAY_STORE_JKS_PASSWD")
++        }
+     }
+     buildTypes {
+         debug {
+@@ -171,7 +177,7 @@ android {
+         release {
+             // Caution! In production, you need to generate your own keystore file.
+             // see https://reactnative.dev/docs/signed-apk-android.
+-            signingConfig signingConfigs.debug
++            signingConfig signingConfigs.release
+             minifyEnabled enableProguardInReleaseBuilds
+             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+         }
 diff --git a/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java b/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java
 index 300d6ea..99a96a7 100644
 --- a/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java
@@ -97,3 +119,12 @@ index 22418c6..5b20247 100644
          aClass
              .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
              .invoke(null, context, reactInstanceManager);
+diff --git a/android/settings.gradle b/android/settings.gradle
+index 9dc22c6..9efb675 100644
+--- a/android/settings.gradle
++++ b/android/settings.gradle
+@@ -1,3 +1,3 @@
+-rootProject.name = 'aries-bifold'
++rootProject.name = 'BifoldWallet'
+ apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+ include ':app'
