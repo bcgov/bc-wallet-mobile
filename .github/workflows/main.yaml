@@ -160,6 +160,6 @@ jobs:
           --apple-id ${{ secrets.APPLE_ID }} \
           --password ${{ secrets.APPLE_ID_PASSWD }} \
           --enable-package-validation \
-          --max-build-processing-wait 10 \
-          --testflight \
-          --beta-group "The Team"
+          --max-build-processing-wait 10
+          # --testflight \
+          # --beta-group "The Team"
