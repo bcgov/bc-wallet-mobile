@@ -122,8 +122,10 @@ jobs:
   #       run: |
   #         scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
 
-  #     - name: Build
-  #       working-directory: bifold/ios
+      # - name: Build
+      #   working-directory: bifold/ios
+      #   env:
+      #     MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
   #       run: |
   #         xcodebuild \
   #         -workspace AriesBifold.xcworkspace \
@@ -248,6 +250,7 @@ jobs:
       - name: Android release build
         working-directory: bifold/android
         env:
+          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
         run: ./gradlew bundleRelease
