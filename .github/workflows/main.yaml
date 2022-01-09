@@ -234,8 +234,11 @@ jobs:
         working-directory: bifold/android/app
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
         run: |
-          echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore
+          echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
+          keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD
 
       - name: Install dependencies
         working-directory: bifold
