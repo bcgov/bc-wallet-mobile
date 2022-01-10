@@ -10,6 +10,10 @@ build/
 *.mobileprovision
 *.p12
 *.p8
+pc-api*.json
+*secret*
+*secrets*
 
 # Other
 bifold/
+node_modules/
