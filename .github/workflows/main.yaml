@@ -259,9 +259,13 @@ jobs:
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
         run: ./gradlew bundleRelease
 
-      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
-      - name: Install Codemagic CLI Tools
+      - name: Publish to Google Play
+        working-directory: bifold/android
+        env:
+          GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
+          GOOGLE_API_CREDENTIALS: 'api_keys.json'
+          ANDROID_PACKAGE_NAME: 'ca.bc.gov.BCWallet'
+          ANDROID_BUNDLE_PATH: './app/build/outputs/bundle/release/app-release.aab'
         run: |
-          pip3 install codemagic-cli-tools
-
-      # ./app/build/outputs/bundle/release/app-release.aab
+          echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
+          npx @bcgov/gpublish
