@@ -7,13 +7,13 @@ index 808ce10..e7c145e 100644
  android_build_config(
      name = "build_config",
 -    package = "com.ariesbifold",
-+    package = "ca.bc.gov.BifoldWallet",
++    package = "ca.bc.gov.BCWallet",
  )
  
  android_resource(
      name = "res",
 -    package = "com.ariesbifold",
-+    package = "ca.bc.gov.BifoldWallet",
++    package = "ca.bc.gov.BCWallet",
      res = "src/main/res",
  )
  
@@ -26,7 +26,7 @@ index 218851a..36b2728 100644
  
      defaultConfig {
 -        applicationId "com.ariesbifold"
-+        applicationId "ca.bc.gov.BifoldWallet"
++        applicationId "ca.bc.gov.BCWallet"
          minSdkVersion rootProject.ext.minSdkVersion
          targetSdkVersion rootProject.ext.targetSdkVersion
          versionCode 1
@@ -61,7 +61,7 @@ index 300d6ea..99a96a7 100644
   * directory of this source tree.
   */
 -package com.ariesbifold;
-+package ca.bc.gov.BifoldWallet;
++package ca.bc.gov.BCWallet;
  import android.content.Context;
  import com.facebook.flipper.android.AndroidFlipperClient;
  import com.facebook.flipper.android.utils.FlipperUtils;
@@ -72,7 +72,7 @@ index 0d48a32..a6c0055 100644
 @@ -1,5 +1,5 @@
  <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 -  package="com.ariesbifold">
-+  package="ca.bc.gov.BifoldWallet">
++  package="ca.bc.gov.BCWallet">
  
      <uses-permission android:name="android.permission.INTERNET" />
      <uses-permission android:name="android.permission.VIBRATE"/>
@@ -85,7 +85,7 @@ index ec79ec1..824c5fc 100644
 +++ b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
 @@ -1,4 +1,4 @@
 -package com.ariesbifold;
-+package ca.bc.gov.BifoldWallet;
++package ca.bc.gov.BCWallet;
  import android.os.Bundle;
  import android.system.ErrnoException;
  import android.system.Os;
@@ -106,7 +106,7 @@ index 22418c6..5b20247 100644
 +++ b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainApplication.java
 @@ -1,4 +1,4 @@
 -package com.ariesbifold;
-+package ca.bc.gov.BifoldWallet;
++package ca.bc.gov.BCWallet;
  
  import android.app.Application;
  import android.content.Context;
@@ -115,7 +115,7 @@ index 22418c6..5b20247 100644
          since Flipper library is not available in release mode
          */
 -        Class<?> aClass = Class.forName("com.ariesbifold.ReactNativeFlipper");
-+        Class<?> aClass = Class.forName("ca.bc.gov.bifoldwallet.ReactNativeFlipper");
++        Class<?> aClass = Class.forName("ca.bc.gov.BCWallet.ReactNativeFlipper");
          aClass
              .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
              .invoke(null, context, reactInstanceManager);
