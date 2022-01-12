@@ -67,7 +67,7 @@ index 0b60edb..6c4ce95 100644
    RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
    RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
 -                                                   moduleName:@"aries-bifold"
-+                                                   moduleName:@"BifoldWallet"
++                                                   moduleName:@"BCWallet"
                                              initialProperties:nil];
  
    if (@available(iOS 13.0, *)) {

@@ -1,5 +1,5 @@
 diff --git a/android/app/BUCK b/android/app/BUCK
-index 808ce10..e7c145e 100644
+index 808ce10..9e2f136 100644
 --- a/android/app/BUCK
 +++ b/android/app/BUCK
 @@ -35,12 +35,12 @@ android_library(
@@ -18,7 +18,7 @@ index 808ce10..e7c145e 100644
  )
  
 diff --git a/android/app/build.gradle b/android/app/build.gradle
-index 218851a..36b2728 100644
+index 218851a..7167277 100644
 --- a/android/app/build.gradle
 +++ b/android/app/build.gradle
 @@ -135,7 +135,7 @@ android {
@@ -53,7 +53,7 @@ index 218851a..36b2728 100644
              proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
          }
 diff --git a/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java b/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java
-index 300d6ea..99a96a7 100644
+index 300d6ea..b779156 100644
 --- a/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java
 +++ b/android/app/src/debug/java/com/ariesbifold/ReactNativeFlipper.java
 @@ -4,7 +4,7 @@
@@ -66,7 +66,7 @@ index 300d6ea..99a96a7 100644
  import com.facebook.flipper.android.AndroidFlipperClient;
  import com.facebook.flipper.android.utils.FlipperUtils;
 diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
-index 0d48a32..a6c0055 100644
+index 0d48a32..b679d90 100644
 --- a/android/app/src/main/AndroidManifest.xml
 +++ b/android/app/src/main/AndroidManifest.xml
 @@ -1,5 +1,5 @@
@@ -80,7 +80,7 @@ diff --git a/android/app/src/main/java/com/ariesbifold/MainActivity.java b/andro
 similarity index 92%
 rename from android/app/src/main/java/com/ariesbifold/MainActivity.java
 rename to android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
-index ec79ec1..824c5fc 100644
+index ec79ec1..113bff6 100644
 --- a/android/app/src/main/java/com/ariesbifold/MainActivity.java
 +++ b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
 @@ -1,4 +1,4 @@
@@ -101,7 +101,7 @@ diff --git a/android/app/src/main/java/com/ariesbifold/MainApplication.java b/an
 similarity index 95%
 rename from android/app/src/main/java/com/ariesbifold/MainApplication.java
 rename to android/app/src/main/java/ca/bc/gov/bifoldwallet/MainApplication.java
-index 22418c6..5b20247 100644
+index 22418c6..c4b5112 100644
 --- a/android/app/src/main/java/com/ariesbifold/MainApplication.java
 +++ b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainApplication.java
 @@ -1,4 +1,4 @@
@@ -119,12 +119,21 @@ index 22418c6..5b20247 100644
          aClass
              .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
              .invoke(null, context, reactInstanceManager);
+diff --git a/android/app/src/main/res/values/strings.xml b/android/app/src/main/res/values/strings.xml
+index 5828d67..33b1443 100644
+--- a/android/app/src/main/res/values/strings.xml
++++ b/android/app/src/main/res/values/strings.xml
+@@ -1,3 +1,3 @@
+ <resources>
+-    <string name="app_name">Aries Bifold</string>
++    <string name="app_name">BC Wallet</string>
+ </resources>
 diff --git a/android/settings.gradle b/android/settings.gradle
 index 9dc22c6..9efb675 100644
 --- a/android/settings.gradle
 +++ b/android/settings.gradle
 @@ -1,3 +1,3 @@
 -rootProject.name = 'aries-bifold'
-+rootProject.name = 'BifoldWallet'
++rootProject.name = 'BCWallet'
  apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
  include ':app'
