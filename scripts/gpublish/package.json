@@ -1,6 +1,6 @@
 {
   "name": "@bcgov/gpublish",
-  "version": "1.0.24",
+  "version": "1.0.25",
   "description": "Scripts to help automate Google Play API access",
   "main": "index.js",
   "bin": "index.js",
