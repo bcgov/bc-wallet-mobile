@@ -104,7 +104,7 @@ const main = async () => {
       track: 'internal',
       requestBody: {
         releases: [{
-          name: `1.0.0-alpha Build ${process.env.GITHUB_RUN_NUMBER}`,
+          name: `v1.0.0-${process.env.GITHUB_RUN_NUMBER}`,
           status: 'draft', // draft, inProgress, completed
           // userFraction: 0.99,
           versionCodes: [
