@@ -94,7 +94,7 @@ index ec79ec1..113bff6 100644
    }
    protected String getMainComponentName() {
 -    return "aries-bifold";
-+    return "BifoldWallet";
++    return "BCWallet";
    }
  }
 diff --git a/android/app/src/main/java/com/ariesbifold/MainApplication.java b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainApplication.java
