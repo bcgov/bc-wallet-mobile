@@ -16,5 +16,4 @@ api*.json
 *secrets*
 
 # Other
-bifold/
 node_modules/

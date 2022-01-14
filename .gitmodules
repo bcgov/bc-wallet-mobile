@@ -1,0 +1,3 @@
+[submodule "bifold"]
+	path = bifold
+	url = git@github.com:bcgov/aries-mobile-agent-react-native.git
