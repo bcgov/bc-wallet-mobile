@@ -16,16 +16,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Pull & update submodules recursively
+        run: |
+          git submodule update --init --recursive
+
       # This part here is cloning a second repository
       # While cloning the repository:
       #   - it clones the repo into the given `path`
       #   - it checks out the branch defined at `ref`
-      - name: Fetch Aries repo
-        uses: actions/checkout@v2
-        with:
-          repository: bcgov/aries-mobile-agent-react-native
-          path: bifold
-          ref: main
+      # - name: Fetch Aries repo
+      #   uses: actions/checkout@v2
+      #   with:
+      #     repository: bcgov/aries-mobile-agent-react-native
+      #     path: bifold
+      #     ref: main
 
       - name: What XCode are we using?
         run: |
@@ -178,16 +182,20 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       
+      - name: Pull & update submodules recursively
+        run: |
+          git submodule update --init --recursive
+
       # This part here is cloning a second repository
       # While cloning the repository:
       #   - it clones the repo into the given `path`
       #   - it checks out the branch defined at `ref`
-      - name: Fetch Aries repo
-        uses: actions/checkout@v2
-        with:
-          repository: bcgov/aries-mobile-agent-react-native
-          path: bifold
-          ref: main
+      # - name: Fetch Aries repo
+      #   uses: actions/checkout@v2
+      #   with:
+      #     repository: bcgov/aries-mobile-agent-react-native
+      #     path: bifold
+      #     ref: main
 
       - name: Setup ubuntu
         run: |
