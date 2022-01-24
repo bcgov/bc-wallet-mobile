@@ -126,12 +126,16 @@ jobs:
         run: |
           scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
 
-      - name: Build
-        working-directory: bifold/ios
+      - name: Create environment settings
+        working-directory: bifold
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >../.env && \
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+
+      - name: Build
+        working-directory: bifold/ios
+        run: |
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
@@ -268,14 +272,19 @@ jobs:
           envsubst >build.gradle.new && \
           mv build.gradle.new build.gradle
 
+      - name: Create environment settings
+        working-directory: bifold
+        env:
+          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+        run: |
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+
       - name: Android release build
         working-directory: bifold/android
         env:
-          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >../.env && \
           ./gradlew bundleRelease
 
       - name: Publish to Google Play
