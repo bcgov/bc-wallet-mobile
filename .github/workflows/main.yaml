@@ -126,6 +126,8 @@ jobs:
         run: |
           scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
 
+        # Actual environment variables are not being picked up
+        # by the build so they're put into an .env file.
       - name: Create environment settings
         working-directory: bifold
         env:
@@ -272,6 +274,8 @@ jobs:
           envsubst >build.gradle.new && \
           mv build.gradle.new build.gradle
 
+        # Actual environment variables are not being picked up
+        # by the build so they're put into an .env file.
       - name: Create environment settings
         working-directory: bifold
         env:
