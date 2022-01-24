@@ -1,5 +1,5 @@
 diff --git a/App/screens/OnboardingPages.tsx b/App/screens/OnboardingPages.tsx
-index 53b978c..944497b 100644
+index 53b978c..98d534e 100644
 --- a/App/screens/OnboardingPages.tsx
 +++ b/App/screens/OnboardingPages.tsx
 @@ -1,21 +1,41 @@
@@ -9,7 +9,7 @@ index 53b978c..944497b 100644
  import { SvgProps } from 'react-native-svg'
  import Toast from 'react-native-toast-message'
  
-+import { Colors } from '../Theme'
++import { Colors } from '../theme'
  import CredentialList from '../assets/img/credential-list.svg'
 +import Credential from '../assets/img/credential.svg'
 +import ExternalLink from '../assets/img/external-link.svg'
@@ -26,20 +26,19 @@ index 53b978c..944497b 100644
 +import { ButtonType } from 'components/buttons/Button'
 +
  const imageDisplayOptions = {
--  fill: Colors.text,
-+  fill: Colors.white,
+   fill: Colors.text,
    height: 180,
    width: 180,
  }
  
 +const iconDisplayOptions = {
-+  fill: Colors.white,
++  fill: Colors.text,
 +  height: 30,
 +  width: 30,
 +}
 +
 +const smallIconDisplayOptions = {
-+  fill: Colors.white,
++  fill: Colors.text,
 +  height: 12,
 +  width: 12,
 +}

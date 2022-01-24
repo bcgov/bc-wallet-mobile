@@ -1,7 +1,7 @@
-diff --git a/App/Theme.ts b/App/Theme.ts
+diff --git a/App/theme.ts b/App/theme.ts
 index 4a282d0..b77da9c 100644
---- a/App/Theme.ts
-+++ b/App/Theme.ts
+--- a/App/theme.ts
++++ b/App/theme.ts
 @@ -9,12 +9,14 @@ export const borderRadius = 4
  export const BaseColors: BaseColor = {
    black: '#000000',
