@@ -131,6 +131,7 @@ jobs:
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
         run: |
+          # echo "${MEDIATOR_URL}" >../.env && \
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
@@ -274,7 +275,7 @@ jobs:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
         run: |
-          echo $MEDIATOR_URL >.env && \
+          echo "${MEDIATOR_URL}" >../.env && \
           ./gradlew bundleRelease
 
       - name: Publish to Google Play

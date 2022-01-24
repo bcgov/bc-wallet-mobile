@@ -14,6 +14,7 @@ pc-api*.json
 api*.json
 *secret*
 *secrets*
+.env
 
 # Other
 node_modules/
