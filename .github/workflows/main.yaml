@@ -131,7 +131,7 @@ jobs:
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
         run: |
-          # echo "MEDIATOR_URL=${MEDIATOR_URL}" >../.env && \
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >../.env && \
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
