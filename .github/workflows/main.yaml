@@ -273,7 +273,9 @@ jobs:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-        run: ./gradlew bundleRelease
+        run: |
+          echo $MEDIATOR_URL >.env && \
+          ./gradlew bundleRelease
 
       - name: Publish to Google Play
         working-directory: bifold/android
