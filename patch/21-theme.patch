@@ -1,44 +1,50 @@
-diff --git a/App/theme.ts b/App/theme.ts
-index 4a282d0..b77da9c 100644
+diff --cc App/theme.ts
+index 79d7e8f,45d6481..0000000
 --- a/App/theme.ts
 +++ b/App/theme.ts
-@@ -9,12 +9,14 @@ export const borderRadius = 4
- export const BaseColors: BaseColor = {
-   black: '#000000',
-   darkGrey: '#1C1C1E',
-+  lightGrey: '#313132',
-   green: '#2D6E35',
-   red: '#DE3333',
-   white: '#FFFFFF',
-+  offWhite: '#F2F2F2',
-   yellow: '#FCBA19',
--  mediumBlue: '#2E8540',
--  lightBlue: '#87B37A',
-+  mediumBlue: '#B9CEDE',
-+  lightBlue: '#D9EAF7',
-   transparent: 'rgba(0, 0, 0, 0)',
- }
- 
-@@ -50,10 +52,10 @@ interface TextTheme {
- }
- 
- export const Colors: ColorTheme = {
--  primary: '#35823f',
-+  primary: '#003366', // 0, 51, 102
-   primaryActive: '#003366B3',
--  text: BaseColors.white,
--  background: BaseColors.black,
-+  text: BaseColors.lightGrey,
-+  background: BaseColors.offWhite,
-   shadow: BaseColors.darkGrey,
-   toastSuccess: BaseColors.green,
-   toastError: BaseColors.red,
-@@ -112,7 +114,7 @@ export const Buttons = StyleSheet.create({
-   primaryDisabled: {
-     padding: 16,
-     borderRadius: 4,
--    backgroundColor: 'rgba(66, 128, 62, 0.3)',
-+    backgroundColor: 'rgba(0, 51, 102, 0.3)',
-   },
-   primaryText: {
-     ...TextTheme.normal,
+@@@ -69,13 -68,13 +69,13 @@@ interface CredentialTheme 
+  
+  export const Colors: ColorTheme = {
+    accent: BaseColors.yellow,
+-   background: BaseColors.black,
++   background: BaseColors.offWhite,
+    backgroundLight: BaseColors.lightBlue,
+    borderLight: BaseColors.mediumBlue,
+-   primary: BaseColors.darkGreen,
+-   primaryActive: BaseColors.darkGreenHeavyTransparent,
++   primary: BaseColors.darkBlue,
++   primaryActive: BaseColors.darkBlueHeavyTransparent,
+    shadow: BaseColors.darkGrey,
+-   text: BaseColors.white,
+ -  text: BaseColors.darkGrey,
+++  text: BaseColors.darkGreyAlt,
+    ...BaseColors,
+    ...StatusColors,
+  }
+@@@ -131,7 -130,7 +131,7 @@@ export const Buttons = StyleSheet.creat
+    primaryDisabled: {
+      padding: 16,
+      borderRadius: 4,
+--    backgroundColor: Colors.darkGreenHeavyTransparent,
+++    backgroundColor: Colors.darkBlueHeavyTransparent,
+    },
+    primaryText: {
+      ...TextTheme.normal,
+@@@ -156,7 -155,7 +156,7 @@@
+      padding: 16,
+      borderRadius: 4,
+      borderWidth: 2,
+--    borderColor: Colors.darkGreenLightTransparent,
+++    borderColor: Colors.darkBlueLightTransparent,
+      backgroundColor: Colors.white,
+    },
+    secondaryText: {
+@@@ -168,7 -167,7 +168,7 @@@
+    secondaryTextDisabled: {
+      ...TextTheme.normal,
+      fontWeight: 'bold',
+--    color: Colors.darkGreenLightTransparent,
+++    color: Colors.darkGlueLightTransparent,
+      textAlign: 'center',
+    },
+  })
