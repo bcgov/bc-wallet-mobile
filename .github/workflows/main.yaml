@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    # paths:
-    #   - patch/**
+    paths:
+      - patch/**
 
 jobs:
   build-ios:
