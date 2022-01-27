@@ -291,16 +291,16 @@ jobs:
         run: |
           ./gradlew bundleRelease
 
-      - name: Publish to Google Play
-        working-directory: bifold/android
-        env:
-          GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
-          GOOGLE_API_CREDENTIALS: 'api_keys.json'
-          ANDROID_PACKAGE_NAME: 'ca.bc.gov.BCWallet'
-          ANDROID_BUNDLE_PATH: './app/build/outputs/bundle/release/app-release.aab'
-        run: |
-          echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          npx @bcgov/gpublish
+      # - name: Publish to Google Play
+      #   working-directory: bifold/android
+      #   env:
+      #     GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
+      #     GOOGLE_API_CREDENTIALS: 'api_keys.json'
+      #     ANDROID_PACKAGE_NAME: 'ca.bc.gov.BCWallet'
+      #     ANDROID_BUNDLE_PATH: './app/build/outputs/bundle/release/app-release.aab'
+      #   run: |
+      #     echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
+      #     npx @bcgov/gpublish
 
       - name: Publish to Saucelabs
         working-directory: bifold/android
@@ -313,7 +313,7 @@ jobs:
           brew install bundletool && \
           bundletool build-apks \
             --bundle=app/build/outputs/bundle/release/app-release.aab \
-            --output=app-release.apks \
+            --output=apks.zip \
             --mode=universal \
             --ks=app/release.keystore \
             --ks-pass=password:$PLAY_STORE_JKS_ALIAS \
