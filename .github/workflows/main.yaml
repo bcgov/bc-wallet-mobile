@@ -11,173 +11,173 @@ on:
       - patch/**
 
 jobs:
-  build-ios:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
+  # build-ios:
+  #   runs-on: macos-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      # - name: Pull & update submodules recursively
-      #   run: |
-      #     git submodule update --init --recursive
+  #     # - name: Pull & update submodules recursively
+  #     #   run: |
+  #     #     git submodule update --init --recursive
 
-      # This part here is cloning a second repository
-      # While cloning the repository:
-      #   - it clones the repo into the given `path`
-      #   - it checks out the branch defined at `ref`
-      - name: Fetch Aries repo
-        uses: actions/checkout@v2
-        with:
-          repository: bcgov/aries-mobile-agent-react-native
-          path: bifold
-          ref: main
+  #     # This part here is cloning a second repository
+  #     # While cloning the repository:
+  #     #   - it clones the repo into the given `path`
+  #     #   - it checks out the branch defined at `ref`
+  #     - name: Fetch Aries repo
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: bcgov/aries-mobile-agent-react-native
+  #         path: bifold
+  #         ref: main
 
-      - name: What XCode are we using?
-        run: |
-          xcode-select -p 
+  #     - name: What XCode are we using?
+  #       run: |
+  #         xcode-select -p 
 
-      - name: Configure node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12.x'
-          registry-url: 'https://registry.npmjs.org'
+  #     - name: Configure node
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: '12.x'
+  #         registry-url: 'https://registry.npmjs.org'
 
-      - name: Configure ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 2.6
+  #     - name: Configure ruby
+  #       uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: 2.6
 
-      # Watch for changes to the HEAD ref, use
-      # git for cache keys.
-      - name: Generate cache key
-        run: |
-          echo $(git rev-parse HEAD) > ./dd-cache-key.txt
+  #     # Watch for changes to the HEAD ref, use
+  #     # git for cache keys.
+  #     - name: Generate cache key
+  #       run: |
+  #         echo $(git rev-parse HEAD) > ./dd-cache-key.txt
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+  #     - uses: actions/cache@v2
+  #       with:
+  #         path: ~/.cache/pip
+  #         key: ${{ runner.os }}-pip-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-pip-
             
-        # GitHub recommends not caching node_modules but rather
-        # .npm because it can break across Node versions and
-        #  won't work with npm ci.
-      - name: Cache node modules
-        uses: actions/cache@v1
-        id: npm-cache
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ env.cacheId }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ env.cacheId }}-
+  #       # GitHub recommends not caching node_modules but rather
+  #       # .npm because it can break across Node versions and
+  #       #  won't work with npm ci.
+  #     - name: Cache node modules
+  #       uses: actions/cache@v1
+  #       id: npm-cache
+  #       with:
+  #         path: ~/.npm
+  #         key: ${{ runner.os }}-node-${{ env.cacheId }}-${{ hashFiles('**/package-lock.json') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-node-${{ env.cacheId }}-
 
-      - name: Cache pod dependencies
-        id: pod-cache
-        uses: actions/cache@v1
-        with:
-          path: bifold/ios/Pods
-          key: ${{ runner.os }}-pods-${{ env.cacheId }}-${{ hashFiles('**/Podfile.lock ') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-${{ env.cacheId }}-
+  #     - name: Cache pod dependencies
+  #       id: pod-cache
+  #       uses: actions/cache@v1
+  #       with:
+  #         path: bifold/ios/Pods
+  #         key: ${{ runner.os }}-pods-${{ env.cacheId }}-${{ hashFiles('**/Podfile.lock ') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-pods-${{ env.cacheId }}-
 
-      - name: Cache derived data
-        uses: actions/cache@v1
-        with:
-          path: bifold/ios/xbuild/Build
-          key: ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-
+  #     - name: Cache derived data
+  #       uses: actions/cache@v1
+  #       with:
+  #         path: bifold/ios/xbuild/Build
+  #         key: ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-
 
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-      - name: Create Provisioning Profile
-        env:         
-          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-        run: |
-          scripts/makepp.sh
+  #     # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+  #     - name: Create Provisioning Profile
+  #       env:         
+  #         PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+  #       run: |
+  #         scripts/makepp.sh
 
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-      - name: Build Keychain
-        env:
-          CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-        run: |
-          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
+  #     # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+  #     - name: Build Keychain
+  #       env:
+  #         CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+  #       run: |
+  #         scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
-      - name: Install react native dependencies
-        working-directory: bifold
-        run: |
-          npm ci && \
-          git status
+  #     - name: Install react native dependencies
+  #       working-directory: bifold
+  #       run: |
+  #         npm ci && \
+  #         git status
 
-      - name: Install iOS dependencies
-        # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
-        working-directory: bifold/ios
-        run: |
-          gem install cocoapods && \
-          pod install && \
-          git status && \
-          git diff Podfile.lock
+  #     - name: Install iOS dependencies
+  #       # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
+  #       working-directory: bifold/ios
+  #       run: |
+  #         gem install cocoapods && \
+  #         pod install && \
+  #         git status && \
+  #         git diff Podfile.lock
 
-      - name: Apply patches
-        working-directory: bifold
-        run: |
-          for i in $(ls ../patch); do git apply ../patch/$i; done
+  #     - name: Apply patches
+  #       working-directory: bifold
+  #       run: |
+  #         for i in $(ls ../patch); do git apply ../patch/$i; done
 
-      - name: Bump Build No.
-        run: |
-          scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
+  #     - name: Bump Build No.
+  #       run: |
+  #         scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
 
-        # Actual environment variables are not being picked up
-        # by the build so they're put into an .env file.
-      - name: Create environment settings
-        working-directory: bifold
-        env:
-          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-        run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+  #       # Actual environment variables are not being picked up
+  #       # by the build so they're put into an .env file.
+  #     - name: Create environment settings
+  #       working-directory: bifold
+  #       env:
+  #         MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+  #       run: |
+  #         echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
 
-      - name: Build
-        working-directory: bifold/ios
-        run: |
-          xcodebuild \
-          -workspace AriesBifold.xcworkspace \
-          -scheme AriesBifold \
-          -configuration Release \
-          -derivedDataPath xbuild \
-          -xcconfig ../../release.xcconfig \
-          -archivePath AriesBifold.xcarchive \
-          -sdk iphoneos \
-          -verbose \
-          archive
+  #     - name: Build
+  #       working-directory: bifold/ios
+  #       run: |
+  #         xcodebuild \
+  #         -workspace AriesBifold.xcworkspace \
+  #         -scheme AriesBifold \
+  #         -configuration Release \
+  #         -derivedDataPath xbuild \
+  #         -xcconfig ../../release.xcconfig \
+  #         -archivePath AriesBifold.xcarchive \
+  #         -sdk iphoneos \
+  #         -verbose \
+  #         archive
 
-      - name: Archive & Sign
-        working-directory: bifold/ios
-        run: |
-          xcodebuild \
-          -exportArchive \
-          -archivePath AriesBifold.xcarchive \
-          -exportPath export \
-          -exportOptionsPlist ../../options.plist \
-          -verbose
+  #     - name: Archive & Sign
+  #       working-directory: bifold/ios
+  #       run: |
+  #         xcodebuild \
+  #         -exportArchive \
+  #         -archivePath AriesBifold.xcarchive \
+  #         -exportPath export \
+  #         -exportOptionsPlist ../../options.plist \
+  #         -verbose
 
-      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
-      - name: Install Codemagic CLI Tools
-        run: |
-          pip3 install codemagic-cli-tools
+  #     # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
+  #     - name: Install Codemagic CLI Tools
+  #       run: |
+  #         pip3 install codemagic-cli-tools
 
-      - name: Ship to iTunes
-        working-directory: bifold/ios
-        env:
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
-          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-        run: |
-          app-store-connect publish \
-          --apple-id ${{ secrets.APPLE_ID }} \
-          --password ${{ secrets.APPLE_ID_PASSWD }} \
-          --enable-package-validation \
-          --max-build-processing-wait 10
-          # --testflight \
-          # --beta-group "The Team"
+  #     - name: Ship to iTunes
+  #       working-directory: bifold/ios
+  #       env:
+  #         APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+  #         APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+  #         APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+  #       run: |
+  #         app-store-connect publish \
+  #         --apple-id ${{ secrets.APPLE_ID }} \
+  #         --password ${{ secrets.APPLE_ID_PASSWD }} \
+  #         --enable-package-validation \
+  #         --max-build-processing-wait 10
+  #         # --testflight \
+  #         # --beta-group "The Team"
   
   build-android:
     runs-on: ubuntu-latest
@@ -302,19 +302,20 @@ jobs:
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           npx @bcgov/gpublish
 
-      # - name: Publish to Saucelabs
-      #   working-directory: bifold/android
-      #   env:
-      #     SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-      #     SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-      #     PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
-      #     PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-      #   run: |
-      #     bundletool build-apks \
-      #       --bundle=app/build/outputs/bundle/release/app-release.aab \
-      #       --output=app-release.apks \
-      #       --mode=universal \
-      #       --ks=app/release.keystore \
-      #       --ks-pass=password:$PLAY_STORE_JKS_ALIAS \
-      #       --ks-key-alias=$PLAY_STORE_JKS_ALIAS \
-      #       --key-pass=password:$PLAY_STORE_JKS_ALIAS
+      - name: Publish to Saucelabs
+        working-directory: bifold/android
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
+        run: |
+          brew install bundletool && \
+          bundletool build-apks \
+            --bundle=app/build/outputs/bundle/release/app-release.aab \
+            --output=app-release.apks \
+            --mode=universal \
+            --ks=app/release.keystore \
+            --ks-pass=password:$PLAY_STORE_JKS_ALIAS \
+            --ks-key-alias=$PLAY_STORE_JKS_ALIAS \
+            --key-pass=password:$PLAY_STORE_JKS_ALIAS
