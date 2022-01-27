@@ -316,6 +316,7 @@ jobs:
             --output=apks.zip \
             --mode=universal \
             --ks=app/release.keystore \
-            --ks-pass=pass:$PLAY_STORE_JKS_ALIAS \
+            --ks-pass=pass:$PLAY_STORE_JKS_PASSWD \
             --ks-key-alias=$PLAY_STORE_JKS_ALIAS \
-            --key-pass=pass:$PLAY_STORE_JKS_ALIAS
+            --key-pass=pass:$PLAY_STORE_JKS_PASSWD &&
+          unzip apks.zip && ls -lah
