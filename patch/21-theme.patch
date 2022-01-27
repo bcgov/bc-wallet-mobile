@@ -1,50 +1,73 @@
-diff --cc App/theme.ts
-index 79d7e8f,45d6481..0000000
+diff --git a/App/theme.ts b/App/theme.ts
+index 9eb74c1..66bea94 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
-@@@ -69,13 -68,13 +69,13 @@@ interface CredentialTheme 
-  
-  export const Colors: ColorTheme = {
-    accent: BaseColors.yellow,
--   background: BaseColors.black,
-+   background: BaseColors.offWhite,
-    backgroundLight: BaseColors.lightBlue,
-    borderLight: BaseColors.mediumBlue,
--   primary: BaseColors.darkGreen,
--   primaryActive: BaseColors.darkGreenHeavyTransparent,
-+   primary: BaseColors.darkBlue,
-+   primaryActive: BaseColors.darkBlueHeavyTransparent,
-    shadow: BaseColors.darkGrey,
--   text: BaseColors.white,
- -  text: BaseColors.darkGrey,
-++  text: BaseColors.darkGreyAlt,
-    ...BaseColors,
-    ...StatusColors,
-  }
-@@@ -131,7 -130,7 +131,7 @@@ export const Buttons = StyleSheet.creat
-    primaryDisabled: {
-      padding: 16,
-      borderRadius: 4,
---    backgroundColor: Colors.darkGreenHeavyTransparent,
-++    backgroundColor: Colors.darkBlueHeavyTransparent,
-    },
-    primaryText: {
-      ...TextTheme.normal,
-@@@ -156,7 -155,7 +156,7 @@@
-      padding: 16,
-      borderRadius: 4,
-      borderWidth: 2,
---    borderColor: Colors.darkGreenLightTransparent,
-++    borderColor: Colors.darkBlueLightTransparent,
-      backgroundColor: Colors.white,
-    },
-    secondaryText: {
-@@@ -168,7 -167,7 +168,7 @@@
-    secondaryTextDisabled: {
-      ...TextTheme.normal,
-      fontWeight: 'bold',
---    color: Colors.darkGreenLightTransparent,
-++    color: Colors.darkGlueLightTransparent,
-      textAlign: 'center',
-    },
-  })
+@@ -81,31 +81,31 @@ interface SingleSelectBlockTheme {
+ 
+ export const Colors: ColorTheme = {
+   accent: BaseColors.yellow,
+-  background: BaseColors.black,
+-  backgroundLight: BaseColors.lightGreen,
+-  borderLight: BaseColors.mediumGreen,
+-  primary: BaseColors.darkGreen,
+-  primaryActive: BaseColors.darkGreenHeavyTransparent,
++  background: BaseColors.offWhite,
++  backgroundLight: BaseColors.lightBlue,
++  borderLight: BaseColors.mediumBlue,
++  primary: BaseColors.darkBlue,
++  primaryActive: BaseColors.darkBlueHeavyTransparent,
+   shadow: BaseColors.darkGrey,
+-  text: BaseColors.white,
++  text: BaseColors.darkGreyAlt,
+   ...BaseColors,
+   ...StatusColors,
+ }
+ 
+ export const CredentialTheme: CredentialTheme = {
+-  background: Colors.shadow,
++  background: Colors.lightBlue,
+ }
+ 
+ export const ContactTheme: ContactTheme = {
+-  background: Colors.shadow,
++  background: Colors.lightBlue,
+ }
+ 
+ export const SettingsTheme: SettingsTheme = {
+-  background: Colors.shadow,
++  background: Colors.lightBlue,
+ }
+ 
+ export const SingleSelectBlockTheme: SingleSelectBlockTheme = {
+-  background: Colors.shadow,
++  background: Colors.lightBlue,
+ }
+ 
+ export const TextTheme: TextTheme = {
+@@ -155,7 +155,7 @@ export const Buttons = StyleSheet.create({
+   primaryDisabled: {
+     padding: 16,
+     borderRadius: 4,
+-    backgroundColor: Colors.darkGreenHeavyTransparent,
++    backgroundColor: Colors.darkBlueHeavyTransparent,
+   },
+   primaryText: {
+     ...TextTheme.normal,
+@@ -180,7 +180,7 @@ export const Buttons = StyleSheet.create({
+     padding: 16,
+     borderRadius: 4,
+     borderWidth: 2,
+-    borderColor: Colors.darkGreenLightTransparent,
++    borderColor: Colors.darkBlueLightTransparent,
+     backgroundColor: Colors.white,
+   },
+   secondaryText: {
+@@ -192,7 +192,7 @@ export const Buttons = StyleSheet.create({
+   secondaryTextDisabled: {
+     ...TextTheme.normal,
+     fontWeight: 'bold',
+-    color: Colors.darkGreenLightTransparent,
++    color: Colors.darkBlueLightTransparent,
+     textAlign: 'center',
+   },
+ })
