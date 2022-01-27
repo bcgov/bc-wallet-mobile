@@ -316,6 +316,6 @@ jobs:
             --output=apks.zip \
             --mode=universal \
             --ks=app/release.keystore \
-            --ks-pass=password:$PLAY_STORE_JKS_ALIAS \
+            --ks-pass=pass:$PLAY_STORE_JKS_ALIAS \
             --ks-key-alias=$PLAY_STORE_JKS_ALIAS \
-            --key-pass=password:$PLAY_STORE_JKS_ALIAS
+            --key-pass=pass:$PLAY_STORE_JKS_ALIAS
