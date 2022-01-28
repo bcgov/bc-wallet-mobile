@@ -1,5 +1,5 @@
 diff --git a/App/theme.ts b/App/theme.ts
-index c67032e..22e4549 100644
+index 67e919a..22e4549 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
 @@ -93,43 +93,43 @@ interface SingleSelectBlockTheme {
@@ -29,7 +29,7 @@ index c67032e..22e4549 100644
  }
  
  export const CredentialOfferTheme: CredentialOfferTheme = {
--  background: Colors.shadow,
+-  background: Colors.black,
 +  background: Colors.white,
  }
  
@@ -44,7 +44,7 @@ index c67032e..22e4549 100644
  }
  
  export const ProofRequestTheme: ProofRequestTheme = {
--  background: Colors.shadow,
+-  background: Colors.black,
 +  background: Colors.white,
  }
  
