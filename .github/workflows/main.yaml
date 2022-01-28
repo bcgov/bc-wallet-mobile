@@ -315,7 +315,7 @@ jobs:
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           npx @bcgov/gpublish
 
-      - name: Publish to Saucelabs
+      - name: Ship to Saucelabs
         working-directory: bifold/android
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
