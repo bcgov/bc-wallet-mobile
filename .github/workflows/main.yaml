@@ -189,7 +189,7 @@ jobs:
           -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
           -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
           --form 'payload=@"export/AriesBifold.ipa"' \
-          --form 'name="AriesBifold-'$(GITHUB_RUN_NUMBER)'.ipa"' \
+          --form 'name="AriesBifold-'$GITHUB_RUN_NUMBER'.ipa"' \
           --form 'description="iOS Bifold BC wallet app'
 
   build-android:
@@ -325,5 +325,5 @@ jobs:
           -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
           -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
           --form 'payload=@"app/build/outputs/bundle/release/app-release.aab"' \
-          --form 'name="'$(GITHUB_RUN_NUMBER)'.aab"' \
+          --form 'name="'$GITHUB_RUN_NUMBER'.aab"' \
           --form 'description="Android Bifold BC wallet app'
