@@ -1,8 +1,8 @@
 diff --git a/App/theme.ts b/App/theme.ts
-index 67e919a..22e4549 100644
+index 3b47d1e..826ac07 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
-@@ -93,43 +93,43 @@ interface SingleSelectBlockTheme {
+@@ -99,47 +99,47 @@ interface TextBoxTheme {
  
  export const Colors: ColorTheme = {
    accent: BaseColors.yellow,
@@ -58,8 +58,13 @@ index 67e919a..22e4549 100644
 +  background: Colors.white,
  }
  
- export const TextTheme: TextTheme = {
-@@ -179,7 +179,7 @@ export const Buttons = StyleSheet.create({
+ export const TextBoxTheme: TextBoxTheme = {
+-  background: Colors.darkGreenLightTransparent,
++  background: Colors.lightBlue,
+   border: Colors.borderLight,
+   text: Colors.text,
+ }
+@@ -191,7 +191,7 @@ export const Buttons = StyleSheet.create({
    primaryDisabled: {
      padding: 16,
      borderRadius: 4,
@@ -68,7 +73,7 @@ index 67e919a..22e4549 100644
    },
    primaryText: {
      ...TextTheme.normal,
-@@ -204,7 +204,7 @@ export const Buttons = StyleSheet.create({
+@@ -216,7 +216,7 @@ export const Buttons = StyleSheet.create({
      padding: 16,
      borderRadius: 4,
      borderWidth: 2,
@@ -77,7 +82,7 @@ index 67e919a..22e4549 100644
      backgroundColor: Colors.white,
    },
    secondaryText: {
-@@ -216,7 +216,7 @@ export const Buttons = StyleSheet.create({
+@@ -228,7 +228,7 @@ export const Buttons = StyleSheet.create({
    secondaryTextDisabled: {
      ...TextTheme.normal,
      fontWeight: 'bold',
