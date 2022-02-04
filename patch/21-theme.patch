@@ -1,0 +1,143 @@
+diff --git a/App/theme.ts b/App/theme.ts
+index 5989426..7b30a07 100644
+--- a/App/theme.ts
++++ b/App/theme.ts
+@@ -73,10 +73,10 @@ export const zeroOpacity = 0.0
+ export const borderWidth = 2
+ 
+ const BrandColors: BrandColors = {
+-  primary: '#42803E',
++  primary: '#003366',
+   highlight: '#FCBA19',
+-  primaryBackground: '#000000',
+-  secondaryBackground: '#313132',
++  primaryBackground: '#F2F2F2',
++  secondaryBackground: '#FFFFFF',
+ }
+ 
+ const SemanticColors: SemanticColors = {
+@@ -86,22 +86,22 @@ const SemanticColors: SemanticColors = {
+ }
+ 
+ const NotificationColors: NotificationColors = {
+-  success: '#313132',
+-  successBorder: '#2E8540',
++  success: '#DFF0D8',
++  successBorder: '#D6E9C6',
+   successIcon: '#2E8540',
+-  successText: '#FFFFFF',
+-  info: '#313132',
+-  infoBorder: '#0099FF',
++  successText: '#2E8540',
++  info: '#D9EAF7',
++  infoBorder: '#B9CEDE',
+   infoIcon: '#0099FF',
+-  infoText: '#FFFFFF',
+-  warn: '#313132',
+-  warnBorder: '#fcba19',
+-  warnIcon: '#fcba19',
+-  warnText: '#FFFFFF',
+-  error: '#313132',
+-  errorBorder: '#D8292F',
++  infoText: '#0099FF',
++  warn: '#F9F1C6',
++  warnBorder: '#FAEBCC',
++  warnIcon: '#6C4A00',
++  warnText: '#6C4A00',
++  error: '#F2DEDE',
++  errorBorder: '#EBCCD1',
+   errorIcon: '#D8292F',
+-  errorText: '#FFFFFF',
++  errorText: '#D8292F',
+ }
+ 
+ const GrayscaleColors: GrayscaleColors = {
+@@ -212,47 +212,47 @@ interface TextBoxTheme {
+ 
+ export const Colors: ColorTheme = {
+   accent: BaseColors.yellow,
+-  background: BaseColors.black,
+-  backgroundLight: BaseColors.lightGreen,
+-  borderLight: BaseColors.mediumGreen,
+-  primary: BaseColors.darkGreen,
+-  primaryActive: BaseColors.darkGreenHeavyTransparent,
++  background: BaseColors.offWhite,
++  backgroundLight: BaseColors.lightBlue,
++  borderLight: BaseColors.mediumBlue,
++  primary: BaseColors.darkBlue,
++  primaryActive: BaseColors.darkBlueHeavyTransparent,
+   shadow: BaseColors.darkGrey,
+-  text: BaseColors.white,
++  text: BaseColors.darkGreyAlt,
+   ...BaseColors,
+   ...StatusColors,
+ }
+ 
+ export const CredentialTheme: CredentialTheme = {
+-  background: Colors.shadow,
++  background: Colors.white,
+ }
+ 
+ export const CredentialOfferTheme: CredentialOfferTheme = {
+-  background: Colors.black,
++  background: Colors.white,
+ }
+ 
+ export const ContactTheme: ContactTheme = {
+-  background: Colors.shadow,
++  background: Colors.white,
+ }
+ 
+ export const ModularViewTheme: ModularViewTheme = {
+-  background: Colors.shadow,
++  background: Colors.backgroundLight,
+ }
+ 
+ export const ProofRequestTheme: ProofRequestTheme = {
+-  background: Colors.black,
++  background: Colors.white,
+ }
+ 
+ export const SettingsTheme: SettingsTheme = {
+-  background: Colors.shadow,
++  background: Colors.white,
+ }
+ 
+ export const SingleSelectBlockTheme: SingleSelectBlockTheme = {
+-  background: Colors.shadow,
++  background: Colors.white,
+ }
+ 
+ export const TextBoxTheme: TextBoxTheme = {
+-  background: Colors.darkGreenLightTransparent,
++  background: Colors.lightBlue,
+   border: Colors.borderLight,
+   text: Colors.text,
+ }
+@@ -304,7 +304,7 @@ export const Buttons = StyleSheet.create({
+   primaryDisabled: {
+     padding: 16,
+     borderRadius: 4,
+-    backgroundColor: Colors.darkGreenHeavyTransparent,
++    backgroundColor: Colors.darkBlueHeavyTransparent,
+   },
+   primaryText: {
+     ...TextTheme.normal,
+@@ -329,7 +329,7 @@ export const Buttons = StyleSheet.create({
+     padding: 16,
+     borderRadius: 4,
+     borderWidth: 2,
+-    borderColor: Colors.darkGreenLightTransparent,
++    borderColor: Colors.darkBlueHeavyTransparent,
+     backgroundColor: Colors.white,
+   },
+   secondaryText: {
+@@ -341,7 +341,7 @@ export const Buttons = StyleSheet.create({
+   secondaryTextDisabled: {
+     ...TextTheme.normal,
+     fontWeight: 'bold',
+-    color: Colors.darkGreenLightTransparent,
++    color: Colors.darkBlueHeavyTransparent,
+     textAlign: 'center',
+   },
+ })
