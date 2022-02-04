@@ -1,8 +1,8 @@
 diff --git a/App/theme.ts b/App/theme.ts
-index 5989426..7b30a07 100644
+index 48c73d1..48b4791 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
-@@ -73,10 +73,10 @@ export const zeroOpacity = 0.0
+@@ -74,10 +74,10 @@ export const zeroOpacity = 0.0
  export const borderWidth = 2
  
  const BrandColors: BrandColors = {
@@ -13,10 +13,10 @@ index 5989426..7b30a07 100644
 -  secondaryBackground: '#313132',
 +  primaryBackground: '#F2F2F2',
 +  secondaryBackground: '#FFFFFF',
+   link: '#ffffff',
  }
  
- const SemanticColors: SemanticColors = {
-@@ -86,22 +86,22 @@ const SemanticColors: SemanticColors = {
+@@ -88,22 +88,22 @@ const SemanticColors: SemanticColors = {
  }
  
  const NotificationColors: NotificationColors = {
@@ -52,30 +52,7 @@ index 5989426..7b30a07 100644
  }
  
  const GrayscaleColors: GrayscaleColors = {
-@@ -212,47 +212,47 @@ interface TextBoxTheme {
- 
- export const Colors: ColorTheme = {
-   accent: BaseColors.yellow,
--  background: BaseColors.black,
--  backgroundLight: BaseColors.lightGreen,
--  borderLight: BaseColors.mediumGreen,
--  primary: BaseColors.darkGreen,
--  primaryActive: BaseColors.darkGreenHeavyTransparent,
-+  background: BaseColors.offWhite,
-+  backgroundLight: BaseColors.lightBlue,
-+  borderLight: BaseColors.mediumBlue,
-+  primary: BaseColors.darkBlue,
-+  primaryActive: BaseColors.darkBlueHeavyTransparent,
-   shadow: BaseColors.darkGrey,
--  text: BaseColors.white,
-+  text: BaseColors.darkGreyAlt,
-   ...BaseColors,
-   ...StatusColors,
- }
- 
- export const CredentialTheme: CredentialTheme = {
--  background: Colors.shadow,
-+  background: Colors.white,
+@@ -225,31 +225,31 @@ export const Colors: ColorTheme = {
  }
  
  export const CredentialOfferTheme: CredentialOfferTheme = {
@@ -114,7 +91,7 @@ index 5989426..7b30a07 100644
    border: Colors.borderLight,
    text: Colors.text,
  }
-@@ -304,7 +304,7 @@ export const Buttons = StyleSheet.create({
+@@ -301,7 +301,7 @@ export const Buttons = StyleSheet.create({
    primaryDisabled: {
      padding: 16,
      borderRadius: 4,
@@ -123,7 +100,7 @@ index 5989426..7b30a07 100644
    },
    primaryText: {
      ...TextTheme.normal,
-@@ -329,7 +329,7 @@ export const Buttons = StyleSheet.create({
+@@ -326,7 +326,7 @@ export const Buttons = StyleSheet.create({
      padding: 16,
      borderRadius: 4,
      borderWidth: 2,
@@ -132,7 +109,7 @@ index 5989426..7b30a07 100644
      backgroundColor: Colors.white,
    },
    secondaryText: {
-@@ -341,7 +341,7 @@ export const Buttons = StyleSheet.create({
+@@ -338,7 +338,7 @@ export const Buttons = StyleSheet.create({
    secondaryTextDisabled: {
      ...TextTheme.normal,
      fontWeight: 'bold',
