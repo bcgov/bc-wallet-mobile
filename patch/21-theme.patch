@@ -1,5 +1,5 @@
 diff --git a/App/theme.ts b/App/theme.ts
-index 48c73d1..48b4791 100644
+index 48c73d1..1a39479 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
 @@ -74,10 +74,10 @@ export const zeroOpacity = 0.0
@@ -52,7 +52,27 @@ index 48c73d1..48b4791 100644
  }
  
  const GrayscaleColors: GrayscaleColors = {
-@@ -225,31 +225,31 @@ export const Colors: ColorTheme = {
+@@ -212,44 +212,44 @@ interface TextBoxTheme {
+ }
+ 
+ export const Colors: ColorTheme = {
+-  accent: BaseColors.yellow,
+-  background: BaseColors.black,
+-  backgroundLight: BaseColors.lightGreen,
+-  borderLight: BaseColors.mediumGreen,
+-  primary: BaseColors.darkGreen,
+-  primaryActive: BaseColors.darkGreenHeavyTransparent,
++  accent: ColorPallet.brand.highlight,
++  background: ColorPallet.brand.primaryBackground,
++  backgroundLight: BaseColors.lightBlue,
++  borderLight: BaseColors.mediumBlue,
++  primary: ColorPallet.brand.primary,
++  primaryActive: BaseColors.darkBlueHeavyTransparent,
+   shadow: BaseColors.darkGrey,
+-  text: BaseColors.white,
++  text: BaseColors.darkGreyAlt,
+   ...BaseColors,
+   ...StatusColors,
  }
  
  export const CredentialOfferTheme: CredentialOfferTheme = {
