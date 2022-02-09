@@ -27,7 +27,7 @@ jobs:
       - name: Fetch Aries repo
         uses: actions/checkout@v2
         with:
-          repository: bcgov/aries-mobile-agent-react-native
+          repository: hyperledger/aries-mobile-agent-react-native
           path: bifold
           ref: main
 
@@ -213,7 +213,7 @@ jobs:
       - name: Fetch Aries repo
         uses: actions/checkout@v2
         with:
-          repository: bcgov/aries-mobile-agent-react-native
+          repository: hyperledger/aries-mobile-agent-react-native
           path: bifold
           ref: main
 
