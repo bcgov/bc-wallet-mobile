@@ -1,8 +1,8 @@
 diff --git a/App/theme.ts b/App/theme.ts
-index 48c73d1..1a39479 100644
+index 4aedefe..0114a28 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
-@@ -74,10 +74,10 @@ export const zeroOpacity = 0.0
+@@ -74,11 +74,11 @@ export const zeroOpacity = 0.0
  export const borderWidth = 2
  
  const BrandColors: BrandColors = {
@@ -11,27 +11,24 @@ index 48c73d1..1a39479 100644
    highlight: '#FCBA19',
 -  primaryBackground: '#000000',
 -  secondaryBackground: '#313132',
+-  link: '#FFFFFF',
 +  primaryBackground: '#F2F2F2',
 +  secondaryBackground: '#FFFFFF',
-   link: '#ffffff',
++  link: '#1A5A96',
  }
  
+ const SemanticColors: SemanticColors = {
 @@ -88,22 +88,22 @@ const SemanticColors: SemanticColors = {
  }
  
  const NotificationColors: NotificationColors = {
 -  success: '#313132',
 -  successBorder: '#2E8540',
-+  success: '#DFF0D8',
-+  successBorder: '#D6E9C6',
-   successIcon: '#2E8540',
+-  successIcon: '#2E8540',
 -  successText: '#FFFFFF',
 -  info: '#313132',
 -  infoBorder: '#0099FF',
-+  successText: '#2E8540',
-+  info: '#D9EAF7',
-+  infoBorder: '#B9CEDE',
-   infoIcon: '#0099FF',
+-  infoIcon: '#0099FF',
 -  infoText: '#FFFFFF',
 -  warn: '#313132',
 -  warnBorder: '#fcba19',
@@ -39,16 +36,24 @@ index 48c73d1..1a39479 100644
 -  warnText: '#FFFFFF',
 -  error: '#313132',
 -  errorBorder: '#D8292F',
-+  infoText: '#0099FF',
+-  errorIcon: '#D8292F',
+-  errorText: '#FFFFFF',
++  success: '#DFF0D8',
++  successBorder: '#D6E9C6',
++  successIcon: '#2d4821',
++  successText: '#2d4821',
++  info: '#D9EAF7',
++  infoBorder: '#B9CEDE',
++  infoIcon: '#313132',
++  infoText: '#313132',
 +  warn: '#F9F1C6',
 +  warnBorder: '#FAEBCC',
 +  warnIcon: '#6C4A00',
 +  warnText: '#6C4A00',
 +  error: '#F2DEDE',
 +  errorBorder: '#EBCCD1',
-   errorIcon: '#D8292F',
--  errorText: '#FFFFFF',
-+  errorText: '#D8292F',
++  errorIcon: '#a12622',
++  errorText: '#a12622',
  }
  
  const GrayscaleColors: GrayscaleColors = {
@@ -107,7 +112,7 @@ index 48c73d1..1a39479 100644
  
  export const TextBoxTheme: TextBoxTheme = {
 -  background: Colors.darkGreenLightTransparent,
-+  background: Colors.lightBlue,
++  background: Colors.darkBlueLightTransparent,
    border: Colors.borderLight,
    text: Colors.text,
  }
@@ -125,7 +130,7 @@ index 48c73d1..1a39479 100644
      borderRadius: 4,
      borderWidth: 2,
 -    borderColor: Colors.darkGreenLightTransparent,
-+    borderColor: Colors.darkBlueHeavyTransparent,
++    borderColor: Colors.darkBlueLightTransparent,
      backgroundColor: Colors.white,
    },
    secondaryText: {
@@ -134,7 +139,7 @@ index 48c73d1..1a39479 100644
      ...TextTheme.normal,
      fontWeight: 'bold',
 -    color: Colors.darkGreenLightTransparent,
-+    color: Colors.darkBlueHeavyTransparent,
++    color: Colors.darkBlueLightTransparent,
      textAlign: 'center',
    },
  })
