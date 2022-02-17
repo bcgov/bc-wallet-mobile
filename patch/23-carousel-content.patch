@@ -1,5 +1,5 @@
 diff --git a/App/screens/OnboardingPages.tsx b/App/screens/OnboardingPages.tsx
-index 8cca1e5..d91d207 100644
+index 269ba23..b15f357 100644
 --- a/App/screens/OnboardingPages.tsx
 +++ b/App/screens/OnboardingPages.tsx
 @@ -1,9 +1,14 @@
@@ -37,7 +37,7 @@ index 8cca1e5..d91d207 100644
  export const carousel: OnboardingStyleSheet = StyleSheet.create({
    container: {
      flex: 1,
-@@ -75,20 +92,54 @@ const defaultStyle = StyleSheet.create({
+@@ -76,20 +93,58 @@ const defaultStyle = StyleSheet.create({
    },
  })
  
@@ -86,7 +86,11 @@ index 8cca1e5..d91d207 100644
 -      <View style={{ marginTop: 'auto', marginBottom: 20, paddingHorizontal: 20 }}>
 +      <View style={[defaultStyle.point, { marginTop: 60 }]}>
 +        <Info {...iconDisplayOptions} style={defaultStyle.icon} />
-+        <TouchableOpacity onPress={() => Linking.openURL('https://example.com/')}>
++        <TouchableOpacity
++          accessibilityLabel={'Learn More'}
++          accessible
++          onPress={() => Linking.openURL('https://example.com/')}
++        >
 +          <Text style={[defaultStyle.bodyText, { color: 'blue', textDecorationLine: 'underline' }]}>
 +            Learn more about the BC Wallet
 +          </Text>
@@ -97,7 +101,7 @@ index 8cca1e5..d91d207 100644
          <Button
            title={'Get Started!'}
            accessibilityLabel={'Get Started'}
-@@ -103,13 +154,13 @@ const customPages = (onTutorialCompleted: GenericFn) => {
+@@ -104,13 +159,13 @@ const customPages = (onTutorialCompleted: GenericFn) => {
  const guides: Array<{ image: React.FC<SvgProps>; title: string; body: string }> = [
    {
      image: CredentialList,
@@ -115,7 +119,7 @@ index 8cca1e5..d91d207 100644
    },
  ]
  
-@@ -126,5 +177,5 @@ const createPageWith = (image: React.FC<SvgProps>, title: string, body: string)
+@@ -127,5 +182,5 @@ const createPageWith = (image: React.FC<SvgProps>, title: string, body: string)
  }
  
  export const pages = (onTutorialCompleted: GenericFn): Array<Element> => {
