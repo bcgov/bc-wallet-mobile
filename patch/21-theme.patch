@@ -1,5 +1,5 @@
 diff --git a/App/theme.ts b/App/theme.ts
-index 4aedefe..0114a28 100644
+index f5b66aa..dbf0574 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
 @@ -74,11 +74,11 @@ export const zeroOpacity = 0.0
@@ -57,7 +57,7 @@ index 4aedefe..0114a28 100644
  }
  
  const GrayscaleColors: GrayscaleColors = {
-@@ -212,44 +212,44 @@ interface TextBoxTheme {
+@@ -192,40 +192,40 @@ interface TextBoxTheme {
  }
  
  export const Colors: ColorTheme = {
@@ -90,11 +90,6 @@ index 4aedefe..0114a28 100644
 +  background: Colors.white,
  }
  
- export const ModularViewTheme: ModularViewTheme = {
--  background: Colors.shadow,
-+  background: Colors.backgroundLight,
- }
- 
  export const ProofRequestTheme: ProofRequestTheme = {
 -  background: Colors.black,
 +  background: Colors.white,
@@ -116,7 +111,7 @@ index 4aedefe..0114a28 100644
    border: Colors.borderLight,
    text: Colors.text,
  }
-@@ -301,7 +301,7 @@ export const Buttons = StyleSheet.create({
+@@ -277,7 +277,7 @@ export const Buttons = StyleSheet.create({
    primaryDisabled: {
      padding: 16,
      borderRadius: 4,
@@ -125,7 +120,7 @@ index 4aedefe..0114a28 100644
    },
    primaryText: {
      ...TextTheme.normal,
-@@ -326,7 +326,7 @@ export const Buttons = StyleSheet.create({
+@@ -302,7 +302,7 @@ export const Buttons = StyleSheet.create({
      padding: 16,
      borderRadius: 4,
      borderWidth: 2,
@@ -134,7 +129,7 @@ index 4aedefe..0114a28 100644
      backgroundColor: Colors.white,
    },
    secondaryText: {
-@@ -338,7 +338,7 @@ export const Buttons = StyleSheet.create({
+@@ -314,7 +314,7 @@ export const Buttons = StyleSheet.create({
    secondaryTextDisabled: {
      ...TextTheme.normal,
      fontWeight: 'bold',
