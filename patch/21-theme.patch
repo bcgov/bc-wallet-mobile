@@ -1,5 +1,5 @@
 diff --git a/App/theme.ts b/App/theme.ts
-index f5b66aa..dbf0574 100644
+index 57b55ed..4223184 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
 @@ -74,11 +74,11 @@ export const zeroOpacity = 0.0
@@ -120,16 +120,16 @@ index f5b66aa..dbf0574 100644
    },
    primaryText: {
      ...TextTheme.normal,
-@@ -302,7 +302,7 @@ export const Buttons = StyleSheet.create({
+@@ -301,7 +301,7 @@ export const Buttons = StyleSheet.create({
      padding: 16,
      borderRadius: 4,
      borderWidth: 2,
 -    borderColor: Colors.darkGreenLightTransparent,
 +    borderColor: Colors.darkBlueLightTransparent,
-     backgroundColor: Colors.white,
    },
    secondaryText: {
-@@ -314,7 +314,7 @@ export const Buttons = StyleSheet.create({
+     ...TextTheme.normal,
+@@ -312,7 +312,7 @@ export const Buttons = StyleSheet.create({
    secondaryTextDisabled: {
      ...TextTheme.normal,
      fontWeight: 'bold',
