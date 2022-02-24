@@ -1,16 +1,8 @@
 diff --git a/App/screens/Terms.tsx b/App/screens/Terms.tsx
-index 50a8140..4bf7583 100644
+index 0c4e79d..10bf5b9 100644
 --- a/App/screens/Terms.tsx
 +++ b/App/screens/Terms.tsx
-@@ -11,7 +11,6 @@ import { DispatchAction } from '../store/reducer'
- import { Colors, TextTheme } from '../theme'
- 
- import { Button, CheckBoxRow } from 'components'
--import HighlightTextBox from 'components/texts/HighlightTextBox'
- import InfoTextBox from 'components/texts/InfoTextBox'
- 
- const style = StyleSheet.create({
-@@ -59,24 +58,231 @@ const Terms: React.FC = () => {
+@@ -59,24 +59,231 @@ const Terms: React.FC = () => {
      <SafeAreaView style={[style.container]}>
        <ScrollView>
          <InfoTextBox>Please agree to the terms and conditions below before using this application.</InfoTextBox>
