@@ -124,7 +124,7 @@ jobs:
 
       - name: Bump Build No.
         run: |
-          scripts/bump_build.sh ./bifold/ios/AriesBifold/Info.plist
+          scripts/bump_ios_build.sh
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
