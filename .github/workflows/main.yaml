@@ -123,11 +123,13 @@ jobs:
           for i in $(ls ../patch); do git apply ../patch/$i; done
 
       - name: Bump Build No.
+        working-directory: bifold/ios
         env:
           CURRENT_PROJECT_VERSION: ${{ github.run_number }}
           MARKETING_VERSION: "1.0.1"
         run: |
-          scripts/bump_ios_build.sh
+          agvtool new-version ${CURRENT_PROJECT_VERSION} && \
+          agvtool new-marketing-version ${MARKETING_VERSION}
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
