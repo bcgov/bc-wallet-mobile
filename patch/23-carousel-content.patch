@@ -1,24 +1,23 @@
 diff --git a/App/screens/OnboardingPages.tsx b/App/screens/OnboardingPages.tsx
-index 269ba23..b15f357 100644
+index 269ba23..e9465cf 100644
 --- a/App/screens/OnboardingPages.tsx
 +++ b/App/screens/OnboardingPages.tsx
-@@ -1,9 +1,14 @@
+@@ -1,9 +1,13 @@
  import React from 'react'
 -import { StyleSheet, Text, View } from 'react-native'
 +import { StyleSheet, Text, Linking, TouchableOpacity, View } from 'react-native'
  import { SvgProps } from 'react-native-svg'
++import Icon from 'react-native-vector-icons/MaterialIcons'
  
  import CredentialList from '../assets/img/credential-list.svg'
 +import Credential from '../assets/img/credential.svg'
-+import ExternalLink from '../assets/img/external-link.svg'
-+import Info from '../assets/img/info.svg'
 +import MobilePhone from '../assets/img/mobile-phone.svg'
  import ScanShare from '../assets/img/scan-share.svg'
 +import SecureCredential from '../assets/img/secure-credentials.svg'
  import SecureImage from '../assets/img/secure-image.svg'
  import { Colors } from '../theme'
  
-@@ -19,6 +24,18 @@ const imageDisplayOptions = {
+@@ -19,6 +23,12 @@ const imageDisplayOptions = {
    width: 180,
  }
  
@@ -28,16 +27,10 @@ index 269ba23..b15f357 100644
 +  width: 30,
 +}
 +
-+const smallIconDisplayOptions = {
-+  fill: Colors.text,
-+  height: 12,
-+  width: 12,
-+}
-+
  export const carousel: OnboardingStyleSheet = StyleSheet.create({
    container: {
      flex: 1,
-@@ -76,20 +93,58 @@ const defaultStyle = StyleSheet.create({
+@@ -76,20 +86,58 @@ const defaultStyle = StyleSheet.create({
    },
  })
  
@@ -85,7 +78,7 @@ index 269ba23..b15f357 100644
        </View>
 -      <View style={{ marginTop: 'auto', marginBottom: 20, paddingHorizontal: 20 }}>
 +      <View style={[defaultStyle.point, { marginTop: 60 }]}>
-+        <Info {...iconDisplayOptions} style={defaultStyle.icon} />
++        <Icon name={'info'} size={30} color={Colors.text} style={{ marginRight: 5 }} />
 +        <TouchableOpacity
 +          accessibilityLabel={'Learn More'}
 +          accessible
@@ -95,13 +88,13 @@ index 269ba23..b15f357 100644
 +            Learn more about the BC Wallet
 +          </Text>
 +        </TouchableOpacity>
-+        <ExternalLink {...smallIconDisplayOptions} style={[defaultStyle.icon, { marginLeft: 7 }]} />
++        <Icon name={'open-in-new'} size={14} color={Colors.text} style={{ marginLeft: 5 }} />
 +      </View>
 +      <View style={{ marginTop: 'auto', marginBottom: 20, marginLeft: 20, marginRight: 20 }}>
          <Button
            title={'Get Started!'}
            accessibilityLabel={'Get Started'}
-@@ -104,13 +159,13 @@ const customPages = (onTutorialCompleted: GenericFn) => {
+@@ -104,13 +152,13 @@ const customPages = (onTutorialCompleted: GenericFn) => {
  const guides: Array<{ image: React.FC<SvgProps>; title: string; body: string }> = [
    {
      image: CredentialList,
@@ -119,7 +112,7 @@ index 269ba23..b15f357 100644
    },
  ]
  
-@@ -127,5 +182,5 @@ const createPageWith = (image: React.FC<SvgProps>, title: string, body: string)
+@@ -127,5 +175,5 @@ const createPageWith = (image: React.FC<SvgProps>, title: string, body: string)
  }
  
  export const pages = (onTutorialCompleted: GenericFn): Array<Element> => {
