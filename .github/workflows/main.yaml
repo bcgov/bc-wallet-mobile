@@ -122,9 +122,9 @@ jobs:
         run: |
           for i in $(ls ../patch); do git apply ../patch/$i; done
 
-      - name: Bump Build No.
-        run: |
-          scripts/bump_ios_build.sh
+      # - name: Bump Build No.
+      #   run: |
+      #     scripts/bump_ios_build.sh
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
@@ -137,6 +137,9 @@ jobs:
 
       - name: Build
         working-directory: bifold/ios
+        env:
+          CURRENT_PROJECT_VERSION: ${GITHUB_RUN_NUMBER}
+          MARKETING_VERSION: "1.0.1"
         run: |
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
@@ -279,13 +282,20 @@ jobs:
         run: |
           for i in $(ls ../patch); do git apply ../patch/$i; done
 
-      - name: Bump Build No.
-        working-directory: bifold/android/app
-        run: |
-          cat build.gradle | \
-          sed 's/versionCode[[:space:]][0-9]\{1,\}/versionCode $GITHUB_RUN_NUMBER/g' | \
-          envsubst >build.gradle.new && \
-          mv build.gradle.new build.gradle
+      # - name: Bump Build No.
+      #   working-directory: bifold/android/app
+      #   env: 
+      #     VERSION_CODE: ${GITHUB_RUN_NUMBER}
+      #     VERSION_NAME: "1.0.0"
+      #   run: |
+      #     cat build.gradle | \
+      #     sed 's/versionCode[[:space:]][0-9]\{1,\}/versionCode $VERSION_CODE/g' | \
+      #     envsubst >build.gradle.new && \
+      #     mv build.gradle.new build.gradle && \
+      #     cat build.gradle | \
+      #     sed 's/versionCode[[:space:]][0-9]\{1,\}/versionCode $VERSION_CODE/g' | \
+      #     envsubst >build.gradle.new && \
+      #     mv build.gradle.new build.gradle
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
@@ -301,6 +311,8 @@ jobs:
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
+          VERSION_CODE: ${GITHUB_RUN_NUMBER}
+          VERSION_NAME: "1.0.0"
         run: |
           ./gradlew bundleRelease
 

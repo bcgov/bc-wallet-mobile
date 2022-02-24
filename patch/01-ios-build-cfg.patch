@@ -1,15 +1,16 @@
 diff --git a/ios/AriesBifold.xcodeproj/project.pbxproj b/ios/AriesBifold.xcodeproj/project.pbxproj
-index 5a07735..9c87305 100644
+index 5a07735..364db29 100644
 --- a/ios/AriesBifold.xcodeproj/project.pbxproj
 +++ b/ios/AriesBifold.xcodeproj/project.pbxproj
 @@ -517,8 +517,9 @@
  			buildSettings = {
  				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
  				CLANG_ENABLE_MODULES = YES;
+-				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = 8GUD26WFN3;
 +				CODE_SIGN_IDENTITY = "iPhone Distribution";
 +				CODE_SIGN_STYLE = Manual;
- 				CURRENT_PROJECT_VERSION = 1;
--				DEVELOPMENT_TEAM = 8GUD26WFN3;
++				CURRENT_PROJECT_VERSION = 444;
  				ENABLE_BITCODE = NO;
  				FRAMEWORK_SEARCH_PATHS = (
  					"$(inherited)",
@@ -34,10 +35,11 @@ index 5a07735..9c87305 100644
  			buildSettings = {
  				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
  				CLANG_ENABLE_MODULES = YES;
+-				CURRENT_PROJECT_VERSION = 1;
+-				DEVELOPMENT_TEAM = 8GUD26WFN3;
 +				CODE_SIGN_IDENTITY = "iPhone Distribution";
 +				CODE_SIGN_STYLE = Manual;
- 				CURRENT_PROJECT_VERSION = 1;
--				DEVELOPMENT_TEAM = 8GUD26WFN3;
++				CURRENT_PROJECT_VERSION = 1;
  				ENABLE_BITCODE = NO;
  				FRAMEWORK_SEARCH_PATHS = (
  					"$(inherited)",
@@ -59,7 +61,7 @@ index 5a07735..9c87305 100644
  				VERSIONING_SYSTEM = "apple-generic";
  			};
 diff --git a/ios/AriesBifold/AppDelegate.m b/ios/AriesBifold/AppDelegate.m
-index 0b60edb..6c4ce95 100644
+index 0b60edb..00007cf 100644
 --- a/ios/AriesBifold/AppDelegate.m
 +++ b/ios/AriesBifold/AppDelegate.m
 @@ -33,7 +33,7 @@ static void InitializeFlipper(UIApplication *application) {
@@ -72,7 +74,7 @@ index 0b60edb..6c4ce95 100644
  
    if (@available(iOS 13.0, *)) {
 diff --git a/ios/AriesBifold/Info.plist b/ios/AriesBifold/Info.plist
-index ce30252..31acc78 100644
+index ce30252..f01ab88 100644
 --- a/ios/AriesBifold/Info.plist
 +++ b/ios/AriesBifold/Info.plist
 @@ -5,7 +5,7 @@

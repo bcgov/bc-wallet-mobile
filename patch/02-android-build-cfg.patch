@@ -18,10 +18,10 @@ index 808ce10..9e2f136 100644
  )
  
 diff --git a/android/app/build.gradle b/android/app/build.gradle
-index 218851a..7167277 100644
+index 218851a..e0bf9fb 100644
 --- a/android/app/build.gradle
 +++ b/android/app/build.gradle
-@@ -135,7 +135,7 @@ android {
+@@ -135,11 +135,12 @@ android {
      }
  
      defaultConfig {
@@ -29,8 +29,15 @@ index 218851a..7167277 100644
 +        applicationId "ca.bc.gov.BCWallet"
          minSdkVersion rootProject.ext.minSdkVersion
          targetSdkVersion rootProject.ext.targetSdkVersion
-         versionCode 1
-@@ -158,6 +158,12 @@ android {
+-        versionCode 1
+-        versionName "1.0"
++        versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 0
++        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "0.0.0"
++
+ 
+         missingDimensionStrategy 'react-native-camera', 'general'
+     }
+@@ -158,6 +159,12 @@ android {
              keyAlias 'androiddebugkey'
              keyPassword 'android'
          }
@@ -43,7 +50,7 @@ index 218851a..7167277 100644
      }
      buildTypes {
          debug {
-@@ -171,7 +177,7 @@ android {
+@@ -171,7 +178,7 @@ android {
          release {
              // Caution! In production, you need to generate your own keystore file.
              // see https://reactnative.dev/docs/signed-apk-android.
@@ -77,10 +84,10 @@ index 0d48a32..b679d90 100644
      <uses-permission android:name="android.permission.INTERNET" />
      <uses-permission android:name="android.permission.VIBRATE"/>
 diff --git a/android/app/src/main/java/com/ariesbifold/MainActivity.java b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
-similarity index 92%
+similarity index 93%
 rename from android/app/src/main/java/com/ariesbifold/MainActivity.java
 rename to android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
-index ec79ec1..113bff6 100644
+index ec79ec1..dca7fb5 100644
 --- a/android/app/src/main/java/com/ariesbifold/MainActivity.java
 +++ b/android/app/src/main/java/ca/bc/gov/bifoldwallet/MainActivity.java
 @@ -1,4 +1,4 @@
@@ -129,7 +136,7 @@ index 5828d67..33b1443 100644
 +    <string name="app_name">BC Wallet</string>
  </resources>
 diff --git a/android/settings.gradle b/android/settings.gradle
-index 9dc22c6..9efb675 100644
+index 9dc22c6..57ec1db 100644
 --- a/android/settings.gradle
 +++ b/android/settings.gradle
 @@ -1,3 +1,3 @@
