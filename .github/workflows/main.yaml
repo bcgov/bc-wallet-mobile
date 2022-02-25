@@ -12,6 +12,7 @@ on:
 
 jobs:
   build-ios:
+    if: ${{ false }}  # disable for now
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -222,6 +223,13 @@ jobs:
           path: bifold
           ref: main
 
+      - name: Fetch mobile test harness repo
+        uses: actions/checkout@v2
+        with:
+          repository: hyperledger/aries-mobile-test-harness
+          path: aries-mobile-test-harness
+          ref: main
+
       - name: Setup ubuntu
         run: |
           sudo apt-get --quiet update --yes
@@ -284,21 +292,6 @@ jobs:
         run: |
           for i in $(ls ../patch); do git apply ../patch/$i; done
 
-      # - name: Bump Build No.
-      #   working-directory: bifold/android/app
-      #   env: 
-      #     VERSION_CODE: ${GITHUB_RUN_NUMBER}
-      #     VERSION_NAME: "1.0.0"
-      #   run: |
-      #     cat build.gradle | \
-      #     sed 's/versionCode[[:space:]][0-9]\{1,\}/versionCode $VERSION_CODE/g' | \
-      #     envsubst >build.gradle.new && \
-      #     mv build.gradle.new build.gradle && \
-      #     cat build.gradle | \
-      #     sed 's/versionCode[[:space:]][0-9]\{1,\}/versionCode $VERSION_CODE/g' | \
-      #     envsubst >build.gradle.new && \
-      #     mv build.gradle.new build.gradle
-
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
@@ -318,16 +311,16 @@ jobs:
         run: |
           ./gradlew bundleRelease
 
-      - name: Ship to Google Play
-        working-directory: bifold/android
-        env:
-          GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
-          GOOGLE_API_CREDENTIALS: 'api_keys.json'
-          ANDROID_PACKAGE_NAME: 'ca.bc.gov.BCWallet'
-          ANDROID_BUNDLE_PATH: './app/build/outputs/bundle/release/app-release.aab'
-        run: |
-          echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          npx @bcgov/gpublish
+      # - name: Ship to Google Play
+      #   working-directory: bifold/android
+      #   env:
+      #     GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
+      #     GOOGLE_API_CREDENTIALS: 'api_keys.json'
+      #     ANDROID_PACKAGE_NAME: 'ca.bc.gov.BCWallet'
+      #     ANDROID_BUNDLE_PATH: './app/build/outputs/bundle/release/app-release.aab'
+      #   run: |
+      #     echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
+      #     npx @bcgov/gpublish
 
       - name: Ship to Saucelabs
         working-directory: bifold/android
@@ -341,3 +334,21 @@ jobs:
           --form "payload=@app/build/outputs/bundle/release/app-release.aab" \
           --form "name=AriesBifold-$GITHUB_RUN_NUMBER.aab" \
           --form "description=Android Bifold BC wallet app"
+
+      - name: Run Saucelabs smoke-test
+        uses: aries-mobile-test-harness/actions/run-test-harness
+        env: 
+          LEDGER_URL_CONFIG: "http://test.bcovrin.vonx.io"
+          REGION: "us-west-1"
+        with:
+          MOBILE_WALLET: "-w bc_wallet"
+          ISSUER_AGENT: "-i acapy-main"
+          VERIFIER_AGENT: "-i acapy-main"
+          DEVICE_CLOUD: "-d SauceLabs"
+          DEVICE_CLOUD_USER: ${{ secrets.SAUCE_USERNAME }}
+          DEVICE_CLOUD_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          MOBILE_PLATFORM: "-p Android"
+          APP_FILE_NAME:  AriesBifold-${{ github.RUN_NUMBER }}.aab
+          TEST_SCOPE: "-t @bc_wallet -t ~@wip"
+          REPORT_PROJECT: android-one-device-smoke
+        continue-on-error: true
