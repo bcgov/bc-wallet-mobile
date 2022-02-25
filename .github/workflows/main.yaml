@@ -336,7 +336,7 @@ jobs:
           --form "description=Android Bifold BC wallet app"
 
       - name: Run Saucelabs smoke-test
-        uses: aries-mobile-test-harness/actions/run-test-harness
+        uses: ./aries-mobile-test-harness/actions/run-test-harness
         env: 
           LEDGER_URL_CONFIG: "http://test.bcovrin.vonx.io"
           REGION: "us-west-1"
