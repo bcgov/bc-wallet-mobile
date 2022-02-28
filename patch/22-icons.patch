@@ -11369,23 +11369,23 @@ index fad41ad..ade2257 100644
 --- a/ios/Media.xcassets/AppIcon.appiconset/Contents.json
 +++ b/ios/Media.xcassets/AppIcon.appiconset/Contents.json
 @@ -31,7 +31,7 @@
-       "size" : "40x40"
+       "size": "40x40"
      },
      {
--      "filename" : "Icon-40@3x.png",
-+      "filename" : "Icon-40@2x-1.png",
-       "idiom" : "iphone",
-       "scale" : "3x",
-       "size" : "40x40"
+-      "filename": "Icon-40@3x.png",
++      "filename": "Icon-40@2x-1.png",
+       "idiom": "iphone",
+       "scale": "3x",
+       "size": "40x40"
 @@ -43,7 +43,7 @@
-       "size" : "60x60"
+       "size": "60x60"
      },
      {
--      "filename" : "Icon-60@3x-1.png",
-+      "filename" : "Icon-60@3x.png",
-       "idiom" : "iphone",
-       "scale" : "3x",
-       "size" : "60x60"
+-      "filename": "Icon-60@3x-1.png",
++      "filename": "Icon-60@3x.png",
+       "idiom": "iphone",
+       "scale": "3x",
+       "size": "60x60"
 diff --git a/ios/Media.xcassets/AppIcon.appiconset/Icon-20@2x.png b/ios/Media.xcassets/AppIcon.appiconset/Icon-20@2x.png
 index 8d36cd847d3a6034c804b85c93dc71421c6f8b2b..34a7d95a97c9862e0d1d2267ef5af3be8a796498 100644
 GIT binary patch
