@@ -333,7 +333,7 @@ jobs:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
           VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: "1.0.0"
+          VERSION_NAME: "1.0.1"
         run: |
           ./gradlew bundleRelease
 
