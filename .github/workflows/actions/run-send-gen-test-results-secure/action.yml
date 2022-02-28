@@ -28,7 +28,7 @@ runs:
       shell: bash
       env:
         NO_TTY: "1"
-      working-directory: test-harness
+      working-directory: aries-mobile-test-harness
 branding:
   icon: "mic"
   color: "purple"
