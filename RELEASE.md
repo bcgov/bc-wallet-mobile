@@ -4,9 +4,10 @@ v1.0.1
 Build #xx
 
 - Better align pager controls on tutorial screen;
-- Extract version number to Settings screen;
+- Extract version number to Settings screen #127;
 - Refactor credential attributes list items;
-- Align Android version to 1.0.1 (match iOS)
+- Align Android version to 1.0.1 (match iOS);
+- Adjust bottom margin for tutorial carousel pager controls #149.
 
 Build #96
 
