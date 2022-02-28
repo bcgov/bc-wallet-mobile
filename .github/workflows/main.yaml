@@ -353,3 +353,9 @@ jobs:
           TEST_SCOPE: "-t @bc_wallet -t ~@wip"
           REPORT_PROJECT: android-one-device-smoke
         continue-on-error: true
+      - name: Upload smoke-test results to Allure
+        uses: ./.github/workflows/actions/run-send-gen-test-results-secure
+        with:
+          REPORT_PROJECT: android-one-device-smoke 
+          ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
+          ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
