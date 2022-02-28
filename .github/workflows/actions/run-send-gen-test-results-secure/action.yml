@@ -24,11 +24,11 @@ runs:
   using: "composite"
   steps:
     - name: run-send-gen-test-results-secure
+      working-directory: aries-mobile-test-harness
       run: ./aries-mobile-tests/allure/send_results_secure.sh ${{ inputs.RESULTS_LOCATION }} ${{ inputs.ALLURE_SERVER }} -p ${{ inputs.REPORT_PROJECT }} ${{ inputs.ADMIN_USER }} ${{ inputs.ADMIN_PW }}
       shell: bash
       env:
         NO_TTY: "1"
-      working-directory: aries-mobile-test-harness
 branding:
   icon: "mic"
   color: "purple"
