@@ -56,15 +56,15 @@ runs:
   using: "composite"
   steps:
     - name: build-mobile-test-harness
+      working-directory: aries-mobile-test-harness
       run: ./manage build ${{ inputs.MOBILE_WALLET }} ${{ inputs.ISSUER_AGENT }} ${{ inputs.VERIFIER_AGENT }}
       shell: bash
-      working-directory: aries-mobile-test-harness
     - name: run-mobile-test-harness
+      working-directory: aries-mobile-test-harness
       run: PROJECT_ID=${{inputs.REPORT_PROJECT}} ./manage run ${{ inputs.DEVICE_CLOUD }} ${{ inputs.DEVICE_CLOUD_USER }} ${{ inputs.DEVICE_CLOUD_KEY }} ${{ inputs.REPORTING }} ${{ inputs.MOBILE_PLATFORM }} ${{ inputs.APP_FILE_NAME }} ${{ inputs.ISSUER_AGENT }} ${{ inputs.VERIFIER_AGENT }} ${{ inputs.OTHER_PARAMS }} ${{ inputs.TEST_SCOPE }}
       shell: bash
       env:
         NO_TTY: "1"
-      working-directory: aries-mobile-test-harness
 branding:
   icon: "mic"
   color: "purple"
