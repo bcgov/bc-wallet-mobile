@@ -32,6 +32,13 @@ jobs:
           path: bifold
           ref: main
 
+      - name: Fetch mobile test harness repo
+        uses: actions/checkout@v2
+        with:
+          repository: hyperledger/aries-mobile-test-harness
+          path: aries-mobile-test-harness
+          ref: main
+
       - name: What XCode are we using?
         run: |
           xcode-select -p 
