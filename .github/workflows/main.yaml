@@ -171,6 +171,7 @@ jobs:
           pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
+        if: ${{ false }}  # disable for now
         working-directory: bifold/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -305,6 +306,7 @@ jobs:
           ./gradlew bundleRelease
 
       - name: Ship to Google Play
+        if: ${{ false }}  # disable for now
         working-directory: bifold/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
