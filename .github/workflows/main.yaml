@@ -330,8 +330,8 @@ jobs:
           --form "name=AriesBifold-$GITHUB_RUN_NUMBER.aab" \
           --form "description=Android Bifold BC wallet app"
 
-  run-on-device-tests:
-    needs: [build-android, build-ios]
+  run-on-device-ios-tests:
+    needs: [build-ios]
     runs-on: ubuntu-latest
     steps:
       - name: Fetch mobile test harness repo
@@ -358,16 +358,25 @@ jobs:
           APP_FILE_NAME:  "-a AriesBifold-${{ github.run_number }}.ipa"
           TEST_SCOPE: "-t @bc_wallet -t ~@wip"
           REPORT_PROJECT: ios-one-device-smoke
-          RESULTS_LOCATION: allure-results-ios
         continue-on-error: true
 
       - name: Upload iOS smoke-test results to Allure
         uses: ./.github/workflows/actions/run-send-gen-test-results-secure
         with:
-          RESULTS_LOCATION: allure-results-ios
           REPORT_PROJECT: ios-one-device-smoke 
           ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
           ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
+
+  run-on-device-android-tests:
+    needs: [build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch mobile test harness repo
+        uses: actions/checkout@v2
+        with:
+          repository: hyperledger/aries-mobile-test-harness
+          path: aries-mobile-test-harness
+          ref: main
 
       - name: Run Android SauceLabs smoke-test
         timeout-minutes: 60
@@ -386,13 +395,11 @@ jobs:
           APP_FILE_NAME:  "-a AriesBifold-${{ github.run_number }}.aab"
           TEST_SCOPE: "-t @bc_wallet -t ~@wip"
           REPORT_PROJECT: android-one-device-smoke
-          RESULTS_LOCATION: allure-results-android
         continue-on-error: true
 
       - name: Upload Android smoke-test results to Allure
         uses: ./.github/workflows/actions/run-send-gen-test-results-secure
         with:
-          RESULTS_LOCATION: allure-results-android
           REPORT_PROJECT: android-one-device-smoke 
           ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
           ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
