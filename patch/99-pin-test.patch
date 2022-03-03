@@ -1,0 +1,26 @@
+diff --git a/App/screens/PinCreate.tsx b/App/screens/PinCreate.tsx
+index 57e91c0..82a4cd6 100644
+--- a/App/screens/PinCreate.tsx
++++ b/App/screens/PinCreate.tsx
+@@ -60,10 +60,10 @@ const PinCreate: React.FC<PinCreateProps> = ({ setAuthenticated }) => {
+     <SafeAreaView style={[style.container]}>
+       <TextInput
+         label={t('Global.EnterPin')}
++        accessible={true}
++        accessibilityLabel={`${t('Global.EnterPin')}X`}
+         placeholder={t('Global.6DigitPin')}
+         placeholderTextColor={Colors.lightGrey}
+-        accessible={true}
+-        accessibilityLabel={t('Global.EnterPin')}
+         maxLength={6}
+         autoFocus
+         keyboardType="numeric"
+@@ -74,7 +74,7 @@ const PinCreate: React.FC<PinCreateProps> = ({ setAuthenticated }) => {
+       <TextInput
+         label={t('PinCreate.ReenterPin')}
+         accessible={true}
+-        accessibilityLabel={t('PinCreate.ReenterPin')}
++        accessibilityLabel={`${t('PinCreate.ReenterPin')}X`}
+         placeholder={t('Global.6DigitPin')}
+         placeholderTextColor={Colors.lightGrey}
+         maxLength={6}
