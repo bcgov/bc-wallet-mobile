@@ -1,6 +1,22 @@
 
 v1.0.1
 
+Build #117
+
+- Base security updates (from Ontario);
+- Remove toast from scan connection success #201;
+- Remove extra buttons from cred #182;
+- Fix partially obscured buttons #195;
+- Locks orientation in portrait mode;
+- Invalid QR code no longer displays connection modal #177;
+- Improves colour contrast for error message on scan screen #178;
+- Accepting a credential offer will navigate to credential list only #180;
+- Notification body better aligned to designs #175;
+- The number of credentials in the wallet needs to be in bold #175;
+- The 'See all' link should be hidden for just one notification #175;
+- Fix notifications list screen title #175;
+- The notification list screen needs the back button implemented #175.
+
 Build #114
 
 - Better align pager controls on tutorial screen #149;
