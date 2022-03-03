@@ -333,6 +333,7 @@ jobs:
   run-on-device-ios-tests:
     needs: [build-ios]
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Fetch mobile test harness repo
         uses: actions/checkout@v2
@@ -342,7 +343,6 @@ jobs:
           ref: main
 
       - name: Run iOS SauceLabs smoke-test
-        timeout-minutes: 60
         uses: ./.github/workflows/actions/run-test-harness
         env: 
           LEDGER_URL_CONFIG: "http://test.bcovrin.vonx.io"
@@ -370,6 +370,7 @@ jobs:
   run-on-device-android-tests:
     needs: [build-android]
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - name: Fetch mobile test harness repo
         uses: actions/checkout@v2
@@ -379,7 +380,6 @@ jobs:
           ref: main
 
       - name: Run Android SauceLabs smoke-test
-        timeout-minutes: 60
         uses: ./.github/workflows/actions/run-test-harness
         env: 
           LEDGER_URL_CONFIG: "http://test.bcovrin.vonx.io"
