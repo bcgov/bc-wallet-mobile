@@ -171,7 +171,6 @@ jobs:
           pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
-        if: ${{ false }}  # disable for now
         working-directory: bifold/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
