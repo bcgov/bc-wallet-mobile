@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #122
+Build #123
 
 - Use BCGov hosted mediator (agent);
 - Align proof request mechanics to the rest of the app;
