@@ -244,7 +244,7 @@ index 2982671..c76c747 100644
 +  </g>
 +</svg>
 diff --git a/App/screens/OnboardingPages.tsx b/App/screens/OnboardingPages.tsx
-index 808d296..e5fac0e 100644
+index 808d296..2257d3b 100644
 --- a/App/screens/OnboardingPages.tsx
 +++ b/App/screens/OnboardingPages.tsx
 @@ -9,8 +9,7 @@ import { Colors } from '../theme'
@@ -266,7 +266,7 @@ index 808d296..e5fac0e 100644
    },
    pagerDot: {
      borderWidth: 1,
-@@ -76,20 +75,49 @@ const defaultStyle = StyleSheet.create({
+@@ -76,22 +75,51 @@ const defaultStyle = StyleSheet.create({
    },
  })
  
@@ -317,10 +317,13 @@ index 808d296..e5fac0e 100644
 +        </TouchableOpacity>
 +        <Icon name={'open-in-new'} size={14} color={Colors.text} style={{ marginLeft: 5 }} />
 +      </View> */}
-+      <View style={{ marginTop: 'auto', marginBottom: 20, marginLeft: 20, marginRight: 20 }}>
++      <View style={{ marginTop: 'auto', marginBottom: 45, marginLeft: 20, marginRight: 20 }}>
          <Button
-           title={'Get Started!'}
+-          title={'Get Started!'}
++          title={'Get Started'}
            accessibilityLabel={'Get Started'}
+           onPress={onTutorialCompleted}
+           buttonType={ButtonType.Primary}
 @@ -104,13 +132,13 @@ const customPages = (onTutorialCompleted: GenericFn) => {
  const guides: Array<{ image: React.FC<SvgProps>; title: string; body: string }> = [
    {
