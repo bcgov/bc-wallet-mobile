@@ -350,8 +350,8 @@ jobs:
           REGION: "us-west-1"
         with:
           MOBILE_WALLET: "-w bc_wallet"
-          ISSUER_AGENT: "-i acapy-main"
-          VERIFIER_AGENT: "-v acapy-main"
+          ISSUER_AGENTS: "-i acapy-main"
+          VERIFIER_AGENTS: "-v acapy-main"
           DEVICE_CLOUD: "-d SauceLabs"
           DEVICE_CLOUD_USER: "-u ${{ secrets.SAUCE_USERNAME }}"
           DEVICE_CLOUD_KEY: "-k ${{ secrets.SAUCE_ACCESS_KEY }}"
@@ -389,8 +389,8 @@ jobs:
           REGION: "us-west-1"
         with:
           MOBILE_WALLET: "-w bc_wallet"
-          ISSUER_AGENT: "-i acapy-main"
-          VERIFIER_AGENT: "-v acapy-main"
+          ISSUER_AGENTS: "-i acapy-main"
+          VERIFIER_AGENTS: "-v acapy-main"
           DEVICE_CLOUD: "-d SauceLabs"
           DEVICE_CLOUD_USER: "-u ${{ secrets.SAUCE_USERNAME }}"
           DEVICE_CLOUD_KEY: "-k ${{ secrets.SAUCE_ACCESS_KEY }}"
