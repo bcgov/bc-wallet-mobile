@@ -1,13 +1,14 @@
 
 v1.0.1
 
-Build #123
+Build #125
 
 - Use BCGov hosted mediator (agent);
 - Align proof request mechanics to the rest of the app;
 - Use error modal as needed in proof requests;
 - Clean up navigation stacks/screens and naming;
-- Numerous UI/UX fixes to on-boarding tutorial #173.
+- Numerous UI/UX fixes to on-boarding tutorial #173;
+- Add and use BCSans font #171.
 
 Build #117
 
