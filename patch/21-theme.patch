@@ -1,8 +1,8 @@
 diff --git a/App/theme.ts b/App/theme.ts
-index 57b55ed..4223184 100644
+index 0e41219..1af9f15 100644
 --- a/App/theme.ts
 +++ b/App/theme.ts
-@@ -74,11 +74,11 @@ export const zeroOpacity = 0.0
+@@ -75,11 +75,11 @@ export const zeroOpacity = 0.0
  export const borderWidth = 2
  
  const BrandColors: BrandColors = {
@@ -18,7 +18,7 @@ index 57b55ed..4223184 100644
  }
  
  const SemanticColors: SemanticColors = {
-@@ -88,22 +88,22 @@ const SemanticColors: SemanticColors = {
+@@ -89,22 +89,22 @@ const SemanticColors: SemanticColors = {
  }
  
  const NotificationColors: NotificationColors = {
@@ -57,7 +57,7 @@ index 57b55ed..4223184 100644
  }
  
  const GrayscaleColors: GrayscaleColors = {
-@@ -192,40 +192,40 @@ interface TextBoxTheme {
+@@ -193,76 +193,83 @@ interface TextBoxTheme {
  }
  
  export const Colors: ColorTheme = {
@@ -111,7 +111,50 @@ index 57b55ed..4223184 100644
    border: Colors.borderLight,
    text: Colors.text,
  }
-@@ -277,7 +277,7 @@ export const Buttons = StyleSheet.create({
+ 
+ export const TextTheme: TextTheme = {
+   headingOne: {
++    fontFamily: 'BCSans-Regular',
+     fontSize: 38,
+     fontWeight: 'bold',
+     color: Colors.text,
+   },
+   headingTwo: {
++    fontFamily: 'BCSans-Regular',
+     fontSize: 32,
+     fontWeight: 'bold',
+     color: Colors.text,
+   },
+   headingThree: {
++    fontFamily: 'BCSans-Regular',
+     fontSize: 26,
+     fontWeight: 'bold',
+     color: Colors.text,
+   },
+   headingFour: {
++    fontFamily: 'BCSans-Regular',
+     fontSize: 21,
+     fontWeight: 'bold',
+     color: Colors.text,
+   },
+   normal: {
++    fontFamily: 'BCSans-Regular',
+     fontSize: 18,
+     fontWeight: 'normal',
+     color: Colors.text,
+   },
+   label: {
++    fontFamily: 'BCSans-Regular',
+     fontSize: 14,
+     fontWeight: 'bold',
+     color: Colors.text,
+   },
+   caption: {
++    fontFamily: 'BCSans-Regular',
+     fontSize: 14,
+     fontWeight: 'normal',
+     color: Colors.text,
+@@ -278,7 +285,7 @@ export const Buttons = StyleSheet.create({
    primaryDisabled: {
      padding: 16,
      borderRadius: 4,
@@ -120,7 +163,7 @@ index 57b55ed..4223184 100644
    },
    primaryText: {
      ...TextTheme.normal,
-@@ -301,7 +301,7 @@ export const Buttons = StyleSheet.create({
+@@ -302,7 +309,7 @@ export const Buttons = StyleSheet.create({
      padding: 16,
      borderRadius: 4,
      borderWidth: 2,
@@ -129,7 +172,7 @@ index 57b55ed..4223184 100644
    },
    secondaryText: {
      ...TextTheme.normal,
-@@ -312,7 +312,7 @@ export const Buttons = StyleSheet.create({
+@@ -313,7 +320,7 @@ export const Buttons = StyleSheet.create({
    secondaryTextDisabled: {
      ...TextTheme.normal,
      fontWeight: 'bold',
