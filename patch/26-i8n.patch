@@ -1,0 +1,13 @@
+diff --git a/App/localization/en/index.ts b/App/localization/en/index.ts
+index a93083f..9e18dda 100644
+--- a/App/localization/en/index.ts
++++ b/App/localization/en/index.ts
+@@ -157,7 +157,7 @@ const translation = {
+     "HideAll": "Hide all"
+   },
+   "Screens": {
+-    "Onboarding": "Onboarding",
++    "Onboarding": "BC Wallet",
+     "Terms": "Terms & Conditions"
+   }
+ }
