@@ -305,7 +305,6 @@ jobs:
           ./gradlew bundleRelease
 
       - name: Ship to Google Play
-        if: ${{ false }}  # disable for now
         working-directory: bifold/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
