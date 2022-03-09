@@ -1,13 +1,13 @@
 
 v1.0.1
 
-Build #1xx
+Build #122
 
 - Use BCGov hosted mediator (agent);
-- Alight proof request mechanics to the rest of the app;
+- Align proof request mechanics to the rest of the app;
 - Use error modal as needed in proof requests;
-- Clean up navigation stacks/screens and naming
-- Numerous UI/UX fixes to on-boarding tutorial #173;
+- Clean up navigation stacks/screens and naming;
+- Numerous UI/UX fixes to on-boarding tutorial #173.
 
 Build #117
 
