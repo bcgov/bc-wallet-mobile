@@ -1,6 +1,10 @@
 
 v1.0.1
 
+Build #1xx
+
+- Fixed missing storage key and erroneous imports #245;
+
 Build #127
 
 - Fix header "Skip" button color #214;
