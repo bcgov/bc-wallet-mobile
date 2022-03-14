@@ -244,20 +244,10 @@ index 2982671..c76c747 100644
 +  </g>
 +</svg>
 diff --git a/App/screens/OnboardingPages.tsx b/App/screens/OnboardingPages.tsx
-index 808d296..2257d3b 100644
+index 4998645..3c74110 100644
 --- a/App/screens/OnboardingPages.tsx
 +++ b/App/screens/OnboardingPages.tsx
-@@ -9,8 +9,7 @@ import { Colors } from '../theme'
- 
- import { OnboardingStyleSheet } from './Onboarding'
- 
--import { Button } from 'components'
--import { ButtonType } from 'components/buttons/Button'
-+import Button, { ButtonType } from '../components/buttons/Button'
- import { GenericFn } from 'types/fn'
- 
- const imageDisplayOptions = {
-@@ -33,7 +32,7 @@ export const carousel: OnboardingStyleSheet = StyleSheet.create({
+@@ -32,7 +32,7 @@ export const carousel: OnboardingStyleSheet = StyleSheet.create({
      flexShrink: 2,
      flexDirection: 'row',
      alignItems: 'center',
@@ -266,27 +256,11 @@ index 808d296..2257d3b 100644
    },
    pagerDot: {
      borderWidth: 1,
-@@ -76,22 +75,51 @@ const defaultStyle = StyleSheet.create({
+@@ -75,20 +75,33 @@ const defaultStyle = StyleSheet.create({
    },
  })
  
 -const customPages = (onTutorialCompleted: GenericFn) => {
-+const startPages = (
-+  <>
-+    <Text style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}>Welcome</Text>
-+    <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 35, marginRight: 20 }]}>
-+      BC Wallet is a secure, private and easy way to prove your identity online and in person.
-+    </Text>
-+    <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
-+      You add your digital cards and documents and use them to gain access to online services, and experience faster
-+      service processing.
-+    </Text>
-+    <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
-+      With BC Wallet, you own your data. You retain full control and share only what is needed.{' '}
-+    </Text>
-+  </>
-+)
-+
 +const endPage = (onTutorialCompleted: GenericFn) => {
    return (
      <>
@@ -304,27 +278,43 @@ index 808d296..2257d3b 100644
          </Text>
        </View>
 -      <View style={{ marginTop: 'auto', marginBottom: 20, paddingHorizontal: 20 }}>
-+      {/* <View style={[defaultStyle.point, { marginTop: 60 }]}>
-+        <Icon name={'info'} size={30} color={Colors.text} style={{ marginRight: 5 }} />
-+        <TouchableOpacity
-+          accessibilityLabel={'Learn More'}
-+          accessible
-+          onPress={() => Linking.openURL('https://example.com/')}
-+        >
-+          <Text style={[defaultStyle.bodyText, { color: 'blue', textDecorationLine: 'underline' }]}>
-+            Learn more about the BC Wallet
-+          </Text>
-+        </TouchableOpacity>
-+        <Icon name={'open-in-new'} size={14} color={Colors.text} style={{ marginLeft: 5 }} />
-+      </View> */}
 +      <View style={{ marginTop: 'auto', marginBottom: 45, marginLeft: 20, marginRight: 20 }}>
++        {/* <View style={[defaultStyle.point, { marginTop: 60 }]}>
++          <Icon name={'info'} size={30} color={Colors.text} style={{ marginRight: 5 }} />
++          <TouchableOpacity
++            accessibilityLabel={'Learn More'}
++            accessible
++            onPress={() => Linking.openURL('https://example.com/')}
++          >
++            <Text style={[defaultStyle.bodyText, { color: 'blue', textDecorationLine: 'underline' }]}>
++              Learn more about the BC Wallet
++            </Text>
++          </TouchableOpacity>
++          <Icon name={'open-in-new'} size={14} color={Colors.text} style={{ marginLeft: 5 }} />
++        </View> */}
          <Button
--          title={'Get Started!'}
-+          title={'Get Started'}
+           title={'Get Started'}
            accessibilityLabel={'Get Started'}
-           onPress={onTutorialCompleted}
-           buttonType={ButtonType.Primary}
-@@ -104,13 +132,13 @@ const customPages = (onTutorialCompleted: GenericFn) => {
+@@ -101,16 +114,32 @@ const customPages = (onTutorialCompleted: GenericFn) => {
+   )
+ }
+ 
++const startPages = (
++  <>
++    <Text style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}>Welcome</Text>
++    <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 35, marginRight: 20 }]}>
++      BC Wallet is a secure, private and easy way to prove your identity online and in person.
++    </Text>
++    <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
++      You add your digital cards and documents and use them to gain access to online services, and experience faster
++      service processing.
++    </Text>
++    <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
++      With BC Wallet, you own your data. You retain full control and share only what is needed.{' '}
++    </Text>
++  </>
++)
++
  const guides: Array<{ image: React.FC<SvgProps>; title: string; body: string }> = [
    {
      image: CredentialList,
@@ -342,7 +332,7 @@ index 808d296..2257d3b 100644
    },
  ]
  
-@@ -127,5 +155,5 @@ const createPageWith = (image: React.FC<SvgProps>, title: string, body: string)
+@@ -127,5 +156,5 @@ const createPageWith = (image: React.FC<SvgProps>, title: string, body: string)
  }
  
  export const pages = (onTutorialCompleted: GenericFn): Array<Element> => {
