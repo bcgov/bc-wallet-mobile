@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #126
+Build #127
 
 - Fix header "Skip" button color #214;
 - Add testID to improve testability #216.
