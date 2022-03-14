@@ -1,6 +1,11 @@
 
 v1.0.1
 
+Build #126
+
+- Fix header "Skip" button color #214;
+- Add testID to improve testability #216.
+
 Build #125
 
 - Use BCGov hosted mediator (agent);
