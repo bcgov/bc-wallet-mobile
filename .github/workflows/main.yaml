@@ -199,6 +199,7 @@ jobs:
           --form "description=iOS BC Wallet app"
 
   build-android:
+    # if: ${{ false }}  # disable for now
     runs-on: ubuntu-latest
     strategy:
       matrix:
