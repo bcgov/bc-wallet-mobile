@@ -3,7 +3,7 @@ v1.0.1
 
 Build #1xx
 
-- Fixed missing storage key and erroneous imports #245;
+- Fixed missing storage key and erroneous imports #230;
 
 Build #127
 
