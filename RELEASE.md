@@ -8,7 +8,10 @@ Build #1xx
 Build #127
 
 - Fix header "Skip" button color #214;
-- Add testID to improve testability #216.
+- Add testID to improve testability #216;
+- Adds revoked status to credential attributes during presentation request #64;
+- Removes botton tab navigation from credential offer and proof request screens #210;
+- More UI/UX fixes to the notification modals;
 
 Build #125
 
