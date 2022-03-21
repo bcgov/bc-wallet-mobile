@@ -57,7 +57,7 @@ runs:
   steps:
     - name: build-mobile-test-harness
       working-directory: aries-mobile-test-harness
-      run: ./manage build ${{ inputs.MOBILE_WALLET }} ${{ inputs.ISSUER_AGENT }} ${{ inputs.VERIFIER_AGENT }}
+      run: ./manage build ${{ inputs.MOBILE_WALLET }}
       shell: bash
     - name: run-mobile-test-harness
       working-directory: aries-mobile-test-harness
