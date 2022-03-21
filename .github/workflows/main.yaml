@@ -352,8 +352,8 @@ jobs:
           REGION: "us-west-1"
         with:
           MOBILE_WALLET: "-w bc_wallet"
-          ISSUER_AGENTS: "-i AATH;http://0.0.0.0:9020"
-          VERIFIER_AGENTS: "-v AATH;http://0.0.0.0:9030"
+          ISSUER_AGENT: '-i "AATH;http://0.0.0.0:9020"'
+          VERIFIER_AGENT: '-v "AATH;http://0.0.0.0:9030"'
           DEVICE_CLOUD: "-d SauceLabs"
           DEVICE_CLOUD_USER: "-u ${{ secrets.SAUCE_USERNAME }}"
           DEVICE_CLOUD_KEY: "-k ${{ secrets.SAUCE_ACCESS_KEY }}"
@@ -394,8 +394,8 @@ jobs:
           REGION: "us-west-1"
         with:
           MOBILE_WALLET: "-w bc_wallet"
-          ISSUER_AGENTS: "-i AATH;http://0.0.0.0:9020"
-          VERIFIER_AGENTS: "-v AATH;http://0.0.0.0:9020"
+          ISSUER_AGENT: '-i "AATH;http://0.0.0.0:9020"'
+          VERIFIER_AGENT: '-v "AATH;http://0.0.0.0:9020"'
           DEVICE_CLOUD: "-d SauceLabs"
           DEVICE_CLOUD_USER: "-u ${{ secrets.SAUCE_USERNAME }}"
           DEVICE_CLOUD_KEY: "-k ${{ secrets.SAUCE_ACCESS_KEY }}"
