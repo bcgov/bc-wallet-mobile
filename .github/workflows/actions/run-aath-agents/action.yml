@@ -1,0 +1,45 @@
+name: "Run aath-agents"
+ description: "Build and run aries agent test harness agents"
+ author: "sheldon.regular@gmail.com"
+ inputs:
+   BUILD_AGENTS:
+     description: "Agent Frameworks to build"
+     required: true
+     default: "-a acapy-main"
+   TEST_AGENTS:
+     description: "Agent Frameworks to run"
+     required: true
+     default: "-a acapy-main -b acapy-main"
+   LEDGER_URL_CONFIG:
+     description: "Ledger to use"
+     required: true
+     default: "http://test.bcovrin.vonx.io"
+   TAILS_SERVER_URL_CONFIG:
+     description: "Tails Server to use"
+     required: true
+     default: "https://tails.vonx.io"
+   AGENT_CONFIG_FILE:
+     description: "Customized agent args to use"
+     required: true
+     default: "/aries-backchannels/acapy/auto_issuer_config.yaml"
+   USE_NGROK:
+     description: "Use NGROK Tunnel"
+     required: false
+     default: "-n"
+ runs:
+   using: "composite"
+   steps:
+     - name: checkout-aath
+       run: git clone https://github.com/hyperledger/aries-agent-test-harness.git
+       shell: bash
+     - name: build-aath-agents
+       run: ./manage build ${{ inputs.BUILD_AGENTS }}
+       shell: bash
+       working-directory: aries-agent-test-harness
+     - name: run-aath-agents
+       run: LEDGER_URL_CONFIG=${{inputs.LEDGER_URL_CONFIG}} TAILS_SERVER_URL_CONFIG=${{inputs.TAILS_SERVER_URL_CONFIG}} AGENT_CONFIG_FILE=${{inputs.AGENT_CONFIG_FILE}} ./manage start ${{inputs.TEST_AGENTS}} ${{inputs.USE_NGROK}}
+       shell: bash
+       working-directory: aries-agent-test-harness
+ branding:
+   icon: "cloud-lightning"
+   color: "blue" 
