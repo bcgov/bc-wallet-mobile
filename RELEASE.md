@@ -3,6 +3,11 @@ v1.0.1
 
 Build #1xx
 
+- Fixes early notifcation modal display on various intermediate screens #253;
+
+
+Build #130
+
 - Fixed missing storage key and erroneous imports #230;
 - Adds revoked status to credential attributes during presentation request #64;
 - Removes botton tab navigation from credential offer and proof request screens #210;
