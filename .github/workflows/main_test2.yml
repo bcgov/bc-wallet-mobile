@@ -6,8 +6,10 @@ on:
 jobs:
   run-on-device-ios-tests:
     runs-on: ubuntu-latest
-    concurrency: wallet-test-ci
-    timeout-minutes: 60
+    concurrency: 
+      group: wallet-test-ci
+      cancel-in-progress: true
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v2
 
@@ -48,8 +50,10 @@ jobs:
 
   run-on-device-android-tests:
     runs-on: ubuntu-latest
-    concurrency: wallet-test-ci
-    timeout-minutes: 60
+    concurrency: 
+      group: wallet-test-ci
+      cancel-in-progress: true
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v2
 
