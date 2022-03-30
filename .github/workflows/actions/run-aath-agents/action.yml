@@ -40,6 +40,10 @@ runs:
       run: LEDGER_URL_CONFIG=${{inputs.LEDGER_URL_CONFIG}} TAILS_SERVER_URL_CONFIG=${{inputs.TAILS_SERVER_URL_CONFIG}} AGENT_CONFIG_FILE=${{inputs.AGENT_CONFIG_FILE}} ./manage start ${{inputs.TEST_AGENTS}} ${{inputs.USE_NGROK}}
       shell: bash
       working-directory: aries-agent-test-harness
+    - name: shut-down-uniresolver
+      run: ./manage service stop uniresolver
+      shell: bash
+      working-directory: aries-agent-test-harness
 branding:
   icon: "cloud-lightning"
   color: "blue"
