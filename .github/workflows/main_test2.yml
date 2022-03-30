@@ -6,6 +6,7 @@ on:
 jobs:
   run-on-device-ios-tests:
     runs-on: ubuntu-latest
+    concurrency: wallet-test-ci-${{ github.ref }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
@@ -47,6 +48,7 @@ jobs:
 
   run-on-device-android-tests:
     runs-on: ubuntu-latest
+    concurrency: wallet-test-ci-${{ github.ref }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
