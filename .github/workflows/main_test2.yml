@@ -10,13 +10,13 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mobile-platform: ["-p iOS", "-p Android"]
-        app-file-name:
-          [
-            "-a AriesBifold-${{ github.run_number }}.ipa",
-            "-a AriesBifold-${{ github.run_number }}.aab",
-          ]
-        report-project: [ios-one-device-smoke, android-one-device-smoke]
+        include:
+          - mobile-platform: "-p Android"
+            app-file-name: "-a AriesBifold-134.aab"
+            report-project: "ios-one-device-smoke"
+          - mobile-platform: "-p iOS"
+            app-file-name: "-a AriesBifold-134.ipa"
+            report-project: "android-one-device-smoke"
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
