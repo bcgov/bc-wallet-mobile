@@ -13,10 +13,10 @@ jobs:
         include:
           - mobile-platform: "-p Android"
             app-file-name: "-a AriesBifold-134.aab"
-            report-project: "ios-one-device-smoke"
+            report-project: "android-one-device-smoke"
           - mobile-platform: "-p iOS"
             app-file-name: "-a AriesBifold-134.ipa"
-            report-project: "android-one-device-smoke"
+            report-project: "ios-one-device-smoke"
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
@@ -45,7 +45,7 @@ jobs:
           DEVICE_CLOUD_KEY: "-k ${{ secrets.SAUCE_ACCESS_KEY }}"
           MOBILE_PLATFORM: ${{ matrix.mobile-platform }}
           APP_FILE_NAME: ${{ matrix.app-file-name }}
-          TEST_SCOPE: "-t @bc_wallet -t ~@wip"
+          TEST_SCOPE: "-t @bc_wallet -t @T002-CredentialOffer"
           REPORT_PROJECT: ${{ matrix.report-project }}
         continue-on-error: true
 
