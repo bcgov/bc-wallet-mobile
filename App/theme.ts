@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native'
+import { Theme } from 'aries-bifold'
 
 interface FontAttributes {
   fontFamily?: string
@@ -220,3 +221,14 @@ export const Buttons = StyleSheet.create({
     textAlign: 'center',
   },
 })
+
+
+
+export const defaultTheme: Theme = {
+  ColorPallet,
+  TextTheme,
+  Buttons,
+  heavyOpacity,
+  borderRadius,
+  borderWidth
+}

@@ -7,7 +7,6 @@ import {
   ErrorModal,
   StoreProvider,
   ThemeProvider,
-  defaultTheme as theme,
   ConfigurationContext,
   ConfigurationProvider,
   initLanguages,
@@ -22,6 +21,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import _merge from 'lodash.merge'
 import en from './localization/en'
+import { defaultTheme as theme} from './theme'
 
 const translationResources = _merge({}, defaultTranslationResources, {en:{translation:en}})
 initLanguages(translationResources)
