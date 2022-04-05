@@ -5,12 +5,11 @@ import React, { useContext, useMemo } from 'react'
 import { Image, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { LocalStorageKeys } from '../constants'
-import { Context } from '../store/Store'
-import { DispatchAction } from '../store/reducer'
+import { LocalStorageKeys, StoreContext } from 'aries-bifold'
+import { DispatchAction } from 'aries-bifold'
 import { ColorPallet } from '../theme'
-import { AuthenticateStackParams, Screens } from '../types/navigators'
-import { Onboarding } from '../types/state'
+import { AuthenticateStackParams, Screens } from 'aries-bifold'
+import { OnboardingState } from 'aries-bifold'
 
 const styles = StyleSheet.create({
   container: {
@@ -21,11 +20,11 @@ const styles = StyleSheet.create({
   },
 })
 
-const onboardingComplete = (state: Onboarding): boolean => {
+const onboardingComplete = (state: OnboardingState): boolean => {
   return state.DidCompleteTutorial && state.DidAgreeToTerms && state.DidCreatePIN
 }
 
-const resumeOnboardingAt = (state: Onboarding): Screens => {
+const resumeOnboardingAt = (state: OnboardingState): Screens => {
   if (state.DidCompleteTutorial && state.DidAgreeToTerms && !state.DidCreatePIN) {
     return Screens.CreatePin
   }
@@ -43,7 +42,7 @@ const resumeOnboardingAt = (state: Onboarding): Screens => {
 */
 
 const Splash: React.FC = () => {
-  const [, dispatch] = useContext(Context)
+  const [, dispatch] = useContext(StoreContext)
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
 
   useMemo(() => {
@@ -53,7 +52,7 @@ const Splash: React.FC = () => {
         const data = await AsyncStorage.getItem(LocalStorageKeys.Onboarding)
 
         if (data) {
-          const dataAsJSON = JSON.parse(data) as Onboarding
+          const dataAsJSON = JSON.parse(data) as OnboardingState
           dispatch({ type: DispatchAction.SetOnboardingState, payload: [dataAsJSON] })
 
           if (onboardingComplete(dataAsJSON)) {

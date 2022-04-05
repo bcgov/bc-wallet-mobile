@@ -139,8 +139,8 @@ android {
         applicationId "ca.bc.gov.BCWallet"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 0
-        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "0.0.0"
+        versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1
+        versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "0.0.1"
 
 
         missingDimensionStrategy 'react-native-camera', 'general'

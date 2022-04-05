@@ -5,77 +5,18 @@ import { SvgProps } from 'react-native-svg'
 import CredentialList from '../assets/img/credential-list.svg'
 import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'
-import Button, { ButtonType } from '../components/buttons/Button'
-import { ColorPallet } from '../theme'
-import { GenericFn } from '../types/fn'
-import { testIdWithKey } from '../utils/testable'
+import {Button,  ButtonType, Theme, createOnboardingPagesStye } from 'aries-bifold'
+import { GenericFn } from 'aries-bifold'
+import { testIdWithKey } from 'aries-bifold'
 
-import { OnboardingStyleSheet } from './Onboarding'
 
-const imageDisplayOptions = {
-  fill: ColorPallet.notification.infoText,
-  height: 180,
-  width: 180,
-}
-
-export const carousel: OnboardingStyleSheet = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: ColorPallet.brand.primaryBackground,
-  },
-  carouselContainer: {
-    flexDirection: 'column',
-    backgroundColor: ColorPallet.brand.primaryBackground,
-  },
-  pagerContainer: {
-    flexShrink: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 60,
-  },
-  pagerDot: {
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: ColorPallet.brand.primary,
-  },
-  pagerPosition: {
-    position: 'relative',
-    top: 0,
-  },
-  pagerNavigationButton: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: ColorPallet.brand.primary,
-  },
-})
-
-const defaultStyle = StyleSheet.create({
-  headerText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: ColorPallet.notification.infoText,
-  },
-  bodyText: {
-    flexShrink: 1,
-    fontSize: 18,
-    fontWeight: 'normal',
-    color: ColorPallet.notification.infoText,
-  },
-  point: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 20,
-    marginTop: 10,
-    marginRight: 20,
-    marginBottom: 10,
-  },
-  icon: {
-    marginRight: 10,
-  },
-})
-
-const endPage = (onTutorialCompleted: GenericFn) => {
+const endPage = (onTutorialCompleted: GenericFn, theme: Theme) => {
+  const defaultStyle = createOnboardingPagesStye(theme)
+  const imageDisplayOptions = {
+    fill: theme.ColorPallet.notification.infoText,
+    height: 180,
+    width: 180,
+  }
   return (
     <>
       <View style={{ alignItems: 'center' }}>
@@ -114,7 +55,9 @@ const endPage = (onTutorialCompleted: GenericFn) => {
   )
 }
 
-const startPages = (
+const startPages = (theme: Theme) => {
+  const defaultStyle = createOnboardingPagesStye(theme)
+  return (
   <>
     <Text style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}>Welcome</Text>
     <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 35, marginRight: 20 }]}>
@@ -127,8 +70,8 @@ const startPages = (
     <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
       With BC Wallet, you own your data. You retain full control and share only what is needed.{' '}
     </Text>
-  </>
-)
+  </>)
+}
 
 const guides: Array<{ image: React.FC<SvgProps>; title: string; body: string }> = [
   {
@@ -143,7 +86,13 @@ const guides: Array<{ image: React.FC<SvgProps>; title: string; body: string }> 
   },
 ]
 
-const createPageWith = (image: React.FC<SvgProps>, title: string, body: string) => {
+const createPageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: Theme) => {
+  const defaultStyle = createOnboardingPagesStye(theme)
+  const imageDisplayOptions = {
+    fill: theme.ColorPallet.notification.infoText,
+    height: 180,
+    width: 180,
+  }
   return (
     <>
       <View style={{ alignItems: 'center' }}>{image(imageDisplayOptions)}</View>
@@ -155,6 +104,6 @@ const createPageWith = (image: React.FC<SvgProps>, title: string, body: string) 
   )
 }
 
-export const pages = (onTutorialCompleted: GenericFn): Array<Element> => {
-  return [startPages, ...guides.map((g) => createPageWith(g.image, g.title, g.body)), endPage(onTutorialCompleted)]
+export const pages = (onTutorialCompleted: GenericFn, theme: Theme): Array<Element> => {
+  return [startPages(theme), ...guides.map((g) => createPageWith(g.image, g.title, g.body, theme)), endPage(onTutorialCompleted, theme)]
 }

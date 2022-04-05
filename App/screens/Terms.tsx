@@ -5,15 +5,14 @@ import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import Button, { ButtonType } from '../components/buttons/Button'
-import CheckBoxRow from '../components/inputs/CheckBoxRow'
-import HighlightTextBox from '../components/texts/HighlightTextBox'
-import InfoTextBox from '../components/texts/InfoTextBox'
-import { Context } from '../store/Store'
-import { DispatchAction } from '../store/reducer'
+import { Button, ButtonType } from 'aries-bifold'
+import { CheckBoxRow } from 'aries-bifold'
+import { InfoTextBox } from 'aries-bifold'
+import { StoreContext } from 'aries-bifold'
+import { DispatchAction } from 'aries-bifold'
 import { ColorPallet, TextTheme } from '../theme'
-import { AuthenticateStackParams, Screens } from '../types/navigators'
-import { testIdWithKey } from '../utils/testable'
+import { AuthenticateStackParams, Screens } from 'aries-bifold'
+import { testIdWithKey } from 'aries-bifold'
 
 const style = StyleSheet.create({
   container: {
@@ -30,7 +29,7 @@ const style = StyleSheet.create({
 })
 
 const Terms: React.FC = () => {
-  const [, dispatch] = useContext(Context)
+  const [, dispatch] = useContext(StoreContext)
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
