@@ -18,3 +18,4 @@ api*.json
 
 # Other
 node_modules/
+android/.gradle/
