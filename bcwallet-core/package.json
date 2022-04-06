@@ -2,8 +2,12 @@
   "name": "bcwallet-core",
   "version": "1.0.0",
   "description": "",
-  "main": "lib\\commonjs\\index.js",
+  "main": "lib/commonjs/index.js",
   "private": true,
+  "engines": {
+    "node": ">= 16.10.0",
+    "npm": ">= 8.0.0"
+  },
   "dependencies": {
     "@aries-framework/core": "^0.2.0-alpha.20",
     "@aries-framework/react-hooks": "^0.1.2",
@@ -83,9 +87,9 @@
     "url": "https://github.com/bcgov/bc-wallet-mobile/issues"
   },
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
-  "react-native": "src\\index.ts",
-  "module": "lib\\module\\index.js",
-  "types": "lib\\typescript\\src\\index.d.ts",
+  "react-native": "src/index.ts",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/src/index.d.ts",
   "files": [
     "src",
     "lib",

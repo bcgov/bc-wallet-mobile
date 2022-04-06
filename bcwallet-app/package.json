@@ -4,6 +4,10 @@
   "description": "",
   "main": "index.js",
   "private": true,
+  "engines": {
+    "node": ">= 16.10.0",
+    "npm": ">= 8.0.0"
+  },
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
