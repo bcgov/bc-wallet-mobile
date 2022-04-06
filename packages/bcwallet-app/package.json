@@ -1,14 +1,26 @@
 {
   "name": "bcwallet-app",
-  "description": "Aries Bifold Wallet App",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcgov/bc-wallet-mobile.git"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/bcgov/bc-wallet-mobile/issues"
+  },
+  "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "dependencies": {
     "@aries-framework/core": "^0.2.0-alpha.20",
     "@aries-framework/react-hooks": "^0.1.2",
@@ -27,7 +39,7 @@
     "@react-navigation/core": "^6.1.0",
     "@react-navigation/native": "^6.0.6",
     "@react-navigation/stack": "^6.0.11",
-    "aries-bifold": "../as-framework-step-2",
+    "aries-bifold": "../aries-bifold",
     "axios": "^0.21.0",
     "i18next": "^21.4.0",
     "indy-sdk-react-native": "^0.1.20",
@@ -58,7 +70,8 @@
     "react-native-toast-message": "^2.0.1",
     "react-native-uuid": "^2.0.1",
     "react-native-vector-icons": "^8.1.0",
-    "uuid": "^8.1.0"
+    "uuid": "^8.1.0",
+    "bcwallet-core": "../bcwallet-core"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
