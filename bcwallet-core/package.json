@@ -8,7 +8,7 @@
     "node": ">= 16.10.0",
     "npm": ">= 8.0.0"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@aries-framework/core": "^0.2.0-alpha.20",
     "@aries-framework/react-hooks": "^0.1.2",
     "@aries-framework/react-native": "^0.2.0-alpha.20",
@@ -75,7 +75,7 @@
     "typecheck": "tsc --noEmit",
     "index": "npx ctix single ./tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "bob build"
+    "prepack": "bob build"
   },
   "repository": {
     "type": "git",
