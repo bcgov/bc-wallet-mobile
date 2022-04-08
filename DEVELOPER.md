@@ -44,15 +44,17 @@ cd bc-wallet-mobile
 git remote add upstream https://github.com/bcgov/bc-wallet-mobile.git
 ```
 
+NOTE: from here on, all paths are relative to the cloned repository directory (e.g.: bc-wallet-mobile)
+
 ## Installing NPM Modules
 
 Next, install the JavaScript modules needed to build and test BC Wallet:
 
 ```shell
 # Install BC Wallet project dependencies (package.json)
-( cd aries-bifold && npm install )
-( cd bcwallet-core && npm install )
-( cd bcwallet-app  && npm install )
+# from the root of the cloned repository
+npm install
+
 ```
 
 ## Running in an Android emulator
