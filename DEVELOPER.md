@@ -24,27 +24,38 @@ following products on your development machine:
 
 ## Getting the Sources
 
-Fork and clone the Angular repository:
+### BC Wallet
 
-1. Login to your GitHub account or create one by following the instructions given
-   [here](https://github.com/signup/free).
-2. [Fork](https://help.github.com/forking) the [main BC Wallet
-   repository](https://github.com/bcgov/bc-wallet-mobile).
-3. Clone your fork of the BC Wallet repository and define an `upstream` remote pointing back to
-   the BC Wallet repository that you forked in the first place.
+NOTE: For now, you can clone from directly from https://github.com/bcgov/bc-wallet-mobile.git and checkout `bifold-framework` branch
+
 
 ```shell
 # Clone your GitHub repository:
-git clone git@github.com:<github username>/bc-wallet-mobile.git
+git clone https://github.com/bcgov/bc-wallet-mobile.git
 
 # Go to the BC Wallet directory:
 cd bc-wallet-mobile
 
-# Add the main BC Wallet repository as an upstream remote to your repository:
-git remote add upstream https://github.com/bcgov/bc-wallet-mobile.git
+# checkout branch
+git checkout bifold-framework
 ```
 
 NOTE: from here on, all paths are relative to the cloned repository directory (e.g.: bc-wallet-mobile)
+
+### Aries Bifold
+
+For now, you can clone from this [fork](https://github.com/cvarjao/aries-mobile-agent-react-native.git) and checkout `as-framework-step-2`
+```shell
+# Clone your GitHub repository:
+git clone https://github.com/cvarjao/aries-mobile-agent-react-native.git aries-bifold
+
+# Go to the BC Wallet directory:
+cd aries-bifold
+
+# checkout branch
+git checkout as-framework-step-2
+```
+
 
 ## Installing NPM Modules
 
