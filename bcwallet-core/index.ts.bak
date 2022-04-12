@@ -1,8 +1,0 @@
-// created from ctix
-
-export * from './src/screens/OnboardingPages';
-export * from './src/theme';
-export { default as App } from './src/App';
-export { default as index } from './src/localization/en/index';
-export { default as Splash } from './src/screens/Splash';
-export { default as Terms } from './src/screens/Terms';
