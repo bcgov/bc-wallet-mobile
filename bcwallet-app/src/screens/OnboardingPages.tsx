@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { Text, View } from 'react-native'
 import { SvgProps } from 'react-native-svg'
 
 import CredentialList from '../assets/img/credential-list.svg'
