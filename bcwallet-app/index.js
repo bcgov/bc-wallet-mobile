@@ -24,7 +24,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
 import { AppRegistry } from 'react-native'
 import App from './App'
-import bcwallet from 'bcwallet-core'
+import bcwallet from './src/'
 const { theme } = bcwallet
 
 import { name as appName } from './app.json'

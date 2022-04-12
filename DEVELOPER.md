@@ -67,5 +67,5 @@ npm run android
 
 ## Updating package.json
 ```
-npx --package=aries-bifold bifold sync-package-json
+npx --package=../bifold-core bifold sync-package-json
 ```

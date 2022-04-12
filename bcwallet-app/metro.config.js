@@ -2,13 +2,11 @@ const path = require('path');
 const escape = require('escape-string-regexp')
 const exclusionList = require('metro-config/src/defaults/exclusionList')
 const packageDirs = [
-  path.resolve(__dirname, '../aries-bifold'),
-  path.resolve(__dirname, '../bcwallet-core')
+  path.resolve(__dirname, '../aries-bifold/bifold-core'),
 ]
 
 const watchFolders = [
   ...packageDirs,
-  path.resolve(__dirname),
 ];
 
 const extraExclusionlist = []
@@ -17,22 +15,24 @@ const extraNodeModules = {}
 for (const packageDir of packageDirs) {
   const pak = require(path.join(packageDir, 'package.json'))
   const modules = Object.keys({
-    ...pak.peerDependencies,
+    ...pak.peerDependencies, ...pak.devDependencies
   })
-  extraExclusionlist.push(...modules.map((m) => new RegExp(`^${escape(path.join(packageDir, 'node_modules', m))}\\/.*$`)))
+  extraExclusionlist.push(...modules.map((m) => path.join(packageDir, 'node_modules', m)))
+  
   modules.reduce((acc, name) => {
     acc[name] = path.join(__dirname, 'node_modules', name)
     return acc
   }, extraNodeModules)
 }
-
+console.dir(extraExclusionlist)
+console.dir(extraNodeModules)
 const { getDefaultConfig } = require('metro-config')
 module.exports = (async () => {
   const {
     resolver: { sourceExts, assetExts },
   } = await getDefaultConfig()
   const metroConfig = {
-    projectRoot: __dirname,
+    projectRoot: path.resolve(__dirname, './'),
     /*resetCache: true,*/
     transformer: {
       babelTransformerPath: require.resolve('react-native-svg-transformer'),
@@ -44,7 +44,7 @@ module.exports = (async () => {
       }),
     },
     resolver: {
-      blacklistRE: exclusionList(extraExclusionlist),
+      blacklistRE: exclusionList(extraExclusionlist.map((m) => new RegExp(`^${escape(m)}\\/.*$`))),
       extraNodeModules: extraNodeModules,
       assetExts: assetExts.filter((ext) => ext !== 'svg'),
       sourceExts: [...sourceExts, 'svg'],
@@ -52,6 +52,6 @@ module.exports = (async () => {
     watchFolders,
   };
   // eslint-disable-next-line no-console
-  console.dir(metroConfig)
+  //console.dir(metroConfig)
   return metroConfig
 })()

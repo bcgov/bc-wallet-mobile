@@ -15,7 +15,7 @@ import { StatusBar } from 'react-native'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import _merge from 'lodash.merge'
-import bcwallet from 'bcwallet-core'
+import bcwallet from './src'
 const { theme, localization, configuration } = bcwallet
 
 initLanguages(localization)
