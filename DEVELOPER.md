@@ -26,8 +26,8 @@ following products on your development machine:
 
 Folder scructure:
 ```
-- bc-wallet-mobile (clone from https://github.com/bcgov/bc-wallet-mobile.git)
-   - aries-bifold  (clone from https://github.com/cvarjao/aries-mobile-agent-react-native.git)
+/bc-wallet-mobile # clone from https://github.com/bcgov/bc-wallet-mobile.git
+    /aries-bifold # clone from https://github.com/cvarjao/aries-mobile-agent-react-native.git
 ```
 
 ### BC Wallet
