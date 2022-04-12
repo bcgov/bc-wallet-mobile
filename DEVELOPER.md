@@ -24,10 +24,15 @@ following products on your development machine:
 
 ## Getting the Sources
 
+Folder scructure:
+```
+- bc-wallet-mobile (clone from https://github.com/bcgov/bc-wallet-mobile.git)
+   - aries-bifold  (clone from https://github.com/cvarjao/aries-mobile-agent-react-native.git)
+```
+
 ### BC Wallet
 
-NOTE: For now, you can clone from directly from https://github.com/bcgov/bc-wallet-mobile.git and checkout `bifold-framework` branch
-
+For now, you can clone  directly from https://github.com/bcgov/bc-wallet-mobile.git and checkout `bifold-framework` branch
 
 ```shell
 # Clone your GitHub repository:
