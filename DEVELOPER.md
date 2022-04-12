@@ -57,6 +57,8 @@ npm install
 
 ```
 
+IMPORTANT: If you are running `npm install` manually, you must provide `--legacy-peer-deps`
+
 ## Running in an Android emulator
 During the devlopment process, you may want to run the app in the emulator to see see what it looks like or for some manual testing.
 ```shell
