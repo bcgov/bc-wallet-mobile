@@ -62,4 +62,10 @@ During the devlopment process, you may want to run the app in the emulator to se
 ```shell
 cd bcwallet-app
 npm run android
+
+```
+
+## Updating package.json
+```
+npx --package=aries-bifold bifold sync-package-json
 ```
