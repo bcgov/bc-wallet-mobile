@@ -77,10 +77,15 @@ IMPORTANT: If you are running `npm install` manually, you must provide `--legacy
 
 ## Running in an Android emulator
 During the devlopment process, you may want to run the app in the emulator to see see what it looks like or for some manual testing.
+
 ```shell
 cd bcwallet-app
 npm run android
-
+```
+After the initial debug app has been built and deployed to emulatore, you can just start the metro bundler:
+```shell
+cd bcwallet-app
+npm run start
 ```
 
 ## Updating package.json
