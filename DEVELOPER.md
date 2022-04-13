@@ -90,5 +90,6 @@ npm run start
 
 ## Updating package.json
 ```
-npx --package=../bifold-core bifold sync-package-json
+cd bcwallet-app
+npx --package=../aries-bifold/core bifold sync-package-json
 ```

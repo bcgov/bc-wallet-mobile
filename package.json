@@ -5,10 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "install:bifold": "cd aries-bifold/bifold-core && npm install",
-    "install:app": "cd bcwallet-app && npm install --legacy-peer-deps",
+    "install:bifold": "cd aries-bifold/core && npm ci",
+    "install:app": "cd bcwallet-app && npm ci",
     "install:all": "run-s install:bifold install:app",
-    "build:bifold": "cd aries-bifold/bifold-core && npm run prepack",
+    "build:bifold": "cd aries-bifold/core && npm run prepack",
     "build:app": "cd bcwallet-app && npm run prepack --if-present",
     "build:all": "run-s build:bifold build:app",
     "prepare": "run-s install:all build:all"

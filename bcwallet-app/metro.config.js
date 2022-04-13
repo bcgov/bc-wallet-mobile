@@ -2,7 +2,7 @@ const path = require('path');
 const escape = require('escape-string-regexp')
 const exclusionList = require('metro-config/src/defaults/exclusionList')
 const packageDirs = [
-  path.resolve(__dirname, '../aries-bifold/bifold-core'),
+  path.resolve(__dirname, '../aries-bifold/core'),
 ]
 
 const watchFolders = [
