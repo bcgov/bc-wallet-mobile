@@ -232,7 +232,7 @@ jobs:
       - name: Configure node
         uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup JDK 1.8
@@ -277,19 +277,14 @@ jobs:
           grep "SHA1"
 
       - name: Install dependencies
-        working-directory: bifold
+        working-directory: ./
         run: |
           npm ci
-
-      - name: Apply patches
-        working-directory: bifold
-        run: |
-          for i in $(ls ../patch); do git apply ../patch/$i; done
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        working-directory: bifold
+        working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
         run: |
