@@ -8,7 +8,7 @@ on:
   push:
     branches: [main]
     paths:
-      - patch/**
+      - app/**
 
 jobs:
   build-ios:
@@ -39,7 +39,7 @@ jobs:
       - name: Configure node
         uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Configure ruby
@@ -51,7 +51,7 @@ jobs:
       # git for cache keys.
       - name: Generate cache key
         run: |
-          echo $(git rev-parse HEAD) > ./dd-cache-key.txt
+          echo $(git rev-parse HEAD:app/ios) > ./dd-cache-key.txt
 
       - uses: actions/cache@v2
         with:
@@ -104,7 +104,7 @@ jobs:
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
       - name: Install react native dependencies
-        working-directory: bifold
+        working-directory: ./
         run: |
           npm ci && \
           git status
@@ -118,11 +118,6 @@ jobs:
           git status && \
           git diff Podfile.lock
 
-      - name: Apply patches
-        working-directory: bifold
-        run: |
-          for i in $(ls ../patch); do git apply ../patch/$i; done
-
       - name: Bump Build No.
         working-directory: app/ios
         env:
@@ -135,7 +130,7 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        working-directory: bifold
+        working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
         run: |
