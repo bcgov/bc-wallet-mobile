@@ -52,10 +52,10 @@ NOTE: from here on, all paths are relative to the cloned repository directory (e
 For now, you can clone from this [fork](https://github.com/cvarjao/aries-mobile-agent-react-native.git) and checkout `as-framework-step-2`
 ```shell
 # Clone your GitHub repository:
-git clone https://github.com/cvarjao/aries-mobile-agent-react-native.git aries-bifold
+git clone https://github.com/cvarjao/aries-mobile-agent-react-native.git bifold
 
 # Go to the BC Wallet directory:
-cd aries-bifold
+cd bifold
 
 # checkout branch
 git checkout as-framework-step-2
@@ -79,17 +79,17 @@ IMPORTANT: If you are running `npm install` manually, you must provide `--legacy
 During the devlopment process, you may want to run the app in the emulator to see see what it looks like or for some manual testing.
 
 ```shell
-cd bcwallet-app
+cd app
 npm run android
 ```
 After the initial debug app has been built and deployed to emulatore, you can just start the metro bundler:
 ```shell
-cd bcwallet-app
+cd app
 npm run start
 ```
 
 ## Updating package.json
 ```
-cd bcwallet-app
-npx --package=../aries-bifold/core bifold sync-package-json
+cd app
+npx --package=../bifold/core bifold sync-package-json
 ```
