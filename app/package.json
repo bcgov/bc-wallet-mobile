@@ -13,7 +13,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start --reset-cache",
     "typecheck": "tsc --noEmit",
-    "postinstall:copy-patches": "copyfiles -V -u 4 \"../aries-bifold/app/patches/*\" \"./patches/\"",
+    "postinstall:copy-patches": "copyfiles -V -u 4 \"../bifold/app/patches/*\" \"./patches/\"",
     "postinstall:patch": "npx patch-package",
     "postinstall": "run-s postinstall:copy-patches postinstall:patch",
     "test": "echo \"Error: no test specified\" && exit 1"
