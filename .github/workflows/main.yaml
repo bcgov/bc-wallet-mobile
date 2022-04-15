@@ -295,26 +295,6 @@ jobs:
         run: |
           ./gradlew bundleRelease
 
-      - name: Convert aab to apk
-        id: convert_aab
-        uses: mukeshsolanki/bundletool-action@v1.0.0
-        with:
-          aabFile: app/android/app/build/outputs/bundle/release/app-release.aab
-          base64Keystore: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
-          keystorePassword: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-          keystoreAlias: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
-          keyPassword: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: release-apk
-          path: ${{ steps.convert_aab.outputs.apkPath }}
-          
-      - uses: actions/upload-artifact@v3
-        with:
-          name: release-aab
-          path: app/build/outputs/bundle/release/
-
       - name: Ship to Google Play
         working-directory: app/android
         env:
