@@ -8,7 +8,7 @@ on:
   push:
     branches: [main]
     paths:
-      - patch/**
+      - app/**
 
 jobs:
   build-ios:
@@ -39,7 +39,7 @@ jobs:
       - name: Configure node
         uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Configure ruby
@@ -51,7 +51,7 @@ jobs:
       # git for cache keys.
       - name: Generate cache key
         run: |
-          echo $(git rev-parse HEAD) > ./dd-cache-key.txt
+          echo $(git rev-parse HEAD:app/ios) > ./dd-cache-key.txt
 
       - uses: actions/cache@v2
         with:
@@ -76,7 +76,7 @@ jobs:
         id: pod-cache
         uses: actions/cache@v1
         with:
-          path: bifold/ios/Pods
+          path: app/ios/Pods
           key: ${{ runner.os }}-pods-${{ env.cacheId }}-${{ hashFiles('**/Podfile.lock ') }}
           restore-keys: |
             ${{ runner.os }}-pods-${{ env.cacheId }}-
@@ -84,7 +84,7 @@ jobs:
       - name: Cache derived data
         uses: actions/cache@v1
         with:
-          path: bifold/ios/xbuild/Build
+          path: app/ios/xbuild/Build
           key: ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
           restore-keys: |
             ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-
@@ -104,27 +104,22 @@ jobs:
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
       - name: Install react native dependencies
-        working-directory: bifold
+        working-directory: ./
         run: |
           npm ci && \
           git status
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
-        working-directory: bifold/ios
+        working-directory: app/ios
         run: |
           gem install cocoapods && \
           pod install && \
           git status && \
           git diff Podfile.lock
 
-      - name: Apply patches
-        working-directory: bifold
-        run: |
-          for i in $(ls ../patch); do git apply ../patch/$i; done
-
       - name: Bump Build No.
-        working-directory: bifold/ios
+        working-directory: app/ios
         env:
           CURRENT_PROJECT_VERSION: ${{ github.run_number }}
           MARKETING_VERSION: "1.0.1"
@@ -135,14 +130,14 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        working-directory: bifold
+        working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
 
       - name: Build
-        working-directory: bifold/ios
+        working-directory: app/ios
         run: |
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
@@ -156,7 +151,7 @@ jobs:
           archive
 
       - name: Archive & Sign
-        working-directory: bifold/ios
+        working-directory: app/ios
         run: |
           xcodebuild \
           -exportArchive \
@@ -171,7 +166,7 @@ jobs:
           pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
-        working-directory: bifold/ios
+        working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
@@ -186,7 +181,7 @@ jobs:
           # --beta-group "The Team"
   
       - name: Ship to SauceLabs
-        working-directory: bifold/ios
+        working-directory: app/ios
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -232,7 +227,7 @@ jobs:
       - name: Configure node
         uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup JDK 1.8
@@ -241,7 +236,7 @@ jobs:
           java-version: 1.8
       
       - name: Download Android SDK
-        working-directory: bifold/android
+        working-directory: app/android
         run: |
           wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-${{ matrix.sdk-tools }}.zip
           unzip -d android-sdk-linux android-sdk.zip
@@ -266,7 +261,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Create release keystore
-        working-directory: bifold/android/app
+        working-directory: app/android/app
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
@@ -277,26 +272,21 @@ jobs:
           grep "SHA1"
 
       - name: Install dependencies
-        working-directory: bifold
+        working-directory: ./
         run: |
           npm ci
-
-      - name: Apply patches
-        working-directory: bifold
-        run: |
-          for i in $(ls ../patch); do git apply ../patch/$i; done
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        working-directory: bifold
+        working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
 
       - name: Android release build
-        working-directory: bifold/android
+        working-directory: app/android
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
@@ -306,7 +296,7 @@ jobs:
           ./gradlew bundleRelease
 
       - name: Ship to Google Play
-        working-directory: bifold/android
+        working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
           GOOGLE_API_CREDENTIALS: 'api_keys.json'
@@ -317,7 +307,7 @@ jobs:
           npx @bcgov/gpublish
 
       - name: Ship to SauceLabs
-        working-directory: bifold/android
+        working-directory: app/android
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
