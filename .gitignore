@@ -17,4 +17,12 @@ api*.json
 .env
 
 # Other
-node_modules/
+node_modules
+.gradle
+lib
+yarn.lock
+
+# aries-bifold should be cloned separately
+aries-bifold/
+storybook/
+*.code-workspace
