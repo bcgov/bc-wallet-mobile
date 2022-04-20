@@ -26,3 +26,13 @@ yarn.lock
 aries-bifold/
 storybook/
 *.code-workspace
+
+# 3rd-party
+app/ios/Pods/*
+!app/ios/Pods/Frameworks
+
+# ?
+app/patches
+
+# xcode
+xcuserdata/
