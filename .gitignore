@@ -32,7 +32,8 @@ app/ios/Pods/*
 !app/ios/Pods/Frameworks
 
 # ?
-app/patches
+app/patches/*.patch
+!app/patches/@aries-framework*.patch
 
 # xcode
 xcuserdata/
