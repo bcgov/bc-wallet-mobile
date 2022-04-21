@@ -222,8 +222,6 @@ export const Buttons = StyleSheet.create({
   },
 })
 
-
-
 export const defaultTheme: Theme = {
   ColorPallet,
   TextTheme,
