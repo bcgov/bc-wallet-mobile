@@ -9,6 +9,8 @@ Build #15x
 - Update terms and conditions screen to final version #222 #285;
 - Rework modals to provide smoother transitions #290;
 - Don't show delay message prematurely #294;
+- Track revoked credential status;
+- Under-the-hood theme and context refactoring.
 
 Build #154
 
