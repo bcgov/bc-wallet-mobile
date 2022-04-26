@@ -1,9 +1,24 @@
 
 v1.0.1
 
-Build #1xx
+Build #15x
 
-- Fixes early notifcation modal display on various intermediate screens #253;
+- Connecting modal is not correctly skinned #293;
+- Add animation for waiting for credential #240;
+- Add animation for credential added to wallet #240;
+- Update terms and conditions screen to final version #222 #285;
+- Rework modals to provide smoother transitions #290;
+- Don't show delay message prematurely #294;
+
+Build #154
+
+- Fixes early notification modal display on various intermediate screens #253;
+- Relax Aries RFC 0441;
+- Add connection in-progress animation;
+- Handle proof request shortly following a new connection;
+- Handle offer shortly following a new connection;
+- Minor UI improvements;
+- Add testIDs throughout the application.
 
 
 Build #130
