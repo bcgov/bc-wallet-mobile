@@ -12,7 +12,7 @@ import { StoreContext } from "aries-bifold";
 import { DispatchAction } from "aries-bifold";
 import { AuthenticateStackParams, Screens } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
-import { useThemeContext } from "aries-bifold";
+import { useTheme } from "aries-bifold";
 
 const Terms: React.FC = () => {
   const [, dispatch] = useContext(StoreContext);
@@ -21,7 +21,7 @@ const Terms: React.FC = () => {
   const navigation =
     useNavigation<StackNavigationProp<AuthenticateStackParams>>();
   navigation.setOptions({ title: "End User License Agreement" });
-  const { ColorPallet, TextTheme } = useThemeContext();
+  const { ColorPallet, TextTheme } = useTheme();
   const style = StyleSheet.create({
     container: {
       backgroundColor: ColorPallet.brand.primaryBackground,
@@ -50,7 +50,7 @@ const Terms: React.FC = () => {
 
   const onSubmitPressed = () => {
     dispatch({
-      type: DispatchAction.SetDidAgreeToTerms,
+      type: DispatchAction.DID_AGREE_TO_TERMS,
       payload: [{ DidAgreeToTerms: checked }],
     });
 
