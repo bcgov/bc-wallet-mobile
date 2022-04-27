@@ -29,12 +29,15 @@ jobs:
       # While cloning the repository:
       #   - it clones the repo into the given `path`
       #   - it checks out the branch defined at `ref`
-      - name: Fetch Aries repo
-        uses: actions/checkout@v2
-        with:
-          repository: hyperledger/aries-mobile-agent-react-native
-          path: bifold
-          ref: main
+      # - name: Fetch Aries repo
+      #   uses: actions/checkout@v2
+      #   with:
+      #     repository: hyperledger/aries-mobile-agent-react-native
+      #     path: bifold
+      #     ref: main
+      - name: Pull & update submodules recursively
+        run: |
+          git submodule update --init --recursive
 
       - name: What XCode are we using?
         run: |
