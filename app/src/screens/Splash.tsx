@@ -1,40 +1,46 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { useNavigation } from '@react-navigation/core'
-import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useContext, useMemo } from 'react'
-import { Image, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/core";
+import { StackNavigationProp } from "@react-navigation/stack";
+import React, { useContext, useMemo } from "react";
+import { Image, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { LocalStorageKeys, StoreContext } from 'aries-bifold'
-import { DispatchAction } from 'aries-bifold'
-import { ColorPallet } from '../theme'
-import { AuthenticateStackParams, Screens } from 'aries-bifold'
-import { OnboardingState } from 'aries-bifold'
+import { LocalStorageKeys, StoreContext } from "aries-bifold";
+import { DispatchAction } from "aries-bifold";
+import { ColorPallet } from "../theme";
+import { AuthenticateStackParams, Screens } from "aries-bifold";
+import { OnboardingState } from "aries-bifold";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: ColorPallet.brand.primary,
   },
-})
+});
 
 const onboardingComplete = (state: OnboardingState): boolean => {
-  return state.DidCompleteTutorial && state.DidAgreeToTerms && state.DidCreatePIN
-}
+  return (
+    state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN
+  );
+};
 
 const resumeOnboardingAt = (state: OnboardingState): Screens => {
-  if (state.DidCompleteTutorial && state.DidAgreeToTerms && !state.DidCreatePIN) {
-    return Screens.CreatePin
+  if (
+    state.didCompleteTutorial &&
+    state.didAgreeToTerms &&
+    !state.didCreatePIN
+  ) {
+    return Screens.CreatePin;
   }
 
-  if (state.DidCompleteTutorial && !state.DidAgreeToTerms) {
-    return Screens.Terms
+  if (state.didCompleteTutorial && !state.didAgreeToTerms) {
+    return Screens.Terms;
   }
 
-  return Screens.Onboarding
-}
+  return Screens.Onboarding;
+};
 /*
   To customize this splash screen set the background color of the
   iOS and Android launch screen to match the background color of
@@ -42,46 +48,50 @@ const resumeOnboardingAt = (state: OnboardingState): Screens => {
 */
 
 const Splash: React.FC = () => {
-  const [, dispatch] = useContext(StoreContext)
-  const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
+  const [, dispatch] = useContext(StoreContext);
+  const navigation =
+    useNavigation<StackNavigationProp<AuthenticateStackParams>>();
 
   useMemo(() => {
     async function init() {
       try {
         // await AsyncStorage.removeItem(LocalStorageKeys.Onboarding)
-        const data = await AsyncStorage.getItem(LocalStorageKeys.Onboarding)
+        const data = await AsyncStorage.getItem(LocalStorageKeys.Onboarding);
 
         if (data) {
-          const dataAsJSON = JSON.parse(data) as OnboardingState
-          dispatch({ type: DispatchAction.SetOnboardingState, payload: [dataAsJSON] })
+          const dataAsJSON = JSON.parse(data) as OnboardingState;
+          dispatch({
+            type: DispatchAction.ONBOARDING_UPDATED,
+            payload: [dataAsJSON],
+          });
 
           if (onboardingComplete(dataAsJSON)) {
-            navigation.navigate(Screens.EnterPin)
-            return
+            navigation.navigate(Screens.EnterPin);
+            return;
           }
 
           // If onboarding was interrupted we need to pickup from where we left off.
-          const destination = resumeOnboardingAt(dataAsJSON)
+          const destination = resumeOnboardingAt(dataAsJSON);
           // @ts-ignore
-          navigation.navigate({ name: destination })
+          navigation.navigate({ name: destination });
 
-          return
+          return;
         }
 
         // We have no onboarding state, starting from step zero.
-        navigation.navigate(Screens.Onboarding)
+        navigation.navigate(Screens.Onboarding);
       } catch (error) {
         // TODO:(jl)
       }
     }
-    init()
-  }, [dispatch])
+    init();
+  }, [dispatch]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <Image source={require('../assets/img/logo-large.png')} />
+      <Image source={require("../assets/img/logo-large.png")} />
     </SafeAreaView>
-  )
-}
+  );
+};
 
-export default Splash
+export default Splash;
