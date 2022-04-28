@@ -10,10 +10,10 @@ import {
   ConfigurationContext,
   ConfigurationProvider,
   initLanguages,
-  defaultTranslationResources,
-  defaultOnboardingPages as onboardingPages,
-  defaultSplashScreen as splashScreen,
-  defaultTerms as termsScreen,
+  translationResources,
+  OnboardingPages,
+  Splash,
+  Terms,
 } from "aries-bifold";
 import React, { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
@@ -23,11 +23,11 @@ import _merge from "lodash.merge";
 import en from "./localization/en";
 import { defaultTheme as theme } from "./theme";
 
-const translationResources = _merge({}, defaultTranslationResources, {
-  en: { translation: en },
-});
-
-initLanguages(translationResources);
+initLanguages(
+  _merge({}, translationResources, {
+    en: { translation: en },
+  })
+);
 
 const App = () => {
   const [agent, setAgent] = useState<Agent | undefined>(undefined);
@@ -39,12 +39,15 @@ const App = () => {
     SplashScreen.hide();
   }, []);
 
+  console.log(
+    "13y82y4823y48i23y4i234yi23u4y2u34y2i3u4y23iu4yi2u34",
+    Terms,
+    Splash
+  );
   const defaultConfiguration: ConfigurationContext = {
-    onboarding: {
-      pages: onboardingPages,
-    },
-    splash: splashScreen,
-    terms: termsScreen,
+    pages: OnboardingPages,
+    splash: Splash,
+    terms: Terms,
   };
 
   return (

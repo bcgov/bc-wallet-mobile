@@ -1,20 +1,18 @@
 import {
-    defaultTranslationResources,
+    translationResources,
     ConfigurationContext,
-    defaultSplashScreen as splashScreen,
+    Splash,
 } from 'aries-bifold'
 import _merge from 'lodash.merge'
 import  {defaultTheme as theme} from './theme'
 import en from './localization/en'
-import { pages as onboardingPages } from './screens/OnboardingPages'
+import { pages }  from './screens/OnboardingPages'
 import Terms from './screens/Terms'
 
-const localization = _merge({}, defaultTranslationResources, {en:{translation:en}})
+const localization = _merge({}, translationResources, {en:{translation:en}})
 const configuration: ConfigurationContext = {
-    onboarding: {
-      pages: onboardingPages,
-    },
-    splash: splashScreen,
+    pages,
+    splash: Splash,
     terms: Terms,
   }
 
