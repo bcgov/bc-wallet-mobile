@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #15x
+Build #162
 
 - Connecting modal is not correctly skinned #293;
 - Add animation for waiting for credential #240;
