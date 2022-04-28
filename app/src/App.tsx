@@ -39,11 +39,6 @@ const App = () => {
     SplashScreen.hide();
   }, []);
 
-  console.log(
-    "13y82y4823y48i23y4i234yi23u4y2u34y2i3u4y23iu4yi2u34",
-    Terms,
-    Splash
-  );
   const defaultConfiguration: ConfigurationContext = {
     pages: OnboardingPages,
     splash: Splash,
