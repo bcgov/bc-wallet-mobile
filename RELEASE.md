@@ -1,6 +1,11 @@
 
 v1.0.1
 
+Build #164
+
+- Bifold logo flashes at app startup #283;
+- Enable RN Splash screen #289;
+
 Build #162
 
 - Connecting modal is not correctly skinned #293;
