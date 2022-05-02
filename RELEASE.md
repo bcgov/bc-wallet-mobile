@@ -4,10 +4,10 @@ v1.0.1
 Build #16x
 
 - Update animation assets for credential offer / accepted;
-- Fix settings font size
-- Update empty credential list text
-- Hides remove button in credential details until AFJ/hooks are updated
-- Share button is hidden for proof request screen unless a valid proof can be presented
+- Fix settings font size;
+- Update empty credential list text;
+- Hides remove button in credential details until AFJ/hooks are updated;
+- Share button is hidden for proof request screen unless a valid proof can be presented.
 
 Build #164
 
