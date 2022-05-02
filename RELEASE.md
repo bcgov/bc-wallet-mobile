@@ -7,7 +7,8 @@ Build #16x
 - Fix settings font size;
 - Update empty credential list text;
 - Hides remove button in credential details until AFJ/hooks are updated;
-- Share button is hidden for proof request screen unless a valid proof can be presented.
+- Share button is hidden for proof request screen unless a valid proof can be presented;
+- Add credential card to offer declined screen #315.
 
 Build #164
 
