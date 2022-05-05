@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #16x
+Build #165
 
 - Update animation assets for credential offer / accepted;
 - Fix settings font size;
