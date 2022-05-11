@@ -9,10 +9,10 @@ import { Button, ButtonType, Theme, createStyles } from "aries-bifold";
 import { GenericFn } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 
-const endPage = (onTutorialCompleted: GenericFn, theme: Theme) => {
+const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']) => {
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
-    fill: theme.ColorPallet.notification.infoText,
+    fill: theme.imageDisplayOptions.fill,
     height: 180,
     width: 180,
   };
@@ -126,11 +126,11 @@ const createPageWith = (
   image: React.FC<SvgProps>,
   title: string,
   body: string,
-  theme: Theme
+  theme: Theme['OnboardingTheme']
 ) => {
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
-    fill: theme.ColorPallet.notification.infoText,
+    fill: theme.imageDisplayOptions.fill,
     height: 180,
     width: 180,
   };

@@ -3,9 +3,31 @@ import { Theme } from 'aries-bifold'
 
 interface FontAttributes {
   fontFamily?: string
+  fontStyle?: 'normal' | 'italic'
   fontSize: number
   fontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900'
   color: string
+}
+
+interface InputAttributes {
+  padding?: number
+  borderRadius?: number
+  fontSize?: number
+  backgroundColor?: string
+  color?: string
+  borderWidth?: number
+  borderColor?: string
+}
+
+interface Inputs {
+  label: FontAttributes
+  textInput: InputAttributes
+  inputSelected: InputAttributes
+  singleSelect: InputAttributes
+  singleSelectText: FontAttributes
+  singleSelectIcon: InputAttributes
+  checkBoxColor: InputAttributes
+  checkBoxText: FontAttributes
 }
 
 interface TextTheme {
@@ -15,7 +37,11 @@ interface TextTheme {
   headingFour: FontAttributes
   normal: FontAttributes
   label: FontAttributes
+  labelTitle: FontAttributes
+  labelSubtitle: FontAttributes
+  labelText: FontAttributes
   caption: FontAttributes
+  title: FontAttributes
 }
 
 interface BrandColors {
@@ -165,13 +191,73 @@ export const TextTheme: TextTheme = {
     fontWeight: 'bold',
     color: ColorPallet.grayscale.darkGrey,
   },
+  labelTitle: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  labelSubtitle: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 14,
+    fontWeight: 'normal',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  labelText: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 10,
+    fontWeight: 'normal',
+    fontStyle: 'italic',
+    color: ColorPallet.grayscale.darkGrey,
+  },
   caption: {
     fontFamily: 'BCSans-Regular',
     fontSize: 14,
     fontWeight: 'normal',
     color: ColorPallet.grayscale.darkGrey,
   },
+  title: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: ColorPallet.notification.infoText,
+  },
 }
+
+export const Inputs: Inputs = StyleSheet.create({
+  label: {
+    ...TextTheme.label,
+  },
+  textInput: {
+    padding: 10,
+    borderRadius,
+    fontSize: 16,
+    backgroundColor: ColorPallet.brand.primaryBackground,
+    color: ColorPallet.notification.infoText,
+    borderWidth: 2,
+    borderColor: ColorPallet.brand.secondary,
+  },
+  inputSelected: {
+    borderColor: ColorPallet.brand.primary,
+  },
+  singleSelect: {
+    padding: 12,
+    borderRadius: borderRadius * 2,
+    backgroundColor: ColorPallet.brand.secondaryBackground,
+  },
+  singleSelectText: {
+    ...TextTheme.normal,
+  },
+  singleSelectIcon: {
+    color: ColorPallet.grayscale.white,
+  },
+  checkBoxColor: {
+    color: ColorPallet.brand.primary,
+  },
+  checkBoxText: {
+    ...TextTheme.normal,
+  },
+})
 
 export const Buttons = StyleSheet.create({
   primary: {
@@ -222,11 +308,262 @@ export const Buttons = StyleSheet.create({
   },
 })
 
+export const ListItems = StyleSheet.create({
+  credentialBackground: {
+    backgroundColor: ColorPallet.brand.secondaryBackground,
+  },
+  credentialTitle: {
+    ...TextTheme.headingFour,
+  },
+  credentialDetails: {
+    ...TextTheme.caption,
+  },
+  credentialOfferBackground: {
+    backgroundColor: ColorPallet.brand.primaryBackground,
+  },
+  credentialOfferTitle: {
+    ...TextTheme.headingThree,
+  },
+  credentialOfferDetails: {
+    ...TextTheme.normal,
+  },
+  revoked: {
+    backgroundColor: ColorPallet.semantic.error,
+    borderColor: ColorPallet.notification.errorBorder,
+  },
+  contactBackground: {
+    backgroundColor: ColorPallet.brand.secondaryBackground,
+  },
+  credentialIconColor: {
+    color: ColorPallet.notification.infoText,
+  },
+  contactTitle: {
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  contactDate: {
+    color: ColorPallet.grayscale.darkGrey,
+    marginTop: 10,
+  },
+  contactIconBackground: {
+    backgroundColor: ColorPallet.brand.primary,
+  },
+  contactIcon: {
+    color: ColorPallet.grayscale.white,
+  },
+  recordAttributeLabel: {
+    ...TextTheme.normal,
+  },
+  recordContainer: {
+    backgroundColor: ColorPallet.brand.secondaryBackground,
+  },
+  recordBorder: {
+    borderBottomColor: ColorPallet.brand.primaryBackground,
+  },
+  recordLink: {
+    color: ColorPallet.brand.link,
+  },
+  recordAttributeText: {
+    ...TextTheme.normal,
+  },
+  proofIcon: {
+    ...TextTheme.headingOne,
+  },
+  proofError: {
+    color: ColorPallet.semantic.error,
+  },
+  proofListItem: {
+    paddingHorizontal: 25,
+    paddingTop: 16,
+    backgroundColor: ColorPallet.brand.primaryBackground,
+    borderTopColor: ColorPallet.brand.secondaryBackground,
+    borderBottomColor: ColorPallet.brand.secondaryBackground,
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
+  },
+  avatarText: {
+    ...TextTheme.headingTwo,
+    fontWeight: 'normal',
+  },
+  avatarCircle: {
+    borderRadius: TextTheme.headingTwo.fontSize,
+    borderColor: TextTheme.headingTwo.color,
+    width: TextTheme.headingTwo.fontSize * 2,
+    height: TextTheme.headingTwo.fontSize * 2,
+  },
+  emptyList: {
+    ...TextTheme.normal,
+  },
+})
+
+export const TabTheme = {
+  tabBarStyle: {
+    height: 60,
+    backgroundColor: ColorPallet.brand.secondaryBackground,
+    shadowOffset: { width: 0, height: -3 },
+    shadowRadius: 6,
+    shadowColor: ColorPallet.grayscale.black,
+    shadowOpacity: 0.1,
+    borderTopWidth: 0,
+    paddingBottom: 0,
+  },
+  tabBarActiveTintColor: ColorPallet.brand.primary,
+  tabBarInactiveTintColor: ColorPallet.notification.infoText,
+  tabBarTextStyle: {
+    ...TextTheme.label,
+    fontWeight: 'normal',
+    paddingBottom: 5,
+  },
+  tabBarButtonIconStyle: {
+    color: ColorPallet.grayscale.white
+  },
+  focusTabIconStyle: {
+    height: 60,
+    width: 60,
+    backgroundColor: ColorPallet.brand.primary,
+    top: -20,
+    borderRadius: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  focusTabActiveTintColor: {
+    backgroundColor: ColorPallet.brand.secondary,
+  },
+}
+
+export const NavigationTheme = {
+  dark: true,
+  colors: {
+    primary: ColorPallet.brand.primary,
+    background: ColorPallet.brand.primaryBackground,
+    card: ColorPallet.brand.primary,
+    text: ColorPallet.grayscale.white,
+    border: ColorPallet.grayscale.white,
+    notification: ColorPallet.grayscale.white,
+  },
+}
+
+export const HomeTheme = StyleSheet.create({
+  welcomeHeader: {
+    ...TextTheme.headingOne,
+  },
+  credentialMsg: {
+    ...TextTheme.normal,
+  },
+  notificationsHeader: {
+    ...TextTheme.headingThree,
+  },
+  noNewUpdatesText: {
+    ...TextTheme.normal,
+    color: ColorPallet.notification.infoText,
+  },
+  link: {
+    ...TextTheme.normal,
+    color: ColorPallet.brand.link,
+  },
+})
+
+export const SettingsTheme = {
+  groupHeader: {
+    ...TextTheme.normal,
+    marginBottom: 8,
+  },
+  groupBackground: ColorPallet.brand.secondaryBackground,
+  iconColor: ColorPallet.grayscale.white,
+  text: {
+    ...TextTheme.caption,
+    color: ColorPallet.grayscale.darkGrey,
+  },
+}
+
+export const ChatTheme = {
+  leftBubble: {
+    backgroundColor: ColorPallet.brand.secondaryBackground,
+    borderRadius: 20,
+    padding: 4,
+    marginLeft: -4,
+  },
+  rightBubble: {
+    backgroundColor: ColorPallet.brand.primary,
+    borderRadius: 20,
+    padding: 4,
+    marginRight: 4,
+  },
+  leftText: {
+    color: ColorPallet.brand.secondary,
+    fontSize: TextTheme.normal.fontSize,
+  },
+  rightText: {
+    color: ColorPallet.brand.secondary,
+    fontSize: TextTheme.normal.fontSize,
+  },
+  inputToolbar: {
+    backgroundColor: ColorPallet.brand.secondary,
+    shadowColor: ColorPallet.brand.primaryDisabled,
+    borderRadius: 10,
+  },
+  inputText: {
+    lineHeight: undefined,
+    fontWeight: '500',
+    fontSize: TextTheme.normal.fontSize,
+  },
+  placeholderText: ColorPallet.grayscale.lightGrey,
+  sendContainer: {
+    marginBottom: 4,
+    paddingHorizontal: 4,
+    justifyContent: 'center',
+  },
+  sendEnabled: ColorPallet.brand.primary,
+  sendDisabled: ColorPallet.brand.primaryDisabled,
+}
+
+export const OnboardingTheme = {
+  container: {
+    backgroundColor: ColorPallet.brand.primaryBackground,
+  },
+  carouselContainer: {
+    backgroundColor: ColorPallet.brand.primaryBackground,
+  },
+  pagerDot: {
+    borderColor: ColorPallet.brand.primary,
+  },
+  pagerDotActive: {
+    color: ColorPallet.brand.primary,
+  },
+  pagerDotInactive: {
+    color: ColorPallet.brand.secondary,
+  },
+  pagerNavigationButton: {
+    color: ColorPallet.brand.primary,
+  },
+  headerTintColor: ColorPallet.grayscale.white,
+  headerText: {
+    color: ColorPallet.notification.infoText,
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  bodyText: {
+    fontSize: 18,
+    fontWeight: 'normal',
+    color: ColorPallet.notification.infoText,
+  },
+  imageDisplayOptions: {
+    fill: ColorPallet.notification.infoText,
+  },
+}
+
 export const defaultTheme: Theme = {
   ColorPallet,
   TextTheme,
   Buttons,
   heavyOpacity,
   borderRadius,
-  borderWidth
+  borderWidth,
+  Inputs,
+  ListItems,
+  TabTheme,
+  NavigationTheme,
+  HomeTheme,
+  SettingsTheme,
+  ChatTheme,
+  OnboardingTheme,
 }
