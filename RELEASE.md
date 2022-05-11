@@ -1,6 +1,10 @@
 
 v1.0.1
 
+Build #166
+
+n/a
+
 Build #165
 
 - Update animation assets for credential offer / accepted;
