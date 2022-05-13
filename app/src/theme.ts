@@ -551,6 +551,13 @@ export const OnboardingTheme = {
   },
 }
 
+export const Assets = {
+  img: {
+    logoLarge: require('./assets/img/logo-large.png'),
+  },
+}
+
+
 export const defaultTheme: Theme = {
   ColorPallet,
   TextTheme,
@@ -566,4 +573,5 @@ export const defaultTheme: Theme = {
   SettingsTheme,
   ChatTheme,
   OnboardingTheme,
+  Assets
 }
