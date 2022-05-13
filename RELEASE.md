@@ -1,9 +1,17 @@
 
 v1.0.1
 
-Build #166
+Build #170
 
-n/a
+- Fix QR scan error (invalid QR code);
+- Add initialization screen after PIN and remove toasts #322;
+- Properly style status bar on light background modals #321;
+- Fix copy and image on proof declined screen;
+- Adds SVG icon to empty list component and updates wording #320;
+- Updates proof requests to display predicate fields #317;
+- Adds Sovrin main net ledger config #317;
+- Add proof accept animations #313.
+- Store and mange credential revocation status #312.
 
 Build #165
 
