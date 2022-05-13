@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #17x
+Build #172
 
 - Fix text on proof declined screen;
 - Add testID to loading modal.
