@@ -1,12 +1,17 @@
 
 v1.0.1
 
+Build #17x
+
+- Fix text on proof declined screen;
+- Add testID to loading modal.
+
 Build #171
 
 - Fix QR scan error (invalid QR code);
 - Add initialization screen after PIN and remove toasts #322;
-- Properly style status bar on light background modals #321;
-- Fix copy and image on proof declined screen;
+- Properly style status bar on light background modals #321 #336;
+- Fix copy and image on proof declined screen #333;
 - Adds SVG icon to empty list component and updates wording #320;
 - Updates proof requests to display predicate fields #317;
 - Adds Sovrin main net ledger config #317;
