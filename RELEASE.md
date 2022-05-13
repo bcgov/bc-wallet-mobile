@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #170
+Build #171
 
 - Fix QR scan error (invalid QR code);
 - Add initialization screen after PIN and remove toasts #322;
