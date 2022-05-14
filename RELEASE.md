@@ -1,6 +1,10 @@
 
 v1.0.1
 
+Build #17x
+
+- Fixed credential offer screen display mode #284;
+
 Build #172
 
 - Fix text on proof declined screen;
