@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #17x
+Build #173
 
 - Fixed credential offer screen display mode #284;
 
