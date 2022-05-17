@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #174
+Build #175
 
 - Fix missing background in safe area overflow #341;
 - Fix proof request covering back buttons #335;
