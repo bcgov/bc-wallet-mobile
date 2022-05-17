@@ -1,6 +1,13 @@
 
 v1.0.1
 
+Build #174
+
+- Fix missing background in safe area overflow #341;
+- Fix proof request covering back buttons #335;
+- Fix activity indicator on Android;
+- Use different testIDs for activity indicator.
+
 Build #173
 
 - Fixed credential offer screen display mode #284;
