@@ -413,7 +413,7 @@ export const TabTheme = {
     fontWeight: 'normal',
     paddingBottom: 5,
   },
-  tabBarButtonIconStyle: {
+  tabBarButtonIconColor: {
     color: ColorPallet.grayscale.white
   },
   focusTabIconStyle: {
