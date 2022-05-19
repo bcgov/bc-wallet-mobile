@@ -77,10 +77,10 @@ export const zeroOpacity = 0.0
 export const borderWidth = 2
 
 const BrandColors: BrandColors = {
-  primary: '#003366',
-  primaryDisabled: `rgba(0, 51, 102, ${lightOpacity})`,
-  secondary: '#FFFFFFFF',
-  secondaryDisabled: `rgba(0, 51, 102, ${heavyOpacity})`,
+  primary: '#095797',
+  primaryDisabled: `rgba(9, 87, 151, ${lightOpacity})`,
+  secondary: '#DAE6F0',
+  secondaryDisabled: `rgba(218, 230, 240, ${heavyOpacity})`,
   highlight: '#FCBA19',
   primaryBackground: '#F2F2F2',
   secondaryBackground: '#FFFFFF',

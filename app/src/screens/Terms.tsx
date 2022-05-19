@@ -70,7 +70,7 @@ const Terms: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[style.container]}>
+    <View style={[style.container]}>
       <ScrollView>
         <InfoTextBox>
           Please agree to the terms and conditions below before using this
@@ -506,7 +506,7 @@ const Terms: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -34,7 +34,6 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme) => {
       </View>
       <View
         style={{
-          marginTop: "auto",
           marginBottom: 45,
           marginLeft: 20,
           marginRight: 20,
