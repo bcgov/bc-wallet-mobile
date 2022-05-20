@@ -1,0 +1,32 @@
+diff --git a/app/ios/Media.xcassets/AppIcon.appiconset/Contents.json b/app/ios/Media.xcassets/AppIcon.appiconset/Contents.json
+index 7b1bf90..1e3356b 100644
+--- a/app/ios/Media.xcassets/AppIcon.appiconset/Contents.json
++++ b/app/ios/Media.xcassets/AppIcon.appiconset/Contents.json
+@@ -31,7 +31,7 @@
+       "size" : "40x40"
+     },
+     {
+-      "filename" : "Icon-40@3x-1.png",
++      "filename" : "Icon-40@3x.png",
+       "idiom" : "iphone",
+       "scale" : "3x",
+       "size" : "40x40"
+diff --git a/app/ios/Media.xcassets/AppIcon.appiconset/Icon-40@3x-1.png b/app/ios/Media.xcassets/AppIcon.appiconset/Icon-40@3x-1.png
+deleted file mode 100644
+index 9a8276e..0000000
+Binary files a/app/ios/Media.xcassets/AppIcon.appiconset/Icon-40@3x-1.png and /dev/null differ
+diff --git a/bifold b/bifold
+--- a/bifold
++++ b/bifold
+@@ -1 +1 @@
+-Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507
++Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507-dirty
+diff --git a/app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork.png b/app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork.png
+index 9900a16..680b4e3 100644
+Binary files a/app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork.png and b/app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork.png differ
+diff --git a/bifold b/bifold
+--- a/bifold
++++ b/bifold
+@@ -1 +1 @@
+-Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507
++Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507-dirty
