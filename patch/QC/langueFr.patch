@@ -1,0 +1,110 @@
+diff --git a/app/ios/AriesBifold.xcodeproj/project.pbxproj b/app/ios/AriesBifold.xcodeproj/project.pbxproj
+index 4cfa156..781ea72 100644
+--- a/app/ios/AriesBifold.xcodeproj/project.pbxproj
++++ b/app/ios/AriesBifold.xcodeproj/project.pbxproj
+@@ -537,9 +537,10 @@
+ 			buildSettings = {
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ 				CLANG_ENABLE_MODULES = YES;
+-				CODE_SIGN_IDENTITY = "iPhone Distribution";
+-				CODE_SIGN_STYLE = Manual;
++				CODE_SIGN_IDENTITY = "Apple Development";
++				CODE_SIGN_STYLE = Automatic;
+ 				CURRENT_PROJECT_VERSION = 444;
++				DEVELOPMENT_TEAM = 467G3V9649;
+ 				ENABLE_BITCODE = NO;
+ 				FRAMEWORK_SEARCH_PATHS = (
+ 					"$(inherited)",
+@@ -560,9 +561,9 @@
+ 					"-ObjC",
+ 					"-lc++",
+ 				);
+-				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuilleqc;
+ 				PRODUCT_NAME = AriesBifold;
+-				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet";
++				PROVISIONING_PROFILE_SPECIFIER = "";
+ 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+ 				SWIFT_VERSION = 5.0;
+ 				VERSIONING_SYSTEM = "apple-generic";
+@@ -575,9 +576,10 @@
+ 			buildSettings = {
+ 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+ 				CLANG_ENABLE_MODULES = YES;
+-				CODE_SIGN_IDENTITY = "iPhone Distribution";
+-				CODE_SIGN_STYLE = Manual;
++				CODE_SIGN_IDENTITY = "Apple Development";
++				CODE_SIGN_STYLE = Automatic;
+ 				CURRENT_PROJECT_VERSION = 1;
++				DEVELOPMENT_TEAM = 467G3V9649;
+ 				ENABLE_BITCODE = NO;
+ 				FRAMEWORK_SEARCH_PATHS = (
+ 					"$(inherited)",
+@@ -598,9 +600,9 @@
+ 					"-ObjC",
+ 					"-lc++",
+ 				);
+-				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuilleqc;
+ 				PRODUCT_NAME = AriesBifold;
+-				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet";
++				PROVISIONING_PROFILE_SPECIFIER = "";
+ 				SWIFT_VERSION = 5.0;
+ 				VERSIONING_SYSTEM = "apple-generic";
+ 			};
+diff --git a/app/ios/AriesBifold/Info.plist b/app/ios/AriesBifold/Info.plist
+index 2144bce..9be0637 100644
+--- a/app/ios/AriesBifold/Info.plist
++++ b/app/ios/AriesBifold/Info.plist
+@@ -5,7 +5,7 @@
+ 	<key>CFBundleDevelopmentRegion</key>
+ 	<string>en</string>
+ 	<key>CFBundleDisplayName</key>
+-	<string>BC Wallet</string>
++	<string>portefeuille QC</string>
+ 	<key>CFBundleExecutable</key>
+ 	<string>$(EXECUTABLE_NAME)</string>
+ 	<key>CFBundleIdentifier</key>
+diff --git a/app/src/App.tsx b/app/src/App.tsx
+index 43f517a..f5f03f1 100644
+--- a/app/src/App.tsx
++++ b/app/src/App.tsx
+@@ -20,12 +20,12 @@ import { StatusBar } from "react-native";
+ import SplashScreen from "react-native-splash-screen";
+ import Toast from "react-native-toast-message";
+ import _merge from "lodash.merge";
+-import en from "./localization/en";
++import fr from "./localization/fr";
+ import { defaultTheme as theme } from "./theme";
+ 
+ initLanguages(
+   _merge({}, translationResources, {
+-    en: { translation: en },
++    fr: { translation: fr },
+   })
+ );
+ 
+diff --git a/app/src/index.ts b/app/src/index.ts
+index b64c38d..ee6c3c3 100644
+--- a/app/src/index.ts
++++ b/app/src/index.ts
+@@ -5,11 +5,12 @@ import {
+ import _merge from 'lodash.merge'
+ import  {defaultTheme as theme} from './theme'
+ import en from './localization/en'
++import fr from './localization/fr'
+ import { pages }  from './screens/OnboardingPages'
+ import Terms from './screens/Terms'
+ import Splash from './screens/Splash'
+ 
+-const localization = _merge({}, translationResources, {en:{translation:en}})
++const localization = _merge({}, translationResources, {fr: {translation:fr}, en:{translation:en},})
+ const configuration: ConfigurationContext = {
+     pages,
+     splash: Splash,
+diff --git a/bifold b/bifold
+--- a/bifold
++++ b/bifold
+@@ -1 +1 @@
+-Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507
++Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507-dirty
