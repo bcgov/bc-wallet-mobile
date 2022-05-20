@@ -103,39 +103,39 @@ export const zeroOpacity = 0.0
 export const borderWidth = 2
 
 const BrandColors: BrandColors = {
-  primary: '#003366',
-  primaryDisabled: `rgba(0, 51, 102, ${lightOpacity})`,
-  secondary: '#FFFFFFFF',
-  secondaryDisabled: `rgba(0, 51, 102, ${heavyOpacity})`,
-  highlight: '#FCBA19',
+  primary: '#095797',
+  primaryDisabled: `rgba(9, 87, 151, ${lightOpacity})`,
+  secondary: '#DAE6F0',
+  secondaryDisabled: `rgba(218, 230, 240, ${heavyOpacity})`,
+  highlight: '#FF8E7A',
   primaryBackground: '#F2F2F2',
   secondaryBackground: '#FFFFFF',
-  link: '#1A5A96',
+  link: '#095797',
 }
 
 const SemanticColors: SemanticColors = {
-  error: '#D8292F',
-  success: '#2E8540',
-  focus: '#3399FF',
+  error: '#CB381F',
+  success: '#4F813D',
+  focus: '#DAE6F0',
 }
 
 const NotificationColors: NotificationColors = {
-  success: '#DFF0D8',
-  successBorder: '#D6E9C6',
-  successIcon: '#2D4821',
-  successText: '#2D4821',
+  success: '#4F813D',
+  successBorder: '#4F813D',
+  successIcon: '#095797',
+  successText: '#095797',
   info: '#D9EAF7',
   infoBorder: '#B9CEDE',
   infoIcon: '#313132',
   infoText: '#313132',
   warn: '#F9F1C6',
-  warnBorder: '#FAEBCC',
-  warnIcon: '#6C4A00',
-  warnText: '#6C4A00',
-  error: '#F2DEDE',
-  errorBorder: '#EBCCD1',
-  errorIcon: '#A12622',
-  errorText: '#A12622',
+  warnBorder: '#E0AD03',
+  warnIcon: '#E0AD03',
+  warnText: '#E0AD03',
+  error: '#EDBAB1',
+  errorBorder: '#EDBAB1',
+  errorIcon: '#EBCCD1',
+  errorText: '#EBCCD1',
 }
 
 const GrayscaleColors: GrayscaleColors = {
