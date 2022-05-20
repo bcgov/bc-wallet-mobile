@@ -1,0 +1,42 @@
+diff --git a/app/src/App.tsx b/app/src/App.tsx
+index 43f517a..bbd645e 100644
+--- a/app/src/App.tsx
++++ b/app/src/App.tsx
+@@ -21,11 +21,13 @@ import SplashScreen from "react-native-splash-screen";
+ import Toast from "react-native-toast-message";
+ import _merge from "lodash.merge";
+ import en from "./localization/en";
++import fr from "./localization/fr";
+ import { defaultTheme as theme } from "./theme";
+ 
+ initLanguages(
+   _merge({}, translationResources, {
+     en: { translation: en },
++    fr: { translation: fr },
+   })
+ );
+ 
+diff --git a/app/src/index.ts b/app/src/index.ts
+index b64c38d..bd280eb 100644
+--- a/app/src/index.ts
++++ b/app/src/index.ts
+@@ -5,11 +5,12 @@ import {
+ import _merge from 'lodash.merge'
+ import  {defaultTheme as theme} from './theme'
+ import en from './localization/en'
++import fr from './localization/fr'
+ import { pages }  from './screens/OnboardingPages'
+ import Terms from './screens/Terms'
+ import Splash from './screens/Splash'
+ 
+-const localization = _merge({}, translationResources, {en:{translation:en}})
++const localization = _merge({}, translationResources, {en:{translation:en}, fr: {translation:fr}})
+ const configuration: ConfigurationContext = {
+     pages,
+     splash: Splash,
+diff --git a/bifold b/bifold
+--- a/bifold
++++ b/bifold
+@@ -1 +1 @@
+-Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507
++Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507-dirty

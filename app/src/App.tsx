@@ -21,11 +21,13 @@ import SplashScreen from "react-native-splash-screen";
 import Toast from "react-native-toast-message";
 import _merge from "lodash.merge";
 import en from "./localization/en";
+import fr from "./localization/fr";
 import { defaultTheme as theme } from "./theme";
 
 initLanguages(
   _merge({}, translationResources, {
     en: { translation: en },
+    fr: { translation: fr },
   })
 );
 

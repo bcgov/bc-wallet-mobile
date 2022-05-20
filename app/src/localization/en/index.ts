@@ -181,6 +181,19 @@ const translation = {
   "Loading": {
     "TakingTooLong": "This is taking longer than usual. You can return to home or continue waiting.",
     "BackToHome": "Go back to home"
+  },
+  "OnboardingPages": {
+    "FirstPageTitle": "Welcome",
+    "FirstPageBody1": "BC Wallet is a secure, private and easy way to prove your identity online and in person.",
+    "FirstPageBody2": "You add your digital cards and documents and use them to gain access to online services, and experience faster service processing.",
+    "FirstPageBody3": "With BC Wallet, you own your data. You retain full control and share only what is needed.",
+    "SecondPageTitle": "Store and secure credentials",
+    "SecondPageBody": "Digital credentials are the digital versions of cards and documents you already know, such as membership cards and licenses.\n\nThey are stored securely in this digital wallet app, only on this device.",
+    "ThirdPageTitle": "Share only what is necessary",
+    "ThirdPageBogy": "To use—“prove things”— with your credentials, online or in person, you’ll scan a QR code to start things off.\n\nYou only share the parts of a credential necessary for a situation, which is better for privacy.",
+    "FourthPageTitle": "Take control of your information",
+    "FourthPageBody": " You have control of what, when, and how you prove things from your credentials, and you approve each use. \n\nThe Government of British Columbia is not told when you use your credentials.",
+    "ButtonGetStarted": "Get Started",
   }
 }
 

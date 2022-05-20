@@ -5,11 +5,13 @@ import { SvgProps } from "react-native-svg";
 import CredentialList from "../assets/img/credential-list.svg";
 import ScanShare from "../assets/img/scan-share.svg";
 import SecureImage from "../assets/img/secure-image.svg";
+import { useTranslation } from "react-i18next";
 import { Button, ButtonType, Theme, createStyles } from "aries-bifold";
 import { GenericFn } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 
-const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']) => {
+const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme'], t: React.FC<"translation", undefined>) => {
+  
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -23,13 +25,10 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
       </View>
       <View style={{ marginLeft: 20, marginRight: 20, marginTop: 30 }}>
         <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>
-          Take control of your information
+        {t("OnboardingPages.FourthPageTitle")}
         </Text>
         <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>
-          You have control of what, when, and how you prove things from your
-          credentials, and you approve each use.
-          {"\n\n"}The Government of British Columbia is not told when you use
-          your credentials.
+        {t("OnboardingPages.FourthPageBody")}
         </Text>
       </View>
       <View
@@ -54,7 +53,7 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
           <Icon name={'open-in-new'} size={14} color={Colors.text} style={{ marginLeft: 5 }} />
         </View> */}
         <Button
-          title={"Get Started"}
+          title={t("OnboardingPages.ButtonGetStarted")}
           accessibilityLabel={"Get Started"}
           testID={testIdWithKey("GetStarted")}
           onPress={onTutorialCompleted}
@@ -65,14 +64,14 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
   );
 };
 
-const startPages = (theme: Theme) => {
+const startPages = (theme: Theme, t: React.FC<"translation", undefined>) => {
   const defaultStyle = createStyles(theme);
   return (
     <>
       <Text
         style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}
       >
-        Welcome
+        {t("OnboardingPages.FirstPageTitle")}
       </Text>
       <Text
         style={[
@@ -80,8 +79,7 @@ const startPages = (theme: Theme) => {
           { marginLeft: 20, marginTop: 35, marginRight: 20 },
         ]}
       >
-        BC Wallet is a secure, private and easy way to prove your identity
-        online and in person.
+        {t("OnboardingPages.FirstPageBody1")}
       </Text>
       <Text
         style={[
@@ -89,8 +87,7 @@ const startPages = (theme: Theme) => {
           { marginLeft: 20, marginTop: 25, marginRight: 20 },
         ]}
       >
-        You add your digital cards and documents and use them to gain access to
-        online services, and experience faster service processing.
+        {t("OnboardingPages.FirstPageBody2")}
       </Text>
       <Text
         style={[
@@ -98,8 +95,7 @@ const startPages = (theme: Theme) => {
           { marginLeft: 20, marginTop: 25, marginRight: 20 },
         ]}
       >
-        With BC Wallet, you own your data. You retain full control and share
-        only what is needed.{" "}
+        {t("OnboardingPages.FirstPageBody3")}
       </Text>
     </>
   );
@@ -112,13 +108,13 @@ const guides: Array<{
 }> = [
   {
     image: CredentialList,
-    title: "Store and secure credentials",
-    body: "Digital credentials are the digital versions of cards and documents you already know, such as membership cards and licenses.\n\nThey are stored securely in this digital wallet app, only on this device.",
+    title: "SecondPageTitle",
+    body: "SecondPageBody",
   },
   {
     image: ScanShare,
-    title: "Share only what is necessary",
-    body: "To use—“prove things”— with your credentials, online or in person, you’ll scan a QR code to start things off.\n\nYou only share the parts of a credential necessary for a situation, which is better for privacy.",
+    title: "ThirdPageTitle",
+    body: "ThirdPageBogy",
   },
 ];
 
@@ -126,7 +122,8 @@ const createPageWith = (
   image: React.FC<SvgProps>,
   title: string,
   body: string,
-  theme: Theme['OnboardingTheme']
+  theme: Theme['OnboardingTheme'],
+  t: React.FC<"translation", undefined>
 ) => {
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
@@ -138,8 +135,8 @@ const createPageWith = (
     <>
       <View style={{ alignItems: "center" }}>{image(imageDisplayOptions)}</View>
       <View style={{ marginLeft: 20, marginRight: 20, marginTop: 30 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{title}</Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{body}</Text>
+        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t("OnboardingPages." + title)}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t("OnboardingPages." + body)}</Text>
       </View>
     </>
   );
@@ -149,9 +146,10 @@ export const pages = (
   onTutorialCompleted: GenericFn,
   theme: Theme
 ): Array<Element> => {
+  const { t } = useTranslation();
   return [
-    startPages(theme),
-    ...guides.map((g) => createPageWith(g.image, g.title, g.body, theme)),
-    endPage(onTutorialCompleted, theme),
+    startPages(theme, t),
+    ...guides.map((g) => createPageWith(g.image, g.title, g.body, theme, t)),
+    endPage(onTutorialCompleted, theme, t),
   ];
 };
