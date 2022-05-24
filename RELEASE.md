@@ -1,6 +1,10 @@
 
 v1.0.1
 
+Build #185
+
+- Fixed stuck on waiting screen #360;
+
 Build #184
 
 - Fix testIDs on credentials screen(s) #349;
