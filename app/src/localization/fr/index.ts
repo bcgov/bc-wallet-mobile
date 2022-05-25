@@ -3,14 +3,14 @@ const translation = {
         "EnterPin": "Saisir le NIP",
         "6DigitPin": "NIP à 6 chiffres",
         "Submit": "Soumettre",
-        "NoneYet!": "Votre portefeuille est vide. Vos justificatifs acceptés seront ajoutés ici.",
+        "NoneYet!": "Votre portefeuille est vide. Vos attestations acceptées seront ajoutées ici.",
         "Cancel": "Annuler",
         "Confirm": "Confirmer",
         "Accept": "Accepter",
         "Reject": "Rejeter",
         "Share": "Partager",
         "Decline": "Refuser",
-        "Back": "Retour",
+        "Back": "Précédent",
         "Next": "Suivant",
         "Continue": "Continuer",
         "Info": "Information",
@@ -24,7 +24,7 @@ const translation = {
         "Home": "Accueil",
         "ErrorCode": "Code d'erreur",
         "Okay": "Ok",
-        "GoBack": "Retour",
+        "GoBack": "Retourner",
         "GetStarted": "Commencer",
         "Dismiss": "Rejeter"
     },
@@ -62,8 +62,8 @@ const translation = {
         "AContact": "Un contact"
     },
     "Credentials": {
-        "CredentialsNotFound": "Justificatifs non trouvés",
-        "CredentialDetails": "Détails des justificatifs"
+        "CredentialsNotFound": "Attestations introuvables",
+        "CredentialDetails": "Détails des attestations"
     },
     "CredentialDetails": {
         "Id": "Identifiant :",
@@ -74,51 +74,51 @@ const translation = {
         "TermsAndConditions": "Conditions d'utilisation",
         "RemoveFromWallet": "Retirer du portefeuille",
         "Revoked": "Révoqué",
-        "CredentialRevokedMessageTitle": "Ce justificatif est révoqué",
-        "CredentialRevokedMessageBody": "Ce justificatif peut ne plus fonctionner pour certaines demandes de preuve. Vous devrez mettre à jour le justificatif avec l'émetteur."
+        "CredentialRevokedMessageTitle": "Cette attestation est révoquée",
+        "CredentialRevokedMessageBody": "Cette attestation peut ne plus fonctionner pour certaines demandes de preuve. Vous devrez mettre à jour l'attestation avec l'émetteur."
     },
     "Home": {
         "Welcome": "Bienvenue",
         "Notifications": "Notifications",
         "NoNewUpdates": "Vous n'avez pas de nouvelles notifications.",
-        "NoCredentials": "Vous n'avez pas de justificatifs dans votre portefeuille.",
-        "SeeAll": "Voir tout",
+        "NoCredentials": "Vous n'avez pas d'attestation dans votre portefeuille.",
+        "SeeAll": "Afficher tout",
         "YouHave": "Vous avez",
-        "Credential": "justificatif",
-        "Credentials": "justificatifs",
+        "Credential": "attestation",
+        "Credentials": "attestations",
         "InYourWallet": "dans votre portefeuille"
     },
     "Scan": {
         "SuccessfullyAcceptedConnection": "Connexion acceptée avec succès",
         "AcceptingConnection": "Acceptation de la connexion",
-        "ConnectionRecordIdNotFound": "Identifiant de l'enregistrement de connexion non trouvé",
+        "ConnectionRecordIdNotFound": "Identifiant de l'enregistrement de connexion introuvable",
         "ConnectionAccepted": "Connexion acceptée",
-        "ConnectionNotFound": "Connexion non trouvée",
-        "InvalidQrCode": "Code QR non valide. Veuillez réessayer.",
+        "ConnectionNotFound": "Connexion non détectée",
+        "InvalidQrCode": "Code QR erroné. Veuillez réessayer.",
         "UnableToHandleRedirection": "Impossible de traiter la redirection",
         "Close": "Fermer",
         "Torch": "Flash"
     },
     "Connection": {
         "JustAMoment": "Veuillez patienter pendant que nous établissons une connexion sécurisée...",
-        "TakingTooLong": "Cela prend plus de temps que d'habitude. Vous pouvez retourner à l'accueil ou continuer à attendre."
+        "TakingTooLong": "Cela prend plus de temps qu'à la normale. Vous pouvez retourner à l'accueil ou continuer à patienter."
     },
     "CredentialOffer": {
-        "ThisIsTakingLongerThanExpected": "Cela prend plus de temps que prévu. Revenez plus tard pour votre nouveau justificatif.",
-        "RejectThisCredential?": "Rejeter ce justificatif?",
-        "AcceptingCredential": "Acceptation du justificatif",
-        "SuccessfullyAcceptedCredential": "Justificatif accepté avec succès",
-        "RejectingCredential": "Rejet du justificatif",
-        "SuccessfullyRejectedCredential": "Justificatif rejeté avec succès",
-        "CredentialNotFound": "Justificatif non trouvé",
-        "CredentialAccepted": "Justificatif accepté",
-        "CredentialRejected": "Justificatif rejeté",
-        "CredentialAddedToYourWallet": "Justificatif ajouté à votre portefeuille",
-        "CredentialDeclined": "Justificatif refusé",
-        "CredentialOnTheWay": "Votre justificatif est en cours de transmission",
-        "CredentialOffer": "Nouvelle offre de justificatif",
-        "IsOfferingYouACredential": "vous offre un justificatif",
-        "ConfirmDeclineCredential": "Oui, refuser ce justificatif",
+        "ThisIsTakingLongerThanExpected": "Cela prend plus de temps que prévu. Revenez plus tard pour votre nouvelle attestation.",
+        "RejectThisCredential?": "Rejeter cette attestation?",
+        "AcceptingCredential": "Acceptation de l'attestation",
+        "SuccessfullyAcceptedCredential": "Attestation acceptée avec succès",
+        "RejectingCredential": "Rejet de l'attestation",
+        "SuccessfullyRejectedCredential": "Attestation rejetée avec succès",
+        "CredentialNotFound": "Attestation introuvable",
+        "CredentialAccepted": "Attestation acceptée",
+        "CredentialRejected": "Attestation rejetée",
+        "CredentialAddedToYourWallet": "Attestation ajoutée à votre portefeuille",
+        "CredentialDeclined": "Attestation refusée",
+        "CredentialOnTheWay": "Votre attestation est en cours de transmission",
+        "CredentialOffer": "Nouvelle offre d'attestation",
+        "IsOfferingYouACredential": "vous propose un attestation",
+        "ConfirmDeclineCredential": "Oui, refuser cette attestation",
         "AbortDeclineCredential": "Non, revenir en arrière"
     },
     "ProofRequest": {
@@ -126,15 +126,15 @@ const translation = {
         "RejectThisProof?": "Rejeter cette preuve?",
         "AcceptingProof": "Acceptation de la preuve",
         "SuccessfullyAcceptedProof": "Preuve acceptée avec succès",
-        "ProofNotFound": "Preuve non trouvée",
+        "ProofNotFound": "Preuve introuvable",
         "RejectingProof": "Rejet de la preuve",
         "ProofAccepted": "Preuve acceptée",
         "ProofRejected": "Preuve rejetée",
-        "RequestedCredentialsCouldNotBeFound": "Les justificatifs demandés n'ont pas été trouvés",
+        "RequestedCredentialsCouldNotBeFound": "Les attestations demandées n'ont pas été trouvées",
         "ProofRequest": "Nouvelle demande de preuve",
         "NotAvailableInYourWallet": "Non disponible dans votre portefeuille",
         "IsRequesting": "demande",
-        "IsRequestingSomethingYouDontHaveAvailable": "demande quelque chose que vous n'avez pas à votre disposition",
+        "IsRequestingSomethingYouDontHaveAvailable": "demande une information que vous n'avez pas à votre disposition",
         "IsRequestingYouToShare": "vous demande de partager",
         "WhichYouCanProvideFrom": "que vous pouvez fournir à partir de",
         "Details": "Détails",
@@ -145,14 +145,14 @@ const translation = {
     "Settings": {
         "Version": "Version",
         "VersionString": "0.0.0-0",
-        "AppPreferences": "Préférences de l'application",
-        "AboutApp": "À propos de l'application",
+        "AppPreferences": "Préférences",
+        "AboutApp": "À propos",
         "Language": "Langue"
     },
     "TabStack": {
         "Home": "Accueil",
-        "Scan": "Numériser",
-        "Credentials": "Justificatifs"
+        "Scan": "Lire un code QR",
+        "Credentials": "Attestations"
     },
     "RootStack": {
         "Contacts": "Contacts",
@@ -176,11 +176,11 @@ const translation = {
         "CreatePin": "Créer un NIP à 6 chiffres",
         "EnterPin": "Saisir le NIP",
         "Home": "Accueil",
-        "Scan": "Numériser",
-        "Credentials": "Justificatifs",
-        "CredentialDetails": "Détails des justificatifs",
+        "Scan": "Lire un code QR",
+        "Credentials": "Attestations",
+        "CredentialDetails": "Détails des attestations",
         "Notifications": "Notifications",
-        "CredentialOffer": "Offre de justificatif",
+        "CredentialOffer": "Proposition d'attestation",
         "ProofRequest": "Demande de preuve",
         "ProofRequestAttributeDetails": "Détails des attributs de la demande de preuve",
         "Settings": "Paramètres",
@@ -189,7 +189,7 @@ const translation = {
         "ContactDetails": "Coordonnées"
     },
     "Loading": {
-        "TakingTooLong": "Cela prend plus de temps que d'habitude. Vous pouvez retourner à l'accueil ou continuer à attendre.",
+        "TakingTooLong": "Cela prend plus de temps que qu'à la normale. Vous pouvez retourner à l'accueil ou continuer à patienter.",
         "BackToHome": "Retour à l'accueil"
     },
     "OnboardingPages": {
