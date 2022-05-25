@@ -1,0 +1,15 @@
+diff --git a/app/src/assets/img/logo-large.png b/app/src/assets/img/logo-large.png
+index 03df9f8..c970223 100644
+Binary files a/app/src/assets/img/logo-large.png and b/app/src/assets/img/logo-large.png differ
+diff --git a/app/src/assets/img/logo-large@2x.png b/app/src/assets/img/logo-large@2x.png
+index b7bb2a1..a31d334 100644
+Binary files a/app/src/assets/img/logo-large@2x.png and b/app/src/assets/img/logo-large@2x.png differ
+diff --git a/app/src/assets/img/logo-large@3x.png b/app/src/assets/img/logo-large@3x.png
+index 69ec80f..48db567 100644
+Binary files a/app/src/assets/img/logo-large@3x.png and b/app/src/assets/img/logo-large@3x.png differ
+diff --git a/bifold b/bifold
+--- a/bifold
++++ b/bifold
+@@ -1 +1 @@
+-Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507
++Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507-dirty
