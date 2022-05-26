@@ -1,9 +1,13 @@
 
 v1.0.1
 
+Build #186
+
+- Expose credential list testIDs #367.
+
 Build #185
 
-- Fixed stuck on waiting screen #360;
+- Fixed stuck on waiting screen #360.
 
 Build #184
 
