@@ -1,6 +1,10 @@
 
 v1.0.1
 
+Build #187
+
+- Connect to ledger on on startup to improve performance.
+
 Build #186
 
 - Expose credential list testIDs #367.
