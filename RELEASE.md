@@ -1,11 +1,15 @@
 
 v1.0.1
 
+Build #18x
+
+
+
 Build #188
 
 - Connect to ledger on on startup to improve performance;
 - Add blue top bar to offer and proof modals #314;
-- Fix faded status bar and wrong color on Android #336;
+- Fix faded status bar and wrong color on Android #336.
 
 Build #186
 
