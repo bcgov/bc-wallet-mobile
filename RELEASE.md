@@ -1,9 +1,9 @@
 
 v1.0.1
 
-Build #18x
+Build #190
 
-
+- Fix app crashes during initialization #381.
 
 Build #188
 
