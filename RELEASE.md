@@ -1,6 +1,19 @@
 
 v1.0.1
 
+Build #197
+
+- Implement new PIN screens;
+- Allow errors to show technical message on demand;
+- Use common decline screen for offer and proof #314;
+- Fix modal decline screen #314;
+- Lock phone orientation to portrait #192 ;
+- Change the color and style of the details button on the proof screen #332;
+- Change the field name in list (offer and proof) to be bold;
+- List item background color to red for revoked credentials #343;
+- Add back button to modal proof details screen;
+- Fix status bar colour on proof / offer screens #336.
+
 Build #190
 
 - Fix app crashes during initialization #381.
