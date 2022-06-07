@@ -15,6 +15,7 @@ api*.json
 *secret*
 *secrets*
 .env
+.idea/
 
 # Other
 node_modules
