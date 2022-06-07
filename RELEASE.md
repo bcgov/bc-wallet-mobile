@@ -1,6 +1,11 @@
 
 v1.0.1
 
+Build #200
+
+- Update app icons #342;
+- Add testIDs to PIN screens.
+
 Build #197
 
 - Implement new PIN screens;
