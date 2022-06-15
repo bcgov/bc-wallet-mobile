@@ -33,7 +33,7 @@ jobs:
       - name: Configure node
         uses: actions/setup-node@v1
         with:
-          node-version: '16.x'
+          node-version: '16.15.0'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Configure ruby
@@ -212,7 +212,7 @@ jobs:
       - name: Configure node
         uses: actions/setup-node@v1
         with:
-          node-version: '16.x'
+          node-version: '16.15.0'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup JDK 1.8
