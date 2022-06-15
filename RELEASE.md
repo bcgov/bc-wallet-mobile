@@ -5,7 +5,7 @@ Build #203
 
 - Add loading animation #304;
 - Allow presenting revoked credentials #352;
-- Add test and accessability labels to PIN screens.
+- Add test and accessibility labels to PIN screens.
 
 Build #200
 
