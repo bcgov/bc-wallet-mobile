@@ -1,7 +1,7 @@
 
 v1.0.1
 
-Build #201
+Build #203
 
 - Add loading animation #304;
 - Allow presenting revoked credentials #352;
