@@ -1,10 +1,17 @@
 
 v1.0.1
 
+Build #201
+
+- Add loading animation #304;
+- Allow presenting revoked credentials #352;
+- Add test and accessability labels to PIN screens.
+
 Build #200
 
 - Update app icons #342;
-- Add testIDs to PIN screens.
+- Add testIDs to PIN screens;
+- Fix first cell focused on PIN screen #388.
 
 Build #197
 
