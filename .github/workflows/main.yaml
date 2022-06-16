@@ -33,7 +33,7 @@ jobs:
       - name: Configure node
         uses: actions/setup-node@v1
         with:
-          node-version: '16.x'
+          node-version: '16.15.0'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Configure ruby
@@ -212,7 +212,7 @@ jobs:
       - name: Configure node
         uses: actions/setup-node@v1
         with:
-          node-version: '16.x'
+          node-version: '16.15.0'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup JDK 1.8
@@ -349,7 +349,7 @@ jobs:
           DEVICE_CLOUD_KEY: "-k ${{ secrets.SAUCE_ACCESS_KEY }}"
           MOBILE_PLATFORM: ${{ matrix.mobile-platform }}
           APP_FILE_NAME: ${{ matrix.app-file-name }}
-          TEST_SCOPE: "-t @bc_wallet -t @T002-Proof"
+          TEST_SCOPE: "-t @bc_wallet -t @SmokeTest"
           REPORT_PROJECT: ${{ matrix.report-project }}
         continue-on-error: true
 

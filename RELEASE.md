@@ -1,6 +1,59 @@
 
 v1.0.1
 
+Build #203
+
+- Add loading animation #304;
+- Allow presenting revoked credentials #352;
+- Add test and accessability labels to PIN screens.
+
+Build #200
+
+- Update app icons #342;
+- Add testIDs to PIN screens;
+- Fix first cell focused on PIN screen #388.
+
+Build #197
+
+- Implement new PIN screens;
+- Allow errors to show technical message on demand;
+- Use common decline screen for offer and proof #314;
+- Fix modal decline screen #314;
+- Lock phone orientation to portrait #192 ;
+- Change the color and style of the details button on the proof screen #332;
+- Change the field name in list (offer and proof) to be bold;
+- List item background color to red for revoked credentials #343;
+- Add back button to modal proof details screen;
+- Fix status bar colour on proof / offer screens #336.
+
+Build #190
+
+- Fix app crashes during initialization #381.
+
+Build #188
+
+- Connect to ledger on on startup to improve performance;
+- Add blue top bar to offer and proof modals #314;
+- Fix faded status bar and wrong color on Android #336.
+
+Build #186
+
+- Expose credential list testIDs #367.
+
+Build #185
+
+- Fixed stuck on waiting screen #360.
+
+Build #184
+
+- Fix testIDs on credentials screen(s) #349;
+- Add professional French translation; #224;
+- Fix issue with LSBC credential issuance #337;
+- Fix proof details style button style #332;
+- Fix style of revoked credential #343;
+- Fix credential offer covering top header #284;
+- Update loading activity indicator;
+
 Build #175
 
 - Fix missing background in safe area overflow #341;

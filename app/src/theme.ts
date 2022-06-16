@@ -328,7 +328,7 @@ export const ListItems = StyleSheet.create({
     ...TextTheme.normal,
   },
   revoked: {
-    backgroundColor: ColorPallet.semantic.error,
+    backgroundColor: ColorPallet.notification.error,
     borderColor: ColorPallet.notification.errorBorder,
   },
   contactBackground: {
@@ -551,9 +551,35 @@ export const OnboardingTheme = {
   },
 }
 
+const LoadingTheme = {
+  backgroundColor: ColorPallet.brand.primary,
+}
+
+const PinInputTheme = {
+  cell: {
+    backgroundColor: ColorPallet.grayscale.lightGrey,
+    borderColor: ColorPallet.grayscale.lightGrey,
+  },
+  focussedCell: {
+    borderColor: '#3399FF',
+  },
+  cellText: {
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  icon: {
+    color: ColorPallet.grayscale.darkGrey
+  }
+}
+
 export const Assets = {
   img: {
-    logoLarge: require('./assets/img/logo-large.png'),
+    logoLarge: {
+      src: require('./assets/img/logo-large.png'),
+      aspectRatio: 1,
+      height: '33%',
+      width: '33%',
+      resizeMode: 'contain',
+    }
   },
 }
 
@@ -573,5 +599,7 @@ export const defaultTheme: Theme = {
   SettingsTheme,
   ChatTheme,
   OnboardingTheme,
+  LoadingTheme,
+  PinInputTheme,
   Assets
 }
