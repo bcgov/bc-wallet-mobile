@@ -63,7 +63,8 @@ const translation = {
     },
     "Credentials": {
         "CredentialsNotFound": "Attestations introuvables",
-        "CredentialDetails": "Détails des attestations"
+        "CredentialDetails": "Détails des attestations",
+        "EmptyList": "Votre portefeuille est vide. Vos informations d'identification acceptées seront ajoutées ici.",
     },
     "CredentialDetails": {
         "Id": "Identifiant :",

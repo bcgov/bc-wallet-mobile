@@ -227,3 +227,24 @@ diff --git a/bifold b/bifold
 @@ -1 +1 @@
 -Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507
 +Subproject commit 0495a19e37efb4cd78ea3c613c83a2539be67507-dirty
+diff --git a/app/src/localization/fr/index.ts b/app/src/localization/fr/index.ts
+index 381bcfc..31d91fa 100644
+--- a/app/src/localization/fr/index.ts
++++ b/app/src/localization/fr/index.ts
+@@ -63,7 +63,8 @@ const translation = {
+     },
+     "Credentials": {
+         "CredentialsNotFound": "Attestations introuvables",
+-        "CredentialDetails": "Détails des attestations"
++        "CredentialDetails": "Détails des attestations",
++        "EmptyList": "Votre portefeuille est vide. Vos informations d'identification acceptées seront ajoutées ici.",
+     },
+     "CredentialDetails": {
+         "Id": "Identifiant :",
+@@ -207,4 +208,4 @@ const translation = {
+     }
+ }
+ 
+-export default translation
+\ No newline at end of file
++export default translation
