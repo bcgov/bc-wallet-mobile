@@ -15,3 +15,30 @@ index 6f12603..796c147 100644
      }
  };
  IndyRevocationService = __decorate([
+diff --git a/node_modules/@aries-framework/core/build/transport/WsOutboundTransport.js b/node_modules/@aries-framework/core/build/transport/WsOutboundTransport.js
+index 3410631..ce70663 100644
+--- a/node_modules/@aries-framework/core/build/transport/WsOutboundTransport.js
++++ b/node_modules/@aries-framework/core/build/transport/WsOutboundTransport.js
+@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.WsOutboundTransport = void 0;
+ const AgentConfig_1 = require("../agent/AgentConfig");
+ const EventEmitter_1 = require("../agent/EventEmitter");
++const Events_1 = require("../agent/Events");
+ const AriesFrameworkError_1 = require("../error/AriesFrameworkError");
+ const buffer_1 = require("../utils/buffer");
+ const TransportEventTypes_1 = require("./TransportEventTypes");
+@@ -17,7 +18,13 @@ class WsOutboundTransport {
+             this.logger.trace('WebSocket message event received.', { url: event.target.url, data: event.data });
+             const payload = JSON.parse(buffer_1.Buffer.from(event.data).toString('utf-8'));
+             this.logger.debug('Payload received from mediator:', payload);
+-            this.agent.receiveMessage(payload);
++            // this.agent.receiveMessage(payload);
++            this.agent.events.emit({
++                type: Events_1.AgentEventTypes.AgentMessageReceived,
++                payload: {
++                    message: payload,
++                },
++            });
+         };
+     }
+     async start(agent) {
