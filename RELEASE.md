@@ -1,6 +1,11 @@
 
 v1.0.1
 
+Build #209
+
+- Wallet is secured based on PIN rather than hard coded secret;
+- Support for biometrics to unlock wallet.
+
 Build #203
 
 - Add loading animation #304;
