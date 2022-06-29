@@ -1,11 +1,16 @@
 
 v1.0.1
 
+Build #209
+
+- Wallet is secured based on PIN rather than hard coded secret;
+- Support for biometrics to unlock wallet.
+
 Build #203
 
 - Add loading animation #304;
 - Allow presenting revoked credentials #352;
-- Add test and accessability labels to PIN screens.
+- Add test and accessibility labels to PIN screens.
 
 Build #200
 
