@@ -20,7 +20,7 @@ following products on your development machine:
 
 * Android SDK
 
-* Java
+* Java 8
 
 ## Getting the Sources
 
@@ -32,7 +32,7 @@ Folder scructure:
 
 ### BC Wallet
 
-For now, you can clone  directly from https://github.com/bcgov/bc-wallet-mobile.git and checkout `bifold-framework` branch
+For now, you can clone  directly from https://github.com/bcgov/bc-wallet-mobile.git
 
 ```shell
 # Clone your GitHub repository:
@@ -40,27 +40,31 @@ git clone https://github.com/bcgov/bc-wallet-mobile.git
 
 # Go to the BC Wallet directory:
 cd bc-wallet-mobile
-
-# checkout branch
-git checkout bifold-framework
 ```
 
 NOTE: from here on, all paths are relative to the cloned repository directory (e.g.: bc-wallet-mobile)
 
 ### Aries Bifold
 
-For now, you can clone from this [fork](https://github.com/cvarjao/aries-mobile-agent-react-native.git) and checkout `as-framework-step-2`
+For now, all you have to do is initialize the sub-module
 ```shell
-# Clone your GitHub repository:
-git clone https://github.com/cvarjao/aries-mobile-agent-react-native.git bifold
-
-# Go to the BC Wallet directory:
-cd bifold
-
-# checkout branch
-git checkout as-framework-step-2
+# Initialize the aries bifold submodule:
+git submodule update --init
 ```
 
+## Updating Environment Variables (Linux)
+
+Make sure you have Android sdk installed, if you have android studio installed then you should already have it.
+```shell
+# Update the PATH and add the variable ANDROID_SDK_ROOT
+
+# Replace <YOUR_USER_NAME> with your user name. 
+# /home/<YOUR_USER_NAME>/Android/Sdk is the default location of the sdk when using android studio. 
+# Depending on how you installed the SDK, it may be in a different folder. 
+# Make sure that ANDROID_SDK_ROOT is set to the "Sdk" folder in your android SDK installation
+export ANDROID_SDK_ROOT=/home/<YOUR_USER_NAME>/Android/Sdk
+export PATH="${PATH}:${ANDROID_SDK_ROOT}/emulator:${ANDROID_SDK_ROOT}/tools:${ANDROID_SDK_ROOT}/tools/bin:${ANDROID_SDK_ROOT}/platform-tools:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin"
+```
 
 ## Installing NPM Modules
 
@@ -76,13 +80,13 @@ npm install
 IMPORTANT: If you are running `npm install` manually, you must provide `--legacy-peer-deps`
 
 ## Running in an Android emulator
-During the devlopment process, you may want to run the app in the emulator to see see what it looks like or for some manual testing.
+During the development process, you may want to run the app in the emulator to see see what it looks like or for some manual testing.
 
 ```shell
 cd app
 npm run android
 ```
-After the initial debug app has been built and deployed to emulatore, you can just start the metro bundler:
+After the initial debug app has been built and deployed to the emulator, you can just start the metro bundler:
 ```shell
 cd app
 npm run start
