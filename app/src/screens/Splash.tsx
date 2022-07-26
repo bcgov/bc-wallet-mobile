@@ -7,7 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { LocalStorageKeys, StoreContext } from "aries-bifold";
 import { DispatchAction } from "aries-bifold";
-import { ColorPallet } from "../theme";
+import { Assets, ColorPallet } from "../theme";
 import { AuthenticateStackParams, Screens } from "aries-bifold";
 import { OnboardingState } from "aries-bifold";
 
@@ -89,7 +89,7 @@ const Splash: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Image source={require("../assets/img/logo-large.png")} />
+      <Image source={Assets.img.logoSecondary.src} />
     </SafeAreaView>
   );
 };
