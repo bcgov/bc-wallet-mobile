@@ -573,14 +573,14 @@ const PinInputTheme = {
 
 export const Assets = {
   img: {
-    logoPrimary: {
+    logoSecondary: {
       src: require('./assets/img/logo-large.png'),
       aspectRatio: 1,
       height: '33%',
       width: '33%',
       resizeMode: 'contain',
     },
-    logoSecondary: {
+    logoPrimary: {
       src: require('./assets/img/logo-large-white.png')
     }
   },
