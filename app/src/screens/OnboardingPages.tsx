@@ -80,8 +80,7 @@ const startPages = (theme: Theme) => {
           { marginLeft: 20, marginTop: 35, marginRight: 20 },
         ]}
       >
-        BC Wallet is a secure, private and easy way to prove your identity
-        online and in person.
+        BC Wallet is a secure, private and easy way to prove things about yourself online.
       </Text>
       <Text
         style={[
