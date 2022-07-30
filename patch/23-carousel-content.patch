@@ -303,7 +303,7 @@ index 4998645..3c74110 100644
 +  <>
 +    <Text style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}>Welcome</Text>
 +    <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 35, marginRight: 20 }]}>
-+      BC Wallet is a secure, private and easy way to prove your identity online and in person.
++      BC Wallet is a secure, private and easy way to prove things about yourself online
 +    </Text>
 +    <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
 +      You add your digital cards and documents and use them to gain access to online services, and experience faster
