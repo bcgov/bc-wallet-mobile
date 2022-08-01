@@ -145,6 +145,7 @@ jobs:
           archive
 
       - name: Archive & Sign
+        if: github.ref_name == 'main'
         working-directory: app/ios
         run: |
           xcodebuild \
@@ -156,6 +157,7 @@ jobs:
 
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
+        if: github.ref_name == 'main'
         run: |
           pip3 install codemagic-cli-tools
 
