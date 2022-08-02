@@ -19,7 +19,6 @@ import {
 import { IDIM_PORTAL_URL, IDIM_AGENT_INVITE_URL } from "../constants";
 import { useNavigation } from "@react-navigation/core";
 import { Screens } from "aries-bifold";
-import url from "url";
 
 const trustedInvitationIssueRe =
   /3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default/i;
@@ -69,7 +68,7 @@ const BCIDView: React.FC = () => {
     }
 
     if (proof.state == ProofState.Done && connection) {
-      const destUrl = url.resolve(IDIM_PORTAL_URL, connection?.did);
+      const destUrl = `${IDIM_PORTAL_URL}/${connection?.did}`;
       navigation.navigate(Screens.WebDisplay, { destUrl });
     }
   }, [proof, connection]);
