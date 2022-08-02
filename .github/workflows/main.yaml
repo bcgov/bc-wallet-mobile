@@ -141,8 +141,10 @@ jobs:
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          IDIM_PORTAL_URL: ${{ secrets.IDIM_PORTAL_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+          echo "IDIM_PORTAL_URL=${IDIM_PORTAL_URL}" >>.env
 
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       - name: Create Provisioning Profile
