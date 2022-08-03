@@ -27,6 +27,7 @@ const App = () => {
   useEffect(() => {
     // Hide the native splash / loading screen so that our
     // RN version can be displayed.
+    // test1
     SplashScreen.hide();
   }, []);
 
