@@ -202,9 +202,9 @@ jobs:
         build-tools: [30.0.2]
         sdk-tools:   [4333796]
     steps:
-
+        # PLAY_STORE_JKS_PASSWD
       - name: Foo
-        if: (github.ref_name == 'main') && ("${{ env.PLAY_STORE_JKS_BASE64 != '' }}")
+        if: (github.ref_name == 'main') && ("${{ env.PLAY_STORE_JKS_BASE64 == '' }}")
         run: |
           echo "Hello World"
           echo "${R}"
