@@ -204,7 +204,7 @@ jobs:
     steps:
         # PLAY_STORE_JKS_PASSWD
       - name: Foo
-        if: (github.ref_name == 'main') && (env.PLAY_STORE_JKS_BASE64 == null)
+        if: github.ref_name == 'main' && "${{ env.PLAY_STORE_JKS_BASE64 == null }}"
         run: |
           echo "Hello World"
           echo "${R}"
