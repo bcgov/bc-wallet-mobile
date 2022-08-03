@@ -17,7 +17,7 @@ on:
 
 jobs:
   build-ios:
-    # if: ${{ false }}  # disable for now
+    if: ${{ false }}  # disable for now
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -202,6 +202,12 @@ jobs:
         build-tools: [30.0.2]
         sdk-tools:   [4333796]
     steps:
+
+      - name: Foo
+        if: (github.ref_name == 'main') && ("${{ env.PLAY_STORE_JKS_BASE64 != '' }}")
+        env:
+          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
+
       - uses: actions/checkout@v1
       
       - name: Log
