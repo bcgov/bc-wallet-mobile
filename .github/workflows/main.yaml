@@ -205,9 +205,12 @@ jobs:
 
       - name: Foo
         if: (github.ref_name == 'main') && ("${{ env.PLAY_STORE_JKS_BASE64 != '' }}")
-        run: echo "Hello World"
+        run: |
+          echo "Hello World"
+          echo "${R}"
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
+          R: ${{ github.repository }}
 
       - uses: actions/checkout@v1
       
