@@ -4,6 +4,7 @@ v1.0.1
 - Update AFJ to latest 0.2.0
 - Update React hooks to latest 0.3.0
 - Add offline messaging support
+- Remove credential feature added
 - Update logos on loading and pin screens
 
 Build #209
