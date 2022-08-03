@@ -22,10 +22,10 @@ jobs:
       isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
     steps:
       - id: isReleaseBuild
-        if: env.PROVISIONING_PROFILE != null && BUILD_CERTIFICATE_BASE64 != null
+        if: env.PROVISIONING_PROFILE != null && env.BUILD_CERTIFICATE_BASE64 != null
         run: echo "::set-output name=defined::true"
         env:
-          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
   
   build-ios:
