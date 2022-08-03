@@ -352,7 +352,7 @@ jobs:
           --form "description=Android Bifold BC wallet app"
 
   run-on-device-tests:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
     runs-on: ubuntu-latest
     strategy:
