@@ -1,6 +1,11 @@
 
 v1.0.1
 
+- Update AFJ to latest 0.2.0
+- Update React hooks to latest 0.3.0
+- Add offline messaging support
+- Update logos on loading and pin screens
+
 Build #209
 
 - Wallet is secured based on PIN rather than hard coded secret;
