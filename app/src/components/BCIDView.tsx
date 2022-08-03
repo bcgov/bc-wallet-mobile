@@ -2,7 +2,6 @@ import { ProofState, CredentialState } from "@aries-framework/core";
 import {
   useAgent,
   useCredentialByState,
-  useConnections,
   useProofById,
   useProofByState,
   useConnectionById,
@@ -24,7 +23,7 @@ import { Config } from "react-native-config";
 const trustedInvitationIssueRe =
   /3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default/i;
 const trustedFoundationCredentialIssuerRe =
-  /XpgeQa93eZvGSZBZef3PHn:[0-9]{1,1}:CL:[0-9]{5,}:BC\sPerson\sCredential\s\(Dev\)/i;
+  /XpgeQa93eZvGSZBZef3PHn:[0-9]{1,1}:CL:[0-9]{5,}:BC\sPerson\sCredential.*/i;
 
 const BCIDView: React.FC = () => {
   const [showGetFoundationCredential, setShowGetFoundationCredential] =
@@ -35,14 +34,14 @@ const BCIDView: React.FC = () => {
   ];
   const { agent } = useAgent();
   const { t } = useTranslation();
-  const connections = useConnections();
-
   const [iDIMAgentConnectionId, setIDIMAgentConnectionId] =
     React.useState<string>();
-  const [coolProofID, setCoolProofID] = React.useState<string>();
+  const [invitationProofID, setInvitationProofID] = React.useState<string>();
   const receivedProofs = useProofByState(ProofState.RequestReceived);
-  const proof = useProofById(coolProofID);
-  const connection = useConnectionById(proof?.connectionId);
+  const proof = invitationProofID ? useProofById(invitationProofID) : undefined;
+  const connection = proof?.connectionId
+    ? useConnectionById(proof?.connectionId)
+    : undefined;
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -51,7 +50,7 @@ const BCIDView: React.FC = () => {
         p.state == ProofState.RequestReceived &&
         p.connectionId === iDIMAgentConnectionId
       ) {
-        setCoolProofID(p.id);
+        setInvitationProofID(p.id);
       }
     }
   }, [receivedProofs]);
@@ -118,7 +117,7 @@ const BCIDView: React.FC = () => {
 
       setIDIMAgentConnectionId(connectionRecord.id);
     } catch (error) {
-      console.log(error.message);
+      // TODO:(jl) add error handling here
     }
   };
 
@@ -127,8 +126,8 @@ const BCIDView: React.FC = () => {
       {showGetFoundationCredential && (
         <View style={{ marginVertical: 40, marginHorizontal: 25 }}>
           <Button
-            title={"Get your BC Digital ID"}
-            accessibilityLabel={"Get BCID"}
+            title={t("BCID.GetDigitalID")}
+            accessibilityLabel={t("BCID.GetID")}
             testID={testIdWithKey("GetBCID")}
             onPress={onGetIdTouched}
             buttonType={ButtonType.Secondary}

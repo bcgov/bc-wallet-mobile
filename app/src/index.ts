@@ -10,7 +10,7 @@ import Terms from './screens/Terms'
 import Splash from './screens/Splash'
 import BCIDView from './components/BCIDView'
 
-const localization = _merge({}, translationResources, {en:{translation:en}})
+const localization = _merge({}, translationResources, {en: {translation: en}})
 const configuration: ConfigurationContext = {
     pages,
     splash: Splash,
