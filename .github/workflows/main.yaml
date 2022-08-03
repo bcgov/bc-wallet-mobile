@@ -145,6 +145,7 @@ jobs:
           archive
 
       - name: Archive & Sign
+        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
         working-directory: app/ios
         run: |
           xcodebuild \
@@ -156,11 +157,12 @@ jobs:
 
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
+        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
         run: |
           pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
-        if: github.ref_name == 'main'
+        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
         working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -176,7 +178,7 @@ jobs:
           # --beta-group "The Team"
   
       - name: Ship to SauceLabs
-        if: github.ref_name == 'main'
+        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
         working-directory: app/ios
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -281,7 +283,7 @@ jobs:
           ./gradlew bundleRelease
 
       - name: Ship to Google Play
-        if: github.ref_name == 'main'
+        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -293,7 +295,7 @@ jobs:
           npx @bcgov/gpublish
 
       - name: Ship to SauceLabs
-        if: github.ref_name == 'main'
+        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
         working-directory: app/android
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -307,7 +309,7 @@ jobs:
           --form "description=Android Bifold BC wallet app"
 
   run-on-device-tests:
-    if: github.ref_name == 'main'
+    if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
     needs: [build-ios, build-android]
     runs-on: ubuntu-latest
     strategy:
