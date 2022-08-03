@@ -16,18 +16,32 @@ on:
       - app/**
 
 jobs:
-  check-android-build-type:
+  check-android-secrets:
     runs-on: ubuntu-latest
     outputs:
       isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
     steps:
       - id: isReleaseBuild
-        if: env.PROVISIONING_PROFILE == null && env.BUILD_CERTIFICATE_BASE64 == null
+        if: env.PLAY_STORE_JKS_BASE64 != null && env.PLAY_STORE_JKS_ALIAS != null && env.PLAY_STORE_JKS_PASSWD != null
         run: echo "::set-output name=defined::true"
         env:
-          PROVISIONING_PROFILE: ${{ secrets.PROVISIONING_PROFILE }}
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-  
+          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
+
+  check-ios-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
+    steps:
+      - id: isReleaseBuild
+        if: env.CERTIFICATE != null && env.KEYCHIAN_PASSWD != null && env.PROVISIONING_PROFILE != null
+        run: echo "::set-output name=defined::true"
+        env:
+          CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          KEYCHIAN_PASSWD: ${{ secrets.KEYCHIAN_PASSWD }}
+          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+
   build-ios:
     if: ${{ false }}  # disable for now
     runs-on: macos-latest
@@ -207,7 +221,7 @@ jobs:
 
   build-android:
     # if: ${{ false }}  # disable for now
-    needs: [check-android-build-type]
+    needs: [check-android-secrets]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -215,15 +229,6 @@ jobs:
         build-tools: [30.0.2]
         sdk-tools:   [4333796]
     steps:
-      - name: Foo
-        if: needs.check-android-build-type.outputs.isReleaseBuild == 'true'
-        run: |
-          echo "Hello World"
-          echo "${R}"
-        env:
-          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
-          R: ${{ github.repository }}
-
       - uses: actions/checkout@v1
       
       - name: Log
@@ -275,7 +280,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Create release keystore
-        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android/app
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
@@ -300,7 +305,17 @@ jobs:
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
 
+      - name: Android debug build
+        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
+        working-directory: app/android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: "1.0.1"
+        run: |
+          ./gradlew buildDebug
+
       - name: Android release build
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
@@ -311,7 +326,7 @@ jobs:
           ./gradlew bundleRelease
 
       - name: Ship to Google Play
-        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -323,7 +338,7 @@ jobs:
           npx @bcgov/gpublish
 
       - name: Ship to SauceLabs
-        if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -337,7 +352,7 @@ jobs:
           --form "description=Android Bifold BC wallet app"
 
   run-on-device-tests:
-    if: (github.repository == 'bcgov/bc-wallet-mobile') && (github.ref_name == 'main') 
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
     runs-on: ubuntu-latest
     strategy:
