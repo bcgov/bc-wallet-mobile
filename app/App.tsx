@@ -5,6 +5,7 @@ import {
   toastConfig,
   initStoredLanguage,
   RootStack,
+  NetInfo,
   ErrorModal,
   StoreProvider,
   ThemeProvider,
@@ -42,6 +43,7 @@ const App = () => {
                 backgroundColor={theme.ColorPallet.brand.primary}
                 translucent={false}
               />
+              <NetInfo />
               <ErrorModal />
               <RootStack setAgent={setAgent} />
               <Toast topOffset={15} config={toastConfig} />
