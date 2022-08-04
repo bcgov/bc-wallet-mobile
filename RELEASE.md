@@ -1,3 +1,11 @@
+Build #269
+
+- Update AFJ to latest 0.2.2
+- Fixed header alignment on Android screens
+- Updated onboarding wording
+- Updated BC wallet icons on loading pin screen
+- Fixed image on empty credential screen
+- Updated wording on "Information Received" screen
 
 v1.0.1
 
