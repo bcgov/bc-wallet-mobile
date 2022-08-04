@@ -1,11 +1,14 @@
 
 v1.0.1
 
+Build #2xx
+
 - Update AFJ to latest 0.2.0
 - Update React hooks to latest 0.3.0
 - Add offline messaging support
 - Remove credential feature added
 - Update logos on loading and pin screens
+- Add preliminary BCID integration
 
 Build #209
 
