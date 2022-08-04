@@ -1,5 +1,9 @@
 // prettier-ignore
 const translation = {
+  "BCID": {
+    "GetID": "Get BCID",
+    "GetDigitalID": "Get your BC Digital ID",
+  },
   "Global": {
     "EnterPin": "Enter Pin",
     "6DigitPin": "6 Digit Pin",

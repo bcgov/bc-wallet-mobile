@@ -5,6 +5,7 @@
 # Merge artifacts
 *.orig
 build/
+xbuild/
 
 # Secrets
 *.mobileprovision
