@@ -129,7 +129,7 @@ jobs:
         working-directory: app/ios
         env:
           CURRENT_PROJECT_VERSION: ${{ github.run_number }}
-          MARKETING_VERSION: "1.0.1"
+          MARKETING_VERSION: "1.0.2"
         run: |
           agvtool new-version ${CURRENT_PROJECT_VERSION} && \
           agvtool new-marketing-version ${MARKETING_VERSION}
@@ -314,7 +314,7 @@ jobs:
         working-directory: app/android
         env:
           VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: "1.0.1"
+          VERSION_NAME: "1.0.2"
         run: |
           ./gradlew buildDebug
 
