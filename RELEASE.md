@@ -1,22 +1,18 @@
+v1.0.1
+
 Build #269
 
 - Update AFJ to latest 0.2.2
-- Fixed header alignment on Android screens
-- Updated onboarding wording
-- Updated BC wallet icons on loading pin screen
-- Fixed image on empty credential screen
-- Updated wording on "Information Received" screen
-
-v1.0.1
-
-Build #2xx
-
-- Update AFJ to latest 0.2.0
 - Update React hooks to latest 0.3.0
 - Add offline messaging support
 - Remove credential feature added
 - Update logos on loading and pin screens
 - Add preliminary BCID integration
+- Fixed header alignment on Android screens
+- Updated onboarding wording
+- Updated BC wallet icons on loading pin screen
+- Fixed image on empty credential screen
+- Updated wording on "Information Received" screen
 
 Build #209
 
