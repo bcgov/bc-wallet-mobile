@@ -4,7 +4,8 @@ Build 27x
 
 - fix: display credential offer attributes 
 - fix: dark status bar on pin screens 
-- feat: add camera disclosure notification 
+- feat: add camera disclosure notification
+- feat: added connection notification to credential offer and proof presentations #407
 
 Build 270
 
