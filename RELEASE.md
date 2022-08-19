@@ -1,6 +1,9 @@
 v1.0.1
 
-Build 27x
+Build 277
+
+UNINSTALL PREVIOUS VERSION BEFORE
+INSTALLING THIS BUILD.
 
 - fix: display credential offer attributes #386
 - fix: dark status bar on pin screens #389
