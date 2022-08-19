@@ -4,11 +4,12 @@ Build 27x
 
 - fix: display credential offer attributes #386
 - fix: dark status bar on pin screens #389
+- fix: fixed OOB proof stuck on sending screen
 - feat: add camera disclosure notification #343
 - feat: added connection notification to credential offer and proof presentations #407
 - feat: align screens to use bcgov font
 - feat: allow user to select the use of biometry #421
-- fix: fixed OOB proof stuck on sending screen
+- feat: offline messaging displayed as needed #412 #386
 
 Build 270
 
