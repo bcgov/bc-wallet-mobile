@@ -1,5 +1,9 @@
 // prettier-ignore
 const translation = {
+  "BCID": {
+    "GetID": "Get BCID",
+    "GetDigitalID": "Get your BC Digital ID",
+  },
   "Global": {
     "EnterPin": "Enter Pin",
     "6DigitPin": "6 Digit Pin",
@@ -182,9 +186,13 @@ const translation = {
     "TakingTooLong": "This is taking longer than usual. You can return to home or continue waiting.",
     "BackToHome": "Go back to home"
   },
+  "NetInfo": {
+    "NoInternetConnectionTitle": "No internet connection",
+    "NoInternetConnectionMessage": "You're unable to access services using BC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection."
+  },
   "OnboardingPages": {
     "FirstPageTitle": "Welcome",
-    "FirstPageBody1": "BC Wallet is a secure, private and easy way to prove your identity online and in person.",
+    "FirstPageBody1": "QC Wallet is a secure, private and easy way to prove your identity online and in person.",
     "FirstPageBody2": "You add your digital cards and documents and use them to gain access to online services, and experience faster service processing.",
     "FirstPageBody3": "With BC Wallet, you own your data. You retain full control and share only what is needed.",
     "SecondPageTitle": "Store and secure credentials",

@@ -16,8 +16,35 @@ on:
       - app/**
 
 jobs:
+  check-android-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
+    steps:
+      - id: isReleaseBuild
+        if: env.PLAY_STORE_JKS_BASE64 != null && env.PLAY_STORE_JKS_ALIAS != null && env.PLAY_STORE_JKS_PASSWD != null
+        run: echo "::set-output name=defined::true"
+        env:
+          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
+
+  check-ios-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
+    steps:
+      - id: isReleaseBuild
+        if: env.CERTIFICATE != null && env.KEYCHIAN_PASSWD != null && env.PROVISIONING_PROFILE != null
+        run: echo "::set-output name=defined::true"
+        env:
+          CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          KEYCHIAN_PASSWD: ${{ secrets.KEYCHIAN_PASSWD }}
+          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+
   build-ios:
     # if: ${{ false }}  # disable for now
+    needs: [check-ios-secrets]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
@@ -83,20 +110,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-
 
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-      - name: Create Provisioning Profile
-        env:         
-          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-        run: |
-          scripts/makepp.sh
-
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-      - name: Build Keychain
-        env:
-          CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-        run: |
-          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
-
       - name: Install react native dependencies
         working-directory: ./
         run: |
@@ -116,7 +129,7 @@ jobs:
         working-directory: app/ios
         env:
           CURRENT_PROJECT_VERSION: ${{ github.run_number }}
-          MARKETING_VERSION: "1.0.1"
+          MARKETING_VERSION: "1.0.2"
         run: |
           agvtool new-version ${CURRENT_PROJECT_VERSION} && \
           agvtool new-marketing-version ${MARKETING_VERSION}
@@ -124,13 +137,33 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
+        if: env.MEDIATOR_URL != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          IDIM_PORTAL_URL: ${{ secrets.IDIM_PORTAL_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+          echo "IDIM_PORTAL_URL=${IDIM_PORTAL_URL}" >>.env
 
-      - name: Build
+      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      - name: Create Provisioning Profile
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        env:         
+          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        run: |
+          scripts/makepp.sh
+
+      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      - name: Build Keychain
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        env:
+          CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+        run: |
+          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
+
+      - name: Release build
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
         run: |
           xcodebuild \
@@ -144,7 +177,21 @@ jobs:
           -verbose \
           archive
 
+      - name: Debug build
+        if: github.ref_name != 'main' || needs.check-ios-secrets.outputs.isReleaseBuild != 'true'
+        working-directory: app/ios
+        run: |
+          xcodebuild \
+          -workspace AriesBifold.xcworkspace \
+          -scheme AriesBifold \
+          -configuration Debug \
+          -derivedDataPath xbuild \
+          build \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO
+
       - name: Archive & Sign
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
         run: |
           xcodebuild \
@@ -156,11 +203,12 @@ jobs:
 
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         run: |
           pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -176,7 +224,7 @@ jobs:
           # --beta-group "The Team"
   
       - name: Ship to SauceLabs
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -191,6 +239,7 @@ jobs:
 
   build-android:
     # if: ${{ false }}  # disable for now
+    needs: [check-android-secrets]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -199,7 +248,7 @@ jobs:
         sdk-tools:   [4333796]
     steps:
       - uses: actions/checkout@v1
-      
+
       - name: Pull & update submodules recursively
         run: |
           git submodule update --init --recursive
@@ -245,7 +294,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
+      - name: Install dependencies
+        working-directory: ./
+        run: |
+          npm ci
+
+        # Actual environment variables are not being picked up
+        # by the build so they're put into an .env file.
+      - name: Create environment settings
+        if: env.MEDIATOR_URL != null
+        working-directory: app
+        env:
+          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+        run: |
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+
+      - name: Android debug build
+        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
+        working-directory: app/android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: "1.0.2"
+        run: |
+          ./gradlew buildDebug
+
       - name: Create release keystore
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android/app
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
@@ -256,21 +330,8 @@ jobs:
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
           grep "SHA1"
 
-      - name: Install dependencies
-        working-directory: ./
-        run: |
-          npm ci
-
-        # Actual environment variables are not being picked up
-        # by the build so they're put into an .env file.
-      - name: Create environment settings
-        working-directory: app
-        env:
-          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-        run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
-
       - name: Android release build
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
@@ -281,7 +342,7 @@ jobs:
           ./gradlew bundleRelease
 
       - name: Ship to Google Play
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -293,7 +354,7 @@ jobs:
           npx @bcgov/gpublish
 
       - name: Ship to SauceLabs
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
@@ -307,7 +368,7 @@ jobs:
           --form "description=Android Bifold BC wallet app"
 
   run-on-device-tests:
-    if: github.ref_name == 'main'
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
     runs-on: ubuntu-latest
     strategy:
@@ -368,4 +429,3 @@ jobs:
           REPORT_PROJECT: ${{ matrix.report-project }}
           ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
           ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
-

@@ -231,6 +231,7 @@ export const Inputs: Inputs = StyleSheet.create({
   textInput: {
     padding: 10,
     borderRadius,
+    fontFamily: TextTheme.normal.fontFamily,
     fontSize: 16,
     backgroundColor: ColorPallet.brand.primaryBackground,
     color: ColorPallet.notification.infoText,
@@ -338,9 +339,11 @@ export const ListItems = StyleSheet.create({
     color: ColorPallet.notification.infoText,
   },
   contactTitle: {
+    fontFamily: TextTheme.title.fontFamily,
     color: ColorPallet.grayscale.darkGrey,
   },
   contactDate: {
+    fontFamily: TextTheme.normal.fontFamily,
     color: ColorPallet.grayscale.darkGrey,
     marginTop: 10,
   },
@@ -439,7 +442,7 @@ export const NavigationTheme = {
     text: ColorPallet.grayscale.white,
     border: ColorPallet.grayscale.white,
     notification: ColorPallet.grayscale.white,
-  },
+  }
 }
 
 export const HomeTheme = StyleSheet.create({
@@ -537,13 +540,11 @@ export const OnboardingTheme = {
   },
   headerTintColor: ColorPallet.grayscale.white,
   headerText: {
+    ...TextTheme.headingTwo,
     color: ColorPallet.notification.infoText,
-    fontSize: 32,
-    fontWeight: 'bold',
   },
   bodyText: {
-    fontSize: 18,
-    fontWeight: 'normal',
+    ...TextTheme.normal,
     color: ColorPallet.notification.infoText,
   },
   imageDisplayOptions: {
@@ -573,12 +574,15 @@ const PinInputTheme = {
 
 export const Assets = {
   img: {
-    logoLarge: {
+    logoSecondary: {
       src: require('./assets/img/logo-large.png'),
       aspectRatio: 1,
       height: '33%',
       width: '33%',
       resizeMode: 'contain',
+    },
+    logoPrimary: {
+      src: require('./assets/img/logo-large-white.png')
     }
   },
 }

@@ -5,6 +5,8 @@ import {
   toastConfig,
   initStoredLanguage,
   RootStack,
+  NetInfo,
+  NetworkProvider,
   ErrorModal,
   StoreProvider,
   ThemeProvider,
@@ -36,15 +38,18 @@ const App = () => {
         <ThemeProvider value={theme}>
           <ConfigurationProvider value={configuration}>
             <AuthProvider>
-              <StatusBar
-                barStyle="light-content"
-                hidden={false}
-                backgroundColor={theme.ColorPallet.brand.primary}
-                translucent={false}
-              />
-              <ErrorModal />
-              <RootStack setAgent={setAgent} />
-              <Toast topOffset={15} config={toastConfig} />
+              <NetworkProvider>
+                <StatusBar
+                  barStyle="light-content"
+                  hidden={false}
+                  backgroundColor={theme.ColorPallet.brand.primary}
+                  translucent={false}
+                />
+                <NetInfo />
+                <ErrorModal />
+                <RootStack setAgent={setAgent} />
+                <Toast topOffset={15} config={toastConfig} />
+              </NetworkProvider>
             </AuthProvider>
           </ConfigurationProvider>
         </ThemeProvider>
