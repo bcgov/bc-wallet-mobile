@@ -8,8 +8,6 @@ INSTALLING THIS BUILD.
 
 - feat: credential brading
 
- - fix:
-
 Build 277
 
 UNINSTALL PREVIOUS VERSION BEFORE
