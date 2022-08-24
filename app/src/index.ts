@@ -9,6 +9,7 @@ import { pages }  from './screens/OnboardingPages'
 import Terms from './screens/Terms'
 import Splash from './screens/Splash'
 import BCIDView from './components/BCIDView'
+import branding from './assets/branding/credential-branding'
 
 const localization = _merge({}, translationResources, {en: {translation: en}})
 const configuration: ConfigurationContext = {
@@ -16,6 +17,7 @@ const configuration: ConfigurationContext = {
     splash: Splash,
     terms: Terms,
     homeContentView: BCIDView,
+    OCABundle: branding
   }
 
 export default {theme, localization, configuration}
