@@ -9,7 +9,7 @@ const branding: Record<string, Overlay> = {
       hideIssuer: true,
     },
   },
-  'Trx3R1frdEzbn34Sp1jyX:2:student_card:1.0': {
+  'XUxBrVSALWHLeycAUhrNr9:2:student_card:1.0': {
     imageSource: require('./best-bc-student-card.png'),
     header: {
       imageSource: require('./best-bc-header-logo.png'),
