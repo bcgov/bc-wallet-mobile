@@ -5,13 +5,13 @@ import { SvgProps } from "react-native-svg";
 import CredentialList from "../assets/img/credential-list.svg";
 import ScanShare from "../assets/img/scan-share.svg";
 import SecureImage from "../assets/img/secure-image.svg";
-import { useTranslation } from "react-i18next";
+import { useTranslation, TFunction } from "react-i18next";
 import { Button, ButtonType, Theme, createStyles } from "aries-bifold";
 import { GenericFn } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 
-const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme'], t: React.FC<"translation", undefined>) => {
-  
+const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme'], t: TFunction<"translation", undefined>) => {
+
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -64,7 +64,7 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
   );
 };
 
-const startPages = (theme: Theme, t: React.FC<"translation", undefined>) => {
+const startPages = (theme: Theme, t: TFunction<"translation", undefined>) => {
   const defaultStyle = createStyles(theme);
   return (
     <>
@@ -123,7 +123,7 @@ const createPageWith = (
   title: string,
   body: string,
   theme: Theme['OnboardingTheme'],
-  t: React.FC<"translation", undefined>
+  t: TFunction<"translation", undefined>
 ) => {
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
