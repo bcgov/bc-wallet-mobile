@@ -28,6 +28,7 @@ const idCardOverlay = {
 }
 
 const branding: Record<string, Overlay> = {
+  // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/370
   'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1': memberCardOverlay, /* LSBC (TEST) */
   '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1': memberCardOverlay, /* LSBC (PROD) */
   // ↓↓↓ https://github.com/bcgov/BC-Wallet-Demo/discussions/59
