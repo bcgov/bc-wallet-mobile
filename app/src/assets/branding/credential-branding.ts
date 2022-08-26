@@ -32,10 +32,10 @@ const branding: Record<string, Overlay> = {
   'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1': memberCardOverlay, /* LSBC (TEST) */
   '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1': memberCardOverlay, /* LSBC (PROD) */
   // ↓↓↓ https://github.com/bcgov/BC-Wallet-Demo/discussions/59
-  'Trx3R1frdEzbn34Sp1jyX:2:Member Card:1.5.1': memberCardOverlay, /* Showcase LSBC (DEV) */
-  '63ZiwyeZeazA6AhYRYm2zD:2:Member Card:1.5.1': memberCardOverlay, /* Showcase (TEST) */
+  'Trx3R1frdEzbn34Sp1jyX:2:Member Card:1.5.1': memberCardOverlay,  /* Showcase LSBC (DEV) */
+  '63ZiwyeZeazA6AhYRYm2zD:2:Member Card:1.5.1': memberCardOverlay, /* Showcase LSBC (TEST) */
   'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1': memberCardOverlay, /* Showcase LSBC (PROD) */
-  'Trx3R1frdEzbn34Sp1jyX:2:student_card:1.0': studentCardOverlay, /* Showcase Student (DEV) */
+  'Trx3R1frdEzbn34Sp1jyX:2:student_card:1.0': studentCardOverlay,  /* Showcase Student (DEV) */
   '63ZiwyeZeazA6AhYRYm2zD:2:student_card:1.0': studentCardOverlay, /* Showcase Student (TEST) */
   'XUxBrVSALWHLeycAUhrNr9:2:student_card:1.0': studentCardOverlay, /* Showcase Student (PROD) */
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/506
