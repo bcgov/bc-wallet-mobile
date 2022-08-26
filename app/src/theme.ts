@@ -50,6 +50,8 @@ interface BrandColors {
   secondary: string
   secondaryDisabled: string
   highlight: string
+  modalPrimaryBackground: string
+  modalSecondaryBackground: string
   primaryBackground: string
   secondaryBackground: string
   link: string
@@ -110,6 +112,8 @@ const BrandColors: BrandColors = {
   highlight: '#FCBA19',
   primaryBackground: '#F2F2F2',
   secondaryBackground: '#FFFFFF',
+  modalPrimaryBackground: '#FFFFFF',
+  modalSecondaryBackground: '#F2F2F2',
   link: '#1A5A96',
 }
 
@@ -261,6 +265,11 @@ export const Inputs: Inputs = StyleSheet.create({
 })
 
 export const Buttons = StyleSheet.create({
+  critical: {
+    padding: 16,
+    borderRadius: 4,
+    backgroundColor: '#D8292F',
+  },
   primary: {
     padding: 16,
     borderRadius: 4,
