@@ -1,7 +1,7 @@
 import { Overlay } from 'aries-bifold/App/types/overlay'
 
 const memberCardOverlay = {
-  imageSource: require('./lsbc-member-card.png'),
+  imageSource: require('./lsbc-member-card-demo.png'),
   header: {
     imageSource: require('./lsbc-header-logo.png'),
     backgroundColor: '#00698C',
