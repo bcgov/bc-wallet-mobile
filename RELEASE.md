@@ -1,5 +1,14 @@
 v1.0.1
 
+Build 284
+
+IF YOU HAVE A BUILD OLDER THAN 277
+UNINSTALL PREVIOUS VERSION BEFORE
+INSTALLING THIS BUILD.
+
+- feat: deep linking support
+- feat: credential branding for bc services card
+
 Build 279
 
 IF YOU HAVE A BUILD OLDER THAN 277
