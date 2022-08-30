@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Switch,
-  StatusBar,
-  Platform,
-} from "react-native";
+import { StyleSheet, Text, View, StatusBar, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Biometrics from "../assets/img/biometrics.svg";
@@ -48,18 +41,11 @@ const UseBiometry: React.FC = () => {
 
   const continueTouched = async () => {
     if (!biometryAvailable) {
-      // const error = new BifoldError(
-      //   declineType === DeclineType.ProofRequest ? t('Error.Title1028') : t('Error.Title1025'),
-      //   declineType === DeclineType.ProofRequest ? t('Error.Message1028') : t('Error.Message1025'),
-      //   (err as Error).message,
-      //   1025
-      // )
-
       const error = new BifoldError(
-        "No Biometrics",
-        "You don't have biometrics enabled on this device.",
-        "Some cool details about fixing this message",
-        9999
+        t("Biometry.NoBiometricsErrorTitle"),
+        t("Biometry.NoBiometricsErrorMessage"),
+        t("Biometry.NoBiometricsErrorDetails"),
+        1032
       );
 
       dispatch({
@@ -70,12 +56,12 @@ const UseBiometry: React.FC = () => {
       return;
     }
 
-    // await convertToUseBiometrics();
+    await convertToUseBiometrics();
 
-    // dispatch({
-    //   type: DispatchAction.USE_BIOMETRY,
-    //   payload: [true],
-    // });
+    dispatch({
+      type: DispatchAction.USE_BIOMETRY,
+      payload: [true],
+    });
   };
 
   return (
