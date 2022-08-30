@@ -34,6 +34,14 @@ const translation = {
     "English": "English",
     "French": "French",
   },
+  "Biometry": {
+    "Toggle": "Toggle Biometrics",
+    "EnabledText1": "xx",
+    "EnabledText2": "yy",
+    "EnabledText3": "yy",
+    "Warning": "Ensure only you have access to your wallet.",
+    "UseToUnlock": "Use biometrics to unlock wallet?"
+  },
   "Error": {
     "Unknown": "Unknown Error",
     "Problem": "A problem has occurred",
@@ -192,4 +200,4 @@ const translation = {
   }
 }
 
-export default translation
+export default translation;
