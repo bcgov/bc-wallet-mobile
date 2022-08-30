@@ -8,6 +8,7 @@ INSTALLING THIS BUILD.
 
 - feat: deep linking support
 - feat: credential branding for bc services card
+- feat: override biometry and check its available #504 #595
 
 Build 279
 
