@@ -36,9 +36,11 @@ const translation = {
   },
   "Biometry": {
     "Toggle": "Toggle Biometrics",
-    "EnabledText1": "xx",
-    "EnabledText2": "yy",
-    "EnabledText3": "yy",
+    "EnabledText1": "To keep your information secure,",
+    "EnabledText1Bold": "you will need to use biometrics to open your BC Wallet.",
+    "EnabledText2": "BC Wallet does not record or save any biometric data.",
+    "EnabledText3": "Anyone who can access your phone with biometrics can access your BC Wallet.",
+    "EnabledText3Bold": "Ensure only you have access to your wallet.",
     "Warning": "Ensure only you have access to your wallet.",
     "UseToUnlock": "Use biometrics to unlock wallet?"
   },
