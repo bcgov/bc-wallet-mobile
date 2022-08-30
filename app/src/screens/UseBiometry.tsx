@@ -93,27 +93,24 @@ const UseBiometry: React.FC = () => {
         </View>
         <View>
           <Text style={[TextTheme.normal]}>
-            To keep your information secure,{" "}
+            {t("Biometry.EnabledText1")}{" "}
             <Text style={[TextTheme.normal, { fontWeight: "bold" }]}>
-              you will need to use biometrics to open your BC Wallet.{" "}
+              {t("Biometry.EnabledText1Bold")}{" "}
             </Text>
-            <Text style={[TextTheme.normal]}>
-              BC Wallet does not record or save any biometric data.
-            </Text>
+            <Text style={[TextTheme.normal]}>{t("Biometry.EnabledText2")}</Text>
           </Text>
           <Text></Text>
           <Text style={[TextTheme.normal]}>
-            Anyone who can access your phone with biometrics can access your BC
-            Wallet.{" "}
+            {t("Biometry.EnabledText3")}{" "}
             <Text style={[TextTheme.normal, { fontWeight: "bold" }]}>
-              Ensure only you have access to your wallet.
+              {t("Biometry.EnabledText3Bold")}
             </Text>
           </Text>
         </View>
         <View style={{ flexGrow: 1, justifyContent: "flex-end" }}>
           <Button
-            title={"Continue"}
-            accessibilityLabel={"Continue"}
+            title={t("Global.Continue")}
+            accessibilityLabel={t("Global.Continue")}
             testID={testIdWithKey("Continue")}
             onPress={continueTouched}
             buttonType={ButtonType.Primary}
