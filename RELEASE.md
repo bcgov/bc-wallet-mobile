@@ -1,4 +1,10 @@
-v1.0.1
+## v1.0.2
+
+Build 306
+
+THIS BUILD REQUIES A RE-INSTALL.
+
+- fix: seporate how credential components are stored
 
 Build 305
 
@@ -48,6 +54,10 @@ Build 270
 - Updated BC wallet icons on loading pin screen
 - Fixed image on empty credential screen
 - Updated wording on "Information Received" screen
+
+
+## v1.0.1
+
 
 Build 209
 
