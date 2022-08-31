@@ -9,6 +9,7 @@ INSTALLING THIS BUILD.
 - feat: deep linking support
 - feat: credential branding for bc services card
 - feat: override biometry and check its available #504 #595
+- feat: adjust popup modal styling
 - fix: refactor: updated delete modal to match wire frames #502
 
 Build 279
