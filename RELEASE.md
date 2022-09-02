@@ -1,10 +1,15 @@
 ## v1.0.2
 
+Build 3xx
+
+- feat: add OS biometry prompt text to replace default #538
+- fix: update EULA text #542
+
 Build 306
 
-THIS BUILD REQUIES A RE-INSTALL.
+THIS BUILD REQUIRES A RE-INSTALL.
 
-- fix: seporate how credential components are stored
+- fix: separate how credential components are stored #539
 
 Build 305
 
@@ -55,9 +60,7 @@ Build 270
 - Fixed image on empty credential screen
 - Updated wording on "Information Received" screen
 
-
 ## v1.0.1
-
 
 Build 209
 
