@@ -13,7 +13,6 @@ import { DispatchAction } from "aries-bifold";
 import { AuthenticateStackParams, Screens } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 import { useTheme } from "aries-bifold";
-import { TouchableOpacity } from "react-native-gesture-handler";
 
 const appleTermsUrl =
   "https://www.apple.com/legal/internet-services/itunes/us/terms.html";
@@ -55,7 +54,6 @@ const Terms: React.FC = () => {
     },
     link: {
       ...TextTheme.normal,
-      flexShrink: 1,
       color: ColorPallet.brand.link,
       textDecorationLine: "underline",
       fontWeight: "bold",
@@ -84,11 +82,11 @@ const Terms: React.FC = () => {
   };
 
   const openLink = async (url: string) => {
+    // Only `https://` is allowed. Update manifest as needed.
     const supported = await Linking.canOpenURL(url);
 
     if (supported) {
-      // Opening the link with some app, if the URL scheme is "http" the web link should be opened
-      // by some browser in the mobile
+      // Will open in device browser.
       await Linking.openURL(url);
     }
   };
@@ -214,10 +212,11 @@ const Terms: React.FC = () => {
             Application on either Google or Apple branded products, provided
             that usage on any Apple branded products must be products that you
             either own or control and as permitted by the Usage Rules set forth
-            in the Apple Media Services Terms and Conditions located at
-            <TouchableOpacity onPress={() => openLink(appleTermsUrl)}>
-              <Text style={[style.link]}>{appleTermsUrl}</Text>
-            </TouchableOpacity>
+            in the Apple Media Services Terms and Conditions located at{"\n"}
+            <Text style={style.link} onPress={() => openLink(appleTermsUrl)}>
+              https://www.apple.com/legal/internet-services/itunes/us/terms.html
+            </Text>
+            {"\n"}
             (or such other URL as Apple may designate) (the “App Store Terms”),
             as may be modified by Apple from time to time (the “License”).
             Except as provided in the App Store Terms (which does permit
@@ -422,14 +421,20 @@ const Terms: React.FC = () => {
           <Text style={[style.bodyText]}>
             <Text style={[style.titleText]}>Privacy.</Text>
             &nbsp;If you visit the website for the Licensed Application at{" "}
-            <TouchableOpacity onPress={() => openLink(bcWalletHomeUrl)}>
-              <Text style={[style.link]}>{bcWalletHomeUrl}</Text>
-            </TouchableOpacity>{" "}
+            <Text
+              style={[style.link]}
+              onPress={() => openLink(bcWalletHomeUrl)}
+            >
+              {bcWalletHomeUrl}
+            </Text>{" "}
             including to access the 'help' feature for the Licensed Application
             or related content at{" "}
-            <TouchableOpacity onPress={() => openLink(digitalWalletHomeUrl)}>
-              <Text style={[style.link]}>{digitalWalletHomeUrl}</Text>
-            </TouchableOpacity>{" "}
+            <Text
+              style={[style.link]}
+              onPress={() => openLink(digitalWalletHomeUrl)}
+            >
+              {digitalWalletHomeUrl}
+            </Text>
             , certain information will be collected from you as outlined in the
             Province's Privacy Statement for government websites. Certain
             information is also collected by the Licensed Application as
