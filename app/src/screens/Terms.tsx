@@ -2,7 +2,7 @@ import { useNavigation } from "@react-navigation/core";
 import { StackNavigationProp } from "@react-navigation/stack";
 import React, { useState, useContext } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button, ButtonType } from "aries-bifold";
@@ -13,6 +13,13 @@ import { DispatchAction } from "aries-bifold";
 import { AuthenticateStackParams, Screens } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 import { useTheme } from "aries-bifold";
+import { TouchableOpacity } from "react-native-gesture-handler";
+
+const appleTermsUrl =
+  "https://www.apple.com/legal/internet-services/itunes/us/terms.html";
+const bcWalletHomeUrl =
+  "https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet";
+const digitalWalletHomeUrl = "https://digital.gov.bc.ca/digital-trust/";
 
 const Terms: React.FC = () => {
   const [, dispatch] = useContext(StoreContext);
@@ -46,6 +53,13 @@ const Terms: React.FC = () => {
       ...TextTheme.normal,
       marginRight: 25,
     },
+    link: {
+      ...TextTheme.normal,
+      flexShrink: 1,
+      color: ColorPallet.brand.link,
+      textDecorationLine: "underline",
+      fontWeight: "bold",
+    },
   });
 
   const onSubmitPressed = () => {
@@ -67,6 +81,16 @@ const Terms: React.FC = () => {
     // }
 
     navigation.navigate(Screens.Onboarding);
+  };
+
+  const openLink = async (url: string) => {
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      // Opening the link with some app, if the URL scheme is "http" the web link should be opened
+      // by some browser in the mobile
+      await Linking.openURL(url);
+    }
   };
 
   return (
@@ -131,7 +155,7 @@ const Terms: React.FC = () => {
             password/passcode or biometric information) and for keeping your
             device protection confidential, as well as for using appropriate
             security protections (e.g., using up to date anti-virus/anti-spyware
-            software and up to date operating system version, limiting password
+            software and up to date operating system version, limiting password
             attempts and setting the device to lock after a short period of
             inactivity) in connection with your device.
           </Text>
@@ -172,7 +196,7 @@ const Terms: React.FC = () => {
           <Text style={[style.enumeration]}>7</Text>
           <Text style={[style.bodyText]}>
             <Text style={[style.titleText]}>Third Party Beneficiary.</Text>
-            &nbsp;The Parties acknowledge and agree that: (a) Apple, and Apple’s
+            &nbsp;The Parties acknowledge and agree that: (a) Apple, and Apple's
             subsidiaries, are third party beneficiaries of this EULA; and (b)
             upon your acceptance of the terms and conditions of the EULA, Apple
             will have the right (and will be deemed to have accepted the right)
@@ -184,14 +208,16 @@ const Terms: React.FC = () => {
           <Text style={[style.enumeration]}>8</Text>
           <Text style={[style.bodyText]}>
             <Text style={[style.titleText]}>License.</Text>
-            &nbsp; The Province hereby grants to you a non-exclusive,
+            &nbsp;The Province hereby grants to you a non-exclusive,
             royalty-free, non-transferable and, subject to section 9 of this
             EULA, perpetual license to perform, use and display the Licensed
             Application on either Google or Apple branded products, provided
             that usage on any Apple branded products must be products that you
             either own or control and as permitted by the Usage Rules set forth
             in the Apple Media Services Terms and Conditions located at
-            https://www.apple.com/legal/internet-services/itunes/us/terms.html
+            <TouchableOpacity onPress={() => openLink(appleTermsUrl)}>
+              <Text style={[style.link]}>{appleTermsUrl}</Text>
+            </TouchableOpacity>
             (or such other URL as Apple may designate) (the “App Store Terms”),
             as may be modified by Apple from time to time (the “License”).
             Except as provided in the App Store Terms (which does permit
@@ -395,15 +421,34 @@ const Terms: React.FC = () => {
           <Text style={[style.enumeration]}>16</Text>
           <Text style={[style.bodyText]}>
             <Text style={[style.titleText]}>Privacy.</Text>
-            &nbsp;You consent to the collection by the Licensed Application of a
-            confirmation from your device that it has been unlocked using your
-            device-specific security features. This information, along with your
-            Content, is stored locally on your device and is not accessible to
-            the Province through the Licensed Application. The consents provided
-            by you as set out in this section will continue unless and until
-            revoked by you in writing to the contact information set out in
-            section 11, in which case this EULA will terminate immediately
-            pursuant to section 9.
+            &nbsp;If you visit the website for the Licensed Application at{" "}
+            <TouchableOpacity onPress={() => openLink(bcWalletHomeUrl)}>
+              <Text style={[style.link]}>{bcWalletHomeUrl}</Text>
+            </TouchableOpacity>{" "}
+            including to access the 'help' feature for the Licensed Application
+            or related content at{" "}
+            <TouchableOpacity onPress={() => openLink(digitalWalletHomeUrl)}>
+              <Text style={[style.link]}>{digitalWalletHomeUrl}</Text>
+            </TouchableOpacity>{" "}
+            , certain information will be collected from you as outlined in the
+            Province's Privacy Statement for government websites. Certain
+            information is also collected by the Licensed Application as
+            outlined in the BC Wallet App Privacy Policy (the “Privacy Policy”),
+            which is incorporated by reference into and forms part of this EULA.
+            You consent to the collection by the Licensed Application of this
+            information which, along with your Content, is stored locally on
+            your device and is not accessible to the Province except in
+            circumstances where you choose to provide information to the
+            Province, as outlined in the Privacy Policy. Any information you
+            provide to the Province that is “personal information”, as defined
+            in the BC Freedom of Information and Protection of Privacy Act (the
+            “Act”), is collected by the Province under section 26(c) of the Act
+            for the purposes set out in the Privacy Policy. Any questions about
+            the collection of such information can be directed to the contact
+            set out in section 11. The consents provided by you as set out in
+            this section will continue unless and until revoked by you in
+            writing to the contact set out in section 11, in which case this
+            EULA will terminate immediately pursuant to section 9.
           </Text>
         </View>
 
@@ -453,8 +498,9 @@ const Terms: React.FC = () => {
             &nbsp;The Province may at any time, in its sole discretion and
             without direct notice to you: (a) discontinue the Licensed
             Application; or (b) make changes to the Licensed Application and/or
-            this EULA. By continuing to use the Licensed Application, you will
-            be conclusively deemed to have accepted any changes to this EULA.
+            this EULA, including the Privacy Policy. By continuing to use the
+            Licensed Application, you will be conclusively deemed to have
+            accepted any such changes.
           </Text>
         </View>
         <View style={style.paragraph}>
