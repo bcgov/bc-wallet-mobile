@@ -1,5 +1,10 @@
 ## v1.0.2
 
+Build 309
+
+- fix: partial back-out of changes in #519.
+- fix: improve changes made to fix #542
+
 Build 308
 
 - feat: add OS biometry prompt text to replace default #538
