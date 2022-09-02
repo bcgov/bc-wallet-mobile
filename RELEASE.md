@@ -1,6 +1,6 @@
 ## v1.0.2
 
-Build 307
+Build 308
 
 - feat: add OS biometry prompt text to replace default #538
 - fix: update EULA text #542
