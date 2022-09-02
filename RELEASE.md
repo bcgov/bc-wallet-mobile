@@ -1,9 +1,10 @@
 ## v1.0.2
 
-Build 3xx
+Build 307
 
 - feat: add OS biometry prompt text to replace default #538
 - fix: update EULA text #542
+- fix: fix Android using biometrics when PIN only required #519.
 
 Build 306
 
