@@ -1,6 +1,23 @@
-v1.0.1
+## v1.0.2
 
-Build 284
+Build 309
+
+- fix: partial back-out of changes in #519.
+- fix: improve changes made to fix #542
+
+Build 308
+
+- feat: add OS biometry prompt text to replace default #538
+- fix: update EULA text #542
+- fix: fix Android using biometrics when PIN only required #519.
+
+Build 306
+
+THIS BUILD REQUIRES A RE-INSTALL.
+
+- fix: separate how credential components are stored #539
+
+Build 305
 
 IF YOU HAVE A BUILD OLDER THAN 277
 UNINSTALL PREVIOUS VERSION BEFORE
@@ -8,6 +25,10 @@ INSTALLING THIS BUILD.
 
 - feat: deep linking support
 - feat: credential branding for bc services card
+- feat: override biometry and check its available #504 #595
+- feat: adjust popup modal styling
+- fix: made "Back Home" button appear immediately on modals #477
+- fix: updated delete modal to match wire frames #502
 
 Build 279
 
@@ -15,7 +36,7 @@ IF YOU HAVE A BUILD OLDER THAN 277
 UNINSTALL PREVIOUS VERSION BEFORE
 INSTALLING THIS BUILD.
 
-- feat: credential brading
+- feat: credential branding
 
 Build 277
 
@@ -44,6 +65,8 @@ Build 270
 - Updated BC wallet icons on loading pin screen
 - Fixed image on empty credential screen
 - Updated wording on "Information Received" screen
+
+## v1.0.1
 
 Build 209
 
