@@ -438,13 +438,13 @@ const Terms: React.FC = () => {
             >
               {digitalTrustHomeUrl}
             </Text>
-            , certain information will be collected from you as outlined in the
+            , certain information will be collected from you as outlined in the{" "}
             <Text
               style={[style.link]}
               onPress={() => openLink(bcWebPrivacyUrl)}
             >
               Province's Privacy Statement for government websites
-            </Text>
+            </Text>{" "}
             Certain information is also collected by the Licensed Application as
             outlined in the{" "}
             <Text
