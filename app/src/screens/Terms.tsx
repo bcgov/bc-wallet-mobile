@@ -2,7 +2,8 @@ import { useNavigation } from "@react-navigation/core";
 import { StackNavigationProp } from "@react-navigation/stack";
 import React, { useState, useContext } from "react";
 import { useTranslation } from "react-i18next";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View, Linking } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button, ButtonType } from "aries-bifold";
 import { CheckBoxRow } from "aries-bifold";
@@ -12,6 +13,12 @@ import { DispatchAction } from "aries-bifold";
 import { AuthenticateStackParams, Screens } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 import { useTheme } from "aries-bifold";
+
+const appleTermsUrl =
+  "https://www.apple.com/legal/internet-services/itunes/us/terms.html";
+const bcWalletHomeUrl =
+  "https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet";
+const digitalWalletHomeUrl = "https://digital.gov.bc.ca/digital-trust/";
 
 const Terms: React.FC = () => {
   const [, dispatch] = useContext(StoreContext);
@@ -45,6 +52,12 @@ const Terms: React.FC = () => {
       ...TextTheme.normal,
       marginRight: 25,
     },
+    link: {
+      ...TextTheme.normal,
+      color: ColorPallet.brand.link,
+      textDecorationLine: "underline",
+      fontWeight: "bold",
+    },
   });
 
   const onSubmitPressed = () => {
@@ -66,6 +79,16 @@ const Terms: React.FC = () => {
     // }
 
     navigation.navigate(Screens.Onboarding);
+  };
+
+  const openLink = async (url: string) => {
+    // Only `https://` is allowed. Update manifest as needed.
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      // Will open in device browser.
+      await Linking.openURL(url);
+    }
   };
 
   return (
@@ -188,7 +211,10 @@ const Terms: React.FC = () => {
               que l'utilisation sur des produits de marque Apple doit être des produits que vous
               que vous possédez ou contrôlez, et dans le respect des règles d'utilisation énoncées dans les
               dans les conditions générales d'Apple Media Services situées à l'adresse suivante
-              https://www.apple.com/legal/internet-services/itunes/us/terms.html
+              <Text style={style.link} onPress={() => openLink(appleTermsUrl)}>
+                https://www.apple.com/legal/internet-services/itunes/us/terms.html
+              </Text>
+              {"\n"}
               (ou toute autre URL désignée par Apple) (les "Conditions de l'App Store"),
               telles qu'elles peuvent être modifiées par Apple de temps à autre (la " Licence ").
               Sauf dans les cas prévus par les Conditions de l'App Store (qui permettent aux

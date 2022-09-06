@@ -34,6 +34,16 @@ const translation = {
     "English": "English",
     "French": "French",
   },
+  "Biometry": {
+    "Toggle": "Toggle Biometrics",
+    "EnabledText1": "To keep your information secure,",
+    "EnabledText1Bold": "you will need to use biometrics to open your BC Wallet.",
+    "EnabledText2": "BC Wallet does not record or save any biometric data.",
+    "EnabledText3": "Anyone who can access your phone with biometrics can access your BC Wallet.",
+    "EnabledText3Bold": "Ensure only you have access to your wallet.",
+    "Warning": "Ensure only you have access to your wallet.",
+    "UseToUnlock": "Use biometrics to unlock wallet?"
+  },
   "Error": {
     "Unknown": "Unknown Error",
     "Problem": "A problem has occurred",
@@ -205,4 +215,4 @@ const translation = {
   }
 }
 
-export default translation
+export default translation;
