@@ -2,6 +2,8 @@ name: Native Build & Test
 
 env:
   cacheId: "10" # increment to expire the cache
+  appBuildNumber: ${{ github.run_number }}
+  appBuildVersion: "1.0.3"
 
 on:
   workflow_dispatch:
@@ -128,8 +130,9 @@ jobs:
       - name: Bump Build No.
         working-directory: app/ios
         env:
-          CURRENT_PROJECT_VERSION: ${{ github.run_number }}
-          MARKETING_VERSION: "1.0.2"
+          CURRENT_PROJECT_VERSION: ${{ env.appBuildNumber }}
+          MARKETING_VERSION: ${{ env.appBuildVersion }}
+
         run: |
           agvtool new-version ${CURRENT_PROJECT_VERSION} && \
           agvtool new-marketing-version ${MARKETING_VERSION}
@@ -313,8 +316,9 @@ jobs:
         if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
         working-directory: app/android
         env:
-          VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: "1.0.2"
+          VERSION_CODE: ${{ env.appBuildNumber }}
+          VERSION_NAME: ${{ env.appBuildVersion }}
+
         run: |
           ./gradlew buildDebug
 
@@ -336,8 +340,8 @@ jobs:
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-          VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: "1.0.1"
+          VERSION_CODE: ${{ env.appBuildNumber }}
+          VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           ./gradlew bundleRelease
 
