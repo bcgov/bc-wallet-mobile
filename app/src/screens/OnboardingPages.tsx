@@ -9,7 +9,10 @@ import { Button, ButtonType, Theme, createStyles } from "aries-bifold";
 import { GenericFn } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 
-const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']) => {
+const endPage = (
+  onTutorialCompleted: GenericFn,
+  theme: Theme["OnboardingTheme"]
+) => {
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -23,13 +26,14 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
       </View>
       <View style={{ marginLeft: 20, marginRight: 20, marginTop: 30 }}>
         <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>
-          Take control of your information
+          Privacy and confidentiality
         </Text>
         <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>
-          You have control of what, when, and how you prove things from your
-          credentials, and you approve each use.
-          {"\n\n"}The Government of British Columbia is not told when you use
-          your credentials.
+          You approve every use of information from your BC Wallet. You also
+          only share what is needed for a situation.
+          {"\n\n"}
+          The Government of British Columbia is not told when you use your
+          digital credentials.
         </Text>
       </View>
       <View
@@ -80,7 +84,7 @@ const startPages = (theme: Theme) => {
           { marginLeft: 20, marginTop: 35, marginRight: 20 },
         ]}
       >
-        BC Wallet is a secure, private and easy way to prove things about yourself online.
+        BC Wallet lets you receive, store and use digital credentials.
       </Text>
       <Text
         style={[
@@ -88,8 +92,7 @@ const startPages = (theme: Theme) => {
           { marginLeft: 20, marginTop: 25, marginRight: 20 },
         ]}
       >
-        You add your digital cards and documents and use them to gain access to
-        online services, and experience faster service processing.
+        It is highly secure, and helps protect your privacy online.
       </Text>
       <Text
         style={[
@@ -97,8 +100,9 @@ const startPages = (theme: Theme) => {
           { marginLeft: 20, marginTop: 25, marginRight: 20 },
         ]}
       >
-        With BC Wallet, you own your data. You retain full control and share
-        only what is needed.{" "}
+        BC Wallet is currently in its early stages and the technology is being
+        explored. Most people will not have a use for BC Wallet yet, because
+        very few digital credentials are available.
       </Text>
     </>
   );
@@ -111,13 +115,13 @@ const guides: Array<{
 }> = [
   {
     image: CredentialList,
-    title: "Store and secure credentials",
-    body: "Digital credentials are the digital versions of cards and documents you already know, such as membership cards and licenses.\n\nThey are stored securely in this digital wallet app, only on this device.",
+    title: "Digital credentials, stored securely",
+    body: "BC Wallet holds digital credentials—the digital versions of things like licenses, identities and permits.\n\nThey are stored securely, only on this device.",
   },
   {
     image: ScanShare,
-    title: "Share only what is necessary",
-    body: "To use—“prove things”— with your credentials, online or in person, you’ll scan a QR code to start things off.\n\nYou only share the parts of a credential necessary for a situation, which is better for privacy.",
+    title: "Receiving and using credentials",
+    body: "To receive and use credentials you use the “Scan” feature in the app to scan a special QR code.\n\nInformation is sent and received over a private, encrypted connection.",
   },
 ];
 
@@ -125,7 +129,7 @@ const createPageWith = (
   image: React.FC<SvgProps>,
   title: string,
   body: string,
-  theme: Theme['OnboardingTheme']
+  theme: Theme["OnboardingTheme"]
 ) => {
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
