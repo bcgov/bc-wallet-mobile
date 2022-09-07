@@ -16,8 +16,8 @@
 	<true/>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>ca.bc.gov.BCWallet</key>
-		<string>6de3caf3-006b-41fc-b779-8f1a619736a9</string>
+		<key>ca.qc.gouv.portefeuilleqc</key>
+		<string>c578b644-c99a-46ac-aac2-f21ece5ca5b9</string>
 	</dict>
 </dict>
 </plist>

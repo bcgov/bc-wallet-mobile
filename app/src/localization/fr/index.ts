@@ -172,7 +172,7 @@ const translation = {
     },
     "Screens": {
         "Splash": "Page de garde",
-        "Onboarding": "Inscription",
+        "Onboarding": "Portefeuille QC",
         "Terms": "Conditions d'utilisation",
         "CreatePin": "Créer un NIP à 6 chiffres",
         "EnterPin": "Saisir le NIP",

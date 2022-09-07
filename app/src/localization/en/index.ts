@@ -175,7 +175,7 @@ const translation = {
   },
   "Screens": {
     "Splash": 'Splash',
-    "Onboarding": "BC Wallet",
+    "Onboarding": "QC Wallet",
     "Terms": "Terms & Conditions",
     "CreatePin": 'Create 6-Digit Pin',
     "EnterPin": 'Enter Pin',
