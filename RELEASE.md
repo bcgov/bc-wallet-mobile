@@ -1,3 +1,9 @@
+## v1.0.3
+
+Build 314
+
+- fix: updated splash icon with high quality logo
+
 ## v1.0.2
 
 Build 309
