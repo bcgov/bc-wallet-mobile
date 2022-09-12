@@ -1,6 +1,6 @@
 import { createStructure } from './use_cases/createStructure';
 import type { Structure } from './entities/Structure';
-import type { OCA } from 'oca.js';
+import type { OCA } from '../oca/oca';
 
 export type Config = {
   dataVaults?: string[];
@@ -25,5 +25,5 @@ export class OcaJs {
   updateDataVaults(dataVaults: Config['dataVaults']) {
     this.config.dataVaults = dataVaults;
   }
-  
+
 }

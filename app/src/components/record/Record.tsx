@@ -8,10 +8,11 @@ import {useTheme} from "aries-bifold";
 import RecordField from 'aries-bifold/App/components/record/RecordField'
 import RecordFooter from 'aries-bifold/App/components/record/RecordFooter'
 import RecordHeader from 'aries-bifold/App/components/record/RecordHeader'
-import {OcaJs} from "../../../OCA-package/oca.js-form-core";
 import getLanguage from "../../utils/getLanguage";
 import getAttributes from "../../utils/getAttributes";
-import type {OCA} from "oca.js";
+import {OcaJs} from "../../../OCA-package/oca.js-form-core";
+import type {OCA} from "../../../OCA-package/oca/oca";
+import {currentLanguage, i18n} from "aries-bifold/App/localization";
 
 export interface RecordProps {
     header?: () => React.ReactElement | null
@@ -26,7 +27,7 @@ const Record: React.FC<RecordProps> = ({ header, footer, fields = [], hideFieldV
     const { t } = useTranslation()
     const [shown, setShown] = useState<boolean[]>([])
     const { ListItems, TextTheme } = useTheme()
-    const [attributes , setAttributes] = useState<Field[]>(fields)
+    const [attributes , setAttributes] = useState<Field[]>([])
     const styles = StyleSheet.create({
         linkContainer: {
             flexDirection: 'row',
@@ -49,8 +50,11 @@ const Record: React.FC<RecordProps> = ({ header, footer, fields = [], hideFieldV
         }
         createStructure().then(ocaStructure => {
             if(ocaStructure){
-                const lang = getLanguage(ocaStructure.translations, t.name)
+                const lang = getLanguage(ocaStructure.translations, i18n.language)
                 setAttributes(getAttributes((fields as Attribute[]), lang, ocaStructure))
+            }
+            else {
+                setAttributes(fields)
             }
         })
     }, [])

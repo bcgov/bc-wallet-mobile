@@ -27,7 +27,7 @@ import type {
   FormLayoutOverlay,
   CredentialLayoutOverlay,
   Overlay,
-} from 'oca.js';
+} from '../../oca/oca';
 
 export const createStructure = async (
   oca: OCA,
