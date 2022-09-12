@@ -51,7 +51,7 @@ const Record: React.FC<RecordProps> = ({ header, footer, fields = [], hideFieldV
                 setAttributes(fields)
             }
         })
-    }, [])
+    }, [fields])
 
     const resetShown = (): void => {
         setShown(fields.map(() => false))
