@@ -8,20 +8,14 @@ import {useTheme} from "aries-bifold";
 import RecordField from 'aries-bifold/App/components/record/RecordField'
 import RecordFooter from 'aries-bifold/App/components/record/RecordFooter'
 import RecordHeader from 'aries-bifold/App/components/record/RecordHeader'
+import {RecordProps} from "aries-bifold/App/components/record/Record";
 import getLanguage from "../../utils/getLanguage";
 import getAttributes from "../../utils/getAttributes";
 import {OcaJs} from "../../../OCA-package/oca.js-form-core";
-import type {OCA} from "../../../OCA-package/oca/oca";
-import {currentLanguage, i18n} from "aries-bifold/App/localization";
+import {i18n} from "aries-bifold/App/localization";
+import {OCA} from "../../../OCA-package/oca/oca";
 
-export interface RecordProps {
-    header?: () => React.ReactElement | null
-    footer?: () => React.ReactElement | null
-    fields?: Array<Field>;
-    hideFieldValues?: boolean
-    field?: (field: Field, index: number, fields: Field[]) => React.ReactElement | null
-    oca: OCA
-}
+
 
 const Record: React.FC<RecordProps> = ({ header, footer, fields = [], hideFieldValues = false, field = null, oca = null }) => {
     const { t } = useTranslation()
@@ -45,7 +39,7 @@ const Record: React.FC<RecordProps> = ({ header, footer, fields = [], hideFieldV
         const createStructure = async () => {
             const ocaJs = new OcaJs({});
             if (oca) {
-                return await ocaJs.createStructure(oca);
+                return await ocaJs.createStructure(oca as OCA);
             }
         }
         createStructure().then(ocaStructure => {

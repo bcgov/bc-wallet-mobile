@@ -202,5 +202,3 @@ export type UnitOverlay = {
     metric_system: string,
     attr_units: { [attr_name: string]: string }
 }
-
-
