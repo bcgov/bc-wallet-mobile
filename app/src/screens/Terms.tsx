@@ -18,7 +18,10 @@ const appleTermsUrl =
   "https://www.apple.com/legal/internet-services/itunes/us/terms.html";
 const bcWalletHomeUrl =
   "https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet";
-const digitalWalletHomeUrl = "https://digital.gov.bc.ca/digital-trust/";
+const digitalTrustHomeUrl = "https://digital.gov.bc.ca/digital-trust/";
+const bcWebPrivacyUrl = "https://www2.gov.bc.ca/gov/content/home/privacy";
+const digitalWalletPrivacyUrl =
+  "https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy";
 
 const Terms: React.FC = () => {
   const [, dispatch] = useContext(StoreContext);
@@ -431,29 +434,41 @@ const Terms: React.FC = () => {
             or related content at{" "}
             <Text
               style={[style.link]}
-              onPress={() => openLink(digitalWalletHomeUrl)}
+              onPress={() => openLink(digitalTrustHomeUrl)}
             >
-              {digitalWalletHomeUrl}
+              {digitalTrustHomeUrl}
             </Text>
-            , certain information will be collected from you as outlined in the
-            Province's Privacy Statement for government websites. Certain
-            information is also collected by the Licensed Application as
-            outlined in the BC Wallet App Privacy Policy (the “Privacy Policy”),
-            which is incorporated by reference into and forms part of this EULA.
-            You consent to the collection by the Licensed Application of this
-            information which, along with your Content, is stored locally on
-            your device and is not accessible to the Province except in
-            circumstances where you choose to provide information to the
-            Province, as outlined in the Privacy Policy. Any information you
-            provide to the Province that is “personal information”, as defined
-            in the BC Freedom of Information and Protection of Privacy Act (the
-            “Act”), is collected by the Province under section 26(c) of the Act
-            for the purposes set out in the Privacy Policy. Any questions about
-            the collection of such information can be directed to the contact
-            set out in section 11. The consents provided by you as set out in
-            this section will continue unless and until revoked by you in
-            writing to the contact set out in section 11, in which case this
-            EULA will terminate immediately pursuant to section 9.
+            , certain information will be collected from you as outlined in the{" "}
+            <Text
+              style={[style.link]}
+              onPress={() => openLink(bcWebPrivacyUrl)}
+            >
+              Province's Privacy Statement for government websites
+            </Text>{" "}
+            Certain information is also collected by the Licensed Application as
+            outlined in the{" "}
+            <Text
+              style={[style.link]}
+              onPress={() => openLink(digitalWalletPrivacyUrl)}
+            >
+              BC Wallet App Privacy Policy
+            </Text>{" "}
+            (the “Privacy Policy”), which is incorporated by reference into and
+            forms part of this EULA. You consent to the collection by the
+            Licensed Application of this information which, along with your
+            Content, is stored locally on your device and is not accessible to
+            the Province except in circumstances where you choose to provide
+            information to the Province, as outlined in the Privacy Policy. Any
+            information you provide to the Province that is “personal
+            information”, as defined in the BC Freedom of Information and
+            Protection of Privacy Act (the “Act”), is collected by the Province
+            under section 26(c) of the Act for the purposes set out in the
+            Privacy Policy. Any questions about the collection of such
+            information can be directed to the contact set out in section 11.
+            The consents provided by you as set out in this section will
+            continue unless and until revoked by you in writing to the contact
+            set out in section 11, in which case this EULA will terminate
+            immediately pursuant to section 9.
           </Text>
         </View>
 
