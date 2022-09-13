@@ -14,6 +14,7 @@ import getAttributes from "../../utils/getAttributes";
 import {OcaJs} from "../../../OCA-package/oca.js-form-core";
 import {i18n} from "aries-bifold/App/localization";
 import {OCA} from "../../../OCA-package/oca/oca";
+import {Structure} from "../../../OCA-package/oca.js-form-core/entities/Structure";
 
 
 
@@ -35,13 +36,22 @@ const Record: React.FC<RecordProps> = ({ header, footer, fields = [], hideFieldV
         },
     })
 
-    useEffect(() => {
-        const createStructure = async () => {
-            const ocaJs = new OcaJs({});
-            if (oca) {
-                return await ocaJs.createStructure(oca as OCA);
+    const createStructure = async (): Promise<Structure | false> => {
+        const ocaJs = new OcaJs({});
+        if (oca) {
+            try{
+                const ocaStructure = await ocaJs.createStructure(oca as OCA);
+                return ocaStructure
+            }
+            catch(e){
+                return false
             }
         }
+        return false
+    }
+
+
+    useEffect(() => {
         createStructure().then(ocaStructure => {
             if(ocaStructure){
                 const lang = getLanguage(ocaStructure.translations, i18n.language)
