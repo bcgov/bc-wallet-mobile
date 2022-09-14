@@ -1,5 +1,9 @@
 ## v1.0.3
 
+Build 318
+
+- fix: secondary message on some proofs #553
+
 Build 317
 
 - chore: update on-boarding text #493
