@@ -8,7 +8,7 @@ const getAttributes = (
 ) => {
     if (structure) {
         fields.forEach((field, index) => {
-            structure.controls.map((control) => {
+            structure.controls.forEach((control) => {
                 if(control?.name === field.name){
                     fields[index].name = control.translations[language].label ?? null
                 }
