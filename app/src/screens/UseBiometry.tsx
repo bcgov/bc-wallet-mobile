@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { StyleSheet, Text, View, StatusBar, Platform } from "react-native";
+import { StyleSheet, Text, View, StatusBar, Platform, Switch } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import Biometrics from "../assets/img/biometrics.svg";
@@ -9,7 +9,6 @@ import { useAuth } from "aries-bifold";
 import { DispatchAction } from "aries-bifold";
 import { useStore } from "aries-bifold";
 import { useTheme } from "aries-bifold";
-import { BifoldError } from "aries-bifold";
 import { statusBarStyleForColor, StatusBarStyles } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 
@@ -18,6 +17,8 @@ const UseBiometry: React.FC = () => {
   const { t } = useTranslation();
   const { convertToUseBiometrics, isBiometricsActive } = useAuth();
   const [biometryAvailable, setBiometryAvailable] = useState(false);
+  const [biometryEnabled, setBiometryEnabled] = useState(false)
+  const [continueEnabled, setContinueEnabled] = useState(true)
   const { ColorPallet, TextTheme } = useTheme();
   const styles = StyleSheet.create({
     container: {
@@ -40,29 +41,19 @@ const UseBiometry: React.FC = () => {
   }, []);
 
   const continueTouched = async () => {
-    if (!biometryAvailable) {
-      const error = new BifoldError(
-        t("Biometry.NoBiometricsErrorTitle"),
-        t("Biometry.NoBiometricsErrorMessage"),
-        t("Biometry.NoBiometricsErrorDetails"),
-        1032
-      );
+    setContinueEnabled(false)
 
-      dispatch({
-        type: DispatchAction.ERROR_ADDED,
-        payload: [{ error }],
-      });
-
-      return;
+    if (biometryEnabled) {
+      await convertToUseBiometrics()
     }
-
-    await convertToUseBiometrics();
 
     dispatch({
       type: DispatchAction.USE_BIOMETRY,
-      payload: [true],
-    });
-  };
+      payload: [biometryEnabled],
+    })
+  }
+
+  const toggleSwitch = () => setBiometryEnabled((previousState) => !previousState)
 
   return (
     <SafeAreaView style={styles.container}>
@@ -77,21 +68,43 @@ const UseBiometry: React.FC = () => {
         <View style={{ alignItems: "center" }}>
           <Biometrics style={[styles.image]} />
         </View>
-        <View>
-          <Text style={[TextTheme.normal]}>
-            {t("Biometry.EnabledText1")}{" "}
-            <Text style={[TextTheme.normal, { fontWeight: "bold" }]}>
-              {t("Biometry.EnabledText1Bold")}{" "}
+        {biometryAvailable ? (
+          <View>
+            <Text style={[TextTheme.normal]}>{t('Biometry.EnabledText1')}</Text>
+            <Text></Text>
+            <Text style={[TextTheme.normal]}>
+              {t('Biometry.EnabledText2')}
+              <Text style={[TextTheme.normal, { fontWeight: 'bold' }]}> {t('Biometry.Warning')}</Text>
             </Text>
-            <Text style={[TextTheme.normal]}>{t("Biometry.EnabledText2")}</Text>
-          </Text>
-          <Text></Text>
-          <Text style={[TextTheme.normal]}>
-            {t("Biometry.EnabledText3")}{" "}
-            <Text style={[TextTheme.normal, { fontWeight: "bold" }]}>
-              {t("Biometry.EnabledText3Bold")}
-            </Text>
-          </Text>
+          </View>
+        ) : (
+          <View>
+            <Text style={[TextTheme.normal]}>{t('Biometry.NotEnabledText1')}</Text>
+            <Text></Text>
+            <Text style={[TextTheme.normal]}>{t('Biometry.NotEnabledText2')}</Text>
+          </View>
+        )}
+        <View
+          style={{
+            flexDirection: 'row',
+            marginVertical: 30,
+          }}
+        >
+          <View style={{ flexShrink: 1 }}>
+            <Text style={[TextTheme.normal, { fontWeight: 'bold' }]}>{t('Biometry.UseToUnlock')}</Text>
+          </View>
+          <View style={{ justifyContent: 'center' }}>
+            <Switch
+              accessibilityLabel={t('Biometry.Toggle')}
+              testID={testIdWithKey('ToggleBiometrics')}
+              trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+              thumbColor={biometryEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+              ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+              onValueChange={toggleSwitch}
+              value={biometryEnabled}
+              disabled={!biometryAvailable}
+            />
+          </View>
         </View>
         <View style={{ flexGrow: 1, justifyContent: "flex-end" }}>
           <Button
@@ -100,6 +113,7 @@ const UseBiometry: React.FC = () => {
             testID={testIdWithKey("Continue")}
             onPress={continueTouched}
             buttonType={ButtonType.Primary}
+            disabled={!continueEnabled}
           />
         </View>
       </View>
