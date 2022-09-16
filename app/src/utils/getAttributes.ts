@@ -8,8 +8,8 @@ const getAttributes = (
 ) => {
     const translatedFields: Attribute[] = []
     if (structure) {
-        fields.map((field, index) => {
-            structure.controls.map((control) => {
+        fields.forEach((field, index) => {
+            structure.controls.forEach((control) => {
                 if(control?.name === field.name){
                     translatedFields[index] = {...fields[index], name: control.translations[language].label ?? fields[index].name}
                 }
