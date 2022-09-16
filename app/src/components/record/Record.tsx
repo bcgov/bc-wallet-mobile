@@ -12,7 +12,7 @@ import {RecordProps} from "aries-bifold/App/components/record/Record";
 import getLanguage from "../../utils/getLanguage";
 import getAttributes from "../../utils/getAttributes";
 import {OcaJs} from "../../../OCA-package/oca.js-form-core";
-import {i18n} from "aries-bifold/App/localization";
+import {currentLanguage, i18n} from "aries-bifold/App/localization";
 import {OCA} from "../../../OCA-package/oca/oca";
 import {Structure} from "../../../OCA-package/oca.js-form-core/entities/Structure";
 
@@ -54,14 +54,14 @@ const Record: React.FC<RecordProps> = ({ header, footer, fields = [], hideFieldV
     useEffect(() => {
         createStructure().then(ocaStructure => {
             if(ocaStructure){
-                const lang = getLanguage(ocaStructure.translations, i18n.language)
+                const lang = getLanguage(ocaStructure.translations, currentLanguage ?? i18n.language)
                 setAttributes(getAttributes((fields as Attribute[]), lang, ocaStructure))
             }
             else {
                 setAttributes(fields)
             }
         })
-    }, [fields])
+    }, [fields, currentLanguage])
 
     const resetShown = (): void => {
         setShown(fields.map(() => false))
