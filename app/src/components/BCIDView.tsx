@@ -50,9 +50,7 @@ const BCIDView: React.FC = () => {
     {}
   );
   const receivedProofs = useProofByState(ProofState.RequestReceived);
-  const proof = agentDetails.invitationProofId
-    ? useProofById(agentDetails.invitationProofId)
-    : undefined;
+  const proof = useProofById(agentDetails.invitationProofId ?? "");
   const navigation = useNavigation();
 
   useEffect(() => {
