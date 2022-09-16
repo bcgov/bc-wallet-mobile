@@ -32,6 +32,23 @@ const translation = {
         "English": "Anglais",
         "French": "Français"
     },
+    "Biometry": {
+        "Toggle": "Basculer la biométrie",
+        "EnabledText1": "Déverrouillez le portefeuille avec les données biométriques de votre téléphone.",
+        "EnabledText2": "L'utilisation de la biométrie signifie que toutes les empreintes digitales ou reconnaissance faciale sur ce téléphone auront accès à votre portefeuille.",
+        "NotEnabledText1": "La biométrie n'est pas actuellement configurée sur cet appareil et ne peut donc pas être activée.",
+        "NotEnabledText2": "Si vous souhaitez activer cette fonctionnalité, activez la biométrie dans les paramètres de l'appareil, puis revenez à cet écran.",
+        "Warning": "Assurez-vous que vous seul avez accès à votre portefeuille.",
+        "UseToUnlock": "Utiliser la biométrie pour déverrouiller le portefeuille ?",
+        "NoBiometricsErrorTitle": "Pas de biométrie",
+        "NoBiometricsErrorMessage": "La biométrie n'est pas activée sur cet appareil.",
+        "NoBiometricsErrorDetails": "Pour résoudre ce problème, activez la biométrie dans les paramètres de votre appareil.",
+        "UnlockPromptTitle": "Déverrouillage du portefeuille",
+        "UnlockPromptDescription": "Utilisez la biométrie pour déverrouiller votre portefeuille",
+        "EnabledText1Bold": "vous devrez utiliser la biométrie pour ouvrir votre portefeuille QC.",
+        "EnabledText3": "Toute personne pouvant accéder à votre téléphone avec la biométrie peut accéder à votre portefeuille QC.",
+        "EnabledText3Bold": "Assurez-vous que vous seul avez accès à votre portefeuille.",
+    },
     "Error": {
         "Unknown": "Erreur inconnue",
         "Problem": "Un problème est survenu"
@@ -89,6 +106,10 @@ const translation = {
         "Credentials": "attestations",
         "InYourWallet": "dans votre portefeuille"
     },
+    "PrivacyPolicy": {
+        "Title": "Politique de confidentialité",
+        "CameraDisclosure": "La caméra est utilisée pour scanner les codes QR pour un traitement immédiat sur l'appareil. Aucune information sur les images n'est stockée, utilisée à des fins d'analyse ou partagée.",
+    },
     "Scan": {
         "SuccessfullyAcceptedConnection": "Connexion acceptée avec succès",
         "AcceptingConnection": "Acceptation de la connexion",
@@ -121,6 +142,20 @@ const translation = {
         "IsOfferingYouACredential": "vous propose un attestation",
         "ConfirmDeclineCredential": "Oui, refuser cette attestation",
         "AbortDeclineCredential": "Non, revenir en arrière"
+    },
+    "ConnectionAlert": {
+        "AddedContacts": "Ajouté aux contacts",
+        "WhatAreContacts": "Que sont les contacts ?",
+        "NotificationBodyUpper": "Tu peux trouver ",
+        "NotificationBodyLower": " dans vos contacts. Gérez vos contacts dans les paramètres",
+        "PopupIntro": "L'ajout d'organisations en tant que contact vous permettra de : ",
+        "PopupPoint1": "Obtenir des mises à jour des informations d'identification émises par cette organisation",
+        "PopupPoint2": "Obtenez de nouvelles informations d'identification",
+        "PopupPoint3": "Demandes de preuves accélérées",
+        "SettingsLink": "Réglages",
+        "SettingsInstruction": "Vous pouvez toujours supprimer des contacts à tout moment dans ",
+        "PrivacyMessage": "L'utilisation de vos informations d'identification n'est jamais partagée avec vos contacts.",
+        "PopupExit": "J'ai compris"
     },
     "ProofRequest": {
         "OfferDelay": "Retard de l'offre",
