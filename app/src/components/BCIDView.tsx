@@ -52,7 +52,7 @@ const BCIDView: React.FC = () => {
     {}
   );
   const receivedProofs = useProofByState(ProofState.RequestReceived);
-  const offers = useCredentialByState(CredentialState.OfferReceived);
+  const receivedOffers = useCredentialByState(CredentialState.OfferReceived);
   const proof = useProofById(agentDetails.invitationProofId ?? "");
   const navigation = useNavigation();
 
@@ -68,7 +68,7 @@ const BCIDView: React.FC = () => {
   }, [receivedProofs]);
 
   useEffect(() => {
-    for (const o of offers) {
+    for (const o of receivedOffers) {
       if (
         o.state == CredentialState.OfferReceived &&
         o.connectionId === agentDetails?.connectionId
@@ -79,7 +79,7 @@ const BCIDView: React.FC = () => {
         });
       }
     }
-  }, [offers]);
+  }, [receivedOffers]);
 
   useEffect(() => {
     if (!proof) {
