@@ -54,6 +54,22 @@ const BCIDView: React.FC = () => {
   const receivedProofs = useProofByState(ProofState.RequestReceived);
   const proof = useProofById(agentDetails.invitationProofId ?? "");
   const navigation = useNavigation();
+  const blarb: Array<NavigationHandler> = [
+    {
+      url: "bcwallet://bcsc/v1/dids/<did>/success",
+      callback: () => {
+        console.log("success");
+        // navigation.pop()
+      },
+    },
+    {
+      url: "bcwallet://bcsc/v1/dids/<did>/cancel",
+      callback: () => {
+        console.log("cancel");
+        // navigation.pop()
+      },
+    },
+  ];
 
   useEffect(() => {
     for (const p of receivedProofs) {
@@ -87,7 +103,14 @@ const BCIDView: React.FC = () => {
 
       console.log("target URL = ", destUrl);
 
-      navigation.navigate(Screens.WebDisplay, { destUrl });
+      blarb.forEach((item) => {
+        item.url = item.url.replace("<did>", agentDetails?.legacyConnectionDid);
+      });
+
+      navigation.navigate(Screens.WebDisplay, {
+        targetUrl: destUrl,
+        navigationHandlers: blarb,
+      });
 
       setWorkflowInFlight(false);
     }
