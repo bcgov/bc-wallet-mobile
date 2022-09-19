@@ -50,6 +50,7 @@ const BCIDView: React.FC = () => {
     {}
   );
   const receivedProofs = useProofByState(ProofState.RequestReceived);
+  const offers = useCredentialByState(CredentialState.OfferReceived);
   const proof = useProofById(agentDetails.invitationProofId ?? "");
   const navigation = useNavigation();
 
@@ -63,6 +64,20 @@ const BCIDView: React.FC = () => {
       }
     }
   }, [receivedProofs]);
+
+  useEffect(() => {
+    for (const o of offers) {
+      if (
+        o.state == CredentialState.OfferReceived &&
+        o.connectionId === agentDetails?.connectionId
+      ) {
+        navigation.getParent()?.navigate("Notifications Stack", {
+          screen: Screens.CredentialOffer,
+          params: { credentialId: o.id },
+        });
+      }
+    }
+  }, [offers]);
 
   useEffect(() => {
     if (!proof) {
