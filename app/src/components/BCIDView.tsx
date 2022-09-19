@@ -46,6 +46,8 @@ const BCIDView: React.FC = () => {
   ];
   const { agent } = useAgent();
   const { t } = useTranslation();
+  const [workflowInFlight, setWorkflowInFlight] =
+    React.useState<boolean>(false);
   const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>(
     {}
   );
@@ -101,6 +103,8 @@ const BCIDView: React.FC = () => {
       console.log("target URL = ", destUrl);
 
       navigation.navigate(Screens.WebDisplay, { destUrl });
+
+      setWorkflowInFlight(false);
     }
   }, [proof]);
 
@@ -128,6 +132,8 @@ const BCIDView: React.FC = () => {
 
   const onGetIdTouched = async () => {
     try {
+      setWorkflowInFlight(true);
+
       // If something fails before we get the credential we need to
       // cleanup the old invitation before it can be used again.
       const oldInvitation = await agent?.oob.findByInvitationId(
@@ -190,7 +196,8 @@ const BCIDView: React.FC = () => {
         legacyConnectionDid: did,
       });
     } catch (error: unknown) {
-      // TODO:(jl) useless try-catch. cleanup.
+      setWorkflowInFlight(false);
+
       throw error;
     }
   };
@@ -205,6 +212,7 @@ const BCIDView: React.FC = () => {
             testID={testIdWithKey("GetBCID")}
             onPress={onGetIdTouched}
             buttonType={ButtonType.Secondary}
+            disabled={workflowInFlight}
           />
         </View>
       )}
