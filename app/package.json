@@ -9,6 +9,9 @@
     "npm": ">= 8.0.0"
   },
   "scripts": {
+    "style-check": "npm run prettier -- --check",
+    "style-format": "npm run prettier -- --write",
+    "style-watch": "onchange '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)' -- prettier --write {{changed}}",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start --reset-cache",
@@ -16,7 +19,8 @@
     "postinstall:copy-patches": "copyfiles -V -u 4 \"../bifold/app/patches/*\" \"./patches/\"",
     "postinstall:patch": "npx patch-package",
     "postinstall": "run-s postinstall:copy-patches postinstall:patch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prettier": "prettier --ignore-path .gitignore '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'"
   },
   "repository": {
     "type": "git",
@@ -90,15 +94,23 @@
   "devDependencies": {
     "@babel/core": "7.15.5",
     "@babel/runtime": "7.15.4",
+    "@react-native-community/eslint-config": "^2.0.0",
     "@types/lodash.flatten": "^4.4.6",
     "@types/lodash.merge": "^4.6.6",
     "@types/lodash.startcase": "^4.4.6",
     "@types/react": "16.14.15",
     "@types/react-native": "0.63.53",
+    "@typescript-eslint/eslint-plugin": "^4.20.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "babel-plugin-module-resolver": "4.1.0",
     "copyfiles": "^2.4.1",
+    "eslint": "^7.14.0",
+    "eslint-import-resolver-typescript": "^2.5.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-prettier": "^3.3.1",
     "metro-react-native-babel-preset": "0.66.2",
     "patch-package": "^6.4.7",
+    "prettier": "^2.1.2",
     "react-native-svg-transformer": "0.14.3",
     "run-s": "^0.0.0",
     "typescript": "4.4.3"
