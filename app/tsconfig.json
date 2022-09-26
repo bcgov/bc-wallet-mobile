@@ -1,20 +1,20 @@
 {
-    "extends": "../tsconfig-base.json",
-    "compilerOptions": {
-        "outDir": "./lib",
-        "declaration": true
-    },
-    "exclude": [
-        "node_modules",
-        "../node_modules",
-        "../../node_modules",
-        "./node_modules",
-        "./node_modules/**",
-        "./node_modules/@types/**",
-        "../node_modules/@types/**",
-        "../../node_modules/@types/**",
-        "babel.config.js",
-        "jest.config.js",
-        "lib"
-    ]
+  "extends": "../tsconfig-base.json",
+  "compilerOptions": {
+    "outDir": "./lib",
+    "declaration": true
+  },
+  "exclude": [
+    "node_modules",
+    "../node_modules",
+    "../../node_modules",
+    "./node_modules",
+    "./node_modules/**",
+    "./node_modules/@types/**",
+    "../node_modules/@types/**",
+    "../../node_modules/@types/**",
+    "babel.config.js",
+    "jest.config.js",
+    "lib"
+  ]
 }
