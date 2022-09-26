@@ -1,13 +1,13 @@
 import { ProofState, CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
 import { useAgent, useCredentialByState, useProofById, useProofByState } from '@aries-framework/react-hooks'
-import React, { useEffect } from 'react'
-import { View } from 'react-native'
-import { useTranslation } from 'react-i18next'
-import { Button, ButtonType, testIdWithKey, HomeContentView, BifoldError } from 'aries-bifold'
-import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
 import { useNavigation } from '@react-navigation/core'
-import { Screens } from 'aries-bifold'
+import { Button, ButtonType, testIdWithKey, HomeContentView, BifoldError, Screens } from 'aries-bifold'
+import React, { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { View } from 'react-native'
 import { Config } from 'react-native-config'
+
+import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssueRe = /3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default/i
@@ -54,10 +54,7 @@ const BCIDView: React.FC = () => {
 
     if (proof.state == ProofState.Done && agentDetails.connectionId && agentDetails.legacyConnectionDid) {
       const destUrl = `${Config.IDIM_PORTAL_URL}/${agentDetails?.legacyConnectionDid}`
-
-      console.log('target URL = ', destUrl)
-
-      navigation.navigate(Screens.WebDisplay, { destUrl })
+      navigation.navigate(Screens.WebDisplay as never, { destUrl } as never)
     }
   }, [proof])
 
@@ -78,6 +75,7 @@ const BCIDView: React.FC = () => {
   }, [credentials])
 
   const onGetIdTouched = async () => {
+    // eslint-disable-next-line no-useless-catch
     try {
       // If something fails before we get the credential we need to
       // cleanup the old invitation before it can be used again.
