@@ -1,10 +1,14 @@
-import { ProofState, CredentialState } from "@aries-framework/core";
+import {
+  ProofState,
+  CredentialState,
+  DidRepository,
+  CredentialMetadataKeys,
+} from "@aries-framework/core";
 import {
   useAgent,
   useCredentialByState,
   useProofById,
   useProofByState,
-  useConnectionById,
 } from "@aries-framework/react-hooks";
 import React, { useEffect } from "react";
 import { View } from "react-native";
@@ -14,16 +18,24 @@ import {
   ButtonType,
   testIdWithKey,
   HomeContentView,
+  BifoldError,
 } from "aries-bifold";
-import { IDIM_AGENT_INVITE_URL } from "../constants";
+import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from "../constants";
 import { useNavigation } from "@react-navigation/core";
 import { Screens } from "aries-bifold";
 import { Config } from "react-native-config";
 
+const legacyDidKey = "_internal/legacyDid"; // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssueRe =
   /3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default/i;
 const trustedFoundationCredentialIssuerRe =
-  /XpgeQa93eZvGSZBZef3PHn:[0-9]{1,1}:CL:[0-9]{5,}:BC\sPerson\sCredential.*/i;
+  /7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)/i;
+
+interface WellKnownAgentDetails {
+  connectionId?: string;
+  invitationProofId?: string;
+  legacyConnectionDid?: string;
+}
 
 const BCIDView: React.FC = () => {
   const [showGetFoundationCredential, setShowGetFoundationCredential] =
@@ -34,23 +46,20 @@ const BCIDView: React.FC = () => {
   ];
   const { agent } = useAgent();
   const { t } = useTranslation();
-  const [iDIMAgentConnectionId, setIDIMAgentConnectionId] =
-    React.useState<string>();
-  const [invitationProofID, setInvitationProofID] = React.useState<string>();
+  const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>(
+    {}
+  );
   const receivedProofs = useProofByState(ProofState.RequestReceived);
-  const proof = invitationProofID ? useProofById(invitationProofID) : undefined;
-  const connection = proof?.connectionId
-    ? useConnectionById(proof?.connectionId)
-    : undefined;
+  const proof = useProofById(agentDetails.invitationProofId ?? "");
   const navigation = useNavigation();
 
   useEffect(() => {
     for (const p of receivedProofs) {
       if (
         p.state == ProofState.RequestReceived &&
-        p.connectionId === iDIMAgentConnectionId
+        p.connectionId === agentDetails?.connectionId
       ) {
-        setInvitationProofID(p.id);
+        setAgentDetails({ ...agentDetails, invitationProofId: p.id });
       }
     }
   }, [receivedProofs]);
@@ -67,57 +76,107 @@ const BCIDView: React.FC = () => {
       });
     }
 
-    if (proof.state == ProofState.Done && connection) {
-      const destUrl = `${Config.IDIM_PORTAL_URL}/${connection?.did}`;
+    if (
+      proof.state == ProofState.Done &&
+      agentDetails.connectionId &&
+      agentDetails.legacyConnectionDid
+    ) {
+      const destUrl = `${Config.IDIM_PORTAL_URL}/${agentDetails?.legacyConnectionDid}`;
+
+      console.log("target URL = ", destUrl);
+
       navigation.navigate(Screens.WebDisplay, { destUrl });
     }
-  }, [proof, connection]);
+  }, [proof]);
 
   useEffect(() => {
-    for (const cred of credentials) {
-      const credentialDefinitionId = cred.metadata.data[
-        "_internal/indyCredential"
-      ].credentialDefinitionId as string;
+    const credentialDefinitionIDs = credentials.map(
+      (c) =>
+        c.metadata.data[CredentialMetadataKeys.IndyCredential]
+          .credentialDefinitionId as string
+    );
 
-      // If we have a foundation credential, hide the button get get said credential.
-      if (
-        credentialDefinitionId &&
-        trustedFoundationCredentialIssuerRe.test(credentialDefinitionId)
-      ) {
-        setShowGetFoundationCredential(false);
+    if (
+      credentialDefinitionIDs.some((i) =>
+        trustedFoundationCredentialIssuerRe.test(i)
+      )
+    ) {
+      setShowGetFoundationCredential(false);
+      return;
+    }
 
-        return;
-      }
-
-      // If we have a foundation invite credential, show the button get get said credential.
-      if (
-        credentialDefinitionId &&
-        trustedInvitationIssueRe.test(credentialDefinitionId)
-      ) {
-        setShowGetFoundationCredential(true);
-
-        return;
-      }
+    if (credentialDefinitionIDs.some((i) => trustedInvitationIssueRe.test(i))) {
+      setShowGetFoundationCredential(true);
+      return;
     }
   }, [credentials]);
 
   const onGetIdTouched = async () => {
     try {
-      const connectionRecord =
-        await agent?.connections.receiveInvitationFromUrl(
-          IDIM_AGENT_INVITE_URL,
-          {
-            autoAcceptConnection: true,
-          }
-        );
+      // If something fails before we get the credential we need to
+      // cleanup the old invitation before it can be used again.
+      const oldInvitation = await agent?.oob.findByInvitationId(
+        IDIM_AGENT_INVITE_ID
+      );
 
-      if (!connectionRecord?.id) {
-        throw new Error("Connection does not have an ID");
+      if (oldInvitation) {
+        await agent?.oob.deleteById(oldInvitation.id);
       }
 
-      setIDIMAgentConnectionId(connectionRecord.id);
-    } catch (error) {
-      // TODO:(jl) add error handling here
+      // connect to the agent, this will re-format the legacy invite
+      // until we have OOB working in ACA-py.
+      const invite = await agent?.oob.parseInvitation(IDIM_AGENT_INVITE_URL);
+      if (!invite) {
+        throw new BifoldError(
+          "Unable to parse invitation",
+          "There was a problem parsing the connection invitation.",
+          "No Message",
+          2020
+        );
+      }
+      const record = await agent?.oob.receiveInvitation(invite!);
+      if (!record) {
+        throw new BifoldError(
+          "Unable to receive invitation",
+          "There was a problem receiving the invitation to connect.",
+          "No Message",
+          2021
+        );
+      }
+
+      // retrieve the legacy DID. ACA-py does not support `peer:did`
+      // yet.
+      const didRepository = agent?.injectionContainer.resolve(DidRepository);
+      if (!didRepository) {
+        throw new BifoldError(
+          "Unable to find legacy DID",
+          "There was a problem extracting the did repository.",
+          "No Message",
+          2022
+        );
+      }
+
+      const didRecord = await didRepository.getById(
+        record.connectionRecord!.did!
+      );
+      const did = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid;
+
+      if (typeof did !== "string" || did.length <= 0) {
+        throw new BifoldError(
+          "Unable to find legacy DID",
+          "There was a problem extracting legacy did.",
+          "No Message",
+          2023
+        );
+      }
+
+      setAgentDetails({
+        connectionId: record.connectionRecord!.id,
+        legacyConnectionDid: did,
+      });
+    } catch (error: unknown) {
+      // TODO:(jl) useless try-catch. cleanup.
+      throw error;
     }
   };
 
