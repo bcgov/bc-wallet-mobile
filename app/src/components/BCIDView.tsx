@@ -26,6 +26,7 @@ import { useNavigation } from "@react-navigation/core";
 import { Screens } from "aries-bifold";
 import { Config } from "react-native-config";
 import { InAppBrowser, RedirectResult } from "react-native-inappbrowser-reborn";
+import { Linking } from "react-native";
 
 const legacyDidKey = "_internal/legacyDid"; // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssueRe =
@@ -200,6 +201,8 @@ const BCIDView: React.FC = () => {
             ErrorCodes.ServiceCardError
           );
         }
+      } else {
+        Linking.openURL(url);
       }
 
       cleanupAfterServiceCardAuthentication(AuthenticationResultType.Success);
