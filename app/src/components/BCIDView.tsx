@@ -30,10 +30,10 @@ import { Linking } from "react-native";
 
 const legacyDidKey = "_internal/legacyDid"; // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssueRe =
-  /3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default/i;
+  /^3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default$/i;
 const trustedFoundationCredentialIssuerRe =
-  /7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)/i;
-const redirectUrlTemplate = "bcwallet://ServiceCard/v1/dids/<did>";
+  /^7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)$/i;
+const redirectUrlTemplate = "bcwallet://bcsc/v1/dids/<did>";
 
 enum AuthenticationResultType {
   Success = "success",
@@ -165,7 +165,7 @@ const BCIDView: React.FC = () => {
     try {
       const url = `${Config.IDIM_PORTAL_URL}/${did}`;
 
-      console.log("target URL = ", url);
+      // console.log("target URL = ", url);
 
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(
@@ -209,7 +209,7 @@ const BCIDView: React.FC = () => {
     } catch (error: unknown) {
       const code = (error as BifoldError).code;
 
-      console.log(`message = ${(error as Error).message}, code = ${code}`);
+      // console.log(`message = ${(error as Error).message}, code = ${code}`);
 
       cleanupAfterServiceCardAuthentication(
         code === ErrorCodes.CanceledByUser
