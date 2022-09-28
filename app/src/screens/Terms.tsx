@@ -18,7 +18,10 @@ const appleTermsUrl =
   "https://www.apple.com/legal/internet-services/itunes/us/terms.html";
 const bcWalletHomeUrl =
   "https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet";
-const digitalWalletHomeUrl = "https://digital.gov.bc.ca/digital-trust/";
+const digitalTrustHomeUrl = "https://digital.gov.bc.ca/digital-trust/";
+const bcWebPrivacyUrl = "https://www2.gov.bc.ca/gov/content/home/privacy";
+const digitalWalletPrivacyUrl =
+  "https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy";
 
 const Terms: React.FC = () => {
   const [, dispatch] = useContext(StoreContext);
@@ -92,7 +95,7 @@ const Terms: React.FC = () => {
   };
 
   return (
-      <View style={[style.container]}>
+      <SafeAreaView style={[style.container]}>
         <ScrollView>
           <InfoTextBox>
             Veuillez accepter les termes et conditions ci-dessous avant d'utiliser cette
@@ -529,7 +532,7 @@ const Terms: React.FC = () => {
             </View>
           </View>
         </ScrollView>
-      </View>
+      </SafeAreaView>
   );
 };
 

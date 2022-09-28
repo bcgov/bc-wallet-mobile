@@ -10,8 +10,11 @@ import { Button, ButtonType, Theme, createStyles } from "aries-bifold";
 import { GenericFn } from "aries-bifold";
 import { testIdWithKey } from "aries-bifold";
 
-const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme'], t: TFunction<"translation", undefined>) => {
-
+const endPage = (
+    onTutorialCompleted: GenericFn,
+    theme: Theme['OnboardingTheme'],
+    t: TFunction<"translation", undefined>
+) => {
   const defaultStyle = createStyles(theme);
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,

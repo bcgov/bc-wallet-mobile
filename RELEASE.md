@@ -1,3 +1,19 @@
+## v1.0.3
+
+Build 318
+
+- fix: secondary message on some proofs #553
+
+Build 317
+
+- chore: update on-boarding text #493
+- fix: add missing eula links #542
+- fix: stuck proof when no ack received #553
+
+Build 314
+
+- fix: updated splash icon with high quality logo
+
 ## v1.0.2
 
 Build 309

@@ -8,7 +8,7 @@ import Terms from "./screens/Terms";
 import Splash from "./screens/Splash";
 import BCIDView from "./components/BCIDView";
 import branding from "./assets/branding/credential-branding";
-import UseBiometry from "./screens/UseBiometry";
+import UseBiometry from "../../bifold/core/App/screens/UseBiometry";
 
 const localization = _merge({}, translationResources, {
     en: {translation: en},

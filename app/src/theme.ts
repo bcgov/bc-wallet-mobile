@@ -591,7 +591,9 @@ export const Assets = {
       resizeMode: 'contain',
     },
     logoPrimary: {
-      src: require('./assets/img/logo-large-white.png')
+      src: require('./assets/img/logo-large-white.png'),
+      height: 170,
+      width: 170,
     }
   },
 }
