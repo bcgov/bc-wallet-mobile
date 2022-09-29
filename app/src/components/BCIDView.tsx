@@ -1,17 +1,33 @@
 import { ProofState, CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
 import { useAgent, useCredentialByState, useProofById, useProofByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import { Button, ButtonType, testIdWithKey, HomeContentView, BifoldError, Screens } from 'aries-bifold'
+import { Button, ButtonType, testIdWithKey, HomeContentView, BifoldError, Agent, Screens } from 'aries-bifold'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
+import { View, Linking } from 'react-native'
 import { Config } from 'react-native-config'
+import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
 import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
-const trustedInvitationIssueRe = /3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default/i
-const trustedFoundationCredentialIssuerRe = /7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)/i
+const trustedInvitationIssueRe = /^3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default$/i
+const trustedFoundationCredentialIssuerRe = /^7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)$/i
+const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
+
+enum AuthenticationResultType {
+  Success = 'success',
+  Fail = 'fail',
+  Cancel = 'cancel',
+}
+
+enum ErrorCodes {
+  BadInvitation = 2020,
+  ReceiveInvitationError = 2021,
+  CannotGetLegacyDID = 2022,
+  CanceledByUser = 2024,
+  ServiceCardError = 2025,
+}
 
 interface WellKnownAgentDetails {
   connectionId?: string
@@ -20,25 +36,42 @@ interface WellKnownAgentDetails {
 }
 
 const BCIDView: React.FC = () => {
+  const { agent } = useAgent()
+  const { t } = useTranslation()
+  const [workflowInFlight, setWorkflowInFlight] = React.useState<boolean>(false)
   const [showGetFoundationCredential, setShowGetFoundationCredential] = React.useState<boolean>(false)
+  const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>({})
+  const offers = useCredentialByState(CredentialState.OfferReceived)
   const credentials = [
     ...useCredentialByState(CredentialState.CredentialReceived),
     ...useCredentialByState(CredentialState.Done),
   ]
-  const { agent } = useAgent()
-  const { t } = useTranslation()
-  const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>({})
-  const receivedProofs = useProofByState(ProofState.RequestReceived)
+  const proofRequests = useProofByState(ProofState.RequestReceived)
   const proof = useProofById(agentDetails.invitationProofId ?? '')
   const navigation = useNavigation()
 
   useEffect(() => {
-    for (const p of receivedProofs) {
+    for (const o of offers) {
+      if (o.state == CredentialState.OfferReceived && o.connectionId === agentDetails?.connectionId) {
+        navigation.getParent()?.navigate('Notifications Stack', {
+          screen: Screens.CredentialOffer,
+          params: { credentialId: o.id },
+        })
+      }
+    }
+
+    if (offers.length === 0 && workflowInFlight) {
+      setWorkflowInFlight(!workflowInFlight)
+    }
+  }, [offers])
+
+  useEffect(() => {
+    for (const p of proofRequests) {
       if (p.state == ProofState.RequestReceived && p.connectionId === agentDetails?.connectionId) {
         setAgentDetails({ ...agentDetails, invitationProofId: p.id })
       }
     }
-  }, [receivedProofs])
+  }, [proofRequests])
 
   useEffect(() => {
     if (!proof) {
@@ -53,8 +86,7 @@ const BCIDView: React.FC = () => {
     }
 
     if (proof.state == ProofState.Done && agentDetails.connectionId && agentDetails.legacyConnectionDid) {
-      const destUrl = `${Config.IDIM_PORTAL_URL}/${agentDetails?.legacyConnectionDid}`
-      navigation.navigate(Screens.WebDisplay as never, { destUrl } as never)
+      authenticateWithServiceCard(agentDetails.legacyConnectionDid)
     }
   }, [proof])
 
@@ -65,6 +97,7 @@ const BCIDView: React.FC = () => {
 
     if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
       setShowGetFoundationCredential(false)
+      // setAgentDetails({});
       return
     }
 
@@ -74,9 +107,77 @@ const BCIDView: React.FC = () => {
     }
   }, [credentials])
 
+  const cleanupAfterServiceCardAuthentication = (status: AuthenticationResultType): void => {
+    InAppBrowser.closeAuth()
+
+    if (status === AuthenticationResultType.Cancel) {
+      setWorkflowInFlight(false)
+    }
+
+    if (navigation.canGoBack()) {
+      navigation.goBack()
+    }
+  }
+
+  const authenticateWithServiceCard = async (did: string): Promise<void> => {
+    try {
+      const url = `${Config.IDIM_PORTAL_URL}/${did}`
+
+      // console.log("target URL = ", url);
+
+      if (await InAppBrowser.isAvailable()) {
+        const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
+          // iOS
+          dismissButtonStyle: 'cancel',
+          // Android
+          showTitle: false,
+          enableUrlBarHiding: true,
+          enableDefaultShare: true,
+        })
+
+        if (result.type === AuthenticationResultType.Cancel) {
+          throw new BifoldError(
+            'BCSC Authentication',
+            'The authentication request was canceled.',
+            'No Message',
+            ErrorCodes.CanceledByUser
+          )
+        }
+
+        if (
+          !(result as unknown as RedirectResult).url.includes(did) ||
+          !(result as unknown as RedirectResult).url.includes('success')
+        ) {
+          throw new BifoldError(
+            'BCSC Authentication',
+            'There was a problem reported by BCSC',
+            'No Message',
+            ErrorCodes.ServiceCardError
+          )
+        }
+      } else {
+        Linking.openURL(url)
+      }
+
+      cleanupAfterServiceCardAuthentication(AuthenticationResultType.Success)
+    } catch (error: unknown) {
+      const code = (error as BifoldError).code
+
+      // console.log(`message = ${(error as Error).message}, code = ${code}`);
+
+      cleanupAfterServiceCardAuthentication(
+        code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
+      )
+
+      // throw error;
+    }
+  }
+
   const onGetIdTouched = async () => {
     // eslint-disable-next-line no-useless-catch
     try {
+      setWorkflowInFlight(true)
+
       // If something fails before we get the credential we need to
       // cleanup the old invitation before it can be used again.
       const oldInvitation = await agent?.oob.findByInvitationId(IDIM_AGENT_INVITE_ID)
@@ -93,7 +194,7 @@ const BCIDView: React.FC = () => {
           'Unable to parse invitation',
           'There was a problem parsing the connection invitation.',
           'No Message',
-          2020
+          ErrorCodes.BadInvitation
         )
       }
       const record = await agent?.oob.receiveInvitation(invite!)
@@ -102,7 +203,7 @@ const BCIDView: React.FC = () => {
           'Unable to receive invitation',
           'There was a problem receiving the invitation to connect.',
           'No Message',
-          2021
+          ErrorCodes.ReceiveInvitationError
         )
       }
 
@@ -114,7 +215,7 @@ const BCIDView: React.FC = () => {
           'Unable to find legacy DID',
           'There was a problem extracting the did repository.',
           'No Message',
-          2022
+          ErrorCodes.CannotGetLegacyDID
         )
       }
 
@@ -126,7 +227,7 @@ const BCIDView: React.FC = () => {
           'Unable to find legacy DID',
           'There was a problem extracting legacy did.',
           'No Message',
-          2023
+          ErrorCodes.CannotGetLegacyDID
         )
       }
 
@@ -135,7 +236,8 @@ const BCIDView: React.FC = () => {
         legacyConnectionDid: did,
       })
     } catch (error: unknown) {
-      // TODO:(jl) useless try-catch. cleanup.
+      setWorkflowInFlight(false)
+
       throw error
     }
   }
@@ -150,6 +252,7 @@ const BCIDView: React.FC = () => {
             testID={testIdWithKey('GetBCID')}
             onPress={onGetIdTouched}
             buttonType={ButtonType.Secondary}
+            disabled={workflowInFlight}
           />
         </View>
       )}
