@@ -1,5 +1,17 @@
 ## v1.0.3
 
+Build 3xx
+
+feat: use secure browser tab for authentication with BCSC #585
+feat: handle callback (redirect) URLs from BCSC #587
+
+Build 330
+
+- feat: work on bcsc / idim foundation credential #407
+- feat: make biometrics optional during onboarding #578
+- fix: biometrics on android #519
+- fix: disappearing image on proof screen #553
+
 Build 318
 
 - fix: secondary message on some proofs #553
