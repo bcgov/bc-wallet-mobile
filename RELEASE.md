@@ -1,6 +1,17 @@
 ## v1.0.3
 
-Build 3xx
+Build 40x
+
+fix: closing offer screen when it should not be. #585
+
+Build 404
+
+feat: use secure browser tab for authentication with BCSC #585
+feat: handle callback (redirect) URLs from BCSC #587
+chore: update Android SDK to API 31 (was 30)
+fix: numerous biometrics improvements
+
+Build 318
 
 feat: use secure browser tab for authentication with BCSC #585
 feat: handle callback (redirect) URLs from BCSC #587
