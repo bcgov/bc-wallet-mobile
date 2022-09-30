@@ -1,18 +1,21 @@
 import { useNavigation } from '@react-navigation/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import {
+  Button,
+  ButtonType,
+  CheckBoxRow,
+  InfoTextBox,
+  StoreContext,
+  DispatchAction,
+  AuthenticateStackParams,
+  Screens,
+  testIdWithKey,
+  useTheme,
+} from 'aries-bifold'
 import React, { useState, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-import { Button, ButtonType } from 'aries-bifold'
-import { CheckBoxRow } from 'aries-bifold'
-import { InfoTextBox } from 'aries-bifold'
-import { StoreContext } from 'aries-bifold'
-import { DispatchAction } from 'aries-bifold'
-import { AuthenticateStackParams, Screens } from 'aries-bifold'
-import { testIdWithKey } from 'aries-bifold'
-import { useTheme } from 'aries-bifold'
 
 const appleTermsUrl = 'https://www.apple.com/legal/internet-services/itunes/us/terms.html'
 const bcWalletHomeUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet'

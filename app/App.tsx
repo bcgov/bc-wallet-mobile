@@ -13,11 +13,12 @@ import {
   ConfigurationProvider,
   initLanguages,
 } from 'aries-bifold'
+import _merge from 'lodash.merge'
 import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'react-native'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
-import _merge from 'lodash.merge'
+
 import bcwallet from './src'
 
 const { theme, localization, configuration } = bcwallet
