@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native'
 import { Theme } from 'aries-bifold'
+import { StyleSheet } from 'react-native'
 
 interface FontAttributes {
   fontFamily?: string

@@ -170,6 +170,7 @@ const BCIDView: React.FC = () => {
   }
 
   const onGetIdTouched = async () => {
+    // eslint-disable-next-line no-useless-catch
     try {
       setWorkflowInFlight(true)
 
