@@ -1,44 +1,24 @@
-import {
-  ProofState,
-  CredentialState,
-  DidRepository,
-  CredentialMetadataKeys,
-} from "@aries-framework/core";
-import {
-  useAgent,
-  useCredentialByState,
-  useProofById,
-  useProofByState,
-} from "@aries-framework/react-hooks";
-import React, { useEffect } from "react";
-import { View } from "react-native";
-import { useTranslation } from "react-i18next";
-import {
-  Button,
-  ButtonType,
-  testIdWithKey,
-  HomeContentView,
-  BifoldError,
-  Agent,
-} from "aries-bifold";
-import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from "../constants";
-import { useNavigation } from "@react-navigation/core";
-import { Screens } from "aries-bifold";
-import { Config } from "react-native-config";
-import { InAppBrowser, RedirectResult } from "react-native-inappbrowser-reborn";
-import { Linking } from "react-native";
+import { ProofState, CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
+import { useAgent, useCredentialByState, useProofById, useProofByState } from '@aries-framework/react-hooks'
+import { useNavigation } from '@react-navigation/core'
+import { Button, ButtonType, testIdWithKey, HomeContentView, BifoldError, Agent, Screens } from 'aries-bifold'
+import React, { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { View, Linking } from 'react-native'
+import { Config } from 'react-native-config'
+import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
-const legacyDidKey = "_internal/legacyDid"; // TODO:(jl) Waiting for AFJ export of this.
-const trustedInvitationIssueRe =
-  /^3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default$/i;
-const trustedFoundationCredentialIssuerRe =
-  /^7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)$/i;
-const redirectUrlTemplate = "bcwallet://bcsc/v1/dids/<did>";
+import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
+
+const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
+const trustedInvitationIssueRe = /^3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default$/i
+const trustedFoundationCredentialIssuerRe = /^7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)$/i
+const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 
 enum AuthenticationResultType {
-  Success = "success",
-  Fail = "fail",
-  Cancel = "cancel",
+  Success = 'success',
+  Fail = 'fail',
+  Cancel = 'cancel',
 }
 
 enum ErrorCodes {
@@ -50,253 +30,221 @@ enum ErrorCodes {
 }
 
 interface WellKnownAgentDetails {
-  connectionId?: string;
-  invitationProofId?: string;
-  legacyConnectionDid?: string;
+  connectionId?: string
+  invitationProofId?: string
+  legacyConnectionDid?: string
 }
 
 const BCIDView: React.FC = () => {
-  const { agent } = useAgent();
-  const { t } = useTranslation();
-  const [workflowInFlight, setWorkflowInFlight] =
-    React.useState<boolean>(false);
-  const [showGetFoundationCredential, setShowGetFoundationCredential] =
-    React.useState<boolean>(false);
-  const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>(
-    {}
-  );
-  const offers = useCredentialByState(CredentialState.OfferReceived);
+  const { agent } = useAgent()
+  const { t } = useTranslation()
+  const [workflowInFlight, setWorkflowInFlight] = React.useState<boolean>(false)
+  const [showGetFoundationCredential, setShowGetFoundationCredential] = React.useState<boolean>(false)
+  const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>({})
+  const offers = useCredentialByState(CredentialState.OfferReceived)
   const credentials = [
     ...useCredentialByState(CredentialState.CredentialReceived),
     ...useCredentialByState(CredentialState.Done),
-  ];
-  const proofRequests = useProofByState(ProofState.RequestReceived);
-  const proof = useProofById(agentDetails.invitationProofId ?? "");
-  const navigation = useNavigation();
+  ]
+  const proofRequests = useProofByState(ProofState.RequestReceived)
+  const proof = useProofById(agentDetails.invitationProofId ?? '')
+  const navigation = useNavigation()
 
   useEffect(() => {
     for (const o of offers) {
-      if (
-        o.state == CredentialState.OfferReceived &&
-        o.connectionId === agentDetails?.connectionId
-      ) {
-        navigation.getParent()?.navigate("Notifications Stack", {
+      if (o.state == CredentialState.OfferReceived && o.connectionId === agentDetails?.connectionId) {
+        navigation.getParent()?.navigate('Notifications Stack', {
           screen: Screens.CredentialOffer,
           params: { credentialId: o.id },
-        });
+        })
       }
     }
 
     if (offers.length === 0 && workflowInFlight) {
-      setWorkflowInFlight(!workflowInFlight);
+      setWorkflowInFlight(!workflowInFlight)
     }
-  }, [offers]);
+  }, [offers])
 
   useEffect(() => {
     for (const p of proofRequests) {
-      if (
-        p.state == ProofState.RequestReceived &&
-        p.connectionId === agentDetails?.connectionId
-      ) {
-        setAgentDetails({ ...agentDetails, invitationProofId: p.id });
+      if (p.state == ProofState.RequestReceived && p.connectionId === agentDetails?.connectionId) {
+        setAgentDetails({ ...agentDetails, invitationProofId: p.id })
       }
     }
-  }, [proofRequests]);
+  }, [proofRequests])
 
   useEffect(() => {
     if (!proof) {
-      return;
+      return
     }
 
     if (proof.state == ProofState.RequestReceived) {
-      navigation.getParent()?.navigate("Notifications Stack", {
+      navigation.getParent()?.navigate('Notifications Stack', {
         screen: Screens.ProofRequest,
         params: { proofId: proof.id },
-      });
+      })
     }
 
-    if (
-      proof.state == ProofState.Done &&
-      agentDetails.connectionId &&
-      agentDetails.legacyConnectionDid
-    ) {
-      authenticateWithServiceCard(agentDetails.legacyConnectionDid);
+    if (proof.state == ProofState.Done && agentDetails.connectionId && agentDetails.legacyConnectionDid) {
+      authenticateWithServiceCard(agentDetails.legacyConnectionDid)
     }
-  }, [proof]);
+  }, [proof])
 
   useEffect(() => {
     const credentialDefinitionIDs = credentials.map(
-      (c) =>
-        c.metadata.data[CredentialMetadataKeys.IndyCredential]
-          .credentialDefinitionId as string
-    );
+      (c) => c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
+    )
 
-    if (
-      credentialDefinitionIDs.some((i) =>
-        trustedFoundationCredentialIssuerRe.test(i)
-      )
-    ) {
-      setShowGetFoundationCredential(false);
+    if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
+      setShowGetFoundationCredential(false)
       // setAgentDetails({});
-      return;
+      return
     }
 
     if (credentialDefinitionIDs.some((i) => trustedInvitationIssueRe.test(i))) {
-      setShowGetFoundationCredential(true);
-      return;
+      setShowGetFoundationCredential(true)
+      return
     }
-  }, [credentials]);
+  }, [credentials])
 
-  const cleanupAfterServiceCardAuthentication = (
-    status: AuthenticationResultType
-  ): void => {
-    InAppBrowser.closeAuth();
+  const cleanupAfterServiceCardAuthentication = (status: AuthenticationResultType): void => {
+    InAppBrowser.closeAuth()
 
     if (status === AuthenticationResultType.Cancel) {
-      setWorkflowInFlight(false);
+      setWorkflowInFlight(false)
     }
-  };
+  }
 
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
     try {
-      const url = `${Config.IDIM_PORTAL_URL}/${did}`;
+      const url = `${Config.IDIM_PORTAL_URL}/${did}`
 
       // console.log("target URL = ", url);
 
       if (await InAppBrowser.isAvailable()) {
-        const result = await InAppBrowser.openAuth(
-          url,
-          redirectUrlTemplate.replace("<did>", did),
-          {
-            // iOS
-            dismissButtonStyle: "cancel",
-            // Android
-            showTitle: false,
-            enableUrlBarHiding: true,
-            enableDefaultShare: true,
-          }
-        );
+        const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
+          // iOS
+          dismissButtonStyle: 'cancel',
+          // Android
+          showTitle: false,
+          enableUrlBarHiding: true,
+          enableDefaultShare: true,
+        })
 
         if (result.type === AuthenticationResultType.Cancel) {
           throw new BifoldError(
-            "BCSC Authentication",
-            "The authentication request was canceled.",
-            "No Message",
+            'BCSC Authentication',
+            'The authentication request was canceled.',
+            'No Message',
             ErrorCodes.CanceledByUser
-          );
+          )
         }
 
         if (
           !(result as unknown as RedirectResult).url.includes(did) ||
-          !(result as unknown as RedirectResult).url.includes("success")
+          !(result as unknown as RedirectResult).url.includes('success')
         ) {
           throw new BifoldError(
-            "BCSC Authentication",
-            "There was a problem reported by BCSC",
-            "No Message",
+            'BCSC Authentication',
+            'There was a problem reported by BCSC',
+            'No Message',
             ErrorCodes.ServiceCardError
-          );
+          )
         }
       } else {
-        await Linking.openURL(url);
+        await Linking.openURL(url)
       }
 
-      cleanupAfterServiceCardAuthentication(AuthenticationResultType.Success);
+      cleanupAfterServiceCardAuthentication(AuthenticationResultType.Success)
     } catch (error: unknown) {
-      const code = (error as BifoldError).code;
+      const code = (error as BifoldError).code
 
       // console.log(`message = ${(error as Error).message}, code = ${code}`);
 
       cleanupAfterServiceCardAuthentication(
-        code === ErrorCodes.CanceledByUser
-          ? AuthenticationResultType.Cancel
-          : AuthenticationResultType.Fail
-      );
+        code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
+      )
 
       // throw error;
     }
-  };
+  }
 
   const onGetIdTouched = async () => {
     try {
-      setWorkflowInFlight(true);
+      setWorkflowInFlight(true)
 
       // If something fails before we get the credential we need to
       // cleanup the old invitation before it can be used again.
-      const oldInvitation = await agent?.oob.findByInvitationId(
-        IDIM_AGENT_INVITE_ID
-      );
+      const oldInvitation = await agent?.oob.findByInvitationId(IDIM_AGENT_INVITE_ID)
 
       if (oldInvitation) {
-        await agent?.oob.deleteById(oldInvitation.id);
+        await agent?.oob.deleteById(oldInvitation.id)
       }
 
       // connect to the agent, this will re-format the legacy invite
       // until we have OOB working in ACA-py.
-      const invite = await agent?.oob.parseInvitation(IDIM_AGENT_INVITE_URL);
+      const invite = await agent?.oob.parseInvitation(IDIM_AGENT_INVITE_URL)
       if (!invite) {
         throw new BifoldError(
-          "Unable to parse invitation",
-          "There was a problem parsing the connection invitation.",
-          "No Message",
+          'Unable to parse invitation',
+          'There was a problem parsing the connection invitation.',
+          'No Message',
           ErrorCodes.BadInvitation
-        );
+        )
       }
-      const record = await agent?.oob.receiveInvitation(invite!);
+      const record = await agent?.oob.receiveInvitation(invite!)
       if (!record) {
         throw new BifoldError(
-          "Unable to receive invitation",
-          "There was a problem receiving the invitation to connect.",
-          "No Message",
+          'Unable to receive invitation',
+          'There was a problem receiving the invitation to connect.',
+          'No Message',
           ErrorCodes.ReceiveInvitationError
-        );
+        )
       }
 
       // retrieve the legacy DID. ACA-py does not support `peer:did`
       // yet.
-      const didRepository = agent?.injectionContainer.resolve(DidRepository);
+      const didRepository = agent?.injectionContainer.resolve(DidRepository)
       if (!didRepository) {
         throw new BifoldError(
-          "Unable to find legacy DID",
-          "There was a problem extracting the did repository.",
-          "No Message",
+          'Unable to find legacy DID',
+          'There was a problem extracting the did repository.',
+          'No Message',
           ErrorCodes.CannotGetLegacyDID
-        );
+        )
       }
 
-      const didRecord = await didRepository.getById(
-        record.connectionRecord!.did!
-      );
-      const did = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid;
+      const didRecord = await didRepository.getById(record.connectionRecord!.did!)
+      const did = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid
 
-      if (typeof did !== "string" || did.length <= 0) {
+      if (typeof did !== 'string' || did.length <= 0) {
         throw new BifoldError(
-          "Unable to find legacy DID",
-          "There was a problem extracting legacy did.",
-          "No Message",
+          'Unable to find legacy DID',
+          'There was a problem extracting legacy did.',
+          'No Message',
           ErrorCodes.CannotGetLegacyDID
-        );
+        )
       }
 
       setAgentDetails({
         connectionId: record.connectionRecord!.id,
         legacyConnectionDid: did,
-      });
+      })
     } catch (error: unknown) {
-      setWorkflowInFlight(false);
+      setWorkflowInFlight(false)
 
-      throw error;
+      throw error
     }
-  };
+  }
 
   return (
     <HomeContentView>
       {showGetFoundationCredential && (
         <View style={{ marginVertical: 40, marginHorizontal: 25 }}>
           <Button
-            title={t("BCID.GetDigitalID")}
-            accessibilityLabel={t("BCID.GetID")}
-            testID={testIdWithKey("GetBCID")}
+            title={t('BCID.GetDigitalID')}
+            accessibilityLabel={t('BCID.GetID')}
+            testID={testIdWithKey('GetBCID')}
             onPress={onGetIdTouched}
             buttonType={ButtonType.Secondary}
             disabled={workflowInFlight}
@@ -304,7 +252,7 @@ const BCIDView: React.FC = () => {
         </View>
       )}
     </HomeContentView>
-  );
-};
+  )
+}
 
-export default BCIDView;
+export default BCIDView
