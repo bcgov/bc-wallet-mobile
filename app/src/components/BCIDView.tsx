@@ -155,10 +155,6 @@ const BCIDView: React.FC = () => {
     if (status === AuthenticationResultType.Cancel) {
       setWorkflowInFlight(false);
     }
-
-    if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
   };
 
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
@@ -202,7 +198,7 @@ const BCIDView: React.FC = () => {
           );
         }
       } else {
-        Linking.openURL(url);
+        await Linking.openURL(url);
       }
 
       cleanupAfterServiceCardAuthentication(AuthenticationResultType.Success);
