@@ -135,7 +135,7 @@ const Splash: React.FC = () => {
   }, [store.authentication.didAuthenticate])
 
   useEffect(() => {
-    if (!store.authentication.didAuthenticate) {
+    if (!store.authentication.didAuthenticate || !store.onboarding.didConsiderBiometry) {
       return
     }
 
@@ -188,7 +188,7 @@ const Splash: React.FC = () => {
     }
 
     initAgent()
-  }, [store.authentication.didAuthenticate])
+  }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry])
 
   return (
     <SafeAreaView style={styles.container}>
