@@ -52,7 +52,7 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
 const startPages = (theme: Theme) => {
   const defaultStyle = createStyles(theme)
   return (
-    <ScrollView style={{ padding: 20 }}>
+    <ScrollView style={{ padding: 20, paddingTop: 30 }}>
       <Text style={[defaultStyle.headerText]}>Welcome</Text>
       <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>
         BC Wallet lets you receive, store and use digital credentials.
