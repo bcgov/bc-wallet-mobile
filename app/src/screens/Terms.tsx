@@ -33,7 +33,7 @@ const Terms: React.FC = () => {
   const style = StyleSheet.create({
     container: {
       backgroundColor: ColorPallet.brand.primaryBackground,
-      margin: 20,
+      padding: 20,
     },
     bodyText: {
       ...TextTheme.normal,
@@ -43,8 +43,9 @@ const Terms: React.FC = () => {
       ...TextTheme.normal,
       textDecorationLine: 'underline',
     },
-    controls: {
-      marginTop: 15,
+    controlsContainer: {
+      marginTop: 'auto',
+      marginBottom: 20,
     },
     paragraph: {
       flexDirection: 'row',
@@ -94,8 +95,8 @@ const Terms: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={[style.container]}>
-      <ScrollView>
+    <SafeAreaView edges={['left', 'right', 'bottom']}>
+      <ScrollView style={[style.container]}>
         <InfoTextBox>Please agree to the terms and conditions below before using this application.</InfoTextBox>
         <Text style={[style.bodyText, { marginTop: 20 }]}>
           The BC Wallet App (the “Licensed Application”) allows you (“You” or “you”) to store your verifiable
@@ -441,7 +442,7 @@ const Terms: React.FC = () => {
             related to this EULA and its subject matter.
           </Text>
         </View>
-        <View style={[style.controls]}>
+        <View style={[style.controlsContainer]}>
           <CheckBoxRow
             title={t('Terms.Attestation')}
             accessibilityLabel={t('Terms.IAgree')}
@@ -459,7 +460,7 @@ const Terms: React.FC = () => {
               buttonType={ButtonType.Primary}
             />
           </View>
-          <View style={[{ paddingTop: 10 }]}>
+          <View style={[{ paddingTop: 10, marginBottom: 20 }]}>
             <Button
               title={t('Global.Back')}
               accessibilityLabel={t('Global.Back')}
