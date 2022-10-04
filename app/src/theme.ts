@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native'
 import { Theme } from 'aries-bifold'
+import { StyleSheet } from 'react-native'
 
 interface FontAttributes {
   fontFamily?: string
@@ -426,7 +426,7 @@ export const TabTheme = {
     paddingBottom: 5,
   },
   tabBarButtonIconStyle: {
-    color: ColorPallet.grayscale.white
+    color: ColorPallet.grayscale.white,
   },
   focusTabIconStyle: {
     height: 60,
@@ -451,7 +451,7 @@ export const NavigationTheme = {
     text: ColorPallet.grayscale.white,
     border: ColorPallet.grayscale.white,
     notification: ColorPallet.grayscale.white,
-  }
+  },
 }
 
 export const HomeTheme = StyleSheet.create({
@@ -577,8 +577,8 @@ const PinInputTheme = {
     color: ColorPallet.grayscale.darkGrey,
   },
   icon: {
-    color: ColorPallet.grayscale.darkGrey
-  }
+    color: ColorPallet.grayscale.darkGrey,
+  },
 }
 
 export const Assets = {
@@ -594,10 +594,9 @@ export const Assets = {
       src: require('./assets/img/logo-large-white.png'),
       height: 170,
       width: 170,
-    }
+    },
   },
 }
-
 
 export const defaultTheme: Theme = {
   ColorPallet,

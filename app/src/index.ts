@@ -21,6 +21,6 @@ const configuration: ConfigurationContext = {
   homeContentView: BCIDView,
   OCABundle: branding,
   useBiometry: UseBiometry,
-};
+}
 
-export default { theme, localization, configuration };
+export default { theme, localization, configuration }
