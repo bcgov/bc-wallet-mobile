@@ -12,26 +12,27 @@ import {
   ThemeProvider,
   ConfigurationProvider,
   initLanguages,
-} from "aries-bifold";
-import React, { useEffect, useState } from "react";
-import { StatusBar } from "react-native";
-import SplashScreen from "react-native-splash-screen";
-import Toast from "react-native-toast-message";
-import _merge from "lodash.merge";
-import bcwallet from "./src";
+} from 'aries-bifold'
+import _merge from 'lodash.merge'
+import React, { useEffect, useState } from 'react'
+import { StatusBar } from 'react-native'
+import SplashScreen from 'react-native-splash-screen'
+import Toast from 'react-native-toast-message'
 
-const { theme, localization, configuration } = bcwallet;
+import bcwallet from './src'
 
-initLanguages(localization);
+const { theme, localization, configuration } = bcwallet
+
+initLanguages(localization)
 const App = () => {
-  const [agent, setAgent] = useState<Agent | undefined>(undefined);
-  initStoredLanguage();
+  const [agent, setAgent] = useState<Agent | undefined>(undefined)
+  initStoredLanguage()
 
   useEffect(() => {
     // Hide the native splash / loading screen so that our
     // RN version can be displayed.
-    SplashScreen.hide();
-  }, []);
+    SplashScreen.hide()
+  }, [])
 
   return (
     <StoreProvider>
@@ -56,7 +57,7 @@ const App = () => {
         </ThemeProvider>
       </AgentProvider>
     </StoreProvider>
-  );
-};
+  )
+}
 
-export default App;
+export default App

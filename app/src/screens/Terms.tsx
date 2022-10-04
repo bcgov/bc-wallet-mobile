@@ -1,27 +1,27 @@
-import { useNavigation } from "@react-navigation/core";
-import { StackNavigationProp } from "@react-navigation/stack";
-import React, { useState, useContext } from "react";
-import { useTranslation } from "react-i18next";
-import { ScrollView, StyleSheet, Text, View, Linking } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from '@react-navigation/core'
+import { StackNavigationProp } from '@react-navigation/stack'
+import {
+  Button,
+  ButtonType,
+  CheckBoxRow,
+  InfoTextBox,
+  StoreContext,
+  DispatchAction,
+  AuthenticateStackParams,
+  Screens,
+  testIdWithKey,
+  useTheme,
+} from 'aries-bifold'
+import React, { useState, useContext } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { Button, ButtonType } from "aries-bifold";
-import { CheckBoxRow } from "aries-bifold";
-import { InfoTextBox } from "aries-bifold";
-import { StoreContext } from "aries-bifold";
-import { DispatchAction } from "aries-bifold";
-import { AuthenticateStackParams, Screens } from "aries-bifold";
-import { testIdWithKey } from "aries-bifold";
-import { useTheme } from "aries-bifold";
-
-const appleTermsUrl =
-  "https://www.apple.com/legal/internet-services/itunes/us/terms.html";
-const bcWalletHomeUrl =
-  "https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet";
-const digitalTrustHomeUrl = "https://digital.gov.bc.ca/digital-trust/";
-const bcWebPrivacyUrl = "https://www2.gov.bc.ca/gov/content/home/privacy";
-const digitalWalletPrivacyUrl =
-  "https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy";
+const appleTermsUrl = 'https://www.apple.com/legal/internet-services/itunes/us/terms.html'
+const bcWalletHomeUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet'
+const digitalTrustHomeUrl = 'https://digital.gov.bc.ca/digital-trust/'
+const bcWebPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/home/privacy'
+const digitalWalletPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy'
 
 const Terms: React.FC = () => {
   const [, dispatch] = useContext(StoreContext);
@@ -42,13 +42,13 @@ const Terms: React.FC = () => {
     },
     titleText: {
       ...TextTheme.normal,
-      textDecorationLine: "underline",
+      textDecorationLine: 'underline',
     },
     controls: {
       marginTop: 15,
     },
     paragraph: {
-      flexDirection: "row",
+      flexDirection: 'row',
       marginTop: 20,
     },
     enumeration: {
@@ -58,19 +58,19 @@ const Terms: React.FC = () => {
     link: {
       ...TextTheme.normal,
       color: ColorPallet.brand.link,
-      textDecorationLine: "underline",
-      fontWeight: "bold",
+      textDecorationLine: 'underline',
+      fontWeight: 'bold',
     },
-  });
+  })
 
   const onSubmitPressed = () => {
     dispatch({
       type: DispatchAction.DID_AGREE_TO_TERMS,
       payload: [{ DidAgreeToTerms: checked }],
-    });
+    })
 
-    navigation.navigate(Screens.CreatePin);
-  };
+    navigation.navigate(Screens.CreatePin)
+  }
 
   const onBackPressed = () => {
     //TODO:(jl) goBack() does not unwind the navigation stack but rather goes
@@ -81,18 +81,18 @@ const Terms: React.FC = () => {
     //   nav.goBack()
     // }
 
-    navigation.navigate(Screens.Onboarding);
-  };
+    navigation.navigate(Screens.Onboarding)
+  }
 
   const openLink = async (url: string) => {
     // Only `https://` is allowed. Update manifest as needed.
-    const supported = await Linking.canOpenURL(url);
+    const supported = await Linking.canOpenURL(url)
 
     if (supported) {
       // Will open in device browser.
-      await Linking.openURL(url);
+      await Linking.openURL(url)
     }
-  };
+  }
 
   return (
       <SafeAreaView style={[style.container]}>
@@ -536,4 +536,4 @@ const Terms: React.FC = () => {
   );
 };
 
-export default Terms;
+export default Terms

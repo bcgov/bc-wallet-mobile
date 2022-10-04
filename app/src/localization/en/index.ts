@@ -215,4 +215,4 @@ const translation = {
   }
 }
 
-export default translation;
+export default translation

@@ -1,6 +1,6 @@
-import React from "react";
-import { Text, View } from "react-native";
-import { SvgProps } from "react-native-svg";
+import React from 'react'
+import { Text, View } from 'react-native'
+import { SvgProps } from 'react-native-svg'
 
 import CredentialList from "../assets/img/credential-list.svg";
 import ScanShare from "../assets/img/scan-share.svg";
@@ -20,10 +20,10 @@ const endPage = (
     fill: theme.imageDisplayOptions.fill,
     height: 180,
     width: 180,
-  };
+  }
   return (
     <>
-      <View style={{ alignItems: "center" }}>
+      <View style={{ alignItems: 'center' }}>
         <SecureImage {...imageDisplayOptions} />
       </View>
       <View style={{ marginLeft: 20, marginRight: 20, marginTop: 30 }}>
@@ -36,7 +36,7 @@ const endPage = (
       </View>
       <View
         style={{
-          marginTop: "auto",
+          marginTop: 'auto',
           marginBottom: 45,
           marginLeft: 20,
           marginRight: 20,
@@ -64,8 +64,8 @@ const endPage = (
         />
       </View>
     </>
-  );
-};
+  )
+}
 
 const startPages = (theme: Theme, t: TFunction<"translation", undefined>) => {
   const defaultStyle = createStyles(theme);
@@ -101,13 +101,13 @@ const startPages = (theme: Theme, t: TFunction<"translation", undefined>) => {
         {t("OnboardingPages.FirstPageBody3")}
       </Text>
     </>
-  );
-};
+  )
+}
 
 const guides: Array<{
-  image: React.FC<SvgProps>;
-  title: string;
-  body: string;
+  image: React.FC<SvgProps>
+  title: string
+  body: string
 }> = [
   {
     image: CredentialList,
@@ -133,17 +133,17 @@ const createPageWith = (
     fill: theme.imageDisplayOptions.fill,
     height: 180,
     width: 180,
-  };
+  }
   return (
     <>
-      <View style={{ alignItems: "center" }}>{image(imageDisplayOptions)}</View>
+      <View style={{ alignItems: 'center' }}>{image(imageDisplayOptions)}</View>
       <View style={{ marginLeft: 20, marginRight: 20, marginTop: 30 }}>
         <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t("OnboardingPages." + title)}</Text>
         <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t("OnboardingPages." + body)}</Text>
       </View>
     </>
-  );
-};
+  )
+}
 
 export const pages = (
   onTutorialCompleted: GenericFn,
