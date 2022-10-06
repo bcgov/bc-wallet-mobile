@@ -562,7 +562,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
 				PRODUCT_NAME = AriesBifold;
-				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet";
+				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet - 2023";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -600,7 +600,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
 				PRODUCT_NAME = AriesBifold;
-				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet";
+				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet - 2023";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
