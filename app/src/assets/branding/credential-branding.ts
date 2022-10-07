@@ -36,6 +36,32 @@ const idCardOverlay = {
   footer: { color: '#FFFFFF' },
 }
 
+const digitalIdInvitationCardOverlay = {
+  imageSource: require('./invitation-card.png'),
+  header: {
+    imageSource: require('./service-bc-header-logo.png'),
+    hideIssuer: true,
+    color: '#FFFFFF',
+    mapping: {
+      credentialLabel: 'BC Digital ID Invitation',
+    },
+    footer: { color: '#FFFFFF' },
+  },
+}
+
+const digitalIdCardOverlay = {
+  imageSource: require('./service-bc-id-card.png'),
+  header: {
+    imageSource: require('./service-bc-header-logo.png'),
+    color: '#FFFFFF',
+    mapping: {
+      connectionLabel: 'Service BC',
+      credentialLabel: 'Person',
+    },
+  },
+  footer: { color: '#FFFFFF' },
+}
+
 const branding: Record<string, Overlay> = {
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/370
   'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1': demoMemberCardOverlay /* LSBC (TEST) */,
@@ -51,6 +77,9 @@ const branding: Record<string, Overlay> = {
   'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0': idCardOverlay /* Unverified Person (DEV) */,
   'XZQpyaFa9hBUdJXfKHUvVg:2:unverified_person:0.1.0': idCardOverlay /* Unverified Person (TEST) */,
   '9wVuYYDEDtpZ6CYMqSiWop:2:unverified_person:0.1.0': idCardOverlay /* Unverified Person (DEV) */,
+  // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/604
+  '3Lbd5wSSSBv1xtjwsQ36sj:2:BC VC Pilot Certificate:1.0.1': digitalIdInvitationCardOverlay /* (TEST) */,
+  'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1': digitalIdCardOverlay /* (TEST) */,
 }
 
 export default branding
