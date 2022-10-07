@@ -1,7 +1,7 @@
 import { ProofState, CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
 import { useAgent, useCredentialByState, useProofById, useProofByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import { Button, ButtonType, testIdWithKey, HomeContentView, BifoldError, Agent, Screens } from 'aries-bifold'
+import { Button, ButtonType, testIdWithKey, HomeContentView, BifoldError, Screens } from 'aries-bifold'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Linking } from 'react-native'
