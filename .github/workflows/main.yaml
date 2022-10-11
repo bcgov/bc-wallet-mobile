@@ -132,7 +132,6 @@ jobs:
         env:
           CURRENT_PROJECT_VERSION: ${{ env.appBuildNumber }}
           MARKETING_VERSION: ${{ env.appBuildVersion }}
-
         run: |
           agvtool new-version ${CURRENT_PROJECT_VERSION} && \
           agvtool new-marketing-version ${MARKETING_VERSION}
@@ -324,6 +323,8 @@ jobs:
           GOOGLE_API_CREDENTIALS: "api_keys.json"
           ANDROID_PACKAGE_NAME: "ca.bc.gov.BCWallet"
           ANDROID_BUNDLE_PATH: "./app/build/outputs/bundle/release/app-release.aab"
+          VERSION_CODE: ${{ env.appBuildNumber }}
+          VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           npx @bcgov/gpublish
