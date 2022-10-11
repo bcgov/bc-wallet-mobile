@@ -30,7 +30,7 @@ if (typeof process.env.ANDROID_PACKAGE_NAME === 'undefined') {
   Set the env var ANDROID_PACKAGE_NAME to the full package name
   used in the Android project.
   eg: ca.fullboar.BifoldWallet
-  `); 
+  `);
   process.exit(1);
 }
 
@@ -47,7 +47,19 @@ if (typeof process.env.ANDROID_BUNDLE_PATH === 'undefined') {
   process.exit(1);
 }
 
-const expiryTimeSeconds= 600 // 10 min
+if (typeof process.env.VERSION_NAME === 'undefined') {
+  console.log(`
+  Google Publish v${pjson.version}
+
+  VERSION_NAME cannot be empty
+
+  Set the env var VERSION_NAME to the full version name
+  eg: 1.0.2
+  `);
+  process.exit(1);
+}
+
+const expiryTimeSeconds = 600 // 10 min
 const scopes = [
   'https://www.googleapis.com/auth/androidpublisher',
 ];
@@ -57,7 +69,7 @@ const main = async () => {
   const keyFile = process.env.GOOGLE_API_CREDENTIALS;
   const packageName = process.env.ANDROID_PACKAGE_NAME;
   const bundlePath = process.env.ANDROID_BUNDLE_PATH;
-  
+
   console.log(`Google Publish v${pjson.version}`);
 
   try {
@@ -79,21 +91,21 @@ const main = async () => {
     console.log('Creating an Edit.');
     const edit = await play.edits.insert({
       resource: {
-          id: `${new Date().getTime()}`,
-          expiryTimeSeconds,
+        id: `${new Date().getTime()}`,
+        expiryTimeSeconds,
       }
     });
 
     console.log('Loading bundle data.');
     const bundle = fs.readFileSync(bundlePath);
-    
+
     console.log('Uploading bundle data to Edit.');
     await play.edits.bundles.upload({
       editId: edit.data.id,
       packageName,
       media: {
-          mimeType: 'application/octet-stream',
-          body: bundle
+        mimeType: 'application/octet-stream',
+        body: bundle
       }
     });
 
@@ -104,7 +116,7 @@ const main = async () => {
       track: 'internal',
       requestBody: {
         releases: [{
-          name: `v1.0.0-${process.env.GITHUB_RUN_NUMBER}`,
+          name: `v${process.env.VERSION_NAME}-${process.env.GITHUB_RUN_NUMBER}`,
           status: 'draft', // draft, inProgress, completed
           // userFraction: 0.99,
           versionCodes: [
