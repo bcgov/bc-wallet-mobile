@@ -183,7 +183,7 @@ const studentCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Student',
-      issuer_name: 'Law Society of BC',
+      issuer_name: 'BestBC College',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
