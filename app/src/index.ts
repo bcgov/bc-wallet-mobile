@@ -1,16 +1,16 @@
-import { translationResources, ConfigurationContext } from 'aries-bifold'
+import { translationResources, ConfigurationContext, types, Record } from 'aries-bifold'
+import { Bundles } from 'aries-bifold/lib/typescript/App/types/oca'
 import _merge from 'lodash.merge'
 
 import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
 
-import branding from './assets/branding/credential-branding'
+import bundles from './assets/branding/credential-branding'
 import BCIDView from './components/BCIDView'
 import en from './localization/en'
 import { pages } from './screens/OnboardingPages'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { defaultTheme as theme } from './theme'
-
 const localization = _merge({}, translationResources, {
   en: { translation: en },
 })
@@ -19,8 +19,9 @@ const configuration: ConfigurationContext = {
   splash: Splash,
   terms: Terms,
   homeContentView: BCIDView,
-  OCABundle: branding,
+  OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(bundles as unknown as Bundles),
   useBiometry: UseBiometry,
+  record: Record,
 }
 
 export default { theme, localization, configuration }
