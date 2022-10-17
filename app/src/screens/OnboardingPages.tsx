@@ -1,5 +1,7 @@
+import { Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
 import React from 'react'
 import { Text, View } from 'react-native'
+import { ScrollView } from 'react-native-gesture-handler'
 import { SvgProps } from 'react-native-svg'
 
 import CredentialList from "../assets/img/credential-list.svg";
@@ -37,24 +39,9 @@ const endPage = (
       <View
         style={{
           marginTop: 'auto',
-          marginBottom: 45,
-          marginLeft: 20,
-          marginRight: 20,
+          margin: 20,
         }}
       >
-        {/* <View style={[defaultStyle.point, { marginTop: 60 }]}>
-          <Icon name={'info'} size={30} color={Colors.text} style={{ marginRight: 5 }} />
-          <TouchableOpacity
-            accessibilityLabel={'Learn More'}
-            accessible
-            onPress={() => Linking.openURL('https://example.com/')}
-          >
-            <Text style={[defaultStyle.bodyText, { color: 'blue', textDecorationLine: 'underline' }]}>
-              Learn more about the BC Wallet
-            </Text>
-          </TouchableOpacity>
-          <Icon name={'open-in-new'} size={14} color={Colors.text} style={{ marginLeft: 5 }} />
-        </View> */}
         <Button
           title={t("OnboardingPages.ButtonGetStarted")}
           accessibilityLabel={"Get Started"}
@@ -70,7 +57,7 @@ const endPage = (
 const startPages = (theme: Theme, t: TFunction<"translation", undefined>) => {
   const defaultStyle = createStyles(theme);
   return (
-    <>
+  <ScrollView style={{ padding: 20, paddingTop: 30 }}>
       <Text
         style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}
       >
@@ -100,7 +87,7 @@ const startPages = (theme: Theme, t: TFunction<"translation", undefined>) => {
       >
         {t("OnboardingPages.FirstPageBody3")}
       </Text>
-    </>
+    </ScrollView>
   )
 }
 
@@ -135,13 +122,13 @@ const createPageWith = (
     width: 180,
   }
   return (
-    <>
+    <ScrollView style={{ padding: 20 }}>
       <View style={{ alignItems: 'center' }}>{image(imageDisplayOptions)}</View>
-      <View style={{ marginLeft: 20, marginRight: 20, marginTop: 30 }}>
+      <View style={{ marginBottom: 20 }}>
         <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t("OnboardingPages." + title)}</Text>
         <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t("OnboardingPages." + body)}</Text>
       </View>
-    </>
+    </ScrollView>
   )
 }
 

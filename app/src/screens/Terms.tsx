@@ -34,7 +34,7 @@ const Terms: React.FC = () => {
   const style = StyleSheet.create({
     container: {
       backgroundColor: ColorPallet.brand.primaryBackground,
-      margin: 20,
+      padding: 20,
     },
     bodyText: {
       ...TextTheme.normal,
@@ -44,8 +44,9 @@ const Terms: React.FC = () => {
       ...TextTheme.normal,
       textDecorationLine: 'underline',
     },
-    controls: {
-      marginTop: 15,
+    controlsContainer: {
+      marginTop: 'auto',
+      marginBottom: 20,
     },
     paragraph: {
       flexDirection: 'row',

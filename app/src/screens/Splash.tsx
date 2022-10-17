@@ -18,6 +18,7 @@ import {
   Screens,
   Stacks,
   OnboardingState,
+  LoginAttemptState,
   PreferencesState,
   PrivacyState,
   useAuth,
@@ -77,6 +78,22 @@ const Splash: React.FC = () => {
     },
   })
 
+  const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
+    try {
+      const attemptsData = await AsyncStorage.getItem(LocalStorageKeys.LoginAttempts)
+      if (attemptsData) {
+        const attempts = JSON.parse(attemptsData) as LoginAttemptState
+        dispatch({
+          type: DispatchAction.ATTEMPT_UPDATED,
+          payload: [attempts],
+        })
+        return attempts
+      }
+    } catch (error) {
+
+    }
+  }
+
   useEffect(() => {
     if (store.authentication.didAuthenticate) {
       return
@@ -84,6 +101,9 @@ const Splash: React.FC = () => {
 
     const initOnboarding = async (): Promise<void> => {
       try {
+        // load authentication attempts from storage
+        const attemptData = await loadAuthAttempts()
+
         const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
 
         if (preferencesData) {
@@ -113,8 +133,12 @@ const Splash: React.FC = () => {
             payload: [dataAsJSON],
           })
 
-          if (onboardingComplete(dataAsJSON)) {
+          if (onboardingComplete(dataAsJSON) && !attemptData?.lockoutDate) {
             navigation.navigate(Screens.EnterPin as never)
+            return
+          } else if (onboardingComplete(dataAsJSON) && attemptData?.lockoutDate) {
+            // return to lockout screen if lockout date is set
+            navigation.navigate(Screens.AttemptLockout as never)
             return
           }
 
@@ -130,7 +154,6 @@ const Splash: React.FC = () => {
         // TODO:(jl)
       }
     }
-
     initOnboarding()
   }, [store.authentication.didAuthenticate])
 

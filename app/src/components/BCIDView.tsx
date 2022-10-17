@@ -1,8 +1,17 @@
 import { ProofState, CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
 import { useAgent, useCredentialByState, useProofById, useProofByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import { Button, ButtonType, testIdWithKey, HomeContentView, BifoldError, Agent, Screens } from 'aries-bifold'
-import React, { useEffect } from 'react'
+import {
+  Button,
+  ButtonType,
+  testIdWithKey,
+  HomeContentView,
+  BifoldError,
+  Screens,
+  StoreContext,
+  DispatchAction,
+} from 'aries-bifold'
+import React, { useEffect, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Linking } from 'react-native'
 import { Config } from 'react-native-config'
@@ -38,6 +47,8 @@ interface WellKnownAgentDetails {
 const BCIDView: React.FC = () => {
   const { agent } = useAgent()
   const { t } = useTranslation()
+  const [, dispatch] = useContext(StoreContext)
+
   const [workflowInFlight, setWorkflowInFlight] = React.useState<boolean>(false)
   const [showGetFoundationCredential, setShowGetFoundationCredential] = React.useState<boolean>(false)
   const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>({})
@@ -119,8 +130,6 @@ const BCIDView: React.FC = () => {
     try {
       const url = `${Config.IDIM_PORTAL_URL}/${did}`
 
-      // console.log("target URL = ", url);
-
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
           // iOS
@@ -133,9 +142,9 @@ const BCIDView: React.FC = () => {
 
         if (result.type === AuthenticationResultType.Cancel) {
           throw new BifoldError(
-            'BCSC Authentication',
-            'The authentication request was canceled.',
-            'No Message',
+            t('Error.Title2024'),
+            t('Error.Description2024'),
+            t('Error.NoMessage'),
             ErrorCodes.CanceledByUser
           )
         }
@@ -145,9 +154,9 @@ const BCIDView: React.FC = () => {
           !(result as unknown as RedirectResult).url.includes('success')
         ) {
           throw new BifoldError(
-            'BCSC Authentication',
-            'There was a problem reported by BCSC',
-            'No Message',
+            t('Error.Title2025'),
+            t('Error.Description2025'),
+            t('Error.NoMessage'),
             ErrorCodes.ServiceCardError
           )
         }
@@ -165,12 +174,14 @@ const BCIDView: React.FC = () => {
         code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
       )
 
-      // throw error;
+      dispatch({
+        type: DispatchAction.ERROR_ADDED,
+        payload: [{ error }],
+      })
     }
   }
 
   const onGetIdTouched = async () => {
-    // eslint-disable-next-line no-useless-catch
     try {
       setWorkflowInFlight(true)
 
@@ -187,18 +198,18 @@ const BCIDView: React.FC = () => {
       const invite = await agent?.oob.parseInvitation(IDIM_AGENT_INVITE_URL)
       if (!invite) {
         throw new BifoldError(
-          'Unable to parse invitation',
-          'There was a problem parsing the connection invitation.',
-          'No Message',
+          t('Error.Title2020'),
+          t('Error.Description2020'),
+          t('Error.NoMessage'),
           ErrorCodes.BadInvitation
         )
       }
       const record = await agent?.oob.receiveInvitation(invite!)
       if (!record) {
         throw new BifoldError(
-          'Unable to receive invitation',
-          'There was a problem receiving the invitation to connect.',
-          'No Message',
+          t('Error.Title2021'),
+          t('Error.Description2021'),
+          t('Error.NoMessage'),
           ErrorCodes.ReceiveInvitationError
         )
       }
@@ -208,9 +219,9 @@ const BCIDView: React.FC = () => {
       const didRepository = agent?.injectionContainer.resolve(DidRepository)
       if (!didRepository) {
         throw new BifoldError(
-          'Unable to find legacy DID',
-          'There was a problem extracting the did repository.',
-          'No Message',
+          t('Error.Title2022'),
+          t('Error.Description2022'),
+          t('Error.NoMessage'),
           ErrorCodes.CannotGetLegacyDID
         )
       }
@@ -220,9 +231,9 @@ const BCIDView: React.FC = () => {
 
       if (typeof did !== 'string' || did.length <= 0) {
         throw new BifoldError(
-          'Unable to find legacy DID',
-          'There was a problem extracting legacy did.',
-          'No Message',
+          t('Error.Title2022'),
+          t('Error.Description2022'),
+          t('Error.NoMessage'),
           ErrorCodes.CannotGetLegacyDID
         )
       }
@@ -234,7 +245,10 @@ const BCIDView: React.FC = () => {
     } catch (error: unknown) {
       setWorkflowInFlight(false)
 
-      throw error
+      dispatch({
+        type: DispatchAction.ERROR_ADDED,
+        payload: [{ error }],
+      })
     }
   }
 
