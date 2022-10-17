@@ -1,0 +1,81 @@
+{
+  "Ep31SvFAetugFPe5CGzJxt:2:Attestation numérique d'identité gouvernemental (EXP):1.0": {
+    "capture_base": {
+      "type": "spec/capture_base/1.0",
+      "classification": "GICS:45102010",
+      "attributes": {
+        "Nom": "Text",
+        "Prénom": "Text",
+        "Date de naissance": "Date",
+        "Nom du parent 1": "Text",
+        "Nom du parent 2": "Text",
+        "Date d'émission": "Date",
+        "Date d'expiration": "Date",
+        "Niveau d'identification": "Text",
+        "Photo": "Binary"
+      }
+    },
+    "overlays": [
+      {
+        "capture_base": "EfeQBz5tyC0gett-ETgkg4pkxBwwuQoeYsT-9Nt0cNsc",
+        "type": "spec/overlays/format/1.0",
+        "attr_formats": {
+          "Nom": "YY-MM-DD",
+          "Prénom": "YY-MM-DD",
+          "Date de naissance": "YY-MM-DD",
+          "Nom du parent 1": "P[A-Z0-9]{1}",
+          "Nom du parent 2": "[A-Z0-9]{9}",
+          "Photo": "image/jpeg"
+        }
+      },
+      {
+        "capture_base": "EfeQBz5tyC0gett-ETgkg4pkxBwwuQoeYsT-9Nt0cNsc",
+        "type": "spec/overlays/label/1.0",
+        "language": "fr",
+        "attr_labels": {
+          "Nom": "Nom",
+          "Prénom": "Prénom",
+          "Date de naissance": "Date De Naissance",
+          "Nom du parent 1": "Nom Du Parent 1",
+          "Nom du parent 2": "Nom Du Parent 2",
+          "Date d'émission": "Date D'Émission",
+          "Date d'expiration": "Date D'Expiration",
+          "Niveau d'identification": "Niveau D'Identification",
+          "Photo": "Photo"
+        }
+      },
+      {
+        "capture_base": "EfeQBz5tyC0gett-ETgkg4pkxBwwuQoeYsT-9Nt0cNsc",
+        "type": "spec/overlays/character_encoding/1.0",
+        "default_character_encoding": "utf-8",
+        "attr_character_encoding": {
+          "Nom": "utf-8",
+          "Prénom": "utf-8",
+          "Date de naissance": "utf-8",
+          "Nom du parent 1": "utf-8",
+          "Nom du parent 2": "utf-8",
+          "Date d'émission": "utf-8",
+          "Date d'expiration": "utf-8",
+          "Niveau d'identification": "utf-8",
+          "Photo": "base64"
+        }
+      },
+      {
+        "capture_base": "EfeQBz5tyC0gett-ETgkg4pkxBwwuQoeYsT-9Nt0cNsc",
+        "type": "spec/overlays/label/1.0",
+        "language": "en",
+        "attr_labels": {
+          "Nom": "Last Name",
+          "Prénom": "First Name",
+          "Date de naissance": "Birth Date",
+          "Nom du parent 1": "First Parent Full Name",
+          "Nom du parent 2": "Second Parent Full Name",
+          "Date d'émission": "Date Of Issue",
+          "Date d'expiration": "Expiration date",
+          "Niveau d'identification": "Identification Level",
+          "Photo": "Picture"
+        }
+      }
+    ]
+  }
+}
