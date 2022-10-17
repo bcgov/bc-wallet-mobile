@@ -7,21 +7,24 @@ import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
 import bundles from './assets/branding/credential-branding'
 import BCIDView from './components/BCIDView'
 import en from './localization/en'
-import fr from './localization/fr';
+import fr from './localization/fr'
 import { pages } from './screens/OnboardingPages'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { defaultTheme as theme } from './theme'
 const localization = _merge({}, translationResources, {
-    en: {translation: en},
-    fr: {translation: fr}
+  en: { translation: en },
+  fr: { translation: fr },
 })
+
 const configuration: ConfigurationContext = {
   pages,
   splash: Splash,
   terms: Terms,
   homeContentView: BCIDView,
-  OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(bundles as unknown as Bundles),
+  OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(
+    require('./assets/branding/oca-bundle-qc.json') as Bundles
+  ),
   useBiometry: UseBiometry,
   record: Record,
 }

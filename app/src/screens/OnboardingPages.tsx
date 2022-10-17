@@ -1,23 +1,20 @@
-import { Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
+import { Button, ButtonType, createStyles, GenericFn, testIdWithKey, Theme } from 'aries-bifold'
 import React from 'react'
+import { useTranslation, TFunction } from 'react-i18next'
 import { Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { SvgProps } from 'react-native-svg'
 
-import CredentialList from "../assets/img/credential-list.svg";
-import ScanShare from "../assets/img/scan-share.svg";
-import SecureImage from "../assets/img/secure-image.svg";
-import { useTranslation, TFunction } from "react-i18next";
-import { Button, ButtonType, Theme, createStyles } from "aries-bifold";
-import { GenericFn } from "aries-bifold";
-import { testIdWithKey } from "aries-bifold";
+import CredentialList from '../assets/img/credential-list.svg'
+import ScanShare from '../assets/img/scan-share.svg'
+import SecureImage from '../assets/img/secure-image.svg'
 
 const endPage = (
-    onTutorialCompleted: GenericFn,
-    theme: Theme['OnboardingTheme'],
-    t: TFunction<"translation", undefined>
+  onTutorialCompleted: GenericFn,
+  theme: Theme['OnboardingTheme'],
+  t: TFunction<'translation', undefined>
 ) => {
-  const defaultStyle = createStyles(theme);
+  const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
     height: 180,
@@ -29,12 +26,8 @@ const endPage = (
         <SecureImage {...imageDisplayOptions} />
       </View>
       <View style={{ marginLeft: 20, marginRight: 20, marginTop: 30 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>
-        {t("OnboardingPages.FourthPageTitle")}
-        </Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>
-        {t("OnboardingPages.FourthPageBody")}
-        </Text>
+        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('OnboardingPages.FourthPageTitle')}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('OnboardingPages.FourthPageBody')}</Text>
       </View>
       <View
         style={{
@@ -43,9 +36,9 @@ const endPage = (
         }}
       >
         <Button
-          title={t("OnboardingPages.ButtonGetStarted")}
-          accessibilityLabel={"Get Started"}
-          testID={testIdWithKey("GetStarted")}
+          title={t('OnboardingPages.ButtonGetStarted')}
+          accessibilityLabel={'Get Started'}
+          testID={testIdWithKey('GetStarted')}
           onPress={onTutorialCompleted}
           buttonType={ButtonType.Primary}
         />
@@ -54,38 +47,21 @@ const endPage = (
   )
 }
 
-const startPages = (theme: Theme, t: TFunction<"translation", undefined>) => {
-  const defaultStyle = createStyles(theme);
+const startPages = (theme: Theme, t: TFunction<'translation', undefined>) => {
+  const defaultStyle = createStyles(theme)
   return (
-  <ScrollView style={{ padding: 20, paddingTop: 30 }}>
-      <Text
-        style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}
-      >
-        {t("OnboardingPages.FirstPageTitle")}
+    <ScrollView style={{ padding: 20, paddingTop: 30 }}>
+      <Text style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}>
+        {t('OnboardingPages.FirstPageTitle')}
       </Text>
-      <Text
-        style={[
-          defaultStyle.bodyText,
-          { marginLeft: 20, marginTop: 35, marginRight: 20 },
-        ]}
-      >
-        {t("OnboardingPages.FirstPageBody1")}
+      <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 35, marginRight: 20 }]}>
+        {t('OnboardingPages.FirstPageBody1')}
       </Text>
-      <Text
-        style={[
-          defaultStyle.bodyText,
-          { marginLeft: 20, marginTop: 25, marginRight: 20 },
-        ]}
-      >
-        {t("OnboardingPages.FirstPageBody2")}
+      <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
+        {t('OnboardingPages.FirstPageBody2')}
       </Text>
-      <Text
-        style={[
-          defaultStyle.bodyText,
-          { marginLeft: 20, marginTop: 25, marginRight: 20 },
-        ]}
-      >
-        {t("OnboardingPages.FirstPageBody3")}
+      <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
+        {t('OnboardingPages.FirstPageBody3')}
       </Text>
     </ScrollView>
   )
@@ -98,24 +74,24 @@ const guides: Array<{
 }> = [
   {
     image: CredentialList,
-    title: "SecondPageTitle",
-    body: "SecondPageBody",
+    title: 'SecondPageTitle',
+    body: 'SecondPageBody',
   },
   {
     image: ScanShare,
-    title: "ThirdPageTitle",
-    body: "ThirdPageBogy",
+    title: 'ThirdPageTitle',
+    body: 'ThirdPageBogy',
   },
-];
+]
 
 const createPageWith = (
   image: React.FC<SvgProps>,
   title: string,
   body: string,
   theme: Theme['OnboardingTheme'],
-  t: TFunction<"translation", undefined>
+  t: TFunction<'translation', undefined>
 ) => {
-  const defaultStyle = createStyles(theme);
+  const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
     height: 180,
@@ -125,21 +101,18 @@ const createPageWith = (
     <ScrollView style={{ padding: 20 }}>
       <View style={{ alignItems: 'center' }}>{image(imageDisplayOptions)}</View>
       <View style={{ marginBottom: 20 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t("OnboardingPages." + title)}</Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t("OnboardingPages." + body)}</Text>
+        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('OnboardingPages.' + title)}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('OnboardingPages.' + body)}</Text>
       </View>
     </ScrollView>
   )
 }
 
-export const pages = (
-  onTutorialCompleted: GenericFn,
-  theme: Theme
-): Array<Element> => {
-  const { t } = useTranslation();
+export const pages = (onTutorialCompleted: GenericFn, theme: Theme): Array<Element> => {
+  const { t } = useTranslation()
   return [
     startPages(theme, t),
     ...guides.map((g) => createPageWith(g.image, g.title, g.body, theme, t)),
     endPage(onTutorialCompleted, theme, t),
-  ];
-};
+  ]
+}
