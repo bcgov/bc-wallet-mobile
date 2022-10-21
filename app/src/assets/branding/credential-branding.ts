@@ -67,13 +67,13 @@ const idCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Person',
-      issuer_name: 'Service BC',
+      issuerName: 'Service BC',
     },
     {
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Personne',
-      issuer_name: 'Service BC',
+      issuerName: 'Service BC',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
@@ -105,13 +105,13 @@ const digitalIdCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Person',
-      issuer_name: 'Service BC',
+      issuerName: 'Service BC',
     },
     {
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Personne',
-      issuer_name: 'Service BC',
+      issuerName: 'Service BC',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
@@ -143,7 +143,7 @@ const demoMemberCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Person',
-      issuer_name: 'Law Society of BC',
+      issuerName: 'Law Society of BC',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
@@ -167,7 +167,7 @@ const memberCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Member',
-      issuer_name: 'Law Society of BC',
+      issuerName: 'Law Society of BC',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
@@ -183,7 +183,7 @@ const studentCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Student',
-      issuer_name: 'BestBC College',
+      issuerName: 'BestBC College',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
@@ -199,7 +199,7 @@ const digitalIdInvitationCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Pilot Invitation',
-      issuer_name: 'DITP',
+      issuerName: 'DITP',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
@@ -228,4 +228,6 @@ export default {
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/604
   '3Lbd5wSSSBv1xtjwsQ36sj:2:BC VC Pilot Certificate:1.0.1': digitalIdInvitationCardBundle /* (TEST) */,
   'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1': digitalIdCardBundle /* (TEST) */,
+  'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:Person (QA)': digitalIdCardBundle /* (QA) */,
+  '7xjfawcnyTUcduWVysLww5:3:CL:28075:Person (SIT)': digitalIdCardBundle /* (SIT) */,
 }
