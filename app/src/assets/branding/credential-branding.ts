@@ -1,3 +1,22 @@
+export enum CREDENTIALS {
+  LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1',
+  LSBC_PROD = '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1',
+  SHOWCASE_LAWYER_DEV = 'Trx3R1frdEzbn34Sp1jyX:2:Member Card:1.5.1',
+  SHOWCASE_LAWYER_TEST = '63ZiwyeZeazA6AhYRYm2zD:2:Member Card:1.5.1',
+  SHOWCASE_LAWYER_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1',
+  SHOWCASE_STUDENT_DEV = 'Trx3R1frdEzbn34Sp1jyX:2:student_card:1.0',
+  SHOWCASE_STUDENT_TEST = '63ZiwyeZeazA6AhYRYm2zD:2:student_card:1.0',
+  SHOWCASE_STUDENT_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:student_card:1.0',
+  UNVERIFIED_PERSON_DEV = 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0',
+  UNVERIFIED_PERSON_TEST = 'XZQpyaFa9hBUdJXfKHUvVg:2:unverified_person:0.1.0',
+  UNVERIFIED_PERSON_PROD = '9wVuYYDEDtpZ6CYMqSiWop:2:unverified_person:0.1.0',
+  PILOT_INVITE_DEV = '',
+  PILOT_INVITE_TEST = '3Lbd5wSSSBv1xtjwsQ36sj:2:BC VC Pilot Certificate:1.0.1',
+  PILOT_INVITE_PROD = '',
+  BC_DIGITAL_ID_QA = 'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:Person (QA)',
+  BC_DIGITAL_ID_SIT = '7xjfawcnyTUcduWVysLww5:3:CL:28075:Person (SIT)',
+}
+
 const demoMemberCardOverlay = {
   imageSource: require('./lsbc-member-card-demo.png'),
   header: {
@@ -60,20 +79,20 @@ const digitalIdCardOverlay = {
   footer: { color: '#FFFFFF' },
 }
 
-const idCardBundle = {
+const unverifiedPersonCardBundle = {
   capture_base: {},
   overlays: [
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
-      name: 'Person',
-      issuerName: 'Service BC',
+      name: 'Unverified Person',
+      issuerName: 'BC Digital Idenity & Trust Program',
     },
     {
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
-      name: 'Personne',
-      issuerName: 'Service BC',
+      name: 'Unverified Personne',
+      issuerName: 'BC Digital Idenity & Trust Program',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
@@ -211,23 +230,23 @@ const digitalIdInvitationCardBundle = {
 export default {
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/370
   /* LSBC (TEST) */
-  'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1': demoMemberCardBundle,
-  '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1': memberCardBundle /* LSBC (PROD) */,
+  [CREDENTIALS.LSBC_TEST]: demoMemberCardBundle,
+  [CREDENTIALS.LSBC_PROD]: memberCardBundle /* LSBC (PROD) */,
   // ↓↓↓ https://github.com/bcgov/BC-Wallet-Demo/discussions/59
-  'Trx3R1frdEzbn34Sp1jyX:2:Member Card:1.5.1': demoMemberCardBundle /* Showcase LSBC (DEV) */,
-  '63ZiwyeZeazA6AhYRYm2zD:2:Member Card:1.5.1': demoMemberCardBundle /* Showcase LSBC (TEST) */,
-  'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1': demoMemberCardBundle /* Showcase LSBC (PROD) */,
-  'Trx3R1frdEzbn34Sp1jyX:2:student_card:1.0': studentCardBundle /* Showcase Student (DEV) */,
-  '63ZiwyeZeazA6AhYRYm2zD:2:student_card:1.0': studentCardBundle /* Showcase Student (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_DEV]: demoMemberCardBundle /* Showcase LSBC (DEV) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_TEST]: demoMemberCardBundle /* Showcase LSBC (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_PROD]: demoMemberCardBundle /* Showcase LSBC (PROD) */,
+  [CREDENTIALS.SHOWCASE_STUDENT_DEV]: studentCardBundle /* Showcase Student (DEV) */,
+  [CREDENTIALS.SHOWCASE_STUDENT_TEST]: studentCardBundle /* Showcase Student (TEST) */,
   /* Showcase Student (PROD) */
-  'XUxBrVSALWHLeycAUhrNr9:2:student_card:1.0': studentCardBundle,
+  [CREDENTIALS.SHOWCASE_STUDENT_PROD]: studentCardBundle,
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/506
-  'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0': idCardBundle /* Unverified Person (DEV) */,
-  'XZQpyaFa9hBUdJXfKHUvVg:2:unverified_person:0.1.0': idCardBundle /* Unverified Person (TEST) */,
-  '9wVuYYDEDtpZ6CYMqSiWop:2:unverified_person:0.1.0': idCardBundle /* Unverified Person (DEV) */,
+  [CREDENTIALS.UNVERIFIED_PERSON_DEV]: unverifiedPersonCardBundle /* Unverified Person (DEV) */,
+  [CREDENTIALS.UNVERIFIED_PERSON_TEST]: unverifiedPersonCardBundle /* Unverified Person (TEST) */,
+  [CREDENTIALS.UNVERIFIED_PERSON_PROD]: unverifiedPersonCardBundle /* Unverified Person (DEV) */,
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/604
-  '3Lbd5wSSSBv1xtjwsQ36sj:2:BC VC Pilot Certificate:1.0.1': digitalIdInvitationCardBundle /* (TEST) */,
+  [CREDENTIALS.PILOT_INVITE_TEST]: digitalIdInvitationCardBundle /* (TEST) */,
   'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1': digitalIdCardBundle /* (TEST) */,
-  'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:Person (QA)': digitalIdCardBundle /* (QA) */,
-  '7xjfawcnyTUcduWVysLww5:3:CL:28075:Person (SIT)': digitalIdCardBundle /* (SIT) */,
+  [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
+  [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
 }
