@@ -89,18 +89,7 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
   return {
     capture_base: {},
     overlays: [
-      {
-        type: 'spec/overlays/meta/1.0',
-        language: 'en',
-        name: 'Person',
-        issuerName: 'Service BC',
-      },
-      {
-        type: 'spec/overlays/meta/1.0',
-        language: 'fr',
-        name: 'Personne',
-        issuerName: 'Service BC',
-      },
+      ...metaOverlays,
       {
         type: 'spec/overlays/card_layout/1.0',
         imageSource: backgroundImageSource,
