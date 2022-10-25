@@ -44,15 +44,6 @@ const studentCardOverlay = {
   footer: { color: '#FFFFFF' },
 }
 
-const idCardOverlay = {
-  imageSource: require('./service-bc-id-card.png'),
-  header: {
-    imageSource: require('./service-bc-header-logo.png'),
-    color: '#FFFFFF',
-  },
-  footer: { color: '#FFFFFF' },
-}
-
 const digitalIdInvitationCardOverlay = {
   imageSource: require('./invitation-card.png'),
   header: {
@@ -66,90 +57,87 @@ const digitalIdInvitationCardOverlay = {
   },
 }
 
-const digitalIdCardOverlay = {
-  imageSource: require('./service-bc-id-card.png'),
-  header: {
-    imageSource: require('./service-bc-header-logo.png'),
-    color: '#FFFFFF',
-  },
-  footer: { color: '#FFFFFF' },
-}
-
-const unverifiedPersonCardBundle = {
-  capture_base: {},
-  overlays: [
-    {
-      type: 'spec/overlays/meta/1.0',
-      language: 'en',
-      name: 'Unverified Person',
-      issuerName: 'BC Digital Idenity & Trust Program',
-    },
-    {
-      type: 'spec/overlays/meta/1.0',
-      language: 'fr',
-      name: 'Unverified Personne',
-      issuerName: 'BC Digital Idenity & Trust Program',
-    },
-    {
-      type: 'spec/overlays/card_layout/1.0',
-      ...idCardOverlay,
-    },
-    {
-      type: 'spec/overlays/label/1.0',
-      language: 'en',
-      attr_labels: {
-        given_names: 'Given Name',
-        family_name: 'Family Name',
-      },
-    },
-    {
-      type: 'spec/overlays/label/1.0',
-      language: 'fr',
-      attr_labels: {
-        given_names: 'Prénoms',
-        family_name: 'Nom de famille',
-      },
-    },
-  ],
-}
-
-const digitalIdCardBundle = {
-  capture_base: {},
-  overlays: [
-    {
+const createPersonCredentialBundle = (backgroundImageSource: any, verified = true) => {
+  const metaOverlays = []
+  if (verified) {
+    metaOverlays.push({
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Person',
       issuerName: 'Service BC',
-    },
-    {
+    })
+    metaOverlays.push({
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Personne',
       issuerName: 'Service BC',
-    },
-    {
-      type: 'spec/overlays/card_layout/1.0',
-      ...digitalIdCardOverlay,
-    },
-    {
-      type: 'spec/overlays/label/1.0',
+    })
+  } else {
+    metaOverlays.push({
+      type: 'spec/overlays/meta/1.0',
       language: 'en',
-      attr_labels: {
-        given_names: 'Given Name',
-        family_name: 'Family Name',
-      },
-    },
-    {
-      type: 'spec/overlays/label/1.0',
+      name: 'Unverified Person',
+      issuerName: 'DITP',
+    })
+    metaOverlays.push({
+      type: 'spec/overlays/meta/1.0',
       language: 'fr',
-      attr_labels: {
-        given_names: 'Prénoms',
-        family_name: 'Nom de famille',
+      name: 'Unverified Personne',
+      issuerName: 'DITP',
+    })
+  }
+  return {
+    capture_base: {},
+    overlays: [
+      {
+        type: 'spec/overlays/meta/1.0',
+        language: 'en',
+        name: 'Person',
+        issuerName: 'Service BC',
       },
-    },
-  ],
+      {
+        type: 'spec/overlays/meta/1.0',
+        language: 'fr',
+        name: 'Personne',
+        issuerName: 'Service BC',
+      },
+      {
+        type: 'spec/overlays/card_layout/1.0',
+        imageSource: backgroundImageSource,
+        header: {
+          imageSource: require('./service-bc-header-logo.png'),
+          color: '#FFFFFF',
+        },
+        footer: { color: '#FFFFFF' },
+      },
+      {
+        type: 'spec/overlays/label/1.0',
+        language: 'en',
+        attr_labels: {
+          given_names: 'Given Name',
+          family_name: 'Family Name',
+        },
+      },
+      {
+        type: 'spec/overlays/label/1.0',
+        language: 'fr',
+        attr_labels: {
+          given_names: 'Prénoms',
+          family_name: 'Nom de famille',
+        },
+      },
+    ],
+  }
 }
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./service-bc-id-card-test.png'), false)
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+//const digitalIdCardBundle = createIdBundle(require('./service-bc-id-card.png')) // Reserver for when we get PROD definitions
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const testDigitalIdCardBundle = createPersonCredentialBundle(require('./service-bc-id-card-test.png'))
 
 const demoMemberCardBundle = {
   capture_base: {},
@@ -234,7 +222,7 @@ export default {
   [CREDENTIALS.UNVERIFIED_PERSON_PROD]: unverifiedPersonCardBundle /* Unverified Person (DEV) */,
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/604
   [CREDENTIALS.PILOT_INVITE_TEST]: digitalIdInvitationCardBundle /* (TEST) */,
-  'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1': digitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
-  [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
+  'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1': testDigitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.BC_DIGITAL_ID_QA]: testDigitalIdCardBundle /* (QA) */,
+  [CREDENTIALS.BC_DIGITAL_ID_SIT]: testDigitalIdCardBundle /* (SIT) */,
 }
