@@ -71,10 +71,6 @@ const digitalIdCardOverlay = {
   header: {
     imageSource: require('./service-bc-header-logo.png'),
     color: '#FFFFFF',
-    mapping: {
-      connectionLabel: 'Service BC',
-      credentialLabel: 'Person',
-    },
   },
   footer: { color: '#FFFFFF' },
 }
@@ -161,20 +157,12 @@ const demoMemberCardBundle = {
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
-      name: 'Person',
+      name: 'Member Card',
       issuerName: 'Law Society of BC',
     },
     {
       type: 'spec/overlays/card_layout/1.0',
       ...demoMemberCardOverlay,
-    },
-    {
-      type: 'spec/overlays/label/1.0',
-      language: 'en',
-      attr_labels: {
-        given_names: 'Given Name',
-        family_name: 'Family Name',
-      },
     },
   ],
 }
@@ -185,7 +173,7 @@ const memberCardBundle = {
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
-      name: 'Member',
+      name: 'Member Card',
       issuerName: 'Law Society of BC',
     },
     {
