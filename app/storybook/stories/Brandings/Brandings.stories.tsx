@@ -31,6 +31,7 @@ enum CREDENTIAL_DEFINITION {
   Lawyer = '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1',
   Generic = 'asdasdasd:2:generic:1.0:Generic',
   UnverifiedPerson = '9wVuYYDEDtpZ6CYMqSiWop:2:unverified_person:0.1.0',
+  PilotInvitation = '3Lbd5wSSSBv1xtjwsQ36sj:2:BC VC Pilot Certificate:1.0.1',
 }
 
 const {
@@ -156,6 +157,16 @@ storiesOf('Brandings', module)
       },
       { credentialDefinitionId: CREDENTIAL_DEFINITION.Lawyer, credentialRecordId: 'Lawyer_default', revoked: false },
       { credentialDefinitionId: CREDENTIAL_DEFINITION.Lawyer, credentialRecordId: 'Lawyer_Revoked', revoked: true },
+      {
+        credentialDefinitionId: CREDENTIAL_DEFINITION.PilotInvitation,
+        credentialRecordId: 'Pilot_default',
+        revoked: false,
+      },
+      {
+        credentialDefinitionId: CREDENTIAL_DEFINITION.PilotInvitation,
+        credentialRecordId: 'Pilot_Revoked',
+        revoked: true,
+      },
       {
         credentialDefinitionId: CREDENTIAL_DEFINITION.UnverifiedPerson,
         credentialRecordId: 'unverified_person_default',
