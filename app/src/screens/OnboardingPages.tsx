@@ -1,4 +1,4 @@
-import { Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
+import { useStore, Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
 import React from 'react'
 import { Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
@@ -9,6 +9,7 @@ import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'
 
 const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']) => {
+  const [store] = useStore()
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -31,20 +32,22 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
           </Text>
         </View>
       </ScrollView>
-      <View
-        style={{
-          marginTop: 'auto',
-          margin: 20,
-        }}
-      >
-        <Button
-          title={'Get Started'}
-          accessibilityLabel={'Get Started'}
-          testID={testIdWithKey('GetStarted')}
-          onPress={onTutorialCompleted}
-          buttonType={ButtonType.Primary}
-        />
-      </View>
+      {!(store.onboarding.didCompleteTutorial && store.authentication.didAuthenticate) && (
+        <View
+          style={{
+            marginTop: 'auto',
+            margin: 20,
+          }}
+        >
+          <Button
+            title={'Get Started'}
+            accessibilityLabel={'Get Started'}
+            testID={testIdWithKey('GetStarted')}
+            onPress={onTutorialCompleted}
+            buttonType={ButtonType.Primary}
+          />
+        </View>
+      )}
     </>
   )
 }
