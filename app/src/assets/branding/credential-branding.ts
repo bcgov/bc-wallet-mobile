@@ -120,7 +120,7 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
 const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./service-bc-id-card-test.png'), false)
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const digitalIdCardBundle = createPersonCredentialBundle(require('./service-bc-id-card.png')) // Reserver for when we get PROD definitions
+const digitalIdCardBundle = createPersonCredentialBundle(require('./service-bc-id-card.png'))
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const testDigitalIdCardBundle = createPersonCredentialBundle(require('./service-bc-id-card-test.png'))
