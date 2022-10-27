@@ -1,6 +1,6 @@
 export enum CREDENTIALS {
-  LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1',
-  LSBC_PROD = '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1',
+  LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
+  LSBC_PROD = '4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default',
   SHOWCASE_LAWYER_DEV = 'Trx3R1frdEzbn34Sp1jyX:2:Member Card:1.5.1',
   SHOWCASE_LAWYER_TEST = '63ZiwyeZeazA6AhYRYm2zD:2:Member Card:1.5.1',
   SHOWCASE_LAWYER_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1',
@@ -15,6 +15,7 @@ export enum CREDENTIALS {
   PILOT_INVITE_PROD = '',
   BC_DIGITAL_ID_QA = 'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:Person (QA)',
   BC_DIGITAL_ID_SIT = '7xjfawcnyTUcduWVysLww5:3:CL:28075:Person (SIT)',
+  BC_DIGITAL_ID_PROD = 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
 }
 
 const demoMemberCardOverlay = {
@@ -119,7 +120,7 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
 const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./service-bc-id-card-test.png'), false)
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-//const digitalIdCardBundle = createIdBundle(require('./service-bc-id-card.png')) // Reserver for when we get PROD definitions
+const digitalIdCardBundle = createPersonCredentialBundle(require('./service-bc-id-card.png')) // Reserver for when we get PROD definitions
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const testDigitalIdCardBundle = createPersonCredentialBundle(require('./service-bc-id-card-test.png'))
@@ -210,4 +211,5 @@ export default {
   'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1': testDigitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: testDigitalIdCardBundle /* (QA) */,
   [CREDENTIALS.BC_DIGITAL_ID_SIT]: testDigitalIdCardBundle /* (SIT) */,
+  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
 }
