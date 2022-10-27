@@ -48,11 +48,7 @@ const digitalIdInvitationCardOverlay = {
   imageSource: require('./invitation-card.png'),
   header: {
     imageSource: require('./service-bc-header-logo.png'),
-    hideIssuer: true,
     color: '#FFFFFF',
-    mapping: {
-      credentialLabel: 'BC Digital ID Invitation',
-    },
     footer: { color: '#FFFFFF' },
   },
 }
