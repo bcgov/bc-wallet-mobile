@@ -25,14 +25,16 @@ import {
   useTheme,
   ToastType,
   indyLedgers,
-  LoadingIndicator,
 } from 'aries-bifold'
 import React, { useContext, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, View, Image } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
+
+import LoadingIndicator from '../components/animation/LoadingIndicator'
+import { Assets } from '../theme'
 
 interface SplashProps {
   setAgent: React.Dispatch<React.SetStateAction<Agent | undefined>>
@@ -68,13 +70,21 @@ const Splash: React.FC = () => {
   const [store, dispatch] = useContext(StoreContext)
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
-  const { ColorPallet } = useTheme()
+  const { ColorPallet, Assets } = useTheme()
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: ColorPallet.brand.primary,
+      backgroundColor: ColorPallet.brand.secondaryBackground,
+    },
+    section: {
+      flex: 1,
+    },
+    bottomImage: {
+      justifyContent: 'flex-end',
+      paddingBottom: 10,
     },
   })
 
@@ -89,9 +99,7 @@ const Splash: React.FC = () => {
         })
         return attempts
       }
-    } catch (error) {
-
-    }
+    } catch (error) {}
   }
 
   useEffect(() => {
@@ -215,7 +223,13 @@ const Splash: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <LoadingIndicator />
+      <View style={styles.section} />
+      <View style={styles.section}>
+        <LoadingIndicator />
+      </View>
+      <View style={[styles.section, styles.bottomImage]}>
+        <Image source={require('../assets/img/Quebec.png')} style={{ height: 50 }} />
+      </View>
     </SafeAreaView>
   )
 }
