@@ -13,7 +13,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/core'
 import {
   LocalStorageKeys,
-  StoreContext,
   DispatchAction,
   Screens,
   Stacks,
@@ -23,11 +22,12 @@ import {
   PrivacyState,
   useAuth,
   useTheme,
+  useStore,
   ToastType,
   indyLedgers,
   LoadingIndicator,
 } from 'aries-bifold'
-import React, { useContext, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { Config } from 'react-native-config'
@@ -65,7 +65,7 @@ const resumeOnboardingAt = (state: OnboardingState): Screens => {
 const Splash: React.FC = () => {
   const { setAgent } = useAgent()
   const { t } = useTranslation()
-  const [store, dispatch] = useContext(StoreContext)
+  const [store, dispatch] = useStore()
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet } = useTheme()
@@ -89,9 +89,7 @@ const Splash: React.FC = () => {
         })
         return attempts
       }
-    } catch (error) {
-
-    }
+    } catch (error) {}
   }
 
   useEffect(() => {
