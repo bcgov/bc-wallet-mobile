@@ -8,8 +8,8 @@ import {
   HomeContentView,
   BifoldError,
   Screens,
-  StoreContext,
   DispatchAction,
+  useStore,
 } from 'aries-bifold'
 import React, { useEffect, useContext } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -47,8 +47,7 @@ interface WellKnownAgentDetails {
 const BCIDView: React.FC = () => {
   const { agent } = useAgent()
   const { t } = useTranslation()
-  const [, dispatch] = useContext(StoreContext)
-
+  const [, dispatch] = useStore()
   const [workflowInFlight, setWorkflowInFlight] = React.useState<boolean>(false)
   const [showGetFoundationCredential, setShowGetFoundationCredential] = React.useState<boolean>(false)
   const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>({})

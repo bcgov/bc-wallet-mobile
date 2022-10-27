@@ -5,14 +5,14 @@ import {
   ButtonType,
   CheckBoxRow,
   InfoTextBox,
-  StoreContext,
   DispatchAction,
   AuthenticateStackParams,
   Screens,
   testIdWithKey,
   useTheme,
+  useStore,
 } from 'aries-bifold'
-import React, { useState, useContext } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -24,7 +24,7 @@ const bcWebPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/home/privacy'
 const digitalWalletPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy'
 
 const Terms: React.FC = () => {
-  const [, dispatch] = useContext(StoreContext)
+  const [, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
