@@ -11,7 +11,7 @@ import {
   NetInfo,
   NetworkProvider,
   ErrorModal,
-  StoreProvider,
+  // StoreProvider,
   ThemeProvider,
   ConfigurationProvider,
   initLanguages,
@@ -23,6 +23,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import bcwallet from './src'
+import { StoreProvider } from './src/store'
 
 const { theme, localization, configuration } = bcwallet
 
