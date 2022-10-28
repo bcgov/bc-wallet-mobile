@@ -88,8 +88,8 @@ const Splash: React.FC = () => {
     },
     img: {
       height: 50,
-      resizeMode: 'contain'
-    }
+      resizeMode: 'contain',
+    },
   })
 
   const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
@@ -232,7 +232,7 @@ const Splash: React.FC = () => {
         <LoadingIndicator />
       </View>
       <View style={[styles.section, styles.bottomImage]}>
-        <Image source={require('../assets/img/Quebec.png')} style={{ styles.img }} />
+        <Image source={require('../assets/img/Quebec.png')} style={styles.img} />
       </View>
     </SafeAreaView>
   )
