@@ -4,7 +4,6 @@ import _merge from 'lodash.merge'
 
 import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
 
-import bundles from './assets/branding/credential-branding'
 import BCIDView from './components/BCIDView'
 import en from './localization/en'
 import fr from './localization/fr'
@@ -23,6 +22,7 @@ const configuration: ConfigurationContext = {
   terms: Terms,
   homeContentView: BCIDView,
   OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     require('./assets/branding/oca-bundle-qc.json') as Bundles
   ),
   useBiometry: UseBiometry,

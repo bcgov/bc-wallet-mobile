@@ -35,14 +35,15 @@ const translation = {
   },
   Biometry: {
     Toggle: 'Basculer la biométrie',
-    EnabledText1: 'Déverrouillez le portefeuille avec les données biométriques de votre téléphone.',
+    EnabledText1:
+      'Déverrouiller votre portefeuille avec les biométries de votre appareil au lieu d’utiliser le NIP du portefeuille.',
     EnabledText2:
-      "L'utilisation de la biométrie signifie que toutes les empreintes digitales ou reconnaissance faciale sur ce téléphone auront accès à votre portefeuille.",
+      'Toute personne qui a des biométries enregistrées sur cet appareil pourra déverrouiller votre portefeuille et avoir accès à vos attestations.',
     NotEnabledText1:
       "La biométrie n'est pas actuellement configurée sur cet appareil et ne peut donc pas être activée.",
     NotEnabledText2:
       "Si vous souhaitez activer cette fonctionnalité, activez la biométrie dans les paramètres de l'appareil, puis revenez à cet écran.",
-    Warning: 'Assurez-vous que vous seul avez accès à votre portefeuille.',
+    Warning: '\n\nAssurez-vous que vous seul avez accès à votre portefeuille.',
     UseToUnlock: 'Utiliser la biométrie pour déverrouiller le portefeuille ?',
     NoBiometricsErrorTitle: 'Pas de biométrie',
     NoBiometricsErrorMessage: "La biométrie n'est pas activée sur cet appareil.",
@@ -75,6 +76,8 @@ const translation = {
     '6DigitPin': 'NIP à 6 chiffres',
     ReenterPin: 'Saisir le NIP à nouveau',
     Create: 'Créer',
+    PINDisclaimer:
+      'Si vous l’oubliez, vous devrez à nouveau : \n• Configurer votre portefeuille.\n• Demander de nouveau les attestations  déjà émise dans votre portefeuille.',
   },
   PinEnter: {
     IncorrectPin: 'NIP erroné',
@@ -257,23 +260,22 @@ const translation = {
     BackToHome: "Retour à l'accueil",
   },
   OnboardingPages: {
-    FirstPageTitle: 'Bienvenue',
+    FirstPageTitle: 'Bienvenue dans le portefeuille Québec',
     FirstPageBody1:
-      'Le portefeuille QC est un moyen sûr, privé et facile de prouver votre identité en ligne et en personne.',
-    FirstPageBody2:
-      "Vous ajoutez vos cartes et documents numériques et les utilisez pour accéder aux services en ligne et bénéficier d'un traitement plus rapide des services.",
+      'Le portefeuille Québec vous permet de recevoir, enregistrer et utiliser vos attestations numérique.',
+    FirstPageBody2: 'Cette application est sécurisé et aide à protéger votre confidentialité en ligne.',
     FirstPageBody3:
-      'Avec le portefeuille QC, vous êtes propriétaire de vos données. Vous gardez le contrôle total et ne partagez que ce qui est nécessaire.',
-    SecondPageTitle: "Stocker et sécuriser les informations d'identification",
+      'Le portefeuille Québec est présentement dans les premières phases de développement et la technologie est en cours d’exploration. La plupart du monde n’auront pas besoin du portefeuille numérique puisqu’il n’y a quelques attestations présentement disponible.',
+    SecondPageTitle: 'Une attestation numérique, enregistrée secrètement',
     SecondPageBody:
-      'Les justificatifs numériques sont les versions numériques des cartes et documents que vous connaissez déjà, tels que les cartes de membre et les permis de conduire. \n\nIls sont stockés en toute sécurité dans cette application de portefeuille numérique, uniquement sur cet appareil.',
-    ThirdPageTitle: 'Ne partagez que ce qui est nécessaire',
+      'Le portefeuille Québec protège vos attestations numérique, une version digitale de vos permis et carte d’identité.\n\n Elles sont enregistrées de manière sécurisée, seulement sur votre appareil.',
+    ThirdPageTitle: 'Recevoir et utiliser les attestations',
     ThirdPageBogy:
-      "Pour utiliser -“prouver des choses“- vos informations d'identification, en ligne ou en personne, vous scannez un code QR pour commencer. \n\nVous ne partagez que les parties d'une information d'identification nécessaires à une situation donnée, ce qui est préférable pour la confidentialité.",
-    FourthPageTitle: 'Prenez le contrôle de vos informations',
+      'Pour recevoir une attestation, vous devez Capturer le code QR qui vous sera présenté. \n\nLes informations seront communiquées grace à une communication privée et protégée.',
+    FourthPageTitle: 'Confidentialité et confidentialité',
     FourthPageBody:
-      "Vous avez le contrôle de ce que vous prouvez, quand et comment, à partir de vos pouvoirs, et vous approuvez chaque utilisation. \n\nLe gouvernement du Québec n'est pas informé lorsque vous utilisez vos titres.",
-    ButtonGetStarted: 'Débuter',
+      'Vous avez le controle sur les informations qui sont partagées et utilisées depuis votre portefeuille Québec. Vous ne partager que les informations requises selon la situation. \n\nLe gouvernement du Québec n’est jamais mis au courant des interactions réalisées lorsque vous utilisez une attestation numérique.',
+    ButtonGetStarted: 'Configurer le portefeuille',
   },
 }
 
