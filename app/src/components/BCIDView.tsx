@@ -21,7 +21,8 @@ import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssueRe = /^3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default$/i
-const trustedFoundationCredentialIssuerRe = /^7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)$/i
+const trustedFoundationCredentialIssuerRe =
+  /^(7xjfawcnyTUcduWVysLww5|Trx3R1frdEzbn34Sp1jyX):[0-9]{1,1}:CL:[0-9]{5,}:Person(\s\(SIT\))?$/im
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 
 enum AuthenticationResultType {
