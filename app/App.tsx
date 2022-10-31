@@ -12,6 +12,8 @@ import {
   ThemeProvider,
   ConfigurationProvider,
   initLanguages,
+  types,
+  contexts,
 } from 'aries-bifold'
 import _merge from 'lodash.merge'
 import React, { useEffect, useState } from 'react'
@@ -20,10 +22,14 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import bcwallet from './src'
+import { BcWalletReducer, BcWalletState } from './src/types'
 
 const { theme, localization, configuration } = bcwallet
 
 initLanguages(localization)
+const reducer = contexts.store.mergeReducers(BcWalletReducer, contexts.store.defaultReducer)
+const state = new BcWalletState()
+
 const App = () => {
   const [agent, setAgent] = useState<Agent | undefined>(undefined)
   initStoredLanguage()
@@ -33,9 +39,8 @@ const App = () => {
     // RN version can be displayed.
     SplashScreen.hide()
   }, [])
-
   return (
-    <StoreProvider>
+    <StoreProvider initialState={state} reducer={reducer}>
       <AgentProvider agent={agent}>
         <ThemeProvider value={theme}>
           <ConfigurationProvider value={configuration}>
