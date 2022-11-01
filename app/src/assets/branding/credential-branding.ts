@@ -7,6 +7,7 @@ export enum CREDENTIALS {
   SHOWCASE_STUDENT_DEV = 'Trx3R1frdEzbn34Sp1jyX:2:student_card:1.0',
   SHOWCASE_STUDENT_TEST = '63ZiwyeZeazA6AhYRYm2zD:2:student_card:1.0',
   SHOWCASE_STUDENT_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:student_card:1.0',
+  SHOWCASE_LAWYER2_PERSON_DEV = 'Trx3R1frdEzbn34Sp1jyX:3:CL:28328:Person',
   UNVERIFIED_PERSON_DEV = 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0',
   UNVERIFIED_PERSON_TEST = 'XZQpyaFa9hBUdJXfKHUvVg:2:unverified_person:0.1.0',
   UNVERIFIED_PERSON_PROD = '9wVuYYDEDtpZ6CYMqSiWop:2:unverified_person:0.1.0',
@@ -84,7 +85,20 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
     })
   }
   return {
-    capture_base: {},
+    capture_base: {
+      attributes: {
+        postal_code: 'Text',
+        //picture: 'Text',
+        given_names: 'Text',
+        family_name: 'Text',
+        locality: 'Text',
+        region: 'Text',
+        street_address: 'Text',
+        country: 'Text',
+        //expiry_date_dateint: 'Text',
+        //birthdate_dateint: 'Text',
+      },
+    },
     overlays: [
       ...metaOverlays,
       {
@@ -209,6 +223,7 @@ export default {
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/604
   [CREDENTIALS.PILOT_INVITE_TEST]: digitalIdInvitationCardBundle /* (TEST) */,
   'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1': testDigitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: testDigitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: testDigitalIdCardBundle /* (QA) */,
   [CREDENTIALS.BC_DIGITAL_ID_SIT]: testDigitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
