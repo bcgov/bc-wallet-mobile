@@ -34,10 +34,6 @@ import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
-// interface SplashProps {
-//   setAgent: React.Dispatch<React.SetStateAction<Agent | undefined>>
-// }
-
 const onboardingComplete = (state: OnboardingState): boolean => {
   return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
 }

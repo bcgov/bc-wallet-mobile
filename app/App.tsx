@@ -64,7 +64,7 @@ const App = () => {
           accessibilityLabel: t('Settings.TermsOfUse'),
           onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
         },
-        // TODO: Resolve pages for these settings
+        // TODO(am): Resolve pages for these settings
         // {
         //   title: t('Settings.PrivacyStatement'),
         //   accessibilityLabel: t('Settings.PrivacyStatement'),

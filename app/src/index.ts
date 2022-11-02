@@ -11,9 +11,11 @@ import { pages } from './screens/OnboardingPages'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { defaultTheme as theme } from './theme'
+
 const localization = merge({}, translationResources, {
   en: { translation: en },
 })
+
 const configuration: ConfigurationContext = {
   pages,
   splash: Splash,
