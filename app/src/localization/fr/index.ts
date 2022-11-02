@@ -28,6 +28,8 @@ const translation = {
     GoBack: 'Retourner',
     GetStarted: 'Commencer',
     Dismiss: 'Rejeter',
+    On: 'Activé',
+    Off: 'Désactivé',
   },
   Language: {
     English: 'Anglais',
