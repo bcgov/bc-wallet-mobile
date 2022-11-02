@@ -87,9 +87,9 @@ const translation = {
     LoggedOut: 'Vous êtes déconnecté',
     LoggedOutDescription:
       "Pour protéger vos informations, vous êtes déconnecté de votre portefeuille si vous ne l'avez pas utilisé pendant 5 minutes.",
-    RepeatPIN: 'Veuillez réessayer avec votre code PIN.',
+    RepeatPIN: 'Veuillez réessayer avec votre code NIP.',
     AttemptLockoutWarning:
-      "Note: pour votre sécurité, la saisie d'un autre code PIN incorrect verrouillera temporairement le portefeuille.",
+      "Note: pour votre sécurité, la saisie d'un autre code NIP incorrect verrouillera temporairement le portefeuille.",
   },
   AttemptLockout: {
     Title: 'Votre portefeuille est temporairement verrouillé ',
