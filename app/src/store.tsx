@@ -1,93 +1,56 @@
-import { DefaultState, DispatchAction as BifoldDispatchAction, reducer as bifoldReducer } from 'aries-bifold'
-import React, { createContext, Dispatch, useContext, useReducer } from 'react'
+import {
+  DefaultBifoldState,
+  mergeReducers,
+  DispatchAction as BifoldDispatchAction,
+  reducer as bifoldReducer,
+} from 'aries-bifold'
+import { Config } from 'react-native-config'
 
-// import reducer, { ReducerAction } from './reducers/store'
+interface Developer {
+  iasAgentInviteUrl: string
+  iasPortalUrl: string
+  iasInvitationID: string
+}
 
-interface BCState extends DefaultState {
-  developer: any
+export interface BCState extends DefaultBifoldState {
+  developer: Developer
 }
 
 enum DeveloperDispatchAction {
-  CAKE = 'yes',
+  UPDATE_DEVELOPER_SETTINGS = 'developer/updateDeveloperSettings',
 }
 
-export type BCDispatchAction = BifoldDispatchAction & DeveloperDispatchAction
+export type BCDispatchAction = DeveloperDispatchAction
 
-export interface ReducerAction {
+export const BCDispatchAction = {
+  ...DeveloperDispatchAction,
+}
+
+interface BCReducerAction {
   type: BCDispatchAction
   payload?: Array<any>
 }
 
-export const initialStateFactory = (): BCState => {
-  return {
-    developer: {
-      idimUrl: 'https://example.com',
-    },
-    onboarding: {
-      didAgreeToTerms: false,
-      didCompleteTutorial: false,
-      didCreatePIN: false,
-      didConsiderBiometry: false,
-    },
-    authentication: {
-      didAuthenticate: false,
-    },
-    loginAttempt: {
-      loginAttempts: 0,
-      servedPenalty: true,
-    },
-    lockout: {
-      displayNotification: false,
-    },
-    privacy: {
-      didShowCameraDisclosure: false,
-    },
-    preferences: {
-      useBiometry: false,
-    },
-    credential: {
-      revoked: new Set(),
-      revokedMessageDismissed: new Set(),
-    },
-    error: null,
-    loading: false,
+export class BCState extends DefaultBifoldState {
+  public developer: Developer = {
+    iasAgentInviteUrl: Config.IAS_AGENT_INVITE_URL,
+    iasPortalUrl: Config.IAS_PORTAL_URL,
+    iasInvitationID: '',
   }
 }
 
-const initialState = initialStateFactory()
-
-export const StoreContext = createContext<[BCState, Dispatch<ReducerAction>]>([
-  initialState,
-  () => {
-    return
-  },
-])
-
-type Reducer = <T extends DefaultState>(state: T, action: ReducerAction) => T
-
-const bcReducer = (state: BCState, action: ReducerAction): BCState => {
+const bcReducer = (state: BCState, action: BCReducerAction): BCState => {
   switch (action.type) {
-    case DeveloperDispatchAction.CAKE:
-      console.log('***************** CAKE ******************')
-      return state
-
+    case DeveloperDispatchAction.UPDATE_DEVELOPER_SETTINGS: {
+      const developer: Developer = (action?.payload || []).pop()
+      return { ...state, developer }
+    }
     default:
       return state
   }
 }
 
-const merge = (a: Reducer, b: Reducer): Reducer => {
-  return <T extends DefaultState>(state: T, action: ReducerAction): T => {
-    return a(b(state, action), action)
-  }
-}
+export const initialState = new BCState()
 
 // @ts-ignore
-const reducer = merge(bifoldReducer, bcReducer)
-
-export const StoreProvider: React.FC = ({ children }) => {
-  const [state, dispatch] = useReducer(reducer, initialState)
-  return <StoreContext.Provider value={[state as BCState, dispatch]}>{children}</StoreContext.Provider>
-}
-
-export const useStore = () => useContext(StoreContext)
+export const reducer = mergeReducers(bifoldReducer, bcReducer)

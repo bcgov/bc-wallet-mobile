@@ -10,7 +10,6 @@ import en from './localization/en'
 import { pages } from './screens/OnboardingPages'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
-import { useStore } from './store'
 import { defaultTheme as theme } from './theme'
 
 const localization = merge({}, translationResources, {
