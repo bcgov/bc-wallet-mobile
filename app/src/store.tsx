@@ -1,9 +1,4 @@
-import {
-  DefaultBifoldState,
-  mergeReducers,
-  DispatchAction as BifoldDispatchAction,
-  reducer as bifoldReducer,
-} from 'aries-bifold'
+import { State as BifoldState, mergeReducers, reducer as bifoldReducer, createInitialStateFactory } from 'aries-bifold'
 import { Config } from 'react-native-config'
 
 interface Developer {
@@ -12,7 +7,7 @@ interface Developer {
   iasInvitationID: string
 }
 
-export interface BCState extends DefaultBifoldState {
+interface BCState extends BifoldState {
   developer: Developer
 }
 
@@ -31,13 +26,14 @@ interface BCReducerAction {
   payload?: Array<any>
 }
 
-export class BCState extends DefaultBifoldState {
-  public developer: Developer = {
-    iasAgentInviteUrl: Config.IAS_AGENT_INVITE_URL,
-    iasPortalUrl: Config.IAS_PORTAL_URL,
-    iasInvitationID: '',
-  }
+const developerState: Developer = {
+  iasAgentInviteUrl: Config.IAS_AGENT_INVITE_URL,
+  iasPortalUrl: Config.IAS_PORTAL_URL,
+  iasInvitationID: '',
 }
+
+export const initialState: BCState = { ...createInitialStateFactory(), developer: developerState }
+console.log('xxxxxxxxx ******************', initialState)
 
 const bcReducer = (state: BCState, action: BCReducerAction): BCState => {
   switch (action.type) {
@@ -49,8 +45,6 @@ const bcReducer = (state: BCState, action: BCReducerAction): BCState => {
       return state
   }
 }
-
-export const initialState = new BCState()
 
 // @ts-ignore
 export const reducer = mergeReducers(bifoldReducer, bcReducer)
