@@ -33,7 +33,6 @@ const developerState: Developer = {
 }
 
 export const initialState: BCState = { ...createInitialStateFactory(), developer: developerState }
-console.log('xxxxxxxxx ******************', initialState)
 
 const bcReducer = (state: BCState, action: BCReducerAction): BCState => {
   switch (action.type) {
