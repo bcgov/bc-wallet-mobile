@@ -38,21 +38,6 @@ const App = () => {
   const { navigate } = useNavigation()
 
   const settings = [
-    // TODO: Resolve pages for these settings
-    // {
-    //   header: {
-    //     title: t('Settings.Help'),
-    //     icon: 'help',
-    //   },
-    //   data: [
-    //     {
-    //       title: t('Settings.HelpUsingBCWallet'),
-    //     },
-    //     {
-    //       title: t('Settings.ReportAProblem'),
-    //     },
-    //   ],
-    // },
     {
       header: {
         title: t('Settings.MoreInformation'),
@@ -64,19 +49,6 @@ const App = () => {
           accessibilityLabel: t('Settings.TermsOfUse'),
           onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
         },
-        // TODO(am): Resolve pages for these settings
-        // {
-        //   title: t('Settings.PrivacyStatement'),
-        //   accessibilityLabel: t('Settings.PrivacyStatement'),
-        // },
-        // {
-        //   title: t('Settings.VulnerabilityDisclosurePolicy'),
-        //   accessibilityLabel: t('Settings.VulnerabilityDisclosurePolicy'),
-        // },
-        // {
-        //   title: t('Settings.Accessibility'),
-        //   accessibilityLabel: t('Settings.Accessibility'),
-        // },
         {
           title: t('Settings.IntroductionToTheApp'),
           accessibilityLabel: t('Settings.IntroductionToTheApp'),
