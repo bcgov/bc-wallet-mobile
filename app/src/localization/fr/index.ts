@@ -79,7 +79,7 @@ const translation = {
     ReenterPin: 'Saisir le NIP à nouveau',
     Create: 'Créer',
     PINDisclaimer:
-      'Si vous l’oubliez, vous devrez à nouveau : \n• Configurer votre portefeuille.\n• Demander de nouveau les attestations  déjà émise dans votre portefeuille.',
+      'Si vous l’oubliez, vous devrez à nouveau : \n• Configurer votre portefeuille.\n• Demander de nouveau les attestations  déjà émises dans votre portefeuille.',
   },
   PinEnter: {
     IncorrectPin: 'NIP erroné',
