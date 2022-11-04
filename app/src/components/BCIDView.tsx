@@ -1,5 +1,5 @@
-import { ProofState, CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
-import { useAgent, useCredentialByState, useProofById, useProofByState } from '@aries-framework/react-hooks'
+import { CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
+import { useAgent, useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
 import {
   Button,
@@ -11,7 +11,7 @@ import {
   DispatchAction,
   useStore,
 } from 'aries-bifold'
-import React, { useEffect, useContext } from 'react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Linking } from 'react-native'
 import { Config } from 'react-native-config'
@@ -57,8 +57,6 @@ const BCIDView: React.FC = () => {
     ...useCredentialByState(CredentialState.CredentialReceived),
     ...useCredentialByState(CredentialState.Done),
   ]
-  const proofRequests = useProofByState(ProofState.RequestReceived)
-  const proof = useProofById(agentDetails.invitationProofId ?? '')
   const navigation = useNavigation()
 
   useEffect(() => {
@@ -75,31 +73,6 @@ const BCIDView: React.FC = () => {
       setWorkflowInFlight(!workflowInFlight)
     }
   }, [offers])
-
-  useEffect(() => {
-    for (const p of proofRequests) {
-      if (p.state == ProofState.RequestReceived && p.connectionId === agentDetails?.connectionId) {
-        setAgentDetails({ ...agentDetails, invitationProofId: p.id })
-      }
-    }
-  }, [proofRequests])
-
-  useEffect(() => {
-    if (!proof) {
-      return
-    }
-
-    if (proof.state == ProofState.RequestReceived) {
-      navigation.getParent()?.navigate('Notifications Stack', {
-        screen: Screens.ProofRequest,
-        params: { proofId: proof.id },
-      })
-    }
-
-    if (proof.state == ProofState.Done && agentDetails.connectionId && agentDetails.legacyConnectionDid) {
-      authenticateWithServiceCard(agentDetails.legacyConnectionDid)
-    }
-  }, [proof])
 
   useEffect(() => {
     const credentialDefinitionIDs = credentials.map(
@@ -168,8 +141,6 @@ const BCIDView: React.FC = () => {
     } catch (error: unknown) {
       const code = (error as BifoldError).code
 
-      // console.log(`message = ${(error as Error).message}, code = ${code}`);
-
       cleanupAfterServiceCardAuthentication(
         code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
       )
@@ -204,6 +175,7 @@ const BCIDView: React.FC = () => {
           ErrorCodes.BadInvitation
         )
       }
+
       const record = await agent?.oob.receiveInvitation(invite!)
       if (!record) {
         throw new BifoldError(
@@ -242,6 +214,8 @@ const BCIDView: React.FC = () => {
         connectionId: record.connectionRecord!.id,
         legacyConnectionDid: did,
       })
+
+      await authenticateWithServiceCard(did)
     } catch (error: unknown) {
       setWorkflowInFlight(false)
 
