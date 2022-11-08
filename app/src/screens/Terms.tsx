@@ -24,7 +24,7 @@ const bcWebPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/home/privacy'
 const digitalWalletPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy'
 
 const Terms: React.FC = () => {
-  const [, dispatch] = useStore()
+  const [store, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
@@ -443,32 +443,36 @@ const Terms: React.FC = () => {
           </Text>
         </View>
         <View style={[style.controlsContainer]}>
-          <CheckBoxRow
-            title={t('Terms.Attestation')}
-            accessibilityLabel={t('Terms.IAgree')}
-            testID={testIdWithKey('IAgree')}
-            checked={checked}
-            onPress={() => setChecked(!checked)}
-          />
-          <View style={[{ paddingTop: 10 }]}>
-            <Button
-              title={t('Global.Continue')}
-              accessibilityLabel={t('Global.Continue')}
-              testID={testIdWithKey('Continue')}
-              disabled={!checked}
-              onPress={onSubmitPressed}
-              buttonType={ButtonType.Primary}
-            />
-          </View>
-          <View style={[{ paddingTop: 10, marginBottom: 20 }]}>
-            <Button
-              title={t('Global.Back')}
-              accessibilityLabel={t('Global.Back')}
-              testID={testIdWithKey('Back')}
-              onPress={onBackPressed}
-              buttonType={ButtonType.Secondary}
-            />
-          </View>
+          {!(store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate) && (
+            <>
+              <CheckBoxRow
+                title={t('Terms.Attestation')}
+                accessibilityLabel={t('Terms.IAgree')}
+                testID={testIdWithKey('IAgree')}
+                checked={checked}
+                onPress={() => setChecked(!checked)}
+              />
+              <View style={[{ paddingTop: 10 }]}>
+                <Button
+                  title={t('Global.Continue')}
+                  accessibilityLabel={t('Global.Continue')}
+                  testID={testIdWithKey('Continue')}
+                  disabled={!checked}
+                  onPress={onSubmitPressed}
+                  buttonType={ButtonType.Primary}
+                />
+              </View>
+              <View style={[{ paddingTop: 10, marginBottom: 20 }]}>
+                <Button
+                  title={t('Global.Back')}
+                  accessibilityLabel={t('Global.Back')}
+                  testID={testIdWithKey('Back')}
+                  onPress={onBackPressed}
+                  buttonType={ButtonType.Secondary}
+                />
+              </View>
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

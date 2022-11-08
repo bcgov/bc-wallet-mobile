@@ -1,4 +1,4 @@
-import { Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
+import { useStore, Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
 import React from 'react'
 import { Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
@@ -8,7 +8,8 @@ import CredentialList from '../assets/img/credential-list.svg'
 import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'
 
-const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']) => {
+const EndPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']) => {
+  const [store] = useStore()
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -31,25 +32,27 @@ const endPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
           </Text>
         </View>
       </ScrollView>
-      <View
-        style={{
-          marginTop: 'auto',
-          margin: 20,
-        }}
-      >
-        <Button
-          title={'Get Started'}
-          accessibilityLabel={'Get Started'}
-          testID={testIdWithKey('GetStarted')}
-          onPress={onTutorialCompleted}
-          buttonType={ButtonType.Primary}
-        />
-      </View>
+      {!(store.onboarding.didCompleteTutorial && store.authentication.didAuthenticate) && (
+        <View
+          style={{
+            marginTop: 'auto',
+            margin: 20,
+          }}
+        >
+          <Button
+            title={'Get Started'}
+            accessibilityLabel={'Get Started'}
+            testID={testIdWithKey('GetStarted')}
+            onPress={onTutorialCompleted}
+            buttonType={ButtonType.Primary}
+          />
+        </View>
+      )}
     </>
   )
 }
 
-const startPages = (theme: Theme) => {
+const StartPages = (theme: Theme) => {
   const defaultStyle = createStyles(theme)
   return (
     <ScrollView style={{ padding: 20, paddingTop: 30 }}>
@@ -85,7 +88,7 @@ const guides: Array<{
   },
 ]
 
-const createPageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: Theme['OnboardingTheme']) => {
+const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: Theme['OnboardingTheme']) => {
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -105,8 +108,8 @@ const createPageWith = (image: React.FC<SvgProps>, title: string, body: string, 
 
 export const pages = (onTutorialCompleted: GenericFn, theme: Theme): Array<Element> => {
   return [
-    startPages(theme),
-    ...guides.map((g) => createPageWith(g.image, g.title, g.body, theme)),
-    endPage(onTutorialCompleted, theme),
+    StartPages(theme),
+    ...guides.map((g) => CreatePageWith(g.image, g.title, g.body, theme)),
+    EndPage(onTutorialCompleted, theme),
   ]
 }

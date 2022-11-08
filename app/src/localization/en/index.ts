@@ -33,6 +33,17 @@ const translation = {
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection",
     "NoInternetConnectionMessage": "You're unable to access services using BC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection."
+  },
+  "Settings": {
+    "Help": "Help",
+    "MoreInformation": "More Information",
+    "HelpUsingBCWallet": "Help using BC Wallet",
+    "ReportAProblem": "Report A Problem",
+    "TermsOfUse": "Terms of use",
+    "PrivacyStatement": "Privacy statement",
+    "VulnerabilityDisclosurePolicy": "Vulnerability disclosure policy",
+    "Accessibility": "Accessibility",
+    "IntroductionToTheApp": "Introduction to the app"
   }
 }
 
