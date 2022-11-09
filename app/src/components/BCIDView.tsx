@@ -102,7 +102,6 @@ const BCIDView: React.FC = () => {
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
     try {
       const url = `${Config.IAS_PORTAL_URL}/${did}`
-      console.log('my URL = ', url)
 
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
