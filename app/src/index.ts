@@ -7,6 +7,7 @@ import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
 import bundles from './assets/branding/credential-branding'
 import BCIDView from './components/BCIDView'
 import en from './localization/en'
+import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
@@ -22,6 +23,7 @@ const configuration: ConfigurationContext = {
   splash: Splash,
   terms: Terms,
   homeContentView: BCIDView,
+  developer: Developer,
   OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(bundles as unknown as Bundles),
   useBiometry: UseBiometry,
   record: Record,
