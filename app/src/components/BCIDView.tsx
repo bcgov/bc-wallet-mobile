@@ -23,7 +23,7 @@ const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export o
 const trustedInvitationIssueRe =
   /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d{5,}:default$/im
 const trustedFoundationCredentialIssuerRe =
-  /^(7xjfawcnyTUcduWVysLww5|Trx3R1frdEzbn34Sp1jyX):\d:CL:\d{2,}:Person(\s\(SIT\))?$/im
+  /^(KCxVC8GkKywjhWJnUfCmkW|7xjfawcnyTUcduWVysLww5|RGjWbW1eycP7FrMf4QJvX8):\d:CL:\d{2,}:Person(\s(\(SIT\)|\(QA\)))?$/im
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 
 enum AuthenticationResultType {
