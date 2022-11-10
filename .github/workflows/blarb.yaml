@@ -1,0 +1,56 @@
+name: Test
+
+env:
+  cacheId: "11" # increment to expire the cache
+  appBuildNumber: ${{ github.run_number }}
+  appBuildVersion: "1.0.4"
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - app/**
+      - bifold
+  pull_request:
+    branches: [main]
+    paths:
+      - app/**
+
+jobs:
+  build-ios:
+    # if: ${{ false }}  # disable for now
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Pull & update submodules recursively
+        run: |
+          git submodule update --init --recursive
+
+      - name: What XCode are we using?
+        run: |
+          xcode-select -p
+
+      - name: Configure node
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.15.0"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Configure ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.6
+
+      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
+      - name: Install Codemagic CLI Tools
+        if: github.ref_name == 'main'
+        run: |
+          pip3 install codemagic-cli-tools
+
+      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
+      - name: xxx
+        if: github.ref_name == 'main'
+        run: |
+          find / -iname '*codemagic*'

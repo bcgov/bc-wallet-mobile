@@ -217,7 +217,8 @@ jobs:
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
         run: |
-          /usr/local/bin/app-store-connect publish \
+          export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
+          app-store-connect publish \
           --apple-id ${{ secrets.APPLE_ID }} \
           --password ${{ secrets.APPLE_ID_PASSWD }} \
           --enable-package-validation \
