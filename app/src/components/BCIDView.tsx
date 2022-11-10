@@ -129,6 +129,8 @@ const BCIDView: React.FC = () => {
           !(result as unknown as RedirectResult).url.includes(did) ||
           !(result as unknown as RedirectResult).url.includes('success')
         ) {
+          setWorkflowInFlight(false)
+
           throw new BifoldError(
             t('Error.Title2025'),
             t('Error.Description2025'),
