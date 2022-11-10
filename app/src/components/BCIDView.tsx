@@ -20,7 +20,8 @@ import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
-const trustedInvitationIssueRe = /^(3Lbd5wSSSBv1xtjwsQ36sj|4zBepKVWZcGTzug4X49vAN):\d:CL:\d{2,}:default$/im
+const trustedInvitationIssueRe =
+  /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d{5,}:default$/im
 const trustedFoundationCredentialIssuerRe =
   /^(7xjfawcnyTUcduWVysLww5|Trx3R1frdEzbn34Sp1jyX):\d:CL:\d{2,}:Person(\s\(SIT\))?$/im
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
