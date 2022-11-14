@@ -131,8 +131,8 @@ const BCIDView: React.FC = () => {
         })
 
         if (result.type === AuthenticationResultType.Cancel) {
-          // The user hit cancel in the Web view to end the
-          // authentication attempt.
+          // Cancel in the Web view to end the authentication
+          // propels the user Home.
           setWorkflowInFlight(false)
         }
 
