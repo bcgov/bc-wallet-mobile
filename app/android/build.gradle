@@ -4,9 +4,13 @@ buildscript {
     ext {
         buildToolsVersion = "30.0.2"
         minSdkVersion = 21
-        compileSdkVersion = 30
+        compileSdkVersion = 31
         targetSdkVersion = 30
         ndkVersion = "21.4.7075529"
+        // The setting `androidXBrowser` is temporary until it can be fixed in 
+        // the npm package `react-native-inappbrowser-reborn` v3.7.0.
+        // Ref. https://github.com/proyecto26/react-native-inappbrowser/issues/386
+        androidXBrowser = "1.4.0"
     }
     repositories {
         google()

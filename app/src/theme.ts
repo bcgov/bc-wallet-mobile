@@ -1,5 +1,12 @@
-import { StyleSheet } from 'react-native'
 import { Theme } from 'aries-bifold'
+import { StyleSheet } from 'react-native'
+import { SvgProps } from 'react-native-svg'
+
+import Logo from './assets/img/logo-with-text.svg'
+
+interface SVGAssets {
+  logo: React.FC<SvgProps>
+}
 
 interface FontAttributes {
   fontFamily?: string
@@ -96,6 +103,14 @@ interface ColorPallet {
   semantic: SemanticColors
   notification: NotificationColors
   grayscale: GrayscaleColors
+}
+
+interface Assets {
+  svg: SVGAssets
+  img: {
+    logoPrimary: any
+    logoSecondary: any
+  }
 }
 
 export const borderRadius = 4
@@ -426,7 +441,7 @@ export const TabTheme = {
     paddingBottom: 5,
   },
   tabBarButtonIconStyle: {
-    color: ColorPallet.grayscale.white
+    color: ColorPallet.grayscale.white,
   },
   focusTabIconStyle: {
     height: 60,
@@ -451,7 +466,7 @@ export const NavigationTheme = {
     text: ColorPallet.grayscale.white,
     border: ColorPallet.grayscale.white,
     notification: ColorPallet.grayscale.white,
-  }
+  },
 }
 
 export const HomeTheme = StyleSheet.create({
@@ -577,11 +592,14 @@ const PinInputTheme = {
     color: ColorPallet.grayscale.darkGrey,
   },
   icon: {
-    color: ColorPallet.grayscale.darkGrey
-  }
+    color: ColorPallet.grayscale.darkGrey,
+  },
 }
 
 export const Assets = {
+  svg: {
+    logo: Logo,
+  },
   img: {
     logoSecondary: {
       src: require('./assets/img/logo-large.png'),
@@ -594,10 +612,9 @@ export const Assets = {
       src: require('./assets/img/logo-large-white.png'),
       height: 170,
       width: 170,
-    }
+    },
   },
 }
-
 
 export const defaultTheme: Theme = {
   ColorPallet,
