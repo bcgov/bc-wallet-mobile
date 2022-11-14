@@ -24,6 +24,9 @@ const trustedInvitationIssueRe =
   /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d{2,}:default$/im
 const trustedFoundationCredentialIssuerRe =
   /^(KCxVC8GkKywjhWJnUfCmkW|7xjfawcnyTUcduWVysLww5|RGjWbW1eycP7FrMf4QJvX8):\d:CL:\d{2,}:Person(\s(\(SIT\)|\(QA\)))?$/im
+const trustedLSBCCredentialIssuerRe =
+  /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d{6,}:default$/im
+
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 
 enum AuthenticationResultType {
@@ -82,11 +85,12 @@ const BCIDView: React.FC = () => {
 
     if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
       setShowGetFoundationCredential(false)
-      // setAgentDetails({});
       return
     }
 
-    if (credentialDefinitionIDs.some((i) => trustedInvitationIssueRe.test(i))) {
+    if (
+      credentialDefinitionIDs.some((i) => trustedInvitationIssueRe.test(i) || trustedLSBCCredentialIssuerRe.test(i))
+    ) {
       setShowGetFoundationCredential(true)
       return
     }
