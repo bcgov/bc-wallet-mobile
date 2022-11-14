@@ -139,14 +139,16 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null
+        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-          IDIM_PORTAL_URL: ${{ secrets.IDIM_PORTAL_URL }}
+          IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
+          IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
-          echo "IDIM_PORTAL_URL=${IDIM_PORTAL_URL}" >>.env
+          echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
+          echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
 
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       - name: Create Provisioning Profile
@@ -276,12 +278,16 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null
+        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
+          IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+          echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
+          echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
 
       - name: Android debug build
         if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
