@@ -131,14 +131,9 @@ const BCIDView: React.FC = () => {
         })
 
         if (result.type === AuthenticationResultType.Cancel) {
+          // The user hit cancel in the Web view to end the
+          // authentication attempt.
           setWorkflowInFlight(false)
-
-          throw new BifoldError(
-            t('Error.Title2024'),
-            t('Error.Description2024'),
-            t('Error.NoMessage'),
-            ErrorCodes.CanceledByUser
-          )
         }
 
         if (

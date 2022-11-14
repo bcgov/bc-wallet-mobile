@@ -11,8 +11,6 @@ const translation = {
     "Message2021": "There was a problem receiving the invitation to connect. (PT-BR)",
     "Title2022": "Unable to find legacy DID (PT-BR)",
     "Message2022": "There was a problem extracting the did repository. (PT-BR)",
-    "Title2024": "BCSC Authentication (PT-BR)",
-    "Message2024": "The authentication request was canceled. (PT-BR)",
     "Title2025": "BCSC Authentication (PT-BR)",
     "Message2025": "There was a problem reported by BCSC. (PT-BR)",
     "NoMessage": "No Message (PT-BR)",
