@@ -52,7 +52,7 @@ interface WellKnownAgentDetails {
 const BCIDView: React.FC = () => {
   const { agent } = useAgent()
   const { t } = useTranslation()
-  const [, dispatch] = useStore()
+  const [store, dispatch] = useStore<BCState>()
   const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
   const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
   const [agentDetails, setAgentDetails] = useState<WellKnownAgentDetails>({})
@@ -109,7 +109,7 @@ const BCIDView: React.FC = () => {
 
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
     try {
-      const url = `${Config.IAS_PORTAL_URL}/${did}`
+      const url = `${store.developer.iasPortalUrl}/${did}`
 
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {

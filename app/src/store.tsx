@@ -1,4 +1,4 @@
-import { State as BifoldState, mergeReducers, reducer as bifoldReducer, createInitialStateFactory } from 'aries-bifold'
+import { State as BifoldState, mergeReducers, reducer as bifoldReducer, defaultState } from 'aries-bifold'
 import { Config } from 'react-native-config'
 
 interface Developer {
@@ -7,7 +7,7 @@ interface Developer {
   iasInvitationID: string
 }
 
-interface BCState extends BifoldState {
+export interface BCState extends BifoldState {
   developer: Developer
 }
 
@@ -32,7 +32,7 @@ const developerState: Developer = {
   iasInvitationID: '',
 }
 
-export const initialState: BCState = { ...createInitialStateFactory(), developer: developerState }
+export const initialState: BCState = { ...defaultState, developer: developerState }
 
 const bcReducer = (state: BCState, action: BCReducerAction): BCState => {
   switch (action.type) {
