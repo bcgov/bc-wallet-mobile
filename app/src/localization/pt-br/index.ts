@@ -2,7 +2,7 @@
 const translation = {
   "BCID": {
     "GetID": "Get BCID (PT-BR)",
-    "GetDigitalID": "Get your BC Digital ID (PT-BR)",
+    "GetDigitalID": "Get your Person credential (PT-BR)",
   },
   "Error": {
     "Title2020": "Unable to parse invitation (PT-BR)",
