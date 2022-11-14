@@ -11,7 +11,7 @@ import {
   DispatchAction,
   useStore,
 } from 'aries-bifold'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Linking } from 'react-native'
 import { Config } from 'react-native-config'
@@ -20,14 +20,14 @@ import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
-const trustedInvitationIssueRe =
+const trustedInvitationIssuerRe =
   /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d{2,}:default$/im
 const trustedFoundationCredentialIssuerRe =
   /^(KCxVC8GkKywjhWJnUfCmkW|7xjfawcnyTUcduWVysLww5|RGjWbW1eycP7FrMf4QJvX8):\d:CL:\d{2,}:Person(\s(\(SIT\)|\(QA\)))?$/im
 const trustedLSBCCredentialIssuerRe =
   /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d{6,}:default$/im
-
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
+const notBeforeDateTimeAsString = '2022-11-21T17:00:00.000Z'
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -53,15 +53,26 @@ const BCIDView: React.FC = () => {
   const { agent } = useAgent()
   const { t } = useTranslation()
   const [, dispatch] = useStore()
-  const [workflowInFlight, setWorkflowInFlight] = React.useState<boolean>(false)
-  const [showGetFoundationCredential, setShowGetFoundationCredential] = React.useState<boolean>(false)
-  const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>({})
+  const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
+  const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
+  const [agentDetails, setAgentDetails] = useState<WellKnownAgentDetails>({})
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const credentials = [
     ...useCredentialByState(CredentialState.CredentialReceived),
     ...useCredentialByState(CredentialState.Done),
   ]
   const navigation = useNavigation()
+  const notBeforeDateTime = new Date(notBeforeDateTimeAsString)
+  const [canUseLSBCredential, setCanUseLSBCredential] = useState<boolean>(notBeforeDateTime.getTime() <= Date.now())
+  const enableLSBCCredentialTimer = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (!canUseLSBCredential && !enableLSBCCredentialTimer.current) {
+      enableLSBCCredentialTimer.current = setTimeout(() => {
+        setCanUseLSBCredential(true)
+      }, notBeforeDateTime.getTime() - Date.now())
+    }
+  })
 
   useEffect(() => {
     for (const o of offers) {
@@ -89,12 +100,13 @@ const BCIDView: React.FC = () => {
     }
 
     if (
-      credentialDefinitionIDs.some((i) => trustedInvitationIssueRe.test(i) || trustedLSBCCredentialIssuerRe.test(i))
+      credentialDefinitionIDs.some((i) => trustedInvitationIssuerRe.test(i)) ||
+      (credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) && canUseLSBCredential)
     ) {
       setShowGetFoundationCredential(true)
       return
     }
-  }, [credentials])
+  }, [credentials, canUseLSBCredential])
 
   const cleanupAfterServiceCardAuthentication = (status: AuthenticationResultType): void => {
     InAppBrowser.closeAuth()
