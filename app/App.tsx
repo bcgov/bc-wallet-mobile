@@ -18,7 +18,7 @@ import {
 } from 'aries-bifold'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StatusBar } from 'react-native'
+import { Linking, StatusBar } from 'react-native'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
@@ -37,7 +37,22 @@ const App = () => {
   const { t } = useTranslation()
   const { navigate } = useNavigation()
 
+  const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
+
   const settings = [
+    {
+      header: {
+        title: t('Settings.Help'),
+        icon: 'help',
+      },
+      data: [
+        {
+          title: t('Settings.HelpUsingBCWallet'),
+          accessibilityLabeL: t('Settings.HelpUsingBCWallet'),
+          onPress: () => Linking.openURL(helpLink),
+        },
+      ],
+    },
     {
       header: {
         title: t('Settings.MoreInformation'),
