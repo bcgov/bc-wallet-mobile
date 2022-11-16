@@ -11,9 +11,10 @@ import {
   DispatchAction,
   useStore,
 } from 'aries-bifold'
+import Spinner from './Spinner'
 import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View, Linking } from 'react-native'
+import { View, Linking, Modal } from 'react-native'
 import { Config } from 'react-native-config'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
@@ -28,6 +29,7 @@ const trustedLSBCCredentialIssuerRe =
   /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d{6,}:default$/im
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 const notBeforeDateTimeAsString = '2022-11-21T17:00:00.000Z'
+const connectionDelayInMs = 3000
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -65,6 +67,7 @@ const BCIDView: React.FC = () => {
   const notBeforeDateTime = new Date(notBeforeDateTimeAsString)
   const [canUseLSBCredential, setCanUseLSBCredential] = useState<boolean>(notBeforeDateTime.getTime() <= Date.now())
   const enableLSBCCredentialTimer = useRef<NodeJS.Timeout | null>(null)
+  const [foo, setFoo] = useState<boolean>(false)
 
   useEffect(() => {
     if (!canUseLSBCredential && !enableLSBCCredentialTimer.current) {
@@ -231,7 +234,11 @@ const BCIDView: React.FC = () => {
         legacyConnectionDid: did,
       })
 
-      await authenticateWithServiceCard(did)
+      setFoo(true)
+      setTimeout(async () => {
+        setFoo(false)
+        await authenticateWithServiceCard(did)
+      }, connectionDelayInMs)
     } catch (error: unknown) {
       setWorkflowInFlight(false)
 
@@ -244,6 +251,11 @@ const BCIDView: React.FC = () => {
 
   return (
     <HomeContentView>
+      <Modal visible={foo} animationType="none" transparent={true}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Spinner />
+        </View>
+      </Modal>
       {showGetFoundationCredential && (
         <View style={{ marginVertical: 40, marginHorizontal: 25 }}>
           <Button
