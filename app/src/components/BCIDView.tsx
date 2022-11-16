@@ -29,8 +29,6 @@ const trustedLSBCCredentialIssuerRe =
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 const notBeforeDateTimeAsString = '2022-11-21T17:00:00.000Z'
 const connectionDelayInMs = 3000
-// const invitationId = '6cc22b56-fd0c-4b78-a7e4-c60c2e80e034'
-const invitationId = '0644a296-8be7-403c-95da-2bfb77ee95f1'
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -172,10 +170,8 @@ const BCIDView: React.FC = () => {
     }
   }
 
-  const onGetIdTouched = async () => {
+  const removeExistingInvitationIfRequired = async (invitationId: string): Promise<void> => {
     try {
-      setWorkflowInFlight(true)
-
       // If something fails before we get the credential we need to
       // cleanup the old invitation before it can be used again.
       const oldInvitation = await agent?.oob.findByInvitationId(invitationId)
@@ -183,6 +179,15 @@ const BCIDView: React.FC = () => {
       if (oldInvitation) {
         await agent?.oob.deleteById(oldInvitation.id)
       }
+    } catch (error) {
+      // findByInvitationId with throw if unsuccessful but that's not a problem.
+      // It just means there is nothing to delete.
+    }
+  }
+
+  const onGetIdTouched = async () => {
+    try {
+      setWorkflowInFlight(true)
 
       // connect to the agent, this will re-format the legacy invite
       // until we have OOB working in ACA-py.
@@ -195,6 +200,10 @@ const BCIDView: React.FC = () => {
           ErrorCodes.BadInvitation
         )
       }
+
+      console.log('A')
+      await removeExistingInvitationIfRequired(invite.id)
+      console.log('B')
 
       const record = await agent?.oob.receiveInvitation(invite)
       if (!record) {
