@@ -11,14 +11,13 @@ import {
   DispatchAction,
   useStore,
 } from 'aries-bifold'
-import Spinner from './Spinner'
 import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Linking, Modal } from 'react-native'
 import { Config } from 'react-native-config'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
-import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
+import Spinner from './Spinner'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssuerRe =
@@ -30,6 +29,8 @@ const trustedLSBCCredentialIssuerRe =
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 const notBeforeDateTimeAsString = '2022-11-21T17:00:00.000Z'
 const connectionDelayInMs = 3000
+// const invitationId = '6cc22b56-fd0c-4b78-a7e4-c60c2e80e034'
+const invitationId = '0644a296-8be7-403c-95da-2bfb77ee95f1'
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -47,8 +48,8 @@ enum ErrorCodes {
 
 interface WellKnownAgentDetails {
   connectionId?: string
-  invitationProofId?: string
   legacyConnectionDid?: string
+  invitationId?: string
 }
 
 const BCIDView: React.FC = () => {
@@ -122,6 +123,8 @@ const BCIDView: React.FC = () => {
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
     try {
       const url = `${Config.IAS_PORTAL_URL}/${did}`
+      console.log('*****************************************************')
+      console.log(url)
 
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
@@ -177,7 +180,7 @@ const BCIDView: React.FC = () => {
 
       // If something fails before we get the credential we need to
       // cleanup the old invitation before it can be used again.
-      const oldInvitation = await agent?.oob.findByInvitationId(IDIM_AGENT_INVITE_ID)
+      const oldInvitation = await agent?.oob.findByInvitationId(invitationId)
 
       if (oldInvitation) {
         await agent?.oob.deleteById(oldInvitation.id)
@@ -185,7 +188,7 @@ const BCIDView: React.FC = () => {
 
       // connect to the agent, this will re-format the legacy invite
       // until we have OOB working in ACA-py.
-      const invite = await agent?.oob.parseInvitation(IDIM_AGENT_INVITE_URL)
+      const invite = await agent?.oob.parseInvitation(Config.IAS_AGENT_INVITE_URL)
       if (!invite) {
         throw new BifoldError(
           t('Error.Title2020'),
@@ -195,7 +198,8 @@ const BCIDView: React.FC = () => {
         )
       }
 
-      const record = await agent?.oob.receiveInvitation(invite!)
+      const record = await agent?.oob.receiveInvitation(invite)
+      console.log(JSON.stringify(record))
       if (!record) {
         throw new BifoldError(
           t('Error.Title2021'),
@@ -231,6 +235,7 @@ const BCIDView: React.FC = () => {
 
       setAgentDetails({
         connectionId: record.connectionRecord!.id,
+        invitationId: invite.id,
         legacyConnectionDid: did,
       })
 
