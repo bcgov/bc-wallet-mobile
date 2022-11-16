@@ -67,7 +67,7 @@ const BCIDView: React.FC = () => {
   const notBeforeDateTime = new Date(notBeforeDateTimeAsString)
   const [canUseLSBCredential, setCanUseLSBCredential] = useState<boolean>(notBeforeDateTime.getTime() <= Date.now())
   const enableLSBCCredentialTimer = useRef<NodeJS.Timeout | null>(null)
-  const [foo, setFoo] = useState<boolean>(false)
+  const [spinnerVisible, setSpinnerVisible] = useState<boolean>(false)
 
   useEffect(() => {
     if (!canUseLSBCredential && !enableLSBCCredentialTimer.current) {
@@ -234,9 +234,9 @@ const BCIDView: React.FC = () => {
         legacyConnectionDid: did,
       })
 
-      setFoo(true)
+      setSpinnerVisible(true)
       setTimeout(async () => {
-        setFoo(false)
+        setSpinnerVisible(false)
         await authenticateWithServiceCard(did)
       }, connectionDelayInMs)
     } catch (error: unknown) {
@@ -251,7 +251,7 @@ const BCIDView: React.FC = () => {
 
   return (
     <HomeContentView>
-      <Modal visible={foo} animationType="none" transparent={true}>
+      <Modal visible={spinnerVisible} animationType="none" transparent={true}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Spinner />
         </View>
