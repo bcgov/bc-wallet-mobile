@@ -123,8 +123,6 @@ const BCIDView: React.FC = () => {
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
     try {
       const url = `${Config.IAS_PORTAL_URL}/${did}`
-      console.log('*****************************************************')
-      console.log(url)
 
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
@@ -199,7 +197,6 @@ const BCIDView: React.FC = () => {
       }
 
       const record = await agent?.oob.receiveInvitation(invite)
-      console.log(JSON.stringify(record))
       if (!record) {
         throw new BifoldError(
           t('Error.Title2021'),
