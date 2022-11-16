@@ -93,6 +93,7 @@ interface GrayscaleColors {
   black: string
   darkGrey: string
   mediumGrey: string
+  grey: string
   lightGrey: string
   veryLightGrey: string
   white: string
@@ -124,11 +125,11 @@ const BrandColors: BrandColors = {
   primaryDisabled: `rgba(9, 87, 151, ${lightOpacity})`,
   secondary: '#DAE6F0',
   secondaryDisabled: `rgba(218, 230, 240, ${heavyOpacity})`,
-  highlight: '#FF8E7A',
-  primaryBackground: '#F2F2F2',
+  highlight: '#E58271',
+  primaryBackground: '#F1F1F2',
   secondaryBackground: '#FFFFFF',
   modalPrimaryBackground: '#FFFFFF',
-  modalSecondaryBackground: '#F2F2F2',
+  modalSecondaryBackground: '#F1F1F2',
   link: '#095797',
 }
 
@@ -140,29 +141,30 @@ const SemanticColors: SemanticColors = {
 
 const NotificationColors: NotificationColors = {
   success: '#4F813D',
-  successBorder: '#4F813D',
-  successIcon: '#095797',
-  successText: '#095797',
-  info: '#D9EAF7',
-  infoBorder: '#B9CEDE',
-  infoIcon: '#313132',
-  infoText: '#313132',
-  warn: '#F9F1C6',
-  warnBorder: '#E0AD03',
+  successBorder: '#C5CAD2',
+  successIcon: '#223654',
+  successText: '#223654',
+  info: '#DAE6F0',
+  infoBorder: '#C5CAD2',
+  infoIcon: '#095797',
+  infoText: '#223654',
+  warn: '#F8E69A',
+  warnBorder: '#C5CAD2',
   warnIcon: '#E0AD03',
   warnText: '#E0AD03',
-  error: '#EDBAB1',
-  errorBorder: '#EDBAB1',
-  errorIcon: '#EBCCD1',
-  errorText: '#EBCCD1',
+  error: '#FFDBD6',
+  errorBorder: '#C5CAD2',
+  errorIcon: '#CB381F',
+  errorText: '#CB381F',
 }
 
 const GrayscaleColors: GrayscaleColors = {
   black: '#000000',
-  darkGrey: '#313132',
-  mediumGrey: '#606060',
-  lightGrey: '#D3D3D3',
-  veryLightGrey: '#F2F2F2',
+  darkGrey: '#4E5662',
+  mediumGrey: '#6B778A',
+  grey: '#8893A2',
+  lightGrey: '#C5CAD2',
+  veryLightGrey: '#F1F1F2',
   white: '#FFFFFF',
 }
 
@@ -633,5 +635,5 @@ export const defaultTheme: Theme = {
   OnboardingTheme,
   LoadingTheme,
   PinInputTheme,
-  Assets
+  Assets,
 }
