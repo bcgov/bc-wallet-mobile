@@ -180,7 +180,7 @@ const translation = {
   },
   Screens: {
     Splash: 'Splash',
-    Onboarding: 'QC Wallet',
+    Onboarding: 'Quebec Wallet',
     Terms: 'Terms & Conditions',
     CreatePin: 'Create 6-Digit Pin',
     EnterPin: 'Enter Pin',

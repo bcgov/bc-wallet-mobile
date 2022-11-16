@@ -8,6 +8,7 @@ import { SvgProps } from 'react-native-svg'
 import CredentialList from '../assets/img/credential-list.svg'
 import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'
+import { defaultTheme } from '../theme'
 
 const endPage = (
   onTutorialCompleted: GenericFn,
@@ -41,7 +42,7 @@ const endPage = (
           }}
         >
           <Button
-            title={'Get Started'}
+            title={t('OnboardingPages.ButtonGetStarted')}
             accessibilityLabel={'Get Started'}
             testID={testIdWithKey('GetStarted')}
             onPress={onTutorialCompleted}
@@ -60,6 +61,10 @@ const startPages = (theme: Theme, t: TFunction<'translation', undefined>) => {
       <Text style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}>
         {t('OnboardingPages.FirstPageTitle')}
       </Text>
+      <View
+        style={{ marginLeft: 20, height: 4, width: 48, backgroundColor: defaultTheme.ColorPallet.brand.highlight }}
+      />
+
       <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 35, marginRight: 20 }]}>
         {t('OnboardingPages.FirstPageBody1')}
       </Text>
