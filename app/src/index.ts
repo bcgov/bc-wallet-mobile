@@ -1,6 +1,6 @@
 import { translationResources, ConfigurationContext, types, Record } from 'aries-bifold'
 import { Bundles } from 'aries-bifold/lib/typescript/App/types/oca'
-import _merge from 'lodash.merge'
+import merge from 'lodash.merge'
 
 import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
 
@@ -11,7 +11,8 @@ import { pages } from './screens/OnboardingPages'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { defaultTheme as theme } from './theme'
-const localization = _merge({}, translationResources, {
+
+const localization = merge({}, translationResources, {
   en: { translation: en },
   fr: { translation: fr },
 })
@@ -27,6 +28,9 @@ const configuration: ConfigurationContext = {
   ),
   useBiometry: UseBiometry,
   record: Record,
+  indyLedgers: [],
+  settings: [],
+  developer: () => null,
 }
 
 export default { theme, localization, configuration }
