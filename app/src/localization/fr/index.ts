@@ -210,13 +210,6 @@ const translation = {
     InformationSentSuccessfully: 'Informations envoyées avec succès',
     ProofRequestDeclined: 'Demande de preuve refusée',
   },
-  Settings: {
-    Version: 'Version',
-    VersionString: '0.0.0-0',
-    AppPreferences: 'Préférences',
-    AboutApp: 'À propos',
-    Language: 'Langue',
-  },
   TabStack: {
     Home: 'Accueil',
     Scan: 'Lire un code QR',
@@ -278,6 +271,27 @@ const translation = {
     FourthPageBody:
       'Vous avez le contrôle sur les informations qui sont partagées et utilisées depuis votre portefeuille Québec. Vous ne partagez que les informations requises selon la situation. \n\nLe gouvernement du Québec n’est jamais mis au courant des interactions réalisées lorsque vous utilisez une attestation numérique.',
     ButtonGetStarted: 'Configurer le portefeuille',
+  },
+  NetInfo: {
+    NoInternetConnectionTitle: 'No internet connection (FR)',
+    NoInternetConnectionMessage:
+      "You're unable to access services using BC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection. (FR)",
+  },
+  Settings: {
+    Help: 'Help (FR)',
+    MoreInformation: 'More Information (FR)',
+    HelpUsingBCWallet: 'Help using BC Wallet (FR)',
+    ReportAProblem: 'Report A Problem (FR)',
+    TermsOfUse: 'Terms of use (FR)',
+    PrivacyStatement: 'Privacy statement (FR)',
+    VulnerabilityDisclosurePolicy: 'Vulnerability disclosure policy (FR)',
+    Accessibility: 'Accessibility (FR)',
+    IntroductionToTheApp: 'Introduction to the app (FR)',
+    Version: 'Version',
+    VersionString: '0.0.0-0',
+    AppPreferences: 'Préférences',
+    AboutApp: 'À propos',
+    Language: 'Langue',
   },
 }
 

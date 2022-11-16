@@ -1,4 +1,3 @@
-// prettier-ignore
 const translation = {
   BCID: {
     GetID: 'Get BCID',
@@ -159,13 +158,6 @@ const translation = {
     InformationSentSuccessfully: 'Information sent successfully',
     ProofRequestDeclined: 'Proof request declined',
   },
-  Settings: {
-    Version: 'Version',
-    VersionString: '0.0.0-0',
-    AppPreferences: 'App Preferences',
-    AboutApp: 'About App',
-    Language: 'Language',
-  },
   TabStack: {
     Home: 'Home',
     Scan: 'Scan',
@@ -212,7 +204,7 @@ const translation = {
   NetInfo: {
     NoInternetConnectionTitle: 'No internet connection',
     NoInternetConnectionMessage:
-      "You're unable to access services using BC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection.",
+      "You're unable to access services using QC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection.",
   },
   OnboardingPages: {
     FirstPageTitle: 'Welcome to the Quebec wallet',
@@ -230,6 +222,22 @@ const translation = {
     FourthPageBody:
       'You have control over the information that is shared and used from your Quebec wallet. You only share the information required by the situation. \n\nThe Government of Quebec is never made aware of the interactions made when you use a digital certificate.',
     ButtonGetStarted: 'Configure Wallet',
+  },
+  Settings: {
+    Help: 'Help',
+    MoreInformation: 'More Information',
+    HelpUsingBCWallet: 'Help using BC Wallet',
+    ReportAProblem: 'Report A Problem',
+    TermsOfUse: 'Terms of use',
+    PrivacyStatement: 'Privacy statement',
+    VulnerabilityDisclosurePolicy: 'Vulnerability disclosure policy',
+    Accessibility: 'Accessibility',
+    IntroductionToTheApp: 'Introduction to the app',
+    Version: 'Version',
+    VersionString: '0.0.0-0',
+    AppPreferences: 'App Preferences',
+    AboutApp: 'About App',
+    Language: 'Language',
   },
 }
 

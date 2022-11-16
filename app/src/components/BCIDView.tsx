@@ -1,5 +1,5 @@
-import { ProofState, CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
-import { useAgent, useCredentialByState, useProofById, useProofByState } from '@aries-framework/react-hooks'
+import { CredentialState, DidRepository, CredentialMetadataKeys } from '@aries-framework/core'
+import { useAgent, useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
 import {
   Button,
@@ -8,10 +8,10 @@ import {
   HomeContentView,
   BifoldError,
   Screens,
-  StoreContext,
   DispatchAction,
+  useStore,
 } from 'aries-bifold'
-import React, { useEffect, useContext } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Linking } from 'react-native'
 import { Config } from 'react-native-config'
@@ -20,9 +20,14 @@ import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
-const trustedInvitationIssueRe = /^3Lbd5wSSSBv1xtjwsQ36sj:[0-9]{1,1}:CL:[0-9]{5,}:default$/i
-const trustedFoundationCredentialIssuerRe = /^7xjfawcnyTUcduWVysLww5:[0-9]{1,1}:CL:[0-9]{5,}:Person\s\(SIT\)$/i
+const trustedInvitationIssuerRe =
+  /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d{2,}:default$/im
+const trustedFoundationCredentialIssuerRe =
+  /^(KCxVC8GkKywjhWJnUfCmkW|7xjfawcnyTUcduWVysLww5|RGjWbW1eycP7FrMf4QJvX8):\d:CL:\d{2,}:Person(\s(\(SIT\)|\(QA\)))?$/im
+const trustedLSBCCredentialIssuerRe =
+  /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d{6,}:default$/im
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
+const notBeforeDateTimeAsString = '2022-11-21T17:00:00.000Z'
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -47,19 +52,27 @@ interface WellKnownAgentDetails {
 const BCIDView: React.FC = () => {
   const { agent } = useAgent()
   const { t } = useTranslation()
-  const [, dispatch] = useContext(StoreContext)
-
-  const [workflowInFlight, setWorkflowInFlight] = React.useState<boolean>(false)
-  const [showGetFoundationCredential, setShowGetFoundationCredential] = React.useState<boolean>(false)
-  const [agentDetails, setAgentDetails] = React.useState<WellKnownAgentDetails>({})
+  const [, dispatch] = useStore()
+  const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
+  const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
+  const [agentDetails, setAgentDetails] = useState<WellKnownAgentDetails>({})
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const credentials = [
     ...useCredentialByState(CredentialState.CredentialReceived),
     ...useCredentialByState(CredentialState.Done),
   ]
-  const proofRequests = useProofByState(ProofState.RequestReceived)
-  const proof = useProofById(agentDetails.invitationProofId ?? '')
   const navigation = useNavigation()
+  const notBeforeDateTime = new Date(notBeforeDateTimeAsString)
+  const [canUseLSBCredential, setCanUseLSBCredential] = useState<boolean>(notBeforeDateTime.getTime() <= Date.now())
+  const enableLSBCCredentialTimer = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (!canUseLSBCredential && !enableLSBCCredentialTimer.current) {
+      enableLSBCCredentialTimer.current = setTimeout(() => {
+        setCanUseLSBCredential(true)
+      }, notBeforeDateTime.getTime() - Date.now())
+    }
+  })
 
   useEffect(() => {
     for (const o of offers) {
@@ -77,46 +90,23 @@ const BCIDView: React.FC = () => {
   }, [offers])
 
   useEffect(() => {
-    for (const p of proofRequests) {
-      if (p.state == ProofState.RequestReceived && p.connectionId === agentDetails?.connectionId) {
-        setAgentDetails({ ...agentDetails, invitationProofId: p.id })
-      }
-    }
-  }, [proofRequests])
-
-  useEffect(() => {
-    if (!proof) {
-      return
-    }
-
-    if (proof.state == ProofState.RequestReceived) {
-      navigation.getParent()?.navigate('Notifications Stack', {
-        screen: Screens.ProofRequest,
-        params: { proofId: proof.id },
-      })
-    }
-
-    if (proof.state == ProofState.Done && agentDetails.connectionId && agentDetails.legacyConnectionDid) {
-      authenticateWithServiceCard(agentDetails.legacyConnectionDid)
-    }
-  }, [proof])
-
-  useEffect(() => {
     const credentialDefinitionIDs = credentials.map(
       (c) => c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
     )
 
     if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
       setShowGetFoundationCredential(false)
-      // setAgentDetails({});
       return
     }
 
-    if (credentialDefinitionIDs.some((i) => trustedInvitationIssueRe.test(i))) {
+    if (
+      credentialDefinitionIDs.some((i) => trustedInvitationIssuerRe.test(i)) ||
+      (credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) && canUseLSBCredential)
+    ) {
       setShowGetFoundationCredential(true)
       return
     }
-  }, [credentials])
+  }, [credentials, canUseLSBCredential])
 
   const cleanupAfterServiceCardAuthentication = (status: AuthenticationResultType): void => {
     InAppBrowser.closeAuth()
@@ -128,7 +118,7 @@ const BCIDView: React.FC = () => {
 
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
     try {
-      const url = `${Config.IDIM_PORTAL_URL}/${did}`
+      const url = `${Config.IAS_PORTAL_URL}/${did}`
 
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
@@ -141,18 +131,17 @@ const BCIDView: React.FC = () => {
         })
 
         if (result.type === AuthenticationResultType.Cancel) {
-          throw new BifoldError(
-            t('Error.Title2024'),
-            t('Error.Description2024'),
-            t('Error.NoMessage'),
-            ErrorCodes.CanceledByUser
-          )
+          // Cancel in the Web view to end the authentication
+          // propels the user Home.
+          setWorkflowInFlight(false)
         }
 
         if (
           !(result as unknown as RedirectResult).url.includes(did) ||
           !(result as unknown as RedirectResult).url.includes('success')
         ) {
+          setWorkflowInFlight(false)
+
           throw new BifoldError(
             t('Error.Title2025'),
             t('Error.Description2025'),
@@ -167,8 +156,6 @@ const BCIDView: React.FC = () => {
       cleanupAfterServiceCardAuthentication(AuthenticationResultType.Success)
     } catch (error: unknown) {
       const code = (error as BifoldError).code
-
-      // console.log(`message = ${(error as Error).message}, code = ${code}`);
 
       cleanupAfterServiceCardAuthentication(
         code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
@@ -204,6 +191,7 @@ const BCIDView: React.FC = () => {
           ErrorCodes.BadInvitation
         )
       }
+
       const record = await agent?.oob.receiveInvitation(invite!)
       if (!record) {
         throw new BifoldError(
@@ -242,6 +230,8 @@ const BCIDView: React.FC = () => {
         connectionId: record.connectionRecord!.id,
         legacyConnectionDid: did,
       })
+
+      await authenticateWithServiceCard(did)
     } catch (error: unknown) {
       setWorkflowInFlight(false)
 

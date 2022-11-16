@@ -1,4 +1,4 @@
-import { Button, ButtonType, createStyles, GenericFn, testIdWithKey, Theme } from 'aries-bifold'
+import { Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey, useStore } from 'aries-bifold'
 import React from 'react'
 import { useTranslation, TFunction } from 'react-i18next'
 import { Text, View } from 'react-native'
@@ -14,6 +14,8 @@ const endPage = (
   theme: Theme['OnboardingTheme'],
   t: TFunction<'translation', undefined>
 ) => {
+  const [store] = useStore()
+
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -22,27 +24,31 @@ const endPage = (
   }
   return (
     <>
-      <View style={{ alignItems: 'center' }}>
-        <SecureImage {...imageDisplayOptions} />
-      </View>
-      <View style={{ marginLeft: 20, marginRight: 20, marginTop: 30 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('OnboardingPages.FourthPageTitle')}</Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('OnboardingPages.FourthPageBody')}</Text>
-      </View>
-      <View
-        style={{
-          marginTop: 'auto',
-          margin: 20,
-        }}
-      >
-        <Button
-          title={t('OnboardingPages.ButtonGetStarted')}
-          accessibilityLabel={'Get Started'}
-          testID={testIdWithKey('GetStarted')}
-          onPress={onTutorialCompleted}
-          buttonType={ButtonType.Primary}
-        />
-      </View>
+      <ScrollView style={{ padding: 20 }}>
+        <View style={{ alignItems: 'center' }}>
+          <SecureImage {...imageDisplayOptions} />
+        </View>
+        <View style={{ marginBottom: 20 }}>
+          <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('OnboardingPages.FourthPageTitle')}</Text>
+          <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('OnboardingPages.FourthPageBody')}</Text>
+        </View>
+      </ScrollView>
+      {!(store.onboarding.didCompleteTutorial && store.authentication.didAuthenticate) && (
+        <View
+          style={{
+            marginTop: 'auto',
+            margin: 20,
+          }}
+        >
+          <Button
+            title={'Get Started'}
+            accessibilityLabel={'Get Started'}
+            testID={testIdWithKey('GetStarted')}
+            onPress={onTutorialCompleted}
+            buttonType={ButtonType.Primary}
+          />
+        </View>
+      )}
     </>
   )
 }
