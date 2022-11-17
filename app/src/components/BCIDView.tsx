@@ -11,14 +11,13 @@ import {
   DispatchAction,
   useStore,
 } from 'aries-bifold'
-import Spinner from './Spinner'
 import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Linking, Modal } from 'react-native'
 import { Config } from 'react-native-config'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
-import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
+import Spinner from './Spinner'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssuerRe =
@@ -47,8 +46,8 @@ enum ErrorCodes {
 
 interface WellKnownAgentDetails {
   connectionId?: string
-  invitationProofId?: string
   legacyConnectionDid?: string
+  invitationId?: string
 }
 
 const BCIDView: React.FC = () => {
@@ -171,21 +170,28 @@ const BCIDView: React.FC = () => {
     }
   }
 
-  const onGetIdTouched = async () => {
+  const removeExistingInvitationIfRequired = async (invitationId: string): Promise<void> => {
     try {
-      setWorkflowInFlight(true)
-
       // If something fails before we get the credential we need to
       // cleanup the old invitation before it can be used again.
-      const oldInvitation = await agent?.oob.findByInvitationId(IDIM_AGENT_INVITE_ID)
+      const oldInvitation = await agent?.oob.findByInvitationId(invitationId)
 
       if (oldInvitation) {
         await agent?.oob.deleteById(oldInvitation.id)
       }
+    } catch (error) {
+      // findByInvitationId with throw if unsuccessful but that's not a problem.
+      // It just means there is nothing to delete.
+    }
+  }
+
+  const onGetIdTouched = async () => {
+    try {
+      setWorkflowInFlight(true)
 
       // connect to the agent, this will re-format the legacy invite
       // until we have OOB working in ACA-py.
-      const invite = await agent?.oob.parseInvitation(IDIM_AGENT_INVITE_URL)
+      const invite = await agent?.oob.parseInvitation(Config.IAS_AGENT_INVITE_URL)
       if (!invite) {
         throw new BifoldError(
           t('Error.Title2020'),
@@ -195,7 +201,9 @@ const BCIDView: React.FC = () => {
         )
       }
 
-      const record = await agent?.oob.receiveInvitation(invite!)
+      await removeExistingInvitationIfRequired(invite.id)
+
+      const record = await agent?.oob.receiveInvitation(invite)
       if (!record) {
         throw new BifoldError(
           t('Error.Title2021'),
@@ -231,6 +239,7 @@ const BCIDView: React.FC = () => {
 
       setAgentDetails({
         connectionId: record.connectionRecord!.id,
+        invitationId: invite.id,
         legacyConnectionDid: did,
       })
 
