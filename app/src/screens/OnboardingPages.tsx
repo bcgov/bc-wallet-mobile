@@ -58,22 +58,12 @@ const startPages = (theme: Theme, t: TFunction<'translation', undefined>) => {
   const defaultStyle = createStyles(theme)
   return (
     <ScrollView style={{ padding: 20, paddingTop: 30 }}>
-      <Text style={[defaultStyle.headerText, { marginLeft: 20, marginRight: 20 }]}>
-        {t('OnboardingPages.FirstPageTitle')}
-      </Text>
-      <View
-        style={{ marginLeft: 20, height: 4, width: 48, backgroundColor: defaultTheme.ColorPallet.brand.highlight }}
-      />
+      <Text style={[defaultStyle.headerText]}>{t('OnboardingPages.FirstPageTitle')}</Text>
+      <View style={{ height: 4, width: 48, backgroundColor: defaultTheme.ColorPallet.brand.highlight }} />
 
-      <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 35, marginRight: 20 }]}>
-        {t('OnboardingPages.FirstPageBody1')}
-      </Text>
-      <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
-        {t('OnboardingPages.FirstPageBody2')}
-      </Text>
-      <Text style={[defaultStyle.bodyText, { marginLeft: 20, marginTop: 25, marginRight: 20 }]}>
-        {t('OnboardingPages.FirstPageBody3')}
-      </Text>
+      <Text style={[defaultStyle.bodyText, { marginTop: 35 }]}>{t('OnboardingPages.FirstPageBody1')}</Text>
+      <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t('OnboardingPages.FirstPageBody2')}</Text>
+      <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t('OnboardingPages.FirstPageBody3')}</Text>
     </ScrollView>
   )
 }
