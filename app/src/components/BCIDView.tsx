@@ -201,9 +201,7 @@ const BCIDView: React.FC = () => {
         )
       }
 
-      console.log('A')
       await removeExistingInvitationIfRequired(invite.id)
-      console.log('B')
 
       const record = await agent?.oob.receiveInvitation(invite)
       if (!record) {
