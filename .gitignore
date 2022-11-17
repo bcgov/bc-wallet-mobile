@@ -39,3 +39,4 @@ app/patches/*.patch
 
 # xcode
 xcuserdata/
+.npmrc
