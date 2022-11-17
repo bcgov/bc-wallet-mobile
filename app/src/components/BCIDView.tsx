@@ -13,7 +13,7 @@ import {
 } from 'aries-bifold'
 import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View, Linking, Modal } from 'react-native'
+import { View, Linking, Modal, Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
@@ -28,7 +28,7 @@ const trustedLSBCCredentialIssuerRe =
   /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d{6,}:default$/im
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 const notBeforeDateTimeAsString = '2022-11-21T17:00:00.000Z'
-const connectionDelayInMs = 3000
+const connectionDelayInMs = Platform.OS === 'android' ? 5000 : 3000
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -130,6 +130,7 @@ const BCIDView: React.FC = () => {
           showTitle: false,
           enableUrlBarHiding: true,
           enableDefaultShare: true,
+          forceCloseOnRedirection: false,
         })
 
         if (result.type === AuthenticationResultType.Cancel) {
