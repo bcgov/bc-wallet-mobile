@@ -129,8 +129,9 @@ const BCIDView: React.FC = () => {
           // Android
           showTitle: false,
           enableUrlBarHiding: true,
-          enableDefaultShare: true,
+          enableDefaultShare: false,
           forceCloseOnRedirection: false,
+          showInRecents: true,
         })
 
         if (result.type === AuthenticationResultType.Cancel) {
