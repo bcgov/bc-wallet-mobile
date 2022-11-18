@@ -1,4 +1,4 @@
-import { translationResources, ConfigurationContext, types, Record } from 'aries-bifold'
+import { translationResources, ConfigurationContext, types, Record, indyLedgers } from 'aries-bifold'
 import { Bundles } from 'aries-bifold/lib/typescript/App/types/oca'
 import merge from 'lodash.merge'
 
@@ -16,6 +16,7 @@ const localization = merge({}, translationResources, {
   en: { translation: en },
 })
 
+const selectedLedgers = indyLedgers.filter((item) => !item.id.startsWith('Indicio'))
 const configuration: ConfigurationContext = {
   pages,
   splash: Splash,
@@ -24,7 +25,7 @@ const configuration: ConfigurationContext = {
   OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(bundles as unknown as Bundles),
   useBiometry: UseBiometry,
   record: Record,
-  indyLedgers: [],
+  indyLedgers: selectedLedgers,
   settings: [],
   developer: () => null,
 }

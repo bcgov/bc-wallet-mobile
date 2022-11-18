@@ -24,8 +24,8 @@ import {
   useTheme,
   useStore,
   ToastType,
-  indyLedgers,
   LoadingIndicator,
+  useConfiguration,
 } from 'aries-bifold'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -65,6 +65,7 @@ const Splash: React.FC = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet } = useTheme()
+  const { indyLedgers } = useConfiguration()
   const styles = StyleSheet.create({
     container: {
       flex: 1,
