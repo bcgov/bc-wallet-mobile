@@ -1,0 +1,2 @@
+"NSFaceIDUsageDescription" = "La biométrie est utilisée pour déverouiller votre application de façon sécuritaire.";
+"NSCameraUsageDescription" = "Cette application utilise la caméra afin de lire des codes QR et de réaliser la vérification d'identité.";
