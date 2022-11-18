@@ -20,6 +20,8 @@
 		56A83D5F27D95E24002FE8FE /* BCSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 56A83D5B27D95E24002FE8FE /* BCSans-Regular.ttf */; };
 		56A83D6027D95E24002FE8FE /* BCSans-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 56A83D5C27D95E24002FE8FE /* BCSans-BoldItalic.ttf */; };
 		56A83D6127D95E24002FE8FE /* BCSans-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 56A83D5D27D95E24002FE8FE /* BCSans-Italic.ttf */; };
+		6FAA896529281E3E002D887C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6FAA896729281E3E002D887C /* InfoPlist.strings */; };
+		6FAA896A29281E60002D887C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6FAA896C29281E60002D887C /* InfoPlist.strings */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		9357A031B216B85E623CA997 /* libPods-AriesBifold-AriesBifoldTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EE3AE16AD3ECDE83208A483 /* libPods-AriesBifold-AriesBifoldTests.a */; };
 /* End PBXBuildFile section */
@@ -70,6 +72,8 @@
 		56A83D5C27D95E24002FE8FE /* BCSans-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-BoldItalic.ttf"; path = "../src/assets/fonts/BCSans-BoldItalic.ttf"; sourceTree = "<group>"; };
 		56A83D5D27D95E24002FE8FE /* BCSans-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-Italic.ttf"; path = "../src/assets/fonts/BCSans-Italic.ttf"; sourceTree = "<group>"; };
 		62AD74D113A13E6D7ECD73DC /* Pods-AriesBifold.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold.release.xcconfig"; path = "Target Support Files/Pods-AriesBifold/Pods-AriesBifold.release.xcconfig"; sourceTree = "<group>"; };
+		6FAA896629281E3E002D887C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		6FAA896B29281E60002D887C /* fr-CA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "fr-CA"; path = "fr-CA.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = AriesBifold/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BB9D3B7B666B014651EA4C03 /* Pods-AriesBifold-AriesBifoldTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold-AriesBifoldTests.release.xcconfig"; path = "Target Support Files/Pods-AriesBifold-AriesBifoldTests/Pods-AriesBifold-AriesBifoldTests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -146,6 +150,8 @@
 				56A83D5C27D95E24002FE8FE /* BCSans-BoldItalic.ttf */,
 				56A83D5D27D95E24002FE8FE /* BCSans-Italic.ttf */,
 				56A83D5B27D95E24002FE8FE /* BCSans-Regular.ttf */,
+				6FAA896729281E3E002D887C /* InfoPlist.strings */,
+				6FAA896C29281E60002D887C /* InfoPlist.strings */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -265,6 +271,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"fr-CA",
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
@@ -290,11 +297,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				56A83D6127D95E24002FE8FE /* BCSans-Italic.ttf in Resources */,
+				6FAA896529281E3E002D887C /* InfoPlist.strings in Resources */,
 				56A83D6027D95E24002FE8FE /* BCSans-BoldItalic.ttf in Resources */,
 				56A83D5E27D95E24002FE8FE /* BCSans-Bold.ttf in Resources */,
 				56A83D5F27D95E24002FE8FE /* BCSans-Regular.ttf in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				566FB1F2273B158E003E9BEE /* Media.xcassets in Resources */,
+				6FAA896A29281E60002D887C /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -477,13 +486,32 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		6FAA896729281E3E002D887C /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6FAA896629281E3E002D887C /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		6FAA896C29281E60002D887C /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6FAA896B29281E60002D887C /* fr-CA */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 31CB7D155F80E7F43020B57A /* Pods-AriesBifold-AriesBifoldTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = "467G3V9649";
+				DEVELOPMENT_TEAM = 467G3V9649;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -512,7 +540,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = "467G3V9649";
+				DEVELOPMENT_TEAM = 467G3V9649;
 				INFOPLIST_FILE = AriesBifoldTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = (
