@@ -1,9 +1,2 @@
-/* 
-  InfoPlist.strings
-  AriesBifold
-
-  Created by jean-christophe.drouin@mcn.gouv.qc.ca on 2022-11-18.
-  
-*/
 "NSFaceIDUsageDescription" = "The application wants to use your FaceID/TouchID to Authenticate your Identity.";
 "NSCameraUsageDescription" = "Camera used for in-app QR Code scanning.";
