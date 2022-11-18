@@ -28,7 +28,7 @@ const Terms: React.FC = () => {
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
-  navigation.setOptions({ title: "Contrat de licence de l'utilisateur" })
+  navigation.setOptions({ title: t('Screens.Terms') })
   const { ColorPallet, TextTheme } = useTheme()
   const style = StyleSheet.create({
     container: {
