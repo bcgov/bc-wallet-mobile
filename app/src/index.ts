@@ -29,7 +29,6 @@ const configuration: ConfigurationContext = {
   record: Record,
   indyLedgers: selectedLedgers,
   settings: [],
-  developer: () => null,
 }
 
 export default { theme, localization, configuration }

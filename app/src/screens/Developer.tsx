@@ -1,22 +1,12 @@
-import { StackScreenProps } from '@react-navigation/stack'
-import { useConfiguration, useTheme, useStore } from 'aries-bifold'
-import React, { useRef, useState } from 'react'
+import { useTheme, useStore, testIdWithKey } from 'aries-bifold'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, SectionList, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native'
+import { Modal, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-// import { useConfiguration } from '../contexts/configuration'
-// import { DispatchAction } from '../contexts/reducers/store'
-// import { useStore } from '../contexts/store'
-// import { useTheme } from '../contexts/theme'
-// import { Locales } from '../localization'
-// import { GenericFn } from '../types/fn'
-// import { Screens, SettingStackParams, Stacks } from '../types/navigators'
-// import { SettingSection } from '../types/settings'
-// import { testIdWithKey } from '../utils/testable'
+import IASEnvironment from './IASEnvironment'
 
-// type SettingsProps = StackScreenProps<SettingStackParams>
 interface DeveloperProps {
   navigation: any
 }
@@ -39,9 +29,9 @@ interface SettingSection {
 
 const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const [store, dispatch] = useStore()
+  const [store] = useStore()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
-  // const { settings } = useConfiguration()
+  const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
 
   const styles = StyleSheet.create({
     container: {
@@ -83,6 +73,10 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
     },
   })
 
+  const onEnvironmentSelected = () => {
+    setEnvironmentModalVisible(false)
+  }
+
   const settingsSections: SettingSection[] = [
     {
       header: {
@@ -92,10 +86,11 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
       data: [
         {
           title: 'Environment',
+          value: store.developer.environment.name,
           accessibilityLabel: 'Environment',
-          testID: 'xxx',
+          testID: testIdWithKey('xxx'),
           onPress: () => {
-            return
+            setEnvironmentModalVisible(true)
           },
         },
       ],
@@ -110,7 +105,7 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
         {
           title: t('Settings.Developer'),
           accessibilityLabel: t('Settings.Developer'),
-          testID: 'xxxx',
+          testID: testIdWithKey('yyy'),
           onPress: () => {
             return
           },
@@ -150,14 +145,14 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
   return (
     <SafeAreaView>
       <Modal
-        visible={true}
+        visible={environmentModalVisible}
         transparent={true}
         animationType={'slide'}
         onRequestClose={() => {
           return
         }}
       >
-        <View style={{ backgroundColor: 'red', flex: 1 }} />
+        <IASEnvironment onEnvironmentSelected={onEnvironmentSelected} />
       </Modal>
       <View style={styles.container}>
         <SectionList
