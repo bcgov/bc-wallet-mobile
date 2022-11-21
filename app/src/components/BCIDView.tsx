@@ -27,7 +27,6 @@ const trustedFoundationCredentialIssuerRe =
 const trustedLSBCCredentialIssuerRe =
   /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d+:default$/im
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
-const notBeforeDateTimeAsString = '2022-11-21T17:00:00.000Z'
 const connectionDelayInMs = Platform.OS === 'android' ? 5000 : 3000
 
 enum AuthenticationResultType {
@@ -63,9 +62,7 @@ const BCIDView: React.FC = () => {
     ...useCredentialByState(CredentialState.Done),
   ]
   const navigation = useNavigation()
-  const notBeforeDateTime = new Date(notBeforeDateTimeAsString)
-  const [canUseLSBCredential, setCanUseLSBCredential] = useState<boolean>(true)
-  const enableLSBCCredentialTimer = useRef<NodeJS.Timeout | null>(null)
+  const [canUseLSBCredential] = useState<boolean>(true)
   const [spinnerVisible, setSpinnerVisible] = useState<boolean>(false)
 
   useEffect(() => {
