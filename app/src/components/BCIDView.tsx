@@ -11,7 +11,7 @@ import {
   DispatchAction,
   useStore,
 } from 'aries-bifold'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Linking, Modal, Platform } from 'react-native'
 import { Config } from 'react-native-config'
