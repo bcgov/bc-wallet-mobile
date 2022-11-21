@@ -17,6 +17,8 @@ import { View, Linking, Modal, Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
+import { BCState, BCDispatchAction } from '../store'
+
 import Spinner from './Spinner'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
@@ -182,7 +184,7 @@ const BCIDView: React.FC = () => {
 
       // connect to the agent, this will re-format the legacy invite
       // until we have OOB working in ACA-py.
-      const invite = await agent?.oob.parseInvitation(Config.IAS_AGENT_INVITE_URL)
+      const invite = await agent?.oob.parseInvitation(store.developer.iasAgentInviteUrl)
       if (!invite) {
         throw new BifoldError(
           t('Error.Title2020'),

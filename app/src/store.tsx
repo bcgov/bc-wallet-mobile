@@ -4,7 +4,6 @@ import { Config } from 'react-native-config'
 interface Developer {
   iasAgentInviteUrl: string
   iasPortalUrl: string
-  iasInvitationID: string
 }
 
 export interface BCState extends BifoldState {
@@ -29,7 +28,6 @@ interface BCReducerAction {
 const developerState: Developer = {
   iasAgentInviteUrl: Config.IAS_AGENT_INVITE_URL,
   iasPortalUrl: Config.IAS_PORTAL_URL,
-  iasInvitationID: '',
 }
 
 export const initialState: BCState = { ...defaultState, developer: developerState }
