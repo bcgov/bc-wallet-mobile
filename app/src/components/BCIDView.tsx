@@ -64,17 +64,9 @@ const BCIDView: React.FC = () => {
   ]
   const navigation = useNavigation()
   const notBeforeDateTime = new Date(notBeforeDateTimeAsString)
-  const [canUseLSBCredential, setCanUseLSBCredential] = useState<boolean>(notBeforeDateTime.getTime() <= Date.now())
+  const [canUseLSBCredential, setCanUseLSBCredential] = useState<boolean>(true)
   const enableLSBCCredentialTimer = useRef<NodeJS.Timeout | null>(null)
   const [spinnerVisible, setSpinnerVisible] = useState<boolean>(false)
-
-  useEffect(() => {
-    if (!canUseLSBCredential && !enableLSBCCredentialTimer.current) {
-      enableLSBCCredentialTimer.current = setTimeout(() => {
-        setCanUseLSBCredential(true)
-      }, notBeforeDateTime.getTime() - Date.now())
-    }
-  })
 
   useEffect(() => {
     for (const o of offers) {
