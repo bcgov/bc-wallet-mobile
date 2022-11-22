@@ -42,6 +42,12 @@ const translation = {
     "VulnerabilityDisclosurePolicy": "Vulnerability disclosure policy",
     "Accessibility": "Accessibility",
     "IntroductionToTheApp": "Introduction to the app"
+  },
+  "Developer": {
+    "Environment": "Environment",
+    "Production": "Production",
+    "Development": "Development",
+    "Test": "Test",
   }
 }
 

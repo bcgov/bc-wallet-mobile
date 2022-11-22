@@ -73,7 +73,7 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
     },
   })
 
-  const onEnvironmentSelected = () => {
+  const shouldDismissModal = () => {
     setEnvironmentModalVisible(false)
   }
 
@@ -85,10 +85,10 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
       },
       data: [
         {
-          title: 'Environment',
+          title: t('Developer.Environment'),
           value: store.developer.environment.name,
-          accessibilityLabel: 'Environment',
-          testID: testIdWithKey('xxx'),
+          accessibilityLabel: t('Developer.Environment'),
+          testID: testIdWithKey('environment'),
           onPress: () => {
             setEnvironmentModalVisible(true)
           },
@@ -105,7 +105,7 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
         {
           title: t('Settings.Developer'),
           accessibilityLabel: t('Settings.Developer'),
-          testID: testIdWithKey('yyy'),
+          testID: testIdWithKey('developer'),
           onPress: () => {
             return
           },
@@ -152,7 +152,7 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
           return
         }}
       >
-        <IASEnvironment onEnvironmentSelected={onEnvironmentSelected} />
+        <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </Modal>
       <View style={styles.container}>
         <SectionList
@@ -160,7 +160,7 @@ const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
             <SectionRow
               title={title}
               accessibilityLabel={title}
-              // testID={testIdWithKey(title)}
+              testID={testIdWithKey(title.toLowerCase())}
               value={value}
               onPress={onPress}
             />
