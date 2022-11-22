@@ -25,7 +25,7 @@ const IASEnvironment: React.FC<IASEnvironmentProps> = ({ shouldDismissModal }) =
 
   const environments: Array<Environment> = [
     {
-      name: t('Developer.Produciton'),
+      name: t('Developer.Production'),
       iasAgentInviteUrl:
         'https://idim-agent.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJkaWQ6c292OkJ6Q2JzTlloTXJqSGlxWkRUVUFTSGc7c3BlYy9jb25uZWN0aW9ucy8xLjAvaW52aXRhdGlvbiIsICJAaWQiOiAiZTZiY2EwNzQtYmNmNC00ZjQzLTgwMjYtNWNjZjhkN2M4OTQyIiwgImxhYmVsIjogIklESU0iLCAic2VydmljZUVuZHBvaW50IjogImh0dHBzOi8vaWRpbS1hZ2VudC5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIiwgImltYWdlVXJsIjogImh0dHBzOi8vaWQuZ292LmJjLmNhL3N0YXRpYy9Hb3YtMi4wL2ltYWdlcy9mYXZpY29uLmljbyIsICJyZWNpcGllbnRLZXlzIjogWyJHeXJxY2NQR1FtV3JxWGZ6cWtRTUF2VlBycmRWYUdwRkgxOHNOWkUzdUtGIl19',
       iasPortalUrl: 'https://id.gov.bc.ca/issuer/v1/dids',

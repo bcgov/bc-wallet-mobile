@@ -87,6 +87,10 @@ const BCIDView: React.FC = () => {
       (c) => c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
     )
 
+    setShowGetFoundationCredential(true)
+    console.log(store.developer)
+    return
+
     if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
       setShowGetFoundationCredential(false)
       return
