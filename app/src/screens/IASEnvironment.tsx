@@ -1,4 +1,3 @@
-// import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useTheme, useStore, Button, ButtonType, testIdWithKey } from 'aries-bifold'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
