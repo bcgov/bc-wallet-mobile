@@ -111,7 +111,7 @@ const BCIDView: React.FC = () => {
 
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
     try {
-      const url = `${store.developer.iasPortalUrl}/${did}`
+      const url = `${store.developer.environment.iasPortalUrl}/${did}`
 
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
@@ -184,7 +184,7 @@ const BCIDView: React.FC = () => {
 
       // connect to the agent, this will re-format the legacy invite
       // until we have OOB working in ACA-py.
-      const invite = await agent?.oob.parseInvitation(store.developer.iasAgentInviteUrl)
+      const invite = await agent?.oob.parseInvitation(store.developer.environment.iasAgentInviteUrl)
       if (!invite) {
         throw new BifoldError(
           t('Error.Title2020'),
