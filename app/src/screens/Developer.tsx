@@ -4,12 +4,9 @@ import { useTranslation } from 'react-i18next'
 import { Modal, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
-
-interface DeveloperProps {
-  navigation: any
-}
 
 interface Setting {
   title: string
@@ -27,9 +24,9 @@ interface SettingSection {
   data: Setting[]
 }
 
-const Settings: React.FC<DeveloperProps> = ({ navigation }) => {
+const Settings: React.FC = () => {
   const { t } = useTranslation()
-  const [store] = useStore()
+  const [store] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
 
