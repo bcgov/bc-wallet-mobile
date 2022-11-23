@@ -1,9 +1,13 @@
 import { State as BifoldState, mergeReducers, reducer as bifoldReducer, defaultState } from 'aries-bifold'
 import { Config } from 'react-native-config'
 
-interface Developer {
+interface IASEnvironment {
+  name: string
   iasAgentInviteUrl: string
   iasPortalUrl: string
+}
+interface Developer {
+  environment: IASEnvironment
 }
 
 export interface BCState extends BifoldState {
@@ -11,7 +15,7 @@ export interface BCState extends BifoldState {
 }
 
 enum DeveloperDispatchAction {
-  UPDATE_DEVELOPER_SETTINGS = 'developer/updateDeveloperSettings',
+  UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
 }
 
 export type BCDispatchAction = DeveloperDispatchAction
@@ -26,16 +30,20 @@ interface BCReducerAction {
 }
 
 const developerState: Developer = {
-  iasAgentInviteUrl: Config.IAS_AGENT_INVITE_URL,
-  iasPortalUrl: Config.IAS_PORTAL_URL,
+  environment: {
+    name: 'Test',
+    iasAgentInviteUrl: Config.IAS_AGENT_INVITE_URL,
+    iasPortalUrl: Config.IAS_PORTAL_URL,
+  },
 }
 
 export const initialState: BCState = { ...defaultState, developer: developerState }
 
 const bcReducer = (state: BCState, action: BCReducerAction): BCState => {
   switch (action.type) {
-    case DeveloperDispatchAction.UPDATE_DEVELOPER_SETTINGS: {
-      const developer: Developer = (action?.payload || []).pop()
+    case DeveloperDispatchAction.UPDATE_ENVIRONMENT: {
+      const environment: IASEnvironment = (action?.payload || []).pop()
+      const developer = { ...state.developer, environment }
       return { ...state, developer }
     }
     default:
