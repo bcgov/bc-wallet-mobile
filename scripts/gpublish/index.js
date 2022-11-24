@@ -117,7 +117,7 @@ const main = async () => {
       requestBody: {
         releases: [{
           name: `v${process.env.VERSION_NAME}-${process.env.GITHUB_RUN_NUMBER}`,
-          status: 'draft', // draft, inProgress, completed
+          status: 'completed', // draft, inProgress, completed
           // userFraction: 0.99,
           versionCodes: [
             `${process.env.GITHUB_RUN_NUMBER ? process.env.GITHUB_RUN_NUMBER : 0}`

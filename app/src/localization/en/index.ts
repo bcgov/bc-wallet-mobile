@@ -239,6 +239,12 @@ const translation = {
     AboutApp: 'About App',
     Language: 'Language',
   },
+  Developer: {
+    Environment: 'Environment',
+    Production: 'Production',
+    Development: 'Development',
+    Test: 'Test',
+  },
 }
 
 export default translation
