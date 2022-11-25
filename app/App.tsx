@@ -23,6 +23,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import bcwallet from './src'
+import { initialState, reducer } from './src/store'
 
 const { theme, localization, configuration } = bcwallet
 
@@ -82,7 +83,7 @@ const App = () => {
   }, [])
 
   return (
-    <StoreProvider>
+    <StoreProvider initialState={initialState} reducer={reducer}>
       <AgentProvider agent={agent}>
         <ThemeProvider value={theme}>
           <ConfigurationProvider value={configuration}>
@@ -96,7 +97,7 @@ const App = () => {
                 />
                 <NetInfo />
                 <ErrorModal />
-                <RootStack setAgent={setAgent} />
+                <RootStack />
                 <Toast topOffset={15} config={toastConfig} />
               </NetworkProvider>
             </AuthProvider>

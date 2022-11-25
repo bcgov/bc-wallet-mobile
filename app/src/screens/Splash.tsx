@@ -24,7 +24,7 @@ import {
   useTheme,
   useStore,
   ToastType,
-  indyLedgers,
+  useConfiguration,
 } from 'aries-bifold'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -69,6 +69,7 @@ const Splash: React.FC = () => {
   const { getWalletCredentials } = useAuth()
   const { ColorPallet } = useTheme()
 
+  const { indyLedgers } = useConfiguration()
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -178,7 +179,7 @@ const Splash: React.FC = () => {
 
         const newAgent = new Agent(
           {
-            label: 'Aries Bifold',
+            label: 'BC Wallet',
             mediatorConnectionsInvite: Config.MEDIATOR_URL,
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             walletConfig: { id: credentials.id, key: credentials.key },
@@ -186,7 +187,7 @@ const Splash: React.FC = () => {
             autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
             logger: new ConsoleLogger(LogLevel.trace),
             indyLedgers,
-            connectToIndyLedgersOnStartup: true,
+            connectToIndyLedgersOnStartup: false,
             autoUpdateStorageOnStartup: true,
           },
           agentDependencies
@@ -199,6 +200,7 @@ const Splash: React.FC = () => {
         newAgent.registerOutboundTransport(httpTransport)
 
         await newAgent.initialize()
+        await newAgent.ledger.connectToPools()
         setAgent(newAgent)
         navigation.navigate(Stacks.TabStack as never)
 

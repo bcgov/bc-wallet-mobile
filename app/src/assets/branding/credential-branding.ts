@@ -96,7 +96,7 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
         street_address: 'Text',
         country: 'Text',
         //expiry_date_dateint: 'Text',
-        //birthdate_dateint: 'Text',
+        birthdate_dateint: 'DateInt',
       },
     },
     overlays: [
@@ -111,11 +111,19 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
         footer: { color: '#FFFFFF' },
       },
       {
+        type: 'spec/overlays/format/1.0',
+        language: 'en',
+        attr_formats: {
+          birthdate_dateint: 'YYYYMMDD',
+        },
+      },
+      {
         type: 'spec/overlays/label/1.0',
         language: 'en',
         attr_labels: {
           given_names: 'Given Name',
           family_name: 'Family Name',
+          birthdate_dateint: 'Date of Birth',
         },
       },
       {
@@ -221,7 +229,9 @@ export default {
   [CREDENTIALS.UNVERIFIED_PERSON_TEST]: unverifiedPersonCardBundle /* Unverified Person (TEST) */,
   [CREDENTIALS.UNVERIFIED_PERSON_PROD]: unverifiedPersonCardBundle /* Unverified Person (DEV) */,
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/604
+  [CREDENTIALS.PILOT_INVITE_DEV]: digitalIdInvitationCardBundle /* (DEV) */,
   [CREDENTIALS.PILOT_INVITE_TEST]: digitalIdInvitationCardBundle /* (TEST) */,
+  [CREDENTIALS.PILOT_INVITE_PROD]: digitalIdInvitationCardBundle /* (PROD) */,
   'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1': testDigitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: testDigitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: testDigitalIdCardBundle /* (QA) */,

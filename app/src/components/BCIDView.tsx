@@ -11,23 +11,25 @@ import {
   DispatchAction,
   useStore,
 } from 'aries-bifold'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View, Linking } from 'react-native'
+import { View, Linking, Modal, Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
-import { IDIM_AGENT_INVITE_URL, IDIM_AGENT_INVITE_ID } from '../constants'
+import { BCState, BCDispatchAction } from '../store'
+
+import Spinner from './Spinner'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssuerRe =
-  /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d{2,}:default$/im
+  /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d+:default$/im
 const trustedFoundationCredentialIssuerRe =
-  /^(KCxVC8GkKywjhWJnUfCmkW|7xjfawcnyTUcduWVysLww5|RGjWbW1eycP7FrMf4QJvX8):\d:CL:\d{2,}:Person(\s(\(SIT\)|\(QA\)))?$/im
+  /^(KCxVC8GkKywjhWJnUfCmkW|7xjfawcnyTUcduWVysLww5|RGjWbW1eycP7FrMf4QJvX8):\d:CL:\d+:Person(\s(\(SIT\)|\(QA\)))?$/im
 const trustedLSBCCredentialIssuerRe =
-  /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d{6,}:default$/im
+  /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d+:default$/im
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
-const notBeforeDateTimeAsString = '2022-11-21T17:00:00.000Z'
+const connectionDelayInMs = Platform.OS === 'android' ? 5000 : 3000
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -45,14 +47,14 @@ enum ErrorCodes {
 
 interface WellKnownAgentDetails {
   connectionId?: string
-  invitationProofId?: string
   legacyConnectionDid?: string
+  invitationId?: string
 }
 
 const BCIDView: React.FC = () => {
   const { agent } = useAgent()
   const { t } = useTranslation()
-  const [, dispatch] = useStore()
+  const [store, dispatch] = useStore<BCState>()
   const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
   const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
   const [agentDetails, setAgentDetails] = useState<WellKnownAgentDetails>({})
@@ -62,17 +64,8 @@ const BCIDView: React.FC = () => {
     ...useCredentialByState(CredentialState.Done),
   ]
   const navigation = useNavigation()
-  const notBeforeDateTime = new Date(notBeforeDateTimeAsString)
-  const [canUseLSBCredential, setCanUseLSBCredential] = useState<boolean>(notBeforeDateTime.getTime() <= Date.now())
-  const enableLSBCCredentialTimer = useRef<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    if (!canUseLSBCredential && !enableLSBCCredentialTimer.current) {
-      enableLSBCCredentialTimer.current = setTimeout(() => {
-        setCanUseLSBCredential(true)
-      }, notBeforeDateTime.getTime() - Date.now())
-    }
-  })
+  const [canUseLSBCredential] = useState<boolean>(true)
+  const [spinnerVisible, setSpinnerVisible] = useState<boolean>(false)
 
   useEffect(() => {
     for (const o of offers) {
@@ -118,7 +111,7 @@ const BCIDView: React.FC = () => {
 
   const authenticateWithServiceCard = async (did: string): Promise<void> => {
     try {
-      const url = `${Config.IAS_PORTAL_URL}/${did}`
+      const url = `${store.developer.environment.iasPortalUrl}/${did}`
 
       if (await InAppBrowser.isAvailable()) {
         const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
@@ -127,7 +120,9 @@ const BCIDView: React.FC = () => {
           // Android
           showTitle: false,
           enableUrlBarHiding: true,
-          enableDefaultShare: true,
+          enableDefaultShare: false,
+          forceCloseOnRedirection: false,
+          showInRecents: true,
         })
 
         if (result.type === AuthenticationResultType.Cancel) {
@@ -168,21 +163,28 @@ const BCIDView: React.FC = () => {
     }
   }
 
-  const onGetIdTouched = async () => {
+  const removeExistingInvitationIfRequired = async (invitationId: string): Promise<void> => {
     try {
-      setWorkflowInFlight(true)
-
       // If something fails before we get the credential we need to
       // cleanup the old invitation before it can be used again.
-      const oldInvitation = await agent?.oob.findByInvitationId(IDIM_AGENT_INVITE_ID)
+      const oldInvitation = await agent?.oob.findByInvitationId(invitationId)
 
       if (oldInvitation) {
         await agent?.oob.deleteById(oldInvitation.id)
       }
+    } catch (error) {
+      // findByInvitationId with throw if unsuccessful but that's not a problem.
+      // It just means there is nothing to delete.
+    }
+  }
+
+  const onGetIdTouched = async () => {
+    try {
+      setWorkflowInFlight(true)
 
       // connect to the agent, this will re-format the legacy invite
       // until we have OOB working in ACA-py.
-      const invite = await agent?.oob.parseInvitation(IDIM_AGENT_INVITE_URL)
+      const invite = await agent?.oob.parseInvitation(store.developer.environment.iasAgentInviteUrl)
       if (!invite) {
         throw new BifoldError(
           t('Error.Title2020'),
@@ -192,7 +194,9 @@ const BCIDView: React.FC = () => {
         )
       }
 
-      const record = await agent?.oob.receiveInvitation(invite!)
+      await removeExistingInvitationIfRequired(invite.id)
+
+      const record = await agent?.oob.receiveInvitation(invite)
       if (!record) {
         throw new BifoldError(
           t('Error.Title2021'),
@@ -228,10 +232,15 @@ const BCIDView: React.FC = () => {
 
       setAgentDetails({
         connectionId: record.connectionRecord!.id,
+        invitationId: invite.id,
         legacyConnectionDid: did,
       })
 
-      await authenticateWithServiceCard(did)
+      setSpinnerVisible(true)
+      setTimeout(async () => {
+        setSpinnerVisible(false)
+        await authenticateWithServiceCard(did)
+      }, connectionDelayInMs)
     } catch (error: unknown) {
       setWorkflowInFlight(false)
 
@@ -244,6 +253,11 @@ const BCIDView: React.FC = () => {
 
   return (
     <HomeContentView>
+      <Modal visible={spinnerVisible} animationType="none" transparent={true}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Spinner />
+        </View>
+      </Modal>
       {showGetFoundationCredential && (
         <View style={{ marginVertical: 40, marginHorizontal: 25 }}>
           <Button
