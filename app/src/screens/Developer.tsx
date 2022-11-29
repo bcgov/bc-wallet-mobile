@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Modal, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+
 import { BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
@@ -140,7 +141,7 @@ const Settings: React.FC = () => {
   )
 
   return (
-    <SafeAreaView>
+    <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
         visible={environmentModalVisible}
         transparent={true}
@@ -174,6 +175,7 @@ const Settings: React.FC = () => {
           )}
           SectionSeparatorComponent={() => <View style={[styles.sectionSeparator]}></View>}
           sections={settingsSections}
+          stickySectionHeadersEnabled={false}
         ></SectionList>
       </View>
     </SafeAreaView>
