@@ -70,6 +70,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
                 }}
                 isChecked={name === store.developer.environment.name}
                 disableBuiltInState
+                testID={testIdWithKey(name.toLocaleLowerCase())}
               />
             </View>
           )
