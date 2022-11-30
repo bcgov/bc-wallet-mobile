@@ -516,7 +516,7 @@ export const ChatTheme = {
     marginRight: 4,
   },
   leftText: {
-    color: ColorPallet.brand.secondary,
+    color: ColorPallet.brand.primary,
     fontSize: TextTheme.normal.fontSize,
   },
   rightText: {
@@ -532,6 +532,7 @@ export const ChatTheme = {
     lineHeight: undefined,
     fontWeight: '500',
     fontSize: TextTheme.normal.fontSize,
+    color: ColorPallet.brand.primary,
   },
   placeholderText: ColorPallet.grayscale.lightGrey,
   sendContainer: {
