@@ -10,16 +10,18 @@ import {
   Screens,
   DispatchAction,
   useStore,
+  useTheme
 } from 'aries-bifold'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View, Linking, Modal, Platform } from 'react-native'
+import { View, Linking, Platform, Animated } from 'react-native'
 import { Config } from 'react-native-config'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
 import { BCState, BCDispatchAction } from '../store'
+import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import Spinner from './Spinner'
+import CredentialIcon from '../assets/img/credentialIcon.svg'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const trustedInvitationIssuerRe =
@@ -65,7 +67,7 @@ const BCIDView: React.FC = () => {
   ]
   const navigation = useNavigation()
   const [canUseLSBCredential] = useState<boolean>(true)
-  const [spinnerVisible, setSpinnerVisible] = useState<boolean>(false)
+  const { ColorPallet } = useTheme()
 
   useEffect(() => {
     for (const o of offers) {
@@ -236,9 +238,7 @@ const BCIDView: React.FC = () => {
         legacyConnectionDid: did,
       })
 
-      setSpinnerVisible(true)
       setTimeout(async () => {
-        setSpinnerVisible(false)
         await authenticateWithServiceCard(did)
       }, connectionDelayInMs)
     } catch (error: unknown) {
@@ -251,13 +251,29 @@ const BCIDView: React.FC = () => {
     }
   }
 
+  const rotationAnim = useRef(new Animated.Value(0)).current
+  const timing: Animated.TimingAnimationConfig = {
+    toValue: 1,
+    duration: 2000,
+    useNativeDriver: true,
+  }
+  const rotation = rotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  })
+
+  useEffect(() => {
+    const animation = Animated.loop(Animated.timing(rotationAnim, timing))
+    if (workflowInFlight) {
+      animation.start()
+    } else {
+      animation.reset()
+      animation.stop()
+    }
+  }, [rotationAnim, workflowInFlight])
+
   return (
     <HomeContentView>
-      <Modal visible={spinnerVisible} animationType="none" transparent={true}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Spinner />
-        </View>
-      </Modal>
       {showGetFoundationCredential && (
         <View style={{ marginVertical: 40, marginHorizontal: 25 }}>
           <Button
@@ -265,8 +281,15 @@ const BCIDView: React.FC = () => {
             accessibilityLabel={t('BCID.GetID')}
             testID={testIdWithKey('GetBCID')}
             onPress={onGetIdTouched}
-            buttonType={ButtonType.Secondary}
+            buttonType={!workflowInFlight ? ButtonType.Secondary : ButtonType.Primary}
             disabled={workflowInFlight}
+            icon={
+              workflowInFlight ? (
+                <Animated.View style={[{ transform: [{ rotate: rotation }] }]}>
+                  <Icon style={{ color: ColorPallet.grayscale.white }} size={35} name="refresh" />
+                </Animated.View>
+              ) : <CredentialIcon style={{ marginRight: 10 }} />
+            }
           />
         </View>
       )}
