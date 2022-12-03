@@ -15,12 +15,12 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start --reset-cache",
-    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall:copy-patches": "copyfiles -V -u 4 \"../bifold/app/patches/*\" \"./patches/\"",
     "postinstall:patch": "npx patch-package",
     "postinstall": "run-s postinstall:copy-patches postinstall:patch",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prettier": "prettier --ignore-path .gitignore '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'"
+    "prettier": "prettier --ignore-path .gitignore '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
@@ -102,6 +102,7 @@
     "@types/lodash.startcase": "^4.4.6",
     "@types/react": "16.14.15",
     "@types/react-native": "0.63.53",
+    "@types/react-native-vector-icons": "^6.4.12",
     "@typescript-eslint/eslint-plugin": "^4.20.0",
     "@typescript-eslint/parser": "^4.33.0",
     "babel-plugin-module-resolver": "4.1.0",
