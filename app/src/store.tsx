@@ -1,5 +1,10 @@
-import { State as BifoldState, mergeReducers, reducer as bifoldReducer, defaultState } from 'aries-bifold'
-import { Config } from 'react-native-config'
+import {
+  State as BifoldState,
+  mergeReducers,
+  reducer as bifoldReducer,
+  defaultState,
+  ReducerAction,
+} from 'aries-bifold'
 
 export interface IASEnvironment {
   name: string
@@ -22,11 +27,6 @@ export type BCDispatchAction = DeveloperDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
-}
-
-interface BCReducerAction {
-  type: BCDispatchAction
-  payload?: Array<any>
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -56,7 +56,7 @@ const developerState: Developer = {
 
 export const initialState: BCState = { ...defaultState, developer: developerState }
 
-const bcReducer = (state: BCState, action: BCReducerAction): BCState => {
+const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
     case DeveloperDispatchAction.UPDATE_ENVIRONMENT: {
       const environment: IASEnvironment = (action?.payload || []).pop()
