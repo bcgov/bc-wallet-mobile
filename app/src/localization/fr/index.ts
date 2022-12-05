@@ -292,6 +292,9 @@ const translation = {
     AppPreferences: 'Préférences',
     AboutApp: 'À propos',
     Language: 'Langue',
+    AppSettings: "Paramètres de l'application",
+    WhatAreContacts: 'Que sont les contacts?',
+    Developer: 'Développeur',
   },
   Developer: {
     Environment: 'Environnement',
