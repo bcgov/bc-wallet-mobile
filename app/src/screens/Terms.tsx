@@ -69,7 +69,7 @@ const Terms: React.FC = () => {
       payload: [{ DidAgreeToTerms: checked }],
     })
 
-    navigation.navigate(Screens.CreatePin)
+    navigation.navigate(Screens.CreatePIN)
   }
 
   const onBackPressed = () => {
