@@ -5,6 +5,7 @@ import { FlatList, StyleSheet, Text, View } from 'react-native'
 import BouncyCheckbox from 'react-native-bouncy-checkbox'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+
 import { BCDispatchAction, BCState, IASEnvironment, iasEnvironments } from '../store'
 
 interface IASEnvironmentProps {

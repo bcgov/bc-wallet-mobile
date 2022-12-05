@@ -6,15 +6,6 @@
   },
   "exclude": [
     "node_modules",
-    "../node_modules",
-    "../../node_modules",
-    "./node_modules",
-    "./node_modules/**",
-    "./node_modules/@types/**",
-    "../node_modules/@types/**",
-    "../../node_modules/@types/**",
-    "babel.config.js",
-    "jest.config.js",
-    "lib"
+    "metro.config.js"
   ]
 }
