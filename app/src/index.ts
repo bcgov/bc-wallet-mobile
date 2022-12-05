@@ -26,6 +26,7 @@ const localization = merge({}, translationResources, {
 })
 
 const selectedLedgers = indyLedgers.filter((item) => item.id.startsWith('Candy'))
+
 const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,
