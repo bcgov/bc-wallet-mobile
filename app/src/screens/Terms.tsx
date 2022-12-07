@@ -12,7 +12,7 @@ import {
   useTheme,
   useStore,
 } from 'aries-bifold'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -190,7 +190,7 @@ const Terms: React.FC = () => {
             Google or Apple branded products, provided that usage on any Apple branded products must be products that
             you either own or control and as permitted by the Usage Rules set forth in the Apple Media Services Terms
             and Conditions located at{'\n'}
-            <Text style={style.link} onPress={() => openLink(appleTermsUrl)}>
+            <Text style={style.link} onPress={useCallback(() => openLink(appleTermsUrl), [])}>
               https://www.apple.com/legal/internet-services/itunes/us/terms.html
             </Text>
             {'\n'}
@@ -359,19 +359,19 @@ const Terms: React.FC = () => {
           <Text style={[style.bodyText]}>
             <Text style={[style.titleText]}>Privacy.</Text>
             &nbsp;If you visit the website for the Licensed Application at{' '}
-            <Text style={[style.link]} onPress={() => openLink(bcWalletHomeUrl)}>
+            <Text style={[style.link]} onPress={useCallback(() => openLink(bcWalletHomeUrl), [])}>
               {bcWalletHomeUrl}
             </Text>{' '}
             including to access the 'help' feature for the Licensed Application or related content at{' '}
-            <Text style={[style.link]} onPress={() => openLink(digitalTrustHomeUrl)}>
+            <Text style={[style.link]} onPress={useCallback(() => openLink(digitalTrustHomeUrl), [])}>
               {digitalTrustHomeUrl}
             </Text>
             , certain information will be collected from you as outlined in the{' '}
-            <Text style={[style.link]} onPress={() => openLink(bcWebPrivacyUrl)}>
+            <Text style={[style.link]} onPress={useCallback(() => openLink(bcWebPrivacyUrl), [])}>
               Province's Privacy Statement for government websites
             </Text>{' '}
             Certain information is also collected by the Licensed Application as outlined in the{' '}
-            <Text style={[style.link]} onPress={() => openLink(digitalWalletPrivacyUrl)}>
+            <Text style={[style.link]} onPress={useCallback(() => openLink(digitalWalletPrivacyUrl), [])}>
               BC Wallet App Privacy Policy
             </Text>{' '}
             (the “Privacy Policy”), which is incorporated by reference into and forms part of this EULA. You consent to
@@ -450,7 +450,7 @@ const Terms: React.FC = () => {
                 accessibilityLabel={t('Terms.IAgree')}
                 testID={testIdWithKey('IAgree')}
                 checked={checked}
-                onPress={() => setChecked(!checked)}
+                onPress={useCallback(() => setChecked(!checked), [])}
               />
               <View style={[{ paddingTop: 10 }]}>
                 <Button
@@ -458,7 +458,7 @@ const Terms: React.FC = () => {
                   accessibilityLabel={t('Global.Continue')}
                   testID={testIdWithKey('Continue')}
                   disabled={!checked}
-                  onPress={onSubmitPressed}
+                  onPress={useCallback(onSubmitPressed, [])}
                   buttonType={ButtonType.Primary}
                 />
               </View>
@@ -467,7 +467,7 @@ const Terms: React.FC = () => {
                   title={t('Global.Back')}
                   accessibilityLabel={t('Global.Back')}
                   testID={testIdWithKey('Back')}
-                  onPress={onBackPressed}
+                  onPress={useCallback(onBackPressed, [])}
                   buttonType={ButtonType.Secondary}
                 />
               </View>
