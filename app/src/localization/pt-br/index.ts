@@ -48,6 +48,8 @@ const translation = {
     "Production": "Production (PT-BR)",
     "Development": "Development (PT-BR)",
     "Test": "Test (PT-BR)",
+    "DeveloperMode": "Developer mode",
+    "Toggle": "Toggle Developer Mode"
   }
 }
 

@@ -1,7 +1,7 @@
-import { useTheme, useStore, testIdWithKey } from 'aries-bifold'
+import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, SectionList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Modal, SectionList, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -27,9 +27,10 @@ interface SettingSection {
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
+  const [devMode, setDevMode] = useState<boolean>(true)
 
   const styles = StyleSheet.create({
     container: {
@@ -125,7 +126,7 @@ const Settings: React.FC = () => {
     accessibilityLabel?: string
     testID?: string
     onPress?: () => void
-  }> = ({ title, value, accessibilityLabel, testID, onPress }) => (
+  }> = ({ title, value, accessibilityLabel, testID, onPress, children }) => (
     <View style={[styles.section]}>
       <TouchableOpacity
         accessible={true}
@@ -136,9 +137,18 @@ const Settings: React.FC = () => {
       >
         <Text style={[TextTheme.headingFour, { fontWeight: 'normal' }]}>{title}</Text>
         <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>{value}</Text>
+        {children}
       </TouchableOpacity>
     </View>
   )
+
+  const toggleSwitch = () => {
+    dispatch({
+      type: DispatchAction.ENABLE_DEVELOPER_MODE,
+      payload: [!devMode],
+    })
+    setDevMode(!devMode)
+  }
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
@@ -153,6 +163,20 @@ const Settings: React.FC = () => {
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </Modal>
       <View style={styles.container}>
+        <SectionRow
+          title={t('Developer.DeveloperMode')}
+        >
+          <Switch
+            accessibilityLabel={t('Developer.Toggle')}
+            testID={testIdWithKey('ToggleDeveloper')}
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={devMode ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleSwitch}
+            value={devMode}
+          />
+        </SectionRow>
+        <View style={[styles.sectionSeparator]}></View>
         <SectionList
           renderItem={({ item: { title, value, onPress } }) => (
             <SectionRow
