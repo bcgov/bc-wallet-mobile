@@ -63,16 +63,16 @@ const Terms: React.FC = () => {
     },
   })
 
-  const onSubmitPressed = () => {
+  const onSubmitPressed = useCallback(() => {
     dispatch({
       type: DispatchAction.DID_AGREE_TO_TERMS,
       payload: [{ DidAgreeToTerms: checked }],
     })
 
     navigation.navigate(Screens.CreatePIN)
-  }
+  }, [])
 
-  const onBackPressed = () => {
+  const onBackPressed = useCallback(() => {
     //TODO:(jl) goBack() does not unwind the navigation stack but rather goes
     //back to the splash screen. Needs fixing before the following code will
     //work as expected.
@@ -82,7 +82,7 @@ const Terms: React.FC = () => {
     // }
 
     navigation.navigate(Screens.Onboarding)
-  }
+  }, [])
 
   const openLink = async (url: string) => {
     // Only `https://` is allowed. Update manifest as needed.
@@ -92,18 +92,6 @@ const Terms: React.FC = () => {
       // Will open in device browser.
       await Linking.openURL(url)
     }
-  }
-
-  const callbackCheck = (setChecked: React.Dispatch<React.SetStateAction<boolean>>, checked: boolean): (() => void) => {
-    return useCallback(() => setChecked(!checked), [])
-  }
-
-  const callbackBack = (onBackPressed: () => void): (() => void) | undefined => {
-    return useCallback(onBackPressed, [])
-  }
-
-  const callbackSubmit = (onSubmitPressed: () => void): (() => void) | undefined => {
-    return useCallback(onSubmitPressed, [])
   }
 
   return (
@@ -462,7 +450,7 @@ const Terms: React.FC = () => {
                 accessibilityLabel={t('Terms.IAgree')}
                 testID={testIdWithKey('IAgree')}
                 checked={checked}
-                onPress={callbackCheck(setChecked, checked)}
+                onPress={() => setChecked(!checked)}
               />
               <View style={[{ paddingTop: 10 }]}>
                 <Button
@@ -470,7 +458,7 @@ const Terms: React.FC = () => {
                   accessibilityLabel={t('Global.Continue')}
                   testID={testIdWithKey('Continue')}
                   disabled={!checked}
-                  onPress={callbackSubmit(onSubmitPressed)}
+                  onPress={onSubmitPressed}
                   buttonType={ButtonType.Primary}
                 />
               </View>
@@ -479,7 +467,7 @@ const Terms: React.FC = () => {
                   title={t('Global.Back')}
                   accessibilityLabel={t('Global.Back')}
                   testID={testIdWithKey('Back')}
-                  onPress={callbackBack(onBackPressed)}
+                  onPress={onBackPressed}
                   buttonType={ButtonType.Secondary}
                 />
               </View>
