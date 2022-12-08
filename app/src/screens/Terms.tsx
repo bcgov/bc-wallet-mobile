@@ -94,6 +94,18 @@ const Terms: React.FC = () => {
     }
   }
 
+  const callbackCheck = (setChecked: React.Dispatch<React.SetStateAction<boolean>>, checked: boolean): (() => void) => {
+    return useCallback(() => setChecked(!checked), [])
+  }
+
+  const callbackBack = (onBackPressed: () => void): (() => void) | undefined => {
+    return useCallback(onBackPressed, [])
+  }
+
+  const callbackSubmit = (onSubmitPressed: () => void): (() => void) | undefined => {
+    return useCallback(onSubmitPressed, [])
+  }
+
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']}>
       <ScrollView style={[style.container]}>
@@ -450,7 +462,7 @@ const Terms: React.FC = () => {
                 accessibilityLabel={t('Terms.IAgree')}
                 testID={testIdWithKey('IAgree')}
                 checked={checked}
-                onPress={useCallback(() => setChecked(!checked), [])}
+                onPress={callbackCheck(setChecked, checked)}
               />
               <View style={[{ paddingTop: 10 }]}>
                 <Button
@@ -458,7 +470,7 @@ const Terms: React.FC = () => {
                   accessibilityLabel={t('Global.Continue')}
                   testID={testIdWithKey('Continue')}
                   disabled={!checked}
-                  onPress={useCallback(onSubmitPressed, [])}
+                  onPress={callbackSubmit(onSubmitPressed)}
                   buttonType={ButtonType.Primary}
                 />
               </View>
@@ -467,7 +479,7 @@ const Terms: React.FC = () => {
                   title={t('Global.Back')}
                   accessibilityLabel={t('Global.Back')}
                   testID={testIdWithKey('Back')}
-                  onPress={useCallback(onBackPressed, [])}
+                  onPress={callbackBack(onBackPressed)}
                   buttonType={ButtonType.Secondary}
                 />
               </View>
