@@ -581,7 +581,7 @@ const LoadingTheme = {
   backgroundColor: ColorPallet.brand.primary,
 }
 
-const PinInputTheme = {
+const PINInputTheme = {
   cell: {
     backgroundColor: ColorPallet.grayscale.lightGrey,
     borderColor: ColorPallet.grayscale.lightGrey,
@@ -633,6 +633,6 @@ export const defaultTheme: Theme = {
   ChatTheme,
   OnboardingTheme,
   LoadingTheme,
-  PinInputTheme,
+  PINInputTheme,
   Assets,
 }
