@@ -278,7 +278,7 @@ const BCIDView: React.FC = () => {
         <View style={{ marginVertical: 40, marginHorizontal: 25 }}>
           <Button
             title={t('BCID.GetDigitalID')}
-            accessibilityLabel={t('BCID.GetID')}
+            accessibilityLabel={t('BCID.GetDigitalID')}
             testID={testIdWithKey('GetBCID')}
             onPress={onGetIdTouched}
             buttonType={!workflowInFlight ? ButtonType.Secondary : ButtonType.Primary}
