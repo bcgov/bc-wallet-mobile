@@ -12,7 +12,7 @@ import {
   useTheme,
   useStore,
 } from 'aries-bifold'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -62,16 +62,16 @@ const Terms: React.FC = () => {
     },
   })
 
-  const onSubmitPressed = () => {
+  const onSubmitPressed = useCallback(() => {
     dispatch({
       type: DispatchAction.DID_AGREE_TO_TERMS,
       payload: [{ DidAgreeToTerms: checked }],
     })
 
-    navigation.navigate(Screens.CreatePin)
-  }
+    navigation.navigate(Screens.CreatePIN)
+  }, [])
 
-  const onBackPressed = () => {
+  const onBackPressed = useCallback(() => {
     //TODO:(jl) goBack() does not unwind the navigation stack but rather goes
     //back to the splash screen. Needs fixing before the following code will
     //work as expected.
@@ -81,7 +81,7 @@ const Terms: React.FC = () => {
     // }
 
     navigation.navigate(Screens.Onboarding)
-  }
+  }, [])
 
   const openLink = async (url: string) => {
     // Only `https://` is allowed. Update manifest as needed.

@@ -47,7 +47,7 @@ const resumeOnboardingAt = (state: OnboardingState): Screens => {
   }
 
   if (state.didCompleteTutorial && state.didAgreeToTerms && !state.didCreatePIN) {
-    return Screens.CreatePin
+    return Screens.CreatePIN
   }
 
   if (state.didCompleteTutorial && !state.didAgreeToTerms) {
@@ -140,7 +140,7 @@ const Splash: React.FC = () => {
           })
 
           if (onboardingComplete(dataAsJSON) && !attemptData?.lockoutDate) {
-            navigation.navigate(Screens.EnterPin as never)
+            navigation.navigate(Screens.EnterPIN as never)
             return
           } else if (onboardingComplete(dataAsJSON) && attemptData?.lockoutDate) {
             // return to lockout screen if lockout date is set
