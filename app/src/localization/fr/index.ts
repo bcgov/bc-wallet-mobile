@@ -301,6 +301,8 @@ const translation = {
     Production: 'Production',
     Development: 'Developpement',
     Test: 'Test',
+    DeveloperMode: 'mode développeur',
+    Toggle: 'Basculer en mode développeur',
   },
 }
 

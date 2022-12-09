@@ -368,7 +368,7 @@ jobs:
 
       - name: run-aath-agents-ngrok
         if: ${{ matrix.mobile-platform=='-p Android' }}
-        uses: ./.github/workflows/run-aath-agents
+        uses: ./.github/workflows/actions/run-aath-agents
         with:
           USE_NGROK: "-n"
 
