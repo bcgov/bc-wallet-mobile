@@ -12,6 +12,7 @@ import merge from 'lodash.merge'
 import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
 
 import BCIDView from './components/BCIDView'
+import { PINValidationRules } from './constants'
 import en from './localization/en'
 import fr from './localization/fr'
 import Developer from './screens/Developer'
@@ -40,6 +41,7 @@ const configuration: ConfigurationContext = {
   useBiometry: UseBiometry,
   developer: Developer,
   record: Record,
+  PINSecurity: { rules: PINValidationRules, displayHelper: true },
   indyLedgers: selectedLedgers,
   settings: [],
 }
