@@ -275,6 +275,19 @@ jobs:
           node-version: "16.15.0"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Update ledgers
+        run: |
+          node bifold/scripts/make-blocks.js
+
+          # the ledgers file should be about 344K
+          ls -lah ledgers.json
+          # note md5
+          md5 ledgers.json
+          md5 bifold/core/configs/ledgers/indy/ledgers.json
+
+          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
+          md5 bifold/core/configs/ledgers/indy/ledgers.json
+
       - name: Cache node modules
         uses: actions/cache@v1
         with:
