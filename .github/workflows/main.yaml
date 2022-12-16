@@ -19,7 +19,7 @@ on:
 
 jobs:
   check-android-secrets:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
     steps:
@@ -32,7 +32,7 @@ jobs:
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
 
   check-ios-secrets:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
     steps:
@@ -65,19 +65,6 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.6
-
-      - name: Update ledgers
-        run: |
-          node bifold/scripts/make-blocks.js
-
-          # the ledgers file should be about 344K
-          ls -lah ledgers.json
-          # note md5
-          shasum ledgers.json
-          shasum bifold/core/configs/ledgers/indy/ledgers.json
-
-          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
-          shasum bifold/core/configs/ledgers/indy/ledgers.json
 
       - name: What XCode are we using?
         run: |
@@ -179,6 +166,17 @@ jobs:
         run: |
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
+      - name: Update ledgers
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        run: |
+          node bifold/scripts/make-blocks.js
+
+          # the ledgers file should be about 344K
+          ls -lah ledgers.json
+
+          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
+
       - name: Release build
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
@@ -241,8 +239,7 @@ jobs:
           --enable-package-validation \
           --max-build-processing-wait 10
           --testflight \
-          --beta-group "The Team" \
-          --beta-group "IDIM Team" \
+          --beta-group "The Team" "IDIM Team" \
           --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
       - name: Ship to SauceLabs
@@ -262,7 +259,7 @@ jobs:
   build-android:
     # if: ${{ false }}  # disable for now
     needs: [check-android-secrets]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     # container:
     #   image: docker.io/fullboar/android-builder:latest
     steps:
@@ -383,7 +380,7 @@ jobs:
   run-on-device-tests:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       max-parallel: 1
       fail-fast: false
