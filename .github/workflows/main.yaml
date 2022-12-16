@@ -55,10 +55,6 @@ jobs:
         run: |
           git submodule update --init --recursive
 
-      - name: What XCode are we using?
-        run: |
-          xcode-select -p
-
       - name: Configure node
         uses: actions/setup-node@v1
         with:
@@ -69,6 +65,23 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.6
+
+      - name: Update ledgers
+        run: |
+          node bifold/scripts/make-blocks.js
+
+          # the ledgers file should be about 344K
+          ls -lah ledgers.json
+          # note md5
+          shasum ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
+
+          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
+
+      - name: What XCode are we using?
+        run: |
+          xcode-select -p
 
       # Watch for changes to the HEAD ref, use
       # git for cache keys.
@@ -261,6 +274,19 @@ jobs:
         with:
           node-version: "16.15.0"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Update ledgers
+        run: |
+          node bifold/scripts/make-blocks.js
+
+          # the ledgers file should be about 344K
+          ls -lah ledgers.json
+          # note md5
+          shasum ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
+
+          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
 
       - name: Cache node modules
         uses: actions/cache@v1
