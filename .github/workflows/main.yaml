@@ -73,11 +73,11 @@ jobs:
           # the ledgers file should be about 344K
           ls -lah ledgers.json
           # note md5
-          md5 ledgers.json
-          md5 bifold/core/configs/ledgers/indy/ledgers.json
+          shasum ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
 
           mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
-          md5 bifold/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
 
       - name: What XCode are we using?
         run: |
@@ -282,11 +282,11 @@ jobs:
           # the ledgers file should be about 344K
           ls -lah ledgers.json
           # note md5
-          md5 ledgers.json
-          md5 bifold/core/configs/ledgers/indy/ledgers.json
+          shasum ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
 
           mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
-          md5 bifold/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
 
       - name: Cache node modules
         uses: actions/cache@v1
