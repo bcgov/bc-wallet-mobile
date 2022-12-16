@@ -325,7 +325,7 @@ jobs:
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          ./actions/deploy-to-playstore.js
+          ./deploy-to-playstore.js
 
       - name: Ship to SauceLabs
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
