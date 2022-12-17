@@ -19,7 +19,7 @@ on:
 
 jobs:
   check-android-secrets:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
     steps:
@@ -32,7 +32,7 @@ jobs:
           PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
 
   check-ios-secrets:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
     steps:
@@ -55,10 +55,6 @@ jobs:
         run: |
           git submodule update --init --recursive
 
-      - name: What XCode are we using?
-        run: |
-          xcode-select -p
-
       - name: Configure node
         uses: actions/setup-node@v1
         with:
@@ -69,6 +65,10 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.6
+
+      - name: What XCode are we using?
+        run: |
+          xcode-select -p
 
       # Watch for changes to the HEAD ref, use
       # git for cache keys.
@@ -166,6 +166,17 @@ jobs:
         run: |
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
+      - name: Update ledgers
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        run: |
+          node bifold/scripts/make-blocks.js
+
+          # the ledgers file should be about 344K
+          ls -lah ledgers.json
+
+          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
+
       - name: Release build
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
@@ -218,15 +229,18 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          VERSION_CODE: ${{ env.appBuildNumber }}
+          VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
           app-store-connect publish \
           --apple-id ${{ secrets.APPLE_ID }} \
           --password ${{ secrets.APPLE_ID_PASSWD }} \
           --enable-package-validation \
-          --max-build-processing-wait 10
-          # --testflight \
-          # --beta-group "The Team"
+          --max-build-processing-wait 10 \
+          --testflight \
+          --beta-group "The Team" "IDIM Team" \
+          --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
       - name: Ship to SauceLabs
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -245,7 +259,7 @@ jobs:
   build-android:
     # if: ${{ false }}  # disable for now
     needs: [check-android-secrets]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     # container:
     #   image: docker.io/fullboar/android-builder:latest
     steps:
@@ -261,6 +275,19 @@ jobs:
         with:
           node-version: "16.15.0"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Update ledgers
+        run: |
+          node bifold/scripts/make-blocks.js
+
+          # the ledgers file should be about 344K
+          ls -lah ledgers.json
+          # note md5
+          shasum ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
+
+          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/core/configs/ledgers/indy/ledgers.json
 
       - name: Cache node modules
         uses: actions/cache@v1
@@ -353,7 +380,7 @@ jobs:
   run-on-device-tests:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       max-parallel: 1
       fail-fast: false
