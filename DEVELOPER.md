@@ -153,10 +153,10 @@ export PATH=$PATH:$ANDROID_SDK_ROOT/platform-tools
 1. Clone git repo
     ```shell
     # Clone your GitHub repository:
-    git clone git@git.novascotia.ca:digitalplatformservices/ns-wallet/ns-wallet-mobile-app.git
+    git clone https://github.com/bcgov/bc-wallet-mobile.git
     
-    # Go to the NS Wallet directory:
-    cd ns-wallet-mobile-app
+    # Go to the BC Wallet directory:
+    cd bc-wallet-mobile
     ```
 
 2. Initialize the Aries `bifold` git sub-module
