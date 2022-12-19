@@ -15,6 +15,7 @@ import {
   ThemeProvider,
   ConfigurationProvider,
   initLanguages,
+  testIdWithKey,
 } from 'aries-bifold'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -34,7 +35,7 @@ const App = () => {
     initStoredLanguage().then()
   }, [])
 
-  const [agent, setAgent] = useState<Agent | undefined>(undefined)
+  const [agent] = useState<Agent | undefined>(undefined)
   const { t } = useTranslation()
   const { navigate } = useNavigation()
 
@@ -50,6 +51,7 @@ const App = () => {
         {
           title: t('Settings.HelpUsingBCWallet'),
           accessibilityLabeL: t('Settings.HelpUsingBCWallet'),
+          testID: testIdWithKey('HelpUsingBCWallet'),
           onPress: () => Linking.openURL(helpLink),
         },
       ],
@@ -63,11 +65,13 @@ const App = () => {
         {
           title: t('Settings.TermsOfUse'),
           accessibilityLabel: t('Settings.TermsOfUse'),
+          testID: testIdWithKey('TermsOfUse'),
           onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
         },
         {
           title: t('Settings.IntroductionToTheApp'),
           accessibilityLabel: t('Settings.IntroductionToTheApp'),
+          testID: testIdWithKey('IntroductionToTheApp'),
           onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Onboarding } as never),
         },
       ],
