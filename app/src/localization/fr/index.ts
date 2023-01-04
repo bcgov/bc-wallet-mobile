@@ -26,9 +26,9 @@ const translation = {
     "UseToUnlock": "Use biometrics to unlock wallet? (FR)",
   },
   "Credentials":{
-    "AddCredential":"Add Credential", 
-    "EmptyList": "Your wallet is empty.",
-    "AddFirstCredential": "Add your first credential"
+    "AddCredential":"Add Credential (FR)", 
+    "EmptyList": "Your wallet is empty. (FR)",
+    "AddFirstCredential": "Add your first credential (FR)"
   },
   "Screens": {
     "Onboarding": "BC Wallet (FR)",

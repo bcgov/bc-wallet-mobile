@@ -10,6 +10,7 @@ import { BCState, BCDispatchAction } from '../store'
 import { useAgent, useCredentialByState } from '@aries-framework/react-hooks'
 import { showBCIDSelector, startFlow } from '../helpers/BCIDHelper'
 import { CredentialMetadataKeys, CredentialState } from '@aries-framework/core'
+import LoadingIcon from './LoadingIcon'
 
 const AddCredentialSlider: React.FC = () => {
     const { ColorPallet, TextTheme } = useTheme()
@@ -24,17 +25,6 @@ const AddCredentialSlider: React.FC = () => {
     ]
     const navigation = useNavigation()
     const [canUseLSBCredential] = useState<boolean>(true)
-
-    const rotationAnim = useRef(new Animated.Value(0)).current
-    const timing: Animated.TimingAnimationConfig = {
-        toValue: 1,
-        duration: 2000,
-        useNativeDriver: true,
-    }
-    const rotation = rotationAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg'],
-    })
 
     const styles = StyleSheet.create({
         centeredView: {
@@ -93,15 +83,6 @@ const AddCredentialSlider: React.FC = () => {
         startFlow(agent, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t)
     }, [store])
 
-    useEffect(() => {
-        const animation = Animated.loop(Animated.timing(rotationAnim, timing))
-        animation.reset()
-        if (workflowInFlight) {
-            animation.start()
-        } else {
-            animation.stop()
-        }
-    }, [rotationAnim, workflowInFlight, store.addCredential.addCredentialPressed])
 
     useEffect(() => {
         const credentialDefinitionIDs = credentials.map(
@@ -129,9 +110,7 @@ const AddCredentialSlider: React.FC = () => {
                         {showGetFoundationCredential && (<TouchableOpacity style={styles.drawerRow} disabled={workflowInFlight} onPress={onBCIDPress}>
 
                             {workflowInFlight ? (
-                                <Animated.View style={[{ transform: [{ rotate: rotation }] }]}>
-                                    <Icon style={styles.drawerRowItem} size={30} name="refresh" />
-                                </Animated.View>
+                                <LoadingIcon size={30} color={styles.drawerRowItem.color} active={workflowInFlight}/>
                             ) : <Icon name='credit-card' size={30} style={styles.drawerRowItem}></Icon>}
 
                             <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Get your Person credential</Text>

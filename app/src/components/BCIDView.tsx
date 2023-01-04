@@ -12,13 +12,13 @@ import {
 } from 'aries-bifold'
 import React, { useEffect, useState, useRef, ReducerAction } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View, Animated } from 'react-native'
+import { View } from 'react-native'
 
 import { BCState } from '../store'
-import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import CredentialIcon from '../assets/img/credentialIcon.svg'
 import { showBCIDSelector, startFlow, WellKnownAgentDetails } from '../helpers/BCIDHelper'
+import LoadingIcon from './LoadingIcon'
 
 
 const BCIDView: React.FC = () => {
@@ -61,32 +61,10 @@ const BCIDView: React.FC = () => {
 
   }, [credentials, canUseLSBCredential])
 
-  const rotationAnim = useRef(new Animated.Value(0)).current
-  const timing: Animated.TimingAnimationConfig = {
-    toValue: 1,
-    duration: 2000,
-    useNativeDriver: true,
-  }
-  const rotation = rotationAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  })
-
-
-  const onGetIdTouched = () => {
+  const startGetBCIDCredentialWorkflow = () => {
     setWorkflowInFlight(true)
     startFlow(agent, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t, setAgentDetails)
   }
-
-  useEffect(() => {
-    const animation = Animated.loop(Animated.timing(rotationAnim, timing))
-    animation.reset()
-    if (workflowInFlight) {
-      animation.start()
-    } else {
-      animation.stop()
-    }
-  }, [rotationAnim, workflowInFlight])
 
   return (
     <HomeContentView>
@@ -96,15 +74,13 @@ const BCIDView: React.FC = () => {
             title={t('BCID.GetDigitalID')}
             accessibilityLabel={t('BCID.GetDigitalID')}
             testID={testIdWithKey('GetBCID')}
-            onPress={onGetIdTouched}
+            onPress={startGetBCIDCredentialWorkflow}
             buttonType={!workflowInFlight ? ButtonType.Secondary : ButtonType.Primary}
             disabled={workflowInFlight}
           >
             {
               workflowInFlight ? (
-                <Animated.View style={[{ transform: [{ rotate: rotation }] }]}>
-                  <Icon style={{ color: ColorPallet.grayscale.white }} size={35} name="refresh" />
-                </Animated.View>
+                <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInFlight}/>
               ) : <CredentialIcon style={{ marginRight: 10 }} />
             }
           </Button>
