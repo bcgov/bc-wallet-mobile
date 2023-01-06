@@ -1,4 +1,4 @@
-import { DidRepository } from '@aries-framework/core'
+import { DidRepository, CredentialExchangeRecord as CredentialRecord, CredentialMetadataKeys } from '@aries-framework/core'
 import {
     BifoldError,
     DispatchAction,
@@ -59,7 +59,6 @@ export const startFlow = async (agent: Agent | undefined, store: BCState, dispat
             }, connectionDelayInMs)
         }
     } catch (error: unknown) {
-        console.log(error)
         setWorkflowInFlight(false)
 
         dispatch({
@@ -81,6 +80,17 @@ export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCre
         return true
     }
     return false
+}
+
+export const getInvitationCredentialDate = (credentials: CredentialRecord[], canUseLSBCCredential: boolean): Date | undefined => {
+
+    const invitationCredential = credentials.find((c) => {
+        const credDef = c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
+        if (trustedInvitationIssuerRe.test(credDef) || (trustedLSBCCredentialIssuerRe.test(credDef) && canUseLSBCCredential)) {
+            return true
+        }
+    })
+    return invitationCredential?.createdAt
 }
 
 export const recieveBCIDInvite = async (agent: Agent | undefined, store: BCState, t: TFunction<"translation", undefined>): Promise<WellKnownAgentDetails> => {

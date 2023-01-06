@@ -25,13 +25,27 @@ const translation = {
     "Warning": "Ensure only you have access to your wallet.",
     "UseToUnlock": "Use biometrics to unlock wallet?"
   },
-  "Credentials":{
-    "AddCredential":"Add Credential", 
+  "Credentials": {
+    "AddCredential": "Add Credential",
     "EmptyList": "Your wallet is empty.",
     "AddFirstCredential": "Add your first credential"
   },
   "Screens": {
-    "Onboarding": "BC Wallet",
+    "Onboarding": "BC Wallet"
+  },
+  "PersonCredentialNotification": {
+    "Title": "Get your Person credential",
+    "Description": "Add your Person credential to your wallet and use it to get access to services online.",
+    "ButtonTitle": "Start",
+  },
+  "PersonCredential": {
+    "Issuer": "Service BC",
+    "Name": "Person",
+    "Description": "Add your Person credential to your wallet to prove your personal information online and get access to services online.\n\nYou'll need the BC Service Card app set up on this mobile device.",
+    "LinkDescription": "Get the BC Services Card app",
+    "GetCredential": "Get your Person credential",
+    "Decline": "Get this later",
+    "PageTitle": "Person Credential"
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection",
