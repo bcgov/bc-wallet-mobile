@@ -7,7 +7,7 @@
 * [Installing npm modules](#installing-npm-modules)
 * [Configuration](#configuration)
 * [Running in an Android emulator](#running-in-an-android-emulator)
-* [Troubleshooting](#troubleshooting)
+* [Troubleshooting and debugging](#troubleshooting-and-debugging)
 
 ## Prerequisite software
 
@@ -20,7 +20,7 @@ following products on your development machine:
   > **Tip**: use [nvm](https://github.com/nvm-sh/nvm) to install node & npm. It helps to easily switch node & npm
   version for each project.
 
-## Prerequisite Services
+## Prerequisite services
 Requires the following services to be up and running.
 
 - [Von Network](https://github.com/bcgov/von-network)
