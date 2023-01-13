@@ -28,8 +28,11 @@ const AddCredentialSlider: React.FC = () => {
 
     const styles = StyleSheet.create({
         centeredView: {
-            flex: 1,
+            marginTop: "auto",
             justifyContent: "flex-end",
+        },
+        outsideListener: {
+            height: "100%"
         },
         modalView: {
             backgroundColor: ColorPallet.grayscale.white,
@@ -101,6 +104,7 @@ const AddCredentialSlider: React.FC = () => {
                 visible={store.addCredential.addCredentialPressed}
                 onRequestClose={deactivateSlider}
             >
+                <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider}/>
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
                         <TouchableOpacity onPress={deactivateSlider}>
@@ -110,7 +114,7 @@ const AddCredentialSlider: React.FC = () => {
                         {showGetFoundationCredential && (<TouchableOpacity style={styles.drawerRow} disabled={workflowInFlight} onPress={onBCIDPress}>
 
                             {workflowInFlight ? (
-                                <LoadingIcon size={30} color={styles.drawerRowItem.color} active={workflowInFlight}/>
+                                <LoadingIcon size={30} color={styles.drawerRowItem.color} active={workflowInFlight} />
                             ) : <Icon name='credit-card' size={30} style={styles.drawerRowItem}></Icon>}
 
                             <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Get your Person credential</Text>
