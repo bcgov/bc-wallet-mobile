@@ -25,6 +25,11 @@ const translation = {
     "Warning": "Ensure only you have access to your wallet. (PT-BR)",
     "UseToUnlock": "Use biometrics to unlock wallet? (PT-BR)",
   },
+  "Credentials":{
+    "AddCredential":"Add Credential (PT-BR)", 
+    "EmptyList": "Your wallet is empty. (PT-BR)",
+    "AddFirstCredential": "Add your first credential (PT-BR)"
+  },
   "Screens": {
     "Onboarding": "BC Wallet (PT-BR)",
   },
