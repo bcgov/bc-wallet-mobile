@@ -15,6 +15,7 @@ import { BCState } from '../store'
 interface CustomNotification {
     type: 'CustomNotification'
     createdAt: Date
+    id: string
 }
 
 interface Notifications {
@@ -42,7 +43,7 @@ export const useNotifications = (): Notifications => {
         (c) => c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
     )
     const invitationDate = getInvitationCredentialDate(credentials, true)
-    const custom: CustomNotification[] = showBCIDSelector(credentialDefinitionIDs, true) && invitationDate && !store.dismissPersonCredentialOffer.personCredentialOfferDissmissed ? [{ type: 'CustomNotification', createdAt: invitationDate }] : []
+    const custom: CustomNotification[] = showBCIDSelector(credentialDefinitionIDs, true) && invitationDate && !store.dismissPersonCredentialOffer.personCredentialOfferDissmissed ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }] : []
 
     const notifications = [...offers, ...proofs, ...revoked, ...custom].sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

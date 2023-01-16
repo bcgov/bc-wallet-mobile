@@ -57,7 +57,7 @@ const configuration: ConfigurationContext = {
     description: "PersonCredentialNotification.Description",
     buttonTitle: "PersonCredentialNotification.ButtonTitle"
   },
-  useNotifications
+  useCustomNotifications: useNotifications
 }
 
 export default { theme, localization, configuration }
