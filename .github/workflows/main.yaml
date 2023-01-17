@@ -249,7 +249,7 @@ jobs:
           -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
           --form "payload=@export/AriesBifold.ipa" \
           --form "name=AriesBifold-$GITHUB_RUN_NUMBER.ipa" \
-          --form "description=iOS BC Wallet app"
+          --form "description=iOS QC Wallet app"
 
   build-android:
     # if: ${{ false }}  # disable for now

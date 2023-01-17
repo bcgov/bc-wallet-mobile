@@ -101,7 +101,7 @@ Build 270
 - Add preliminary BCID integration
 - Fixed header alignment on Android screens
 - Updated onboarding wording
-- Updated BC wallet icons on loading pin screen
+- Updated QC wallet icons on loading pin screen
 - Fixed image on empty credential screen
 - Updated wording on "Information Received" screen
 

@@ -36,10 +36,10 @@ const translation = {
   Biometry: {
     Toggle: 'Toggle Biometrics',
     EnabledText1: "Log in with your phone's biometrics instead of your wallet PIN.",
-    EnabledText1Bold: 'you will need to use biometrics to open your BC Wallet.',
+    EnabledText1Bold: 'you will need to use biometrics to open your QC Wallet.',
     EnabledText2:
-      'This means all fingerprint and facial data added on this phone can be used to access your BC Wallet.',
-    EnabledText3: 'Anyone who can access your phone with biometrics can access your BC Wallet.',
+      'This means all fingerprint and facial data added on this phone can be used to access your QC Wallet.',
+    EnabledText3: 'Anyone who can access your phone with biometrics can access your QC Wallet.',
     EnabledText3Bold: 'Ensure only you have access to your wallet.',
     Warning: '\n\nEnsure only you have access to your wallet.',
     UseToUnlock: 'Use biometrics to unlock wallet?',

@@ -1,4 +1,4 @@
-package ca.bc.gov.BCWallet;
+package ca.qc.gouv.portefeuilleqc;
 
 import android.app.Application;
 import android.content.Context;
@@ -55,7 +55,7 @@ public class MainApplication extends Application implements ReactApplication {
          We use reflection here to pick up the class that initializes Flipper,
         since Flipper library is not available in release mode
         */
-        Class<?> aClass = Class.forName("ca.bc.gov.BCWallet.ReactNativeFlipper");
+        Class<?> aClass = Class.forName("ca.qc.gouv.portefeuilleqc.ReactNativeFlipper");
         aClass
             .getMethod("initializeFlipper", Context.class, ReactInstanceManager.class)
             .invoke(null, context, reactInstanceManager);
