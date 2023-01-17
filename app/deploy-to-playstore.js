@@ -1,9 +1,3 @@
-#!/usr/bin/env node
-
-// This script will upload to a Google Play release track. See
-// the Google Developer API documentation reference here:
-// https://developers.google.com/android-publisher/api-ref/rest
-
 const fs = require('fs')
 const { google } = require('googleapis')
 
@@ -11,7 +5,7 @@ const pjson = require('./package.json')
 
 if (typeof process.env.GOOGLE_API_CREDENTIALS === 'undefined') {
   console.log(`
-  Google Publish v${_version}
+  Google Publish v${pjson.version}
   GOOGLE_API_CREDENTIALS cannot be empty
   Set the env var GOOGLE_API_CREDENTIALS to the full path of the
   JSON credentials (keys) downloaded from the GCP console.
@@ -22,7 +16,7 @@ if (typeof process.env.GOOGLE_API_CREDENTIALS === 'undefined') {
 
 if (typeof process.env.ANDROID_PACKAGE_NAME === 'undefined') {
   console.log(`
-  Google Publish v${_version}
+  Google Publish v${pjson.version}
   ANDROID_PACKAGE_NAME cannot be empty
   Set the env var ANDROID_PACKAGE_NAME to the full package name
   used in the Android project.
@@ -33,7 +27,7 @@ if (typeof process.env.ANDROID_PACKAGE_NAME === 'undefined') {
 
 if (typeof process.env.ANDROID_BUNDLE_PATH === 'undefined') {
   console.log(`
-  Google Publish v${_version}
+  Google Publish v${pjson.version}
   ANDROID_BUNDLE_PATH cannot be empty
   Set the env var ANDROID_BUNDLE_PATH to the full path to the
   bundle (aab) file produced by the build.
@@ -44,7 +38,7 @@ if (typeof process.env.ANDROID_BUNDLE_PATH === 'undefined') {
 
 if (typeof process.env.VERSION_NAME === 'undefined') {
   console.log(`
-  Google Publish v${_version}
+  Google Publish v${pjson.version}
   VERSION_NAME cannot be empty
   Set the env var VERSION_NAME to the full version name
   eg: 1.0.2
@@ -60,7 +54,7 @@ const main = async () => {
   const packageName = process.env.ANDROID_PACKAGE_NAME
   const bundlePath = process.env.ANDROID_BUNDLE_PATH
 
-  console.log(`Google Publish v${_version}`)
+  console.log(`Google Publish v${pjson.version}`)
 
   try {
     console.log('Creating Google API client.')
@@ -87,7 +81,7 @@ const main = async () => {
     })
 
     console.log('Loading bundle data.')
-    const bundle = readFileSync(bundlePath)
+    const bundle = fs.readFileSync(bundlePath)
 
     console.log('Uploading bundle data to Edit.')
     await play.edits.bundles.upload({

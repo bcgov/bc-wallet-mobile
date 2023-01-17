@@ -342,7 +342,7 @@ jobs:
 
       - name: Ship to Google Play
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/android
+        working-directory: app/
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
           GOOGLE_API_CREDENTIALS: "api_keys.json"
@@ -352,7 +352,7 @@ jobs:
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          ./deploy-to-playstore.js
+          node ./deploy-to-playstore.js
 
       - name: Ship to SauceLabs
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
