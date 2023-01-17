@@ -15,18 +15,31 @@ interface Developer {
   environment: IASEnvironment
 }
 
+interface AddCredential {
+  addCredentialPressed: boolean
+}
+
 export interface BCState extends BifoldState {
   developer: Developer
+  addCredential: AddCredential
 }
 
 enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
 }
 
-export type BCDispatchAction = DeveloperDispatchAction
+enum AddCredentialDispatchAction {
+  ADD_CREDENTIAL_PRESSED = 'addCredential/addCredentialPressed',
+}
+
+
+export type BCDispatchAction =
+  DeveloperDispatchAction
+  | AddCredentialDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
+  ...AddCredentialDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -54,7 +67,11 @@ const developerState: Developer = {
   environment: iasEnvironments[0],
 }
 
-export const initialState: BCState = { ...defaultState, developer: developerState }
+const addCredentialState: AddCredential = {
+  addCredentialPressed: false,
+}
+
+export const initialState: BCState = { ...defaultState, developer: developerState, addCredential: addCredentialState, }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
@@ -62,6 +79,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const environment: IASEnvironment = (action?.payload || []).pop()
       const developer = { ...state.developer, environment }
       return { ...state, developer }
+    }
+    case AddCredentialDispatchAction.ADD_CREDENTIAL_PRESSED: {
+      const addCredentialPressed: boolean = (action?.payload || []).pop()
+      const addCredential = { ...state.addCredential, addCredentialPressed }
+      return {...state, addCredential}
     }
     default:
       return state

@@ -11,7 +11,9 @@ import merge from 'lodash.merge'
 
 import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
 
-import BCIDView from './components/BCIDView'
+import AddCredentialButton from './components/AddCredentialButton'
+import AddCredentialSlider from './components/AddCredentialSlider'
+import EmptyList from './components/EmptyList'
 import { PINValidationRules } from './constants'
 import en from './localization/en'
 import fr from './localization/fr'
@@ -26,19 +28,21 @@ const localization = merge({}, translationResources, {
   fr: { translation: fr },
 })
 
-const selectedLedgers = indyLedgers.filter((item) => item.id.startsWith('Candy'))
+const selectedLedgers = indyLedgers.filter((item) => !item.id.startsWith('Indicio'))
 
 const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,
   splash: Splash,
   terms: Terms,
-  homeContentView: BCIDView,
   OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     require('./assets/branding/oca-bundle-qc.json') as Bundles
   ),
   useBiometry: UseBiometry,
+  credentialListHeaderRight: AddCredentialButton,
+  credentialListOptions: AddCredentialSlider,
+  credentialEmptyList: EmptyList,
   developer: Developer,
   record: Record,
   PINSecurity: { rules: PINValidationRules, displayHelper: true },

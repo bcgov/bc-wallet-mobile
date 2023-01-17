@@ -106,7 +106,7 @@ const Terms: React.FC = () => {
           chose quelque chose à votre sujet en présentant ces justificatifs à une autre partie qui partie qui a besoin
           de vérifier ces justificatifs. Le présent contrat de licence de l'utilisateur final utilisateur final ("CLUF")
           définit les termes et conditions qui s'appliquent à vous lorsque vous téléchargez et/ou utilisez le BC
-          Walters. lorsque vous téléchargez et/ou utilisez l'application BC Wallet. Ce CLUF est un accord légal accord
+          Walters. lorsque vous téléchargez et/ou utilisez l'application QC Wallet. Ce CLUF est un accord légal accord
           légal entre vous, en tant qu'utilisateur final de l'application sous licence (" vous " ou " vous ") et Sa
           Majesté la Reine du chef de la province de la Colombie-Britannique (la " province "). de la
           Colombie-Britannique (la "Province"). Vous pouvez accéder à l'application sous licence licence sur un appareil
@@ -289,8 +289,7 @@ const Terms: React.FC = () => {
             support, le cas échéant ; et (c) Apple n'a aucune obligation de fournir des services d'entretien et de
             d'entretien et de soutien en ce qui concerne l'application sous licence. Toutes les questions concernant les
             Services d'assistance, et toutes les questions d'ordre général générales concernant l'Application sous
-            Licence, doivent être adressées à : Produit Propriétaire du produit, BC Wallet, ditrust@gov.bc.ca, 4000
-            Seymour Place, Victoria, BC, V8W 9V1.
+            Licence, doivent être adressées à : Produit Propriétaire du produit, QC Wallet.
           </Text>
         </View>
         <View style={style.paragraph}>
