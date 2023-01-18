@@ -31,7 +31,20 @@ const translation = {
     "AddFirstCredential": "Add your first credential (FR)"
   },
   "Screens": {
-    "Onboarding": "BC Wallet (FR)",
+    "Onboarding": "BC Wallet (FR)"
+  },
+  "PersonCredentialNotification": {
+    "Title":"Get your Person credential (FR)",
+    "Description":"Add your Person credential to your wallet and use it to get access to services online. (FR)"
+  },
+  "PersonCredential": {
+    "Issuer": "Service BC (FR)",
+    "Name": "Person (FR)",
+    "Description": "Add your Person credential to your wallet to prove your personal information online and get access to services online.\n\nYou'll need the BC Service Card app set up on this mobile device. (FR)",
+    "LinkDescription": "Get the BC Services Card app (FR)",
+    "GetCredential": "Get your Person credential (FR)",
+    "Decline": "Get this later (FR)",
+    "PageTitle": "Person Credential (FR)"
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection (FR)",

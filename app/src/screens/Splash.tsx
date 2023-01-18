@@ -33,6 +33,7 @@ import { StyleSheet } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
+import { BCDispatchAction } from '../store'
 
 const onboardingComplete = (state: OnboardingState): boolean => {
   return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
@@ -91,6 +92,21 @@ const Splash: React.FC = () => {
     }
   }
 
+  const loadPersonNotificationDismissed = async (): Promise<void> => {
+    try {
+      const dismissedData = await AsyncStorage.getItem('PersonCredentialOfferDismissed')
+      if(dismissedData){
+        const dismissed = JSON.parse(dismissedData)
+        dispatch({
+          type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
+          payload: [dismissed.personCredentialOfferDissmissed],
+        })
+      }
+    } catch (error) {
+      /* eslint-disable:no-empty */
+    }
+  }
+
   useEffect(() => {
     if (store.authentication.didAuthenticate) {
       return
@@ -100,6 +116,9 @@ const Splash: React.FC = () => {
       try {
         // load authentication attempts from storage
         const attemptData = await loadAuthAttempts()
+
+        // load BCID person credential notification dismissed state from storage
+        await loadPersonNotificationDismissed()
 
         const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
 
