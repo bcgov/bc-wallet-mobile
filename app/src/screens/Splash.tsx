@@ -19,7 +19,6 @@ import {
   OnboardingState,
   LoginAttemptState,
   PreferencesState,
-  PrivacyState,
   useAuth,
   useTheme,
   useStore,
@@ -127,16 +126,6 @@ const Splash: React.FC = () => {
 
           dispatch({
             type: DispatchAction.PREFERENCES_UPDATED,
-            payload: [dataAsJSON],
-          })
-        }
-
-        const privacyData = await AsyncStorage.getItem(LocalStorageKeys.Privacy)
-        if (privacyData) {
-          const dataAsJSON = JSON.parse(privacyData) as PrivacyState
-
-          dispatch({
-            type: DispatchAction.PRIVACY_UPDATED,
             payload: [dataAsJSON],
           })
         }
