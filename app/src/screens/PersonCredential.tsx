@@ -51,10 +51,7 @@ const PersonCredentialScreen: React.FC = () => {
         },
         innerHeaderContainer: {
             flexDirection: 'row',
-            marginLeft: borderPadding,
-            marginRight: borderPadding,
-            marginTop: borderPadding,
-            marginBottom: borderPadding,
+            margin: borderPadding,
             backgroundColor: transparent,
         },
         buttonContainer: {
@@ -78,7 +75,7 @@ const PersonCredentialScreen: React.FC = () => {
     const dismissPersonCredentialOffer = useCallback(() => {
         dispatch({
             type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
-            payload: [true]
+            payload: [{personCredentialOfferDismissed: true}]
         })
         navigation.navigate(Screens.Home as never)
     }, [])

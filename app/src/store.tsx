@@ -21,7 +21,7 @@ interface AddCredential {
 }
 
 interface DismissPersonCredentialOffer {
-  personCredentialOfferDissmissed: boolean
+  personCredentialOfferDismissed: boolean
 }
 
 export interface BCState extends BifoldState {
@@ -39,7 +39,7 @@ enum AddCredentialDispatchAction {
 }
 
 enum DismissPersonCredentialOfferDispatchAction {
-  PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDissmissed',
+  PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
 }
 
 
@@ -84,7 +84,7 @@ const addCredentialState: AddCredential = {
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
-  personCredentialOfferDissmissed: false
+  personCredentialOfferDismissed: false
 }
 
 export const initialState: BCState = { ...defaultState, developer: developerState, addCredential: addCredentialState, dismissPersonCredentialOffer: dismissPersonCredentialOfferState }
@@ -102,8 +102,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return { ...state, addCredential }
     }
     case DismissPersonCredentialOfferDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED: {
-      const personCredentialOfferDissmissed: boolean = (action?.payload || []).pop()
-      const dismissPersonCredentialOffer = { ...state.dismissPersonCredentialOffer, personCredentialOfferDissmissed }
+      const { personCredentialOfferDismissed } = (action?.payload || []).pop()
+      const dismissPersonCredentialOffer = { ...state.dismissPersonCredentialOffer, personCredentialOfferDismissed }
       const newState = { ...state, dismissPersonCredentialOffer }
 
       // save to storage so notification doesn't reapper on app restart

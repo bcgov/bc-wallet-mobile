@@ -92,17 +92,13 @@ const Splash: React.FC = () => {
   }
 
   const loadPersonNotificationDismissed = async (): Promise<void> => {
-    try {
-      const dismissedData = await AsyncStorage.getItem('PersonCredentialOfferDismissed')
-      if(dismissedData){
-        const dismissed = JSON.parse(dismissedData)
-        dispatch({
-          type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
-          payload: [dismissed.personCredentialOfferDissmissed],
-        })
-      }
-    } catch (error) {
-      /* eslint-disable:no-empty */
+    const dismissedData = await AsyncStorage.getItem('PersonCredentialOfferDismissed')
+    if (dismissedData) {
+      const dismissed = JSON.parse(dismissedData)
+      dispatch({
+        type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
+        payload: [{ personCredentialOfferDismissed: dismissed.personCredentialOfferDismissed }],
+      })
     }
   }
 

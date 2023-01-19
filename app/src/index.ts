@@ -48,7 +48,7 @@ const configuration: ConfigurationContext = {
       if (dispatch) {
         dispatch({
           type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
-          payload: [true]
+          payload: [{personCredentialOfferDismissed: true}]
         })
       }
     },
