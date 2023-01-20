@@ -1,5 +1,9 @@
-import { DidRepository } from '@aries-framework/core'
-import { BifoldError, DispatchAction, Agent } from 'aries-bifold'
+import { DidRepository, CredentialExchangeRecord as CredentialRecord, CredentialMetadataKeys } from '@aries-framework/core'
+import {
+    BifoldError,
+    DispatchAction,
+    Agent
+} from 'aries-bifold'
 import React, { ReducerAction } from 'react'
 import { TFunction } from 'react-i18next'
 import { Linking, Platform } from 'react-native'
@@ -87,6 +91,17 @@ export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCre
     return true
   }
   return false
+}
+
+export const getInvitationCredentialDate = (credentials: CredentialRecord[], canUseLSBCCredential: boolean): Date | undefined => {
+
+  const invitationCredential = credentials.find((c) => {
+      const credDef = c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
+      if (trustedInvitationIssuerRe.test(credDef) || (trustedLSBCCredentialIssuerRe.test(credDef) && canUseLSBCCredential)) {
+          return true
+      }
+  })
+  return invitationCredential?.createdAt
 }
 
 export const recieveBCIDInvite = async (
