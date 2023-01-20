@@ -15,6 +15,13 @@ const translation = {
     "Message2025": "There was a problem reported by BCSC. (FR)",
     "NoMessage": "No Message (FR)",
   },
+  "CameraDisclosure": {
+    "AllowCameraUse": "Allow camera use (FR)",
+    "CameraDisclosure": "La caméra est utilisée pour scanner les codes QR pour un traitement immédiat sur l'appareil. Aucune information sur les images n'est stockée, utilisée à des fins d'analyse ou partagée.",
+    "ToContinueUsing": "To continue using the BC Wallet scan feature, please allow camera permissions. (FR)",
+    "Allow": "Allow (FR)",
+    "OpenSettings": "Open settings (FR)",
+  },
   "Biometry": {
     "Toggle": "Toggle Biometrics (FR)",
     "EnabledText1": "Log in with your phone's biometrics instead of your wallet PIN. (FR)",
