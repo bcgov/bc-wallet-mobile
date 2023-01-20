@@ -75,6 +75,17 @@ const Splash: React.FC = () => {
     },
   })
 
+  const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
+    try {
+      const data = await AsyncStorage.getItem(key)
+      if (data) {
+        return JSON.parse(data)
+      }
+    } catch {
+      return
+    }
+  }
+
   const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
     try {
       const attemptsData = await AsyncStorage.getItem(LocalStorageKeys.LoginAttempts)
@@ -92,9 +103,8 @@ const Splash: React.FC = () => {
   }
 
   const loadPersonNotificationDismissed = async (): Promise<void> => {
-    const dismissedData = await AsyncStorage.getItem('PersonCredentialOfferDismissed')
-    if (dismissedData) {
-      const dismissed = JSON.parse(dismissedData)
+    const dismissed = await loadObjectFromStorage('PersonCredentialOfferDismissed')
+    if (dismissed) {
       dispatch({
         type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
         payload: [{ personCredentialOfferDismissed: dismissed.personCredentialOfferDismissed }],
