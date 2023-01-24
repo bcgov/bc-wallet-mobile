@@ -5,6 +5,7 @@ import {
   defaultState,
   ReducerAction,
 } from 'aries-bifold'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export interface IASEnvironment {
   name: string
@@ -19,9 +20,14 @@ interface AddCredential {
   addCredentialPressed: boolean
 }
 
+interface DismissPersonCredentialOffer {
+  personCredentialOfferDismissed: boolean
+}
+
 export interface BCState extends BifoldState {
   developer: Developer
   addCredential: AddCredential
+  dismissPersonCredentialOffer: DismissPersonCredentialOffer
 }
 
 enum DeveloperDispatchAction {
@@ -32,14 +38,20 @@ enum AddCredentialDispatchAction {
   ADD_CREDENTIAL_PRESSED = 'addCredential/addCredentialPressed',
 }
 
+enum DismissPersonCredentialOfferDispatchAction {
+  PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
+}
+
 
 export type BCDispatchAction =
   DeveloperDispatchAction
   | AddCredentialDispatchAction
+  | DismissPersonCredentialOfferDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...AddCredentialDispatchAction,
+  ...DismissPersonCredentialOfferDispatchAction
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -71,7 +83,11 @@ const addCredentialState: AddCredential = {
   addCredentialPressed: false,
 }
 
-export const initialState: BCState = { ...defaultState, developer: developerState, addCredential: addCredentialState, }
+const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
+  personCredentialOfferDismissed: false
+}
+
+export const initialState: BCState = { ...defaultState, developer: developerState, addCredential: addCredentialState, dismissPersonCredentialOffer: dismissPersonCredentialOfferState }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
@@ -83,7 +99,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case AddCredentialDispatchAction.ADD_CREDENTIAL_PRESSED: {
       const addCredentialPressed: boolean = (action?.payload || []).pop()
       const addCredential = { ...state.addCredential, addCredentialPressed }
-      return {...state, addCredential}
+      return { ...state, addCredential }
+    }
+    case DismissPersonCredentialOfferDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED: {
+      const { personCredentialOfferDismissed } = (action?.payload || []).pop()
+      const dismissPersonCredentialOffer = { ...state.dismissPersonCredentialOffer, personCredentialOfferDismissed }
+      const newState = { ...state, dismissPersonCredentialOffer }
+
+      // save to storage so notification doesn't reapper on app restart
+      AsyncStorage.setItem('PersonCredentialOfferDismissed', JSON.stringify(newState.dismissPersonCredentialOffer))
+      return newState
     }
     default:
       return state
