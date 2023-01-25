@@ -118,7 +118,7 @@ export const recieveBCIDInvite = async (
   // retrieve the legacy DID. ACA-py does not support `peer:did`
   // yet.
 
-  const didRepository = agent.injectionContainer.resolve(DidRepository)
+  const didRepository = agent.dependencyManager.resolve(DidRepository)
 
   if (!didRepository) {
     throw new BifoldError(
