@@ -1,7 +1,6 @@
 import { types } from 'aries-bifold'
 
 type CardLayoutOverlay = types.oca.CardLayoutOverlay
-type CardLayoutOverlay_2_0 = types.oca.CardLayoutOverlay_2_0
 
 export enum CREDENTIALS {
   LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
@@ -24,20 +23,20 @@ export enum CREDENTIALS {
   BC_DIGITAL_ID_PROD = 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
 }
 
-const digitalIdInvitationCardOverlay: CardLayoutOverlay = {
+// const digitalIdInvitationCardOverlay: CardLayoutOverlay = {
+//   capture_base: '',
+//   type: 'spec/overlays/card_layout/1.0',
+//   imageSource: require('./invitation-card.png'),
+//   header: {
+//     imageSource: require('./service-bc-header-logo.png'),
+//     color: '#FFFFFF',
+//   },
+//   footer: { color: '#FFFFFF' },
+// }
+
+const studentCardOverlay: CardLayoutOverlay = {
   capture_base: '',
   type: 'spec/overlays/card_layout/1.0',
-  imageSource: require('./invitation-card.png'),
-  header: {
-    imageSource: require('./service-bc-header-logo.png'),
-    color: '#FFFFFF',
-  },
-  footer: { color: '#FFFFFF' },
-}
-
-const studentCardOverlay_2_0: CardLayoutOverlay_2_0 = {
-  capture_base: '',
-  type: 'spec/overlays/card_layout/2.0',
   logo: {
     src: require('./best-bc-logo.png'),
   },
@@ -50,9 +49,9 @@ const studentCardOverlay_2_0: CardLayoutOverlay_2_0 = {
   primaryBackgroundColor: '#32674e',
 }
 
-const memberCardOverlay_2_0: CardLayoutOverlay_2_0 = {
+const memberCardOverlay: CardLayoutOverlay = {
   capture_base: '',
-  type: 'spec/overlays/card_layout/2.0',
+  type: 'spec/overlays/card_layout/1.0',
   logo: {
     src: require('./lsbc-logo.png'),
   },
@@ -72,11 +71,11 @@ const digitalIdInvitationCardBundle = {
       name: 'Pilot Invitation',
       issuerName: 'DITP',
     },
-    digitalIdInvitationCardOverlay,
+    // digitalIdInvitationCardOverlay,
   ],
 }
 
-const studentCardBundle_2_0 = {
+const studentCardBundle = {
   capture_base: {},
   overlays: [
     {
@@ -85,11 +84,11 @@ const studentCardBundle_2_0 = {
       name: 'Student',
       issuerName: 'BestBC College',
     },
-    studentCardOverlay_2_0,
+    studentCardOverlay,
   ],
 }
 
-const memberCardBundle_2_0 = {
+const memberCardBundle = {
   capture_base: {},
   overlays: [
     {
@@ -98,7 +97,7 @@ const memberCardBundle_2_0 = {
       name: 'Member Card',
       issuerName: 'Law Society of BC',
     },
-    memberCardOverlay_2_0,
+    memberCardOverlay,
   ],
 }
 
@@ -148,15 +147,15 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
     },
     overlays: [
       ...metaOverlays,
-      {
-        type: 'spec/overlays/card_layout/1.0',
-        imageSource: backgroundImageSource,
-        header: {
-          imageSource: require('./service-bc-header-logo.png'),
-          color: '#FFFFFF',
-        },
-        footer: { color: '#FFFFFF' },
-      } as CardLayoutOverlay,
+      // {
+      //   type: 'spec/overlays/card_layout/1.0',
+      //   imageSource: backgroundImageSource,
+      //   header: {
+      //     imageSource: require('./service-bc-header-logo.png'),
+      //     color: '#FFFFFF',
+      //   },
+      //   footer: { color: '#FFFFFF' },
+      // } as CardLayoutOverlay,
       {
         type: 'spec/overlays/format/1.0',
         language: 'en',
@@ -196,17 +195,15 @@ const testDigitalIdCardBundle = createPersonCredentialBundle(require('./service-
 
 export default {
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/370
-  /* LSBC (TEST) */
-  [CREDENTIALS.LSBC_TEST]: memberCardBundle_2_0,
-  [CREDENTIALS.LSBC_PROD]: memberCardBundle_2_0 /* LSBC (PROD) */,
+  [CREDENTIALS.LSBC_TEST]: memberCardBundle /* LSBC (TEST) */,
+  [CREDENTIALS.LSBC_PROD]: memberCardBundle /* LSBC (PROD) */,
   // ↓↓↓ https://github.com/bcgov/BC-Wallet-Demo/discussions/59
-  [CREDENTIALS.SHOWCASE_LAWYER_DEV]: memberCardBundle_2_0 /* Showcase LSBC (DEV) */,
-  [CREDENTIALS.SHOWCASE_LAWYER_TEST]: memberCardBundle_2_0 /* Showcase LSBC (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER_PROD]: memberCardBundle_2_0 /* Showcase LSBC (PROD) */,
-  [CREDENTIALS.SHOWCASE_STUDENT_DEV]: studentCardBundle_2_0 /* Showcase Student (DEV) */,
-  [CREDENTIALS.SHOWCASE_STUDENT_TEST]: studentCardBundle_2_0 /* Showcase Student (TEST) */,
-  /* Showcase Student (PROD) */
-  [CREDENTIALS.SHOWCASE_STUDENT_PROD]: studentCardBundle_2_0,
+  [CREDENTIALS.SHOWCASE_LAWYER_DEV]: memberCardBundle /* Showcase LSBC (DEV) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_TEST]: memberCardBundle /* Showcase LSBC (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_PROD]: memberCardBundle /* Showcase LSBC (PROD) */,
+  [CREDENTIALS.SHOWCASE_STUDENT_DEV]: studentCardBundle /* Showcase Student (DEV) */,
+  [CREDENTIALS.SHOWCASE_STUDENT_TEST]: studentCardBundle /* Showcase Student (TEST) */,
+  [CREDENTIALS.SHOWCASE_STUDENT_PROD]: studentCardBundle /* Showcase Student (PROD) */,
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/506
   [CREDENTIALS.UNVERIFIED_PERSON_DEV]: unverifiedPersonCardBundle /* Unverified Person (DEV) */,
   [CREDENTIALS.UNVERIFIED_PERSON_TEST]: unverifiedPersonCardBundle /* Unverified Person (TEST) */,
