@@ -53,7 +53,7 @@ const BCIDView: React.FC = () => {
 
   const startGetBCIDCredentialWorkflow = () => {
     setWorkflowInFlight(true)
-    startFlow(agent, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t, setAgentDetails)
+    startFlow(agent!, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t, setAgentDetails)
   }
 
   return (

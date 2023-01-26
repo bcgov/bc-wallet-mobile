@@ -68,7 +68,7 @@ const PersonCredentialScreen: React.FC = () => {
 
   const startGetBCIDCredentialWorkflow = useCallback(() => {
     setWorkflowInFlight(true)
-    startFlow(agent, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t)
+    startFlow(agent!, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t)
   }, [])
 
   const dismissPersonCredentialOffer = useCallback(() => {
