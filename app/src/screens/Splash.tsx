@@ -25,6 +25,7 @@ import {
   useConfiguration,
   InfoBox,
   InfoBoxType,
+  testIdWithKey,
 } from 'aries-bifold'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -274,7 +275,7 @@ const Splash: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.splashContainer}>
-      <View style={styles.progressContainer}>
+      <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
         <ProgressBar progressPercent={progressPercent} />
         <View style={styles.stepTextContainer}>
           <Text style={styles.stepText}>{stepText}</Text>
@@ -299,6 +300,7 @@ const Splash: React.FC = () => {
         <Image
           source={Assets.img.logoPrimary.src}
           style={{ width: Assets.img.logoPrimary.width, height: Assets.img.logoPrimary.height }}
+          testID={testIdWithKey('LoadingActivityIndicatorImage')}
         />
       </View>
     </SafeAreaView>
