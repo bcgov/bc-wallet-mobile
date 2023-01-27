@@ -22,16 +22,18 @@ import {
   useAuth,
   useTheme,
   useStore,
-  ToastType,
-  LoadingIndicator,
   useConfiguration,
+  InfoBox,
+  InfoBoxType,
 } from 'aries-bifold'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, View, Text, Image, useWindowDimensions } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
+
+import ProgressBar from '../components/ProgressBar'
+import TipCarousel from '../components/TipCarousel'
 import { BCDispatchAction } from '../store'
 
 const onboardingComplete = (state: OnboardingState): boolean => {
@@ -59,19 +61,50 @@ const resumeOnboardingAt = (state: OnboardingState): Screens => {
   of this view.
 */
 const Splash: React.FC = () => {
+  const { width } = useWindowDimensions()
   const { setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore()
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
-  const { ColorPallet } = useTheme()
+  const { ColorPallet, Assets } = useTheme()
   const { indyLedgers } = useConfiguration()
+  const [stepText, setStepText] = useState<string>(t('Init.Starting'))
+  const [progressPercent, setProgressPercent] = useState(0)
+  const [initError, setInitError] = useState<Error | null>(null)
+  const setProgress = (text: string, percent: number) => {
+    setStepText(text)
+    setProgressPercent(percent)
+  }
+
   const styles = StyleSheet.create({
-    container: {
+    splashContainer: {
       flex: 1,
-      justifyContent: 'center',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
       alignItems: 'center',
       backgroundColor: ColorPallet.brand.primary,
+    },
+    progressContainer: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      width: '100%',
+      minHeight: 37,
+    },
+    stepTextContainer: {
+      marginTop: 10,
+    },
+    stepText: {
+      fontFamily: 'BCSans-Regular',
+      fontSize: 16,
+      color: '#a8abae',
+    },
+    errorBoxContainer: {
+      paddingHorizontal: 20,
+    },
+    logoContainer: {
+      alignSelf: 'center',
+      marginBottom: '10%',
     },
   })
 
@@ -87,18 +120,14 @@ const Splash: React.FC = () => {
   }
 
   const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
-    try {
-      const attemptsData = await AsyncStorage.getItem(LocalStorageKeys.LoginAttempts)
-      if (attemptsData) {
-        const attempts = JSON.parse(attemptsData) as LoginAttemptState
-        dispatch({
-          type: DispatchAction.ATTEMPT_UPDATED,
-          payload: [attempts],
-        })
-        return attempts
-      }
-    } catch (error) {
-      /* eslint-disable:no-empty */
+    const attemptsData = await AsyncStorage.getItem(LocalStorageKeys.LoginAttempts)
+    if (attemptsData) {
+      const attempts = JSON.parse(attemptsData) as LoginAttemptState
+      dispatch({
+        type: DispatchAction.ATTEMPT_UPDATED,
+        payload: [attempts],
+      })
+      return attempts
     }
   }
 
@@ -119,12 +148,14 @@ const Splash: React.FC = () => {
 
     const initOnboarding = async (): Promise<void> => {
       try {
+        setProgress(t('Init.CheckingAuth'), 3)
         // load authentication attempts from storage
         const attemptData = await loadAuthAttempts()
 
         // load BCID person credential notification dismissed state from storage
         await loadPersonNotificationDismissed()
 
+        setProgress(t('Init.FetchingPreferences'), 7)
         const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
 
         if (preferencesData) {
@@ -136,6 +167,7 @@ const Splash: React.FC = () => {
           })
         }
 
+        setProgress(t('Init.VerifyingOnboarding'), 10)
         const data = await AsyncStorage.getItem(LocalStorageKeys.Onboarding)
         if (data) {
           const dataAsJSON = JSON.parse(data) as OnboardingState
@@ -161,8 +193,8 @@ const Splash: React.FC = () => {
 
         // We have no onboarding state, starting from step zero.
         navigation.navigate(Screens.Onboarding as never)
-      } catch (error) {
-        // TODO:(jl)
+      } catch (e: unknown) {
+        setInitError(e as Error)
       }
     }
     initOnboarding()
@@ -175,6 +207,7 @@ const Splash: React.FC = () => {
 
     const initAgent = async (): Promise<void> => {
       try {
+        setProgress(t('Init.GettingCredentials'), 20)
         const credentials = await getWalletCredentials()
 
         if (!credentials?.id || !credentials.key) {
@@ -182,6 +215,7 @@ const Splash: React.FC = () => {
           return
         }
 
+        setProgress(t('Init.RegisteringTransports'), 35)
         const options = {
           config: {
             label: 'BC Wallet',
@@ -205,21 +239,19 @@ const Splash: React.FC = () => {
         newAgent.registerOutboundTransport(wsTransport)
         newAgent.registerOutboundTransport(httpTransport)
 
+        setProgress(t('Init.InitializingAgent'), 55)
         await newAgent.initialize()
-        await newAgent.ledger.connectToPools()
-        setAgent(newAgent)
-        navigation.navigate(Stacks.TabStack as never)
 
-        // TODO:
+        setProgress(t('Init.ConnectingLedgers'), 80)
+        await newAgent.ledger.connectToPools()
+
+        setProgress(t('Init.SettingAgent'), 95)
+        setAgent(newAgent)
+
+        setProgress(t('Init.Finishing'), 100)
+        navigation.navigate(Stacks.TabStack as never)
       } catch (e: unknown) {
-        Toast.show({
-          type: ToastType.Error,
-          text1: t('Global.Failure'),
-          text2: (e as Error)?.message || t('Error.Unknown'),
-          visibilityTime: 2000,
-          position: 'bottom',
-        })
-        return
+        setInitError(e as Error)
       }
     }
 
@@ -227,8 +259,34 @@ const Splash: React.FC = () => {
   }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry])
 
   return (
-    <SafeAreaView style={styles.container}>
-      <LoadingIndicator />
+    <SafeAreaView style={styles.splashContainer}>
+      <View style={styles.progressContainer}>
+        <ProgressBar progressPercent={progressPercent} />
+        <View style={styles.stepTextContainer}>
+          <Text style={styles.stepText}>{stepText}</Text>
+        </View>
+      </View>
+      <View style={{ width, minHeight: '40%' }}>
+        {initError ? (
+          <View style={styles.errorBoxContainer}>
+            <InfoBox
+              notificationType={InfoBoxType.Error}
+              title={t('Error.Title2026')}
+              description={t('Error.Message2026')}
+              message={initError?.message || t('Error.Unknown')}
+              onCallToActionPressed={() => setInitError(null)}
+            />
+          </View>
+        ) : (
+          <TipCarousel />
+        )}
+      </View>
+      <View style={styles.logoContainer}>
+        <Image
+          source={Assets.img.logoPrimary.src}
+          style={{ width: Assets.img.logoPrimary.width, height: Assets.img.logoPrimary.height }}
+        />
+      </View>
     </SafeAreaView>
   )
 }

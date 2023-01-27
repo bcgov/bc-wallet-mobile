@@ -13,6 +13,8 @@ const translation = {
     "Message2022": "There was a problem extracting the did repository. (PT-BR)",
     "Title2025": "BCSC Authentication (PT-BR)",
     "Message2025": "There was a problem reported by BCSC. (PT-BR)",
+    "Title2026": "Oops! Something went wrong (PT-BR)",
+    "Message2026": "The app has encountered a problem. Try restarting the app. (PT-BR)",
     "NoMessage": "No Message (PT-BR)",
   },
   "CameraDisclosure": {
@@ -75,6 +77,36 @@ const translation = {
     "Test": "Test (PT-BR)",
     "DeveloperMode": "Developer mode",
     "Toggle": "Toggle Developer Mode"
+  },
+  "Tips": {
+    "Header": "Tips (PT-BR)",
+    "GettingReady": "Getting your wallet ready... (PT-BR)",
+    "Tip1": "For extra security, BC Wallet locks the app after 5 minutes of inactivity (PT-BR)",
+    "Tip2": "Unlike showing physical cards, you share only what is necessary from your credentials (PT-BR)",
+    "Tip3": "Your credentials are stored only on this phone, nowhere else (PT-BR)",
+    "Tip4": "Information is sent and received over an untraceable encrypted connection (PT-BR)",
+    "Tip5": "Remember your PIN. If you forget it, you'll need to reinstall and re-add your credentials (PT-BR)",
+    "Tip6": "Skip the PIN and unlock your wallet using your biometrics for a faster experience (PT-BR)",
+    "Tip7": "Your most recently added credentials are placed at the top (PT-BR)",
+    "Tip8": "Remove credentials in your wallet from the credential details screen (PT-BR)",
+    "Tip9": "You can dismiss notifications without opening them by tapping “X” in the top right corner (PT-BR)",
+    "Tip10": "Need help? Find answers in the help section within the “☰” button on the top left corner (PT-BR)",
+    "Tip11": "You can turn on the camera flash if the QR code is hard to see (PT-BR)",
+    "Tip12": "If the QR code isn't scanning, try increasing the screen's brightness (PT-BR)",
+    "Tip13": "Information sent via your wallet is trusted by you and your Contacts you interact with (PT-BR)",
+    "Tip14": "Even revoked or expired credentials can be usable if the organisation doesn't request for it (PT-BR)",
+  },
+  "Init": {
+    "Starting": "Starting... (PT-BR)",
+    "CheckingAuth": "Checking authentication... (PT-BR)",
+    "FetchingPreferences": "Fetching preferences... (PT-BR)",
+    "VerifyingOnboarding": "Verifying onboarding... (PT-BR)",
+    "GettingCredentials": "Getting wallet credentials... (PT-BR)",
+    "RegisteringTransports": "Registering transports... (PT-BR)",
+    "InitializingAgent": "Initializing agent... (PT-BR)",
+    "ConnectingLedgers": "Connecting to ledgers... (PT-BR)",
+    "SettingAgent": "Setting agent... (PT-BR)",
+    "Finishing": "Finishing... (PT-BR)",
   }
 }
 
