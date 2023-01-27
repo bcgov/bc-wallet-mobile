@@ -26,10 +26,5 @@
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "devDependencies": {
     "npm-run-all": "^4.1.5"
-  },
-  "dependencies": {
-    "@aries-framework/core": "^0.3.3",
-    "@aries-framework/react-hooks": "^0.4.0",
-    "@aries-framework/react-native": "^0.3.2"
   }
 }
