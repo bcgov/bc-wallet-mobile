@@ -1,6 +1,6 @@
 import { useTheme } from 'aries-bifold'
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View, LayoutChangeEvent, Animated } from 'react-native'
+import { StyleSheet, View, Animated, useWindowDimensions } from 'react-native'
 
 export interface ProgressBarProps {
   progressPercent: number
@@ -8,7 +8,7 @@ export interface ProgressBarProps {
 
 const ProgressBar: React.FC<ProgressBarProps> = ({ progressPercent }) => {
   const { ColorPallet } = useTheme()
-  const [progressBarWidth, setProgressBarWidth] = useState(700)
+  const { width: windowWidth } = useWindowDimensions()
   const [progressBarScale] = useState(new Animated.Value(0))
 
   useEffect(() => {
@@ -38,18 +38,11 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progressPercent }) => {
   })
   const animatedBarStyle = {
     // without these two translates, the progress would start from the center and expand outward, rather than start from the left
-    transform: [{ translateX: -(progressBarWidth / 2) }, { scaleX }, { translateX: progressBarWidth / 2 }],
-  }
-
-  const onLayout = (event: LayoutChangeEvent) => {
-    const { width } = event.nativeEvent.layout
-    if (width) {
-      setProgressBarWidth(width)
-    }
+    transform: [{ translateX: -(windowWidth / 2) }, { scaleX }, { translateX: windowWidth / 2 }],
   }
 
   return (
-    <View onLayout={onLayout} style={styles.progressBarContainer}>
+    <View style={styles.progressBarContainer}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.progressBar, animatedBarStyle]} />
     </View>
   )

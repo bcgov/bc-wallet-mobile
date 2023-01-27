@@ -17,14 +17,14 @@ const shuffleArray = (arr: number[]) => {
 // increase / decrease the count in this array if you remove or add tips from the i18n files
 const tipOrder: number[] = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14])
 
-interface ITip {
+interface TipItem {
   id: string
   showHeader: boolean
   text: string
 }
 
 export interface TipProps {
-  item: ITip
+  item: TipItem
   width: number
   header: string
 }
@@ -125,8 +125,8 @@ const TipCarousel: React.FC = () => {
 
   // translating once here to prevent many repeated translations for each tip item
   const tipHeader = t('Tips.Header')
-  const keyExtractor = (item: ITip) => item.id
-  const renderItem: ListRenderItem<ITip> = ({ item }) => {
+  const keyExtractor = (item: TipItem) => item.id
+  const renderItem: ListRenderItem<TipItem> = ({ item }) => {
     return <Tip item={item} width={width} header={tipHeader} />
   }
 

@@ -72,8 +72,22 @@ const Splash: React.FC = () => {
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initError, setInitError] = useState<Error | null>(null)
-  const setProgress = (text: string, percent: number) => {
-    setStepText(text)
+  const steps: string[] = [
+    t('Init.Starting'),
+    t('Init.CheckingAuth'),
+    t('Init.FetchingPreferences'),
+    t('Init.VerifyingOnboarding'),
+    t('Init.GettingCredentials'),
+    t('Init.RegisteringTransports'),
+    t('Init.InitializingAgent'),
+    t('Init.ConnectingLedgers'),
+    t('Init.SettingAgent'),
+    t('Init.Finishing'),
+  ]
+
+  const setStep = (stepIdx: number) => {
+    setStepText(steps[stepIdx])
+    const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
     setProgressPercent(percent)
   }
 
@@ -148,14 +162,14 @@ const Splash: React.FC = () => {
 
     const initOnboarding = async (): Promise<void> => {
       try {
-        setProgress(t('Init.CheckingAuth'), 3)
+        setStep(1)
         // load authentication attempts from storage
         const attemptData = await loadAuthAttempts()
 
         // load BCID person credential notification dismissed state from storage
         await loadPersonNotificationDismissed()
 
-        setProgress(t('Init.FetchingPreferences'), 7)
+        setStep(2)
         const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
 
         if (preferencesData) {
@@ -167,7 +181,7 @@ const Splash: React.FC = () => {
           })
         }
 
-        setProgress(t('Init.VerifyingOnboarding'), 10)
+        setStep(3)
         const data = await AsyncStorage.getItem(LocalStorageKeys.Onboarding)
         if (data) {
           const dataAsJSON = JSON.parse(data) as OnboardingState
@@ -207,7 +221,7 @@ const Splash: React.FC = () => {
 
     const initAgent = async (): Promise<void> => {
       try {
-        setProgress(t('Init.GettingCredentials'), 20)
+        setStep(4)
         const credentials = await getWalletCredentials()
 
         if (!credentials?.id || !credentials.key) {
@@ -215,7 +229,7 @@ const Splash: React.FC = () => {
           return
         }
 
-        setProgress(t('Init.RegisteringTransports'), 35)
+        setStep(5)
         const options = {
           config: {
             label: 'BC Wallet',
@@ -239,16 +253,16 @@ const Splash: React.FC = () => {
         newAgent.registerOutboundTransport(wsTransport)
         newAgent.registerOutboundTransport(httpTransport)
 
-        setProgress(t('Init.InitializingAgent'), 55)
+        setStep(6)
         await newAgent.initialize()
 
-        setProgress(t('Init.ConnectingLedgers'), 80)
+        setStep(7)
         await newAgent.ledger.connectToPools()
 
-        setProgress(t('Init.SettingAgent'), 95)
+        setStep(8)
         setAgent(newAgent)
 
-        setProgress(t('Init.Finishing'), 100)
+        setStep(9)
         navigation.navigate(Stacks.TabStack as never)
       } catch (e: unknown) {
         setInitError(e as Error)
