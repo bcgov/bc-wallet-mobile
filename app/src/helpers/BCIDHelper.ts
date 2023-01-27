@@ -42,43 +42,6 @@ export interface WellKnownAgentDetails {
   invitationId?: string
 }
 
-export const startFlow = async (
-  agent: Agent | undefined,
-  store: BCState,
-  dispatch: React.Dispatch<ReducerAction<any>>,
-  setWorkflowInFlight: React.Dispatch<React.SetStateAction<boolean>>,
-  t: TFunction<'translation', undefined>,
-  setAgentDetails?: React.Dispatch<React.SetStateAction<WellKnownAgentDetails>>
-) => {
-  try {
-    const agentDetails = await recieveBCIDInvite(agent, store, t)
-
-    if (setAgentDetails !== undefined) {
-      setAgentDetails(agentDetails)
-    }
-
-    if (agentDetails.legacyConnectionDid !== undefined) {
-      setTimeout(async () => {
-        await authenticateWithServiceCard(
-          store,
-          dispatch,
-          setWorkflowInFlight,
-          agentDetails.legacyConnectionDid as string,
-          t
-        )
-      }, connectionDelayInMs)
-    }
-  } catch (error: unknown) {
-    console.log(error)
-    setWorkflowInFlight(false)
-
-    dispatch({
-      type: DispatchAction.ERROR_ADDED,
-      payload: [{ error }],
-    })
-  }
-}
-
 export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCredential: boolean): boolean => {
   if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
     return false
@@ -109,21 +72,40 @@ export const getInvitationCredentialDate = (
   return invitationCredential?.createdAt
 }
 
-export const recieveBCIDInvite = async (
+export const removeExistingInvitationIfRequired = async (
   agent: Agent | undefined,
+  invitationId: string
+): Promise<void> => {
+  try {
+    // If something fails before we get the credential we need to
+    // cleanup the old invitation before it can be used again.
+    const oobRecord = await agent?.oob.findByReceivedInvitationId(invitationId)
+    if (oobRecord) {
+      await agent?.oob.deleteById(oobRecord.id)
+    }
+  } catch (error) {
+    // findByInvitationId with throw if unsuccessful but that's not a problem.
+    // It just means there is nothing to delete.
+  }
+}
+
+export const recieveBCIDInvite = async (
+  agent: Agent,
   store: BCState,
   t: TFunction<'translation', undefined>
 ): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.
-  const invite = await agent?.oob.parseInvitation(store.developer.environment.iasAgentInviteUrl)
+  const invite = await agent.oob.parseInvitation(store.developer.environment.iasAgentInviteUrl)
+
   if (!invite) {
     throw new BifoldError(t('Error.Title2020'), t('Error.Message2020'), t('Error.NoMessage'), ErrorCodes.BadInvitation)
   }
 
   await removeExistingInvitationIfRequired(agent, invite.id)
 
-  const record = await agent?.oob.receiveInvitation(invite)
+  const record = await agent.oob.receiveInvitation(invite)
+
   if (!record) {
     throw new BifoldError(
       t('Error.Title2021'),
@@ -135,7 +117,9 @@ export const recieveBCIDInvite = async (
 
   // retrieve the legacy DID. ACA-py does not support `peer:did`
   // yet.
-  const didRepository = agent?.injectionContainer.resolve(DidRepository)
+
+  const didRepository = agent.dependencyManager.resolve(DidRepository)
+
   if (!didRepository) {
     throw new BifoldError(
       t('Error.Title2022'),
@@ -145,11 +129,22 @@ export const recieveBCIDInvite = async (
     )
   }
 
-  // @ts-ignore
-  const didRecord = await didRepository.getById(agent, record.connectionRecord!.did!)
-  const did = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid
+  const dids = await didRepository.getAll(agent.context)
+  const didRecord = dids.filter((d) => d.did === record.connectionRecord?.did).pop()
 
-  if (typeof did !== 'string' || did.length <= 0) {
+  if (!didRecord) {
+    throw new BifoldError(
+      t('Error.Title2022'),
+      t('Error.Message2022'),
+      t('Error.NoMessage'),
+      ErrorCodes.CannotGetLegacyDID
+    )
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const legacyConnectionDid = didRecord.metadata.get(legacyDidKey)!.unqualifiedDid
+
+  if (typeof legacyConnectionDid !== 'string' || legacyConnectionDid.length <= 0) {
     throw new BifoldError(
       t('Error.Title2022'),
       t('Error.Message2022'),
@@ -159,28 +154,10 @@ export const recieveBCIDInvite = async (
   }
 
   return {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     connectionId: record.connectionRecord!.id,
     invitationId: invite.id,
-    legacyConnectionDid: did,
-  }
-}
-
-export const removeExistingInvitationIfRequired = async (
-  agent: Agent | undefined,
-  invitationId: string
-): Promise<void> => {
-  try {
-    // If something fails before we get the credential we need to
-    // cleanup the old invitation before it can be used again.
-    // TODO:(jl) Confirm and fix API.
-    const oldInvitation = await agent?.oob.findById(invitationId)
-
-    if (oldInvitation) {
-      await agent?.oob.deleteById(oldInvitation.id)
-    }
-  } catch (error) {
-    // findByInvitationId with throw if unsuccessful but that's not a problem.
-    // It just means there is nothing to delete.
+    legacyConnectionDid,
   }
 }
 
@@ -254,6 +231,42 @@ export const authenticateWithServiceCard = async (
     cleanupAfterServiceCardAuthentication(
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
+
+    dispatch({
+      type: DispatchAction.ERROR_ADDED,
+      payload: [{ error }],
+    })
+  }
+}
+
+export const startFlow = async (
+  agent: Agent,
+  store: BCState,
+  dispatch: React.Dispatch<ReducerAction<any>>,
+  setWorkflowInFlight: React.Dispatch<React.SetStateAction<boolean>>,
+  t: TFunction<'translation', undefined>,
+  setAgentDetails?: React.Dispatch<React.SetStateAction<WellKnownAgentDetails>>
+) => {
+  try {
+    const agentDetails = await recieveBCIDInvite(agent, store, t)
+
+    if (setAgentDetails !== undefined) {
+      setAgentDetails(agentDetails)
+    }
+
+    if (agentDetails.legacyConnectionDid !== undefined) {
+      setTimeout(async () => {
+        await authenticateWithServiceCard(
+          store,
+          dispatch,
+          setWorkflowInFlight,
+          agentDetails.legacyConnectionDid as string,
+          t
+        )
+      }, connectionDelayInMs)
+    }
+  } catch (error: unknown) {
+    setWorkflowInFlight(false)
 
     dispatch({
       type: DispatchAction.ERROR_ADDED,

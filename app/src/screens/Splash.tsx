@@ -208,9 +208,8 @@ const Splash: React.FC = () => {
         await newAgent.initialize()
         await newAgent.ledger.connectToPools()
         setAgent(newAgent)
-        navigation.navigate(Stacks.TabStack as never)
 
-        // TODO:
+        navigation.navigate(Stacks.TabStack as never)
       } catch (e: unknown) {
         Toast.show({
           type: ToastType.Error,
