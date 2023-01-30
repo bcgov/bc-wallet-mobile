@@ -87,6 +87,7 @@ interface NotificationColors {
   errorBorder: string
   errorIcon: string
   errorText: string
+  popupOverlay: string
 }
 
 interface GrayscaleColors {
@@ -115,6 +116,7 @@ interface Assets {
 
 export const borderRadius = 4
 export const heavyOpacity = 0.7
+export const mediumOpacity = 0.5
 export const lightOpacity = 0.35
 export const zeroOpacity = 0.0
 export const borderWidth = 2
@@ -155,6 +157,7 @@ const NotificationColors: NotificationColors = {
   errorBorder: '#EBCCD1',
   errorIcon: '#A12622',
   errorText: '#A12622',
+  popupOverlay: `rgba(0, 0, 0, ${mediumOpacity})`,
 }
 
 const GrayscaleColors: GrayscaleColors = {

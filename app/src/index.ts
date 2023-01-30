@@ -19,7 +19,11 @@ import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
+import PersonCredentialScreen from './screens/PersonCredential'
 import { defaultTheme as theme } from './theme'
+import { useNotifications } from './hooks/notifications'
+import { ReducerAction } from 'react'
+import { BCDispatchAction } from './store'
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
@@ -31,7 +35,6 @@ const configuration: ConfigurationContext = {
   pages,
   splash: Splash,
   terms: Terms,
-  homeContentView: BCIDView,
   credentialListHeaderRight: AddCredentialButton,
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
@@ -40,6 +43,22 @@ const configuration: ConfigurationContext = {
   record: Record,
   indyLedgers: selectedLedgers,
   settings: [],
+  customNotification: {
+    component: PersonCredentialScreen,
+    onCloseAction: (dispatch?: React.Dispatch<ReducerAction<any>>) => {
+      if (dispatch) {
+        dispatch({
+          type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
+          payload: [{personCredentialOfferDismissed: true}]
+        })
+      }
+    },
+    pageTitle: "PersonCredential.PageTitle",
+    title: "PersonCredentialNotification.Title",
+    description: "PersonCredentialNotification.Description",
+    buttonTitle: "PersonCredentialNotification.ButtonTitle"
+  },
+  useCustomNotifications: useNotifications
 }
 
 export default { theme, localization, configuration }
