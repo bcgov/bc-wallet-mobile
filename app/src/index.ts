@@ -49,16 +49,16 @@ const configuration: ConfigurationContext = {
       if (dispatch) {
         dispatch({
           type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
-          payload: [{personCredentialOfferDismissed: true}]
+          payload: [{ personCredentialOfferDismissed: true }],
         })
       }
     },
-    pageTitle: "PersonCredential.PageTitle",
-    title: "PersonCredentialNotification.Title",
-    description: "PersonCredentialNotification.Description",
-    buttonTitle: "PersonCredentialNotification.ButtonTitle"
+    pageTitle: 'PersonCredential.PageTitle',
+    title: 'PersonCredentialNotification.Title',
+    description: 'PersonCredentialNotification.Description',
+    buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
-  useCustomNotifications: useNotifications
+  useCustomNotifications: useNotifications,
 }
 
 export default { theme, localization, configuration }

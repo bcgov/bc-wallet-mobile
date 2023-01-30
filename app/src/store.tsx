@@ -42,16 +42,15 @@ enum DismissPersonCredentialOfferDispatchAction {
   PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
 }
 
-
 export type BCDispatchAction =
-  DeveloperDispatchAction
+  | DeveloperDispatchAction
   | AddCredentialDispatchAction
   | DismissPersonCredentialOfferDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...AddCredentialDispatchAction,
-  ...DismissPersonCredentialOfferDispatchAction
+  ...DismissPersonCredentialOfferDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -84,10 +83,15 @@ const addCredentialState: AddCredential = {
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
-  personCredentialOfferDismissed: false
+  personCredentialOfferDismissed: false,
 }
 
-export const initialState: BCState = { ...defaultState, developer: developerState, addCredential: addCredentialState, dismissPersonCredentialOffer: dismissPersonCredentialOfferState }
+export const initialState: BCState = {
+  ...defaultState,
+  developer: developerState,
+  addCredential: addCredentialState,
+  dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
+}
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
