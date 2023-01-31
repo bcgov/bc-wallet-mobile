@@ -12,7 +12,6 @@ import { ReducerAction } from 'react'
 import bundles from './assets/branding/credential-branding'
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
-import BCIDView from './components/BCIDView'
 import EmptyList from './components/EmptyList'
 import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
@@ -38,9 +37,7 @@ const configuration: ConfigurationContext = {
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
   developer: Developer,
-  OCABundleResolver: new types.oca.OCABundleResolver(bundles as unknown as types.oca.Bundles, {
-    cardOverlayType: types.oca.CardOverlayType.CardLayout11,
-  }),
+  OCABundleResolver: new types.oca.OCABundleResolver(bundles as unknown as types.oca.Bundles),
   record: Record,
   indyLedgers: selectedLedgers,
   settings: [],

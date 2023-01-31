@@ -1,7 +1,8 @@
 import { types } from 'aries-bifold'
 
-type CardLayoutOverlay = types.oca.CardLayoutOverlay10
+type CardLayoutOverlay10 = types.oca.CardLayoutOverlay10
 type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
+type MetaOverlay = types.oca.MetaOverlay
 
 export enum CREDENTIALS {
   LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
@@ -24,7 +25,7 @@ export enum CREDENTIALS {
   BC_DIGITAL_ID_PROD = 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
 }
 
-const digitalIdInvitationCardOverlay: CardLayoutOverlay = {
+const digitalIdInvitationCardOverlay: CardLayoutOverlay10 = {
   capture_base: '',
   type: 'spec/overlays/card_layout/1.0',
   imageSource: require('./invitation-card.png'),
@@ -55,6 +56,9 @@ const memberCardOverlay11: CardLayoutOverlay11 = {
   },
   primaryBackgroundColor: '#00698c',
   secondaryBackgroundColor: '#1a2930',
+  backgroundImage: {
+    src: require('./lsbc-background-image.jpg'),
+  },
 }
 
 const digitalIdInvitationCardBundle = {
@@ -96,34 +100,38 @@ const memberCardBundle11 = {
   ],
 }
 
-const createPersonCredentialBundle = (backgroundImageSource: any, verified = true) => {
-  const metaOverlays = []
+const createPersonCredentialBundle = (backgroundImageSource: string, verified = true) => {
+  const metaOverlays: MetaOverlay[] = []
   if (verified) {
-    //   metaOverlays.push({
-    //     type: 'spec/overlays/meta/1.0',
-    //     language: 'en',
-    //     name: 'Person',
-    //     issuerName: 'Service BC',
-    //   })
-    //   metaOverlays.push({
-    //     type: 'spec/overlays/meta/1.0',
-    //     language: 'fr',
-    //     name: 'Personne',
-    //     issuerName: 'Service BC',
-    //   })
-    // } else {
-    //   metaOverlays.push({
-    //     type: 'spec/overlays/meta/1.0',
-    //     language: 'en',
-    //     name: 'Unverified Person',
-    //     issuerName: 'DITP',
-    //   })
-    //   metaOverlays.push({
-    //     type: 'spec/overlays/meta/1.0',
-    //     language: 'fr',
-    //     name: 'Unverified Personne',
-    //     issuerName: 'DITP',
-    //   })
+    metaOverlays.push({
+      capture_base: '',
+      type: 'spec/overlays/meta/1.0',
+      language: 'en',
+      name: 'Person',
+      issuerName: 'Service BC',
+    })
+    metaOverlays.push({
+      capture_base: '',
+      type: 'spec/overlays/meta/1.0',
+      language: 'fr',
+      name: 'Personne',
+      issuerName: 'Service BC',
+    })
+  } else {
+    metaOverlays.push({
+      capture_base: '',
+      type: 'spec/overlays/meta/1.0',
+      language: 'en',
+      name: 'Unverified Person',
+      issuerName: 'DITP',
+    })
+    metaOverlays.push({
+      capture_base: '',
+      type: 'spec/overlays/meta/1.0',
+      language: 'fr',
+      name: 'Unverified Personne',
+      issuerName: 'DITP',
+    })
   }
   return {
     capture_base: {
@@ -143,6 +151,7 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
     overlays: [
       ...metaOverlays,
       {
+        capture_base: '',
         type: 'spec/overlays/card_layout/1.0',
         imageSource: backgroundImageSource,
         header: {
@@ -150,7 +159,7 @@ const createPersonCredentialBundle = (backgroundImageSource: any, verified = tru
           color: '#FFFFFF',
         },
         footer: { color: '#FFFFFF' },
-      } as CardLayoutOverlay,
+      } as CardLayoutOverlay10,
       {
         type: 'spec/overlays/format/1.0',
         language: 'en',
