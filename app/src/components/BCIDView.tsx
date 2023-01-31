@@ -1,25 +1,16 @@
 import { CredentialState, CredentialMetadataKeys } from '@aries-framework/core'
 import { useAgent, useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import {
-  Button,
-  ButtonType,
-  testIdWithKey,
-  HomeContentView,
-  Screens,
-  useStore,
-  useTheme
-} from 'aries-bifold'
-import React, { useEffect, useState, useRef, ReducerAction } from 'react'
+import { Button, ButtonType, testIdWithKey, HomeContentView, Screens, useStore, useTheme } from 'aries-bifold'
+import React, { useEffect, useState, ReducerAction } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
-import { BCState } from '../store'
-
 import CredentialIcon from '../assets/img/credentialIcon.svg'
 import { showBCIDSelector, startFlow, WellKnownAgentDetails } from '../helpers/BCIDHelper'
-import LoadingIcon from './LoadingIcon'
+import { BCState } from '../store'
 
+import LoadingIcon from './LoadingIcon'
 
 const BCIDView: React.FC = () => {
   const { agent } = useAgent()
@@ -58,12 +49,11 @@ const BCIDView: React.FC = () => {
     )
 
     setShowGetFoundationCredential(showBCIDSelector(credentialDefinitionIDs, canUseLSBCredential))
-
   }, [credentials, canUseLSBCredential])
 
   const startGetBCIDCredentialWorkflow = () => {
     setWorkflowInFlight(true)
-    startFlow(agent, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t, setAgentDetails)
+    startFlow(agent!, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t, setAgentDetails)
   }
 
   return (
@@ -78,11 +68,11 @@ const BCIDView: React.FC = () => {
             buttonType={!workflowInFlight ? ButtonType.Secondary : ButtonType.Primary}
             disabled={workflowInFlight}
           >
-            {
-              workflowInFlight ? (
-                <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInFlight}/>
-              ) : <CredentialIcon style={{ marginRight: 10 }} />
-            }
+            {workflowInFlight ? (
+              <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInFlight} />
+            ) : (
+              <CredentialIcon style={{ marginRight: 10 }} />
+            )}
           </Button>
         </View>
       )}
