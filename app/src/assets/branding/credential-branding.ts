@@ -3,6 +3,9 @@ import { types } from 'aries-bifold'
 type CardLayoutOverlay10 = types.oca.CardLayoutOverlay10
 type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
 type MetaOverlay = types.oca.MetaOverlay
+type FormatOverlay = types.oca.FormatOverlay
+type LabelOverlay = types.oca.LabelOverlay
+type CaptureBaseOverlay = types.oca.CaptureBaseOverlay
 
 export enum CREDENTIALS {
   LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
@@ -26,7 +29,7 @@ export enum CREDENTIALS {
 }
 
 const digitalIdInvitationCardOverlay: CardLayoutOverlay10 = {
-  capture_base: '',
+  captureBase: '',
   type: 'spec/overlays/card_layout/1.0',
   imageSource: require('./invitation-card.png'),
   header: {
@@ -37,7 +40,7 @@ const digitalIdInvitationCardOverlay: CardLayoutOverlay10 = {
 }
 
 const studentCardOverlay11: CardLayoutOverlay11 = {
-  capture_base: '',
+  captureBase: '',
   type: 'spec/overlays/card_layout/1.1',
   logo: {
     src: require('./best-bc-logo.png'),
@@ -49,7 +52,7 @@ const studentCardOverlay11: CardLayoutOverlay11 = {
 }
 
 const memberCardOverlay11: CardLayoutOverlay11 = {
-  capture_base: '',
+  captureBase: '',
   type: 'spec/overlays/card_layout/1.1',
   logo: {
     src: require('./lsbc-logo.png'),
@@ -62,40 +65,40 @@ const memberCardOverlay11: CardLayoutOverlay11 = {
 }
 
 const digitalIdInvitationCardBundle = {
-  capture_base: {},
+  captureBase: {} as CaptureBaseOverlay,
   overlays: [
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Pilot Invitation',
       issuerName: 'DITP',
-    },
+    } as MetaOverlay,
     digitalIdInvitationCardOverlay,
   ],
 }
 
 const studentCardBundle11 = {
-  capture_base: {},
+  captureBase: {} as CaptureBaseOverlay,
   overlays: [
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Student',
       issuerName: 'BestBC College',
-    },
+    } as MetaOverlay,
     studentCardOverlay11,
   ],
 }
 
 const memberCardBundle11 = {
-  capture_base: {},
+  captureBase: {} as CaptureBaseOverlay,
   overlays: [
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Member Card',
       issuerName: 'Law Society of BC',
-    },
+    } as MetaOverlay,
     memberCardOverlay11,
   ],
 }
@@ -104,14 +107,14 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
   const metaOverlays: MetaOverlay[] = []
   if (verified) {
     metaOverlays.push({
-      capture_base: '',
+      captureBase: '',
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Person',
       issuerName: 'Service BC',
     })
     metaOverlays.push({
-      capture_base: '',
+      captureBase: '',
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Personne',
@@ -119,14 +122,14 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
     })
   } else {
     metaOverlays.push({
-      capture_base: '',
+      captureBase: '',
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Unverified Person',
       issuerName: 'DITP',
     })
     metaOverlays.push({
-      capture_base: '',
+      captureBase: '',
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Unverified Personne',
@@ -134,24 +137,24 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
     })
   }
   return {
-    capture_base: {
+    captureBase: {
+      captureBase: '',
+      type: 'spec/overlays/capture_base/1.0',
       attributes: {
         postal_code: 'Text',
-        //picture: 'Text',
         given_names: 'Text',
         family_name: 'Text',
         locality: 'Text',
         region: 'Text',
         street_address: 'Text',
         country: 'Text',
-        //expiry_date_dateint: 'Text',
         birthdate_dateint: 'DateInt',
       },
-    },
+    } as CaptureBaseOverlay,
     overlays: [
       ...metaOverlays,
       {
-        capture_base: '',
+        captureBase: '',
         type: 'spec/overlays/card_layout/1.0',
         imageSource: backgroundImageSource,
         header: {
@@ -161,29 +164,32 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         footer: { color: '#FFFFFF' },
       } as CardLayoutOverlay10,
       {
+        captureBase: '',
         type: 'spec/overlays/format/1.0',
         language: 'en',
-        attr_formats: {
+        attributeFormats: {
           birthdate_dateint: 'YYYYMMDD',
         },
-      },
+      } as FormatOverlay,
       {
+        captureBase: '',
         type: 'spec/overlays/label/1.0',
         language: 'en',
-        attr_labels: {
+        attributeLabels: {
           given_names: 'Given Name',
           family_name: 'Family Name',
           birthdate_dateint: 'Date of Birth',
         },
-      },
+      } as LabelOverlay,
       {
+        captureBase: '',
         type: 'spec/overlays/label/1.0',
         language: 'fr',
-        attr_labels: {
+        attributeLabels: {
           given_names: 'Prénoms',
           family_name: 'Nom de famille',
         },
-      },
+      } as LabelOverlay,
     ],
   }
 }
