@@ -3,8 +3,7 @@ import { useNavigation } from '@react-navigation/core'
 import { Button, ButtonType, Screens, useStore, useTheme } from 'aries-bifold'
 import React, { ReducerAction, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View, Image, Dimensions, ImageBackground, TouchableOpacity, Linking } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StyleSheet, Text, View, Image, Dimensions, ImageBackground, TouchableOpacity, Linking, ScrollView, SafeAreaView } from 'react-native'
 import LoadingIcon from '../components/LoadingIcon'
 import { startFlow } from '../helpers/BCIDHelper'
 import { BCDispatchAction, BCState } from '../store'
@@ -27,9 +26,13 @@ const PersonCredentialScreen: React.FC = () => {
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
+    pageContainer: {
+      flex: 1
+    },
     pageContent: {
       marginHorizontal: 20,
       flexGrow: 1,
+      justifyContent: 'space-between'
     },
     pageTextContainer: {
       display: 'flex',
@@ -86,95 +89,99 @@ const PersonCredentialScreen: React.FC = () => {
   }, [])
 
   return (
-    <SafeAreaView style={[styles.pageContent]}>
-      <View style={[styles.container]}>
-        <View style={[styles.flexGrow]}>
-          <ImageBackground
-            source={require('../assets/branding/service-bc-id-card.png')}
-            style={[styles.flexGrow]}
-            imageStyle={{ borderRadius }}
-          >
-            <View style={[styles.outerHeaderContainer]}>
-              <View style={[styles.innerHeaderContainer]}>
-                <Image
-                  source={require('../assets/branding/service-bc-header-logo.png')}
-                  style={{
-                    flex: 1,
-                    resizeMode: 'contain',
-                    maxHeight: styles.outerHeaderContainer.height - borderPadding,
-                  }}
-                />
-                <Text
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  style={[
-                    TextTheme.label,
-                    {
-                      color: ColorPallet.grayscale.white,
-                      paddingHorizontal: 0.5 * paddingHorizontal,
-                      flex: 3,
-                      textAlignVertical: 'center',
-                    },
-                  ]}
-                  maxFontSizeMultiplier={1}
-                >
-                  {t('PersonCredential.Issuer')}
-                </Text>
-                <Text
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  style={[
-                    TextTheme.label,
-                    {
-                      color: ColorPallet.grayscale.white,
-                      textAlign: 'right',
-                      paddingHorizontal: 0.5 * paddingHorizontal,
-                      flex: 4,
-                      textAlignVertical: 'center',
-                    },
-                  ]}
-                  maxFontSizeMultiplier={1}
-                >
-                  {t('PersonCredential.Name')}
-                </Text>
-              </View>
+    <SafeAreaView style={styles.pageContainer}>
+      <ScrollView contentContainerStyle={[styles.pageContent]}>
+        <View>
+          <View style={[styles.container]}>
+            <View style={[styles.flexGrow]}>
+              <ImageBackground
+                source={require('../assets/branding/service-bc-id-card.png')}
+                style={[styles.flexGrow]}
+                imageStyle={{ borderRadius }}
+              >
+                <View style={[styles.outerHeaderContainer]}>
+                  <View style={[styles.innerHeaderContainer]}>
+                    <Image
+                      source={require('../assets/branding/service-bc-header-logo.png')}
+                      style={{
+                        flex: 1,
+                        resizeMode: 'contain',
+                        maxHeight: styles.outerHeaderContainer.height - borderPadding,
+                      }}
+                    />
+                    <Text
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                      style={[
+                        TextTheme.label,
+                        {
+                          color: ColorPallet.grayscale.white,
+                          paddingHorizontal: 0.5 * paddingHorizontal,
+                          flex: 3,
+                          textAlignVertical: 'center',
+                        },
+                      ]}
+                      maxFontSizeMultiplier={1}
+                    >
+                      {t('PersonCredential.Issuer')}
+                    </Text>
+                    <Text
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                      style={[
+                        TextTheme.label,
+                        {
+                          color: ColorPallet.grayscale.white,
+                          textAlign: 'right',
+                          paddingHorizontal: 0.5 * paddingHorizontal,
+                          flex: 4,
+                          textAlignVertical: 'center',
+                        },
+                      ]}
+                      maxFontSizeMultiplier={1}
+                    >
+                      {t('PersonCredential.Name')}
+                    </Text>
+                  </View>
+                </View>
+              </ImageBackground>
             </View>
-          </ImageBackground>
-        </View>
-      </View>
-      <View>
-        <Text style={TextTheme.normal}>
-          {t('PersonCredential.Description') + ' '}
-          <TouchableOpacity onPress={getBCServicesCardApp}>
-            <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
-              {t('PersonCredential.LinkDescription')}
+          </View>
+          <View>
+            <Text style={TextTheme.normal}>
+              {t('PersonCredential.Description') + ' '}
+              <TouchableOpacity onPress={getBCServicesCardApp}>
+                <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
+                  {t('PersonCredential.LinkDescription')}
+                </Text>
+              </TouchableOpacity>
             </Text>
-          </TouchableOpacity>
-        </Text>
-      </View>
-      <View style={styles.buttonContainer}>
-        <View style={styles.button}>
-          <Button
-            title={t('PersonCredential.GetCredential')}
-            accessibilityLabel={t('PersonCredential.GetCredential')}
-            onPress={startGetBCIDCredentialWorkflow}
-            disabled={workflowInFlight}
-            buttonType={ButtonType.Primary}
-          >
-            {workflowInFlight && (
-              <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInFlight} />
-            )}
-          </Button>
+          </View>
         </View>
-        <View style={styles.button}>
-          <Button
-            title={t('PersonCredential.Decline')}
-            accessibilityLabel={t('PersonCredential.Decline')}
-            onPress={dismissPersonCredentialOffer}
-            buttonType={ButtonType.Secondary}
-          ></Button>
+        <View style={styles.buttonContainer}>
+          <View style={styles.button}>
+            <Button
+              title={t('PersonCredential.GetCredential')}
+              accessibilityLabel={t('PersonCredential.GetCredential')}
+              onPress={startGetBCIDCredentialWorkflow}
+              disabled={workflowInFlight}
+              buttonType={ButtonType.Primary}
+            >
+              {workflowInFlight && (
+                <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInFlight} />
+              )}
+            </Button>
+          </View>
+          <View style={styles.button}>
+            <Button
+              title={t('PersonCredential.Decline')}
+              accessibilityLabel={t('PersonCredential.Decline')}
+              onPress={dismissPersonCredentialOffer}
+              buttonType={ButtonType.Secondary}
+            ></Button>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
