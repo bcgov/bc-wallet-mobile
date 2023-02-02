@@ -35,7 +35,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
-import { BCDispatchAction } from '../store'
+import { BCDispatchAction, BCLocalStorageKeys } from '../store'
 
 const onboardingComplete = (state: OnboardingState): boolean => {
   return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
@@ -147,11 +147,21 @@ const Splash: React.FC = () => {
   }
 
   const loadPersonNotificationDismissed = async (): Promise<void> => {
-    const dismissed = await loadObjectFromStorage('PersonCredentialOfferDismissed')
+    const dismissed = await loadObjectFromStorage(BCLocalStorageKeys.PersonCredentialOfferDismissed)
     if (dismissed) {
       dispatch({
         type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
         payload: [{ personCredentialOfferDismissed: dismissed.personCredentialOfferDismissed }],
+      })
+    }
+  }
+
+  const loadIASEnvironment = async (): Promise<void> => {
+    const environment = await loadObjectFromStorage(BCLocalStorageKeys.Environment)
+    if (environment) {
+      dispatch({
+        type: BCDispatchAction.UPDATE_ENVIRONMENT,
+        payload: [environment],
       })
     }
   }
@@ -169,6 +179,8 @@ const Splash: React.FC = () => {
 
         // load BCID person credential notification dismissed state from storage
         await loadPersonNotificationDismissed()
+
+        await loadIASEnvironment()
 
         setStep(2)
         const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
