@@ -3,10 +3,10 @@ import {
   CredentialExchangeRecord as CredentialRecord,
   CredentialMetadataKeys,
 } from '@aries-framework/core'
-import { BifoldError, DispatchAction, Agent } from 'aries-bifold'
+import { BifoldError, Agent, EventTypes as BifoldEventTypes } from 'aries-bifold'
 import React, { ReducerAction } from 'react'
 import { TFunction } from 'react-i18next'
-import { Linking, Platform } from 'react-native'
+import { Linking, Platform, DeviceEventEmitter } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
 import { BCState } from '../store'
@@ -232,10 +232,7 @@ export const authenticateWithServiceCard = async (
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
 
-    dispatch({
-      type: DispatchAction.ERROR_ADDED,
-      payload: [{ error }],
-    })
+    DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }
 
@@ -268,9 +265,6 @@ export const startFlow = async (
   } catch (error: unknown) {
     setWorkflowInFlight(false)
 
-    dispatch({
-      type: DispatchAction.ERROR_ADDED,
-      payload: [{ error }],
-    })
+    DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }

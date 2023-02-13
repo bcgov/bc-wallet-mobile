@@ -1,20 +1,16 @@
-import React, {useCallback} from 'react'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity } from 'react-native'
+import { StyleSheet, TouchableOpacity, DeviceEventEmitter } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useTheme, testIdWithKey, useStore } from 'aries-bifold'
-import { BCState, BCDispatchAction } from '../store'
+import { useTheme, testIdWithKey } from 'aries-bifold'
+import { BCWalletEventTypes } from '../events/eventTypes'
 
 const AddCredentialButton: React.FC = () => {
     const { t } = useTranslation()
     const { ColorPallet } = useTheme()
-    const [, dispatch] = useStore<BCState>()
 
     const activateSlider = useCallback(() => {
-        dispatch({
-            type: BCDispatchAction.ADD_CREDENTIAL_PRESSED,
-            payload: [true],
-        })
+        DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED)
     }, [])
 
     const styles = StyleSheet.create({

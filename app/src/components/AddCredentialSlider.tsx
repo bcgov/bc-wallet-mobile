@@ -1,15 +1,16 @@
-import React, { ReducerAction, useEffect, useRef, useState, useCallback } from 'react'
+import React, { ReducerAction, useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Animated, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Modal, StyleSheet, Text, TouchableOpacity, View, DeviceEventEmitter } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useNavigation } from '@react-navigation/core'
 
 import { useTheme, useStore, Screens, Stacks } from 'aries-bifold'
-import { BCState, BCDispatchAction } from '../store'
+import { BCState } from '../store'
 import { useAgent, useCredentialByState } from '@aries-framework/react-hooks'
 import { showBCIDSelector, startFlow } from '../helpers/BCIDHelper'
 import { CredentialMetadataKeys, CredentialState } from '@aries-framework/core'
 import LoadingIcon from './LoadingIcon'
+import { BCWalletEventTypes } from '../events/eventTypes'
 
 const AddCredentialSlider: React.FC = () => {
   const { ColorPallet, TextTheme } = useTheme()
@@ -17,6 +18,7 @@ const AddCredentialSlider: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
+  const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
   const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
   const credentials = [
     ...useCredentialByState(CredentialState.CredentialReceived),
@@ -24,6 +26,13 @@ const AddCredentialSlider: React.FC = () => {
   ]
   const navigation = useNavigation()
   const [canUseLSBCredential] = useState<boolean>(true)
+
+  DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED,
+    (value?: boolean) => {
+      const newVal = value === undefined ? !addCredentialPressed : value
+      setAddCredentialPressed(newVal)
+    }
+  )
 
   const styles = StyleSheet.create({
     centeredView: {
@@ -68,10 +77,7 @@ const AddCredentialSlider: React.FC = () => {
   })
 
   const deactivateSlider = useCallback(() => {
-    dispatch({
-      type: BCDispatchAction.ADD_CREDENTIAL_PRESSED,
-      payload: [false],
-    })
+    DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED)
   }, [])
 
   const goToScanScreen = useCallback(() => {
@@ -97,7 +103,7 @@ const AddCredentialSlider: React.FC = () => {
       <Modal
         animationType="slide"
         transparent={true}
-        visible={store.addCredential.addCredentialPressed}
+        visible={addCredentialPressed}
         onRequestClose={deactivateSlider}
       >
         <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />

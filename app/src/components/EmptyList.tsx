@@ -1,10 +1,10 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Text, View } from 'react-native'
+import { Text, View, DeviceEventEmitter } from 'react-native'
 
 import EmptyWallet from '../assets/img/emptyWallet.svg'
-import { useTheme, testIdWithKey, Button, ButtonType, useStore } from 'aries-bifold'
-import { BCState, BCDispatchAction } from '../store'
+import { useTheme, testIdWithKey, Button, ButtonType } from 'aries-bifold'
+import { BCWalletEventTypes } from '../events/eventTypes'
 export interface EmptyListProps {
     message?: string
 }
@@ -12,13 +12,17 @@ export interface EmptyListProps {
 const EmptyList: React.FC<EmptyListProps> = ({ message }) => {
     const { t } = useTranslation()
     const { ListItems, } = useTheme()
-    const [store, dispatch] = useStore<BCState>()
+    const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
+
+    DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED,
+        (value?: boolean) => {
+            const newVal = value === undefined ? !addCredentialPressed : value
+            setAddCredentialPressed(newVal)
+        }
+    )
 
     const addCredentialPress = useCallback(() => {
-        dispatch({
-            type: BCDispatchAction.ADD_CREDENTIAL_PRESSED,
-            payload: [true],
-        })
+        DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, !addCredentialPressed)
     }, [])
 
     return (
@@ -28,7 +32,7 @@ const EmptyList: React.FC<EmptyListProps> = ({ message }) => {
                 {message || t('Global.NoneYet!')}
             </Text>
             <View style={{ margin: 25 }}>
-                <Button title={t('Credentials.AddFirstCredential')} buttonType={ButtonType.Primary} onPress={addCredentialPress} disabled={store.addCredential.addCredentialPressed} ></Button>
+                <Button title={t('Credentials.AddFirstCredential')} buttonType={ButtonType.Primary} onPress={addCredentialPress} disabled={addCredentialPressed} ></Button>
             </View>
         </View>
     )
