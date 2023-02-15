@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   State as BifoldState,
   mergeReducers,
@@ -5,7 +6,6 @@ import {
   defaultState,
   ReducerAction,
 } from 'aries-bifold'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export interface IASEnvironment {
   name: string
@@ -86,6 +86,11 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
   personCredentialOfferDismissed: false,
 }
 
+export enum BCLocalStorageKeys {
+  PersonCredentialOfferDismissed = 'PersonCredentialOfferDismissed',
+  Environment = 'Environment',
+}
+
 export const initialState: BCState = {
   ...defaultState,
   developer: developerState,
@@ -98,6 +103,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case DeveloperDispatchAction.UPDATE_ENVIRONMENT: {
       const environment: IASEnvironment = (action?.payload || []).pop()
       const developer = { ...state.developer, environment }
+
+      // Persist IAS environment between app restarts
+      AsyncStorage.setItem(BCLocalStorageKeys.Environment, JSON.stringify(developer.environment))
       return { ...state, developer }
     }
     case AddCredentialDispatchAction.ADD_CREDENTIAL_PRESSED: {
@@ -111,7 +119,10 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, dismissPersonCredentialOffer }
 
       // save to storage so notification doesn't reapper on app restart
-      AsyncStorage.setItem('PersonCredentialOfferDismissed', JSON.stringify(newState.dismissPersonCredentialOffer))
+      AsyncStorage.setItem(
+        BCLocalStorageKeys.PersonCredentialOfferDismissed,
+        JSON.stringify(newState.dismissPersonCredentialOffer)
+      )
       return newState
     }
     default:
