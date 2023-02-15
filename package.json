@@ -11,7 +11,13 @@
     "build:app": "cd app && npm run typecheck && npm run prepack --if-present",
     "build:all": "run-s build:bifold build:app",
     "prepare": "run-s install:all build:all",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:app": "cd app && npm run lint --if-present",
+    "lint": "run-s lint:app",
+    "prettier:app": "cd app && npm run prettier --if-present",
+    "prettier": "run-s prettier:app",
+    "test": "cd app && npm test",
+    "pre-commit-lint:app": "cd app && npm run pre-commit-lint",
+    "pre-commit-lint": "run-s pre-commit-lint:app",
     "typecheck": "cd app && npm run typecheck"
   },
   "repository": {

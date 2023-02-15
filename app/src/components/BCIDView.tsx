@@ -6,10 +6,10 @@ import React, { useEffect, useState, useRef, ReducerAction } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
-import { BCState } from '../store'
-
 import CredentialIcon from '../assets/img/credentialIcon.svg'
 import { showBCIDSelector, startFlow, WellKnownAgentDetails } from '../helpers/BCIDHelper'
+import { BCState } from '../store'
+
 import LoadingIcon from './LoadingIcon'
 
 const BCIDView: React.FC = () => {

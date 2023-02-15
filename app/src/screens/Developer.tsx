@@ -163,9 +163,7 @@ const Settings: React.FC = () => {
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </Modal>
       <View style={styles.container}>
-        <SectionRow
-          title={t('Developer.DeveloperMode')}
-        >
+        <SectionRow title={t('Developer.DeveloperMode')}>
           <Switch
             accessibilityLabel={t('Developer.Toggle')}
             testID={testIdWithKey('ToggleDeveloper')}
