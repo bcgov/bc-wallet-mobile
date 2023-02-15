@@ -1,11 +1,10 @@
-import { useTheme, testIdWithKey } from 'aries-bifold'
+import { testIdWithKey } from 'aries-bifold'
 import React, { useEffect, useRef } from 'react'
 import { View, StyleSheet, Animated } from 'react-native'
 
 import ActivityIndicator from '../assets/img/activity-indicator-circle.svg'
 
 const Spinner: React.FC = () => {
-  const { ColorPallet } = useTheme()
   const rotationAnim = useRef(new Animated.Value(0)).current
   const timing: Animated.TimingAnimationConfig = {
     toValue: 1,

@@ -25,6 +25,7 @@ module.exports = {
   plugins: ['@typescript-eslint', 'import'],
   rules: {
     'no-console': 'error',
+    '@typescript-eslint/no-unused-vars': 'error',
     // Because of early development, we only warn on ts-ignore. In future we want to move to error
     '@typescript-eslint/ban-ts-comment': 'warn',
     // Aries protocol defines attributes with snake case.
