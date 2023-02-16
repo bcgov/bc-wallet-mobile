@@ -4,15 +4,15 @@
   "description": "![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)",
   "main": "index.js",
   "scripts": {
-    "install:bifold": "cd bifold/core && yarn install",
-    "install:app": "cd app && yarn install",
+    "install:bifold": "cd bifold/core && npm ci",
+    "install:app": "cd app && npm ci",
     "install:all": "run-s install:bifold install:app",
-    "build:bifold": "cd bifold/core && yarn typecheck && yarn prepack",
-    "build:app": "cd app && yarn typecheck && yarn prepack --if-present",
+    "build:bifold": "cd bifold/core && npm run typecheck && npm run prepack",
+    "build:app": "cd app && npm run typecheck && npm run prepack --if-present",
     "build:all": "run-s build:bifold build:app",
     "prepare": "run-s install:all build:all",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "typecheck": "cd app && yarn typecheck"
+    "typecheck": "cd app && npm run typecheck"
   },
   "repository": {
     "type": "git",
