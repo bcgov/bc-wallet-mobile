@@ -1,12 +1,7 @@
 import { Theme } from 'aries-bifold'
 import { StyleSheet } from 'react-native'
-import { SvgProps } from 'react-native-svg'
 
 import Logo from './assets/img/logo-with-text.svg'
-
-interface SVGAssets {
-  logo: React.FC<SvgProps>
-}
 
 interface FontAttributes {
   fontFamily?: string
@@ -104,14 +99,6 @@ interface ColorPallet {
   semantic: SemanticColors
   notification: NotificationColors
   grayscale: GrayscaleColors
-}
-
-interface Assets {
-  svg: SVGAssets
-  img: {
-    logoPrimary: any
-    logoSecondary: any
-  }
 }
 
 export const borderRadius = 4
@@ -618,7 +605,7 @@ export const Assets = {
       width: 170,
     },
   },
-}
+} as Theme['Assets']
 
 export const defaultTheme: Theme = {
   ColorPallet,
