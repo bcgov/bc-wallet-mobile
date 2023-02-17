@@ -232,10 +232,11 @@ export const authenticateWithServiceCard = async (
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
 
-    dispatch({
-      type: DispatchAction.ERROR_ADDED,
-      payload: [{ error }],
-    })
+    // FIXME: Disabled until even emitters have been updated
+    // dispatch({
+    //   type: DispatchAction.ERROR_ADDED,
+    //   payload: [{ error }],
+    // })
   }
 }
 
@@ -268,9 +269,10 @@ export const startFlow = async (
   } catch (error: unknown) {
     setWorkflowInFlight(false)
 
-    dispatch({
-      type: DispatchAction.ERROR_ADDED,
-      payload: [{ error }],
-    })
+    // FIXME: Disabled until even emitters have been updated
+    // dispatch({
+    //   type: DispatchAction.ERROR_ADDED,
+    //   payload: [{ error }],
+    // })
   }
 }
