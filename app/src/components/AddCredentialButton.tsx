@@ -13,22 +13,22 @@ const AddCredentialButton: React.FC = () => {
         DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED)
     }, [])
 
-    const styles = StyleSheet.create({
-        button: {
-            paddingHorizontal: 16,
-        },
-    })
-    return (
-        <TouchableOpacity
-            accessible={true}
-            accessibilityLabel={t('Credentials.AddCredential')}
-            testID={testIdWithKey('AddCredential')}
-            style={styles.button}
-            onPress={activateSlider}
-        >
-            <Icon name="plus-circle-outline" size={24} color={ColorPallet.grayscale.white}></Icon>
-        </TouchableOpacity>
-    )
+  const styles = StyleSheet.create({
+    button: {
+      paddingHorizontal: 16,
+    },
+  })
+  return (
+    <TouchableOpacity
+      accessible={true}
+      accessibilityLabel={t('Credentials.AddCredential')}
+      testID={testIdWithKey('AddCredential')}
+      style={styles.button}
+      onPress={activateSlider}
+    >
+      <Icon name="plus-circle-outline" size={24} color={ColorPallet.grayscale.white}></Icon>
+    </TouchableOpacity>
+  )
 }
 
 export default AddCredentialButton

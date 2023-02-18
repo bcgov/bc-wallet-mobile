@@ -6,7 +6,7 @@ import EmptyWallet from '../assets/img/emptyWallet.svg'
 import { useTheme, testIdWithKey, Button, ButtonType } from 'aries-bifold'
 import { BCWalletEventTypes } from '../events/eventTypes'
 export interface EmptyListProps {
-    message?: string
+  message?: string
 }
 
 const EmptyList: React.FC<EmptyListProps> = ({ message }) => {
