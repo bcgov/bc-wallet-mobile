@@ -25,7 +25,6 @@ module.exports = {
   plugins: ['@typescript-eslint', 'import'],
   rules: {
     'no-console': 'error',
-    '@typescript-eslint/no-unused-vars': 'error',
     // Because of early development, we only warn on ts-ignore. In future we want to move to error
     '@typescript-eslint/ban-ts-comment': 'warn',
     // Aries protocol defines attributes with snake case.
@@ -34,6 +33,7 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/explicit-member-accessibility': 'error',
+    '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/no-use-before-define': ['error', { functions: false, classes: false, variables: true }],
     'import/order': [
       'error',

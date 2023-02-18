@@ -87,7 +87,7 @@ const Settings: React.FC = () => {
           title: t('Developer.Environment'),
           value: store.developer.environment.name,
           accessibilityLabel: t('Developer.Environment'),
-          testID: testIdWithKey('environment'),
+          testID: testIdWithKey('Environment'),
           onPress: () => {
             setEnvironmentModalVisible(true)
           },
@@ -104,7 +104,7 @@ const Settings: React.FC = () => {
         {
           title: t('Settings.Developer'),
           accessibilityLabel: t('Settings.Developer'),
-          testID: testIdWithKey('developer'),
+          testID: testIdWithKey('Developer'),
           onPress: () => {
             return
           },

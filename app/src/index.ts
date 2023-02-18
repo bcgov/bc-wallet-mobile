@@ -6,7 +6,6 @@ import {
   indyLedgers,
   defaultConfiguration,
 } from 'aries-bifold'
-import { Bundles } from 'aries-bifold/lib/typescript/App/types/oca'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 
@@ -38,7 +37,7 @@ const configuration: ConfigurationContext = {
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
   developer: Developer,
-  OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(bundles as unknown as Bundles),
+  OCABundleResolver: new types.oca.OCABundleResolver(bundles as unknown as types.oca.Bundles),
   record: Record,
   indyLedgers: selectedLedgers,
   settings: [],
