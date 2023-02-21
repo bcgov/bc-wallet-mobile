@@ -3,7 +3,7 @@ import {
   CredentialExchangeRecord as CredentialRecord,
   CredentialMetadataKeys,
 } from '@aries-framework/core'
-import { BifoldError, DispatchAction, Agent } from 'aries-bifold'
+import { BifoldError, /*DispatchAction,*/ Agent } from 'aries-bifold'
 import React, { ReducerAction } from 'react'
 import { TFunction } from 'react-i18next'
 import { Linking, Platform } from 'react-native'

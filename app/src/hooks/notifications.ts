@@ -7,8 +7,8 @@ import {
 } from '@aries-framework/core'
 import { useCredentialByState, useProofByState } from '@aries-framework/react-hooks'
 import { useStore } from 'aries-bifold'
-
 import { CredentialMetadata, customMetadata } from 'aries-bifold/App/types/metadata'
+
 import { getInvitationCredentialDate, showBCIDSelector } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 
