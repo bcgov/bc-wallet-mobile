@@ -3,7 +3,19 @@ import { useNavigation } from '@react-navigation/core'
 import { Button, ButtonType, Screens, useStore, useTheme } from 'aries-bifold'
 import React, { ReducerAction, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View, Image, Dimensions, ImageBackground, TouchableOpacity, Linking, ScrollView, SafeAreaView } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  View,
+  Image,
+  Dimensions,
+  ImageBackground,
+  TouchableOpacity,
+  Linking,
+  ScrollView,
+  SafeAreaView,
+} from 'react-native'
+
 import LoadingIcon from '../components/LoadingIcon'
 import { startFlow } from '../helpers/BCIDHelper'
 import { BCDispatchAction, BCState } from '../store'
@@ -27,12 +39,12 @@ const PersonCredentialScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     pageContainer: {
-      flex: 1
+      flex: 1,
     },
     pageContent: {
       marginHorizontal: 20,
       flexGrow: 1,
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
     },
     pageTextContainer: {
       display: 'flex',
