@@ -33,9 +33,7 @@ enum DismissPersonCredentialOfferDispatchAction {
   PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
 }
 
-export type BCDispatchAction =
-  | DeveloperDispatchAction
-  | DismissPersonCredentialOfferDispatchAction
+export type BCDispatchAction = DeveloperDispatchAction | DismissPersonCredentialOfferDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,

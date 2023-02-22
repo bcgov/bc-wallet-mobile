@@ -7,11 +7,11 @@ import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { BCWalletEventTypes } from '../events/eventTypes'
 import { showBCIDSelector, startFlow } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 
 import LoadingIcon from './LoadingIcon'
-import { BCWalletEventTypes } from '../events/eventTypes'
 
 const AddCredentialSlider: React.FC = () => {
   const { ColorPallet, TextTheme } = useTheme()
@@ -28,12 +28,16 @@ const AddCredentialSlider: React.FC = () => {
   const navigation = useNavigation()
   const [canUseLSBCredential] = useState<boolean>(true)
 
-  DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED,
-    (value?: boolean) => {
+  useEffect(() => {
+    const handle = DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, (value?: boolean) => {
       const newVal = value === undefined ? !addCredentialPressed : value
       setAddCredentialPressed(newVal)
+    })
+
+    return () => {
+      handle.remove()
     }
-  )
+  }, [])
 
   const styles = StyleSheet.create({
     centeredView: {
@@ -78,7 +82,7 @@ const AddCredentialSlider: React.FC = () => {
   })
 
   const deactivateSlider = useCallback(() => {
-    DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED)
+    DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, false)
   }, [])
 
   const goToScanScreen = useCallback(() => {
@@ -101,12 +105,7 @@ const AddCredentialSlider: React.FC = () => {
 
   return (
     <View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={addCredentialPressed}
-        onRequestClose={deactivateSlider}
-      >
+      <Modal animationType="slide" transparent={true} visible={addCredentialPressed} onRequestClose={deactivateSlider}>
         <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />
         <View style={styles.centeredView}>
           <View style={styles.modalView}>

@@ -1,3 +1,3 @@
 export enum BCWalletEventTypes {
-    ADD_CREDENTIAL_PRESSED = "AddCredentialPressed"
+  ADD_CREDENTIAL_PRESSED = 'AddCredentialPressed',
 }
