@@ -1,14 +1,15 @@
-import React, { ReducerAction, useEffect, useRef, useState, useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Animated, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { useNavigation } from '@react-navigation/core'
-
-import { useTheme, useStore, Screens, Stacks } from 'aries-bifold'
-import { BCState, BCDispatchAction } from '../store'
-import { useAgent, useCredentialByState } from '@aries-framework/react-hooks'
-import { showBCIDSelector, startFlow } from '../helpers/BCIDHelper'
 import { CredentialMetadataKeys, CredentialState } from '@aries-framework/core'
+import { useAgent, useCredentialByState } from '@aries-framework/react-hooks'
+import { useNavigation } from '@react-navigation/core'
+import { useTheme, useStore, Screens, Stacks } from 'aries-bifold'
+import React, { ReducerAction, useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+
+import { showBCIDSelector, startFlow } from '../helpers/BCIDHelper'
+import { BCState, BCDispatchAction } from '../store'
+
 import LoadingIcon from './LoadingIcon'
 
 const AddCredentialSlider: React.FC = () => {

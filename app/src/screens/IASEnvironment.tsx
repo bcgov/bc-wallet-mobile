@@ -86,7 +86,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
         <Button
           title={t('Global.Cancel')}
           accessibilityLabel={t('Global.Cancel')}
-          testID={testIdWithKey('cancel')}
+          testID={testIdWithKey('Cancel')}
           onPress={shouldDismissModal}
           buttonType={ButtonType.Secondary}
         />
