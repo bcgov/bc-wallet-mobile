@@ -21,7 +21,7 @@ export enum CREDENTIALS {
   SHOWCASE_LAWYER2_PERSON_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
   UNVERIFIED_PERSON_DEV = 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0',
   UNVERIFIED_PERSON_TEST = 'HTkhhCW1bAXWnxC1u3YVoa:2:unverified_person:0.1.0',
-  UNVERIFIED_PERSON_PROD = '4eCXHS79ykiMv2PoBxPK23:2:unverified_person:0.1.0',
+  UNVERIFIED_PERSON_PROD = 'YXCtXE4YhVjULgj5hrk4ML:2:unverified_person:0.1.0',
   PILOT_INVITE_DEV = 'Mp2pDQqS2eSjNVA7kXc8ut:2:BC VC Pilot Certificate:1.0.1',
   PILOT_INVITE_TEST = '4zBepKVWZcGTzug4X49vAN:2:BC VC Pilot Certificate:1.0.1',
   PILOT_INVITE_PROD = 'E2h4RUJxyh48PLJ1CtGJrq:2:BC VC Pilot Certificate:1.0.1',
@@ -30,30 +30,34 @@ export enum CREDENTIALS {
   BC_DIGITAL_ID_PROD = 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
 }
 
-const digitalIdInvitationCardOverlay: CardLayoutOverlay10 = {
+const digitalIdInvitationCardOverlay: CardLayoutOverlay11 = {
   captureBase: '',
-  type: 'spec/overlays/card_layout/1.0',
-  imageSource: require('./invitation-card.png'),
-  header: {
-    imageSource: require('./service-bc-header-logo.png'),
-    color: '#FFFFFF',
+  type: 'spec/overlays/card_layout/1.1',
+  logo: {
+    src: require('./bc-logo.jpg'),
   },
-  footer: { color: '#FFFFFF' },
+  primaryBackgroundColor: '#003366',
+  backgroundImageSlice: {
+    src: require('./invitation-background-image-slice.png'),
+  },
 }
 
-const studentCardOverlay11: CardLayoutOverlay11 = {
+const studentCardOverlay: CardLayoutOverlay11 = {
   captureBase: '',
   type: 'spec/overlays/card_layout/1.1',
   logo: {
     src: require('./best-bc-logo.png'),
   },
+  primaryBackgroundColor: '#32674e',
+  backgroundImage: {
+    src: require('./best-bc-background-image.jpg'),
+  },
   backgroundImageSlice: {
     src: require('./best-bc-background-image-slice.png'),
   },
-  primaryBackgroundColor: '#32674e',
 }
 
-const memberCardOverlay11: CardLayoutOverlay11 = {
+const memberCardOverlay: CardLayoutOverlay11 = {
   captureBase: '',
   type: 'spec/overlays/card_layout/1.1',
   logo: {
@@ -73,13 +77,13 @@ const digitalIdInvitationCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Pilot Invitation',
-      issuerName: 'DITP',
+      issuerName: 'Digital Identity and Trust Program',
     } as MetaOverlay,
     digitalIdInvitationCardOverlay,
   ],
 }
 
-const studentCardBundle11 = {
+const studentCardBundle = {
   captureBase: {} as CaptureBaseOverlay,
   overlays: [
     {
@@ -88,11 +92,11 @@ const studentCardBundle11 = {
       name: 'Student',
       issuerName: 'BestBC College',
     } as MetaOverlay,
-    studentCardOverlay11,
+    studentCardOverlay,
   ],
 }
 
-const memberCardBundle11 = {
+const memberCardBundle = {
   captureBase: {} as CaptureBaseOverlay,
   overlays: [
     {
@@ -101,7 +105,7 @@ const memberCardBundle11 = {
       name: 'Member Card',
       issuerName: 'Law Society of BC',
     } as MetaOverlay,
-    memberCardOverlay11,
+    memberCardOverlay,
   ],
 }
 
@@ -128,14 +132,14 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Unverified Person',
-      issuerName: 'DITP',
+      issuerName: 'Digital Identity and Trust Program',
     })
     metaOverlays.push({
       captureBase: '',
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Unverified Personne',
-      issuerName: 'DITP',
+      issuerName: 'Digital Identity and Trust Program',
     })
   }
   return {
@@ -157,14 +161,21 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       ...metaOverlays,
       {
         captureBase: '',
-        type: 'spec/overlays/card_layout/1.0',
-        imageSource: backgroundImageSource,
-        header: {
-          imageSource: require('./service-bc-header-logo.png'),
-          color: '#FFFFFF',
+        type: 'spec/overlays/card_layout/1.1',
+        logo: {
+          src: require('./bc-logo.jpg'),
         },
-        footer: { color: '#FFFFFF' },
-      } as CardLayoutOverlay10,
+        primaryBackgroundColor: '#003366',
+        backgroundImage: {
+          src: backgroundImageSource,
+        },
+        primaryAttribute: {
+          name: 'given_names',
+        },
+        secondaryAttribute: {
+          name: 'family_name',
+        },
+      } as CardLayoutOverlay11,
       {
         captureBase: '',
         type: 'spec/overlays/format/1.0',
@@ -197,37 +208,34 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
 }
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./service-bc-id-card-test.png'), false)
+const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./person-background-image.png'), false)
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const digitalIdCardBundle = createPersonCredentialBundle(require('./service-bc-id-card.png'))
-
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const testDigitalIdCardBundle = createPersonCredentialBundle(require('./service-bc-id-card-test.png'))
+const digitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'))
 
 export default {
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/370
-  [CREDENTIALS.LSBC_TEST]: memberCardBundle11 /* LSBC (TEST) */,
-  [CREDENTIALS.LSBC_PROD]: memberCardBundle11 /* LSBC (PROD) */,
+  [CREDENTIALS.LSBC_TEST]: memberCardBundle /* LSBC (TEST) */,
+  [CREDENTIALS.LSBC_PROD]: memberCardBundle /* LSBC (PROD) */,
   // ↓↓↓ https://github.com/bcgov/BC-Wallet-Demo/discussions/59
-  [CREDENTIALS.SHOWCASE_LAWYER_DEV]: memberCardBundle11 /* Showcase LSBC (DEV) */,
-  [CREDENTIALS.SHOWCASE_LAWYER_TEST]: memberCardBundle11 /* Showcase LSBC (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER_PROD]: memberCardBundle11 /* Showcase LSBC (PROD) */,
-  [CREDENTIALS.SHOWCASE_STUDENT_DEV]: studentCardBundle11 /* Showcase Student (DEV) */,
-  [CREDENTIALS.SHOWCASE_STUDENT_TEST]: studentCardBundle11 /* Showcase Student (TEST) */,
-  [CREDENTIALS.SHOWCASE_STUDENT_PROD]: studentCardBundle11 /* Showcase Student (PROD) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_DEV]: memberCardBundle /* Showcase LSBC (DEV) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_TEST]: memberCardBundle /* Showcase LSBC (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_PROD]: memberCardBundle /* Showcase LSBC (PROD) */,
+  [CREDENTIALS.SHOWCASE_STUDENT_DEV]: studentCardBundle /* Showcase Student (DEV) */,
+  [CREDENTIALS.SHOWCASE_STUDENT_TEST]: studentCardBundle /* Showcase Student (TEST) */,
+  [CREDENTIALS.SHOWCASE_STUDENT_PROD]: studentCardBundle /* Showcase Student (PROD) */,
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/506
   [CREDENTIALS.UNVERIFIED_PERSON_DEV]: unverifiedPersonCardBundle /* Unverified Person (DEV) */,
   [CREDENTIALS.UNVERIFIED_PERSON_TEST]: unverifiedPersonCardBundle /* Unverified Person (TEST) */,
-  [CREDENTIALS.UNVERIFIED_PERSON_PROD]: unverifiedPersonCardBundle /* Unverified Person (DEV) */,
+  [CREDENTIALS.UNVERIFIED_PERSON_PROD]: unverifiedPersonCardBundle /* Unverified Person (PROD) */,
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/604
   [CREDENTIALS.PILOT_INVITE_DEV]: digitalIdInvitationCardBundle /* (DEV) */,
   [CREDENTIALS.PILOT_INVITE_TEST]: digitalIdInvitationCardBundle /* (TEST) */,
   [CREDENTIALS.PILOT_INVITE_PROD]: digitalIdInvitationCardBundle /* (PROD) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: testDigitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_TEST]: testDigitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_PROD]: testDigitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.BC_DIGITAL_ID_QA]: testDigitalIdCardBundle /* (QA) */,
-  [CREDENTIALS.BC_DIGITAL_ID_SIT]: testDigitalIdCardBundle /* (SIT) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: digitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_TEST]: digitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_PROD]: digitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
+  [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
 }
