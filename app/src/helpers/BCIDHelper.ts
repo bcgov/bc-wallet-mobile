@@ -191,8 +191,6 @@ export const authenticateWithServiceCard = async (
         showInRecents: true,
       })
 
-      console.log('*** UUU ***', (result as unknown as RedirectResult).url, result.type)
-
       // When `result.type` is "Cancel" that comes from the alert box or
       // secure browser `result.url` will be undefined.
       if (
