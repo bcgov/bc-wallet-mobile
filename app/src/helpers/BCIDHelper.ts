@@ -171,10 +171,10 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
 
 export const authenticateWithServiceCard = async (
   store: BCState,
-  dispatch: React.Dispatch<ReducerAction<any>>,
   setWorkflow: React.Dispatch<React.SetStateAction<boolean>>,
   did: string,
-  t: TFunction<'translation', undefined>
+  t: TFunction<'translation', undefined>,
+  callback?: () => void
 ): Promise<void> => {
   try {
     const url = `${store.developer.environment.iasPortalUrl}/${did}`
@@ -191,34 +191,47 @@ export const authenticateWithServiceCard = async (
         showInRecents: true,
       })
 
-      // When `result.type` is "Cancel" that comes from the secure browser
-      // tab "Cancel" mechanics. When the URL includes the word "cancel" this
-      // comes from the BC Service Card app authentication workflow.
+      console.log('*** UUU ***', (result as unknown as RedirectResult).url, result.type)
+
+      // When `result.type` is "Cancel" that comes from the alert box or
+      // secure browser `result.url` will be undefined.
       if (
-        result.type === AuthenticationResultType.Cancel ||
-        ((result as unknown as RedirectResult).url.includes(did) &&
-          ((result as unknown as RedirectResult).url.includes('cancel') ||
-            (result as unknown as RedirectResult).url.includes('success')))
+        result.type === AuthenticationResultType.Cancel &&
+        typeof (result as unknown as RedirectResult).url === 'undefined'
       ) {
         setWorkflow(false)
+
         return
       }
 
+      // When `result.type` is "Success" and `result.url` contains the
+      // word "success" the credential offer workflow has been completed.
       if (
-        !(result as unknown as RedirectResult).url.includes(did) ||
-        !(
-          (result as unknown as RedirectResult).url.includes('success') ||
-          (result as unknown as RedirectResult).url.includes('cancel')
-        )
+        result.type === AuthenticationResultType.Success &&
+        (result as unknown as RedirectResult).url.includes(did) &&
+        (result as unknown as RedirectResult).url.includes('success')
+      ) {
+        setWorkflow(false)
+        callback && callback()
+      }
+
+      // When `result.type` is "Success" and `result.url` contains the
+      // word "cancel" the credential offer workflow has been canceled by
+      // the user.
+      if (
+        result.type === AuthenticationResultType.Success &&
+        (result as unknown as RedirectResult).url.includes(did) &&
+        (result as unknown as RedirectResult).url.includes('cancel')
       ) {
         setWorkflow(false)
 
-        throw new BifoldError(
-          t('Error.Title2025'),
-          t('Error.Message2025'),
-          t('Error.NoMessage'),
-          ErrorCodes.ServiceCardError
-        )
+        // FIXME: This does nothing unlit the catch below is updated.
+        // throw new BifoldError(
+        //   t('Error.Title2025'),
+        //   t('Error.Message2025'),
+        //   t('Error.NoMessage'),
+        //   ErrorCodes.ServiceCardError
+        // )
       }
     } else {
       await Linking.openURL(url)
@@ -243,26 +256,21 @@ export const authenticateWithServiceCard = async (
 export const startFlow = async (
   agent: Agent,
   store: BCState,
-  dispatch: React.Dispatch<ReducerAction<any>>,
   setWorkflowInFlight: React.Dispatch<React.SetStateAction<boolean>>,
   t: TFunction<'translation', undefined>,
-  setAgentDetails?: React.Dispatch<React.SetStateAction<WellKnownAgentDetails>>
+  callback?: () => void
 ) => {
   try {
     const agentDetails = await recieveBCIDInvite(agent, store, t)
-
-    if (setAgentDetails !== undefined) {
-      setAgentDetails(agentDetails)
-    }
 
     if (agentDetails.legacyConnectionDid !== undefined) {
       setTimeout(async () => {
         await authenticateWithServiceCard(
           store,
-          dispatch,
           setWorkflowInFlight,
           agentDetails.legacyConnectionDid as string,
-          t
+          t,
+          callback
         )
       }, connectionDelayInMs)
     }
