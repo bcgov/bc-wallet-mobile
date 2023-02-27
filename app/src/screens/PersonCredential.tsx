@@ -104,7 +104,7 @@ const PersonCredentialScreen: React.FC = () => {
     <SafeAreaView style={styles.pageContainer}>
       <ScrollView contentContainerStyle={[styles.pageContent]}>
         <View>
-          <View style={[styles.container]}>
+          {/* <View style={[styles.container]}>
             <View style={[styles.flexGrow]}>
               <ImageBackground
                 source={require('../assets/branding/service-bc-id-card.png')}
@@ -158,7 +158,7 @@ const PersonCredentialScreen: React.FC = () => {
                 </View>
               </ImageBackground>
             </View>
-          </View>
+          </View> */}
           <View>
             <Text style={TextTheme.normal}>
               {t('PersonCredential.Description') + ' '}
