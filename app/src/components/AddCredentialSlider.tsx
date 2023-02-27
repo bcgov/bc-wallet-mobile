@@ -75,6 +75,13 @@ const AddCredentialSlider: React.FC = () => {
     })
   }, [])
 
+  const navigateToHomeScreen = () => {
+    deactivateSlider()
+    // TODO(jl): Replace hard coded string with import from Bifold.
+    // Waiting on PR #644 to be merged.
+    navigation.getParent()?.navigate('Tab Home Stack')
+  }
+
   const goToScanScreen = useCallback(() => {
     deactivateSlider()
     navigation.getParent()?.navigate(Stacks.ConnectStack, { screen: Screens.Scan })
@@ -82,7 +89,7 @@ const AddCredentialSlider: React.FC = () => {
 
   const onBCIDPress = useCallback(() => {
     setWorkflowInFlight(true)
-    startFlow(agent!, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t)
+    startFlow(agent!, store, setWorkflowInFlight, t, navigateToHomeScreen)
   }, [store])
 
   useEffect(() => {

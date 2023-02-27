@@ -81,17 +81,18 @@ const PersonCredentialScreen: React.FC = () => {
     },
   })
 
-  const startGetBCIDCredentialWorkflow = useCallback(() => {
-    setWorkflowInFlight(true)
-    startFlow(agent!, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t)
-  }, [])
-
   const dismissPersonCredentialOffer = useCallback(() => {
     dispatch({
       type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
       payload: [{ personCredentialOfferDismissed: true }],
     })
+
     navigation.navigate(Screens.Home as never)
+  }, [])
+
+  const startGetBCIDCredentialWorkflow = useCallback(() => {
+    setWorkflowInFlight(true)
+    startFlow(agent!, store, setWorkflowInFlight, t, dismissPersonCredentialOffer)
   }, [])
 
   const getBCServicesCardApp = useCallback(() => {
