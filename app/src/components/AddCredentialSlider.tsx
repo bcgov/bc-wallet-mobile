@@ -4,11 +4,12 @@ import { useNavigation } from '@react-navigation/core'
 import { useTheme, useStore, Screens, Stacks } from 'aries-bifold'
 import React, { ReducerAction, useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { BCWalletEventTypes } from '../events/eventTypes'
 import { showBCIDSelector, startFlow } from '../helpers/BCIDHelper'
-import { BCState, BCDispatchAction } from '../store'
+import { BCState } from '../store'
 
 import LoadingIcon from './LoadingIcon'
 
@@ -18,6 +19,7 @@ const AddCredentialSlider: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
+  const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
   const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
   const credentials = [
     ...useCredentialByState(CredentialState.CredentialReceived),
@@ -25,6 +27,17 @@ const AddCredentialSlider: React.FC = () => {
   ]
   const navigation = useNavigation()
   const [canUseLSBCredential] = useState<boolean>(true)
+
+  useEffect(() => {
+    const handle = DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, (value?: boolean) => {
+      const newVal = value === undefined ? !addCredentialPressed : value
+      setAddCredentialPressed(newVal)
+    })
+
+    return () => {
+      handle.remove()
+    }
+  }, [])
 
   const styles = StyleSheet.create({
     centeredView: {
@@ -69,10 +82,7 @@ const AddCredentialSlider: React.FC = () => {
   })
 
   const deactivateSlider = useCallback(() => {
-    dispatch({
-      type: BCDispatchAction.ADD_CREDENTIAL_PRESSED,
-      payload: [false],
-    })
+    DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, false)
   }, [])
 
   const navigateToHomeScreen = () => {
@@ -102,12 +112,7 @@ const AddCredentialSlider: React.FC = () => {
 
   return (
     <View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={store.addCredential.addCredentialPressed}
-        onRequestClose={deactivateSlider}
-      >
+      <Modal animationType="slide" transparent={true} visible={addCredentialPressed} onRequestClose={deactivateSlider}>
         <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
