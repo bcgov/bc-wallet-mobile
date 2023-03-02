@@ -1,15 +1,15 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
 import { Button, ButtonType, Screens, useStore, useTheme } from 'aries-bifold'
-import React, { ReducerAction, useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   StyleSheet,
   Text,
   View,
-  Image,
+  // Image,
   Dimensions,
-  ImageBackground,
+  // ImageBackground,
   TouchableOpacity,
   Linking,
   ScrollView,
@@ -26,7 +26,7 @@ const PersonCredentialScreen: React.FC = () => {
   const navigation = useNavigation()
   const [store, dispatch] = useStore<BCState>()
 
-  const paddingHorizontal = 10
+  // const paddingHorizontal = 10
   const transparent = 'rgba(0,0,0,0)'
   const borderRadius = 15
   const borderPadding = 8

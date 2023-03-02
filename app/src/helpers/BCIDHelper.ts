@@ -4,7 +4,7 @@ import {
   CredentialMetadataKeys,
 } from '@aries-framework/core'
 import { BifoldError, Agent, EventTypes as BifoldEventTypes } from 'aries-bifold'
-import React, { ReducerAction } from 'react'
+import React from 'react'
 import { TFunction } from 'react-i18next'
 import { Linking, Platform, DeviceEventEmitter } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
