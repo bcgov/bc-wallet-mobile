@@ -1,6 +1,5 @@
 import { types } from 'aries-bifold'
 
-type CardLayoutOverlay10 = types.oca.CardLayoutOverlay10
 type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
 type MetaOverlay = types.oca.MetaOverlay
 type FormatOverlay = types.oca.FormatOverlay

@@ -2,7 +2,7 @@ import { CredentialMetadataKeys, CredentialState } from '@aries-framework/core'
 import { useAgent, useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
 import { useTheme, useStore, Screens, Stacks } from 'aries-bifold'
-import React, { ReducerAction, useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -17,7 +17,7 @@ const AddCredentialSlider: React.FC = () => {
   const { ColorPallet, TextTheme } = useTheme()
   const { agent } = useAgent()
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
   const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
   const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)

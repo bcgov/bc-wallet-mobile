@@ -11,6 +11,7 @@ import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/core'
+import { CommonActions } from '@react-navigation/native'
 import {
   LocalStorageKeys,
   DispatchAction,
@@ -204,22 +205,42 @@ const Splash: React.FC = () => {
           })
 
           if (onboardingComplete(dataAsJSON) && !attemptData?.lockoutDate) {
-            navigation.navigate(Screens.EnterPIN as never)
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: Screens.EnterPIN }],
+              })
+            )
             return
           } else if (onboardingComplete(dataAsJSON) && attemptData?.lockoutDate) {
             // return to lockout screen if lockout date is set
-            navigation.navigate(Screens.AttemptLockout as never)
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: Screens.AttemptLockout }],
+              })
+            )
             return
           }
 
           // If onboarding was interrupted we need to pickup from where we left off.
-          navigation.navigate(resumeOnboardingAt(dataAsJSON) as never)
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: resumeOnboardingAt(dataAsJSON) }],
+            })
+          )
 
           return
         }
 
         // We have no onboarding state, starting from step zero.
-        navigation.navigate(Screens.Onboarding as never)
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: Screens.Onboarding }],
+          })
+        )
       } catch (e: unknown) {
         setInitError(e as Error)
       }
@@ -276,7 +297,12 @@ const Splash: React.FC = () => {
         setAgent(newAgent)
 
         setStep(9)
-        navigation.navigate(Stacks.TabStack as never)
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: Stacks.TabStack }],
+          })
+        )
       } catch (e: unknown) {
         setInitError(e as Error)
       }
