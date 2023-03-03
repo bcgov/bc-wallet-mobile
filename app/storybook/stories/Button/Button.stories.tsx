@@ -5,11 +5,8 @@ import React from 'react'
 import { SafeAreaView, ScrollView, Text, View } from 'react-native'
 
 import { defaultTheme as theme } from '../../../src/theme'
-const {
-  buttons: {
-    Button: { Button, ButtonType },
-  },
-} = components
+const Button = components.buttons.Button.default
+const ButtonType = components.buttons.Button.ButtonType
 
 storiesOf('Button', module)
   //.addDecorator((getStory) => <CenterView>{getStory()}</CenterView>)

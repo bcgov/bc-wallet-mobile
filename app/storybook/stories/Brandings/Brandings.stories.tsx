@@ -4,6 +4,7 @@ import {
   CredentialExchangeRecordProps,
   CredentialMetadataKeys,
   CredentialState,
+  RevocationNotification,
 } from '@aries-framework/core'
 import { select } from '@storybook/addon-knobs'
 import { storiesOf } from '@storybook/react-native'
@@ -21,17 +22,12 @@ import { useTranslation } from 'react-i18next'
 import { FlatList, ListRenderItem, View } from 'react-native'
 
 import bcwallet from '../../../src'
-import bundles from '../../../src/assets/branding/credential-branding'
+import bundles, { CREDENTIALS } from '../../../src/assets/branding/credential-branding'
 
 const { theme } = bcwallet
 
 enum CREDENTIAL_DEFINITION {
-  Person = 'XpgeQa93eZvGSZBZef3PHn:2:Person:0.1',
-  Student = '63ZiwyeZeazA6AhYRYm2zD:2:student_card:1.0',
-  Lawyer = '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1',
   Generic = 'asdasdasd:2:generic:1.0:Generic',
-  UnverifiedPerson = '9wVuYYDEDtpZ6CYMqSiWop:2:unverified_person:0.1.0',
-  PilotInvitation = '3Lbd5wSSSBv1xtjwsQ36sj:2:BC VC Pilot Certificate:1.0.1',
 }
 
 const {
@@ -39,7 +35,6 @@ const {
 } = components
 
 type CredentialProps = {
-  state: types.state.State
   credentialRecordId: string
   revoked?: boolean
   credentialDefinitionId: string
@@ -47,7 +42,6 @@ type CredentialProps = {
 }
 
 const CredentialWrapper: FC<CredentialProps> = ({
-  state,
   revoked = false,
   credentialRecordId,
   credentialDefinitionId,
@@ -67,7 +61,7 @@ const CredentialWrapper: FC<CredentialProps> = ({
     schemaId: '',
   })
   if (revoked) {
-    state.credential.revoked.add(indyCredential.credentialRecordId)
+    credential.revocationNotification = new RevocationNotification()
   }
   return <CredentialCard credential={credential} />
 }
@@ -79,16 +73,15 @@ type ListItem = {
   connectionId?: string
 }
 
-type CredentialsProps = { items: ListItem[]; state: types.state.State }
+type CredentialsProps = { items: ListItem[] }
 
-const Credentials: FC<CredentialsProps> = ({ items, state }) => {
+const Credentials: FC<CredentialsProps> = ({ items }) => {
   const lang = select('Language', ['en', 'fr', 'pt'], 'en')
   const { i18n } = useTranslation()
   const [isLoaded, setLoaded] = useState(false)
   const renderItem: ListRenderItem<ListItem> = ({ item }): JSX.Element => {
     return (
       <CredentialWrapper
-        state={state}
         revoked={item.revoked}
         credentialDefinitionId={item.credentialDefinitionId}
         credentialRecordId={item.credentialRecordId}
@@ -123,57 +116,61 @@ const Credentials: FC<CredentialsProps> = ({ items, state }) => {
   )
 }
 
+const OCABundleResolver = new types.oca.OCABundleResolver(bundles as unknown as Record<string, types.oca.Bundle>, {
+  cardOverlayType: types.oca.CardOverlayType.CardLayout11,
+})
+
 storiesOf('Brandings', module)
   .add('All', () => {
     const configuration: ConfigurationContext = {
-      OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(bundles as unknown as types.oca.Bundles),
+      OCABundleResolver: OCABundleResolver,
     } as unknown as ConfigurationContext
 
-    const state = contexts.store.initialStateFactory()
+    const state = contexts.store.defaultState
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dispatch: Dispatch<any> = () => {
       return
     }
     const list: ListItem[] = [
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.Person,
+        credentialDefinitionId: CREDENTIALS.BC_DIGITAL_ID_PROD,
         credentialRecordId: 'PersonCredential_default',
         revoked: false,
       },
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.Person,
+        credentialDefinitionId: CREDENTIALS.BC_DIGITAL_ID_PROD,
         credentialRecordId: 'PersonCredential_Revoked',
         revoked: true,
       },
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.Student,
+        credentialDefinitionId: CREDENTIALS.SHOWCASE_STUDENT_PROD,
         credentialRecordId: 'StudentCredential_default',
         revoked: false,
       },
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.Student,
+        credentialDefinitionId: CREDENTIALS.SHOWCASE_STUDENT_PROD,
         credentialRecordId: 'StudentCredential_Revoked',
         revoked: true,
       },
-      { credentialDefinitionId: CREDENTIAL_DEFINITION.Lawyer, credentialRecordId: 'Lawyer_default', revoked: false },
-      { credentialDefinitionId: CREDENTIAL_DEFINITION.Lawyer, credentialRecordId: 'Lawyer_Revoked', revoked: true },
+      { credentialDefinitionId: CREDENTIALS.LSBC_PROD, credentialRecordId: 'Lawyer_default', revoked: false },
+      { credentialDefinitionId: CREDENTIALS.LSBC_PROD, credentialRecordId: 'Lawyer_Revoked', revoked: true },
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.PilotInvitation,
+        credentialDefinitionId: CREDENTIALS.PILOT_INVITE_PROD,
         credentialRecordId: 'Pilot_default',
         revoked: false,
       },
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.PilotInvitation,
+        credentialDefinitionId: CREDENTIALS.PILOT_INVITE_PROD,
         credentialRecordId: 'Pilot_Revoked',
         revoked: true,
       },
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.UnverifiedPerson,
+        credentialDefinitionId: CREDENTIALS.UNVERIFIED_PERSON_PROD,
         credentialRecordId: 'unverified_person_default',
         revoked: false,
       },
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.UnverifiedPerson,
+        credentialDefinitionId: CREDENTIALS.UNVERIFIED_PERSON_PROD,
         credentialRecordId: 'unverified_person_Revoked',
         revoked: true,
       },
@@ -189,7 +186,7 @@ storiesOf('Brandings', module)
       <ConfigurationProvider value={configuration}>
         <StoreContext.Provider value={[state, dispatch]}>
           <ThemeProvider value={theme}>
-            <Credentials items={list} state={state} />
+            <Credentials items={list} />
           </ThemeProvider>
         </StoreContext.Provider>
       </ConfigurationProvider>
@@ -197,17 +194,17 @@ storiesOf('Brandings', module)
   })
   .add('Person: Default', () => {
     const configuration: ConfigurationContext = {
-      OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(bundles as unknown as types.oca.Bundles),
+      OCABundleResolver: OCABundleResolver,
     } as unknown as ConfigurationContext
 
-    const state = contexts.store.initialStateFactory()
+    const state = contexts.store.defaultState
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dispatch: Dispatch<any> = () => {
       return
     }
     const list: ListItem[] = [
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.Person,
+        credentialDefinitionId: CREDENTIALS.BC_DIGITAL_ID_PROD,
         credentialRecordId: 'PersonCredential_default',
         revoked: false,
       },
@@ -216,7 +213,7 @@ storiesOf('Brandings', module)
       <ConfigurationProvider value={configuration}>
         <StoreContext.Provider value={[state, dispatch]}>
           <ThemeProvider value={theme}>
-            <Credentials items={list} state={state} />
+            <Credentials items={list} />
           </ThemeProvider>
         </StoreContext.Provider>
       </ConfigurationProvider>
@@ -224,17 +221,17 @@ storiesOf('Brandings', module)
   })
   .add('Person: Revoked', () => {
     const configuration: ConfigurationContext = {
-      OCABundle: new types.oca.DefaultOCABundleResolver().loadBundles(bundles as unknown as types.oca.Bundles),
+      OCABundleResolver: OCABundleResolver,
     } as unknown as ConfigurationContext
 
-    const state = contexts.store.initialStateFactory()
+    const state = contexts.store.defaultState
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dispatch: Dispatch<any> = () => {
       return
     }
     const list: ListItem[] = [
       {
-        credentialDefinitionId: CREDENTIAL_DEFINITION.Person,
+        credentialDefinitionId: CREDENTIALS.BC_DIGITAL_ID_PROD,
         credentialRecordId: 'PersonCredential_Revoked',
         revoked: true,
       },
@@ -242,7 +239,7 @@ storiesOf('Brandings', module)
     return (
       <ConfigurationProvider value={configuration}>
         <StoreContext.Provider value={[state, dispatch]}>
-          <Credentials items={list} state={state} />
+          <Credentials items={list} />
         </StoreContext.Provider>
       </ConfigurationProvider>
     )
