@@ -1,10 +1,10 @@
-import { useTheme, testIdWithKey, Button, ButtonType, useStore } from 'aries-bifold'
-import React, { useCallback } from 'react'
+import { useTheme, testIdWithKey, Button, ButtonType } from 'aries-bifold'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Text, View } from 'react-native'
+import { Text, View, DeviceEventEmitter } from 'react-native'
 
 import EmptyWallet from '../assets/img/emptyWallet.svg'
-import { BCState, BCDispatchAction } from '../store'
+import { BCWalletEventTypes } from '../events/eventTypes'
 export interface EmptyListProps {
   message?: string
 }
@@ -12,13 +12,20 @@ export interface EmptyListProps {
 const EmptyList: React.FC<EmptyListProps> = ({ message }) => {
   const { t } = useTranslation()
   const { ListItems } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
+
+  useEffect(() => {
+    const handle = DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, (value?: boolean) => {
+      const newVal = value === undefined ? !addCredentialPressed : value
+      setAddCredentialPressed(newVal)
+    })
+    return () => {
+      handle.remove()
+    }
+  }, [])
 
   const addCredentialPress = useCallback(() => {
-    dispatch({
-      type: BCDispatchAction.ADD_CREDENTIAL_PRESSED,
-      payload: [true],
-    })
+    DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, !addCredentialPressed)
   }, [])
 
   return (
@@ -32,7 +39,7 @@ const EmptyList: React.FC<EmptyListProps> = ({ message }) => {
           title={t('Credentials.AddFirstCredential')}
           buttonType={ButtonType.Primary}
           onPress={addCredentialPress}
-          disabled={store.addCredential.addCredentialPressed}
+          disabled={addCredentialPressed}
         ></Button>
       </View>
     </View>

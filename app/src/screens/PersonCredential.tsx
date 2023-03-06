@@ -1,20 +1,9 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
 import { Button, ButtonType, Screens, useStore, useTheme } from 'aries-bifold'
-import React, { ReducerAction, useState, useCallback } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
-  Dimensions,
-  ImageBackground,
-  TouchableOpacity,
-  Linking,
-  ScrollView,
-  SafeAreaView,
-} from 'react-native'
+import { StyleSheet, Text, View, Dimensions, TouchableOpacity, Linking, ScrollView, SafeAreaView } from 'react-native'
 
 import LoadingIcon from '../components/LoadingIcon'
 import { startFlow } from '../helpers/BCIDHelper'
@@ -26,7 +15,6 @@ const PersonCredentialScreen: React.FC = () => {
   const navigation = useNavigation()
   const [store, dispatch] = useStore<BCState>()
 
-  const paddingHorizontal = 10
   const transparent = 'rgba(0,0,0,0)'
   const borderRadius = 15
   const borderPadding = 8
@@ -81,17 +69,18 @@ const PersonCredentialScreen: React.FC = () => {
     },
   })
 
-  const startGetBCIDCredentialWorkflow = useCallback(() => {
-    setWorkflowInFlight(true)
-    startFlow(agent!, store, dispatch as React.Dispatch<ReducerAction<any>>, setWorkflowInFlight, t)
-  }, [])
-
   const dismissPersonCredentialOffer = useCallback(() => {
     dispatch({
       type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
       payload: [{ personCredentialOfferDismissed: true }],
     })
+
     navigation.navigate(Screens.Home as never)
+  }, [])
+
+  const startGetBCIDCredentialWorkflow = useCallback(() => {
+    setWorkflowInFlight(true)
+    startFlow(agent!, store, setWorkflowInFlight, t, dismissPersonCredentialOffer)
   }, [])
 
   const getBCServicesCardApp = useCallback(() => {
@@ -104,61 +93,6 @@ const PersonCredentialScreen: React.FC = () => {
     <SafeAreaView style={styles.pageContainer}>
       <ScrollView contentContainerStyle={[styles.pageContent]}>
         <View>
-          {/* <View style={[styles.container]}>
-            <View style={[styles.flexGrow]}>
-              <ImageBackground
-                source={require('../assets/branding/service-bc-id-card.png')}
-                style={[styles.flexGrow]}
-                imageStyle={{ borderRadius }}
-              >
-                <View style={[styles.outerHeaderContainer]}>
-                  <View style={[styles.innerHeaderContainer]}>
-                    <Image
-                      source={require('../assets/branding/service-bc-header-logo.png')}
-                      style={{
-                        flex: 1,
-                        resizeMode: 'contain',
-                        maxHeight: styles.outerHeaderContainer.height - borderPadding,
-                      }}
-                    />
-                    <Text
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      style={[
-                        TextTheme.label,
-                        {
-                          color: ColorPallet.grayscale.white,
-                          paddingHorizontal: 0.5 * paddingHorizontal,
-                          flex: 3,
-                          textAlignVertical: 'center',
-                        },
-                      ]}
-                      maxFontSizeMultiplier={1}
-                    >
-                      {t('PersonCredential.Issuer')}
-                    </Text>
-                    <Text
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                      style={[
-                        TextTheme.label,
-                        {
-                          color: ColorPallet.grayscale.white,
-                          textAlign: 'right',
-                          paddingHorizontal: 0.5 * paddingHorizontal,
-                          flex: 4,
-                          textAlignVertical: 'center',
-                        },
-                      ]}
-                      maxFontSizeMultiplier={1}
-                    >
-                      {t('PersonCredential.Name')}
-                    </Text>
-                  </View>
-                </View>
-              </ImageBackground>
-            </View>
-          </View> */}
           <View>
             <Text style={TextTheme.normal}>
               {t('PersonCredential.Description') + ' '}

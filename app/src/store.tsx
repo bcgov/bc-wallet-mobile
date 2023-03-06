@@ -16,17 +16,12 @@ interface Developer {
   environment: IASEnvironment
 }
 
-interface AddCredential {
-  addCredentialPressed: boolean
-}
-
 interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
 export interface BCState extends BifoldState {
   developer: Developer
-  addCredential: AddCredential
   dismissPersonCredentialOffer: DismissPersonCredentialOffer
 }
 
@@ -34,22 +29,14 @@ enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
 }
 
-enum AddCredentialDispatchAction {
-  ADD_CREDENTIAL_PRESSED = 'addCredential/addCredentialPressed',
-}
-
 enum DismissPersonCredentialOfferDispatchAction {
   PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
 }
 
-export type BCDispatchAction =
-  | DeveloperDispatchAction
-  | AddCredentialDispatchAction
-  | DismissPersonCredentialOfferDispatchAction
+export type BCDispatchAction = DeveloperDispatchAction | DismissPersonCredentialOfferDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
-  ...AddCredentialDispatchAction,
   ...DismissPersonCredentialOfferDispatchAction,
 }
 
@@ -78,10 +65,6 @@ const developerState: Developer = {
   environment: iasEnvironments[0],
 }
 
-const addCredentialState: AddCredential = {
-  addCredentialPressed: false,
-}
-
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
   personCredentialOfferDismissed: false,
 }
@@ -94,7 +77,6 @@ export enum BCLocalStorageKeys {
 export const initialState: BCState = {
   ...defaultState,
   developer: developerState,
-  addCredential: addCredentialState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
 }
 
@@ -107,11 +89,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // Persist IAS environment between app restarts
       AsyncStorage.setItem(BCLocalStorageKeys.Environment, JSON.stringify(developer.environment))
       return { ...state, developer }
-    }
-    case AddCredentialDispatchAction.ADD_CREDENTIAL_PRESSED: {
-      const addCredentialPressed: boolean = (action?.payload || []).pop()
-      const addCredential = { ...state.addCredential, addCredentialPressed }
-      return { ...state, addCredential }
     }
     case DismissPersonCredentialOfferDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED: {
       const { personCredentialOfferDismissed } = (action?.payload || []).pop()
