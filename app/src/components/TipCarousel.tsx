@@ -78,7 +78,7 @@ const TipCarousel: React.FC = () => {
   const { width } = useWindowDimensions()
   const [currentPosition, setCurrentPosition] = useState(0)
   const { t } = useTranslation()
-  const delay = 5000 // ms
+  const delay = 10000 // ms
   const tips = [
     {
       id: '0',
