@@ -49,6 +49,8 @@ const translation = {
   "PersonCredential": {
     "Issuer": "Service BC (FR)",
     "Name": "Person (FR)",
+    "GivenName":"Sample Given Name (FR)",
+    "FamilyName":"Sample Family Name (FR)",
     "Description": "Add your Person credential to your wallet to prove your personal information online and get access to services online.\n\nYou'll need the BC Service Card app set up on this mobile device. (FR)",
     "LinkDescription": "Get the BC Services Card app (FR)",
     "GetCredential": "Get your Person credential (FR)",
