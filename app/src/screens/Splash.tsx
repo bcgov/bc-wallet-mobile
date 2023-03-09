@@ -96,12 +96,12 @@ const Splash: React.FC = () => {
   const styles = StyleSheet.create({
     splashContainer: {
       flex: 1,
+      width: '100%',
       flexDirection: 'column',
       justifyContent: 'space-between',
       alignItems: 'center',
       backgroundColor: ColorPallet.brand.secondaryBackground,
     },
-
     img: {
       width: '51.5%',
       resizeMode: 'contain',
@@ -121,10 +121,15 @@ const Splash: React.FC = () => {
       color: '#a8abae',
     },
     errorBoxContainer: {
+      flex: 1,
       paddingHorizontal: 20,
     },
     logoContainer: {
+      flex: 2,
       alignSelf: 'center',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
       marginBottom: '10%',
     },
   })
@@ -318,12 +323,6 @@ const Splash: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.splashContainer}>
-      <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
-        <ProgressBar progressPercent={progressPercent} />
-        <View style={styles.stepTextContainer}>
-          <Text style={styles.stepText}>{stepText}</Text>
-        </View>
-      </View>
       <View style={{ width, minHeight: '40%' }}>
         {initError ? (
           <View style={styles.errorBoxContainer}>
@@ -341,6 +340,12 @@ const Splash: React.FC = () => {
       </View>
       <View style={styles.logoContainer}>
         <Image source={require('../assets/img/Quebec.png')} style={styles.img} />
+      </View>
+      <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
+        <ProgressBar progressPercent={progressPercent} />
+        <View style={styles.stepTextContainer}>
+          <Text style={styles.stepText}>{stepText}</Text>
+        </View>
       </View>
     </SafeAreaView>
   )
