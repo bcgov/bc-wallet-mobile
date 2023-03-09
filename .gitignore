@@ -23,6 +23,8 @@ node_modules
 .gradle
 lib
 yarn.lock
+local.properties
+.jest
 
 # aries-bifold should be cloned separately
 aries-bifold/

@@ -77,6 +77,17 @@ import com.android.build.OutputFile
  * ]
  */
 
+// added 1/26/2023 by BM, when our builds suddenly started failing due to conflicting kotlin stdlib versions
+configurations.all {
+    resolutionStrategy {
+        eachDependency {
+            if ((requested.group == "org.jetbrains.kotlin") && (requested.name.startsWith("kotlin-stdlib"))) {
+                useVersion("1.8.0")
+            }
+        }
+    }
+}
+
 project.ext.react = [
     enableHermes: true,  // clean and rebuild if changing
 ]

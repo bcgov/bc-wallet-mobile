@@ -11,6 +11,7 @@ import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/core'
+import { CommonActions } from '@react-navigation/native'
 import {
   LocalStorageKeys,
   DispatchAction,
@@ -19,23 +20,23 @@ import {
   OnboardingState,
   LoginAttemptState,
   PreferencesState,
-  PrivacyState,
   useAuth,
   useTheme,
   useStore,
-  ToastType,
   useConfiguration,
+  InfoBox,
+  InfoBoxType,
+  testIdWithKey,
 } from 'aries-bifold'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Image } from 'react-native'
+import { StyleSheet, View, Text, Image, useWindowDimensions } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Toast from 'react-native-toast-message'
 
-interface SplashProps {
-  setAgent: React.Dispatch<React.SetStateAction<Agent | undefined>>
-}
+import ProgressBar from '../components/ProgressBar'
+import TipCarousel from '../components/TipCarousel'
+import { BCDispatchAction, BCLocalStorageKeys } from '../store'
 
 const onboardingComplete = (state: OnboardingState): boolean => {
   return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
@@ -62,18 +63,41 @@ const resumeOnboardingAt = (state: OnboardingState): Screens => {
   of this view.
 */
 const Splash: React.FC = () => {
+  const { width } = useWindowDimensions()
   const { setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore()
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
-  const { ColorPallet } = useTheme()
-
+  const { ColorPallet, Assets } = useTheme()
   const { indyLedgers } = useConfiguration()
+  const [stepText, setStepText] = useState<string>(t('Init.Starting'))
+  const [progressPercent, setProgressPercent] = useState(0)
+  const [initError, setInitError] = useState<Error | null>(null)
+  const steps: string[] = [
+    t('Init.Starting'),
+    t('Init.CheckingAuth'),
+    t('Init.FetchingPreferences'),
+    t('Init.VerifyingOnboarding'),
+    t('Init.GettingCredentials'),
+    t('Init.RegisteringTransports'),
+    t('Init.InitializingAgent'),
+    t('Init.ConnectingLedgers'),
+    t('Init.SettingAgent'),
+    t('Init.Finishing'),
+  ]
+
+  const setStep = (stepIdx: number) => {
+    setStepText(steps[stepIdx])
+    const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
+    setProgressPercent(percent)
+  }
+
   const styles = StyleSheet.create({
-    container: {
+    splashContainer: {
       flex: 1,
-      justifyContent: 'center',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
       alignItems: 'center',
       backgroundColor: ColorPallet.brand.secondaryBackground,
     },
@@ -82,21 +106,69 @@ const Splash: React.FC = () => {
       width: '51.5%',
       resizeMode: 'contain',
     },
+    progressContainer: {
+      flexDirection: 'column',
+      alignItems: 'center',
+      width: '100%',
+      minHeight: 37,
+    },
+    stepTextContainer: {
+      marginTop: 10,
+    },
+    stepText: {
+      fontFamily: 'BCSans-Regular',
+      fontSize: 16,
+      color: '#a8abae',
+    },
+    errorBoxContainer: {
+      paddingHorizontal: 20,
+    },
+    logoContainer: {
+      alignSelf: 'center',
+      marginBottom: '10%',
+    },
   })
 
-  const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
+  const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
     try {
-      const attemptsData = await AsyncStorage.getItem(LocalStorageKeys.LoginAttempts)
-      if (attemptsData) {
-        const attempts = JSON.parse(attemptsData) as LoginAttemptState
-        dispatch({
-          type: DispatchAction.ATTEMPT_UPDATED,
-          payload: [attempts],
-        })
-        return attempts
+      const data = await AsyncStorage.getItem(key)
+      if (data) {
+        return JSON.parse(data)
       }
-    } catch (error) {
-      /* eslint-disable:no-empty */
+    } catch {
+      return
+    }
+  }
+
+  const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
+    const attemptsData = await AsyncStorage.getItem(LocalStorageKeys.LoginAttempts)
+    if (attemptsData) {
+      const attempts = JSON.parse(attemptsData) as LoginAttemptState
+      dispatch({
+        type: DispatchAction.ATTEMPT_UPDATED,
+        payload: [attempts],
+      })
+      return attempts
+    }
+  }
+
+  const loadPersonNotificationDismissed = async (): Promise<void> => {
+    const dismissed = await loadObjectFromStorage(BCLocalStorageKeys.PersonCredentialOfferDismissed)
+    if (dismissed) {
+      dispatch({
+        type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
+        payload: [{ personCredentialOfferDismissed: dismissed.personCredentialOfferDismissed }],
+      })
+    }
+  }
+
+  const loadIASEnvironment = async (): Promise<void> => {
+    const environment = await loadObjectFromStorage(BCLocalStorageKeys.Environment)
+    if (environment) {
+      dispatch({
+        type: BCDispatchAction.UPDATE_ENVIRONMENT,
+        payload: [environment],
+      })
     }
   }
 
@@ -107,9 +179,16 @@ const Splash: React.FC = () => {
 
     const initOnboarding = async (): Promise<void> => {
       try {
+        setStep(1)
         // load authentication attempts from storage
         const attemptData = await loadAuthAttempts()
 
+        // load BCID person credential notification dismissed state from storage
+        await loadPersonNotificationDismissed()
+
+        await loadIASEnvironment()
+
+        setStep(2)
         const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
 
         if (preferencesData) {
@@ -121,16 +200,7 @@ const Splash: React.FC = () => {
           })
         }
 
-        const privacyData = await AsyncStorage.getItem(LocalStorageKeys.Privacy)
-        if (privacyData) {
-          const dataAsJSON = JSON.parse(privacyData) as PrivacyState
-
-          dispatch({
-            type: DispatchAction.PRIVACY_UPDATED,
-            payload: [dataAsJSON],
-          })
-        }
-
+        setStep(3)
         const data = await AsyncStorage.getItem(LocalStorageKeys.Onboarding)
         if (data) {
           const dataAsJSON = JSON.parse(data) as OnboardingState
@@ -140,24 +210,44 @@ const Splash: React.FC = () => {
           })
 
           if (onboardingComplete(dataAsJSON) && !attemptData?.lockoutDate) {
-            navigation.navigate(Screens.EnterPIN as never)
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: Screens.EnterPIN }],
+              })
+            )
             return
           } else if (onboardingComplete(dataAsJSON) && attemptData?.lockoutDate) {
             // return to lockout screen if lockout date is set
-            navigation.navigate(Screens.AttemptLockout as never)
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: Screens.AttemptLockout }],
+              })
+            )
             return
           }
 
           // If onboarding was interrupted we need to pickup from where we left off.
-          navigation.navigate(resumeOnboardingAt(dataAsJSON) as never)
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: resumeOnboardingAt(dataAsJSON) }],
+            })
+          )
 
           return
         }
 
         // We have no onboarding state, starting from step zero.
-        navigation.navigate(Screens.Onboarding as never)
-      } catch (error) {
-        // TODO:(jl)
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: Screens.Onboarding }],
+          })
+        )
+      } catch (e: unknown) {
+        setInitError(e as Error)
       }
     }
     initOnboarding()
@@ -170,6 +260,7 @@ const Splash: React.FC = () => {
 
     const initAgent = async (): Promise<void> => {
       try {
+        setStep(4)
         const credentials = await getWalletCredentials()
 
         if (!credentials?.id || !credentials.key) {
@@ -177,8 +268,9 @@ const Splash: React.FC = () => {
           return
         }
 
-        const newAgent = new Agent(
-          {
+        setStep(5)
+        const options = {
+          config: {
             label: 'QC Wallet',
             mediatorConnectionsInvite: Config.MEDIATOR_URL,
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
@@ -190,30 +282,34 @@ const Splash: React.FC = () => {
             connectToIndyLedgersOnStartup: false,
             autoUpdateStorageOnStartup: true,
           },
-          agentDependencies
-        )
+          dependencies: agentDependencies,
+        }
 
+        const newAgent = new Agent(options)
         const wsTransport = new WsOutboundTransport()
         const httpTransport = new HttpOutboundTransport()
 
         newAgent.registerOutboundTransport(wsTransport)
         newAgent.registerOutboundTransport(httpTransport)
 
+        setStep(6)
         await newAgent.initialize()
-        await newAgent.ledger.connectToPools()
-        setAgent(newAgent)
-        navigation.navigate(Stacks.TabStack as never)
 
-        // TODO:
+        setStep(7)
+        await newAgent.ledger.connectToPools()
+
+        setStep(8)
+        setAgent(newAgent)
+
+        setStep(9)
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: Stacks.TabStack }],
+          })
+        )
       } catch (e: unknown) {
-        Toast.show({
-          type: ToastType.Error,
-          text1: t('Global.Failure'),
-          text2: (e as Error)?.message || t('Error.Unknown'),
-          visibilityTime: 2000,
-          position: 'bottom',
-        })
-        return
+        setInitError(e as Error)
       }
     }
 
@@ -221,8 +317,31 @@ const Splash: React.FC = () => {
   }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry])
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Image source={require('../assets/img/Quebec.png')} style={styles.img} />
+    <SafeAreaView style={styles.splashContainer}>
+      <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
+        <ProgressBar progressPercent={progressPercent} />
+        <View style={styles.stepTextContainer}>
+          <Text style={styles.stepText}>{stepText}</Text>
+        </View>
+      </View>
+      <View style={{ width, minHeight: '40%' }}>
+        {initError ? (
+          <View style={styles.errorBoxContainer}>
+            <InfoBox
+              notificationType={InfoBoxType.Error}
+              title={t('Error.Title2026')}
+              description={t('Error.Message2026')}
+              message={initError?.message || t('Error.Unknown')}
+              onCallToActionPressed={() => setInitError(null)}
+            />
+          </View>
+        ) : (
+          <TipCarousel />
+        )}
+      </View>
+      <View style={styles.logoContainer}>
+        <Image source={require('../assets/img/Quebec.png')} style={styles.img} />
+      </View>
     </SafeAreaView>
   )
 }
