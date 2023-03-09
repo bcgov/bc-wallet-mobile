@@ -21,23 +21,17 @@ const AddCredentialSlider: React.FC = () => {
   const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
   const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
   const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
+  const [workflowConnectionId, setWorkflowConnectionId] = useState<string | undefined>()
+
+  const offers = useCredentialByState(CredentialState.OfferReceived)
+
   const credentials = [
     ...useCredentialByState(CredentialState.CredentialReceived),
     ...useCredentialByState(CredentialState.Done),
   ]
+
   const navigation = useNavigation()
   const [canUseLSBCredential] = useState<boolean>(true)
-
-  useEffect(() => {
-    const handle = DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, (value?: boolean) => {
-      const newVal = value === undefined ? !addCredentialPressed : value
-      setAddCredentialPressed(newVal)
-    })
-
-    return () => {
-      handle.remove()
-    }
-  }, [])
 
   const styles = StyleSheet.create({
     centeredView: {
@@ -85,11 +79,11 @@ const AddCredentialSlider: React.FC = () => {
     DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, false)
   }, [])
 
-  const navigateToHomeScreen = () => {
-    deactivateSlider()
-    // TODO(jl): Replace hard coded string with import from Bifold.
-    // Waiting on PR #644 to be merged.
-    navigation.getParent()?.navigate('Tab Home Stack')
+  const goToHomeScreen = (credentialId?: string) => {
+    navigation.getParent()?.navigate(Stacks.NotificationStack, {
+      screen: Screens.CredentialOffer,
+      params: { credentialId },
+    })
   }
 
   const goToScanScreen = useCallback(() => {
@@ -99,8 +93,17 @@ const AddCredentialSlider: React.FC = () => {
 
   const onBCIDPress = useCallback(() => {
     setWorkflowInFlight(true)
-    startFlow(agent!, store, setWorkflowInFlight, t, navigateToHomeScreen)
+    startFlow(agent!, store, setWorkflowInFlight, t, (connectionId) => setWorkflowConnectionId(connectionId))
   }, [store])
+
+  useEffect(() => {
+    for (const credential of offers) {
+      if (credential.state == CredentialState.OfferReceived && credential.connectionId === workflowConnectionId) {
+        goToHomeScreen(credential.id)
+        deactivateSlider()
+      }
+    }
+  }, [offers, workflowConnectionId])
 
   useEffect(() => {
     const credentialDefinitionIDs = credentials.map(
@@ -109,6 +112,17 @@ const AddCredentialSlider: React.FC = () => {
 
     setShowGetFoundationCredential(showBCIDSelector(credentialDefinitionIDs, canUseLSBCredential))
   }, [credentials, canUseLSBCredential])
+
+  useEffect(() => {
+    const handle = DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, (value?: boolean) => {
+      const newVal = value === undefined ? !addCredentialPressed : value
+      setAddCredentialPressed(newVal)
+    })
+
+    return () => {
+      handle.remove()
+    }
+  }, [])
 
   return (
     <View>
