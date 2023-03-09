@@ -10,7 +10,7 @@ import LoadingIcon from '../components/LoadingIcon'
 import { startFlow } from '../helpers/BCIDHelper'
 import { BCDispatchAction, BCState } from '../store'
 
-const PersonCredentialScreen: React.FC = () => {
+const PersonCredential: React.FC = () => {
   const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
   const { agent } = useAgent()
   const navigation = useNavigation()
@@ -120,4 +120,4 @@ const PersonCredentialScreen: React.FC = () => {
   )
 }
 
-export default PersonCredentialScreen
+export default PersonCredential
