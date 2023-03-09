@@ -25,15 +25,15 @@ const PersonCredential: React.FC = () => {
     },
     pageContent: {
       marginHorizontal: 20,
-      flex:1,
+      flex: 1,
       flexGrow: 1,
     },
     credentialCardContainer: {
-      marginVertical: 20
+      marginVertical: 20,
     },
     button: {
       marginBottom: 15,
-    }
+    },
   })
 
   const dismissPersonCredentialOffer = useCallback(() => {
@@ -60,7 +60,10 @@ const PersonCredential: React.FC = () => {
     credName: 'Person',
     credDefId: 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
     schemaId: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
-    attributes: [{ name: 'given_names', value: t('PersonCredential.GivenName') }, { name: 'family_name', value: t('PersonCredential.FamilyName') }]
+    attributes: [
+      { name: 'given_names', value: t('PersonCredential.GivenName') },
+      { name: 'family_name', value: t('PersonCredential.FamilyName') },
+    ],
   }
 
   const personPageFooter = () => {
@@ -96,13 +99,13 @@ const PersonCredential: React.FC = () => {
         <FlatList
           data={[personCredentialAttributes]}
           ListFooterComponent={personPageFooter}
-          contentContainerStyle={{flexGrow:1}}
-          ListFooterComponentStyle={{flex:1, justifyContent:"flex-end"}}
+          contentContainerStyle={{ flexGrow: 1 }}
+          ListFooterComponentStyle={{ flex: 1, justifyContent: 'flex-end' }}
           renderItem={({ item }) => {
             return (
               <View>
                 <View style={styles.credentialCardContainer}>
-                  <CredentialCard credDefId={item.credDefId} schemaId={item.schemaId} displayItems={item.attributes}/>
+                  <CredentialCard credDefId={item.credDefId} schemaId={item.schemaId} displayItems={item.attributes} />
                 </View>
                 <Text style={TextTheme.normal}>
                   {t('PersonCredential.Description') + ' '}
@@ -114,7 +117,8 @@ const PersonCredential: React.FC = () => {
                 </Text>
               </View>
             )
-          }} />
+          }}
+        />
       </View>
     </SafeAreaView>
   )
