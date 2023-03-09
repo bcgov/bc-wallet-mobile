@@ -17,7 +17,7 @@ import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
-import PersonCredentialScreen from './screens/PersonCredential'
+import PersonCredential from './screens/PersonCredential'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { BCDispatchAction } from './store'
@@ -42,7 +42,7 @@ const configuration: ConfigurationContext = {
   indyLedgers: selectedLedgers,
   settings: [],
   customNotification: {
-    component: PersonCredentialScreen,
+    component: PersonCredential,
     onCloseAction: (dispatch?: React.Dispatch<ReducerAction<any>>) => {
       if (dispatch) {
         dispatch({

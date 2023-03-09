@@ -1,8 +1,4 @@
-import {
-  DidRepository,
-  CredentialExchangeRecord as CredentialRecord,
-  CredentialMetadataKeys,
-} from '@aries-framework/core'
+import { DidRepository, CredentialMetadataKeys, CredentialExchangeRecord } from '@aries-framework/core'
 import { BifoldError, Agent, EventTypes as BifoldEventTypes } from 'aries-bifold'
 import React from 'react'
 import { TFunction } from 'react-i18next'
@@ -24,6 +20,7 @@ enum AuthenticationResultType {
   Success = 'success',
   Fail = 'fail',
   Cancel = 'cancel',
+  Dismiss = 'dismiss',
 }
 
 enum ErrorCodes {
@@ -57,7 +54,7 @@ export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCre
 }
 
 export const getInvitationCredentialDate = (
-  credentials: CredentialRecord[],
+  credentials: CredentialExchangeRecord[],
   canUseLSBCCredential: boolean
 ): Date | undefined => {
   const invitationCredential = credentials.find((c) => {
@@ -172,11 +169,12 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
 export const authenticateWithServiceCard = async (
   store: BCState,
   setWorkflow: React.Dispatch<React.SetStateAction<boolean>>,
-  did: string,
+  agentDetails: WellKnownAgentDetails,
   t: TFunction<'translation', undefined>,
-  callback?: () => void
+  callback?: (connectionId?: string) => void
 ): Promise<void> => {
   try {
+    const did = agentDetails.legacyConnectionDid as string
     const url = `${store.developer.environment.iasPortalUrl}/${did}`
 
     if (await InAppBrowser.isAvailable()) {
@@ -198,8 +196,15 @@ export const authenticateWithServiceCard = async (
         typeof (result as unknown as RedirectResult).url === 'undefined'
       ) {
         setWorkflow(false)
-
         return
+      }
+
+      if (
+        result.type === AuthenticationResultType.Dismiss &&
+        typeof (result as unknown as RedirectResult).url === 'undefined'
+      ) {
+        setWorkflow(false)
+        callback && callback(agentDetails.connectionId)
       }
 
       // When `result.type` is "Success" and `result.url` contains the
@@ -210,7 +215,7 @@ export const authenticateWithServiceCard = async (
         (result as unknown as RedirectResult).url.includes('success')
       ) {
         setWorkflow(false)
-        callback && callback()
+        callback && callback(agentDetails.connectionId)
       }
 
       // When `result.type` is "Success" and `result.url` contains the
@@ -252,20 +257,14 @@ export const startFlow = async (
   store: BCState,
   setWorkflowInFlight: React.Dispatch<React.SetStateAction<boolean>>,
   t: TFunction<'translation', undefined>,
-  callback?: () => void
+  callback?: (connectionId?: string) => void
 ) => {
   try {
     const agentDetails = await recieveBCIDInvite(agent, store, t)
 
     if (agentDetails.legacyConnectionDid !== undefined) {
       setTimeout(async () => {
-        await authenticateWithServiceCard(
-          store,
-          setWorkflowInFlight,
-          agentDetails.legacyConnectionDid as string,
-          t,
-          callback
-        )
+        await authenticateWithServiceCard(store, setWorkflowInFlight, agentDetails, t, callback)
       }, connectionDelayInMs)
     }
   } catch (error: unknown) {
