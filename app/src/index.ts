@@ -11,6 +11,7 @@ import { ReducerAction } from 'react'
 
 import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
 
+import bundle from './assets/branding/QC-credential-branding'
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
@@ -45,7 +46,8 @@ const configuration: ConfigurationContext = {
   developer: Developer,
   OCABundleResolver: new types.oca.OCABundleResolver(
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require('./assets/branding/oca-bundle-qc.json') as unknown as types.oca.Bundles
+    bundle as unknown as types.oca.Bundles,
+    { cardOverlayType: types.oca.CardOverlayType.CardLayout10 }
   ),
   record: Record,
   PINSecurity: { rules: PINValidationRules, displayHelper: true },

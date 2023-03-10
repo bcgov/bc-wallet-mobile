@@ -107,9 +107,11 @@ const Splash: React.FC = () => {
       resizeMode: 'contain',
     },
     progressContainer: {
+      flex: 2,
       flexDirection: 'column',
       alignItems: 'center',
-      width: '100%',
+      justifyContent: 'flex-start',
+      width: '60%',
       minHeight: 37,
     },
     stepTextContainer: {
@@ -121,11 +123,10 @@ const Splash: React.FC = () => {
       color: '#a8abae',
     },
     errorBoxContainer: {
-      flex: 1,
       paddingHorizontal: 20,
     },
     logoContainer: {
-      flex: 2,
+      flex: 1,
       alignSelf: 'center',
       alignItems: 'center',
       justifyContent: 'center',
@@ -323,7 +324,7 @@ const Splash: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.splashContainer}>
-      <View style={{ width, minHeight: '40%' }}>
+      <View style={{ flex: 2 }}>
         {initError ? (
           <View style={styles.errorBoxContainer}>
             <InfoBox
