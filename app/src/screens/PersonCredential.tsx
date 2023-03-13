@@ -5,15 +5,18 @@ import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, Dimensions, TouchableOpacity, Linking, ScrollView, SafeAreaView } from 'react-native'
 
+import CredentialOfferTrigger from '../components/CredentialOfferTrigger'
 import LoadingIcon from '../components/LoadingIcon'
 import { startFlow } from '../helpers/BCIDHelper'
 import { BCDispatchAction, BCState } from '../store'
 
 const PersonCredential: React.FC = () => {
-  const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
   const { agent } = useAgent()
   const navigation = useNavigation()
+
   const [store, dispatch] = useStore<BCState>()
+  const [workflowInProgress, setWorkflowInProgress] = useState<boolean>(false)
+  const [workflowConnectionId, setWorkflowConnectionId] = useState<string | undefined>()
 
   const transparent = 'rgba(0,0,0,0)'
   const borderRadius = 15
@@ -78,9 +81,9 @@ const PersonCredential: React.FC = () => {
     navigation.navigate(Screens.Home as never)
   }, [])
 
-  const startGetBCIDCredentialWorkflow = useCallback(() => {
-    setWorkflowInFlight(true)
-    startFlow(agent!, store, setWorkflowInFlight, t, dismissPersonCredentialOffer)
+  const onBCIDPress = useCallback(() => {
+    setWorkflowInProgress(true)
+    startFlow(agent!, store, setWorkflowInProgress, t, (connectionId) => setWorkflowConnectionId(connectionId))
   }, [])
 
   const getBCServicesCardApp = useCallback(() => {
@@ -90,45 +93,48 @@ const PersonCredential: React.FC = () => {
   }, [])
 
   return (
-    <SafeAreaView style={styles.pageContainer}>
-      <ScrollView contentContainerStyle={[styles.pageContent]}>
-        <View>
+    <>
+      <SafeAreaView style={styles.pageContainer}>
+        <ScrollView contentContainerStyle={[styles.pageContent]}>
           <View>
-            <Text style={TextTheme.normal}>
-              {t('PersonCredential.Description') + ' '}
-              <TouchableOpacity onPress={getBCServicesCardApp}>
-                <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
-                  {t('PersonCredential.LinkDescription')}
-                </Text>
-              </TouchableOpacity>
-            </Text>
+            <View>
+              <Text style={TextTheme.normal}>
+                {t('PersonCredential.Description') + ' '}
+                <TouchableOpacity onPress={getBCServicesCardApp}>
+                  <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
+                    {t('PersonCredential.LinkDescription')}
+                  </Text>
+                </TouchableOpacity>
+              </Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.buttonContainer}>
-          <View style={styles.button}>
-            <Button
-              title={t('PersonCredential.GetCredential')}
-              accessibilityLabel={t('PersonCredential.GetCredential')}
-              onPress={startGetBCIDCredentialWorkflow}
-              disabled={workflowInFlight}
-              buttonType={ButtonType.Primary}
-            >
-              {workflowInFlight && (
-                <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInFlight} />
-              )}
-            </Button>
+          <View style={styles.buttonContainer}>
+            <View style={styles.button}>
+              <Button
+                title={t('PersonCredential.GetCredential')}
+                accessibilityLabel={t('PersonCredential.GetCredential')}
+                onPress={onBCIDPress}
+                disabled={workflowInProgress}
+                buttonType={ButtonType.Primary}
+              >
+                {workflowInProgress && (
+                  <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInProgress} />
+                )}
+              </Button>
+            </View>
+            <View style={styles.button}>
+              <Button
+                title={t('PersonCredential.Decline')}
+                accessibilityLabel={t('PersonCredential.Decline')}
+                onPress={dismissPersonCredentialOffer}
+                buttonType={ButtonType.Secondary}
+              ></Button>
+            </View>
           </View>
-          <View style={styles.button}>
-            <Button
-              title={t('PersonCredential.Decline')}
-              accessibilityLabel={t('PersonCredential.Decline')}
-              onPress={dismissPersonCredentialOffer}
-              buttonType={ButtonType.Secondary}
-            ></Button>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+      <CredentialOfferTrigger workflowConnectionId={workflowConnectionId} />
+    </>
   )
 }
 
