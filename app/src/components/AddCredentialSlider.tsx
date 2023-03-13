@@ -88,12 +88,32 @@ const AddCredentialSlider: React.FC = () => {
   }, [store])
 
   useEffect(() => {
+    for (const credential of offers) {
+      if (credential.state == CredentialState.OfferReceived && credential.connectionId === workflowConnectionId) {
+        goToHomeScreen(credential.id)
+        deactivateSlider()
+      }
+    }
+  }, [offers, workflowConnectionId])
+
+  useEffect(() => {
     const credentialDefinitionIDs = credentials.map(
       (c) => c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
     )
 
     setShowGetFoundationCredential(showBCIDSelector(credentialDefinitionIDs, true))
   }, [credentials])
+
+  useEffect(() => {
+    const handle = DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, (value?: boolean) => {
+      const newVal = value === undefined ? !addCredentialPressed : value
+      setAddCredentialPressed(newVal)
+    })
+
+    return () => {
+      handle.remove()
+    }
+  }, [])
 
   useEffect(() => {
     const handle = DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, (value?: boolean) => {

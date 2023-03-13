@@ -1,9 +1,10 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import { Button, ButtonType, Screens, useStore, useTheme } from 'aries-bifold'
+import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard } from 'aries-bifold'
 import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View, Dimensions, TouchableOpacity, Linking, ScrollView, SafeAreaView } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, Linking, FlatList } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 import CredentialOfferTrigger from '../components/CredentialOfferTrigger'
 import LoadingIcon from '../components/LoadingIcon'
@@ -18,13 +19,6 @@ const PersonCredential: React.FC = () => {
   const [workflowInProgress, setWorkflowInProgress] = useState<boolean>(false)
   const [workflowConnectionId, setWorkflowConnectionId] = useState<string | undefined>()
 
-  const transparent = 'rgba(0,0,0,0)'
-  const borderRadius = 15
-  const borderPadding = 8
-  const { width } = Dimensions.get('window')
-  const cardHeight = width / 2 // a card height is half of the screen width
-  const cardHeaderHeight = cardHeight / 4 // a card has a total of 4 rows, and the header occupy 1 row
-
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
 
@@ -34,41 +28,14 @@ const PersonCredential: React.FC = () => {
     },
     pageContent: {
       marginHorizontal: 20,
+      flex: 1,
       flexGrow: 1,
-      justifyContent: 'space-between',
     },
-    pageTextContainer: {
-      display: 'flex',
-      flexDirection: 'row',
-    },
-    container: {
-      backgroundColor: ColorPallet.brand.primaryBackground,
-      height: cardHeight,
-      paddingTop: 15,
-      marginBottom: 20,
-    },
-    outerHeaderContainer: {
-      flexDirection: 'column',
-      backgroundColor: transparent,
-      height: cardHeaderHeight + borderPadding,
-      borderTopLeftRadius: borderRadius,
-      borderTopRightRadius: borderRadius,
-    },
-    innerHeaderContainer: {
-      flexDirection: 'row',
-      margin: borderPadding,
-      backgroundColor: transparent,
-    },
-    buttonContainer: {
-      flexGrow: 1,
-      justifyContent: 'flex-end',
-      marginBottom: 20,
+    credentialCardContainer: {
+      marginVertical: 20,
     },
     button: {
       marginBottom: 15,
-    },
-    flexGrow: {
-      flexGrow: 1,
     },
   })
 
@@ -92,46 +59,75 @@ const PersonCredential: React.FC = () => {
     )
   }, [])
 
+  const personCredentialAttributes = {
+    credName: 'Person',
+    credDefId: 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
+    schemaId: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
+    attributes: [
+      { name: 'given_names', value: t('PersonCredential.GivenName') },
+      { name: 'family_name', value: t('PersonCredential.FamilyName') },
+    ],
+  }
+
+  const personPageFooter = () => {
+    return (
+      <View>
+        <View style={styles.button}>
+          <Button
+            title={t('PersonCredential.GetCredential')}
+            accessibilityLabel={t('PersonCredential.GetCredential')}
+            onPress={onBCIDPress}
+            disabled={workflowInProgress}
+            buttonType={ButtonType.Primary}
+          >
+            {workflowInProgress && (
+              <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInProgress} />
+            )}
+          </Button>
+        </View>
+        <View style={styles.button}>
+          <Button
+            title={t('PersonCredential.Decline')}
+            accessibilityLabel={t('PersonCredential.Decline')}
+            onPress={dismissPersonCredentialOffer}
+            buttonType={ButtonType.Secondary}
+          ></Button>
+        </View>
+      </View>
+    )
+  }
   return (
     <>
-      <SafeAreaView style={styles.pageContainer}>
-        <ScrollView contentContainerStyle={[styles.pageContent]}>
-          <View>
-            <View>
-              <Text style={TextTheme.normal}>
-                {t('PersonCredential.Description') + ' '}
-                <TouchableOpacity onPress={getBCServicesCardApp}>
-                  <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
-                    {t('PersonCredential.LinkDescription')}
+      <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+        <View style={styles.pageContent}>
+          <FlatList
+            data={[personCredentialAttributes]}
+            ListFooterComponent={personPageFooter}
+            contentContainerStyle={{ flexGrow: 1 }}
+            ListFooterComponentStyle={{ flex: 1, justifyContent: 'flex-end' }}
+            renderItem={({ item }) => {
+              return (
+                <View>
+                  <View style={styles.credentialCardContainer}>
+                    <CredentialCard
+                      credDefId={item.credDefId}
+                      schemaId={item.schemaId}
+                      displayItems={item.attributes}
+                    />
+                  </View>
+                  <Text style={TextTheme.normal}>
+                    {t('PersonCredential.Description') + ' '}
+                    <TouchableOpacity onPress={getBCServicesCardApp}>
+                      <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
+                        {t('PersonCredential.LinkDescription')}
+                      </Text>
+                    </TouchableOpacity>
                   </Text>
-                </TouchableOpacity>
-              </Text>
-            </View>
-          </View>
-          <View style={styles.buttonContainer}>
-            <View style={styles.button}>
-              <Button
-                title={t('PersonCredential.GetCredential')}
-                accessibilityLabel={t('PersonCredential.GetCredential')}
-                onPress={onBCIDPress}
-                disabled={workflowInProgress}
-                buttonType={ButtonType.Primary}
-              >
-                {workflowInProgress && (
-                  <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInProgress} />
-                )}
-              </Button>
-            </View>
-            <View style={styles.button}>
-              <Button
-                title={t('PersonCredential.Decline')}
-                accessibilityLabel={t('PersonCredential.Decline')}
-                onPress={dismissPersonCredentialOffer}
-                buttonType={ButtonType.Secondary}
-              ></Button>
-            </View>
-          </View>
-        </ScrollView>
+                </View>
+              )
+            }}
+          />
+        </View>
       </SafeAreaView>
       <CredentialOfferTrigger workflowConnectionId={workflowConnectionId} />
     </>
