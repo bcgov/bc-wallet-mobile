@@ -106,17 +106,6 @@ const AddCredentialSlider: React.FC = () => {
     }
   }, [])
 
-  useEffect(() => {
-    const handle = DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, (value?: boolean) => {
-      const newVal = value === undefined ? !addCredentialPressed : value
-      setAddCredentialPressed(newVal)
-    })
-
-    return () => {
-      handle.remove()
-    }
-  }, [])
-
   return (
     <>
       <Modal animationType="slide" transparent={true} visible={addCredentialPressed} onRequestClose={deactivateSlider}>
