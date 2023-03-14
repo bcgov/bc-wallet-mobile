@@ -1,6 +1,6 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard } from 'aries-bifold'
+import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard, TabStacks } from 'aries-bifold'
 import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, FlatList } from 'react-native'
@@ -46,11 +46,10 @@ const PersonCredential: React.FC = () => {
       type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
       payload: [{ personCredentialOfferDismissed: true }],
     })
-
-    navigation.navigate(Screens.Home as never)
+    navigation.getParent()?.navigate(TabStacks.HomeStack, { screen: Screens.Home })
   }, [])
 
-  const onBCIDPress = useCallback(() => {
+  const acceptPersonCredentialOffer = useCallback(() => {
     setWorkflowInProgress(true)
     startFlow(agent!, store, setWorkflowInProgress, t, (connectionId) => setWorkflowConnectionId(connectionId))
   }, [])
@@ -78,7 +77,7 @@ const PersonCredential: React.FC = () => {
           <Button
             title={t('PersonCredential.GetCredential')}
             accessibilityLabel={t('PersonCredential.GetCredential')}
-            onPress={onBCIDPress}
+            onPress={acceptPersonCredentialOffer}
             disabled={workflowInProgress}
             buttonType={ButtonType.Primary}
           >
@@ -92,6 +91,7 @@ const PersonCredential: React.FC = () => {
             title={t('PersonCredential.Decline')}
             accessibilityLabel={t('PersonCredential.Decline')}
             onPress={dismissPersonCredentialOffer}
+            disabled={workflowInProgress}
             buttonType={ButtonType.Secondary}
           ></Button>
         </View>
