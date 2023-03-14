@@ -1,6 +1,8 @@
 const path = require('path')
 const escape = require('escape-string-regexp')
 const exclusionList = require('metro-config/src/defaults/exclusionList')
+require('dotenv').config()
+
 const packageDirs = [path.resolve(__dirname, '../bifold/core')]
 
 const watchFolders = [...packageDirs]
@@ -23,6 +25,7 @@ for (const packageDir of packageDirs) {
 }
 console.dir(extraExclusionlist)
 console.dir(extraNodeModules)
+console.log(`inlineRequires = ${process.env.LOAD_STORYBOOK !== 'true'}`)
 const { getDefaultConfig } = require('metro-config')
 module.exports = (async () => {
   const {
@@ -36,7 +39,7 @@ module.exports = (async () => {
       getTransformOptions: async () => ({
         transform: {
           experimentalImportSupport: false,
-          inlineRequires: false,
+          inlineRequires: process.env.STORYBOOK !== 'true',
         },
       }),
     },
