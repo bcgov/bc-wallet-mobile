@@ -168,7 +168,7 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
 
 export const authenticateWithServiceCard = async (
   store: BCState,
-  setWorkflow: React.Dispatch<React.SetStateAction<boolean>>,
+  setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
   agentDetails: WellKnownAgentDetails,
   t: TFunction<'translation', undefined>,
   callback?: (connectionId?: string) => void
@@ -195,7 +195,7 @@ export const authenticateWithServiceCard = async (
         result.type === AuthenticationResultType.Cancel &&
         typeof (result as unknown as RedirectResult).url === 'undefined'
       ) {
-        setWorkflow(false)
+        setWorkflowInProgress(false)
         return
       }
 
@@ -203,7 +203,6 @@ export const authenticateWithServiceCard = async (
         result.type === AuthenticationResultType.Dismiss &&
         typeof (result as unknown as RedirectResult).url === 'undefined'
       ) {
-        setWorkflow(false)
         callback && callback(agentDetails.connectionId)
       }
 
@@ -214,7 +213,6 @@ export const authenticateWithServiceCard = async (
         (result as unknown as RedirectResult).url.includes(did) &&
         (result as unknown as RedirectResult).url.includes('success')
       ) {
-        setWorkflow(false)
         callback && callback(agentDetails.connectionId)
       }
 
@@ -226,15 +224,8 @@ export const authenticateWithServiceCard = async (
         (result as unknown as RedirectResult).url.includes(did) &&
         (result as unknown as RedirectResult).url.includes('cancel')
       ) {
-        setWorkflow(false)
-
-        // FIXME: This does nothing unlit the catch below is updated.
-        // throw new BifoldError(
-        //   t('Error.Title2025'),
-        //   t('Error.Message2025'),
-        //   t('Error.NoMessage'),
-        //   ErrorCodes.ServiceCardError
-        // )
+        setWorkflowInProgress(false)
+        return
       }
     } else {
       await Linking.openURL(url)
@@ -243,11 +234,9 @@ export const authenticateWithServiceCard = async (
     cleanupAfterServiceCardAuthentication(AuthenticationResultType.Success)
   } catch (error: unknown) {
     const code = (error as BifoldError).code
-
     cleanupAfterServiceCardAuthentication(
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
-
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }
@@ -255,7 +244,7 @@ export const authenticateWithServiceCard = async (
 export const startFlow = async (
   agent: Agent,
   store: BCState,
-  setWorkflowInFlight: React.Dispatch<React.SetStateAction<boolean>>,
+  setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
   t: TFunction<'translation', undefined>,
   callback?: (connectionId?: string) => void
 ) => {
@@ -264,12 +253,11 @@ export const startFlow = async (
 
     if (agentDetails.legacyConnectionDid !== undefined) {
       setTimeout(async () => {
-        await authenticateWithServiceCard(store, setWorkflowInFlight, agentDetails, t, callback)
+        await authenticateWithServiceCard(store, setWorkflowInProgress, agentDetails, t, callback)
       }, connectionDelayInMs)
     }
   } catch (error: unknown) {
-    setWorkflowInFlight(false)
-
+    setWorkflowInProgress(false)
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }

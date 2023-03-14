@@ -1,6 +1,6 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard } from 'aries-bifold'
+import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard, TabStacks } from 'aries-bifold'
 import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, FlatList } from 'react-native'
@@ -8,16 +8,21 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import LoadingIcon from '../components/LoadingIcon'
 import { startFlow } from '../helpers/BCIDHelper'
+import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
 import { BCDispatchAction, BCState } from '../store'
 
 const PersonCredential: React.FC = () => {
-  const [workflowInFlight, setWorkflowInFlight] = useState<boolean>(false)
   const { agent } = useAgent()
   const navigation = useNavigation()
+
   const [store, dispatch] = useStore<BCState>()
+  const [workflowInProgress, setWorkflowInProgress] = useState<boolean>(false)
+  const [workflowConnectionId, setWorkflowConnectionId] = useState<string | undefined>()
 
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
+
+  useCredentialOfferTrigger(workflowConnectionId)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -41,13 +46,12 @@ const PersonCredential: React.FC = () => {
       type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
       payload: [{ personCredentialOfferDismissed: true }],
     })
-
-    navigation.navigate(Screens.Home as never)
+    navigation.getParent()?.navigate(TabStacks.HomeStack, { screen: Screens.Home })
   }, [])
 
-  const startGetBCIDCredentialWorkflow = useCallback(() => {
-    setWorkflowInFlight(true)
-    startFlow(agent!, store, setWorkflowInFlight, t, dismissPersonCredentialOffer)
+  const acceptPersonCredentialOffer = useCallback(() => {
+    setWorkflowInProgress(true)
+    startFlow(agent!, store, setWorkflowInProgress, t, (connectionId) => setWorkflowConnectionId(connectionId))
   }, [])
 
   const getBCServicesCardApp = useCallback(() => {
@@ -73,12 +77,12 @@ const PersonCredential: React.FC = () => {
           <Button
             title={t('PersonCredential.GetCredential')}
             accessibilityLabel={t('PersonCredential.GetCredential')}
-            onPress={startGetBCIDCredentialWorkflow}
-            disabled={workflowInFlight}
+            onPress={acceptPersonCredentialOffer}
+            disabled={workflowInProgress}
             buttonType={ButtonType.Primary}
           >
-            {workflowInFlight && (
-              <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInFlight} />
+            {workflowInProgress && (
+              <LoadingIcon color={ColorPallet.grayscale.white} size={35} active={workflowInProgress} />
             )}
           </Button>
         </View>
@@ -87,6 +91,7 @@ const PersonCredential: React.FC = () => {
             title={t('PersonCredential.Decline')}
             accessibilityLabel={t('PersonCredential.Decline')}
             onPress={dismissPersonCredentialOffer}
+            disabled={workflowInProgress}
             buttonType={ButtonType.Secondary}
           ></Button>
         </View>
