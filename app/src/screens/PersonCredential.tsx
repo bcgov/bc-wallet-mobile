@@ -6,9 +6,9 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, FlatList } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import CredentialOfferTrigger from '../components/CredentialOfferTrigger'
 import LoadingIcon from '../components/LoadingIcon'
 import { startFlow } from '../helpers/BCIDHelper'
+import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
 import { BCDispatchAction, BCState } from '../store'
 
 const PersonCredential: React.FC = () => {
@@ -21,6 +21,8 @@ const PersonCredential: React.FC = () => {
 
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
+
+  useCredentialOfferTrigger(workflowConnectionId)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -97,40 +99,33 @@ const PersonCredential: React.FC = () => {
     )
   }
   return (
-    <>
-      <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-        <View style={styles.pageContent}>
-          <FlatList
-            data={[personCredentialAttributes]}
-            ListFooterComponent={personPageFooter}
-            contentContainerStyle={{ flexGrow: 1 }}
-            ListFooterComponentStyle={{ flex: 1, justifyContent: 'flex-end' }}
-            renderItem={({ item }) => {
-              return (
-                <View>
-                  <View style={styles.credentialCardContainer}>
-                    <CredentialCard
-                      credDefId={item.credDefId}
-                      schemaId={item.schemaId}
-                      displayItems={item.attributes}
-                    />
-                  </View>
-                  <Text style={TextTheme.normal}>
-                    {t('PersonCredential.Description') + ' '}
-                    <TouchableOpacity onPress={getBCServicesCardApp}>
-                      <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
-                        {t('PersonCredential.LinkDescription')}
-                      </Text>
-                    </TouchableOpacity>
-                  </Text>
+    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+      <View style={styles.pageContent}>
+        <FlatList
+          data={[personCredentialAttributes]}
+          ListFooterComponent={personPageFooter}
+          contentContainerStyle={{ flexGrow: 1 }}
+          ListFooterComponentStyle={{ flex: 1, justifyContent: 'flex-end' }}
+          renderItem={({ item }) => {
+            return (
+              <View>
+                <View style={styles.credentialCardContainer}>
+                  <CredentialCard credDefId={item.credDefId} schemaId={item.schemaId} displayItems={item.attributes} />
                 </View>
-              )
-            }}
-          />
-        </View>
-      </SafeAreaView>
-      <CredentialOfferTrigger workflowConnectionId={workflowConnectionId} />
-    </>
+                <Text style={TextTheme.normal}>
+                  {t('PersonCredential.Description') + ' '}
+                  <TouchableOpacity onPress={getBCServicesCardApp}>
+                    <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
+                      {t('PersonCredential.LinkDescription')}
+                    </Text>
+                  </TouchableOpacity>
+                </Text>
+              </View>
+            )
+          }}
+        />
+      </View>
+    </SafeAreaView>
   )
 }
 

@@ -9,9 +9,9 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { BCWalletEventTypes } from '../events/eventTypes'
 import { showBCIDSelector, startFlow } from '../helpers/BCIDHelper'
+import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
 import { BCState } from '../store'
 
-import CredentialOfferTrigger from './CredentialOfferTrigger'
 import LoadingIcon from './LoadingIcon'
 
 const AddCredentialSlider: React.FC = () => {
@@ -30,6 +30,8 @@ const AddCredentialSlider: React.FC = () => {
     ...useCredentialByState(CredentialState.CredentialReceived),
     ...useCredentialByState(CredentialState.Done),
   ]
+
+  useCredentialOfferTrigger(workflowConnectionId)
 
   const styles = StyleSheet.create({
     centeredView: {
@@ -107,35 +109,32 @@ const AddCredentialSlider: React.FC = () => {
   }, [])
 
   return (
-    <>
-      <Modal animationType="slide" transparent={true} visible={addCredentialPressed} onRequestClose={deactivateSlider}>
-        <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <TouchableOpacity onPress={deactivateSlider}>
-              <Icon name="window-close" size={35} style={styles.drawerRowItem}></Icon>
-            </TouchableOpacity>
-            <Text style={styles.drawerTitleText}>Choose</Text>
-            {showGetFoundationCredential && (
-              <TouchableOpacity style={styles.drawerRow} disabled={workflowInProgress} onPress={onBCIDPress}>
-                {workflowInProgress ? (
-                  <LoadingIcon size={30} color={styles.drawerRowItem.color} active={workflowInProgress} />
-                ) : (
-                  <Icon name="credit-card" size={30} style={styles.drawerRowItem}></Icon>
-                )}
+    <Modal animationType="slide" transparent={true} visible={addCredentialPressed} onRequestClose={deactivateSlider}>
+      <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />
+      <View style={styles.centeredView}>
+        <View style={styles.modalView}>
+          <TouchableOpacity onPress={deactivateSlider}>
+            <Icon name="window-close" size={35} style={styles.drawerRowItem}></Icon>
+          </TouchableOpacity>
+          <Text style={styles.drawerTitleText}>Choose</Text>
+          {showGetFoundationCredential && (
+            <TouchableOpacity style={styles.drawerRow} disabled={workflowInProgress} onPress={onBCIDPress}>
+              {workflowInProgress ? (
+                <LoadingIcon size={30} color={styles.drawerRowItem.color} active={workflowInProgress} />
+              ) : (
+                <Icon name="credit-card" size={30} style={styles.drawerRowItem}></Icon>
+              )}
 
-                <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Get your Person credential</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity style={styles.drawerRow} onPress={goToScanScreen}>
-              <Icon name="qrcode" size={30} style={styles.drawerRowItem}></Icon>
-              <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Scan a QR code</Text>
+              <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Get your Person credential</Text>
             </TouchableOpacity>
-          </View>
+          )}
+          <TouchableOpacity style={styles.drawerRow} onPress={goToScanScreen}>
+            <Icon name="qrcode" size={30} style={styles.drawerRowItem}></Icon>
+            <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Scan a QR code</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
-      <CredentialOfferTrigger workflowConnectionId={workflowConnectionId} />
-    </>
+      </View>
+    </Modal>
   )
 }
 

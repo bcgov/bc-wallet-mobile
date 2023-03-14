@@ -2,13 +2,9 @@ import { CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
 import { Screens, Stacks } from 'aries-bifold'
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 
-interface CredentialOfferTriggerProps {
-  workflowConnectionId?: string
-}
-
-const CredentialOfferTrigger: React.FC<CredentialOfferTriggerProps> = ({ workflowConnectionId }) => {
+export const useCredentialOfferTrigger = (workflowConnectionId?: string): void => {
   const navigation = useNavigation()
 
   const offers = useCredentialByState(CredentialState.OfferReceived)
@@ -27,8 +23,4 @@ const CredentialOfferTrigger: React.FC<CredentialOfferTriggerProps> = ({ workflo
       }
     }
   }, [offers, workflowConnectionId])
-
-  return null
 }
-
-export default CredentialOfferTrigger
