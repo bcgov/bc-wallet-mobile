@@ -4,14 +4,20 @@
   "description": "![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)",
   "main": "index.js",
   "scripts": {
-    "install:bifold": "cd bifold/core && npm ci",
+    "install:bifold": "cd bifold/core && yarn install --frozen-lockfile",
     "install:app": "cd app && npm ci",
     "install:all": "run-s install:bifold install:app",
-    "build:bifold": "cd bifold/core && npm run typecheck && npm run prepack",
+    "build:bifold": "cd bifold/core && yarn typecheck && yarn prepack",
     "build:app": "cd app && npm run typecheck && npm run prepack --if-present",
     "build:all": "run-s build:bifold build:app",
     "prepare": "run-s install:all build:all",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint:app": "cd app && npm run lint --if-present",
+    "lint": "run-s lint:app",
+    "prettier:app": "cd app && npm run prettier --if-present",
+    "prettier": "run-s prettier:app",
+    "test": "cd app && npm test",
+    "pre-commit-lint:app": "cd app && npm run pre-commit-lint",
+    "pre-commit-lint": "run-s pre-commit-lint:app",
     "typecheck": "cd app && npm run typecheck"
   },
   "repository": {

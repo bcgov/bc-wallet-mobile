@@ -64,7 +64,7 @@ jobs:
       - name: Configure ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.6
+          ruby-version: 2.7
 
       - name: What XCode are we using?
         run: |
@@ -237,19 +237,18 @@ jobs:
           --beta-group "The Team" "IDIM Team" \
           --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
-      - name: Ship to SauceLabs
+      - name: Ship to LambdaTest
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
         env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+          LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
         run: |
           curl \
-          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-          -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-          --form "payload=@export/AriesBifold.ipa" \
+          -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
+          --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
+          --form 'appFile=@"export/AriesBifold.ipa"' \
           --form "name=AriesBifold-$GITHUB_RUN_NUMBER.ipa" \
-          --form "description=iOS QC Wallet app"
 
   build-android:
     # if: ${{ false }}  # disable for now
@@ -354,19 +353,18 @@ jobs:
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           node ./deploy-to-playstore.js
 
-      - name: Ship to SauceLabs
+      - name: Ship to LambdaTest
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+          LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
         run: |
           curl \
-          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-          -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-          --form "payload=@app/build/outputs/bundle/release/app-release.aab" \
+          -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
+          --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
+          --form 'appFile=@"app/build/outputs/bundle/release/app-release.aab"' \
           --form "name=AriesBifold-$GITHUB_RUN_NUMBER.aab" \
-          --form "description=Android Bifold BC wallet app"
 
   run-on-device-tests:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
