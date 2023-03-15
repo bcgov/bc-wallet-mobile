@@ -1,7 +1,7 @@
 name: Native Build & Test
 
 env:
-  cacheId: "13" # increment to expire the cache
+  cacheId: "12" # increment to expire the cache
   appBuildNumber: ${{ github.run_number }}
   appBuildVersion: "1.0.5"
 
@@ -351,9 +351,7 @@ jobs:
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          cd ../scripts/gpublish && \
-          npm i && \
-          node ./index.js
+          node ./deploy-to-playstore.js
 
       - name: Ship to LambdaTest
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
