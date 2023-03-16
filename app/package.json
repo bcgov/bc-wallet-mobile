@@ -102,7 +102,6 @@
     "uuid": "8.3.2"
   },
   "devDependencies": {
-    "googleapis": "^92.0.0",
     "@babel/core": "7.15.5",
     "@babel/runtime": "7.15.4",
     "@commitlint/cli": "^11.0.0",
