@@ -397,13 +397,13 @@ jobs:
         with:
           USE_NGROK: "-n"
 
-      - name: run-sauce-connect-tunnel
+      - name: run-lambdatest-connect-tunnel
         if: ${{ matrix.mobile-platform=='-p iOS' }}
-        uses: saucelabs/sauce-connect-action@v2
+        uses: LambdaTest/LambdaTest-tunnel-action@v1
         with:
-          username: ${{ secrets.SAUCE_USERNAME }}
-          accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
-          directDomains: aries-mediator-agent-test.apps.silver.devops.gov.bc.ca
+          user: ${{ secrets.LAMBDA_USERNAME }}
+          accessKey: ${{ secrets.LAMBDA_ACCESS_KEY }}
+          tunnelName: "PortefeuilleQC-Tunnel-${{ github.run_number }}"
 
       - name: Fetch mobile test harness repo
         uses: actions/checkout@v2
