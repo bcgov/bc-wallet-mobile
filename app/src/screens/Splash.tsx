@@ -30,7 +30,7 @@ import {
 } from 'aries-bifold'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, Text, Image, useWindowDimensions } from 'react-native'
+import { StyleSheet, View, Text, Image } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -63,13 +63,12 @@ const resumeOnboardingAt = (state: OnboardingState): Screens => {
   of this view.
 */
 const Splash: React.FC = () => {
-  const { width } = useWindowDimensions()
   const { setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore()
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
-  const { ColorPallet, Assets } = useTheme()
+  const { ColorPallet } = useTheme()
   const { indyLedgers } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
