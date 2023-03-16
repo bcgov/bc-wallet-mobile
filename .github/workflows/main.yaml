@@ -351,7 +351,6 @@ jobs:
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          npm i googleapis && \
           node ./deploy-to-playstore.js
 
       - name: Ship to LambdaTest
