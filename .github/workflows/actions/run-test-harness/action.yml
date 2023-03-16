@@ -5,7 +5,7 @@ inputs:
   DEVICE_CLOUD:
     description: "Mobile Device Cloud Service"
     required: true
-    default: "-d SauceLabs"
+    default: "-d LambdaTest"
   DEVICE_CLOUD_USER:
     description: "Username for the Device Cloud Service"
     required: true
