@@ -408,11 +408,11 @@ jobs:
       - name: Fetch mobile test harness repo
         uses: actions/checkout@v2
         with:
-          repository: hyperledger/aries-mobile-test-harness
+          repository: MCN-ING/aries-mobile-test-harness
           path: aries-mobile-test-harness
           ref: main
 
-      - name: Run SauceLabs smoke-test
+      - name: Run LambdaTest smoke-test
         uses: ./.github/workflows/actions/run-test-harness
         env:
           LEDGER_URL_CONFIG: "http://test.bcovrin.vonx.io"
