@@ -51,6 +51,7 @@ interface BrandColors {
   primaryDisabled: string
   secondary: string
   secondaryDisabled: string
+  primaryLight: string
   highlight: string
   modalPrimaryBackground: string
   modalSecondaryBackground: string
@@ -113,6 +114,7 @@ const BrandColors: BrandColors = {
   primaryDisabled: `rgba(0, 51, 102, ${lightOpacity})`,
   secondary: '#FFFFFFFF',
   secondaryDisabled: `rgba(0, 51, 102, ${heavyOpacity})`,
+  primaryLight: '#D9EAF7',
   highlight: '#FCBA19',
   primaryBackground: '#F2F2F2',
   secondaryBackground: '#FFFFFF',
@@ -531,31 +533,36 @@ export const ChatTheme = {
     marginLeft: 16,
   },
   rightBubble: {
-    backgroundColor: ColorPallet.brand.primary,
+    backgroundColor: ColorPallet.brand.primaryLight,
     borderRadius: 4,
     padding: 16,
     marginRight: 16,
   },
-  timeStyle: {
-    color: ColorPallet.grayscale.lightGrey,
+  timeStyleLeft: {
+    color: ColorPallet.grayscale.black,
+    fontSize: 12,
+    marginTop: 8,
+  },
+  timeStyleRight: {
+    color: ColorPallet.grayscale.black,
     fontSize: 12,
     marginTop: 8,
   },
   leftText: {
-    color: ColorPallet.brand.primary,
+    color: ColorPallet.grayscale.black,
     fontSize: TextTheme.normal.fontSize,
   },
   leftTextHighlighted: {
-    color: ColorPallet.brand.primary,
+    color: ColorPallet.grayscale.black,
     fontSize: TextTheme.normal.fontSize,
     fontWeight: 'bold',
   },
   rightText: {
-    color: ColorPallet.brand.secondary,
+    color: ColorPallet.grayscale.black,
     fontSize: TextTheme.normal.fontSize,
   },
   rightTextHighlighted: {
-    color: ColorPallet.brand.secondary,
+    color: ColorPallet.grayscale.black,
     fontSize: TextTheme.normal.fontSize,
     fontWeight: 'bold',
   },
