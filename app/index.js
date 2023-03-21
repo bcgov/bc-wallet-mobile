@@ -47,7 +47,7 @@ LogBox.ignoreAllLogs()
 
 if (Config.LOAD_STORYBOOK === 'true') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const App = require('./AppSorybook').default
+  const App = require('./AppStorybook').default
   const Base = () => {
     return (
       <NavigationContainer theme={navigationTheme}>

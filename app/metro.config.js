@@ -39,7 +39,7 @@ module.exports = (async () => {
       getTransformOptions: async () => ({
         transform: {
           experimentalImportSupport: false,
-          inlineRequires: process.env.STORYBOOK === 'true',
+          inlineRequires: process.env.LOAD_STORYBOOK !== 'true',
         },
       }),
     },
