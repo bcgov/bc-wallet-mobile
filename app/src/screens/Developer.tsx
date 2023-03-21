@@ -139,8 +139,10 @@ const Settings: React.FC = () => {
         style={styles.sectionRow}
         onPress={onPress}
       >
-        <Text style={[TextTheme.headingFour, { fontWeight: 'normal' }]}>{title}</Text>
-        <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>{value}</Text>
+        <Text style={[TextTheme.headingFour, { fontWeight: 'normal', maxWidth: '90%' }]}>{title}</Text>
+        <Text style={[TextTheme.headingFour, { fontWeight: 'normal', maxWidth: '90%', color: ColorPallet.brand.link }]}>
+          {value}
+        </Text>
         {children}
       </TouchableOpacity>
     </View>
@@ -224,7 +226,7 @@ const Settings: React.FC = () => {
             accessibilityLabel={t('Verifier.Toggle')}
             testID={testIdWithKey('ToggleVerifierCapability')}
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={devMode ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            thumbColor={useVerifierCapability ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleVerifierCapabilitySwitch}
             value={useVerifierCapability}
