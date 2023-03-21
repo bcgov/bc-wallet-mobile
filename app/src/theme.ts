@@ -640,6 +640,24 @@ export const OnboardingTheme = {
   },
 }
 
+export const ProofRequestTutorialTheme = {
+  modalView: {
+    backgroundColor: ColorPallet.brand.primaryBackground,
+  },
+  titleText: {
+    color: ColorPallet.grayscale.black,
+  },
+  description: {
+    color: ColorPallet.grayscale.black,
+  },
+  closeButtonIcon: {
+    color: ColorPallet.grayscale.black,
+  },
+  carouselButtonText: {
+    color: ColorPallet.grayscale.black,
+  },
+}
+
 const LoadingTheme = {
   backgroundColor: ColorPallet.brand.primary,
 }
@@ -695,6 +713,7 @@ export const defaultTheme: Theme = {
   SettingsTheme,
   ChatTheme,
   OnboardingTheme,
+  ProofRequestTutorialTheme,
   LoadingTheme,
   PINInputTheme,
   Assets,
