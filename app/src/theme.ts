@@ -647,7 +647,7 @@ export const OnboardingTheme = {
   },
 }
 
-export const ProofRequestTutorialTheme = {
+export const DialogTheme = {
   modalView: {
     backgroundColor: ColorPallet.brand.primaryLight,
   },
@@ -721,7 +721,7 @@ export const defaultTheme: Theme = {
   SettingsTheme,
   ChatTheme,
   OnboardingTheme,
-  ProofRequestTutorialTheme,
+  DialogTheme,
   LoadingTheme,
   PINInputTheme,
   Assets,
