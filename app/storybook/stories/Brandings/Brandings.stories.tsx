@@ -3,6 +3,7 @@ import {
   CredentialExchangeRecord,
   CredentialExchangeRecordProps,
   CredentialMetadataKeys,
+  CredentialPreviewAttribute,
   CredentialState,
   RevocationNotification,
 } from '@aries-framework/core'
@@ -54,6 +55,13 @@ const CredentialWrapper: FC<CredentialProps> = ({
     state: CredentialState.CredentialIssued,
     protocolVersion: '1.0',
     credentials: [indyCredential],
+  }
+  const credDefIdParts = credentialDefinitionId.split(':')
+  if (credDefIdParts[2] === 'CL' && credDefIdParts[4] === 'Person') {
+    props.credentialAttributes = [
+      new CredentialPreviewAttribute({ name: 'given_names', value: 'John' }),
+      new CredentialPreviewAttribute({ name: 'family_name', value: 'Doe' }),
+    ]
   }
   const credential: CredentialExchangeRecord = new CredentialExchangeRecord(props)
   credential.metadata.set(CredentialMetadataKeys.IndyCredential, {
@@ -180,6 +188,24 @@ storiesOf('Brandings', module)
         credentialRecordId: 'Generic_Revoked',
         revoked: true,
         connectionId: 'ACME',
+      },
+      {
+        credentialDefinitionId: CREDENTIAL_DEFINITION.Generic,
+        credentialRecordId: 'Generic_Revoked',
+        revoked: true,
+        connectionId: 'ab2c9305-282e-42da-82d9-70d3e99ecb02',
+      },
+      {
+        credentialDefinitionId: CREDENTIAL_DEFINITION.Generic,
+        credentialRecordId: 'Generic_Revoked',
+        revoked: true,
+        connectionId: 'ab2c9305-282e-42da-82d9-70d3e99ecb02-70d3e99ecb02',
+      },
+      {
+        credentialDefinitionId: CREDENTIAL_DEFINITION.Generic,
+        credentialRecordId: 'Generic_Revoked',
+        revoked: true,
+        connectionId: 'ab2c9305-282e-42da-82d9-70d3e99ecb02-70d3e99ecb02-282e-42da-82d9-70d3e99ecb02-70d3e99ecb02',
       },
     ]
     return (

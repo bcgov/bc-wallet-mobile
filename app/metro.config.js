@@ -23,9 +23,9 @@ for (const packageDir of packageDirs) {
     return acc
   }, extraNodeModules)
 }
-console.dir(extraExclusionlist)
-console.dir(extraNodeModules)
-console.log(`inlineRequires = ${process.env.LOAD_STORYBOOK !== 'true'}`)
+// console.dir(extraExclusionlist)
+// console.dir(extraNodeModules)
+// console.log(`inlineRequires = ${process.env.LOAD_STORYBOOK === 'true'}`)
 const { getDefaultConfig } = require('metro-config')
 module.exports = (async () => {
   const {
@@ -39,7 +39,7 @@ module.exports = (async () => {
       getTransformOptions: async () => ({
         transform: {
           experimentalImportSupport: false,
-          inlineRequires: process.env.STORYBOOK !== 'true',
+          inlineRequires: process.env.STORYBOOK === 'true',
         },
       }),
     },
