@@ -649,7 +649,7 @@ export const OnboardingTheme = {
 
 export const ProofRequestTutorialTheme = {
   modalView: {
-    backgroundColor: ColorPallet.brand.primaryBackground,
+    backgroundColor: ColorPallet.brand.primaryLight,
   },
   titleText: {
     color: ColorPallet.grayscale.black,
@@ -661,7 +661,8 @@ export const ProofRequestTutorialTheme = {
     color: ColorPallet.grayscale.black,
   },
   carouselButtonText: {
-    color: ColorPallet.grayscale.black,
+    color: ColorPallet.brand.primary,
+    fontWeight: 'bold',
   },
 }
 
