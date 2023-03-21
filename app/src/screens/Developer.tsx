@@ -31,6 +31,10 @@ const Settings: React.FC = () => {
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
+  const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
+  const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
+    !!store.preferences.useConnectionInviterCapability
+  )
 
   const styles = StyleSheet.create({
     container: {
@@ -150,6 +154,22 @@ const Settings: React.FC = () => {
     setDevMode(!devMode)
   }
 
+  const toggleVerifierCapabilitySwitch = () => {
+    dispatch({
+      type: DispatchAction.USE_VERIFIER_CAPABILITY,
+      payload: [!useVerifierCapability],
+    })
+    setUseVerifierCapability((previousState) => !previousState)
+  }
+
+  const toggleConnectionInviterCapabilitySwitch = () => {
+    dispatch({
+      type: DispatchAction.USE_CONNECTION_INVITER_CAPABILITY,
+      payload: [!useConnectionInviterCapability],
+    })
+    setConnectionInviterCapability((previousState) => !previousState)
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -199,6 +219,27 @@ const Settings: React.FC = () => {
           sections={settingsSections}
           stickySectionHeadersEnabled={false}
         ></SectionList>
+        <SectionRow title={t('Verifier.UseVerifierCapability')}>
+          <Switch
+            accessibilityLabel={t('Verifier.Toggle')}
+            testID={testIdWithKey('ToggleVerifierCapability')}
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={devMode ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleVerifierCapabilitySwitch}
+            value={useVerifierCapability}
+          />
+        </SectionRow>
+        <SectionRow title={t('Connection.UseConnectionInviterCapability')}>
+          <Switch
+            testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={useConnectionInviterCapability ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleConnectionInviterCapabilitySwitch}
+            value={useConnectionInviterCapability}
+          />
+        </SectionRow>
       </View>
     </SafeAreaView>
   )
