@@ -30,7 +30,7 @@ import {
 } from 'aries-bifold'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, Text, Image, useWindowDimensions } from 'react-native'
+import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -94,18 +94,17 @@ const Splash: React.FC = () => {
   }
 
   const styles = StyleSheet.create({
-    splashContainer: {
-      flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+    screenContainer: {
       backgroundColor: ColorPallet.brand.primary,
+      flex: 1,
+    },
+    scrollContentContainer: {
+      flexGrow: 1,
+      justifyContent: 'space-between',
     },
     progressContainer: {
-      flexDirection: 'column',
       alignItems: 'center',
       width: '100%',
-      minHeight: 37,
     },
     stepTextContainer: {
       marginTop: 10,
@@ -115,12 +114,17 @@ const Splash: React.FC = () => {
       fontSize: 16,
       color: '#a8abae',
     },
+    carouselContainer: {
+      width,
+      marginVertical: 30,
+      flex: 1,
+    },
     errorBoxContainer: {
       paddingHorizontal: 20,
     },
     logoContainer: {
       alignSelf: 'center',
-      marginBottom: '10%',
+      marginBottom: 30,
     },
   })
 
@@ -312,35 +316,37 @@ const Splash: React.FC = () => {
   }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry])
 
   return (
-    <SafeAreaView style={styles.splashContainer}>
-      <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
-        <ProgressBar progressPercent={progressPercent} />
-        <View style={styles.stepTextContainer}>
-          <Text style={styles.stepText}>{stepText}</Text>
-        </View>
-      </View>
-      <View style={{ width, minHeight: '40%' }}>
-        {initError ? (
-          <View style={styles.errorBoxContainer}>
-            <InfoBox
-              notificationType={InfoBoxType.Error}
-              title={t('Error.Title2026')}
-              description={t('Error.Message2026')}
-              message={initError?.message || t('Error.Unknown')}
-              onCallToActionPressed={() => setInitError(null)}
-            />
+    <SafeAreaView style={styles.screenContainer}>
+      <ScrollView contentContainerStyle={styles.scrollContentContainer}>
+        <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
+          <ProgressBar progressPercent={progressPercent} />
+          <View style={styles.stepTextContainer}>
+            <Text style={styles.stepText}>{stepText}</Text>
           </View>
-        ) : (
-          <TipCarousel />
-        )}
-      </View>
-      <View style={styles.logoContainer}>
-        <Image
-          source={Assets.img.logoPrimary.src}
-          style={{ width: Assets.img.logoPrimary.width, height: Assets.img.logoPrimary.height }}
-          testID={testIdWithKey('LoadingActivityIndicatorImage')}
-        />
-      </View>
+        </View>
+        <View style={styles.carouselContainer}>
+          {initError ? (
+            <View style={styles.errorBoxContainer}>
+              <InfoBox
+                notificationType={InfoBoxType.Error}
+                title={t('Error.Title2026')}
+                description={t('Error.Message2026')}
+                message={initError?.message || t('Error.Unknown')}
+                onCallToActionPressed={() => setInitError(null)}
+              />
+            </View>
+          ) : (
+            <TipCarousel />
+          )}
+        </View>
+        <View style={styles.logoContainer}>
+          <Image
+            source={Assets.img.logoPrimary.src}
+            style={{ width: Assets.img.logoPrimary.width, height: Assets.img.logoPrimary.height }}
+            testID={testIdWithKey('LoadingActivityIndicatorImage')}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
