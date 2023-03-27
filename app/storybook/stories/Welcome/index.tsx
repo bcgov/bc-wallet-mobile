@@ -1,14 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 /* eslint-disable import/no-extraneous-dependencies */
-import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import { View, Text } from 'react-native'
 
-type WelcomeProps = {
-  showApp?: () => void
-}
-
-export default class Welcome extends Component<WelcomeProps> {
+export default class Welcome extends Component {
   styles = {
     wrapper: {
       flex: 1,
@@ -24,17 +19,6 @@ export default class Welcome extends Component<WelcomeProps> {
       lineHeight: 18,
     },
   }
-
-  showApp = (event: { preventDefault: () => void }) => {
-    const { showApp } = this.props
-    event.preventDefault()
-
-    if (showApp) {
-      showApp()
-    }
-  }
-  static defaultProps: WelcomeProps
-  static propTypes: { showApp: typeof PropTypes.func }
 
   render() {
     return (
@@ -52,10 +36,4 @@ export default class Welcome extends Component<WelcomeProps> {
       </View>
     )
   }
-}
-
-Welcome.defaultProps = {}
-
-Welcome.propTypes = {
-  showApp: PropTypes.func,
 }

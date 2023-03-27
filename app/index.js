@@ -45,27 +45,20 @@ const navigationTheme = {
 
 LogBox.ignoreAllLogs()
 
+const getBase = (App) => {
+  return () => (
+    <NavigationContainer theme={navigationTheme}>
+      <App />
+    </NavigationContainer>
+  )
+}
+
 if (Config.LOAD_STORYBOOK === 'true') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const App = require('./AppStorybook').default
-  const Base = () => {
-    return (
-      <NavigationContainer theme={navigationTheme}>
-        <App />
-      </NavigationContainer>
-    )
-  }
-  AppRegistry.registerComponent(appName, () => Base)
+  AppRegistry.registerComponent(appName, () => getBase(App))
 } else {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const App = require('./App').default
-  const Base = () => {
-    return (
-      <NavigationContainer theme={navigationTheme}>
-        <App />
-      </NavigationContainer>
-    )
-  }
-
-  AppRegistry.registerComponent(appName, () => Base)
+  AppRegistry.registerComponent(appName, () => getBase(App))
 }

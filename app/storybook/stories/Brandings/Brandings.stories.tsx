@@ -83,28 +83,30 @@ type ListItem = {
 
 type CredentialsProps = { items: ListItem[] }
 
+const ItemDivider = () => {
+  return (
+    <View
+      style={{
+        height: 10,
+        width: '100%',
+        backgroundColor: 'transparent',
+      }}
+    />
+  )
+}
+
 const Credentials: FC<CredentialsProps> = ({ items }) => {
   const lang = select('Language', ['en', 'fr', 'pt'], 'en')
   const { i18n } = useTranslation()
   const [isLoaded, setLoaded] = useState(false)
-  const renderItem: ListRenderItem<ListItem> = ({ item }): JSX.Element => {
+  const renderItem: ListRenderItem<ListItem> = ({ item, index }): JSX.Element => {
     return (
       <CredentialWrapper
         revoked={item.revoked}
         credentialDefinitionId={item.credentialDefinitionId}
         credentialRecordId={item.credentialRecordId}
         connectionId={item.connectionId}
-      />
-    )
-  }
-  const ItemDivider = () => {
-    return (
-      <View
-        style={{
-          height: 10,
-          width: '100%',
-          backgroundColor: 'transparent',
-        }}
+        key={index}
       />
     )
   }
