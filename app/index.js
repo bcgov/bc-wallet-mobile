@@ -22,9 +22,9 @@ import '@formatjs/intl-datetimeformat/add-all-tz' // Add ALL tz data
 
 import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
-import { AppRegistry, LogBox } from 'react-native'
-import Config from 'react-native-config'
+import { AppRegistry } from 'react-native'
 
+import App from './App'
 import { name as appName } from './app.json'
 import bcwallet from './src/'
 const { theme } = bcwallet
@@ -43,22 +43,11 @@ const navigationTheme = {
   },
 }
 
-LogBox.ignoreAllLogs()
-
-const getBase = (App) => {
-  return () => (
+const Base = () => {
+  return (
     <NavigationContainer theme={navigationTheme}>
       <App />
     </NavigationContainer>
   )
 }
-
-if (Config.LOAD_STORYBOOK === 'true') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const App = require('./AppStorybook').default
-  AppRegistry.registerComponent(appName, () => getBase(App))
-} else {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const App = require('./App').default
-  AppRegistry.registerComponent(appName, () => getBase(App))
-}
+AppRegistry.registerComponent(appName, () => Base)
