@@ -22,7 +22,7 @@ import '@formatjs/intl-datetimeformat/add-all-tz' // Add ALL tz data
 
 import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
-import { AppRegistry, LogBox } from 'react-native'
+import { AppRegistry } from 'react-native'
 
 import { name as appName } from './app.json'
 import bcwallet from './src/'
@@ -41,8 +41,6 @@ const navigationTheme = {
     notification: ColorPallet.grayscale.white,
   },
 }
-
-LogBox.ignoreAllLogs()
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const App = require('./App').default
