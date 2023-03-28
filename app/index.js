@@ -24,6 +24,7 @@ import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
 import { AppRegistry } from 'react-native'
 
+import App from './App'
 import { name as appName } from './app.json'
 import bcwallet from './src/'
 const { theme } = bcwallet
@@ -42,8 +43,6 @@ const navigationTheme = {
   },
 }
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const App = require('./App').default
 const Base = () => {
   return (
     <NavigationContainer theme={navigationTheme}>
