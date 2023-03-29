@@ -347,6 +347,8 @@ jobs:
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
+          cp ../node_modules/react-native-vector-icons/Fonts/* ./app/src/main/assets/fonts/ && \
+          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
           ./gradlew bundleRelease
 
       - name: Ship to Google Play
