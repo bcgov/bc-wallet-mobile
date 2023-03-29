@@ -12,10 +12,13 @@ on:
     paths:
       - app/**
       - bifold
+      - .github/workflows/**
   pull_request:
     branches: [main]
     paths:
       - app/**
+      - bifold
+      - .github/workflows/**
 
 jobs:
   check-android-secrets:
@@ -376,7 +379,7 @@ jobs:
           -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
           -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
           --form "payload=@app/build/outputs/bundle/release/app-release.aab" \
-          --form "name=AriesBifold-$GITHUB_RUN_NUMBER.aab" \
+          --form "name=BCWallet-$GITHUB_RUN_NUMBER.aab" \
           --form "description=Android Bifold BC wallet app"
 
   run-on-device-tests:
@@ -389,7 +392,7 @@ jobs:
       matrix:
         include:
           - mobile-platform: "-p Android"
-            app-file-name: "-a AriesBifold-${{ github.run_number }}.aab"
+            app-file-name: "-a BCWallet-${{ github.run_number }}.aab"
             report-project: "android-one-device-smoke"
           - mobile-platform: "-p iOS"
             app-file-name: "-a BCWallet-${{ github.run_number }}.ipa"
