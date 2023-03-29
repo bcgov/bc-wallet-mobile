@@ -392,7 +392,7 @@ jobs:
             app-file-name: "-a AriesBifold-${{ github.run_number }}.aab"
             report-project: "android-one-device-smoke"
           - mobile-platform: "-p iOS"
-            app-file-name: "-a AriesBifold-${{ github.run_number }}.ipa"
+            app-file-name: "-a BCWallet-${{ github.run_number }}.ipa"
             report-project: "ios-one-device-smoke"
     timeout-minutes: 60
     steps:
