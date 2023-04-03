@@ -22,6 +22,7 @@ import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
+import { proofRequestTemplates } from "./constants";
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
@@ -57,6 +58,7 @@ const configuration: ConfigurationContext = {
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
   useCustomNotifications: useNotifications,
+  proofRequestTemplates
 }
 
 export default { theme, localization, configuration }
