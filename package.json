@@ -4,10 +4,10 @@
   "description": "![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)",
   "main": "index.js",
   "scripts": {
-    "install:bifold": "cd bifold/core && yarn install --frozen-lockfile",
+    "install:bifold": "cd bifold/packages/legacy/core && yarn install --frozen-lockfile",
     "install:app": "cd app && npm ci",
     "install:all": "run-s install:bifold install:app",
-    "build:bifold": "cd bifold/core && yarn typecheck && yarn prepack",
+    "build:bifold": "cd bifold/packages/legacy/core && yarn typecheck && yarn prepack",
     "build:app": "cd app && npm run typecheck && npm run prepack --if-present",
     "build:all": "run-s build:bifold build:app",
     "prepare": "run-s install:all build:all",
