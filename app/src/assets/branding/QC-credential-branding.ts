@@ -67,7 +67,7 @@ const ANIGLabelOverlayEn: LabelOverlay = {
 
 const CQENLabelOverlayFr: LabelOverlay = {
   type: 'spec/overlays/label/1.0',
-  capture_base: '',
+  captureBase: '',
   language: 'fr',
   attributeLabels: {
     email: 'Courriel',
