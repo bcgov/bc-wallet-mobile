@@ -1,9 +1,10 @@
+const fs = require('fs')
 const path = require('path')
 const escape = require('escape-string-regexp')
 const exclusionList = require('metro-config/src/defaults/exclusionList')
 require('dotenv').config()
 
-const packageDirs = [path.resolve(__dirname, '../bifold/core')]
+const packageDirs = [fs.realpathSync(path.join(__dirname, 'node_modules', 'aries-bifold'))]
 
 const watchFolders = [...packageDirs]
 
