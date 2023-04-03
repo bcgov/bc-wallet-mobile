@@ -47,7 +47,7 @@ const configuration: ConfigurationContext = {
   OCABundleResolver: new types.oca.OCABundleResolver(
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     bundle as unknown as types.oca.Bundles,
-    { cardOverlayType: types.oca.CardOverlayType.CardLayout10 }
+    { cardOverlayType: types.oca.CardOverlayType.CardLayout11 }
   ),
   record: Record,
   PINSecurity: { rules: PINValidationRules, displayHelper: true },
