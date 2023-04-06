@@ -3,7 +3,7 @@
 <plist version="1.0">
 	<dict>
 		<key>NSFaceIDUsageDescription</key>
-		<string>$(PRODUCT_NAME) Wants to use your FaceID/TouchID to Authenticate your Identity</string>
+		<string>$(PRODUCT_NAME) wants to use your FaceID/TouchID to authenticate your identity</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>en</string>
 		<key>CFBundleDisplayName</key>
