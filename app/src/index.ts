@@ -19,11 +19,11 @@ import { PINValidationRules } from './constants'
 import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import fr from './localization/fr'
+import TermsStack from './navigators/TermsStack'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import PersonCredentialScreen from './screens/PersonCredential'
 import Splash from './screens/Splash'
-import Terms from './screens/Terms'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
 
@@ -38,7 +38,7 @@ const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,
   splash: Splash,
-  terms: Terms,
+  terms: TermsStack,
   useBiometry: UseBiometry,
   credentialListHeaderRight: AddCredentialButton,
   credentialListOptions: AddCredentialSlider,
