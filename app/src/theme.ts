@@ -649,20 +649,19 @@ export const OnboardingTheme = {
 
 export const DialogTheme = {
   modalView: {
-    backgroundColor: ColorPallet.brand.primaryLight,
+    backgroundColor: ColorPallet.brand.secondaryBackground,
   },
   titleText: {
-    color: ColorPallet.grayscale.black,
+    color: ColorPallet.grayscale.white,
   },
   description: {
-    color: ColorPallet.grayscale.black,
+    color: ColorPallet.grayscale.white,
   },
   closeButtonIcon: {
-    color: ColorPallet.grayscale.black,
+    color: ColorPallet.grayscale.white,
   },
   carouselButtonText: {
-    color: ColorPallet.brand.primary,
-    fontWeight: 'bold',
+    color: ColorPallet.grayscale.white,
   },
 }
 
