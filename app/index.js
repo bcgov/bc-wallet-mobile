@@ -26,9 +26,8 @@ import { AppRegistry } from 'react-native'
 
 import App from './App'
 import { name as appName } from './app.json'
-import bcwallet from './src/'
-
-const { theme } = bcwallet
+import qcwallet from './src/'
+const { theme } = qcwallet
 
 const { ColorPallet } = theme
 
@@ -51,5 +50,4 @@ const Base = () => {
     </NavigationContainer>
   )
 }
-
 AppRegistry.registerComponent(appName, () => Base)

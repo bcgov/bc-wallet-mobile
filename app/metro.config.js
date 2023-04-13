@@ -1,7 +1,10 @@
+const fs = require('fs')
 const path = require('path')
 const escape = require('escape-string-regexp')
 const exclusionList = require('metro-config/src/defaults/exclusionList')
-const packageDirs = [path.resolve(__dirname, '../bifold/core')]
+require('dotenv').config()
+
+const packageDirs = [fs.realpathSync(path.join(__dirname, 'node_modules', 'aries-bifold'))]
 
 const watchFolders = [...packageDirs]
 
@@ -21,8 +24,7 @@ for (const packageDir of packageDirs) {
     return acc
   }, extraNodeModules)
 }
-console.dir(extraExclusionlist)
-console.dir(extraNodeModules)
+
 const { getDefaultConfig } = require('metro-config')
 module.exports = (async () => {
   const {
@@ -36,7 +38,7 @@ module.exports = (async () => {
       getTransformOptions: async () => ({
         transform: {
           experimentalImportSupport: false,
-          inlineRequires: true,
+          inlineRequires: process.env.LOAD_STORYBOOK !== 'true',
         },
       }),
     },
@@ -44,11 +46,10 @@ module.exports = (async () => {
       blacklistRE: exclusionList(extraExclusionlist.map((m) => new RegExp(`^${escape(m)}\\/.*$`))),
       extraNodeModules: extraNodeModules,
       assetExts: assetExts.filter((ext) => ext !== 'svg'),
-      sourceExts: [...sourceExts, 'svg'],
+      sourceExts: [...sourceExts, 'svg', 'cjs'],
     },
     watchFolders,
   }
-  // eslint-disable-next-line no-console
-  //console.dir(metroConfig)
+
   return metroConfig
 })()

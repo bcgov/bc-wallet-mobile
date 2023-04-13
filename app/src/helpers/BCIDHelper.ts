@@ -1,8 +1,4 @@
-import {
-  DidRepository,
-  CredentialExchangeRecord as CredentialRecord,
-  CredentialMetadataKeys,
-} from '@aries-framework/core'
+import { DidRepository, CredentialMetadataKeys, CredentialExchangeRecord } from '@aries-framework/core'
 import { BifoldError, Agent, EventTypes as BifoldEventTypes } from 'aries-bifold'
 import React from 'react'
 import { TFunction } from 'react-i18next'
@@ -24,6 +20,7 @@ enum AuthenticationResultType {
   Success = 'success',
   Fail = 'fail',
   Cancel = 'cancel',
+  Dismiss = 'dismiss',
 }
 
 enum ErrorCodes {
@@ -57,7 +54,7 @@ export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCre
 }
 
 export const getInvitationCredentialDate = (
-  credentials: CredentialRecord[],
+  credentials: CredentialExchangeRecord[],
   canUseLSBCCredential: boolean
 ): Date | undefined => {
   const invitationCredential = credentials.find((c) => {
@@ -171,12 +168,13 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
 
 export const authenticateWithServiceCard = async (
   store: BCState,
-  setWorkflow: React.Dispatch<React.SetStateAction<boolean>>,
-  did: string,
+  setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
+  agentDetails: WellKnownAgentDetails,
   t: TFunction<'translation', undefined>,
-  callback?: () => void
+  callback?: (connectionId?: string) => void
 ): Promise<void> => {
   try {
+    const did = agentDetails.legacyConnectionDid as string
     const url = `${store.developer.environment.iasPortalUrl}/${did}`
 
     if (await InAppBrowser.isAvailable()) {
@@ -197,9 +195,15 @@ export const authenticateWithServiceCard = async (
         result.type === AuthenticationResultType.Cancel &&
         typeof (result as unknown as RedirectResult).url === 'undefined'
       ) {
-        setWorkflow(false)
-
+        setWorkflowInProgress(false)
         return
+      }
+
+      if (
+        result.type === AuthenticationResultType.Dismiss &&
+        typeof (result as unknown as RedirectResult).url === 'undefined'
+      ) {
+        callback && callback(agentDetails.connectionId)
       }
 
       // When `result.type` is "Success" and `result.url` contains the
@@ -209,8 +213,7 @@ export const authenticateWithServiceCard = async (
         (result as unknown as RedirectResult).url.includes(did) &&
         (result as unknown as RedirectResult).url.includes('success')
       ) {
-        setWorkflow(false)
-        callback && callback()
+        callback && callback(agentDetails.connectionId)
       }
 
       // When `result.type` is "Success" and `result.url` contains the
@@ -221,15 +224,8 @@ export const authenticateWithServiceCard = async (
         (result as unknown as RedirectResult).url.includes(did) &&
         (result as unknown as RedirectResult).url.includes('cancel')
       ) {
-        setWorkflow(false)
-
-        // FIXME: This does nothing unlit the catch below is updated.
-        // throw new BifoldError(
-        //   t('Error.Title2025'),
-        //   t('Error.Message2025'),
-        //   t('Error.NoMessage'),
-        //   ErrorCodes.ServiceCardError
-        // )
+        setWorkflowInProgress(false)
+        return
       }
     } else {
       await Linking.openURL(url)
@@ -238,11 +234,9 @@ export const authenticateWithServiceCard = async (
     cleanupAfterServiceCardAuthentication(AuthenticationResultType.Success)
   } catch (error: unknown) {
     const code = (error as BifoldError).code
-
     cleanupAfterServiceCardAuthentication(
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
-
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }
@@ -250,27 +244,20 @@ export const authenticateWithServiceCard = async (
 export const startFlow = async (
   agent: Agent,
   store: BCState,
-  setWorkflowInFlight: React.Dispatch<React.SetStateAction<boolean>>,
+  setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
   t: TFunction<'translation', undefined>,
-  callback?: () => void
+  callback?: (connectionId?: string) => void
 ) => {
   try {
     const agentDetails = await recieveBCIDInvite(agent, store, t)
 
     if (agentDetails.legacyConnectionDid !== undefined) {
       setTimeout(async () => {
-        await authenticateWithServiceCard(
-          store,
-          setWorkflowInFlight,
-          agentDetails.legacyConnectionDid as string,
-          t,
-          callback
-        )
+        await authenticateWithServiceCard(store, setWorkflowInProgress, agentDetails, t, callback)
       }, connectionDelayInMs)
     }
   } catch (error: unknown) {
-    setWorkflowInFlight(false)
-
+    setWorkflowInProgress(false)
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }

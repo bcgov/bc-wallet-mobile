@@ -54,7 +54,7 @@
 		00E356EE1AD99517003FC87E /* AriesBifoldTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AriesBifoldTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* AriesBifoldTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AriesBifoldTests.m; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* AriesBifold.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AriesBifold.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07F961A680F5B00A75B9A /* QCWallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QCWallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = AriesBifold/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = AriesBifold/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AriesBifold/Images.xcassets; sourceTree = "<group>"; };
@@ -183,7 +183,7 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* AriesBifold.app */,
+				13B07F961A680F5B00A75B9A /* QCWallet.app */,
 				00E356EE1AD99517003FC87E /* AriesBifoldTests.xctest */,
 			);
 			name = Products;
@@ -244,7 +244,7 @@
 			);
 			name = AriesBifold;
 			productName = AriesBifold;
-			productReference = 13B07F961A680F5B00A75B9A /* AriesBifold.app */;
+			productReference = 13B07F961A680F5B00A75B9A /* QCWallet.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */

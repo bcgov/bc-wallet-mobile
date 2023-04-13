@@ -24,6 +24,6 @@ public class MainActivity extends ReactActivity {
     }
   }
   protected String getMainComponentName() {
-    return "BCWallet";
+    return "QCWallet";
   }
 }

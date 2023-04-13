@@ -12,10 +12,13 @@ on:
     paths:
       - app/**
       - bifold
+      - .github/workflows/**
   pull_request:
     branches: [main]
     paths:
       - app/**
+      - bifold
+      - .github/workflows/**
 
 jobs:
   check-android-secrets:
@@ -162,15 +165,14 @@ jobs:
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
       - name: Update ledgers
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         run: |
           node bifold/scripts/make-blocks.js
 
           # the ledgers file should be about 344K
           ls -lah ledgers.json
 
-          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
-          shasum bifold/core/configs/ledgers/indy/ledgers.json
+          mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
       - name: Release build
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -278,10 +280,10 @@ jobs:
           ls -lah ledgers.json
           # note md5
           shasum ledgers.json
-          shasum bifold/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
-          mv ledgers.json bifold/core/configs/ledgers/indy/ledgers.json
-          shasum bifold/core/configs/ledgers/indy/ledgers.json
+          mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
       - name: Cache node modules
         uses: actions/cache@v1
@@ -337,6 +339,8 @@ jobs:
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
+          cp ../node_modules/react-native-vector-icons/Fonts/* ./app/src/main/assets/fonts/ && \
+          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
           ./gradlew bundleRelease
 
       - name: Ship to Google Play
@@ -376,10 +380,10 @@ jobs:
       matrix:
         include:
           - mobile-platform: "-p Android"
-            app-file-name: "-a AriesBifold-${{ github.run_number }}.aab"
+            app-file-name: "-a QCWallet-${{ github.run_number }}.aab"
             report-project: "android-one-device-smoke"
           - mobile-platform: "-p iOS"
-            app-file-name: "-a AriesBifold-${{ github.run_number }}.ipa"
+            app-file-name: "-a QCWallet-${{ github.run_number }}.ipa"
             report-project: "ios-one-device-smoke"
     timeout-minutes: 60
     steps:
@@ -426,7 +430,7 @@ jobs:
           DEVICE_CLOUD_KEY: "-k ${{ secrets.LAMBDA_ACCESS_KEY }}"
           MOBILE_PLATFORM: ${{ matrix.mobile-platform }}
           APP_FILE_NAME: ${{ matrix.app-file-name }}
-          TEST_SCOPE: "-t @bc_wallet -t @SmokeTest"
+          TEST_SCOPE: "-t @qc_wallet -t @SmokeTest"
           REPORT_PROJECT: ${{ matrix.report-project }}
 
       - name: Upload smoke-test results to Allure

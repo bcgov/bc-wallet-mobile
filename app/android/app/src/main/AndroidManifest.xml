@@ -39,7 +39,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="didcomm"/>
-        <data android:scheme="bcwallet"/>
+        <data android:scheme="qcwallet"/>
       </intent-filter>
     </activity>
   </application>

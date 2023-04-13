@@ -1,5 +1,5 @@
 {
-  "name": "bcwallet-app",
+  "name": "qcwallet-app",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -25,7 +25,9 @@
     "postinstall:copy-patches": "copyfiles -V -u 4 \"../bifold/app/patches/*\" \"./patches/\"",
     "postinstall:patch": "npx patch-package",
     "postinstall": "run-s postinstall:copy-patches postinstall:patch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "storybook": "start-storybook -p 7007",
+    "build-storybook": "build-storybook"
   },
   "repository": {
     "type": "git",
@@ -57,7 +59,7 @@
     "@react-navigation/devtools": "6.0.8",
     "@react-navigation/native": "6.0.6",
     "@react-navigation/stack": "6.0.11",
-    "aries-bifold": "file:../bifold/core",
+    "aries-bifold": "file:../bifold/packages/legacy/core",
     "axios": "0.21.4",
     "googleapis": "^113.0.0",
     "i18next": "21.4.0",
@@ -107,6 +109,13 @@
     "@babel/runtime": "7.15.4",
     "@commitlint/cli": "^11.0.0",
     "@react-native-community/eslint-config": "^2.0.0",
+    "@storybook/addon-actions": "^5.3.21",
+    "@storybook/addon-knobs": "^5.3.21",
+    "@storybook/addon-links": "^5.3.21",
+    "@storybook/addon-ondevice-actions": "^5.3.23",
+    "@storybook/addon-ondevice-knobs": "^5.3.26",
+    "@storybook/react-native": "^5.3.25",
+    "@storybook/react-native-server": "^5.3.23",
     "@testing-library/jest-native": "^4.0.13",
     "@testing-library/react-native": "^9.0.0",
     "@types/jest": "^27.4.0",
@@ -134,6 +143,7 @@
     "mockdate": "^3.0.5",
     "patch-package": "^6.4.7",
     "prettier": "^2.1.2",
+    "react-dom": "^17.0.2",
     "react-native-svg-transformer": "0.14.3",
     "react-test-renderer": "^17.0.2",
     "run-s": "^0.0.0",

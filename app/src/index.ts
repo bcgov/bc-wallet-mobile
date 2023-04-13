@@ -9,8 +9,6 @@ import {
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 
-import UseBiometry from '../../bifold/core/App/screens/UseBiometry'
-
 import bundle from './assets/branding/QC-credential-branding'
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
@@ -22,7 +20,7 @@ import fr from './localization/fr'
 import TermsStack from './navigators/TermsStack'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
-import PersonCredentialScreen from './screens/PersonCredential'
+import PersonCredential from './screens/PersonCredential'
 import Splash from './screens/Splash'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
@@ -39,7 +37,6 @@ const configuration: ConfigurationContext = {
   pages,
   splash: Splash,
   terms: TermsStack,
-  useBiometry: UseBiometry,
   credentialListHeaderRight: AddCredentialButton,
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
@@ -54,7 +51,7 @@ const configuration: ConfigurationContext = {
   indyLedgers: selectedLedgers,
   settings: [],
   customNotification: {
-    component: PersonCredentialScreen,
+    component: PersonCredential,
     onCloseAction: (dispatch?: React.Dispatch<ReducerAction<any>>) => {
       if (dispatch) {
         dispatch({
