@@ -567,6 +567,24 @@ export const OnboardingTheme = {
   },
 }
 
+export const DialogTheme = {
+  modalView: {
+    backgroundColor: ColorPallet.brand.secondaryBackground,
+  },
+  titleText: {
+    color: ColorPallet.grayscale.white,
+  },
+  description: {
+    color: ColorPallet.grayscale.white,
+  },
+  closeButtonIcon: {
+    color: ColorPallet.grayscale.white,
+  },
+  carouselButtonText: {
+    color: ColorPallet.grayscale.white,
+  },
+}
+
 const LoadingTheme = {
   backgroundColor: ColorPallet.brand.primary,
 }
@@ -622,6 +640,7 @@ export const defaultTheme: Theme = {
   SettingsTheme,
   ChatTheme,
   OnboardingTheme,
+  DialogTheme,
   LoadingTheme,
   PINInputTheme,
   Assets,
