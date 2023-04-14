@@ -15,6 +15,7 @@ import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
 import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
+import { proofRequestTemplates } from './request-templates'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import PersonCredential from './screens/PersonCredential'
@@ -22,7 +23,6 @@ import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
-import { proofRequestTemplates } from "./constants";
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
@@ -58,7 +58,7 @@ const configuration: ConfigurationContext = {
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
   useCustomNotifications: useNotifications,
-  proofRequestTemplates
+  proofRequestTemplates,
 }
 
 export default { theme, localization, configuration }
