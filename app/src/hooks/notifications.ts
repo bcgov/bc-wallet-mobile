@@ -8,6 +8,7 @@ import {
 import { useCredentialByState, useProofByState } from '@aries-framework/react-hooks'
 import { useStore } from 'aries-bifold'
 import { CredentialMetadata, customMetadata } from 'aries-bifold/App/types/metadata'
+import { ProofCustomMetadata, ProofMetadata } from 'aries-bifold/verifier'
 
 import { getInvitationCredentialDate, showBCIDSelector } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
@@ -26,7 +27,15 @@ interface Notifications {
 export const useNotifications = (): Notifications => {
   const [store] = useStore<BCState>()
   const offers = useCredentialByState(CredentialState.OfferReceived)
-  const proofs = useProofByState(ProofState.RequestReceived)
+  const proofsRequested = useProofByState(ProofState.RequestReceived)
+  const proofsDone = useProofByState([ProofState.Done, ProofState.PresentationReceived]).filter(
+    (proof: ProofExchangeRecord) => {
+      if (proof.isVerified === undefined) return false
+
+      const metadata = proof.metadata.get(ProofMetadata.customMetadata) as ProofCustomMetadata
+      return !metadata?.details_seen
+    }
+  )
   const revoked = useCredentialByState(CredentialState.Done).filter((cred: CredentialRecord) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const metadata = cred!.metadata.get(CredentialMetadata.customMetadata) as customMetadata
@@ -50,7 +59,7 @@ export const useNotifications = (): Notifications => {
       ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
       : []
 
-  const notifications = [...offers, ...proofs, ...revoked, ...custom].sort(
+  const notifications = [...offers, ...proofsRequested, ...proofsDone, ...revoked, ...custom].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   )
 
