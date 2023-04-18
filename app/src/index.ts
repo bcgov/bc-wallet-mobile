@@ -13,6 +13,7 @@ import bundles from './assets/branding/credential-branding'
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
+import HomeContentView from './components/HomeContentView'
 import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import { proofRequestTemplates } from './request-templates'
@@ -34,6 +35,7 @@ const configuration: ConfigurationContext = {
   pages,
   splash: Splash,
   terms: Terms,
+  homeContentView: HomeContentView,
   credentialListHeaderRight: AddCredentialButton,
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
