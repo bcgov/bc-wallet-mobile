@@ -39,7 +39,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
           requestedAttributes: [
             {
               names: ['given_names', 'family_name'],
-              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0' }],
+              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:3:CL:28330:Person' }],
             },
           ],
           requestedPredicates: [
@@ -47,7 +47,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               name: 'birthdate_dateint',
               predicateType: PredicateType.GreaterThanOrEqualTo,
               predicateValue: 18,
-              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0' }],
+              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:3:CL:28330:Person' }],
             },
           ],
         },
@@ -69,7 +69,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               name: 'birthdate_dateint',
               predicateType: PredicateType.GreaterThanOrEqualTo,
               predicateValue: 18,
-              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0' }],
+              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:3:CL:28330:Person' }],
             },
           ],
         },
@@ -89,7 +89,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
           requestedAttributes: [
             {
               names: ['Given Name', 'Surname', 'PPID', 'Member Status'],
-              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1' }],
+              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:3:CL:27369:Member Card' }],
             },
           ],
         },
@@ -109,7 +109,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
           requestedAttributes: [
             {
               names: ['given_names', 'family_name'],
-              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0' }],
+              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:3:CL:28330:Person' }],
             },
           ],
         },
@@ -118,7 +118,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
           requestedAttributes: [
             {
               names: ['Given Name', 'Surname', 'PPID', 'Member Status'],
-              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1' }],
+              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:3:CL:27369:Member Card' }],
             },
           ],
         },
@@ -141,7 +141,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               predicateType: PredicateType.GreaterThanOrEqualTo,
               predicateValue: 18,
               parameterizable: true,
-              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0' }],
+              restrictions: [{ schema_id: 'XUxBrVSALWHLeycAUhrNr9:3:CL:28330:Person' }],
             },
           ],
         },
