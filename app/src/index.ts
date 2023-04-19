@@ -66,6 +66,7 @@ const configuration: ConfigurationContext = {
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
   useCustomNotifications: useNotifications,
+  proofRequestTemplates,
 }
 
 export default { theme, localization, configuration }
