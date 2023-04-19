@@ -8,10 +8,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { BCWalletEventTypes } from '../events/eventTypes'
 import { showBCIDSelector } from '../helpers/BCIDHelper'
+import { useTranslation } from 'react-i18next'
 
 const AddCredentialSlider: React.FC = () => {
   const { ColorPallet, TextTheme } = useTheme()
   const navigation = useNavigation()
+  const { t } = useTranslation()
 
   const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
   const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
@@ -106,16 +108,16 @@ const AddCredentialSlider: React.FC = () => {
           <TouchableOpacity onPress={deactivateSlider}>
             <Icon name="window-close" size={35} style={styles.drawerRowItem}></Icon>
           </TouchableOpacity>
-          <Text style={styles.drawerTitleText}>Choose</Text>
+          <Text style={styles.drawerTitleText}>{t('CredentialDetails.Choose')}</Text>
           {showGetFoundationCredential && (
             <TouchableOpacity style={styles.drawerRow} onPress={goToPersonCredentialScreen}>
               <Icon name="credit-card" size={30} style={styles.drawerRowItem}></Icon>
-              <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Get your Person credential</Text>
+              <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>{t('CredentialDetails.GetPersonCred')}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.drawerRow} onPress={goToScanScreen}>
             <Icon name="qrcode" size={30} style={styles.drawerRowItem}></Icon>
-            <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Scan a QR code</Text>
+            <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>{t('CredentialDetails.ScanQrCode')}</Text>
           </TouchableOpacity>
         </View>
       </View>

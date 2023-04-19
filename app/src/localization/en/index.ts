@@ -218,6 +218,12 @@ const translation = {
     TermsAndConditions: 'Terms and conditions',
     RemoveFromWallet: 'Remove from wallet',
     Revoked: 'Revoked',
+    Choose: 'Choose',
+    GetPersonCred: 'Get your Person credential',
+    ScanQrCode: 'Scan a QR code',
+    CredentialRevokedMessageTitle: 'This certificate is revoked',
+    CredentialRevokedMessageBody:
+      "This attestation may no longer work for certain proof requests. You will need to update the attestation with the issuer.",
   },
   Home: {
     Welcome: 'Welcome',

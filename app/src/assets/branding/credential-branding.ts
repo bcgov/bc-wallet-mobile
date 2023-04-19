@@ -137,8 +137,8 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       captureBase: '',
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
-      name: 'Unverified Personne',
-      issuerName: 'Digital Identity and Trust Program',
+      name: 'Personne non verifiée',
+      issuerName: "Programme d'identité numérique et de confiance",
     })
   }
   return {
@@ -181,6 +181,14 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         language: 'en',
         attributeFormats: {
           birthdate_dateint: 'YYYYMMDD',
+        },
+      } as FormatOverlay,
+      {
+        captureBase: '',
+        type: 'spec/overlays/format/1.0',
+        language: 'fr',
+        attributeFormats: {
+          birthdate_dateint: 'DDMMYYYY',
         },
       } as FormatOverlay,
       {
