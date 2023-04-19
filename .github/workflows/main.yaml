@@ -167,12 +167,12 @@ jobs:
       - name: Update ledgers
         run: |
           node bifold/scripts/make-blocks.js
-
+          
           # the ledgers file should be about 344K
           ls -lah ledgers.json
-
-          mv ledgers.json bifold/packages/legacy/packages/legacy/core/configs/ledgers/indy/ledgers.json
-          shasum bifold/packages/legacy/packages/legacy/core/configs/ledgers/indy/ledgers.json
+          
+          mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
+          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
       - name: Release build
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
