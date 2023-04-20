@@ -51,6 +51,7 @@ interface BrandColors {
   primaryDisabled: string
   secondary: string
   secondaryDisabled: string
+  primaryLight: string
   highlight: string
   modalPrimaryBackground: string
   modalSecondaryBackground: string
@@ -114,6 +115,7 @@ const BrandColors: BrandColors = {
   primaryDisabled: `rgba(9, 87, 151, ${lightOpacity})`,
   secondary: '#DAE6F0',
   secondaryDisabled: `rgba(218, 230, 240, ${heavyOpacity})`,
+  primaryLight: '#D9EAF7',
   highlight: '#E58271',
   primaryBackground: '#F1F1F2',
   secondaryBackground: '#FFFFFF',
@@ -412,6 +414,29 @@ export const ListItems = StyleSheet.create({
   emptyList: {
     ...TextTheme.normal,
   },
+  requestTemplateBackground: {
+    backgroundColor: ColorPallet.grayscale.white,
+  },
+  requestTemplateIconColor: {
+    color: ColorPallet.notification.infoText,
+  },
+  requestTemplateTitle: {
+    color: ColorPallet.grayscale.black,
+    fontWeight: 'bold',
+  },
+  requestTemplateDetails: {
+    color: ColorPallet.grayscale.black,
+    fontWeight: 'normal',
+  },
+  requestTemplateZkpLabel: {
+    color: ColorPallet.grayscale.mediumGrey,
+  },
+  requestTemplateIcon: {
+    color: ColorPallet.grayscale.black,
+  },
+  requestTemplateDate: {
+    color: ColorPallet.grayscale.mediumGrey,
+  },
 })
 
 export const TabTheme = {
@@ -495,25 +520,53 @@ export const SettingsTheme = {
 }
 
 export const ChatTheme = {
+  containerStyle: {
+    marginBottom: 16,
+    marginLeft: 16,
+    marginRight: 16,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    alignSelf: 'flex-end',
+  },
   leftBubble: {
     backgroundColor: ColorPallet.brand.secondaryBackground,
-    borderRadius: 20,
-    padding: 4,
-    marginLeft: -4,
+    borderRadius: 4,
+    padding: 16,
+    marginLeft: 16,
   },
   rightBubble: {
-    backgroundColor: ColorPallet.brand.primary,
-    borderRadius: 20,
-    padding: 4,
-    marginRight: 4,
+    backgroundColor: ColorPallet.brand.primaryLight,
+    borderRadius: 4,
+    padding: 16,
+    marginRight: 16,
+  },
+  timeStyleLeft: {
+    color: ColorPallet.grayscale.black,
+    fontSize: 12,
+    marginTop: 8,
+  },
+  timeStyleRight: {
+    color: ColorPallet.grayscale.black,
+    fontSize: 12,
+    marginTop: 8,
   },
   leftText: {
-    color: ColorPallet.brand.primary,
+    color: ColorPallet.grayscale.black,
     fontSize: TextTheme.normal.fontSize,
   },
-  rightText: {
-    color: ColorPallet.brand.secondary,
+  leftTextHighlighted: {
+    color: ColorPallet.grayscale.black,
     fontSize: TextTheme.normal.fontSize,
+    fontWeight: 'bold',
+  },
+  rightText: {
+    color: ColorPallet.grayscale.black,
+    fontSize: TextTheme.normal.fontSize,
+  },
+  rightTextHighlighted: {
+    color: ColorPallet.grayscale.black,
+    fontSize: TextTheme.normal.fontSize,
+    fontWeight: 'bold',
   },
   inputToolbar: {
     backgroundColor: ColorPallet.brand.secondary,
@@ -534,6 +587,33 @@ export const ChatTheme = {
   },
   sendEnabled: ColorPallet.brand.primary,
   sendDisabled: ColorPallet.brand.primaryDisabled,
+  options: ColorPallet.brand.primary,
+  optionsText: ColorPallet.grayscale.black,
+  openButtonStyle: {
+    borderRadius: 32,
+    backgroundColor: ColorPallet.brand.primary,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingLeft: 16,
+    paddingRight: 16,
+    marginTop: 16,
+  },
+  openButtonTextStyle: {
+    color: ColorPallet.brand.secondary,
+    fontSize: TextTheme.normal.fontSize,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  documentIconContainer: {
+    backgroundColor: ColorPallet.brand.primary,
+    alignSelf: 'flex-start',
+    padding: 4,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  documentIcon: {
+    color: ColorPallet.grayscale.white,
+  },
 }
 
 export const OnboardingTheme = {
@@ -566,6 +646,24 @@ export const OnboardingTheme = {
   },
   imageDisplayOptions: {
     fill: ColorPallet.notification.infoText,
+  },
+}
+
+export const DialogTheme = {
+  modalView: {
+    backgroundColor: ColorPallet.brand.secondaryBackground,
+  },
+  titleText: {
+    color: ColorPallet.grayscale.white,
+  },
+  description: {
+    color: ColorPallet.grayscale.white,
+  },
+  closeButtonIcon: {
+    color: ColorPallet.grayscale.white,
+  },
+  carouselButtonText: {
+    color: ColorPallet.grayscale.white,
   },
 }
 
@@ -624,6 +722,7 @@ export const defaultTheme: Theme = {
   SettingsTheme,
   ChatTheme,
   OnboardingTheme,
+  DialogTheme,
   LoadingTheme,
   PINInputTheme,
   Assets,

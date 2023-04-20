@@ -167,10 +167,10 @@ jobs:
       - name: Update ledgers
         run: |
           node bifold/scripts/make-blocks.js
-
+          
           # the ledgers file should be about 344K
           ls -lah ledgers.json
-
+          
           mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
           shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
@@ -250,7 +250,7 @@ jobs:
           -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
           --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
           --form 'appFile=@"export/AriesBifold.ipa"' \
-          --form "name=AriesBifold-$GITHUB_RUN_NUMBER.ipa" \
+          --form "name=QCWallet-$GITHUB_RUN_NUMBER.ipa" \
 
   build-android:
     # if: ${{ false }}  # disable for now
@@ -368,7 +368,7 @@ jobs:
           -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
           --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
           --form 'appFile=@"app/build/outputs/bundle/release/app-release.aab"' \
-          --form "name=AriesBifold-$GITHUB_RUN_NUMBER.aab" \
+          --form "name=QCWallet-$GITHUB_RUN_NUMBER.aab" \
 
   release:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
