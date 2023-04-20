@@ -109,6 +109,9 @@ const translation = {
     "ConnectingLedgers": "Connecting to ledgers... (FR)",
     "SettingAgent": "Setting agent... (FR)",
     "Finishing": "Finishing... (FR)",
+  },
+  "Feedback": {
+    "GiveFeedback": "Give Feedback (FR)",
   }
 }
 
