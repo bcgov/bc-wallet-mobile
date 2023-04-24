@@ -4,6 +4,7 @@ import {
   Screens,
   Agent,
   AgentProvider,
+  TourProvider,
   AuthProvider,
   toastConfig,
   initStoredLanguage,
@@ -24,6 +25,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import bcwallet from './src'
+import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { initialState, reducer } from './src/store'
 
 const { theme, localization, configuration } = bcwallet
@@ -101,7 +103,9 @@ const App = () => {
                 />
                 <NetInfo />
                 <ErrorModal />
-                <RootStack />
+                <TourProvider steps={homeTourSteps} overlayColor={'black'} overlayOpacity={0.6}>
+                  <RootStack />
+                </TourProvider>
                 <Toast topOffset={15} config={toastConfig} />
               </NetworkProvider>
             </AuthProvider>

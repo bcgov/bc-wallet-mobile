@@ -62,6 +62,22 @@ const translation = {
     "NoInternetConnectionTitle": "No internet connection",
     "NoInternetConnectionMessage": "You're unable to access services using BC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection."
   },
+  "Tour": {
+    "GuideTitle": "Welcome to BC Wallet",
+    "WouldYouLike": "Would you like some guidance on how to use BC Wallet?",
+    "UseAppGuides": "Use app guides",
+    "DoNotUseAppGuides": "Don't use app guides",
+    "AddAndShare": "Add and share credentials",
+    "AddAndShareDescription": "To add and use credentials you scan a QR code displayed by the service provider.",
+    "Notifications": "Notifications",
+    "NotificationsDescription": "After you scan a QR code, the credential offer or proof request will appear here, as well as other notable events.",
+    "YourCredentials": "Your credentials",
+    "YourCredentialsDescription": "Your added digital credentials appear here. You can review credential details and add and delete credentials.",
+    "Skip": "Skip",
+    "Next": "Next",
+    "Back": "Back",
+    "Done": "Done",
+  },
   "Settings": {
     "Help": "Help",
     "MoreInformation": "More Information",
