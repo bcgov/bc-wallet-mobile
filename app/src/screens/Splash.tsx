@@ -20,6 +20,7 @@ import {
   OnboardingState,
   LoginAttemptState,
   PreferencesState,
+  ToursState,
   useAuth,
   useTheme,
   useStore,
@@ -195,6 +196,16 @@ const Splash: React.FC = () => {
 
           dispatch({
             type: DispatchAction.PREFERENCES_UPDATED,
+            payload: [dataAsJSON],
+          })
+        }
+
+        const toursData = await AsyncStorage.getItem(LocalStorageKeys.Tours)
+        if (toursData) {
+          const dataAsJSON = JSON.parse(toursData) as ToursState
+
+          dispatch({
+            type: DispatchAction.TOUR_DATA_UPDATED,
             payload: [dataAsJSON],
           })
         }
