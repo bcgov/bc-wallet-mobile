@@ -82,8 +82,6 @@ const HomeContentView: React.FC<HomeContentViewProps> = ({ children }) => {
 
   const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
 
-  console.log(store.preferences.developerModeEnabled)
-
   return (
     <View style={[styles.feedbackContainer]}>
       {store.preferences.developerModeEnabled ? (
