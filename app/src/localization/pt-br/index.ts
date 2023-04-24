@@ -40,7 +40,8 @@ const translation = {
     "AddFirstCredential": "Add your first credential (PT-BR)"
   },
   "Screens": {
-    "Onboarding": "BC Wallet (PT-BR)"
+    "Onboarding": "BC Wallet (PT-BR)",
+    "Settings": "Menu (PT-BR)",
   },
   "PersonCredentialNotification": {
     "Title": "Get your Person credential (PT-BR)",
