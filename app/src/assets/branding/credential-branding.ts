@@ -33,11 +33,14 @@ const digitalIdInvitationCardOverlay: CardLayoutOverlay11 = {
   captureBase: '',
   type: 'spec/overlays/card_layout/1.1',
   logo: {
-    src: require('./bc-logo.jpg'),
+    src: require('./invitation-logo.png'),
   },
   primaryBackgroundColor: '#003366',
   backgroundImageSlice: {
     src: require('./invitation-background-image-slice.png'),
+  },
+  backgroundImage: {
+    src: require('./invitation-primary-background.png'),
   },
 }
 
@@ -52,7 +55,7 @@ const studentCardOverlay: CardLayoutOverlay11 = {
     src: require('./best-bc-background-image.jpg'),
   },
   backgroundImageSlice: {
-    src: require('./best-bc-background-image-slice.png'),
+    src: require('./best-bc-background-image-slice.jpg'),
   },
 }
 
@@ -88,6 +91,12 @@ const studentCardBundle = {
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
+      name: 'Student',
+      issuerName: 'BestBC College',
+    } as MetaOverlay,
+    {
+      type: 'spec/overlays/meta/1.0',
+      language: 'fr',
       name: 'Student',
       issuerName: 'BestBC College',
     } as MetaOverlay,
