@@ -188,7 +188,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         type: 'spec/overlays/label/1.0',
         language: 'en',
         attributeLabels: {
-          given_names: 'Given Name',
+          given_names: 'Given Names',
           family_name: 'Family Name',
           birthdate_dateint: 'Date of Birth',
         },
