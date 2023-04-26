@@ -16,15 +16,25 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               name: 'given_names',
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                // IDIM Person credential
+                { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
+                { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
+                { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
             {
               name: 'family_name',
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                 // IDIM Person credential
+                { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
+                { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
+                { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
           ],
@@ -46,8 +56,13 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               names: ['given_names', 'family_name'],
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                 // IDIM Person credential
+                { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
+                { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
+                { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
           ],
@@ -57,8 +72,13 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               predicateType: PredicateType.GreaterThanOrEqualTo,
               predicateValue: 18,
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                 // IDIM Person credential
+                { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
+                { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
+                { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
           ],
@@ -82,8 +102,13 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               predicateType: PredicateType.GreaterThanOrEqualTo,
               predicateValue: 18,
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                 // IDIM Person credential
+                { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
+                { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
+                { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
           ],
@@ -105,8 +130,12 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               names: ['Given Name', 'Surname', 'PPID', 'Member Status'],
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                // LSBC Member Card
+                { schema_id: '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1', issuer_did: '4xE68b6S5VRFrKMMG1U95M' }, // Prod
+                { schema_id: 'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1', issuer_did: 'AuJrigKQGRLJajKAebTgWu' }, // Test
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
           ],
@@ -128,8 +157,13 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               names: ['given_names', 'family_name'],
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                 // IDIM Person credential
+                { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
+                { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
+                { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
           ],
@@ -140,8 +174,12 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               names: ['Given Name', 'Surname', 'PPID', 'Member Status'],
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                // LSBC Member Card
+                { schema_id: '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1', issuer_did: '4xE68b6S5VRFrKMMG1U95M' }, // Prod
+                { schema_id: 'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1', issuer_did: 'AuJrigKQGRLJajKAebTgWu' }, // Test
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
           ],
@@ -166,8 +204,13 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               predicateValue: 18,
               parameterizable: true,
               restrictions: [
-                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' },
-                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' },
+                 // IDIM Person credential
+                { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
+                { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
+                { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
+                // BC Wallet Showcase
+                { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
+                { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
               ],
             },
           ],
