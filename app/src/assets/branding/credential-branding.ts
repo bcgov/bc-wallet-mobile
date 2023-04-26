@@ -244,8 +244,8 @@ export default {
   [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: digitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_TEST]: digitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_PROD]: digitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
-  [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_DEV]: digitalIdCardBundle /* (DEV) */,
-  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
+  [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
+  [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
+  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */
 }
