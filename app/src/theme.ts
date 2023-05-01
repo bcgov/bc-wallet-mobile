@@ -769,9 +769,7 @@ const PINInputTheme = {
 
 export const Assets = {
   ...BifoldImageAssets,
-  svg: {
-    logo: Logo,
-  },
+  svg: { ...BifoldImageAssets.svg, Logo },
   img: {
     logoSecondary: {
       src: require('./assets/img/logo-large.png'),
