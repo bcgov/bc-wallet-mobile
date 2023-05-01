@@ -9,13 +9,13 @@ type CaptureBaseOverlay = types.oca.CaptureBaseOverlay
 export enum CREDENTIALS {
   LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
   LSBC_PROD = '4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default',
-  SHOWCASE_LAWYER_DEV = '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.5.1',
+  SHOWCASE_LAWYER_DEV = '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.1',
   SHOWCASE_LAWYER_TEST = '63ZiwyeZeazA6AhYRYm2zD:2:Member Card:1.5.1',
   SHOWCASE_LAWYER_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1',
   SHOWCASE_STUDENT_DEV = '2K2h7kf8VGTLtfoxJgWazf:2:student_card:1.0',
   SHOWCASE_STUDENT_TEST = '63ZiwyeZeazA6AhYRYm2zD:2:student_card:1.0',
   SHOWCASE_STUDENT_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:student_card:1.0',
-  SHOWCASE_LAWYER2_PERSON_DEV = '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.0',
+  SHOWCASE_LAWYER2_PERSON_DEV = '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1',
   SHOWCASE_LAWYER2_PERSON_TEST = '63ZiwyeZeazA6AhYRYm2zD:2:Person:1.0',
   SHOWCASE_LAWYER2_PERSON_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
   UNVERIFIED_PERSON_DEV = 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0',
@@ -33,11 +33,14 @@ const digitalIdInvitationCardOverlay: CardLayoutOverlay11 = {
   captureBase: '',
   type: 'spec/overlays/card_layout/1.1',
   logo: {
-    src: require('./bc-logo.jpg'),
+    src: require('./invitation-logo.png'),
   },
   primaryBackgroundColor: '#003366',
   backgroundImageSlice: {
     src: require('./invitation-background-image-slice.png'),
+  },
+  backgroundImage: {
+    src: require('./invitation-primary-background.png'),
   },
 }
 
@@ -52,7 +55,7 @@ const studentCardOverlay: CardLayoutOverlay11 = {
     src: require('./best-bc-background-image.jpg'),
   },
   backgroundImageSlice: {
-    src: require('./best-bc-background-image-slice.png'),
+    src: require('./best-bc-background-image-slice.jpg'),
   },
 }
 
@@ -88,6 +91,12 @@ const studentCardBundle = {
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
+      name: 'Student',
+      issuerName: 'BestBC College',
+    } as MetaOverlay,
+    {
+      type: 'spec/overlays/meta/1.0',
+      language: 'fr',
       name: 'Student',
       issuerName: 'BestBC College',
     } as MetaOverlay,
@@ -196,7 +205,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         type: 'spec/overlays/label/1.0',
         language: 'en',
         attributeLabels: {
-          given_names: 'Given Name',
+          given_names: 'Given Names',
           family_name: 'Family Name',
           birthdate_dateint: 'Date of Birth',
         },
