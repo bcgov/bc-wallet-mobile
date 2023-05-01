@@ -28,7 +28,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               name: 'family_name',
               restrictions: [
-                 // IDIM Person credential
+                // IDIM Person credential
                 { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
                 { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
                 { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
@@ -56,7 +56,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               names: ['given_names', 'family_name'],
               restrictions: [
-                 // IDIM Person credential
+                // IDIM Person credential
                 { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
                 { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
                 { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
@@ -72,7 +72,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               predicateType: PredicateType.GreaterThanOrEqualTo,
               predicateValue: 18,
               restrictions: [
-                 // IDIM Person credential
+                // IDIM Person credential
                 { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
                 { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
                 { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
@@ -102,7 +102,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               predicateType: PredicateType.GreaterThanOrEqualTo,
               predicateValue: 18,
               restrictions: [
-                 // IDIM Person credential
+                // IDIM Person credential
                 { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
                 { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
                 { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
@@ -157,7 +157,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               names: ['given_names', 'family_name'],
               restrictions: [
-                 // IDIM Person credential
+                // IDIM Person credential
                 { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
                 { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
                 { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
@@ -204,7 +204,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               predicateValue: 18,
               parameterizable: true,
               restrictions: [
-                 // IDIM Person credential
+                // IDIM Person credential
                 { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
                 { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
                 { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
