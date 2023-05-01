@@ -767,7 +767,7 @@ const PINInputTheme = {
   },
 }
 
-export const BCImageAssets = {
+export const Assets = {
   ...BifoldImageAssets,
   svg: {
     logo: Logo,
@@ -806,5 +806,5 @@ export const defaultTheme: Theme = {
   DialogTheme,
   LoadingTheme,
   PINInputTheme,
-  Assets: BCImageAssets,
+  Assets,
 }
