@@ -433,18 +433,6 @@ const translation = {
     SettingAgent: 'Configuration de l’agent...',
     Finishing: 'Finalisation...',
   },
-  Init: {
-    Starting: 'Starting... (FR)',
-    CheckingAuth: 'Checking authentication... (FR)',
-    FetchingPreferences: 'Fetching preferences... (FR)',
-    VerifyingOnboarding: 'Verifying onboarding... (FR)',
-    GettingCredentials: 'Getting wallet credentials... (FR)',
-    RegisteringTransports: 'Registering transports... (FR)',
-    InitializingAgent: 'Initializing agent... (FR)',
-    ConnectingLedgers: 'Connecting to ledgers... (FR)',
-    SettingAgent: 'Setting agent... (FR)',
-    Finishing: 'Finishing... (FR)',
-  },
 }
 
 export default translation

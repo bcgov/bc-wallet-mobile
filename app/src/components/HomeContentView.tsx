@@ -6,9 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import { surveyMonkeyUrl, surveyMonkeyExitUrl } from '../constants'
 import { useNotifications } from '../hooks/notifications'
-import WebDisplay from '../screens/WebDisplay'
 import { BCState } from '../store'
 
 const offset = 25
@@ -100,12 +98,6 @@ const HomeContentView: React.FC<HomeContentViewProps> = ({ children }) => {
               color={ColorPallet.grayscale.white}
             />
           </Button>
-          <WebDisplay
-            destinationUrl={surveyMonkeyUrl}
-            exitUrl={surveyMonkeyExitUrl}
-            visible={surveyVisible}
-            onClose={toggleSurveyVisibility}
-          />
         </>
       ) : null}
       {notifications.total === 0 && (
