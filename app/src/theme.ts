@@ -44,6 +44,11 @@ interface TextTheme {
   labelText: FontAttributes
   caption: FontAttributes
   title: FontAttributes
+  headerTitle: FontAttributes
+  modalNormal: FontAttributes
+  modalTitle: FontAttributes
+  modalHeadingOne: FontAttributes
+  modalHeadingThree: FontAttributes
 }
 
 interface BrandColors {
@@ -53,11 +58,21 @@ interface BrandColors {
   secondaryDisabled: string
   primaryLight: string
   highlight: string
-  modalPrimaryBackground: string
-  modalSecondaryBackground: string
   primaryBackground: string
   secondaryBackground: string
+  modalPrimary: string
+  modalSecondary: string
+  modalPrimaryBackground: string
+  modalSecondaryBackground: string
   link: string
+  text: string
+  icon: string
+  headerText: string
+  headerIcon: string
+  buttonText: string
+  tabBarInactive: string
+  unorderedList: string
+  unorderedListModal: string
 }
 
 interface SemanticColors {
@@ -109,20 +124,6 @@ export const lightOpacity = 0.35
 export const zeroOpacity = 0.0
 export const borderWidth = 2
 
-const BrandColors: BrandColors = {
-  primary: '#003366',
-  primaryDisabled: `rgba(0, 51, 102, ${lightOpacity})`,
-  secondary: '#FFFFFFFF',
-  secondaryDisabled: `rgba(0, 51, 102, ${heavyOpacity})`,
-  primaryLight: '#D9EAF7',
-  highlight: '#FCBA19',
-  primaryBackground: '#F2F2F2',
-  secondaryBackground: '#FFFFFF',
-  modalPrimaryBackground: '#FFFFFF',
-  modalSecondaryBackground: '#F2F2F2',
-  link: '#1A5A96',
-}
-
 const SemanticColors: SemanticColors = {
   error: '#D8292F',
   success: '#2E8540',
@@ -156,6 +157,30 @@ const GrayscaleColors: GrayscaleColors = {
   lightGrey: '#D3D3D3',
   veryLightGrey: '#F2F2F2',
   white: '#FFFFFF',
+}
+
+const BrandColors: BrandColors = {
+  primary: '#003366',
+  primaryDisabled: `rgba(0, 51, 102, ${lightOpacity})`,
+  secondary: '#FFFFFFFF',
+  secondaryDisabled: `rgba(0, 51, 102, ${heavyOpacity})`,
+  primaryLight: '#D9EAF7',
+  highlight: '#FCBA19',
+  primaryBackground: '#F2F2F2',
+  secondaryBackground: '#FFFFFF',
+  modalPrimary: '#003366',
+  modalSecondary: '#FFFFFFFF',
+  modalPrimaryBackground: '#FFFFFF',
+  modalSecondaryBackground: '#F2F2F2',
+  link: '#1A5A96',
+  unorderedList: GrayscaleColors.white,
+  unorderedListModal: GrayscaleColors.darkGrey,
+  text: GrayscaleColors.white,
+  icon: GrayscaleColors.white,
+  headerIcon: GrayscaleColors.white,
+  headerText: GrayscaleColors.white,
+  buttonText: GrayscaleColors.white,
+  tabBarInactive: GrayscaleColors.white,
 }
 
 export const ColorPallet: ColorPallet = {
@@ -233,6 +258,31 @@ export const TextTheme: TextTheme = {
     fontWeight: 'bold',
     color: ColorPallet.notification.infoText,
   },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: ColorPallet.brand.headerText,
+  },
+  modalNormal: {
+    fontSize: 18,
+    fontWeight: 'normal',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  modalHeadingOne: {
+    fontSize: 38,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  modalHeadingThree: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
 }
 
 export const Inputs: Inputs = StyleSheet.create({
@@ -261,7 +311,7 @@ export const Inputs: Inputs = StyleSheet.create({
     ...TextTheme.normal,
   },
   singleSelectIcon: {
-    color: ColorPallet.grayscale.white,
+    color: ColorPallet.brand.text,
   },
   checkBoxColor: {
     color: ColorPallet.brand.primary,
@@ -290,13 +340,13 @@ export const Buttons = StyleSheet.create({
   primaryText: {
     ...TextTheme.normal,
     fontWeight: 'bold',
-    color: ColorPallet.grayscale.white,
+    color: ColorPallet.brand.text,
     textAlign: 'center',
   },
   primaryTextDisabled: {
     ...TextTheme.normal,
     fontWeight: 'bold',
-    color: ColorPallet.grayscale.white,
+    color: ColorPallet.brand.text,
     textAlign: 'center',
   },
   secondary: {
@@ -323,6 +373,34 @@ export const Buttons = StyleSheet.create({
     color: ColorPallet.brand.secondaryDisabled,
     textAlign: 'center',
   },
+  modalCritical: {
+    padding: 16,
+    borderRadius: 4,
+    backgroundColor: '#D8292F',
+  },
+  modalPrimary: {
+    padding: 16,
+    borderRadius: 4,
+    backgroundColor: ColorPallet.brand.primary,
+  },
+  modalPrimaryText: {
+    ...TextTheme.normal,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: ColorPallet.brand.text,
+  },
+  modalSecondary: {
+    padding: 16,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: ColorPallet.brand.primary,
+  },
+  modalSecondaryText: {
+    ...TextTheme.normal,
+    fontWeight: 'bold',
+    color: ColorPallet.brand.primary,
+    textAlign: 'center',
+  },
 })
 
 export const ListItems = StyleSheet.create({
@@ -336,10 +414,10 @@ export const ListItems = StyleSheet.create({
     ...TextTheme.caption,
   },
   credentialOfferBackground: {
-    backgroundColor: ColorPallet.brand.primaryBackground,
+    backgroundColor: ColorPallet.brand.modalPrimaryBackground,
   },
   credentialOfferTitle: {
-    ...TextTheme.headingThree,
+    ...TextTheme.modalHeadingThree,
   },
   credentialOfferDetails: {
     ...TextTheme.normal,
@@ -367,7 +445,7 @@ export const ListItems = StyleSheet.create({
     backgroundColor: ColorPallet.brand.primary,
   },
   contactIcon: {
-    color: ColorPallet.grayscale.white,
+    color: ColorPallet.brand.text,
   },
   recordAttributeLabel: {
     ...TextTheme.normal,
@@ -482,7 +560,7 @@ export const NavigationTheme = {
     primary: ColorPallet.brand.primary,
     background: ColorPallet.brand.primaryBackground,
     card: ColorPallet.brand.primary,
-    text: ColorPallet.grayscale.white,
+    text: ColorPallet.brand.text,
     border: ColorPallet.grayscale.white,
     notification: ColorPallet.grayscale.white,
   },
