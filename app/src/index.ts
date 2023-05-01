@@ -68,6 +68,7 @@ const configuration: ConfigurationContext = {
   },
   useCustomNotifications: useNotifications,
   proofRequestTemplates,
+  enableTours: true,
 }
 
 export default { theme, localization, configuration }

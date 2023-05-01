@@ -40,7 +40,8 @@ const translation = {
     "AddFirstCredential": "Add your first credential (PT-BR)"
   },
   "Screens": {
-    "Onboarding": "QC Wallet (PT-BR)"
+    "Onboarding": "QC Wallet (PT-BR)",
+    "Settings": "Menu (PT-BR)",
   },
   "PersonCredentialNotification": {
     "Title": "Get your Person credential (PT-BR)",
@@ -60,7 +61,39 @@ const translation = {
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection (PT-BR)",
-    "NoInternetConnectionMessage": "You're unable to access services using QC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection. (PT-BR)",
+    "NoInternetConnectionMessage": "You're unable to access services using BC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection. (PT-BR)",
+  },
+  "Tour": {
+    "GuideTitle": "Welcome to BC Wallet (PT-BR)",
+    "WouldYouLike": "Would you like some guidance on how to use BC Wallet? (PT-BR)",
+    "UseAppGuides": "Use app guides (PT-BR)",
+    "DoNotUseAppGuides": "Don't use app guides (PT-BR)",
+    "AddAndShare": "Add and share credentials (PT-BR)",
+    "AddAndShareDescription": "To add and use credentials you scan a QR code displayed by the service provider. (PT-BR)",
+    "Notifications": "Notifications (PT-BR)",
+    "NotificationsDescription": "After you scan a QR code, the credential offer or proof request will appear here, as well as other notable events. (PT-BR)",
+    "YourCredentials": "Your credentials (PT-BR)",
+    "YourCredentialsDescription": "Your added digital credentials appear here. You can review credential details and add and delete credentials. (PT-BR)",
+    "Skip": "Skip (PT-BR)",
+    "Next": "Next (PT-BR)",
+    "Back": "Back (PT-BR)",
+    "Done": "Done (PT-BR)",
+  },
+  "Tour": {
+    "GuideTitle": "Welcome to BC Wallet (PT-BR)",
+    "WouldYouLike": "Would you like some guidance on how to use BC Wallet? (PT-BR)",
+    "UseAppGuides": "Use app guides (PT-BR)",
+    "DoNotUseAppGuides": "Don't use app guides (PT-BR)",
+    "AddAndShare": "Add and share credentials (PT-BR)",
+    "AddAndShareDescription": "To add and use credentials you scan a QR code displayed by the service provider. (PT-BR)",
+    "Notifications": "Notifications (PT-BR)",
+    "NotificationsDescription": "After you scan a QR code, the credential offer or proof request will appear here, as well as other notable events. (PT-BR)",
+    "YourCredentials": "Your credentials (PT-BR)",
+    "YourCredentialsDescription": "Your added digital credentials appear here. You can review credential details and add and delete credentials. (PT-BR)",
+    "Skip": "Skip (PT-BR)",
+    "Next": "Next (PT-BR)",
+    "Back": "Back (PT-BR)",
+    "Done": "Done (PT-BR)",
   },
   "Settings": {
     "Help": "Help (PT-BR)",
@@ -110,6 +143,9 @@ const translation = {
     "ConnectingLedgers": "Connecting to ledgers... (PT-BR)",
     "SettingAgent": "Setting agent... (PT-BR)",
     "Finishing": "Finishing... (PT-BR)",
+  },
+  "Feedback": {
+    "GiveFeedback": "Give Feedback (PT-BR)",
   }
 }
 
