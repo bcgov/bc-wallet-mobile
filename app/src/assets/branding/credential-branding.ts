@@ -247,5 +247,5 @@ export default {
   [CREDENTIALS.BC_DIGITAL_ID_DEV]: digitalIdCardBundle /* (DEV) */,
   [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
-  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */
+  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
 }
