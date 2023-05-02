@@ -1,4 +1,4 @@
-import { Theme } from 'aries-bifold'
+import { ImageAssets as BifoldImageAssets, Theme } from 'aries-bifold'
 import { StyleSheet } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
@@ -768,9 +768,8 @@ const PINInputTheme = {
 }
 
 export const Assets = {
-  svg: {
-    logo: Logo,
-  },
+  ...BifoldImageAssets,
+  svg: { ...BifoldImageAssets.svg, Logo },
   img: {
     logoSecondary: {
       src: require('./assets/img/logo-large.png'),
@@ -785,7 +784,7 @@ export const Assets = {
       width: 170,
     },
   },
-} as Theme['Assets']
+}
 
 export const defaultTheme: Theme = {
   ColorPallet,
