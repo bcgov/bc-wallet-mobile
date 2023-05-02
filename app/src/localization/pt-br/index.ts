@@ -117,6 +117,7 @@ const translation = {
     "Tip14": "Even revoked or expired credentials can be usable if the organisation doesn't request for it (PT-BR)",
   },
   "Init": {
+    "Retry": "Retry (PT-BR)",
     "Starting": "Starting... (PT-BR)",
     "CheckingAuth": "Checking authentication... (PT-BR)",
     "FetchingPreferences": "Fetching preferences... (PT-BR)",

@@ -1,4 +1,4 @@
-import { Theme } from 'aries-bifold'
+import { ImageAssets as BifoldImageAssets, Theme } from 'aries-bifold'
 import { StyleSheet } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
@@ -44,6 +44,11 @@ interface TextTheme {
   labelText: FontAttributes
   caption: FontAttributes
   title: FontAttributes
+  headerTitle: FontAttributes
+  modalNormal: FontAttributes
+  modalTitle: FontAttributes
+  modalHeadingOne: FontAttributes
+  modalHeadingThree: FontAttributes
 }
 
 interface BrandColors {
@@ -53,11 +58,21 @@ interface BrandColors {
   secondaryDisabled: string
   primaryLight: string
   highlight: string
-  modalPrimaryBackground: string
-  modalSecondaryBackground: string
   primaryBackground: string
   secondaryBackground: string
+  modalPrimary: string
+  modalSecondary: string
+  modalPrimaryBackground: string
+  modalSecondaryBackground: string
   link: string
+  text: string
+  icon: string
+  headerText: string
+  headerIcon: string
+  buttonText: string
+  tabBarInactive: string
+  unorderedList: string
+  unorderedListModal: string
 }
 
 interface SemanticColors {
@@ -110,20 +125,6 @@ export const lightOpacity = 0.35
 export const zeroOpacity = 0.0
 export const borderWidth = 2
 
-const BrandColors: BrandColors = {
-  primary: '#095797',
-  primaryDisabled: `rgba(9, 87, 151, ${lightOpacity})`,
-  secondary: '#DAE6F0',
-  secondaryDisabled: `rgba(218, 230, 240, ${heavyOpacity})`,
-  primaryLight: '#D9EAF7',
-  highlight: '#E58271',
-  primaryBackground: '#F1F1F2',
-  secondaryBackground: '#FFFFFF',
-  modalPrimaryBackground: '#FFFFFF',
-  modalSecondaryBackground: '#F1F1F2',
-  link: '#095797',
-}
-
 const SemanticColors: SemanticColors = {
   error: '#CB381F',
   success: '#4F813D',
@@ -158,6 +159,30 @@ const GrayscaleColors: GrayscaleColors = {
   lightGrey: '#C5CAD2',
   veryLightGrey: '#F1F1F2',
   white: '#FFFFFF',
+}
+
+const BrandColors: BrandColors = {
+  primary: '#095797',
+  primaryDisabled: `rgba(9, 87, 151, ${lightOpacity})`,
+  secondary: '#DAE6F0',
+  secondaryDisabled: `rgba(218, 230, 240, ${heavyOpacity})`,
+  primaryLight: '#D9EAF7',
+  highlight: '#E58271',
+  primaryBackground: '#F1F1F2',
+  secondaryBackground: '#FFFFFF',
+  modalPrimaryBackground: '#FFFFFF',
+  modalSecondaryBackground: '#F1F1F2',
+  link: '#095797',
+  modalPrimary: '#095797',
+  modalSecondary: '#FFFFFFFF',
+  unorderedList: GrayscaleColors.white,
+  unorderedListModal: GrayscaleColors.darkGrey,
+  text: GrayscaleColors.white,
+  icon: GrayscaleColors.white,
+  headerIcon: GrayscaleColors.white,
+  headerText: GrayscaleColors.white,
+  buttonText: GrayscaleColors.white,
+  tabBarInactive: GrayscaleColors.white,
 }
 
 export const ColorPallet: ColorPallet = {
@@ -235,6 +260,31 @@ export const TextTheme: TextTheme = {
     fontWeight: 'bold',
     color: ColorPallet.notification.infoText,
   },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: ColorPallet.brand.headerText,
+  },
+  modalNormal: {
+    fontSize: 18,
+    fontWeight: 'normal',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  modalHeadingOne: {
+    fontSize: 38,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  modalHeadingThree: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
 }
 
 export const Inputs: Inputs = StyleSheet.create({
@@ -263,7 +313,7 @@ export const Inputs: Inputs = StyleSheet.create({
     ...TextTheme.normal,
   },
   singleSelectIcon: {
-    color: ColorPallet.grayscale.white,
+    color: ColorPallet.brand.text,
   },
   checkBoxColor: {
     color: ColorPallet.brand.primary,
@@ -292,13 +342,13 @@ export const Buttons = StyleSheet.create({
   primaryText: {
     ...TextTheme.normal,
     fontWeight: 'bold',
-    color: ColorPallet.grayscale.white,
+    color: ColorPallet.brand.text,
     textAlign: 'center',
   },
   primaryTextDisabled: {
     ...TextTheme.normal,
     fontWeight: 'bold',
-    color: ColorPallet.grayscale.white,
+    color: ColorPallet.brand.text,
     textAlign: 'center',
   },
   secondary: {
@@ -325,6 +375,34 @@ export const Buttons = StyleSheet.create({
     color: ColorPallet.brand.secondaryDisabled,
     textAlign: 'center',
   },
+  modalCritical: {
+    padding: 16,
+    borderRadius: 4,
+    backgroundColor: '#D8292F',
+  },
+  modalPrimary: {
+    padding: 16,
+    borderRadius: 4,
+    backgroundColor: ColorPallet.brand.primary,
+  },
+  modalPrimaryText: {
+    ...TextTheme.normal,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: ColorPallet.brand.text,
+  },
+  modalSecondary: {
+    padding: 16,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: ColorPallet.brand.primary,
+  },
+  modalSecondaryText: {
+    ...TextTheme.normal,
+    fontWeight: 'bold',
+    color: ColorPallet.brand.primary,
+    textAlign: 'center',
+  },
 })
 
 export const ListItems = StyleSheet.create({
@@ -338,10 +416,10 @@ export const ListItems = StyleSheet.create({
     ...TextTheme.caption,
   },
   credentialOfferBackground: {
-    backgroundColor: ColorPallet.brand.primaryBackground,
+    backgroundColor: ColorPallet.brand.modalPrimaryBackground,
   },
   credentialOfferTitle: {
-    ...TextTheme.headingThree,
+    ...TextTheme.modalHeadingThree,
   },
   credentialOfferDetails: {
     ...TextTheme.normal,
@@ -369,7 +447,7 @@ export const ListItems = StyleSheet.create({
     backgroundColor: ColorPallet.brand.primary,
   },
   contactIcon: {
-    color: ColorPallet.grayscale.white,
+    color: ColorPallet.brand.text,
   },
   recordAttributeLabel: {
     ...TextTheme.normal,
@@ -484,7 +562,7 @@ export const NavigationTheme = {
     primary: ColorPallet.brand.primary,
     background: ColorPallet.brand.primaryBackground,
     card: ColorPallet.brand.primary,
-    text: ColorPallet.grayscale.white,
+    text: ColorPallet.brand.text,
     border: ColorPallet.grayscale.white,
     notification: ColorPallet.grayscale.white,
   },
@@ -692,9 +770,8 @@ const PINInputTheme = {
 }
 
 export const Assets = {
-  svg: {
-    logo: Logo,
-  },
+  ...BifoldImageAssets,
+  svg: { ...BifoldImageAssets.svg, Logo },
   img: {
     logoSecondary: {
       src: require('./assets/img/logo-large.png'),
@@ -709,7 +786,7 @@ export const Assets = {
       width: 170,
     },
   },
-} as Theme['Assets']
+}
 
 export const defaultTheme: Theme = {
   ColorPallet,

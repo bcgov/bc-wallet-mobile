@@ -39,6 +39,11 @@ import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { BCDispatchAction, BCLocalStorageKeys } from '../store'
 
+enum InitErrorTypes {
+  Onboarding,
+  Agent,
+}
+
 const onboardingComplete = (state: OnboardingState): boolean => {
   return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
 }
@@ -73,6 +78,9 @@ const Splash: React.FC = () => {
   const { indyLedgers } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
+  const [initOnboardingCount, setInitOnboardingCount] = useState(0)
+  const [initAgentCount, setInitAgentCount] = useState(0)
+  const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
   const steps: string[] = [
     t('Init.Starting'),
@@ -179,12 +187,13 @@ const Splash: React.FC = () => {
   }
 
   useEffect(() => {
-    if (store.authentication.didAuthenticate) {
-      return
-    }
-
     const initOnboarding = async (): Promise<void> => {
       try {
+        setStep(0)
+        if (store.authentication.didAuthenticate) {
+          return
+        }
+
         setStep(1)
         // load authentication attempts from storage
         const attemptData = await loadAuthAttempts()
@@ -263,19 +272,20 @@ const Splash: React.FC = () => {
           })
         )
       } catch (e: unknown) {
+        setInitErrorType(InitErrorTypes.Onboarding)
         setInitError(e as Error)
       }
     }
     initOnboarding()
-  }, [store.authentication.didAuthenticate])
+  }, [store.authentication.didAuthenticate, initOnboardingCount])
 
   useEffect(() => {
-    if (!store.authentication.didAuthenticate || !store.onboarding.didConsiderBiometry) {
-      return
-    }
-
     const initAgent = async (): Promise<void> => {
       try {
+        if (!store.authentication.didAuthenticate || !store.onboarding.didConsiderBiometry) {
+          return
+        }
+
         setStep(4)
         const credentials = await getWalletCredentials()
 
@@ -325,12 +335,22 @@ const Splash: React.FC = () => {
           })
         )
       } catch (e: unknown) {
+        setInitErrorType(InitErrorTypes.Agent)
         setInitError(e as Error)
       }
     }
 
     initAgent()
-  }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry])
+  }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry, initAgentCount])
+
+  const handleErrorCallToActionPressed = () => {
+    setInitError(null)
+    if (initErrorType === InitErrorTypes.Agent) {
+      setInitAgentCount(initAgentCount + 1)
+    } else {
+      setInitOnboardingCount(initOnboardingCount + 1)
+    }
+  }
 
   return (
     <SafeAreaView style={styles.splashContainer}>
@@ -342,7 +362,8 @@ const Splash: React.FC = () => {
               title={t('Error.Title2026')}
               description={t('Error.Message2026')}
               message={initError?.message || t('Error.Unknown')}
-              onCallToActionPressed={() => setInitError(null)}
+              onCallToActionLabel={t('Init.Retry')}
+              onCallToActionPressed={handleErrorCallToActionPressed}
             />
           </View>
         ) : (
