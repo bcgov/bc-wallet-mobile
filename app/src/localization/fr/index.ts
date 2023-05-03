@@ -8,6 +8,7 @@ const translation = {
     Confirm: 'Confirmer',
     Accept: 'Accepter',
     Reject: 'Rejeter',
+    NotNow: "Pas maintenant",
     Share: 'Partager',
     Decline: 'Refuser',
     Back: 'Précédent',
@@ -30,6 +31,7 @@ const translation = {
     Dismiss: 'Rejeter',
     On: 'Activé',
     Off: 'Désactivé',
+    Close: "Fermer",
   },
   Language: {
     English: 'Anglais',
@@ -80,6 +82,15 @@ const translation = {
     NoMessage: 'Pas de message',
     Unknown: 'Erreur inconnue',
     Problem: 'Un problème est survenu',
+    Title1034: "Impossible d'obtenir une demande de preuve.",
+    Message1034: "La demande de preuve est introuvable.",
+    Title1035: "Impossible de récupérer l'offre de justificatifs d'identité.",
+    Message1035: "L'offre de justificatifs d'identité est introuvable.",
+    Title1036: "Impossible de récupérer les justificatifs d'identité du portefeuille",
+    Message1036: "Les justificatifs d'identité du portefeuille sont introuvables",
+    Title1037: "Impossible de supprimer le contact.",
+    Message1037: "Il y a eu un problème lors de la suppression du contact.",
+
   },
   Credentials: {
     AddCredential: 'Ajouter une attestation',
@@ -218,6 +229,23 @@ const translation = {
     Created: 'Créé',
     ConnectionState: 'État de la connexion',
     AContact: 'Un contact',
+    DateOfConnection: "Date de connexion : {{ date }}",
+    RemoveTitle: "Supprimer ce contact",
+    RemoveCaption: "Pour ajouter des justificatifs d'identité, l'organisation émettrice doit être un contact.",
+    UnableToRemoveTitle: "Impossible de supprimer le contact",
+    UnableToRemoveCaption: "Impossible de supprimer car il y a des justificatifs d'identité émises par ce contact dans votre portefeuille. Supprimez d'abord les justificatifs d'identité, puis supprimez ce contact.",
+    GoToCredentials: "Aller aux justificatifs d'identité",
+    ContactRemoved: "Contact supprimé"
+  },
+  WhatAreContacts: {
+    Title: "Que sont les contacts?",
+    Preamble: "L'ajout d'organisations en tant que contact vous permettra de:",
+    ListItemCredentialUpdates: "Obtenir des mises à jour des justificatifs d'identité délivrées par cette organisation",
+    ListItemNewCredentials: "Obtenez de nouveaux justificatifs d'identité",
+    ListItemProofRequest: "Demandes de preuves accélérées",
+    RemoveContacts: "Vous pouvez à tout moment supprimer des contacts de votre ",
+    ContactsLink: "liste de contacts",
+    ContactSharing: "L'utilisation de vos justificatifs d'identité n'est jamais partagée avec vos contacts."
   },
   CredentialDetails: {
     Id: 'Identifiant :',
@@ -234,6 +262,7 @@ const translation = {
     CredentialRevokedMessageTitle: 'Cette attestation est révoquée',
     CredentialRevokedMessageBody:
       "Cette attestation peut ne plus fonctionner pour certaines demandes de preuve. Vous devrez mettre à jour l'attestation avec l'émetteur.",
+    NewRevoked: "Identité révoqué",
   },
   Home: {
     Welcome: 'Bienvenue',
@@ -285,6 +314,10 @@ const translation = {
     IsOfferingYouACredential: 'vous propose un attestation',
     ConfirmDeclineCredential: 'Oui, refuser cette attestation',
     AbortDeclineCredential: 'Non, revenir en arrière',
+    DeleteOfferTitle: "Supprimer cette offre ?",
+    DeleteOfferMessage: "La suppression de cette offre supprimera la notification de votre liste.",
+    DeleteOfferDescription: "Vous ne reconnaissez pas l'organisation ? Vérifiez votre liste de contacts. Vous ne recevez des notifications que des contacts que vous avez initiés",
+    NewCredentialOffer: "Nouvelle offre de justificatif",
   },
   ConnectionAlert: {
     AddedContacts: 'Ajouté aux contacts',
@@ -382,6 +415,8 @@ const translation = {
     NoInternetConnectionTitle: 'Pas de connexion Internet',
     NoInternetConnectionMessage:
       "Vous ne pouvez pas accéder aux services à l'aide du portefeuille Québec, ni recevoir d'informations d'identification tant que vous n'êtes pas de nouveau en ligne.\n\nVeuillez vérifier votre connexion Internet.",
+    LedgerConnectivityIssueTitle: "Services de portefeuille",
+    LedgerConnectivityIssueMessage: "Il se peut qu'un pare-feu vous empêche de vous connecter aux services liés au portefeuille.",
   },
   Settings: {
     Help: 'Aide',

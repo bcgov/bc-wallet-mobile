@@ -12,6 +12,7 @@ const translation = {
     Confirm: 'Confirm',
     Accept: 'Accept',
     Reject: 'Reject',
+    NotNow: "Not now",
     Share: 'Share',
     Decline: 'Decline',
     Back: 'Back',
@@ -28,6 +29,7 @@ const translation = {
     Home: 'Home',
     ErrorCode: 'Error Code',
     Okay: 'Okay',
+    Close: "Close",
   },
   Language: {
     English: 'English',
@@ -108,6 +110,14 @@ const translation = {
     NoMessage: 'No Message',
     Title2024: 'BCSC Authentication',
     Message2024: 'The authentication request was canceled.',
+    Title1034: "Unable to fetch proof request.",
+    Message1034: "Proof request could not be found.",
+    Title1035: "Unable to fetch credential offer.",
+    Message1035: "Credential offer could not be found.",
+    Title1036: "Unable to fetch wallet credentials",
+    Message1036: "Wallet credentials could not be found",
+    Title1037: "Unable to remove contact.",
+    Message1037: "There was a problem while removing the contact. ",
   },
   StatusMessages: {
     InitAgent: 'Initializing agent ..',
@@ -208,6 +218,23 @@ const translation = {
     Created: 'Created',
     ConnectionState: 'Connection State',
     AContact: 'A contact',
+    DateOfConnection: "Date of connection: {{ date }}",
+    RemoveTitle: "Remove this contact",
+    RemoveCaption: "To add credentials, the issuing organization needs to be a contact.",
+    UnableToRemoveTitle: "Unable to remove contact",
+    UnableToRemoveCaption: "Unable to remove because there are credentials issued by this contact in your wallet. Remove the credentials first then remove this contact.",
+    GoToCredentials: "Go to Credentials",
+    ContactRemoved: "Contact removed"
+  },
+  WhatAreContacts: {
+    Title: "What are Contacts?",
+    Preamble: "Adding organizations as a Contact will allow you to:",
+    ListItemCredentialUpdates: "Get updates to credentials issued by this organization",
+    ListItemNewCredentials: "Get offered new credentials",
+    ListItemProofRequest: "Fast-track proof requests",
+    RemoveContacts: "You can always remove Contacts at any time from your ",
+    ContactsLink: "Contacts list",
+    ContactSharing: "Use of your credentials is never shared with your Contacts."
   },
   CredentialDetails: {
     Id: 'Id:',
@@ -218,6 +245,7 @@ const translation = {
     TermsAndConditions: 'Terms and conditions',
     RemoveFromWallet: 'Remove from wallet',
     Revoked: 'Revoked',
+    NewRevoked: "Credential revoked",
     Choose: 'Choose',
     GetPersonCred: 'Get your Person credential',
     ScanQrCode: 'Scan a QR code',
@@ -263,6 +291,10 @@ const translation = {
     CredentialOnTheWay: 'Your credential is on the way',
     CredentialOffer: 'New Credential Offer',
     IsOfferingYouACredential: 'is offering you a credential',
+    DeleteOfferTitle: "Delete this offer?",
+    DeleteOfferMessage: "Deleting this offer will remove the notification from your list.",
+    DeleteOfferDescription: "Don't recognize the organization? Check your Contacts list. You only receive notifications from contacts you've initiated",
+    NewCredentialOffer: "New Credential Offer",
   },
   ProofRequest: {
     OfferDelay: 'Offer delay',
@@ -313,6 +345,8 @@ const translation = {
     NoInternetConnectionTitle: 'No internet connection',
     NoInternetConnectionMessage:
       "You're unable to access services using QC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection.",
+    LedgerConnectivityIssueTitle: "Wallet Services",
+    LedgerConnectivityIssueMessage: "A firewall may be preventing you from connecting to wallet related services.",
   },
   OnboardingPages: {
     FirstPageTitle: 'Welcome to the Quebec wallet',
