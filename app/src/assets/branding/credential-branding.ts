@@ -3,6 +3,7 @@ import { types } from 'aries-bifold'
 type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
 type MetaOverlay = types.oca.MetaOverlay
 type FormatOverlay = types.oca.FormatOverlay
+type CharacterEncodingOverlay = types.oca.CharacterEncodingOverlay
 type LabelOverlay = types.oca.LabelOverlay
 type CaptureBaseOverlay = types.oca.CaptureBaseOverlay
 
@@ -156,6 +157,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       captureBase: '',
       type: 'spec/overlays/capture_base/1.0',
       attributes: {
+        picture: 'Binary',
         postal_code: 'Text',
         given_names: 'Text',
         family_name: 'Text',
@@ -191,8 +193,17 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         language: 'en',
         attributeFormats: {
           birthdate_dateint: 'YYYYMMDD',
+          picture: 'image/png'
         },
       } as FormatOverlay,
+      {
+        captureBase: '',
+        type: 'spec/overlays/character_encoding/1.0',
+        language: 'en',
+        attributeCharacterEncoding: {
+          picture: 'base64'
+        },
+      } as CharacterEncodingOverlay,
       {
         captureBase: '',
         type: 'spec/overlays/label/1.0',
