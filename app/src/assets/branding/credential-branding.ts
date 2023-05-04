@@ -112,7 +112,7 @@ const memberCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Member Card',
-      issuerName: 'Law Society of BC',
+      issuerName: 'Law Society of British Columbia',
     } as MetaOverlay,
     memberCardOverlay,
   ],
