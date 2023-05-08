@@ -1,4 +1,4 @@
-package ca.bc.gov.BCWallet;
+package ca.qc.gouv.portefeuilleqc;
 import android.os.Bundle;
 import android.system.ErrnoException;
 import android.system.Os;
@@ -24,6 +24,6 @@ public class MainActivity extends ReactActivity {
     }
   }
   protected String getMainComponentName() {
-    return "BCWallet";
+    return "QCWallet";
   }
 }

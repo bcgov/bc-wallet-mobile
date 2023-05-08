@@ -23,12 +23,14 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progressPercent }) => {
     progressBarContainer: {
       width: '100%',
       height: 11,
-      backgroundColor: '#001e3d',
+      backgroundColor: ColorPallet.grayscale.lightGrey,
+      borderRadius: 4,
+      overflow: 'hidden',
     },
     progressBar: {
       height: '100%',
       width: '100%',
-      backgroundColor: ColorPallet.brand.highlight,
+      backgroundColor: ColorPallet.brand.primary,
     },
   })
   // scaleX rather than width is used for the progress bar as this allows useNativeDriver to be true

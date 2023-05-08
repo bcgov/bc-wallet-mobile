@@ -7,7 +7,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>en</string>
 		<key>CFBundleDisplayName</key>
-		<string>BC Wallet</string>
+		<string>Portefeuille QC</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -71,7 +71,7 @@
 			<dict>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<string>bcwallet</string>
+					<string>qcwallet</string>
 				</array>
 			</dict>
 			<dict>
@@ -81,5 +81,10 @@
 				</array>
 			</dict>
 		</array>
+		<key>bugsnag</key>
+		<dict>
+			<key>apiKey</key>
+			<string>$(BUGSNAG_API_KEY)</string>
+		</dict>
 	</dict>
 </plist>

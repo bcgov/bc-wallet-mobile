@@ -27,9 +27,9 @@ const translation = {
   "Biometry": {
     "Toggle": "Toggle Biometrics (PT-BR)",
     "EnabledText1": "Log in with your phone's biometrics instead of your wallet PIN. (PT-BR)",
-    "EnabledText1Bold": "you will need to use biometrics to open your BC Wallet. (PT-BR)",
-    "EnabledText2": "This means all fingerprint and facial data added on this phone can be used to access your BC Wallet. (PT-BR)",
-    "EnabledText3": "Anyone who can access your phone with biometrics can access your BC Wallet. (PT-BR)",
+    "EnabledText1Bold": "you will need to use biometrics to open your QC Wallet. (PT-BR)",
+    "EnabledText2": "This means all fingerprint and facial data added on this phone can be used to access your QC Wallet. (PT-BR)",
+    "EnabledText3": "Anyone who can access your phone with biometrics can access your QC Wallet. (PT-BR)",
     "EnabledText3Bold": "Ensure only you have access to your wallet. (PT-BR)",
     "Warning": "Ensure only you have access to your wallet. (PT-BR)",
     "UseToUnlock": "Use biometrics to unlock wallet? (PT-BR)",
@@ -40,7 +40,7 @@ const translation = {
     "AddFirstCredential": "Add your first credential (PT-BR)"
   },
   "Screens": {
-    "Onboarding": "BC Wallet (PT-BR)",
+    "Onboarding": "QC Wallet (PT-BR)",
     "Settings": "Menu (PT-BR)",
   },
   "PersonCredentialNotification": {
@@ -56,7 +56,8 @@ const translation = {
     "LinkDescription": "Get the BC Services Card app (PT-BR)",
     "GetCredential": "Get your Person credential (PT-BR)",
     "Decline": "Get this later (PT-BR)",
-    "PageTitle": "Person Credential (PT-BR)"
+    "PageTitle": "Person Credential (PT-BR)",
+    "Onboarding": "QC Wallet (PT-BR)",
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection (PT-BR)",
@@ -81,7 +82,7 @@ const translation = {
   "Settings": {
     "Help": "Help (PT-BR)",
     "MoreInformation": "More Information (PT-BR)",
-    "HelpUsingBCWallet": "Help using BC Wallet (PT-BR)",
+    "HelpUsingBCWallet": "Help using QC Wallet (PT-BR)",
     "ReportAProblem": "Report A Problem (PT-BR)",
     "TermsOfUse": "Terms of use (PT-BR)",
     "PrivacyStatement": "Privacy statement (PT-BR)",

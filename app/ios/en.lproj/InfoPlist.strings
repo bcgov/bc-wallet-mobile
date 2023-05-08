@@ -1,0 +1,2 @@
+"NSFaceIDUsageDescription" = "The application wants to use your FaceID/TouchID to Authenticate your Identity.";
+"NSCameraUsageDescription" = "Camera used for in-app QR Code scanning.";

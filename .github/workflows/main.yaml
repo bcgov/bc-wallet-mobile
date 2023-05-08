@@ -1,9 +1,9 @@
 name: Native Build & Test
 
 env:
-  cacheId: "11" # increment to expire the cache
+  cacheId: "1" # increment to expire the cache
   appBuildNumber: ${{ github.run_number }}
-  appBuildVersion: "1.0.9"
+  appBuildVersion: "1.0.6"
 
 on:
   workflow_dispatch:
@@ -142,17 +142,14 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null
+        if: env.MEDIATOR_URL != null || env.BUGSNAG_API_KEY != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-          IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
-          IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
-          echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
-          echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
-
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env |
+          echo "BUGSNAG_API_KEY=${BUGSNAG_API_KEY}" >>.env
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       - name: Create Provisioning Profile
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -172,10 +169,10 @@ jobs:
       - name: Update ledgers
         run: |
           node bifold/scripts/make-blocks.js
-
+          
           # the ledgers file should be about 344K
           ls -lah ledgers.json
-
+          
           mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
           shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
@@ -239,24 +236,23 @@ jobs:
           --apple-id ${{ secrets.APPLE_ID }} \
           --password ${{ secrets.APPLE_ID_PASSWD }} \
           --enable-package-validation \
-          --max-build-processing-wait 10 \
+          --max-build-processing-wait 25 \
           --testflight \
           --beta-group "The Team" "IDIM Team" \
           --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
-      - name: Ship to SauceLabs
+      - name: Ship to LambdaTest
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
         env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+          LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
         run: |
           curl \
-          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-          -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-          --form "payload=@export/BCWallet.ipa" \
-          --form "name=BCWallet-$GITHUB_RUN_NUMBER.ipa" \
-          --form "description=iOS BC Wallet app"
+          -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
+          --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
+          --form 'appFile=@"export/AriesBifold.ipa"' \
+          --form "name=QCWallet-$GITHUB_RUN_NUMBER.ipa" \
 
   build-android:
     # if: ${{ false }}  # disable for now
@@ -307,16 +303,14 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null
+        if: env.MEDIATOR_URL != null || env.BUGSNAG_API_KEY != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-          IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
-          IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
-          echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
-          echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env |
+          echo "BUGSNAG_API_KEY=${BUGSNAG_API_KEY}" >>.env
 
       - name: Android debug build
         if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
@@ -355,31 +349,47 @@ jobs:
 
       - name: Ship to Google Play
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/android
+        working-directory: app/
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
           GOOGLE_API_CREDENTIALS: "api_keys.json"
-          ANDROID_PACKAGE_NAME: "ca.bc.gov.BCWallet"
-          ANDROID_BUNDLE_PATH: "./app/build/outputs/bundle/release/app-release.aab"
+          ANDROID_PACKAGE_NAME: "ca.qc.gouv.portefeuilleqc"
+          ANDROID_BUNDLE_PATH: "./android/app/build/outputs/bundle/release/app-release.aab"
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          npx @bcgov/gpublish
+          node ./deploy-to-playstore.js
 
-      - name: Ship to SauceLabs
+      - name: Ship to LambdaTest
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+          LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+          LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
         run: |
           curl \
-          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-          -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-          --form "payload=@app/build/outputs/bundle/release/app-release.aab" \
-          --form "name=BCWallet-$GITHUB_RUN_NUMBER.aab" \
-          --form "description=Android Bifold BC wallet app"
+          -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
+          --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
+          --form 'appFile=@"app/build/outputs/bundle/release/app-release.aab"' \
+          --form "name=QCWallet-$GITHUB_RUN_NUMBER.aab" \
+
+  release:
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    needs: [build-ios, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.appBuildVersion }}-${{ env.appBuildNumber }}
+          release_name: Version ${{ env.appBuildVersion }}-${{ env.appBuildNumber }}
+          body: |
+            Dev Release.
 
   run-on-device-tests:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -391,10 +401,10 @@ jobs:
       matrix:
         include:
           - mobile-platform: "-p Android"
-            app-file-name: "-a BCWallet-${{ github.run_number }}.aab"
+            app-file-name: "-a QCWallet-${{ github.run_number }}.aab"
             report-project: "android-one-device-smoke"
           - mobile-platform: "-p iOS"
-            app-file-name: "-a BCWallet-${{ github.run_number }}.ipa"
+            app-file-name: "-a QCWallet-${{ github.run_number }}.ipa"
             report-project: "ios-one-device-smoke"
     timeout-minutes: 60
     steps:
@@ -412,36 +422,36 @@ jobs:
         with:
           USE_NGROK: "-n"
 
-      - name: run-sauce-connect-tunnel
+      - name: run-lambdatest-connect-tunnel
         if: ${{ matrix.mobile-platform=='-p iOS' }}
-        uses: saucelabs/sauce-connect-action@v2
+        uses: LambdaTest/LambdaTest-tunnel-action@v1
         with:
-          username: ${{ secrets.SAUCE_USERNAME }}
-          accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
-          directDomains: aries-mediator-agent-test.apps.silver.devops.gov.bc.ca
+          user: ${{ secrets.LAMBDA_USERNAME }}
+          accessKey: ${{ secrets.LAMBDA_ACCESS_KEY }}
+          tunnelName: "PortefeuilleQC-Tunnel-${{ github.run_number }}"
 
       - name: Fetch mobile test harness repo
         uses: actions/checkout@v2
         with:
-          repository: hyperledger/aries-mobile-test-harness
+          repository: MCN-ING/aries-mobile-test-harness
           path: aries-mobile-test-harness
           ref: main
 
-      - name: Run SauceLabs smoke-test
+      - name: Run LambdaTest smoke-test
         uses: ./.github/workflows/actions/run-test-harness
         env:
           LEDGER_URL_CONFIG: "http://test.bcovrin.vonx.io"
           REGION: "us-west-1"
         with:
-          MOBILE_WALLET: "-w bc_wallet"
+          MOBILE_WALLET: "-w bifold"
           ISSUER_AGENT: '-i "AATH;http://0.0.0.0:9020"'
           VERIFIER_AGENT: '-v "AATH;http://0.0.0.0:9030"'
-          DEVICE_CLOUD: "-d SauceLabs"
-          DEVICE_CLOUD_USER: "-u ${{ secrets.SAUCE_USERNAME }}"
-          DEVICE_CLOUD_KEY: "-k ${{ secrets.SAUCE_ACCESS_KEY }}"
+          DEVICE_CLOUD: "-d LambdaTest"
+          DEVICE_CLOUD_USER: "-u ${{ secrets.LAMBDA_USERNAME }}"
+          DEVICE_CLOUD_KEY: "-k ${{ secrets.LAMBDA_ACCESS_KEY }}"
           MOBILE_PLATFORM: ${{ matrix.mobile-platform }}
           APP_FILE_NAME: ${{ matrix.app-file-name }}
-          TEST_SCOPE: "-t @bc_wallet -t @SmokeTest"
+          TEST_SCOPE: "-t @qc_wallet -t @SmokeTest"
           REPORT_PROJECT: ${{ matrix.report-project }}
 
       - name: Upload smoke-test results to Allure

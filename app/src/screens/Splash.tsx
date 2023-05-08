@@ -9,6 +9,7 @@ import {
 } from '@aries-framework/core'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
+import Bugsnag from '@bugsnag/react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/core'
 import { CommonActions } from '@react-navigation/native'
@@ -31,7 +32,7 @@ import {
 } from 'aries-bifold'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
+import { StyleSheet, View, Text, Image } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -69,13 +70,12 @@ const resumeOnboardingAt = (state: OnboardingState): Screens => {
   of this view.
 */
 const Splash: React.FC = () => {
-  const { width } = useWindowDimensions()
   const { setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore()
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
-  const { ColorPallet, Assets } = useTheme()
+  const { ColorPallet } = useTheme()
   const { indyLedgers } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
@@ -103,17 +103,25 @@ const Splash: React.FC = () => {
   }
 
   const styles = StyleSheet.create({
-    screenContainer: {
-      backgroundColor: ColorPallet.brand.primary,
+    splashContainer: {
       flex: 1,
-    },
-    scrollContentContainer: {
-      flexGrow: 1,
+      width: '100%',
+      flexDirection: 'column',
       justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: ColorPallet.brand.secondaryBackground,
+    },
+    img: {
+      width: '51.5%',
+      resizeMode: 'contain',
     },
     progressContainer: {
+      flex: 2,
+      flexDirection: 'column',
       alignItems: 'center',
-      width: '100%',
+      justifyContent: 'flex-start',
+      width: '60%',
+      minHeight: 37,
     },
     stepTextContainer: {
       marginTop: 10,
@@ -123,17 +131,16 @@ const Splash: React.FC = () => {
       fontSize: 16,
       color: '#a8abae',
     },
-    carouselContainer: {
-      width,
-      marginVertical: 30,
-      flex: 1,
-    },
     errorBoxContainer: {
       paddingHorizontal: 20,
     },
     logoContainer: {
+      flex: 1,
       alignSelf: 'center',
-      marginBottom: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: '100%',
+      marginBottom: '10%',
     },
   })
 
@@ -143,7 +150,8 @@ const Splash: React.FC = () => {
       if (data) {
         return JSON.parse(data)
       }
-    } catch {
+    } catch (e: unknown) {
+      Bugsnag.notify(e as Error)
       return
     }
   }
@@ -266,6 +274,7 @@ const Splash: React.FC = () => {
           })
         )
       } catch (e: unknown) {
+        Bugsnag.notify(e as Error)
         setInitErrorType(InitErrorTypes.Onboarding)
         setInitError(e as Error)
       }
@@ -291,7 +300,7 @@ const Splash: React.FC = () => {
         setStep(5)
         const options = {
           config: {
-            label: 'BC Wallet',
+            label: 'QC Wallet',
             mediatorConnectionsInvite: Config.MEDIATOR_URL,
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             walletConfig: { id: credentials.id, key: credentials.key },
@@ -329,6 +338,7 @@ const Splash: React.FC = () => {
           })
         )
       } catch (e: unknown) {
+        Bugsnag.notify(e as Error)
         setInitErrorType(InitErrorTypes.Agent)
         setInitError(e as Error)
       }
@@ -347,38 +357,32 @@ const Splash: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.screenContainer}>
-      <ScrollView contentContainerStyle={styles.scrollContentContainer}>
-        <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
-          <ProgressBar progressPercent={progressPercent} />
-          <View style={styles.stepTextContainer}>
-            <Text style={styles.stepText}>{stepText}</Text>
+    <SafeAreaView style={styles.splashContainer}>
+      <View style={{ flex: 2 }}>
+        {initError ? (
+          <View style={styles.errorBoxContainer}>
+            <InfoBox
+              notificationType={InfoBoxType.Error}
+              title={t('Error.Title2026')}
+              description={t('Error.Message2026')}
+              message={initError?.message || t('Error.Unknown')}
+              onCallToActionLabel={t('Init.Retry')}
+              onCallToActionPressed={handleErrorCallToActionPressed}
+            />
           </View>
+        ) : (
+          <TipCarousel />
+        )}
+      </View>
+      <View style={styles.logoContainer}>
+        <Image source={require('../assets/img/Quebec.png')} style={styles.img} />
+      </View>
+      <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
+        <ProgressBar progressPercent={progressPercent} />
+        <View style={styles.stepTextContainer}>
+          <Text style={styles.stepText}>{stepText}</Text>
         </View>
-        <View style={styles.carouselContainer}>
-          {initError ? (
-            <View style={styles.errorBoxContainer}>
-              <InfoBox
-                notificationType={InfoBoxType.Error}
-                title={t('Error.Title2026')}
-                description={t('Error.Message2026')}
-                message={initError?.message || t('Error.Unknown')}
-                onCallToActionLabel={t('Init.Retry')}
-                onCallToActionPressed={handleErrorCallToActionPressed}
-              />
-            </View>
-          ) : (
-            <TipCarousel />
-          )}
-        </View>
-        <View style={styles.logoContainer}>
-          <Image
-            source={Assets.img.logoPrimary.src}
-            style={{ width: Assets.img.logoPrimary.width, height: Assets.img.logoPrimary.height }}
-            testID={testIdWithKey('LoadingActivityIndicatorImage')}
-          />
-        </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   )
 }

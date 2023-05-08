@@ -24,11 +24,11 @@ import { Linking, StatusBar } from 'react-native'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
-import bcwallet from './src'
+import qcwallet from './src'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { initialState, reducer } from './src/store'
 
-const { theme, localization, configuration } = bcwallet
+const { theme, localization, configuration } = qcwallet
 
 initLanguages(localization)
 

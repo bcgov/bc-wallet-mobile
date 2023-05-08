@@ -20,6 +20,8 @@
 		56A83D5F27D95E24002FE8FE /* BCSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 56A83D5B27D95E24002FE8FE /* BCSans-Regular.ttf */; };
 		56A83D6027D95E24002FE8FE /* BCSans-BoldItalic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 56A83D5C27D95E24002FE8FE /* BCSans-BoldItalic.ttf */; };
 		56A83D6127D95E24002FE8FE /* BCSans-Italic.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 56A83D5D27D95E24002FE8FE /* BCSans-Italic.ttf */; };
+		6FAA896529281E3E002D887C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6FAA896729281E3E002D887C /* InfoPlist.strings */; };
+		6FAA896A29281E60002D887C /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6FAA896C29281E60002D887C /* InfoPlist.strings */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		9357A031B216B85E623CA997 /* libPods-AriesBifold-AriesBifoldTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4EE3AE16AD3ECDE83208A483 /* libPods-AriesBifold-AriesBifoldTests.a */; };
 /* End PBXBuildFile section */
@@ -52,7 +54,7 @@
 		00E356EE1AD99517003FC87E /* AriesBifoldTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AriesBifoldTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		00E356F11AD99517003FC87E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00E356F21AD99517003FC87E /* AriesBifoldTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AriesBifoldTests.m; sourceTree = "<group>"; };
-		13B07F961A680F5B00A75B9A /* BCWallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BCWallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07F961A680F5B00A75B9A /* QCWallet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QCWallet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = AriesBifold/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = AriesBifold/AppDelegate.m; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AriesBifold/Images.xcassets; sourceTree = "<group>"; };
@@ -70,6 +72,9 @@
 		56A83D5C27D95E24002FE8FE /* BCSans-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-BoldItalic.ttf"; path = "../src/assets/fonts/BCSans-BoldItalic.ttf"; sourceTree = "<group>"; };
 		56A83D5D27D95E24002FE8FE /* BCSans-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-Italic.ttf"; path = "../src/assets/fonts/BCSans-Italic.ttf"; sourceTree = "<group>"; };
 		62AD74D113A13E6D7ECD73DC /* Pods-AriesBifold.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold.release.xcconfig"; path = "Target Support Files/Pods-AriesBifold/Pods-AriesBifold.release.xcconfig"; sourceTree = "<group>"; };
+		6F99AD4C2A0572BB0073B4BF /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		6FAA896629281E3E002D887C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		6FAA896B29281E60002D887C /* fr-CA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "fr-CA"; path = "fr-CA.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = AriesBifold/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BB9D3B7B666B014651EA4C03 /* Pods-AriesBifold-AriesBifoldTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold-AriesBifoldTests.release.xcconfig"; path = "Target Support Files/Pods-AriesBifold-AriesBifoldTests/Pods-AriesBifold-AriesBifoldTests.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -146,6 +151,8 @@
 				56A83D5C27D95E24002FE8FE /* BCSans-BoldItalic.ttf */,
 				56A83D5D27D95E24002FE8FE /* BCSans-Italic.ttf */,
 				56A83D5B27D95E24002FE8FE /* BCSans-Regular.ttf */,
+				6FAA896729281E3E002D887C /* InfoPlist.strings */,
+				6FAA896C29281E60002D887C /* InfoPlist.strings */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -160,6 +167,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				6F99AD4C2A0572BB0073B4BF /* Config.xcconfig */,
 				566FB1F1273B158E003E9BEE /* Media.xcassets */,
 				13B07FAE1A68108700A75B9A /* AriesBifold */,
 				00E356EF1AD99517003FC87E /* AriesBifoldTests */,
@@ -177,7 +185,7 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* BCWallet.app */,
+				13B07F961A680F5B00A75B9A /* QCWallet.app */,
 				00E356EE1AD99517003FC87E /* AriesBifoldTests.xctest */,
 			);
 			name = Products;
@@ -231,6 +239,7 @@
 				F5B7D67D9BBF4C5FE692BB29 /* [CP] Embed Pods Frameworks */,
 				EB396EB204E0E4C9F6307F29 /* [CP] Copy Pods Resources */,
 				433E774026557E1B00F569EE /* Embed Frameworks */,
+				9D840F3D7FAB4E2AA01DCE7C /* Upload source maps to Bugsnag */,
 			);
 			buildRules = (
 			);
@@ -238,7 +247,7 @@
 			);
 			name = AriesBifold;
 			productName = AriesBifold;
-			productReference = 13B07F961A680F5B00A75B9A /* BCWallet.app */;
+			productReference = 13B07F961A680F5B00A75B9A /* QCWallet.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -265,6 +274,7 @@
 			knownRegions = (
 				en,
 				Base,
+				"fr-CA",
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
@@ -290,11 +300,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				56A83D6127D95E24002FE8FE /* BCSans-Italic.ttf in Resources */,
+				6FAA896529281E3E002D887C /* InfoPlist.strings in Resources */,
 				56A83D6027D95E24002FE8FE /* BCSans-BoldItalic.ttf in Resources */,
 				56A83D5E27D95E24002FE8FE /* BCSans-Bold.ttf in Resources */,
 				56A83D5F27D95E24002FE8FE /* BCSans-Regular.ttf in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				566FB1F2273B158E003E9BEE /* Media.xcassets in Resources */,
+				6FAA896A29281E60002D887C /* InfoPlist.strings in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -314,7 +326,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $TMPDIR/$(md5 -qs \"$CONFIGURATION_BUILD_DIR\")-main.jsbundle.map\"\nset -e\n\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
 		4EC0E8613979411464217753 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -371,6 +383,20 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AriesBifold-AriesBifoldTests/Pods-AriesBifold-AriesBifoldTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		9D840F3D7FAB4E2AA01DCE7C /* Upload source maps to Bugsnag */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Upload source maps to Bugsnag";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SOURCE_MAP=\"$TMPDIR/$(md5 -qs \"$CONFIGURATION_BUILD_DIR\")-main.jsbundle.map\" ../node_modules/@bugsnag/react-native/bugsnag-react-native-xcode.sh";
 		};
 		B9A54C90D3BE82CD93B12CE2 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -477,13 +503,32 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		6FAA896729281E3E002D887C /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6FAA896629281E3E002D887C /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		6FAA896C29281E60002D887C /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6FAA896B29281E60002D887C /* fr-CA */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		00E356F61AD99517003FC87E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 31CB7D155F80E7F43020B57A /* Pods-AriesBifold-AriesBifoldTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 467G3V9649;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
@@ -512,7 +557,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COPY_PHASE_STRIP = NO;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 467G3V9649;
 				INFOPLIST_FILE = AriesBifoldTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -537,9 +582,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 444;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 467G3V9649;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -560,9 +606,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
-				PRODUCT_NAME = BCWallet;
-				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet - 2023";
+				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuilleqc;
+				PRODUCT_NAME = AriesBifold;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -577,7 +623,8 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = 467G3V9649;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -598,9 +645,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
-				PRODUCT_NAME = BCWallet;
-				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet - 2023";
+				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuilleqc;
+				PRODUCT_NAME = AriesBifold;
+				PROVISIONING_PROFILE_SPECIFIER = PortefeuilleQcProvisioning;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -608,6 +655,7 @@
 		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6F99AD4C2A0572BB0073B4BF /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -673,6 +721,7 @@
 		};
 		83CBBA211A601CBA00E9B192 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6F99AD4C2A0572BB0073B4BF /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;

@@ -22,10 +22,10 @@ import React, { FC, Dispatch, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, ListRenderItem, View } from 'react-native'
 
-import bcwallet from '../../../src'
+import qcwallet from '../../../src'
 import bundles, { CREDENTIALS } from '../../../src/assets/branding/credential-branding'
 
-const { theme } = bcwallet
+const { theme } = qcwallet
 
 enum CREDENTIAL_DEFINITION {
   Generic = 'asdasdasd:2:generic:1.0:Generic',

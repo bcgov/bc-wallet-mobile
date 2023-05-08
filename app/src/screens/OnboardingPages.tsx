@@ -1,5 +1,6 @@
-import { useStore, Button, ButtonType, ITheme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
+import { Button, ButtonType, ITheme, createStyles, GenericFn, testIdWithKey, useStore } from 'aries-bifold'
 import React from 'react'
+import { useTranslation, TFunction } from 'react-i18next'
 import { Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { SvgProps } from 'react-native-svg'
@@ -7,9 +8,15 @@ import { SvgProps } from 'react-native-svg'
 import CredentialList from '../assets/img/credential-list.svg'
 import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'
+import { defaultTheme } from '../theme'
 
-const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme']) => {
+const endPage = (
+  onTutorialCompleted: GenericFn,
+  theme: ITheme['OnboardingTheme'],
+  t: TFunction<'translation', undefined>
+) => {
   const [store] = useStore()
+
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -23,13 +30,8 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
           <SecureImage {...imageDisplayOptions} />
         </View>
         <View style={{ marginBottom: 20 }}>
-          <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>Privacy and confidentiality</Text>
-          <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>
-            You approve every use of information from your BC Wallet. You also only share what is needed for a
-            situation.
-            {'\n\n'}
-            The Government of British Columbia is not told when you use your digital credentials.
-          </Text>
+          <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('OnboardingPages.FourthPageTitle')}</Text>
+          <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('OnboardingPages.FourthPageBody')}</Text>
         </View>
       </ScrollView>
       {!(store.onboarding.didCompleteTutorial && store.authentication.didAuthenticate) && (
@@ -40,7 +42,7 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
           }}
         >
           <Button
-            title={'Get Started'}
+            title={t('OnboardingPages.ButtonGetStarted')}
             accessibilityLabel={'Get Started'}
             testID={testIdWithKey('GetStarted')}
             onPress={onTutorialCompleted}
@@ -52,21 +54,16 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
   )
 }
 
-const StartPages = (theme: ITheme) => {
+const startPages = (theme: ITheme, t: TFunction<'translation', undefined>) => {
   const defaultStyle = createStyles(theme)
   return (
     <ScrollView style={{ padding: 20, paddingTop: 30 }}>
-      <Text style={[defaultStyle.headerText]}>Welcome</Text>
-      <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>
-        BC Wallet lets you receive, store and use digital credentials.
-      </Text>
-      <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>
-        It is highly secure, and helps protect your privacy online.
-      </Text>
-      <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>
-        BC Wallet is currently in its early stages and the technology is being explored. Most people will not have a use
-        for BC Wallet yet, because very few digital credentials are available.
-      </Text>
+      <Text style={[defaultStyle.headerText]}>{t('OnboardingPages.FirstPageTitle')}</Text>
+      <View style={{ height: 4, width: 48, backgroundColor: defaultTheme.ColorPallet.brand.highlight }} />
+
+      <Text style={[defaultStyle.bodyText, { marginTop: 35 }]}>{t('OnboardingPages.FirstPageBody1')}</Text>
+      <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t('OnboardingPages.FirstPageBody2')}</Text>
+      <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t('OnboardingPages.FirstPageBody3')}</Text>
     </ScrollView>
   )
 }
@@ -78,17 +75,23 @@ const guides: Array<{
 }> = [
   {
     image: CredentialList,
-    title: 'Digital credentials, stored securely',
-    body: 'BC Wallet holds digital credentials—the digital versions of things like licenses, identities and permits.\n\nThey are stored securely, only on this device.',
+    title: 'SecondPageTitle',
+    body: 'SecondPageBody',
   },
   {
     image: ScanShare,
-    title: 'Receiving and using credentials',
-    body: 'To receive and use credentials you use the “Scan” feature in the app to scan a special QR code.\n\nInformation is sent and received over a private, encrypted connection.',
+    title: 'ThirdPageTitle',
+    body: 'ThirdPageBogy',
   },
 ]
 
-const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: ITheme['OnboardingTheme']) => {
+const createPageWith = (
+  image: React.FC<SvgProps>,
+  title: string,
+  body: string,
+  theme: ITheme['OnboardingTheme'],
+  t: TFunction<'translation', undefined>
+) => {
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -99,17 +102,18 @@ const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, 
     <ScrollView style={{ padding: 20 }}>
       <View style={{ alignItems: 'center' }}>{image(imageDisplayOptions)}</View>
       <View style={{ marginBottom: 20 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{title}</Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{body}</Text>
+        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('OnboardingPages.' + title)}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('OnboardingPages.' + body)}</Text>
       </View>
     </ScrollView>
   )
 }
 
 export const pages = (onTutorialCompleted: GenericFn, theme: ITheme): Array<Element> => {
+  const { t } = useTranslation()
   return [
-    StartPages(theme),
-    ...guides.map((g) => CreatePageWith(g.image, g.title, g.body, theme)),
-    EndPage(onTutorialCompleted, theme),
+    startPages(theme, t),
+    ...guides.map((g) => createPageWith(g.image, g.title, g.body, theme, t)),
+    endPage(onTutorialCompleted, theme, t),
   ]
 }

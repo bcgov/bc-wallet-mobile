@@ -2,10 +2,10 @@ import { initLanguages } from 'aries-bifold'
 import React from 'react'
 import { LogBox } from 'react-native'
 
-import bcwallet from './src'
+import qcwallet from './src'
 import StorybookUIRoot from './storybook'
 
-const { localization } = bcwallet
+const { localization } = qcwallet
 
 initLanguages(localization)
 
