@@ -1,4 +1,4 @@
-import { Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey, useStore } from 'aries-bifold'
+import { Button, ButtonType, ITheme, createStyles, GenericFn, testIdWithKey, useStore } from 'aries-bifold'
 import React from 'react'
 import { useTranslation, TFunction } from 'react-i18next'
 import { Text, View } from 'react-native'
@@ -12,7 +12,7 @@ import { defaultTheme } from '../theme'
 
 const endPage = (
   onTutorialCompleted: GenericFn,
-  theme: Theme['OnboardingTheme'],
+  theme: ITheme['OnboardingTheme'],
   t: TFunction<'translation', undefined>
 ) => {
   const [store] = useStore()
@@ -54,7 +54,7 @@ const endPage = (
   )
 }
 
-const startPages = (theme: Theme, t: TFunction<'translation', undefined>) => {
+const startPages = (theme: ITheme, t: TFunction<'translation', undefined>) => {
   const defaultStyle = createStyles(theme)
   return (
     <ScrollView style={{ padding: 20, paddingTop: 30 }}>
@@ -89,7 +89,7 @@ const createPageWith = (
   image: React.FC<SvgProps>,
   title: string,
   body: string,
-  theme: Theme['OnboardingTheme'],
+  theme: ITheme['OnboardingTheme'],
   t: TFunction<'translation', undefined>
 ) => {
   const defaultStyle = createStyles(theme)
@@ -109,7 +109,7 @@ const createPageWith = (
   )
 }
 
-export const pages = (onTutorialCompleted: GenericFn, theme: Theme): Array<Element> => {
+export const pages = (onTutorialCompleted: GenericFn, theme: ITheme): Array<Element> => {
   const { t } = useTranslation()
   return [
     startPages(theme, t),

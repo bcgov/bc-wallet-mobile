@@ -25,6 +25,8 @@ export const homeTourSteps: TourStep[] = [
           previous={previous}
           stop={stop}
           next={next}
+          stepOn={1}
+          stepsOutOf={3}
         >
           <Image
             source={require('../../assets/img/mobile-phone-scanning-laptop.jpg')}
@@ -64,6 +66,8 @@ export const homeTourSteps: TourStep[] = [
           next={next}
           stop={stop}
           previous={previous}
+          stepOn={2}
+          stepsOutOf={3}
         >
           <Text
             style={{
@@ -93,6 +97,8 @@ export const homeTourSteps: TourStep[] = [
           next={next}
           stop={stop}
           previous={previous}
+          stepOn={3}
+          stepsOutOf={3}
         >
           <Image
             source={require('../../assets/img/list-of-credentials.jpg')}

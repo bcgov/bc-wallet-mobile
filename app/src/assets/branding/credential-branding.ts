@@ -64,10 +64,10 @@ const memberCardOverlay: CardLayoutOverlay11 = {
   captureBase: '',
   type: 'spec/overlays/card_layout/1.1',
   logo: {
-    src: require('./lsbc-logo.png'),
+    src: require('./lsbc-logo.jpg'),
   },
-  primaryBackgroundColor: '#00698c',
-  secondaryBackgroundColor: '#1a2930',
+  primaryBackgroundColor: '#23485A',
+  secondaryBackgroundColor: '#00698C',
   backgroundImage: {
     src: require('./lsbc-background-image.jpg'),
   },
@@ -112,7 +112,7 @@ const memberCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Member Card',
-      issuerName: 'Law Society of BC',
+      issuerName: 'Law Society of British Columbia',
     } as MetaOverlay,
     memberCardOverlay,
   ],
@@ -255,5 +255,5 @@ export default {
   [CREDENTIALS.BC_DIGITAL_ID_DEV]: digitalIdCardBundle /* (DEV) */,
   [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
-  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */
+  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
 }

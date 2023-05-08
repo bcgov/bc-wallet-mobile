@@ -1,122 +1,19 @@
-import { ImageAssets as BifoldImageAssets, Theme } from 'aries-bifold'
+import {
+  ImageAssets as BifoldImageAssets,
+  IInputs,
+  ITextTheme,
+  IBrandColors,
+  ISemanticColors,
+  INotificationColors,
+  IGrayscaleColors,
+  IColorPallet,
+  ITheme,
+  IAssets,
+} from 'aries-bifold'
+import React from 'react'
 import { StyleSheet } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
-
-interface FontAttributes {
-  fontFamily?: string
-  fontStyle?: 'normal' | 'italic'
-  fontSize: number
-  fontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900'
-  color: string
-}
-
-interface InputAttributes {
-  padding?: number
-  borderRadius?: number
-  fontSize?: number
-  backgroundColor?: string
-  color?: string
-  borderWidth?: number
-  borderColor?: string
-}
-
-interface Inputs {
-  label: FontAttributes
-  textInput: InputAttributes
-  inputSelected: InputAttributes
-  singleSelect: InputAttributes
-  singleSelectText: FontAttributes
-  singleSelectIcon: InputAttributes
-  checkBoxColor: InputAttributes
-  checkBoxText: FontAttributes
-}
-
-interface TextTheme {
-  headingOne: FontAttributes
-  headingTwo: FontAttributes
-  headingThree: FontAttributes
-  headingFour: FontAttributes
-  normal: FontAttributes
-  label: FontAttributes
-  labelTitle: FontAttributes
-  labelSubtitle: FontAttributes
-  labelText: FontAttributes
-  caption: FontAttributes
-  title: FontAttributes
-  headerTitle: FontAttributes
-  modalNormal: FontAttributes
-  modalTitle: FontAttributes
-  modalHeadingOne: FontAttributes
-  modalHeadingThree: FontAttributes
-}
-
-interface BrandColors {
-  primary: string
-  primaryDisabled: string
-  secondary: string
-  secondaryDisabled: string
-  primaryLight: string
-  highlight: string
-  primaryBackground: string
-  secondaryBackground: string
-  modalPrimary: string
-  modalSecondary: string
-  modalPrimaryBackground: string
-  modalSecondaryBackground: string
-  link: string
-  text: string
-  icon: string
-  headerText: string
-  headerIcon: string
-  buttonText: string
-  tabBarInactive: string
-  unorderedList: string
-  unorderedListModal: string
-}
-
-interface SemanticColors {
-  error: string
-  success: string
-  focus: string
-}
-
-interface NotificationColors {
-  success: string
-  successBorder: string
-  successIcon: string
-  successText: string
-  info: string
-  infoBorder: string
-  infoIcon: string
-  infoText: string
-  warn: string
-  warnBorder: string
-  warnIcon: string
-  warnText: string
-  error: string
-  errorBorder: string
-  errorIcon: string
-  errorText: string
-  popupOverlay: string
-}
-
-interface GrayscaleColors {
-  black: string
-  darkGrey: string
-  mediumGrey: string
-  grey: string
-  lightGrey: string
-  veryLightGrey: string
-  white: string
-}
-
-interface ColorPallet {
-  brand: BrandColors
-  semantic: SemanticColors
-  notification: NotificationColors
-  grayscale: GrayscaleColors
-}
 
 export const borderRadius = 4
 export const heavyOpacity = 0.7
@@ -125,13 +22,13 @@ export const lightOpacity = 0.35
 export const zeroOpacity = 0.0
 export const borderWidth = 2
 
-const SemanticColors: SemanticColors = {
+const SemanticColors: ISemanticColors = {
   error: '#CB381F',
   success: '#4F813D',
   focus: '#DAE6F0',
 }
 
-const NotificationColors: NotificationColors = {
+const NotificationColors: INotificationColors = {
   success: '#4F813D',
   successBorder: '#C5CAD2',
   successIcon: '#223654',
@@ -151,17 +48,16 @@ const NotificationColors: NotificationColors = {
   popupOverlay: `rgba(0, 0, 0, ${mediumOpacity})`,
 }
 
-const GrayscaleColors: GrayscaleColors = {
+const GrayscaleColors: IGrayscaleColors = {
   black: '#000000',
   darkGrey: '#4E5662',
   mediumGrey: '#6B778A',
-  grey: '#8893A2',
   lightGrey: '#C5CAD2',
   veryLightGrey: '#F1F1F2',
   white: '#FFFFFF',
 }
 
-const BrandColors: BrandColors = {
+const BrandColors: IBrandColors = {
   primary: '#095797',
   primaryDisabled: `rgba(9, 87, 151, ${lightOpacity})`,
   secondary: '#DAE6F0',
@@ -185,14 +81,14 @@ const BrandColors: BrandColors = {
   tabBarInactive: GrayscaleColors.white,
 }
 
-export const ColorPallet: ColorPallet = {
+export const ColorPallet: IColorPallet = {
   brand: BrandColors,
   semantic: SemanticColors,
   notification: NotificationColors,
   grayscale: GrayscaleColors,
 }
 
-export const TextTheme: TextTheme = {
+export const TextTheme: ITextTheme = {
   headingOne: {
     fontFamily: 'BCSans-Regular',
     fontSize: 38,
@@ -287,7 +183,7 @@ export const TextTheme: TextTheme = {
   },
 }
 
-export const Inputs: Inputs = StyleSheet.create({
+export const Inputs: IInputs = StyleSheet.create({
   label: {
     ...TextTheme.label,
   },
@@ -769,9 +665,9 @@ const PINInputTheme = {
   },
 }
 
-export const Assets = {
+export const Assets: IAssets = {
   ...BifoldImageAssets,
-  svg: { ...BifoldImageAssets.svg, Logo },
+  svg: { ...BifoldImageAssets.svg, logo: Logo as React.FC },
   img: {
     logoSecondary: {
       src: require('./assets/img/logo-large.png'),
@@ -788,7 +684,7 @@ export const Assets = {
   },
 }
 
-export const defaultTheme: Theme = {
+export const defaultTheme: ITheme = {
   ColorPallet,
   TextTheme,
   Buttons,
