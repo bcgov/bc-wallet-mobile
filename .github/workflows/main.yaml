@@ -142,12 +142,14 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null
+        if: env.MEDIATOR_URL != null || env.BUGSNAG_API_KEY != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env |
+          echo "BUGSNAG_API_KEY=${BUGSNAG_API_KEY}" >>.env
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       - name: Create Provisioning Profile
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -301,12 +303,14 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null
+        if: env.MEDIATOR_URL != null || env.BUGSNAG_API_KEY != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env |
+          echo "BUGSNAG_API_KEY=${BUGSNAG_API_KEY}" >>.env
 
       - name: Android debug build
         if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'

@@ -41,3 +41,4 @@ app/patches/react-native-gifted-chat*.patch
 # xcode
 xcuserdata/
 .npmrc
+app/ios/tmp.xcconfig

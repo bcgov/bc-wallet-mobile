@@ -9,6 +9,7 @@ import {
 } from '@aries-framework/core'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
+import Bugsnag from '@bugsnag/react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNavigation } from '@react-navigation/core'
 import { CommonActions } from '@react-navigation/native'
@@ -149,7 +150,8 @@ const Splash: React.FC = () => {
       if (data) {
         return JSON.parse(data)
       }
-    } catch {
+    } catch (e: unknown) {
+      Bugsnag.notify(e as Error)
       return
     }
   }
@@ -272,6 +274,7 @@ const Splash: React.FC = () => {
           })
         )
       } catch (e: unknown) {
+        Bugsnag.notify(e as Error)
         setInitErrorType(InitErrorTypes.Onboarding)
         setInitError(e as Error)
       }
@@ -335,6 +338,7 @@ const Splash: React.FC = () => {
           })
         )
       } catch (e: unknown) {
+        Bugsnag.notify(e as Error)
         setInitErrorType(InitErrorTypes.Agent)
         setInitError(e as Error)
       }

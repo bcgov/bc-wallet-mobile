@@ -20,6 +20,8 @@ import '@formatjs/intl-datetimeformat/polyfill'
 import '@formatjs/intl-datetimeformat/locale-data/en' // locale-data for en
 import '@formatjs/intl-datetimeformat/add-all-tz' // Add ALL tz data
 
+import BugsnagPluginReactNavigation from '@bugsnag/plugin-react-navigation'
+import Bugsnag from '@bugsnag/react-native'
 import { NavigationContainer } from '@react-navigation/native'
 import React from 'react'
 import { AppRegistry } from 'react-native'
@@ -30,6 +32,16 @@ import qcwallet from './src/'
 const { theme } = qcwallet
 
 const { ColorPallet } = theme
+
+Bugsnag.start({
+  plugins: [new BugsnagPluginReactNavigation()],
+})
+
+const ErrorBoundary = Bugsnag.getPlugin('react').createErrorBoundary(React)
+
+const { createNavigationContainer } = Bugsnag.getPlugin('reactNavigation')
+
+const BugsnagNavigationContainer = createNavigationContainer(NavigationContainer)
 
 const navigationTheme = {
   dark: true,
@@ -45,9 +57,11 @@ const navigationTheme = {
 
 const Base = () => {
   return (
-    <NavigationContainer theme={navigationTheme}>
-      <App />
-    </NavigationContainer>
+    <BugsnagNavigationContainer theme={navigationTheme}>
+      <ErrorBoundary>
+        <App />
+      </ErrorBoundary>
+    </BugsnagNavigationContainer>
   )
 }
 AppRegistry.registerComponent(appName, () => Base)

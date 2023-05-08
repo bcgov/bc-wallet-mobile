@@ -72,6 +72,7 @@
 		56A83D5C27D95E24002FE8FE /* BCSans-BoldItalic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-BoldItalic.ttf"; path = "../src/assets/fonts/BCSans-BoldItalic.ttf"; sourceTree = "<group>"; };
 		56A83D5D27D95E24002FE8FE /* BCSans-Italic.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "BCSans-Italic.ttf"; path = "../src/assets/fonts/BCSans-Italic.ttf"; sourceTree = "<group>"; };
 		62AD74D113A13E6D7ECD73DC /* Pods-AriesBifold.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AriesBifold.release.xcconfig"; path = "Target Support Files/Pods-AriesBifold/Pods-AriesBifold.release.xcconfig"; sourceTree = "<group>"; };
+		6F99AD4C2A0572BB0073B4BF /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		6FAA896629281E3E002D887C /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		6FAA896B29281E60002D887C /* fr-CA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "fr-CA"; path = "fr-CA.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = AriesBifold/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -166,6 +167,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				6F99AD4C2A0572BB0073B4BF /* Config.xcconfig */,
 				566FB1F1273B158E003E9BEE /* Media.xcassets */,
 				13B07FAE1A68108700A75B9A /* AriesBifold */,
 				00E356EF1AD99517003FC87E /* AriesBifoldTests */,
@@ -237,6 +239,7 @@
 				F5B7D67D9BBF4C5FE692BB29 /* [CP] Embed Pods Frameworks */,
 				EB396EB204E0E4C9F6307F29 /* [CP] Copy Pods Resources */,
 				433E774026557E1B00F569EE /* Embed Frameworks */,
+				9D840F3D7FAB4E2AA01DCE7C /* Upload source maps to Bugsnag */,
 			);
 			buildRules = (
 			);
@@ -323,7 +326,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
+			shellScript = "export EXTRA_PACKAGER_ARGS=\"--sourcemap-output $TMPDIR/$(md5 -qs \"$CONFIGURATION_BUILD_DIR\")-main.jsbundle.map\"\nset -e\n\nexport NODE_BINARY=node\n../node_modules/react-native/scripts/react-native-xcode.sh\n";
 		};
 		4EC0E8613979411464217753 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -380,6 +383,20 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AriesBifold-AriesBifoldTests/Pods-AriesBifold-AriesBifoldTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		9D840F3D7FAB4E2AA01DCE7C /* Upload source maps to Bugsnag */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Upload source maps to Bugsnag";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SOURCE_MAP=\"$TMPDIR/$(md5 -qs \"$CONFIGURATION_BUILD_DIR\")-main.jsbundle.map\" ../node_modules/@bugsnag/react-native/bugsnag-react-native-xcode.sh";
 		};
 		B9A54C90D3BE82CD93B12CE2 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -638,6 +655,7 @@
 		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6F99AD4C2A0572BB0073B4BF /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -703,6 +721,7 @@
 		};
 		83CBBA211A601CBA00E9B192 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6F99AD4C2A0572BB0073B4BF /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;

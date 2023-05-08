@@ -1,5 +1,6 @@
 package ca.qc.gouv.portefeuilleqc;
 
+import com.bugsnag.android.Bugsnag;
 import android.app.Application;
 import android.content.Context;
 import com.facebook.react.PackageList;
@@ -44,6 +45,7 @@ public class MainApplication extends Application implements ReactApplication {
   @Override
   public void onCreate() {
     super.onCreate();
+    Bugsnag.start(this);
     SoLoader.init(this, /* native exopackage */ false);
   }
 }
