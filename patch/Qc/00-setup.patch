@@ -7,7 +7,7 @@ index 4cfa156..30dc17d 100644
  			buildSettings = {
  				BUNDLE_LOADER = "$(TEST_HOST)";
 -				DEVELOPMENT_TEAM = "";
-+				DEVELOPMENT_TEAM = "467G3V9649";
++				DEVELOPMENT_TEAM = "2RST8749NS";
  				GCC_PREPROCESSOR_DEFINITIONS = (
  					"DEBUG=1",
  					"$(inherited)",
@@ -16,7 +16,7 @@ index 4cfa156..30dc17d 100644
  				BUNDLE_LOADER = "$(TEST_HOST)";
  				COPY_PHASE_STRIP = NO;
 -				DEVELOPMENT_TEAM = "";
-+				DEVELOPMENT_TEAM = "467G3V9649";
++				DEVELOPMENT_TEAM = "2RST8749NS";
  				INFOPLIST_FILE = AriesBifoldTests/Info.plist;
  				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
  				LD_RUNPATH_SEARCH_PATHS = (
@@ -30,7 +30,7 @@ index 4cfa156..30dc17d 100644
 +				CODE_SIGN_IDENTITY = "Apple Development";
 +				CODE_SIGN_STYLE = Automatic;
 +				CURRENT_PROJECT_VERSION = 5;
-+				DEVELOPMENT_TEAM = 467G3V9649;
++				DEVELOPMENT_TEAM = 2RST8749NS;
  				ENABLE_BITCODE = NO;
  				FRAMEWORK_SEARCH_PATHS = (
  					"$(inherited)",
@@ -39,7 +39,7 @@ index 4cfa156..30dc17d 100644
  					"-lc++",
  				);
 -				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
-+				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuilleqc;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuillemobileqc;
  				PRODUCT_NAME = AriesBifold;
 -				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet";
 +				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -52,7 +52,7 @@ index 4cfa156..30dc17d 100644
  				CODE_SIGN_STYLE = Manual;
 -				CURRENT_PROJECT_VERSION = 1;
 +				CURRENT_PROJECT_VERSION = 5;
-+				DEVELOPMENT_TEAM = 467G3V9649;
++				DEVELOPMENT_TEAM = 2RST8749NS;
  				ENABLE_BITCODE = NO;
  				FRAMEWORK_SEARCH_PATHS = (
  					"$(inherited)",
@@ -61,7 +61,7 @@ index 4cfa156..30dc17d 100644
  					"-lc++",
  				);
 -				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
-+				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuilleqc;
++				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuillemobileqc;
  				PRODUCT_NAME = AriesBifold;
 -				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet";
 +				PROVISIONING_PROFILE_SPECIFIER = PortefeuilleQcProvisioning;
