@@ -3,6 +3,7 @@ import { types } from 'aries-bifold'
 type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
 type MetaOverlay = types.oca.MetaOverlay
 type FormatOverlay = types.oca.FormatOverlay
+type CharacterEncodingOverlay = types.oca.CharacterEncodingOverlay
 type LabelOverlay = types.oca.LabelOverlay
 type CaptureBaseOverlay = types.oca.CaptureBaseOverlay
 
@@ -118,7 +119,7 @@ const memberCardBundle = {
   ],
 }
 
-const createPersonCredentialBundle = (backgroundImageSource: string, verified = true) => {
+const createPersonCredentialBundle = (backgroundImageSource: string, verified = true, dev = false) => {
   const metaOverlays: MetaOverlay[] = []
   if (verified) {
     metaOverlays.push({
@@ -151,7 +152,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       issuerName: 'Digital Identity and Trust Program',
     })
   }
-  return {
+  const overlay = {
     captureBase: {
       captureBase: '',
       type: 'spec/overlays/capture_base/1.0',
@@ -191,8 +192,17 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         language: 'en',
         attributeFormats: {
           birthdate_dateint: 'YYYYMMDD',
+          picture: 'image/png'
         },
       } as FormatOverlay,
+      {
+        captureBase: '',
+        type: 'spec/overlays/character_encoding/1.0',
+        language: 'en',
+        attributeCharacterEncoding: {
+          picture: 'base64'
+        },
+      } as CharacterEncodingOverlay,
       {
         captureBase: '',
         type: 'spec/overlays/label/1.0',
@@ -214,6 +224,10 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       } as LabelOverlay,
     ],
   }
+  if (dev && overlay.captureBase.attributes){
+    overlay.captureBase.attributes.picture = 'Binary' 
+  }
+  return overlay
 }
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -221,6 +235,9 @@ const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./perso
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const digitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'))
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const devDigitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'), true, true)
 
 export default {
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/370
@@ -241,9 +258,9 @@ export default {
   [CREDENTIALS.PILOT_INVITE_DEV]: digitalIdInvitationCardBundle /* (DEV) */,
   [CREDENTIALS.PILOT_INVITE_TEST]: digitalIdInvitationCardBundle /* (TEST) */,
   [CREDENTIALS.PILOT_INVITE_PROD]: digitalIdInvitationCardBundle /* (PROD) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: digitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_TEST]: digitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_PROD]: digitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: devDigitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_TEST]: devDigitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_PROD]: devDigitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.BC_DIGITAL_ID_DEV]: digitalIdCardBundle /* (DEV) */,
   [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
