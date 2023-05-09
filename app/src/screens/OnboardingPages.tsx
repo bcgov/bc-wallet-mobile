@@ -1,4 +1,4 @@
-import { useStore, Button, ButtonType, Theme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
+import { useStore, Button, ButtonType, ITheme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
 import React from 'react'
 import { Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
@@ -8,7 +8,7 @@ import CredentialList from '../assets/img/credential-list.svg'
 import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'
 
-const EndPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']) => {
+const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme']) => {
   const [store] = useStore()
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
@@ -52,7 +52,7 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: Theme['OnboardingTheme']
   )
 }
 
-const StartPages = (theme: Theme) => {
+const StartPages = (theme: ITheme) => {
   const defaultStyle = createStyles(theme)
   return (
     <ScrollView style={{ padding: 20, paddingTop: 30 }}>
@@ -88,7 +88,7 @@ const guides: Array<{
   },
 ]
 
-const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: Theme['OnboardingTheme']) => {
+const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: ITheme['OnboardingTheme']) => {
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -106,7 +106,7 @@ const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, 
   )
 }
 
-export const pages = (onTutorialCompleted: GenericFn, theme: Theme): Array<Element> => {
+export const pages = (onTutorialCompleted: GenericFn, theme: ITheme): Array<Element> => {
   return [
     StartPages(theme),
     ...guides.map((g) => CreatePageWith(g.image, g.title, g.body, theme)),

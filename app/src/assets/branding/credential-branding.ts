@@ -3,6 +3,7 @@ import { types } from 'aries-bifold'
 type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
 type MetaOverlay = types.oca.MetaOverlay
 type FormatOverlay = types.oca.FormatOverlay
+type CharacterEncodingOverlay = types.oca.CharacterEncodingOverlay
 type LabelOverlay = types.oca.LabelOverlay
 type CaptureBaseOverlay = types.oca.CaptureBaseOverlay
 
@@ -64,10 +65,10 @@ const memberCardOverlay: CardLayoutOverlay11 = {
   captureBase: '',
   type: 'spec/overlays/card_layout/1.1',
   logo: {
-    src: require('./lsbc-logo.png'),
+    src: require('./lsbc-logo.jpg'),
   },
-  primaryBackgroundColor: '#00698c',
-  secondaryBackgroundColor: '#1a2930',
+  primaryBackgroundColor: '#23485A',
+  secondaryBackgroundColor: '#00698C',
   backgroundImage: {
     src: require('./lsbc-background-image.jpg'),
   },
@@ -156,7 +157,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       issuerName: 'Digital Identity and Trust Program',
     })
   }
-  return {
+  const overlay = {
     captureBase: {
       captureBase: '',
       type: 'spec/overlays/capture_base/1.0',
@@ -196,8 +197,17 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         language: 'en',
         attributeFormats: {
           birthdate_dateint: 'YYYYMMDD',
+          picture: 'image/png'
         },
       } as FormatOverlay,
+      {
+        captureBase: '',
+        type: 'spec/overlays/character_encoding/1.0',
+        language: 'en',
+        attributeCharacterEncoding: {
+          picture: 'base64'
+        },
+      } as CharacterEncodingOverlay,
       {
         captureBase: '',
         type: 'spec/overlays/label/1.0',
@@ -219,6 +229,10 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       } as LabelOverlay,
     ],
   }
+  if (demo && overlay.captureBase.attributes){
+    overlay.captureBase.attributes.picture = 'Binary' 
+  }
+  return overlay
 }
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -258,5 +272,5 @@ export default {
   [CREDENTIALS.BC_DIGITAL_ID_DEV]: digitalIdCardBundle /* (DEV) */,
   [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
-  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */
+  [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
 }
