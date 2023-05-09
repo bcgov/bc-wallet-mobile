@@ -241,6 +241,7 @@ const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./perso
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const digitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'))
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const demoDigitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'), true, true)
 
 const memberCardBundle = createMemberCardBundle()
