@@ -197,7 +197,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         language: 'en',
         attributeFormats: {
           birthdate_dateint: 'YYYYMMDD',
-          picture: 'image/png'
+          picture: 'image/jpeg'
         },
       } as FormatOverlay,
       {
@@ -270,8 +270,8 @@ export default {
   [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: demoDigitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_TEST]: demoDigitalIdCardBundle /* (TEST) */,
   [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_PROD]: demoDigitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.BC_DIGITAL_ID_DEV]: digitalIdCardBundle /* (DEV) */,
-  [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
+  [CREDENTIALS.BC_DIGITAL_ID_DEV]: demoDigitalIdCardBundle /* (DEV) */,
+  [CREDENTIALS.BC_DIGITAL_ID_SIT]: demoDigitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
   [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
 }
