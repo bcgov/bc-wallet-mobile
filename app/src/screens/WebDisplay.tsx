@@ -15,12 +15,12 @@ const WebDisplay: React.FC<WebDisplayProps> = ({ destinationUrl, exitUrl, visibl
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      marginTop: 54,
+      marginTop: 32,
     },
   })
 
   return (
-    <Modal animationType="slide" transparent={true} visible={visible}>
+    <Modal animationType="slide" transparent={false} visible={visible}>
       <WebView
         style={styles.container}
         source={{ uri: destinationUrl }}
