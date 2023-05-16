@@ -94,13 +94,13 @@ const studentCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Student',
-      issuerName: 'BestBC College',
+      issuerName: 'BestBC College DEMO',
     } as MetaOverlay,
     {
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Student',
-      issuerName: 'BestBC College',
+      issuerName: 'BestBC College DEMO',
     } as MetaOverlay,
     studentCardOverlay,
   ],
@@ -114,7 +114,7 @@ const createMemberCardBundle = (demo = false) => {
         type: 'spec/overlays/meta/1.0',
         language: 'en',
         name: 'Member Card',
-        issuerName: 'Law Society of BC',
+        issuerName: demo ? 'Law Society of BC DEMO' : 'Law Society of BC',
         watermark: demo ? "NON-PRODUCTION" : undefined
       } as MetaOverlay,
       memberCardOverlay,
@@ -130,7 +130,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Person',
-      issuerName: 'Service BC',
+      issuerName: demo ? 'Service BC DEMO' : 'Service BC',
       watermark: demo ? "NON-PRODUCTION" : undefined,
     })
     metaOverlays.push({
@@ -138,7 +138,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Personne',
-      issuerName: 'Service BC',
+      issuerName: demo ? 'Service BC DEMO' : 'Service BC',
       watermark: demo ? "NON-PRODUCTION (FR)" : undefined
     })
   } else {
