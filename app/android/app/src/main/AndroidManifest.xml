@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ca.qc.gouv.portefeuilleqc">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ca.qc.gouv.portefeuillemobileqc">
   <uses-permission android:name="android.permission.USE_BIOMETRICS" />
   <uses-permission android:name="android.permission.USE_FINGERPRINT" />
   <uses-permission android:name="android.permission.INTERNET"/>

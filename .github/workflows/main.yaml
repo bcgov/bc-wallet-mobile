@@ -353,7 +353,7 @@ jobs:
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
           GOOGLE_API_CREDENTIALS: "api_keys.json"
-          ANDROID_PACKAGE_NAME: "ca.qc.gouv.portefeuilleqc"
+          ANDROID_PACKAGE_NAME: "ca.qc.gouv.portefeuillemobileqc"
           ANDROID_BUNDLE_PATH: "./android/app/build/outputs/bundle/release/app-release.aab"
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}

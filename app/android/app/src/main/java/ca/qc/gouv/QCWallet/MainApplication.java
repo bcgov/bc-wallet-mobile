@@ -1,4 +1,4 @@
-package ca.qc.gouv.portefeuilleqc;
+package ca.qc.gouv.portefeuillemobileqc;
 
 import com.bugsnag.android.Bugsnag;
 import android.app.Application;

@@ -149,7 +149,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "ca.qc.gouv.portefeuilleqc"
+        applicationId "ca.qc.gouv.portefeuillemobileqc"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1

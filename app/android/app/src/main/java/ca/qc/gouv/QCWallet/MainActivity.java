@@ -1,4 +1,4 @@
-package ca.qc.gouv.portefeuilleqc;
+package ca.qc.gouv.portefeuillemobileqc;
 import android.os.Bundle;
 import android.system.ErrnoException;
 import android.system.Os;

@@ -98,7 +98,7 @@ index 235e7e0..dc77d51 100644
 --- a/app/android/app/src/main/java/ca/qc/gouv/QCWallet/MainApplication.java
 +++ b/app/android/app/src/main/java/ca/qc/gouv/QCWallet/MainApplication.java
 @@ -1,5 +1,6 @@
- package ca.qc.gouv.portefeuilleqc;
+ package ca.qc.gouv.portefeuillemobileqc;
  
 +import com.bugsnag.android.Bugsnag;
  import android.app.Application;
