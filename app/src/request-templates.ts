@@ -1,6 +1,12 @@
 import { PredicateType } from '@aries-framework/core'
 import { ProofRequestTemplate, ProofRequestType } from 'aries-bifold'
 
+const calculatePreviousYear = (yearOffset: number) => {
+  const pastDate = new Date()
+  pastDate.setFullYear(pastDate.getFullYear() - yearOffset)
+  return parseInt(pastDate.toISOString().split('T')[0].replace(/-/g, ''))
+}
+
 export const proofRequestTemplates: Array<ProofRequestTemplate> = [
   {
     id: 'BC:5:FullName:0.0.1:indy',
@@ -70,7 +76,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               name: 'birthdate_dateint',
               predicateType: PredicateType.GreaterThanOrEqualTo,
-              predicateValue: 18,
+              predicateValue: calculatePreviousYear(19),
               restrictions: [
                 // IDIM Person credential
                 { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
@@ -100,7 +106,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               name: 'birthdate_dateint',
               predicateType: PredicateType.GreaterThanOrEqualTo,
-              predicateValue: 18,
+              predicateValue: calculatePreviousYear(19),
               restrictions: [
                 // IDIM Person credential
                 { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
@@ -201,7 +207,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
             {
               name: 'birthdate_dateint',
               predicateType: PredicateType.GreaterThanOrEqualTo,
-              predicateValue: 18,
+              predicateValue: calculatePreviousYear(19),
               parameterizable: true,
               restrictions: [
                 // IDIM Person credential
