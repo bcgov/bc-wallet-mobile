@@ -16,6 +16,8 @@ import EmptyList from './components/EmptyList'
 import HomeContentView from './components/HomeContentView'
 import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
+import fr from './localization/fr'
+import ptBr from './localization/pt-br'
 import { proofRequestTemplates } from './request-templates'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
@@ -27,6 +29,8 @@ import { defaultTheme as theme } from './theme'
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
+  fr: { translation: fr },
+  'pt-BR': { translation: ptBr },
 })
 
 const selectedLedgers = indyLedgers.filter((item) => !item.id.startsWith('Indicio'))
