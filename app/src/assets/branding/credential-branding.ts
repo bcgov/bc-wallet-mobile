@@ -115,7 +115,7 @@ const createMemberCardBundle = (demo = false) => {
         language: 'en',
         name: 'Member Card',
         issuerName: demo ? 'Law Society of BC DEMO' : 'Law Society of BC',
-        watermark: demo ? "NON-PRODUCTION" : undefined
+        watermark: demo ? 'NON-PRODUCTION' : undefined,
       } as MetaOverlay,
       memberCardOverlay,
     ],
@@ -131,7 +131,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       language: 'en',
       name: 'Person',
       issuerName: demo ? 'Service BC DEMO' : 'Service BC',
-      watermark: demo ? "NON-PRODUCTION" : undefined,
+      watermark: demo ? 'NON-PRODUCTION' : undefined,
     })
     metaOverlays.push({
       captureBase: '',
@@ -139,7 +139,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       language: 'fr',
       name: 'Personne',
       issuerName: demo ? 'Service BC DEMO' : 'Service BC',
-      watermark: demo ? "NON-PRODUCTION (FR)" : undefined
+      watermark: demo ? 'NON-PRODUCTION (FR)' : undefined,
     })
   } else {
     metaOverlays.push({
@@ -197,7 +197,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         language: 'en',
         attributeFormats: {
           birthdate_dateint: 'YYYYMMDD',
-          picture: 'image/jpeg'
+          picture: 'image/jpeg',
         },
       } as FormatOverlay,
       {
@@ -205,7 +205,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         type: 'spec/overlays/character_encoding/1.0',
         language: 'en',
         attributeCharacterEncoding: {
-          picture: 'base64'
+          picture: 'base64',
         },
       } as CharacterEncodingOverlay,
       {
@@ -229,8 +229,8 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       } as LabelOverlay,
     ],
   }
-  if (demo && overlay.captureBase.attributes){
-    overlay.captureBase.attributes.picture = 'Binary' 
+  if (demo && overlay.captureBase.attributes) {
+    overlay.captureBase.attributes.picture = 'Binary'
   }
   return overlay
 }
