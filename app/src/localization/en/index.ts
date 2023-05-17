@@ -39,6 +39,19 @@ const translation = {
     "EmptyList": "Your wallet is empty.",
     "AddFirstCredential": "Add your first credential"
   },
+  "Onboarding": {
+    "Welcome": "Welcome",
+    "WelcomeParagraph1": "BC Wallet lets you receive, store and use digital credentials.",
+    "WelcomeParagraph2": "It is highly secure, and helps protect your privacy online.",
+    "WelcomeParagraph3": "BC Wallet is currently in its early stages and the technology is being explored. Most people will not have a use for BC Wallet yet, because very few digital credentials are available.",
+    "StoredSecurelyTitle": "Digital credentials, stored securely",
+    "StoredSecurelyBody": "BC Wallet holds digital credentials—the digital versions of things like licenses, identities and permits.\n\nThey are stored securely, only on this device.",
+    "UsingCredentialsTitle": "Receiving and using credentials",
+    "UsingCredentialsBody": "To receive and use credentials you use the “Scan” feature in the app to scan a special QR code.\n\nInformation is sent and received over a private, encrypted connection.",
+    "PrivacyConfidentiality": "Privacy and confidentiality",
+    "PrivacyParagraph": "You approve every use of information from your BC Wallet. You also only share what is needed for a situation.\n\nThe Government of British Columbia is not told when you use your digital credentials.",
+    "GetStarted": "Get Started",
+  },
   "Screens": {
     "Onboarding": "BC Wallet",
     "Settings": "Menu",
