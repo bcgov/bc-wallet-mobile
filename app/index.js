@@ -48,11 +48,11 @@ const navigationTheme = {
 
 const Base = () => {
   return (
-    <StoreProvider initialState={initialState} reducer={reducer}>
-      <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer theme={navigationTheme}>
+      <StoreProvider initialState={initialState} reducer={reducer}>
         <App />
-      </NavigationContainer>
-    </StoreProvider>
+      </StoreProvider>
+    </NavigationContainer>
   )
 }
 AppRegistry.registerComponent(appName, () => Base)
