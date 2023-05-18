@@ -21,14 +21,12 @@ import '@formatjs/intl-datetimeformat/locale-data/en' // locale-data for en
 import '@formatjs/intl-datetimeformat/add-all-tz' // Add ALL tz data
 
 import { NavigationContainer } from '@react-navigation/native'
-import { StoreProvider } from 'aries-bifold'
 import React from 'react'
 import { AppRegistry } from 'react-native'
 
 import App from './App'
 import { name as appName } from './app.json'
 import bcwallet from './src/'
-import { initialState, reducer } from './src/store'
 
 const { theme } = bcwallet
 
@@ -49,9 +47,7 @@ const navigationTheme = {
 const Base = () => {
   return (
     <NavigationContainer theme={navigationTheme}>
-      <StoreProvider initialState={initialState} reducer={reducer}>
-        <App />
-      </StoreProvider>
+      <App />
     </NavigationContainer>
   )
 }

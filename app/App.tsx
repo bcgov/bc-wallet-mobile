@@ -12,11 +12,11 @@ import {
   NetInfo,
   NetworkProvider,
   ErrorModal,
+  StoreProvider,
   ThemeProvider,
   ConfigurationProvider,
   initLanguages,
   testIdWithKey,
-  useStore,
 } from 'aries-bifold'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -26,9 +26,9 @@ import Toast from 'react-native-toast-message'
 
 import bcwallet from './src'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
-import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
-import WebDisplay from './src/screens/WebDisplay'
-import { BCState } from './src/store'
+// import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
+// import WebDisplay from './src/screens/WebDisplay'
+import { initialState, reducer } from './src/store'
 
 const { theme, localization, configuration } = bcwallet
 
@@ -39,12 +39,11 @@ const App = () => {
     initStoredLanguage().then()
   }, [])
 
-  const [store] = useStore<BCState>()
   const [agent] = useState<Agent | undefined>(undefined)
-  const [surveyVisible, setSurveyVisible] = useState(false)
+  // const [surveyVisible, setSurveyVisible] = useState(false)
   const { t } = useTranslation()
   const { navigate } = useNavigation()
-  const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
+  // const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
 
   const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
 
@@ -61,6 +60,18 @@ const App = () => {
           testID: testIdWithKey('HelpUsingBCWallet'),
           onPress: () => Linking.openURL(helpLink),
         },
+        // {
+        //   title: t('Settings.GiveFeedback'),
+        //   accessibilityLabel: t('Settings.GiveFeedback'),
+        //   testID: testIdWithKey('GiveFeedback'),
+        //   onPress: toggleSurveyVisibility,
+        // },
+        // {
+        //   title: t('Settings.ReportAProblem'),
+        //   accessibilityLabel: t('Settings.ReportAProblem'),
+        //   testID: testIdWithKey('ReportAProblem'),
+        //   onPress: toggleSurveyVisibility,
+        // },
       ],
     },
     {
@@ -85,27 +96,6 @@ const App = () => {
     },
   ]
 
-  if (store.preferences.developerModeEnabled) {
-    const section = settings.find((item) => item.header.title === t('Settings.Help'))
-    if (section) {
-      section.data = [
-        ...section.data,
-        {
-          title: t('Settings.GiveFeedback'),
-          accessibilityLabel: t('Settings.GiveFeedback'),
-          testID: testIdWithKey('GiveFeedback'),
-          onPress: toggleSurveyVisibility,
-        },
-        {
-          title: t('Settings.ReportAProblem'),
-          accessibilityLabel: t('Settings.ReportAProblem'),
-          testID: testIdWithKey('ReportAProblem'),
-          onPress: toggleSurveyVisibility,
-        },
-      ]
-    }
-  }
-
   configuration.settings = settings
 
   useEffect(() => {
@@ -115,34 +105,36 @@ const App = () => {
   }, [])
 
   return (
-    <AgentProvider agent={agent}>
-      <ThemeProvider value={theme}>
-        <ConfigurationProvider value={configuration}>
-          <AuthProvider>
-            <NetworkProvider>
-              <StatusBar
-                barStyle="light-content"
-                hidden={false}
-                backgroundColor={theme.ColorPallet.brand.primary}
-                translucent={false}
-              />
-              <NetInfo />
-              <ErrorModal />
-              <WebDisplay
-                destinationUrl={surveyMonkeyUrl}
-                exitUrl={surveyMonkeyExitUrl}
-                visible={surveyVisible}
-                onClose={toggleSurveyVisibility}
-              />
-              <TourProvider steps={homeTourSteps} overlayColor={'black'} overlayOpacity={0.6}>
-                <RootStack />
-              </TourProvider>
-              <Toast topOffset={15} config={toastConfig} />
-            </NetworkProvider>
-          </AuthProvider>
-        </ConfigurationProvider>
-      </ThemeProvider>
-    </AgentProvider>
+    <StoreProvider initialState={initialState} reducer={reducer}>
+      <AgentProvider agent={agent}>
+        <ThemeProvider value={theme}>
+          <ConfigurationProvider value={configuration}>
+            <AuthProvider>
+              <NetworkProvider>
+                <StatusBar
+                  barStyle="light-content"
+                  hidden={false}
+                  backgroundColor={theme.ColorPallet.brand.primary}
+                  translucent={false}
+                />
+                <NetInfo />
+                <ErrorModal />
+                {/* <WebDisplay
+                  destinationUrl={surveyMonkeyUrl}
+                  exitUrl={surveyMonkeyExitUrl}
+                  visible={surveyVisible}
+                  onClose={toggleSurveyVisibility}
+                /> */}
+                <TourProvider steps={homeTourSteps} overlayColor={'black'} overlayOpacity={0.6}>
+                  <RootStack />
+                </TourProvider>
+                <Toast topOffset={15} config={toastConfig} />
+              </NetworkProvider>
+            </AuthProvider>
+          </ConfigurationProvider>
+        </ThemeProvider>
+      </AgentProvider>
+    </StoreProvider>
   )
 }
 
