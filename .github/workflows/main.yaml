@@ -245,11 +245,10 @@ jobs:
 
       - name: Upload iOS artifact
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/ios
         uses: actions/upload-artifact@v3
         with:
           name: ios-artifact
-          path: export/BCWallet.ipa
+          path: app/ios/export/BCWallet.ipa
           if-no-files-found: error
           retention-days: 7
 
@@ -363,11 +362,10 @@ jobs:
 
       - name: Upload Android artifact
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/android
         uses: actions/upload-artifact@v3
         with:
           name: android-artifact
-          path: app/build/outputs/bundle/release/app-release.aab
+          path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
 
