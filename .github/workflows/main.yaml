@@ -374,15 +374,15 @@ jobs:
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     steps:
-      - name: 'Download iOS artifact'
+      - name: Download iOS artifact
         uses: actions/download-artifact@v3
         with:
-          name: 'ios-artifact'
+          name: ios-artifact
       
-      - name: 'Download Android artifact'
+      - name: Download Android artifact
         uses: actions/download-artifact@v3
         with:
-          name: 'android-artifact'
+          name: android-artifact
 
       - name: Ship iOS to SauceLabs
         env:
