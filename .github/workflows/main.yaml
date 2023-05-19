@@ -371,7 +371,6 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-
   ship-to-saucelabs:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
