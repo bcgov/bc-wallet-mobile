@@ -48,7 +48,6 @@ jobs:
           PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
 
   build-ios:
-    # if: ${{ false }}  # disable for now
     needs: [check-ios-secrets]
     runs-on: macos-latest
     steps:
@@ -244,19 +243,15 @@ jobs:
           --beta-group "The Team" "IDIM Team" \
           --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
-      - name: Ship to SauceLabs
+      - name: Upload iOS artifact
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
-        env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-        run: |
-          curl \
-          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-          -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-          --form "payload=@export/BCWallet.ipa" \
-          --form "name=BCWallet-$GITHUB_RUN_NUMBER.ipa" \
-          --form "description=iOS BC Wallet app"
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-artifact
+          path: export/BCWallet.ipa
+          if-no-files-found: error
+          retention-days: 7
 
   build-android:
     # if: ${{ false }}  # disable for now
@@ -366,10 +361,34 @@ jobs:
         run: |
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           npx @bcgov/gpublish
-
-      - name: Ship to SauceLabs
+      
+      - name: Upload Android artifact
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-artifact
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+      
+
+  ship-to-saucelabs:
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    needs: [build-ios, build-android]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: 'Download iOS artifact'
+        uses: actions/download-artifact@v3
+        with:
+          name: 'ios-artifact'
+      
+      - name: 'Download Android artifact'
+        uses: actions/download-artifact@v3
+        with:
+          name: 'android-artifact'
+
+      - name: Ship iOS to SauceLabs
         env:
           SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
           SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
@@ -377,13 +396,26 @@ jobs:
           curl \
           -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
           -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-          --form "payload=@app/build/outputs/bundle/release/app-release.aab" \
+          --form "payload=@BCWallet.ipa" \
+          --form "name=BCWallet-$GITHUB_RUN_NUMBER.ipa" \
+          --form "description=iOS BC Wallet app"
+
+      - name: Ship Android to SauceLabs
+        env:
+          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
+          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+        run: |
+          curl \
+          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+          -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+          --form "payload=@app-release.aab" \
           --form "name=BCWallet-$GITHUB_RUN_NUMBER.aab" \
           --form "description=Android Bifold BC wallet app"
 
+  
   run-on-device-tests:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-    needs: [build-ios, build-android]
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    needs: [ship-to-saucelabs]
     runs-on: ubuntu-22.04
     strategy:
       max-parallel: 1
