@@ -254,7 +254,6 @@ jobs:
           retention-days: 7
 
   build-android:
-    # if: ${{ false }}  # disable for now
     needs: [check-android-secrets]
     runs-on: ubuntu-22.04
     # container:
@@ -361,7 +360,7 @@ jobs:
         run: |
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           npx @bcgov/gpublish
-      
+
       - name: Upload Android artifact
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
@@ -371,7 +370,7 @@ jobs:
           path: app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
-      
+
 
   ship-to-saucelabs:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -412,7 +411,6 @@ jobs:
           --form "name=BCWallet-$GITHUB_RUN_NUMBER.aab" \
           --form "description=Android Bifold BC wallet app"
 
-  
   run-on-device-tests:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [ship-to-saucelabs]
