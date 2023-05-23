@@ -3,7 +3,7 @@ name: Native Build & Test
 env:
   cacheId: "2" # increment to expire the cache
   appBuildNumber: ${{ github.run_number }}
-  appBuildVersion: "1.0.0"
+  appBuildVersion: "0.0.1"
 
 on:
   workflow_dispatch:
@@ -375,7 +375,7 @@ jobs:
           --form "name=QCWallet-$GITHUB_RUN_NUMBER.aab" \
 
   release:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
     runs-on: ubuntu-latest
     steps:
