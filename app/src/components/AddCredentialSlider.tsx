@@ -109,6 +109,7 @@ const AddCredentialSlider: React.FC = () => {
           <TouchableOpacity
             testID={testIdWithKey('Close')}
             accessibilityLabel={t('Global.Close')}
+            accessibilityRole={'button'}
             onPress={deactivateSlider}
             hitSlop={hitSlop}
           >
