@@ -35,6 +35,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import VersionCheck from 'react-native-version-check'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
@@ -83,6 +84,8 @@ const Splash: React.FC = () => {
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
+  const [currentVersion, setCurrentVersion] = useState<string | null>(null)
+  const [latestVersion, setLatestVersion] = useState<string | null>(null)
   const steps: string[] = [
     t('Init.Starting'),
     t('Init.CheckingAuth'),
@@ -119,12 +122,14 @@ const Splash: React.FC = () => {
       flex: 2,
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'flex-start',
+      justifyContent: 'space-between',
       width: '60%',
       minHeight: 37,
     },
     stepTextContainer: {
       marginTop: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
     stepText: {
       fontFamily: 'BCSans-Regular',
@@ -187,6 +192,20 @@ const Splash: React.FC = () => {
       })
     }
   }
+
+  useEffect(() => {
+    const VersionCheckSplash = async () => {
+      try {
+        setCurrentVersion(VersionCheck.getCurrentVersion())
+        VersionCheck.getLatestVersion().then((latestVersion) => {
+          setLatestVersion(latestVersion)
+        })
+      } catch (e) {
+        Bugsnag.notify(e as Error)
+      }
+    }
+    VersionCheckSplash()
+  }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry, initAgentCount])
 
   useEffect(() => {
     const initOnboarding = async (): Promise<void> => {
@@ -358,7 +377,7 @@ const Splash: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.splashContainer}>
-      <View style={{ flex: 2 }}>
+      <View style={{ flex: 2, width: '100%' }}>
         {initError ? (
           <View style={styles.errorBoxContainer}>
             <InfoBox
@@ -378,9 +397,17 @@ const Splash: React.FC = () => {
         <Image source={require('../assets/img/Quebec.png')} style={styles.img} />
       </View>
       <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
-        <ProgressBar progressPercent={progressPercent} />
-        <View style={styles.stepTextContainer}>
-          <Text style={styles.stepText}>{stepText}</Text>
+        <View style={{ flex: 1, width: '100%', alignContent: 'center' }}>
+          <View>
+            <ProgressBar progressPercent={progressPercent} />
+          </View>
+          <View style={styles.stepTextContainer}>
+            <Text style={styles.stepText}>{stepText}</Text>
+          </View>
+        </View>
+        <View>
+          <Text style={styles.stepText}>Actuel: {currentVersion}v</Text>
+          {latestVersion && <Text style={styles.stepText}>Disponible: {latestVersion}v</Text>}
         </View>
       </View>
     </SafeAreaView>
