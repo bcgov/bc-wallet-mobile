@@ -229,14 +229,12 @@ jobs:
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
-          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_RZ }}
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
           app-store-connect publish \
-          --apple-id ${{ secrets.APPLE_ID }} \
-          --password ${{ secrets.APPLE_ID_PASSWD }} \
           --enable-package-validation \
           --max-build-processing-wait 10 \
           --testflight \
@@ -378,7 +376,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ios-artifact
-      
+
       - name: Download Android artifact
         uses: actions/download-artifact@v3
         with:
