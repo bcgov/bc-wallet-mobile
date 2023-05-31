@@ -1,6 +1,6 @@
 import { Button, ButtonType, ITheme, createStyles, GenericFn, testIdWithKey, useStore } from 'aries-bifold'
 import React from 'react'
-import { useTranslation, TFunction } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { SvgProps } from 'react-native-svg'
@@ -10,13 +10,9 @@ import ScanShare from '../assets/img/scan-share.svg'
 import SecureImage from '../assets/img/secure-image.svg'
 import { defaultTheme } from '../theme'
 
-const endPage = (
-  onTutorialCompleted: GenericFn,
-  theme: ITheme['OnboardingTheme'],
-  t: TFunction<'translation', undefined>
-) => {
+const endPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme']) => {
   const [store] = useStore()
-
+  const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -54,7 +50,8 @@ const endPage = (
   )
 }
 
-const startPages = (theme: ITheme, t: TFunction<'translation', undefined>) => {
+const startPages = (theme: ITheme) => {
+  const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
   return (
     <ScrollView style={{ padding: 20, paddingTop: 30 }}>
@@ -75,23 +72,18 @@ const guides: Array<{
 }> = [
   {
     image: CredentialList,
-    title: 'SecondPageTitle',
-    body: 'SecondPageBody',
+    title: 'OnboardingPages.SecondPageTitle',
+    body: 'OnboadingPages.SecondPageBody',
   },
   {
     image: ScanShare,
-    title: 'ThirdPageTitle',
-    body: 'ThirdPageBogy',
+    title: 'OnboadingPages.ThirdPageTitle',
+    body: 'OnboardingPages.ThirdPageBody',
   },
 ]
 
-const createPageWith = (
-  image: React.FC<SvgProps>,
-  title: string,
-  body: string,
-  theme: ITheme['OnboardingTheme'],
-  t: TFunction<'translation', undefined>
-) => {
+const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, theme: ITheme['OnboardingTheme']) => {
+  const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -102,18 +94,17 @@ const createPageWith = (
     <ScrollView style={{ padding: 20 }}>
       <View style={{ alignItems: 'center' }}>{image(imageDisplayOptions)}</View>
       <View style={{ marginBottom: 20 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('OnboardingPages.' + title)}</Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('OnboardingPages.' + body)}</Text>
+        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t(title)}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t(body)}</Text>
       </View>
     </ScrollView>
   )
 }
 
 export const pages = (onTutorialCompleted: GenericFn, theme: ITheme): Array<Element> => {
-  const { t } = useTranslation()
   return [
-    startPages(theme, t),
-    ...guides.map((g) => createPageWith(g.image, g.title, g.body, theme, t)),
-    endPage(onTutorialCompleted, theme, t),
+    startPages(theme),
+    ...guides.map((g) => CreatePageWith(g.image, g.title, g.body, theme)),
+    endPage(onTutorialCompleted, theme),
   ]
 }

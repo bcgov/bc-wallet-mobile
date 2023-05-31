@@ -68,6 +68,7 @@ const BrandColors: IBrandColors = {
   secondaryBackground: '#FFFFFF',
   modalPrimaryBackground: '#FFFFFF',
   modalSecondaryBackground: '#F1F1F2',
+  modalIcon: GrayscaleColors.darkGrey,
   link: '#095797',
   modalPrimary: '#095797',
   modalSecondary: '#FFFFFFFF',
@@ -179,6 +180,11 @@ export const TextTheme: ITextTheme = {
   modalHeadingThree: {
     fontSize: 26,
     fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  popupModalText: {
+    fontSize: 18,
+    fontWeight: 'normal',
     color: ColorPallet.grayscale.darkGrey,
   },
 }
