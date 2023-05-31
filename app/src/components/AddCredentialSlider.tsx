@@ -1,11 +1,13 @@
 import { CredentialMetadataKeys, CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import { useTheme, Screens, Stacks } from 'aries-bifold'
+import { useTheme, Screens, Stacks, testIdWithKey } from 'aries-bifold'
 import React, { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { hitSlop } from '../constants'
 import { BCWalletEventTypes } from '../events/eventTypes'
 import { showBCIDSelector } from '../helpers/BCIDHelper'
 import { useTranslation } from 'react-i18next'
@@ -105,7 +107,13 @@ const AddCredentialSlider: React.FC = () => {
       <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-          <TouchableOpacity onPress={deactivateSlider}>
+          <TouchableOpacity
+            testID={testIdWithKey('Close')}
+            accessibilityLabel={t('Global.Close')}
+            accessibilityRole={'button'}
+            onPress={deactivateSlider}
+            hitSlop={hitSlop}
+          >
             <Icon name="window-close" size={35} style={styles.drawerRowItem}></Icon>
           </TouchableOpacity>
           <Text style={styles.drawerTitleText}>{t('CredentialDetails.Choose')}</Text>

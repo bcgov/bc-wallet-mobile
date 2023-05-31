@@ -3,6 +3,7 @@ import { types } from 'aries-bifold'
 type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
 type MetaOverlay = types.oca.MetaOverlay
 type FormatOverlay = types.oca.FormatOverlay
+type CharacterEncodingOverlay = types.oca.CharacterEncodingOverlay
 type LabelOverlay = types.oca.LabelOverlay
 type CaptureBaseOverlay = types.oca.CaptureBaseOverlay
 
@@ -93,32 +94,35 @@ const studentCardBundle = {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Student',
-      issuerName: 'BestBC College',
+      issuerName: 'BestBC College DEMO',
     } as MetaOverlay,
     {
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Student',
-      issuerName: 'BestBC College',
+      issuerName: 'BestBC College DEMO',
     } as MetaOverlay,
     studentCardOverlay,
   ],
 }
 
-const memberCardBundle = {
-  captureBase: {} as CaptureBaseOverlay,
-  overlays: [
-    {
-      type: 'spec/overlays/meta/1.0',
-      language: 'en',
-      name: 'Member Card',
-      issuerName: 'Law Society of British Columbia',
-    } as MetaOverlay,
-    memberCardOverlay,
-  ],
+const createMemberCardBundle = (demo = false) => {
+  return {
+    captureBase: {} as CaptureBaseOverlay,
+    overlays: [
+      {
+        type: 'spec/overlays/meta/1.0',
+        language: 'en',
+        name: 'Member Card',
+        issuerName: demo ? 'Law Society of BC DEMO' : 'Law Society of BC',
+        watermark: demo ? 'NON-PRODUCTION' : undefined,
+      } as MetaOverlay,
+      memberCardOverlay,
+    ],
+  }
 }
 
-const createPersonCredentialBundle = (backgroundImageSource: string, verified = true) => {
+const createPersonCredentialBundle = (backgroundImageSource: string, verified = true, demo = false) => {
   const metaOverlays: MetaOverlay[] = []
   if (verified) {
     metaOverlays.push({
@@ -126,14 +130,16 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Person',
-      issuerName: 'Service BC',
+      issuerName: demo ? 'Service BC DEMO' : 'Service BC',
+      watermark: demo ? 'NON-PRODUCTION' : undefined,
     })
     metaOverlays.push({
       captureBase: '',
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Personne',
-      issuerName: 'Service BC',
+      issuerName: demo ? 'Service BC DEMO' : 'Service BC',
+      watermark: demo ? 'NON-PRODUCTION (FR)' : undefined,
     })
   } else {
     metaOverlays.push({
@@ -151,7 +157,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       issuerName: "Programme d'identité numérique et de confiance",
     })
   }
-  return {
+  const overlay = {
     captureBase: {
       captureBase: '',
       type: 'spec/overlays/capture_base/1.0',
@@ -191,6 +197,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         language: 'en',
         attributeFormats: {
           birthdate_dateint: 'YYYYMMDD',
+          picture: 'image/jpeg',
         },
       } as FormatOverlay,
       {
@@ -201,6 +208,14 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
           birthdate_dateint: 'DDMMYYYY',
         },
       } as FormatOverlay,
+      {
+        captureBase: '',
+        type: 'spec/overlays/character_encoding/1.0',
+        language: 'en',
+        attributeCharacterEncoding: {
+          picture: 'base64',
+        },
+      } as CharacterEncodingOverlay,
       {
         captureBase: '',
         type: 'spec/overlays/label/1.0',
@@ -222,6 +237,10 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
       } as LabelOverlay,
     ],
   }
+  if (demo && overlay.captureBase.attributes) {
+    overlay.captureBase.attributes.picture = 'Binary'
+  }
+  return overlay
 }
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -230,14 +249,21 @@ const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./perso
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const digitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'))
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const demoDigitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'), true, true)
+
+const memberCardBundle = createMemberCardBundle()
+
+const demoMemberCardBundle = createMemberCardBundle(true)
+
 export default {
   // ↓↓↓ https://github.com/bcgov/bc-wallet-mobile/discussions/370
   [CREDENTIALS.LSBC_TEST]: memberCardBundle /* LSBC (TEST) */,
   [CREDENTIALS.LSBC_PROD]: memberCardBundle /* LSBC (PROD) */,
   // ↓↓↓ https://github.com/bcgov/BC-Wallet-Demo/discussions/59
-  [CREDENTIALS.SHOWCASE_LAWYER_DEV]: memberCardBundle /* Showcase LSBC (DEV) */,
-  [CREDENTIALS.SHOWCASE_LAWYER_TEST]: memberCardBundle /* Showcase LSBC (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER_PROD]: memberCardBundle /* Showcase LSBC (PROD) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_DEV]: demoMemberCardBundle /* Showcase LSBC (DEV) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_TEST]: demoMemberCardBundle /* Showcase LSBC (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER_PROD]: demoMemberCardBundle /* Showcase LSBC (PROD) */,
   [CREDENTIALS.SHOWCASE_STUDENT_DEV]: studentCardBundle /* Showcase Student (DEV) */,
   [CREDENTIALS.SHOWCASE_STUDENT_TEST]: studentCardBundle /* Showcase Student (TEST) */,
   [CREDENTIALS.SHOWCASE_STUDENT_PROD]: studentCardBundle /* Showcase Student (PROD) */,
@@ -249,11 +275,11 @@ export default {
   [CREDENTIALS.PILOT_INVITE_DEV]: digitalIdInvitationCardBundle /* (DEV) */,
   [CREDENTIALS.PILOT_INVITE_TEST]: digitalIdInvitationCardBundle /* (TEST) */,
   [CREDENTIALS.PILOT_INVITE_PROD]: digitalIdInvitationCardBundle /* (PROD) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: digitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_TEST]: digitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_PROD]: digitalIdCardBundle /* (TEST) */,
-  [CREDENTIALS.BC_DIGITAL_ID_DEV]: digitalIdCardBundle /* (DEV) */,
-  [CREDENTIALS.BC_DIGITAL_ID_SIT]: digitalIdCardBundle /* (SIT) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_DEV]: demoDigitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_TEST]: demoDigitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.SHOWCASE_LAWYER2_PERSON_PROD]: demoDigitalIdCardBundle /* (TEST) */,
+  [CREDENTIALS.BC_DIGITAL_ID_DEV]: demoDigitalIdCardBundle /* (DEV) */,
+  [CREDENTIALS.BC_DIGITAL_ID_SIT]: demoDigitalIdCardBundle /* (SIT) */,
   [CREDENTIALS.BC_DIGITAL_ID_QA]: digitalIdCardBundle /* (QA) */,
   [CREDENTIALS.BC_DIGITAL_ID_PROD]: digitalIdCardBundle /* (PROD) */,
 }

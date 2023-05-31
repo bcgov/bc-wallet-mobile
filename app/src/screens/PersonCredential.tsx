@@ -1,12 +1,13 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/core'
-import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard, TabStacks } from 'aries-bifold'
+import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard, TabStacks, testIdWithKey } from 'aries-bifold'
 import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, FlatList } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import LoadingIcon from '../components/LoadingIcon'
+import { hitSlop } from '../constants'
 import { startFlow } from '../helpers/BCIDHelper'
 import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
 import { BCDispatchAction, BCState } from '../store'
@@ -114,7 +115,11 @@ const PersonCredential: React.FC = () => {
                 </View>
                 <Text style={TextTheme.normal}>
                   {t('PersonCredential.Description') + ' '}
-                  <TouchableOpacity onPress={getBCServicesCardApp}>
+                  <TouchableOpacity
+                    onPress={getBCServicesCardApp}
+                    hitSlop={hitSlop}
+                    testID={testIdWithKey('GetBCServicesCardApp')}
+                  >
                     <Text style={{ ...TextTheme.normal, color: ColorPallet.brand.link }}>
                       {t('PersonCredential.LinkDescription')}
                     </Text>

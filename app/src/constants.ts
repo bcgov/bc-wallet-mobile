@@ -8,3 +8,4 @@ export const PINValidationRules = {
   no_even_or_odd_series_of_numbers: false,
   no_cross_pattern: false,
 }
+export const hitSlop = { top: 44, bottom: 44, left: 44, right: 44 }

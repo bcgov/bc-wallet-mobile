@@ -48,7 +48,6 @@ jobs:
           PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
 
   build-ios:
-    # if: ${{ false }}  # disable for now
     needs: [check-ios-secrets]
     runs-on: macos-latest
     steps:
@@ -169,10 +168,10 @@ jobs:
       - name: Update ledgers
         run: |
           node bifold/scripts/make-blocks.js
-          
+
           # the ledgers file should be about 344K
           ls -lah ledgers.json
-          
+
           mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
           shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
@@ -226,36 +225,29 @@ jobs:
         working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
           app-store-connect publish \
-          --apple-id ${{ secrets.APPLE_ID }} \
-          --password ${{ secrets.APPLE_ID_PASSWD }} \
           --enable-package-validation \
           --max-build-processing-wait 25 \
           --testflight \
           --beta-group "The Team" "IDIM Team" \
           --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
-      - name: Ship to LambdaTest
+      - name: Upload iOS artifact
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/ios
-        env:
-          LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
-          LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
-        run: |
-          curl \
-          -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
-          --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
-          --form 'appFile=@"export/AriesBifold.ipa"' \
-          --form "name=QCWallet-$GITHUB_RUN_NUMBER.ipa" \
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-artifact
+          path: app/ios/export/AriesBifold.ipa
+          if-no-files-found: error
+          retention-days: 7
 
   build-android:
-    # if: ${{ false }}  # disable for now
     needs: [check-android-secrets]
     runs-on: ubuntu-22.04
     # container:
@@ -361,9 +353,31 @@ jobs:
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           node ./deploy-to-playstore.js
 
-      - name: Ship to LambdaTest
+      - name: Upload Android artifact
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/android
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-artifact
+          path: app/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+
+  ship-to-lambdatest:
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    needs: [build-ios, build-android]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download iOS artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ios-artifact
+
+      - name: Download Android artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: android-artifact
+
+      - name: Ship iOS to LambdaTest
         env:
           LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
           LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
@@ -371,29 +385,23 @@ jobs:
           curl \
           -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
           --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
-          --form 'appFile=@"app/build/outputs/bundle/release/app-release.aab"' \
+          --form 'appFile=@"AriesBifold.ipa"' \
+          --form "name=QCWallet-$GITHUB_RUN_NUMBER.ipa" \
+
+      - name: Ship Android to LambdaTest
+        env:
+          LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
+          LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+        run: |
+          curl \
+          -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
+          --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
+          --form 'appFile=@"app-release.aab"' \
           --form "name=QCWallet-$GITHUB_RUN_NUMBER.aab" \
 
-  release:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-    needs: [build-ios, build-android]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Create release
-        uses: actions/create-release@v1.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ env.appBuildVersion }}-${{ env.appBuildNumber }}
-          release_name: Version ${{ env.appBuildVersion }}-${{ env.appBuildNumber }}
-          body: |
-            Dev Release.
-
   run-on-device-tests:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'&& needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-    needs: [build-ios, build-android]
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    needs: [ship-to-lambdatest]
     runs-on: ubuntu-22.04
     strategy:
       max-parallel: 1
