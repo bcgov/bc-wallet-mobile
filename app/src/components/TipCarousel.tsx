@@ -1,3 +1,4 @@
+import { useTheme } from 'aries-bifold'
 import React, { memo, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem } from 'react-native'
@@ -31,6 +32,8 @@ export interface TipProps {
 
 // memo used here to optimize for FlatList rendering
 const Tip: React.FC<TipProps> = memo(({ item, width, header }) => {
+  const { TextTheme, ColorPallet } = useTheme()
+
   // not making use of useTheme here to optimize FlatList rendering
   const tipStyles = StyleSheet.create({
     tipContainer: {
@@ -42,20 +45,20 @@ const Tip: React.FC<TipProps> = memo(({ item, width, header }) => {
     },
     tipHeaderContainer: {
       borderBottomWidth: 1,
-      borderBottomColor: '#FCBA19',
+      borderBottomColor: ColorPallet.brand.highlight,
     },
     tipHeader: {
       paddingBottom: 3,
       fontSize: 26,
       fontFamily: 'BCSans-Regular',
       fontWeight: 'bold',
-      color: 'white',
+      color: TextTheme.title.color,
     },
     tipText: {
       fontSize: 26,
       fontFamily: 'BCSans-Regular',
       fontWeight: 'bold',
-      color: 'white',
+      color: TextTheme.title.color,
       marginTop: 10,
       textAlign: 'center',
     },
