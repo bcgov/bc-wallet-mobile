@@ -70,6 +70,7 @@ const BrandColors: IBrandColors = {
   modalSecondary: '#FFFFFFFF',
   modalPrimaryBackground: '#FFFFFF',
   modalSecondaryBackground: '#F2F2F2',
+  modalIcon: GrayscaleColors.darkGrey,
   link: '#1A5A96',
   unorderedList: GrayscaleColors.white,
   unorderedListModal: GrayscaleColors.darkGrey,
