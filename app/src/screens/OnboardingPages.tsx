@@ -73,11 +73,11 @@ const guides: Array<{
   {
     image: CredentialList,
     title: 'OnboardingPages.SecondPageTitle',
-    body: 'OnboadingPages.SecondPageBody',
+    body: 'OnboardingPages.SecondPageBody',
   },
   {
     image: ScanShare,
-    title: 'OnboadingPages.ThirdPageTitle',
+    title: 'OnboardingPages.ThirdPageTitle',
     body: 'OnboardingPages.ThirdPageBody',
   },
 ]
