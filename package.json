@@ -3,33 +3,41 @@
   "version": "1.0.0",
   "description": "![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)",
   "main": "index.js",
-  "scripts": {
-    "install:bifold": "cd bifold/packages/legacy/core && yarn install --frozen-lockfile",
-    "install:app": "cd app && npm ci",
-    "install:all": "run-s install:bifold install:app",
-    "build:bifold": "cd bifold/packages/legacy/core && yarn typecheck && yarn prepack",
-    "build:app": "cd app && npm run typecheck && npm run prepack --if-present",
-    "build:all": "run-s build:bifold build:app",
-    "prepare": "run-s install:all build:all",
-    "lint:app": "cd app && npm run lint --if-present",
-    "lint": "run-s lint:app",
-    "prettier:app": "cd app && npm run prettier --if-present",
-    "prettier": "run-s prettier:app",
-    "test": "cd app && npm test",
-    "pre-commit-lint:app": "cd app && npm run pre-commit-lint",
-    "pre-commit-lint": "run-s pre-commit-lint:app",
-    "typecheck": "cd app && npm run typecheck"
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=16.15.0 <18.0.0",
+    "yarn": "^3.3.1"
+  },
+  "packageManager": "yarn@3.3.1",
+  "workspaces": {
+    "packages": [
+      "app",
+      "bifold/packages/legacy/core"
+    ]
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bcgov/bc-wallet-mobile.git"
   },
-  "author": "",
-  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/bcgov/bc-wallet-mobile/issues"
   },
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
+  "scripts": {
+    "build:bifold": "yarn workspace aries-bifold install --immutable && yarn workspace aries-bifold typecheck && yarn workspace aries-bifold run prepack",
+    "build:app": "yarn workspace bc-wallet-mobile-app install --immutable",
+    "build:all": "yarn build:bifold && yarn build:app",
+    "preinstall": "yarn build:all",
+    "lint:app": "cd app && yarn lint",
+    "lint": "yarn lint:app",
+    "prettier:app": "cd app && yarn prettier",
+    "prettier": "yarn prettier:app",
+    "test": "cd app && yarn test",
+    "pre-commit-lint:app": "cd app && yarn pre-commit-lint",
+    "pre-commit-lint": "yarn pre-commit-lint:app",
+    "typecheck": "cd app && yarn typecheck"
+  },
   "devDependencies": {
     "npm-run-all": "^4.1.5"
   }

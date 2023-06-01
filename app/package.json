@@ -1,5 +1,5 @@
 {
-  "name": "bc-wallet-mobile",
+  "name": "bc-wallet-mobile-app",
   "version": "1.0.0",
   "description": "BC Wallet to hold Verifiable Credentials",
   "main": "index.js",
@@ -9,6 +9,18 @@
     "node": ">=16.15.0 <18.0.0",
     "yarn": "^1.22.19"
   },
+  "installConfig": {
+    "hoistingLimits": "workspaces"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bcgov/bc-wallet-mobile.git"
+  },
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/bcgov/bc-wallet-mobile/issues"
+  },
+  "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
@@ -30,15 +42,6 @@
     "storybook": "start-storybook -p 7007",
     "build-storybook": "build-storybook"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bcgov/bc-wallet-mobile.git"
-  },
-  "author": "",
-  "bugs": {
-    "url": "https://github.com/bcgov/bc-wallet-mobile/issues"
-  },
-  "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "dependencies": {
     "@aries-framework/core": "^0.3.3",
     "@aries-framework/react-hooks": "^0.4.0",
