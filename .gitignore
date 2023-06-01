@@ -34,6 +34,13 @@ local.properties
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+app/.yarn/*
+app/.yarn/cache
+!app/.yarn/patches
+!app/.yarn/plugins
+!app/.yarn/releases
+!app/.yarn/sdks
+!app/.yarn/versions
 yarn-debug.log*
 yarn-error.log*
 .yarn-integrity
