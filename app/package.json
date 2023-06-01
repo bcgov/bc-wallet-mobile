@@ -1,30 +1,31 @@
 {
-  "name": "bcwallet-app",
+  "name": "bc-wallet-mobile",
   "version": "1.0.0",
-  "description": "",
+  "description": "BC Wallet to hold Verifiable Credentials",
   "main": "index.js",
   "private": true,
+  "license": "Apache-2.0",
   "engines": {
-    "node": ">= 16.10.0",
-    "npm": ">= 8.0.0"
+    "node": ">=16.15.0 <18.0.0",
+    "yarn": "^1.22.19"
   },
   "scripts": {
-    "style-check": "npm run prettier -- --check",
-    "style-format": "npm run prettier -- --write",
-    "style-watch": "onchange '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)' -- prettier --write {{changed}}",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "start": "react-native start --reset-cache",
-    "test": "jest",
-    "test:watch": "jest --watch --notify --notifyMode=change --coverage",
-    "test:coverage": "jest --coverage",
+    "style-check": "yarn prettier -- --check",
+    "style-format": "yarn prettier -- --write",
+    "style-watch": "onchange '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)' -- prettier --write {{changed}}",
+    "test": "TZ=GMT jest",
+    "test:watch": "TZ=GMT jest --watch --notify --notifyMode=change --coverage",
+    "test:coverage": "TZ=GMT jest --coverage",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx --color .",
-    "prettier": "prettier --ignore-path .gitignore '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'",
-    "pre-commit-lint": "npx lint-staged",
+    "prettier": "prettier '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'",
+    "pre-commit-lint": "yarn lint-staged",
     "setup": "cd .. && husky install .husky",
     "postinstall:copy-patches": "copyfiles -V -u 4 \"../bifold/app/patches/*\" \"./patches/\"",
     "postinstall:patch": "npx patch-package",
-    "postinstall": "run-s postinstall:copy-patches postinstall:patch",
+    "postinstall": "yarn postinstall:copy-patches && yarn postinstall:patch",
     "typecheck": "tsc --noEmit",
     "storybook": "start-storybook -p 7007",
     "build-storybook": "build-storybook"
@@ -34,7 +35,6 @@
     "url": "git+https://github.com/bcgov/bc-wallet-mobile.git"
   },
   "author": "",
-  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/bcgov/bc-wallet-mobile/issues"
   },
