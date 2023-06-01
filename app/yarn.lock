@@ -15,7 +15,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/core@npm:0.3.3, @aries-framework/core@npm:^0.3.3":
+"@aries-framework/core@npm:0.3.3":
   version: 0.3.3
   resolution: "@aries-framework/core@npm:0.3.3"
   dependencies:
@@ -51,7 +51,43 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/react-hooks@npm:^0.4.0":
+"@aries-framework/core@patch:@aries-framework/core@npm%3A0.3.3#./.yarn/patches/@aries-framework-core-npm-0.3.3-dd6486de3d.patch::locator=bc-wallet-mobile-app%40workspace%3A.":
+  version: 0.3.3
+  resolution: "@aries-framework/core@patch:@aries-framework/core@npm%3A0.3.3#./.yarn/patches/@aries-framework-core-npm-0.3.3-dd6486de3d.patch::version=0.3.3&hash=eb518c&locator=bc-wallet-mobile-app%40workspace%3A."
+  dependencies:
+    "@digitalcredentials/jsonld": ^5.2.1
+    "@digitalcredentials/jsonld-signatures": ^9.3.1
+    "@digitalcredentials/vc": ^1.1.2
+    "@multiformats/base-x": ^4.0.1
+    "@stablelib/ed25519": ^1.0.2
+    "@stablelib/random": ^1.0.1
+    "@stablelib/sha256": ^1.0.1
+    "@types/indy-sdk": 1.16.24
+    "@types/node-fetch": ^2.5.10
+    "@types/ws": ^7.4.6
+    abort-controller: ^3.0.0
+    bn.js: ^5.2.0
+    borc: ^3.0.0
+    buffer: ^6.0.3
+    class-transformer: 0.5.1
+    class-validator: 0.13.1
+    did-resolver: ^3.1.3
+    lru_map: ^0.4.1
+    luxon: ^1.27.0
+    make-error: ^1.3.6
+    object-inspect: ^1.10.3
+    query-string: ^7.0.1
+    reflect-metadata: ^0.1.13
+    rxjs: ^7.2.0
+    tsyringe: ^4.7.0
+    uuid: ^8.3.2
+    varint: ^6.0.0
+    web-did-resolver: ^2.0.8
+  checksum: ab3138c38189e1bd65236897abbd3348d043a4e6c5e6ddf8766f25719ca1ed3ae17ffdf8c2c7331c2f6957a4a96d92f9af31cd2b7e682149892fca95a7fb9c81
+  languageName: node
+  linkType: hard
+
+"@aries-framework/react-hooks@npm:0.4.2":
   version: 0.4.2
   resolution: "@aries-framework/react-hooks@npm:0.4.2"
   dependencies:
@@ -60,6 +96,18 @@ __metadata:
     "@aries-framework/core": ^0.3.2
     react: ">=17.0.0 <19.0.0"
   checksum: fc34499dc82535904479f9a0e4c396c6c67eba211596fd7447e198f9980b6667f444293de5eb9d988e93261f0b526bb084039a6bac28bd2700722acfeff26f52
+  languageName: node
+  linkType: hard
+
+"@aries-framework/react-hooks@patch:@aries-framework/react-hooks@npm%3A0.4.2#./.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch::locator=bc-wallet-mobile-app%40workspace%3A.":
+  version: 0.4.2
+  resolution: "@aries-framework/react-hooks@patch:@aries-framework/react-hooks@npm%3A0.4.2#./.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch::version=0.4.2&hash=486b38&locator=bc-wallet-mobile-app%40workspace%3A."
+  dependencies:
+    rxjs: ^7.2.0
+  peerDependencies:
+    "@aries-framework/core": ^0.3.2
+    react: ">=17.0.0 <19.0.0"
+  checksum: f34dcedc0cb778e520b9eabc8d933c0c9bd7138cfc83cba3e664c56edc5ca3723094be79ac26b3f767d69dd0e0acc875d2e72a1afdcfce07225dcb0f7072d01e
   languageName: node
   linkType: hard
 
@@ -5226,7 +5274,7 @@ __metadata:
 
 "aries-bifold@file:../bifold/packages/legacy/core::locator=bc-wallet-mobile-app%40workspace%3A.":
   version: 0.0.1
-  resolution: "aries-bifold@file:../bifold/packages/legacy/core#../bifold/packages/legacy/core::hash=3d6663&locator=bc-wallet-mobile-app%40workspace%3A."
+  resolution: "aries-bifold@file:../bifold/packages/legacy/core#../bifold/packages/legacy/core::hash=fe4604&locator=bc-wallet-mobile-app%40workspace%3A."
   peerDependencies:
     "@aries-framework/core": ^0.3.3
     "@aries-framework/react-hooks": ^0.4.2
@@ -5286,7 +5334,7 @@ __metadata:
     uuid: ^8.1.0
   bin:
     bifold: bin/bifold
-  checksum: d3343ab29fec3ec24ae7ab23471f500f14de9f198753f1d08c97fcbf45b730aac515bcad987f88f9c30d2809fba49c4133e9a62a7c13d3e070dc63db3d8e184c
+  checksum: c4c13109a3f182c651276cca701c72bc36c2d77454c0382fe8ba6292907c0e12d70ffaab73bc4c0f8ed05feef8942ea6b6090fc41f0b4dc5a48c04b4838b1db8
   languageName: node
   linkType: hard
 
@@ -16533,6 +16581,27 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: 43898375c78ea8dfdfe34f33a5e35bc427ffd17e09f299ad1cf98d0261b28cd25d4ed352d4dc80760ec4834cecd524d4363afc41d90df0a96cc433190d7ebc9e
+  languageName: node
+  linkType: hard
+
+"react-native-gifted-chat@patch:react-native-gifted-chat@npm%3A0.16.3#./.yarn/patches/react-native-gifted-chat-npm-0.16.3-9cbc12a602.patch::locator=bc-wallet-mobile-app%40workspace%3A.":
+  version: 0.16.3
+  resolution: "react-native-gifted-chat@patch:react-native-gifted-chat@npm%3A0.16.3#./.yarn/patches/react-native-gifted-chat-npm-0.16.3-9cbc12a602.patch::version=0.16.3&hash=a12345&locator=bc-wallet-mobile-app%40workspace%3A."
+  dependencies:
+    "@expo/react-native-action-sheet": ^3.6.0
+    dayjs: ^1.8.26
+    prop-types: ^15.7.2
+    react-native-communications: ^2.2.1
+    react-native-iphone-x-helper: ^1.2.1
+    react-native-lightbox: ^0.8.1
+    react-native-parsed-text: 0.0.22
+    react-native-typing-animation: ^0.1.7
+    uuid: 3.4.0
+  peerDependencies:
+    dayjs: "*"
+    react: "*"
+    react-native: "*"
+  checksum: 97cabd17ad47aafdeabbe40fd8058f7b925824cfa2b76bedfb88435da36777f7452cd8fb60773959d263865141a2bcbeee26bee8f4ae18a1e498aebdbb1c019a
   languageName: node
   linkType: hard
 
