@@ -35,7 +35,6 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import VersionCheck from 'react-native-version-check'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
@@ -84,8 +83,6 @@ const Splash: React.FC = () => {
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
-  const [currentVersion, setCurrentVersion] = useState<string | null>(null)
-  const [latestVersion, setLatestVersion] = useState<string | null>(null)
   const steps: string[] = [
     t('Init.Starting'),
     t('Init.CheckingAuth'),
@@ -192,20 +189,6 @@ const Splash: React.FC = () => {
       })
     }
   }
-
-  useEffect(() => {
-    const VersionCheckSplash = async () => {
-      try {
-        setCurrentVersion(VersionCheck.getCurrentVersion())
-        VersionCheck.getLatestVersion().then((latestVersion) => {
-          setLatestVersion(latestVersion)
-        })
-      } catch (e) {
-        Bugsnag.notify(e as Error)
-      }
-    }
-    VersionCheckSplash()
-  }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry, initAgentCount])
 
   useEffect(() => {
     const initOnboarding = async (): Promise<void> => {
@@ -404,10 +387,6 @@ const Splash: React.FC = () => {
           <View style={styles.stepTextContainer}>
             <Text style={styles.stepText}>{stepText}</Text>
           </View>
-        </View>
-        <View>
-          <Text style={styles.stepText}>Actuel: {currentVersion}v</Text>
-          {latestVersion && <Text style={styles.stepText}>Disponible: {latestVersion}v</Text>}
         </View>
       </View>
     </SafeAreaView>

@@ -103,7 +103,6 @@
     "react-native-toast-message": "2.0.1",
     "react-native-uuid": "2.0.1",
     "react-native-vector-icons": "8.1.0",
-    "react-native-version-check": "^3.4.7",
     "react-native-webview": "11.23.0",
     "uuid": "8.3.2"
   },
