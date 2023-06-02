@@ -5473,7 +5473,7 @@ __metadata:
 
 "aries-bifold@file:../bifold/packages/legacy/core::locator=bc-wallet-mobile-app%40workspace%3Aapp":
   version: 0.0.1
-  resolution: "aries-bifold@file:../bifold/packages/legacy/core#../bifold/packages/legacy/core::hash=904cc4&locator=bc-wallet-mobile-app%40workspace%3Aapp"
+  resolution: "aries-bifold@file:../bifold/packages/legacy/core#../bifold/packages/legacy/core::hash=f4dc85&locator=bc-wallet-mobile-app%40workspace%3Aapp"
   peerDependencies:
     "@aries-framework/core": ^0.3.3
     "@aries-framework/react-hooks": ^0.4.2
@@ -5532,7 +5532,7 @@ __metadata:
     uuid: ^8.1.0
   bin:
     bifold: bin/bifold
-  checksum: 0881da773c94db75c35b850eed844f453e2e23e47fd1f8f6a4c779eac1b9795511822ca19a6fcd91a81797d3c27651ccefe8eda8fde41bf70807057f2c9544fd
+  checksum: 484c1e75926f1ebd398a0bd89bbe1568a092284ecc779a1e394fa73f72d69fb01555f83d06cde677b788819f902fbde2cf50c5f81a2840f56e6efc743e305ace
   languageName: node
   linkType: hard
 
