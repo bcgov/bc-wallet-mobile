@@ -102,7 +102,7 @@ jobs:
       - name: Install react native dependencies
         working-directory: ./
         run: |
-          yarn build:app && \
+          yarn install --immutable && \
           git status
 
       - name: Install iOS dependencies
@@ -267,7 +267,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn build:app && \
+          yarn install --immutable  && \
           git status
 
         # Actual environment variables are not being picked up
