@@ -13,7 +13,7 @@
   "workspaces": {
     "packages": [
       "app",
-      "bifold/packages/legacy/core"
+      "bifold-core"
     ]
   },
   "repository": {
@@ -25,8 +25,8 @@
   },
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "scripts": {
-    "build:bifold": "yarn workspace aries-bifold install --immutable && yarn workspace aries-bifold typecheck && yarn workspace aries-bifold run prepack",
-    "build:app": "yarn workspace bc-wallet-mobile-app install --immutable",
+    "build:bifold": "yarn workspace aries-bifold typecheck && yarn workspace aries-bifold prepack",
+    "build:app": "yarn workspace bc-wallet-mobile-app typecheck",
     "build:all": "yarn build:bifold && yarn build:app",
     "preinstall": "yarn build:all",
     "lint:app": "cd app && yarn lint",

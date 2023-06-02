@@ -5471,75 +5471,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"aries-bifold@file:../bifold/packages/legacy/core::locator=bc-wallet-mobile-app%40workspace%3Aapp":
-  version: 0.0.1
-  resolution: "aries-bifold@file:../bifold/packages/legacy/core#../bifold/packages/legacy/core::hash=5ff28e&locator=bc-wallet-mobile-app%40workspace%3Aapp"
-  peerDependencies:
-    "@aries-framework/core": ^0.3.3
-    "@aries-framework/react-hooks": ^0.4.2
-    "@aries-framework/react-native": ^0.3.2
-    "@formatjs/intl-datetimeformat": ^4.2.3
-    "@formatjs/intl-displaynames": ^5.2.3
-    "@formatjs/intl-getcanonicallocales": ^1.7.3
-    "@formatjs/intl-listformat": ^6.3.3
-    "@formatjs/intl-locale": ^2.4.37
-    "@formatjs/intl-numberformat": ^7.2.3
-    "@formatjs/intl-pluralrules": ^4.1.3
-    "@formatjs/intl-relativetimeformat": ^9.2.3
-    "@react-native-async-storage/async-storage": ^1.12.1
-    "@react-native-community/masked-view": ^0.1.11
-    "@react-native-community/netinfo": ^9.3.0
-    "@react-navigation/bottom-tabs": ^6.0.9
-    "@react-navigation/core": ^6.1.0
-    "@react-navigation/devtools": ^6.0.8
-    "@react-navigation/native": ^6.0.6
-    "@react-navigation/stack": ^6.0.11
-    axios: ^0.21.0
-    i18next: ^21.4.0
-    indy-sdk-react-native: ^0.2.2
-    lodash.flatten: ^4.4.0
-    lodash.startcase: ^4.4.0
-    moment: ^2.29.4
-    query-string: ^7.0.1
-    react: 17.0.2
-    react-i18next: ^11.13.0
-    react-native: 0.66.5
-    react-native-animated-pagination-dots: ^0.1.72
-    react-native-argon2: ^2.0.1
-    react-native-bouncy-checkbox: ^3.0.5
-    react-native-camera: ^3.31.1
-    react-native-collapsible: ^1.6.0
-    react-native-config: ^1.4.2
-    react-native-confirmation-code-field: ^7.3.0
-    react-native-device-info: ^8.4.9
-    react-native-encrypted-storage: ^4.0.2
-    react-native-fs: ^2.16.6
-    react-native-gesture-handler: ^1.10.3
-    react-native-get-random-values: ^1.7.0
-    react-native-gifted-chat: ^0.16.3
-    react-native-keychain: ^8.1.1
-    react-native-localize: ^2.2.4
-    react-native-permissions: ^3.6.1
-    react-native-qrcode-svg: ^6.0.6
-    react-native-reanimated: ^2.2.4
-    react-native-safe-area-context: ^3.2.0
-    react-native-screens: ^3.3.0
-    react-native-splash-screen: ^3.2.0
-    react-native-svg: ^12.1.1
-    react-native-tcp-socket: ^6.0.3
-    react-native-toast-message: ^2.0.1
-    react-native-uuid: ^2.0.1
-    react-native-vector-icons: ^8.1.0
-    uuid: ^8.1.0
-  bin:
-    bifold: bin/bifold
-  checksum: 5e92bfa8f5a86785dabd398845ff7f959f1c0e1041f80d225d7cb252c90be4cdf14ca7a43bec0b917cf61d494909d86aa5249128cd2364b3362f972bec46c4e5
-  languageName: node
-  linkType: hard
-
-"aries-bifold@workspace:bifold/packages/legacy/core":
+"aries-bifold@link:../bifold-core::locator=bc-wallet-mobile-app%40workspace%3Aapp":
   version: 0.0.0-use.local
-  resolution: "aries-bifold@workspace:bifold/packages/legacy/core"
+  resolution: "aries-bifold@link:../bifold-core::locator=bc-wallet-mobile-app%40workspace%3Aapp"
+  languageName: node
+  linkType: soft
+
+"aries-bifold@workspace:bifold-core":
+  version: 0.0.0-use.local
+  resolution: "aries-bifold@workspace:bifold-core"
   dependencies:
     "@aries-framework/core": ^0.3.3
     "@aries-framework/react-hooks": ^0.3.0
@@ -6625,7 +6565,7 @@ __metadata:
     "@types/react-test-renderer": ^16.9.5
     "@typescript-eslint/eslint-plugin": ^4.20.0
     "@typescript-eslint/parser": ^4.33.0
-    aries-bifold: "file:../bifold/packages/legacy/core"
+    aries-bifold: "link:../bifold-core"
     axios: 0.21.4
     babel-jest: ^27.5.1
     babel-plugin-module-resolver: 4.1.0
@@ -8536,9 +8476,9 @@ __metadata:
   linkType: hard
 
 "dayjs@npm:^1.8.15, dayjs@npm:^1.8.26":
-  version: 1.11.7
-  resolution: "dayjs@npm:1.11.7"
-  checksum: 5003a7c1dd9ed51385beb658231c3548700b82d3548c0cfbe549d85f2d08e90e972510282b7506941452c58d32136d6362f009c77ca55381a09c704e9f177ebb
+  version: 1.11.8
+  resolution: "dayjs@npm:1.11.8"
+  checksum: 4fe04b6df98ba6e5f89b49d80bba603cbf01e21a1b4a24ecb163c94c0ba5324a32ac234a139cee654f89d5277a2bcebca5347e6676c28a0a6d1a90f1d34a42b8
   languageName: node
   linkType: hard
 
