@@ -5473,7 +5473,7 @@ __metadata:
 
 "aries-bifold@file:../bifold/packages/legacy/core::locator=bc-wallet-mobile-app%40workspace%3Aapp":
   version: 0.0.1
-  resolution: "aries-bifold@file:../bifold/packages/legacy/core#../bifold/packages/legacy/core::hash=f4dc85&locator=bc-wallet-mobile-app%40workspace%3Aapp"
+  resolution: "aries-bifold@file:../bifold/packages/legacy/core#../bifold/packages/legacy/core::hash=5ff28e&locator=bc-wallet-mobile-app%40workspace%3Aapp"
   peerDependencies:
     "@aries-framework/core": ^0.3.3
     "@aries-framework/react-hooks": ^0.4.2
@@ -5490,6 +5490,7 @@ __metadata:
     "@react-native-community/masked-view": ^0.1.11
     "@react-native-community/netinfo": ^9.3.0
     "@react-navigation/bottom-tabs": ^6.0.9
+    "@react-navigation/core": ^6.1.0
     "@react-navigation/devtools": ^6.0.8
     "@react-navigation/native": ^6.0.6
     "@react-navigation/stack": ^6.0.11
@@ -5532,7 +5533,7 @@ __metadata:
     uuid: ^8.1.0
   bin:
     bifold: bin/bifold
-  checksum: 484c1e75926f1ebd398a0bd89bbe1568a092284ecc779a1e394fa73f72d69fb01555f83d06cde677b788819f902fbde2cf50c5f81a2840f56e6efc743e305ace
+  checksum: 5e92bfa8f5a86785dabd398845ff7f959f1c0e1041f80d225d7cb252c90be4cdf14ca7a43bec0b917cf61d494909d86aa5249128cd2364b3362f972bec46c4e5
   languageName: node
   linkType: hard
 
@@ -5650,6 +5651,7 @@ __metadata:
     "@react-native-community/masked-view": ^0.1.11
     "@react-native-community/netinfo": ^9.3.0
     "@react-navigation/bottom-tabs": ^6.0.9
+    "@react-navigation/core": ^6.1.0
     "@react-navigation/devtools": ^6.0.8
     "@react-navigation/native": ^6.0.6
     "@react-navigation/stack": ^6.0.11
