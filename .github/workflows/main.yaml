@@ -58,7 +58,7 @@ jobs:
           git submodule update --init --recursive
 
       - name: Setup NodeJS
-        uses: ./.github/actions/setup-node
+        uses: ./.github/workflows/actions/setup-node
 
       - name: Configure ruby
         uses: ruby/setup-ruby@v1
@@ -249,7 +249,7 @@ jobs:
           git submodule update --init --recursive
 
       - name: Setup NodeJS
-        uses: ./.github/actions/setup-node
+        uses: ./.github/workflows/actions/setup-node
 
       - name: Update ledgers
         run: |
