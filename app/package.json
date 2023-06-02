@@ -35,9 +35,6 @@
     "prettier": "prettier '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'",
     "pre-commit-lint": "yarn lint-staged",
     "setup": "cd .. && husky install .husky",
-    "postinstall:copy-patches": "copyfiles -V -u 4 \"../bifold/app/patches/*\" \"./patches/\"",
-    "postinstall:patch": "npx patch-package",
-    "postinstall": "yarn postinstall:copy-patches && yarn postinstall:patch",
     "typecheck": "tsc --noEmit",
     "storybook": "start-storybook -p 7007",
     "build-storybook": "build-storybook"
