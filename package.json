@@ -26,7 +26,7 @@
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "scripts": {
     "build:bifold": "yarn workspace aries-bifold prepack",
-    "preinstall": "yarn build:bifold",
+    "preinstall": "yarn build:bifold && npx husky install .husky",
     "lint:app": "cd app && yarn lint",
     "lint": "yarn lint:app",
     "prettier:app": "cd app && yarn prettier",

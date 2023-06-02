@@ -34,7 +34,6 @@
     "lint": "eslint --ext .js,.jsx,.ts,.tsx --color .",
     "prettier": "prettier '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'",
     "pre-commit-lint": "yarn lint-staged",
-    "setup": "cd .. && husky install .husky",
     "typecheck": "tsc --noEmit",
     "storybook": "start-storybook -p 7007",
     "build-storybook": "build-storybook"
