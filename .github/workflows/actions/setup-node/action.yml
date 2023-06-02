@@ -1,0 +1,25 @@
+# based on https://github.com/hyperledger/aries-framework-javascript-ext/blob/main/.github/actions/setup-node/action.yml
+name: Setup NodeJS
+description: Setup NodeJS with caching
+author: "timo@animo.id"
+
+inputs:
+  node-version:
+    description: Select the nodejs version to use
+    required: false
+    default: "16.15.0"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup node v${{ inputs.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node-version }}
+        registry-url: "https://registry.npmjs.org/"
+        cache: "yarn"
+
+    - name: Node Version
+      shell: bash
+      run: |
+        node -v && yarn -v
