@@ -1,6 +1,6 @@
 import { CredentialMetadataKeys, CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
-import { useNavigation } from '@react-navigation/core'
+import { useNavigation } from '@react-navigation/native'
 import { useTheme, Screens, Stacks, testIdWithKey } from 'aries-bifold'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

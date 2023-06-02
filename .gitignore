@@ -22,9 +22,28 @@ api*.json
 node_modules
 .gradle
 lib
-yarn.lock
 local.properties
 .jest
+.npmrc
+
+# yarn
+.yarn/*
+.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+app/.yarn/*
+app/.yarn/cache
+!app/.yarn/patches
+!app/.yarn/plugins
+!app/.yarn/releases
+!app/.yarn/sdks
+!app/.yarn/versions
+yarn-debug.log*
+yarn-error.log*
+.yarn-integrity
 
 # aries-bifold should be cloned separately
 aries-bifold/
@@ -40,4 +59,3 @@ app/patches/react-native-gifted-chat*.patch
 
 # xcode
 xcuserdata/
-.npmrc

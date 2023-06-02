@@ -1,6 +1,6 @@
 import { CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
-import { useNavigation } from '@react-navigation/core'
+import { useNavigation } from '@react-navigation/native'
 import { Screens, Stacks } from 'aries-bifold'
 import { useEffect } from 'react'
 
