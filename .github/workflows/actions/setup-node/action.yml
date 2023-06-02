@@ -5,7 +5,7 @@ author: "timo@animo.id"
 
 inputs:
   node-version:
-    description: Node version to use
+    description: Select the nodejs version to use
     required: false
     default: "16.15.0"
 
