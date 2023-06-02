@@ -57,11 +57,8 @@ jobs:
         run: |
           git submodule update --init --recursive
 
-      - name: Configure node
-        uses: actions/setup-node@v1
-        with:
-          node-version: "16.15.0"
-          registry-url: "https://registry.npmjs.org"
+      - name: Setup NodeJS
+        uses: ./.github/actions/setup-node
 
       - name: Configure ruby
         uses: ruby/setup-ruby@v1
@@ -85,18 +82,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-        # GitHub recommends not caching node_modules but rather
-        # .npm because it can break across Node versions and
-        #  won't work with npm ci.
-      - name: Cache node modules
-        uses: actions/cache@v1
-        id: npm-cache
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ env.cacheId }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ env.cacheId }}-
-
       - name: Cache pod dependencies
         id: pod-cache
         uses: actions/cache@v1
@@ -117,7 +102,7 @@ jobs:
       - name: Install react native dependencies
         working-directory: ./
         run: |
-          npm ci && \
+          yarn build:app && \
           git status
 
       - name: Install iOS dependencies
@@ -263,11 +248,8 @@ jobs:
           git config --global --add safe.directory '*'
           git submodule update --init --recursive
 
-      - name: Configure node
-        uses: actions/setup-node@v1
-        with:
-          node-version: "16.15.0"
-          registry-url: "https://registry.npmjs.org"
+      - name: Setup NodeJS
+        uses: ./.github/actions/setup-node
 
       - name: Update ledgers
         run: |
@@ -282,18 +264,11 @@ jobs:
           mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
           shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
-      - name: Cache node modules
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Install dependencies
         working-directory: ./
         run: |
-          npm ci
+          yarn build:app && \
+          git status
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
