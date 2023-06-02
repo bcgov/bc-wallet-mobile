@@ -58,7 +58,7 @@
     "@react-navigation/devtools": "6.0.8",
     "@react-navigation/native": "6.0.6",
     "@react-navigation/stack": "6.0.11",
-    "aries-bifold": "file:../bifold/packages/legacy/core",
+    "aries-bifold": "link:../bifold-core",
     "axios": "0.21.4",
     "i18next": "21.4.0",
     "indy-sdk-react-native": "0.2.2",
