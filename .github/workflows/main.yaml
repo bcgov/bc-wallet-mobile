@@ -324,19 +324,15 @@ jobs:
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
-          # /home/runner/work/bc-wallet-mobile/bc-wallet-mobile/app/api_keys.json
-          # ./app/android/api_keys.json - nope
-          # ./app/build/outputs/bundle/release/app-release.aab
           GOOGLE_API_CREDENTIALS: "api_keys.json"
-          ANDROID_PACKAGE_NAME: "ca.bc.gov.BCWallet"
           ANDROID_BUNDLE_PATH: "./android/app/build/outputs/bundle/release/app-release.aab"
+          ANDROID_PACKAGE_NAME: "ca.bc.gov.BCWallet"
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
+          # when we updated to yarn we started getting an error with paths
+          # and had to add `/android` to the path.
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          pwd && \
-          ls -lah && \
-          find . -iname "app-release.aab" && \
           GOOGLE_API_CREDENTIALS="./android/api_keys.json" npx @bcgov/gpublish
 
       - name: Upload Android artifact
