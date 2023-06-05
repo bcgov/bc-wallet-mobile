@@ -496,7 +496,7 @@ export const SettingsTheme = {
     marginBottom: 8,
   },
   groupBackground: ColorPallet.brand.secondaryBackground,
-  iconColor: ColorPallet.grayscale.white,
+  iconColor: ColorPallet.grayscale.darkGrey,
   text: {
     ...TextTheme.caption,
     color: ColorPallet.grayscale.darkGrey,

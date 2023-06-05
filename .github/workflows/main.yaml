@@ -362,6 +362,23 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  release:
+    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    needs: [build-ios, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.appBuildVersion }}-${{ env.appBuildNumber }}
+          release_name: Version ${{ env.appBuildVersion }}-${{ env.appBuildNumber }}
+          body: |
+            Dev Release.
+
   ship-to-lambdatest:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
