@@ -366,6 +366,9 @@ jobs:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
+    outputs:
+      IOS_APP_URL: ${{ steps.upload-app-ios.outputs.IOS_APP_URL }}
+      ANDROID_APP_URL: ${{ steps.upload-app-android.outputs.ANDROID_APP_URL }}
     steps:
       - name: Download iOS artifact
         uses: actions/download-artifact@v3
@@ -381,23 +384,27 @@ jobs:
         env:
           LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
           LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+        id: upload-app-ios
         run: |
           curl \
           -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
           --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
           --form 'appFile=@"AriesBifold.ipa"' \
-          --form "name=QCWallet-$GITHUB_RUN_NUMBER.ipa" \
+          --form "name=QCWallet-$GITHUB_RUN_NUMBER.ipa" > $HOME/lt_ios_resp.json
+          echo "IOS_APP_URL=lt://$(jq -r '.app_id' $HOME/lt_ios_resp.json)" >> "$GITHUB_OUTPUT"
 
       - name: Ship Android to LambdaTest
         env:
           LAMBDA_USERNAME: ${{ secrets.LAMBDA_USERNAME }}
           LAMBDA_ACCESS_KEY: ${{ secrets.LAMBDA_ACCESS_KEY }}
+        id: upload-app-android
         run: |
           curl \
           -u "$LAMBDA_USERNAME:$LAMBDA_ACCESS_KEY" \
           --location --request POST 'https://manual-api.lambdatest.com/app/upload/realDevice' \
           --form 'appFile=@"app-release.aab"' \
-          --form "name=QCWallet-$GITHUB_RUN_NUMBER.aab" \
+          --form "name=QCWallet-$GITHUB_RUN_NUMBER.aab" > $HOME/lt_android_resp.json
+          echo "ANDROID_APP_URL=lt://$(jq -r '.app_id' $HOME/lt_android_resp.json)" >> "$GITHUB_OUTPUT"
 
   run-on-device-tests:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -409,11 +416,13 @@ jobs:
       matrix:
         include:
           - mobile-platform: "-p Android"
-            app-file-name: "-a QCWallet-${{ github.run_number }}.aab"
-            report-project: "android-one-device-smoke"
+            app-file-name: "-a ${{ needs.ship-to-lambdatest.outputs.ANDROID_APP_URL }}"
+            build-name: "-b QCWallet-${{ github.run_number }}-Android"
+            report-project: "android-multi-device-full"
           - mobile-platform: "-p iOS"
-            app-file-name: "-a QCWallet-${{ github.run_number }}.ipa"
-            report-project: "ios-one-device-smoke"
+            app-file-name: "-a ${{ needs.ship-to-lambdatest.outputs.IOS_APP_URL }}"
+            build-name: "-b QCWallet-${{ github.run_number }}-iOS"
+            report-project: "ios-multi-device-full"
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
@@ -430,13 +439,13 @@ jobs:
         with:
           USE_NGROK: "-n"
 
-      - name: run-lambdatest-connect-tunnel
-        if: ${{ matrix.mobile-platform=='-p iOS' }}
-        uses: LambdaTest/LambdaTest-tunnel-action@v1
-        with:
-          user: ${{ secrets.LAMBDA_USERNAME }}
-          accessKey: ${{ secrets.LAMBDA_ACCESS_KEY }}
-          tunnelName: "PortefeuilleQC-Tunnel-${{ github.run_number }}"
+      # - name: run-lambdatest-connect-tunnel
+      #   if: ${{ matrix.mobile-platform=='-p iOS' }}
+      #   uses: LambdaTest/LambdaTest-tunnel-action@v1
+      #   with:
+      #     user: ${{ secrets.LAMBDA_USERNAME }}
+      #     accessKey: ${{ secrets.LAMBDA_ACCESS_KEY }}
+      #     tunnelName: "PortefeuilleQC-Tunnel-${{ github.run_number }}"
 
       - name: Fetch mobile test harness repo
         uses: actions/checkout@v2
@@ -445,13 +454,13 @@ jobs:
           path: aries-mobile-test-harness
           ref: main
 
-      - name: Run LambdaTest smoke-test
+      - name: Run LambdaTest all tests
         uses: ./.github/workflows/actions/run-test-harness
         env:
           LEDGER_URL_CONFIG: "http://test.bcovrin.vonx.io"
           REGION: "us-west-1"
         with:
-          MOBILE_WALLET: "-w bifold"
+          MOBILE_WALLET: "-w qc_wallet"
           ISSUER_AGENT: '-i "AATH;http://0.0.0.0:9020"'
           VERIFIER_AGENT: '-v "AATH;http://0.0.0.0:9030"'
           DEVICE_CLOUD: "-d LambdaTest"
@@ -459,13 +468,14 @@ jobs:
           DEVICE_CLOUD_KEY: "-k ${{ secrets.LAMBDA_ACCESS_KEY }}"
           MOBILE_PLATFORM: ${{ matrix.mobile-platform }}
           APP_FILE_NAME: ${{ matrix.app-file-name }}
-          TEST_SCOPE: "-t @qc_wallet -t @SmokeTest"
+          BUILD_NAME: ${{ matrix.build-name }}
+          TEST_SCOPE: "-t @qc_wallet -t ~@wip -t ~@qc_wallet_not"
           REPORT_PROJECT: ${{ matrix.report-project }}
 
-      - name: Upload smoke-test results to Allure
-        if: ${{ always() }}
-        uses: ./.github/workflows/actions/run-send-gen-test-results-secure
-        with:
-          REPORT_PROJECT: ${{ matrix.report-project }}
-          ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
-          ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
+      # - name: Upload smoke-test results to Allure
+      #   if: ${{ always() }}
+      #   uses: ./.github/workflows/actions/run-send-gen-test-results-secure
+      #   with:
+      #     REPORT_PROJECT: ${{ matrix.report-project }}
+      #     ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
+      #     ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
