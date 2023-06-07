@@ -1,7 +1,7 @@
 import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, SectionList, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native'
+import { Modal, SectionList, StyleSheet, Switch, Text, Pressable, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -131,20 +131,18 @@ const Settings: React.FC = () => {
     testID?: string
     onPress?: () => void
   }> = ({ title, value, accessibilityLabel, testID, onPress, children }) => (
-    <View style={[styles.section]}>
-      <TouchableOpacity
+    <View style={[styles.section, { flexDirection: 'row' }]}>
+      <Text style={[TextTheme.headingFour, { flexGrow: 1, fontWeight: 'normal' }]}>{title}</Text>
+      <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>{value}</Text>
+      <Pressable
         accessible={true}
         accessibilityLabel={accessibilityLabel}
         testID={testID}
         style={styles.sectionRow}
         onPress={onPress}
       >
-        <Text style={[TextTheme.headingFour, { fontWeight: 'normal', maxWidth: '90%' }]}>{title}</Text>
-        <Text style={[TextTheme.headingFour, { fontWeight: 'normal', maxWidth: '90%', color: ColorPallet.brand.link }]}>
-          {value}
-        </Text>
         {children}
-      </TouchableOpacity>
+      </Pressable>
     </View>
   )
 
@@ -185,9 +183,8 @@ const Settings: React.FC = () => {
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </Modal>
       <View style={styles.container}>
-        <SectionRow title={t('Developer.DeveloperMode')}>
+        <SectionRow accessibilityLabel={t('Developer.Toggle')} title={t('Developer.DeveloperMode')}>
           <Switch
-            accessibilityLabel={t('Developer.Toggle')}
             testID={testIdWithKey('ToggleDeveloper')}
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
             thumbColor={devMode ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
@@ -221,9 +218,8 @@ const Settings: React.FC = () => {
           sections={settingsSections}
           stickySectionHeadersEnabled={false}
         ></SectionList>
-        <SectionRow title={t('Verifier.UseVerifierCapability')}>
+        <SectionRow accessibilityLabel={t('Verifier.Toggle')} title={t('Verifier.UseVerifierCapability')}>
           <Switch
-            accessibilityLabel={t('Verifier.Toggle')}
             testID={testIdWithKey('ToggleVerifierCapability')}
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
             thumbColor={useVerifierCapability ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
@@ -232,7 +228,7 @@ const Settings: React.FC = () => {
             value={useVerifierCapability}
           />
         </SectionRow>
-        <SectionRow title={t('Connection.UseConnectionInviterCapability')}>
+        <SectionRow accessibilityLabel={t('Connection.Toggle')} title={t('Connection.UseConnectionInviterCapability')}>
           <Switch
             testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
