@@ -387,7 +387,7 @@ export const ListItems = StyleSheet.create({
   },
   avatarCircle: {
     borderRadius: TextTheme.headingTwo.fontSize,
-    borderColor: TextTheme.headingTwo.color,
+    borderColor: ColorPallet.grayscale.lightGrey,
     width: TextTheme.headingTwo.fontSize * 2,
     height: TextTheme.headingTwo.fontSize * 2,
   },
