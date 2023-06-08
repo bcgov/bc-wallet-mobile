@@ -1,6 +1,6 @@
 import { CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
-import { useStore, Button, ButtonType, testIdWithKey, useTheme } from 'aries-bifold'
+import { Button, ButtonType, testIdWithKey, useTheme } from 'aries-bifold'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text } from 'react-native'
@@ -9,7 +9,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from '../constants'
 import { useNotifications } from '../hooks/notifications'
 import WebDisplay from '../screens/WebDisplay'
-import { BCState } from '../store'
 
 const offset = 25
 
@@ -26,7 +25,6 @@ const HomeContentView: React.FC<HomeContentViewProps> = ({ children }) => {
   const { HomeTheme, ColorPallet } = useTheme()
   const { t } = useTranslation()
   const [surveyVisible, setSurveyVisible] = useState(false)
-  const [store] = useStore<BCState>()
 
   const styles = StyleSheet.create({
     container: {
@@ -84,30 +82,26 @@ const HomeContentView: React.FC<HomeContentViewProps> = ({ children }) => {
 
   return (
     <View style={[styles.feedbackContainer]}>
-      {store.preferences.developerModeEnabled ? (
-        <>
-          <Button
-            title={t('Feedback.GiveFeedback')}
-            accessibilityLabel={t('Feedback.GiveFeedback')}
-            testID={testIdWithKey('GiveFeedback')}
-            onPress={toggleSurveyVisibility}
-            buttonType={ButtonType.Secondary}
-          >
-            <Icon
-              name="message-draw"
-              style={[styles.feedbackIcon, { color: ColorPallet.brand.primary }]}
-              size={26}
-              color={ColorPallet.grayscale.white}
-            />
-          </Button>
-          <WebDisplay
-            destinationUrl={surveyMonkeyUrl}
-            exitUrl={surveyMonkeyExitUrl}
-            visible={surveyVisible}
-            onClose={toggleSurveyVisibility}
-          />
-        </>
-      ) : null}
+      <Button
+        title={t('Feedback.GiveFeedback')}
+        accessibilityLabel={t('Feedback.GiveFeedback')}
+        testID={testIdWithKey('GiveFeedback')}
+        onPress={toggleSurveyVisibility}
+        buttonType={ButtonType.Secondary}
+      >
+        <Icon
+          name="message-draw"
+          style={[styles.feedbackIcon, { color: ColorPallet.brand.primary }]}
+          size={26}
+          color={ColorPallet.grayscale.white}
+        />
+      </Button>
+      <WebDisplay
+        destinationUrl={surveyMonkeyUrl}
+        exitUrl={surveyMonkeyExitUrl}
+        visible={surveyVisible}
+        onClose={toggleSurveyVisibility}
+      />
       {notifications.total === 0 && (
         <View style={[styles.messageContainer]}>
           <Text adjustsFontSizeToFit style={[HomeTheme.welcomeHeader, { marginTop: offset, marginBottom: 20 }]}>
