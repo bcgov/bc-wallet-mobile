@@ -133,9 +133,7 @@ const TipCarousel: React.FC = () => {
     if (currentTip) {
       const tipBody = t(`Tips.Tip${tipOrder[currentPosition - 1]}`)
       const tipHeader = t('Tips.Header')
-      AccessibilityInfo.announceForAccessibility(
-        `${tipHeader}, ${tipBody}`
-      )
+      AccessibilityInfo.announceForAccessibility(`${tipHeader}, ${tipBody}`)
     } else if (currentPosition === 0) {
       AccessibilityInfo.announceForAccessibility(t('Tips.GettingReady'))
     }
