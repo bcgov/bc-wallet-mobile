@@ -183,9 +183,12 @@ const Settings: React.FC = () => {
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </Modal>
       <View style={styles.container}>
-        <SectionRow accessibilityLabel={t('Developer.Toggle')} title={t('Developer.DeveloperMode')}>
+        <SectionRow
+          title={t('Developer.DeveloperMode')}
+          accessibilityLabel={t('Developer.Toggle')}
+          testID={testIdWithKey('ToggleDeveloper')}
+        >
           <Switch
-            testID={testIdWithKey('ToggleDeveloper')}
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
             thumbColor={devMode ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
@@ -218,9 +221,12 @@ const Settings: React.FC = () => {
           sections={settingsSections}
           stickySectionHeadersEnabled={false}
         ></SectionList>
-        <SectionRow accessibilityLabel={t('Verifier.Toggle')} title={t('Verifier.UseVerifierCapability')}>
+        <SectionRow
+          title={t('Verifier.UseVerifierCapability')}
+          accessibilityLabel={t('Verifier.Toggle')}
+          testID={testIdWithKey('ToggleVerifierCapability')}
+        >
           <Switch
-            testID={testIdWithKey('ToggleVerifierCapability')}
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
             thumbColor={useVerifierCapability ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
@@ -228,9 +234,12 @@ const Settings: React.FC = () => {
             value={useVerifierCapability}
           />
         </SectionRow>
-        <SectionRow accessibilityLabel={t('Connection.Toggle')} title={t('Connection.UseConnectionInviterCapability')}>
+        <SectionRow
+          title={t('Connection.UseConnectionInviterCapability')}
+          accessibilityLabel={t('Connection.Toggle')}
+          testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
+        >
           <Switch
-            testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
             thumbColor={useConnectionInviterCapability ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
