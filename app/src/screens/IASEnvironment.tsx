@@ -60,6 +60,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
             <View style={[styles.section, styles.sectionRow]}>
               <Text style={[TextTheme.title]}>{t(`Developer.${name}`)}</Text>
               <BouncyCheckbox
+                accessibilityLabel={name}
                 disableText
                 fillColor="#FFFFFFFF"
                 unfillColor="#FFFFFFFF"

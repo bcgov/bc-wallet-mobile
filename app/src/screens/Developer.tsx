@@ -126,20 +126,18 @@ const Settings: React.FC = () => {
 
   const SectionRow: React.FC<{
     title: string
-    value?: string
     accessibilityLabel?: string
     testID?: string
     onPress?: () => void
-  }> = ({ title, value, accessibilityLabel, testID, onPress, children }) => (
+  }> = ({ title, accessibilityLabel, testID, onPress, children }) => (
     <View style={[styles.section, { flexDirection: 'row' }]}>
       <Text style={[TextTheme.headingFour, { flexGrow: 1, fontWeight: 'normal' }]}>{title}</Text>
-      <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>{value}</Text>
       <Pressable
+        onPress={onPress}
         accessible={true}
         accessibilityLabel={accessibilityLabel}
         testID={testID}
         style={styles.sectionRow}
-        onPress={onPress}
       >
         {children}
       </Pressable>
@@ -174,7 +172,7 @@ const Settings: React.FC = () => {
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
         visible={environmentModalVisible}
-        transparent={true}
+        transparent={false}
         animationType={'slide'}
         onRequestClose={() => {
           return
@@ -203,9 +201,12 @@ const Settings: React.FC = () => {
               title={title}
               accessibilityLabel={title}
               testID={testIdWithKey(title.toLowerCase())}
-              value={value}
               onPress={onPress}
-            />
+            >
+              <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>
+                {value}
+              </Text>
+            </SectionRow>
           )}
           renderSectionHeader={({
             section: {
@@ -220,7 +221,7 @@ const Settings: React.FC = () => {
           SectionSeparatorComponent={() => <View style={[styles.sectionSeparator]}></View>}
           sections={settingsSections}
           stickySectionHeadersEnabled={false}
-        ></SectionList>
+        />
         <SectionRow
           title={t('Verifier.UseVerifierCapability')}
           accessibilityLabel={t('Verifier.Toggle')}
