@@ -1,7 +1,7 @@
 import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, SectionList, StyleSheet, Switch, Text, Pressable, View, TouchableOpacity } from 'react-native'
+import { Modal, SectionList, StyleSheet, Switch, Text, Pressable, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
