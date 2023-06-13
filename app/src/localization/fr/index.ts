@@ -51,6 +51,7 @@ const translation = {
     "PrivacyConfidentiality": "Privacy and confidentiality (FR)",
     "PrivacyParagraph": "You approve every use of information from your BC Wallet. You also only share what is needed for a situation.\n\nThe Government of British Columbia is not told when you use your digital credentials. (FR)",
     "GetStarted": "Get Started (FR)",
+    "SkipA11y": "Skip introduction to BC Wallet (FR)",
   },
   "Screens": {
     "Onboarding": "BC Wallet (FR)",
