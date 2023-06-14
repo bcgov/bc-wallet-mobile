@@ -1,5 +1,5 @@
 diff --git a/build/modules/indy/services/IndyRevocationService.js b/build/modules/indy/services/IndyRevocationService.js
-index 0c5346f989ae234afb93a90432f1310cb897cd25..8cd704c831f5f831fef78e2b1463c43f6f8ca791 100644
+index 0c5346f989ae234afb93a90432f1310cb897cd25..14f7d830cdb4fc5b419e53aa67929474e65e4c4c 100644
 --- a/build/modules/indy/services/IndyRevocationService.js
 +++ b/build/modules/indy/services/IndyRevocationService.js
 @@ -121,10 +121,10 @@ let IndyRevocationService = class IndyRevocationService {
@@ -17,3 +17,4 @@ index 0c5346f989ae234afb93a90432f1310cb897cd25..8cd704c831f5f831fef78e2b1463c43f
      }
  };
  IndyRevocationService = __decorate([
+\ No newline at end of file
