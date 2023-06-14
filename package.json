@@ -37,6 +37,7 @@
     "typecheck": "cd app && yarn typecheck"
   },
   "devDependencies": {
+    "husky": "^7.0.0",
     "npm-run-all": "^4.1.5"
   },
   "resolutions": {
@@ -46,11 +47,12 @@
     "@react-navigation/native": "6.0.6",
     "@react-navigation/stack": "6.0.11",
     "@types/node": "16.9.6",
-    "@aries-framework/core": "0.3.3",
     "did-resolver": "3.1.5",
-    "react-native@0.66.5": "patch:react-native@npm%3A0.66.5#./app/.yarn/patches/react-native-npm-0.66.5-22e5dd8ec5.patch",
-    "@aries-framework/core@^0.3.3": "patch:@aries-framework/core@npm%3A0.3.3#./app/.yarn/patches/@aries-framework-core-npm-0.3.3-dd6486de3d.patch",
-    "@aries-framework/react-hooks@^0.4.0": "patch:@aries-framework/react-hooks@npm%3A0.4.2#./app/.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch",
-    "react-native-gifted-chat@0.16.3": "patch:react-native-gifted-chat@npm%3A0.16.3#./app/.yarn/patches/react-native-gifted-chat-npm-0.16.3-9cbc12a602.patch"
+    "react-native@0.66.5": "patch:react-native@npm:0.66.5#.yarn/patches/react-native-npm-0.66.5-22e5dd8ec5.patch",
+    "@aries-framework/react-hooks@^0.4.0": "patch:@aries-framework/react-hooks@npm:0.4.2#./.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch",
+    "react-native-gifted-chat@0.16.3": "patch:react-native-gifted-chat@npm:0.16.3#./.yarn/patches/react-native-gifted-chat-npm-0.16.3-9cbc12a602.patch",
+    "@aries-framework/core@0.2.5": "patch:@aries-framework/core@npm:0.2.5#./.yarn/patches/@aries-framework-core-npm-0.3.3-dd6486de3d.patch",
+    "@aries-framework/core@0.3.3": "patch:@aries-framework/core@npm:0.3.3#./.yarn/patches/@aries-framework-core-npm-0.3.3-dd6486de3d.patch",
+    "@aries-framework/core@^0.3.3": "patch:@aries-framework/core@npm:^0.3.3#./.yarn/patches/@aries-framework-core-npm-0.3.3-dd6486de3d.patch"
   }
 }
