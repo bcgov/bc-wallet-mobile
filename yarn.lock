@@ -6733,6 +6733,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bc-wallet-mobile@workspace:."
   dependencies:
+    "@commitlint/cli": ^11.0.0
+    commitlint: ^11.0.0
     husky: ^7.0.0
     npm-run-all: ^4.1.5
   languageName: unknown
