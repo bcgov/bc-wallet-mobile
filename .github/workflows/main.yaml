@@ -235,6 +235,19 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Rocket.Chat iOS Notification
+        if: failure()
+        uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
+        with:
+          type: ${{ job.status }}
+          job_name: 'BC Wallet iOS Build - Run number ${{ github.run_number }}'
+          mention: 'jason.leach @cvarjao @wade.king @bryce.mcmath'
+          mention_if: 'failure'
+          channel: '#test'
+          url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+          commit: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
   build-android:
     needs: [check-android-secrets]
     runs-on: ubuntu-22.04
@@ -343,6 +356,19 @@ jobs:
           path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
+
+      - name: Rocket.Chat Android Notification
+        if: failure()
+        uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
+        with:
+          type: ${{ job.status }}
+          job_name: 'BC Wallet Android Build - Run number ${{ github.run_number }}'
+          mention: 'jason.leach @cvarjao @wade.king @bryce.mcmath'
+          mention_if: 'failure'
+          channel: '#test'
+          url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+          commit: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   ship-to-saucelabs:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
