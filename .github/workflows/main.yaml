@@ -236,7 +236,7 @@ jobs:
           retention-days: 7
 
       - name: Rocket.Chat iOS Notification
-        if: failure()
+        if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
         with:
           type: ${{ job.status }}
@@ -358,7 +358,7 @@ jobs:
           retention-days: 7
 
       - name: Rocket.Chat Android Notification
-        if: failure()
+        if: failure() && github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
         with:
           type: ${{ job.status }}
