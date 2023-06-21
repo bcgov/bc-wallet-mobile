@@ -1,4 +1,12 @@
 PODS:
+  - anoncreds (0.1.0):
+    - React
+    - React-callinvoker
+    - React-Core
+  - aries-askar (0.1.0):
+    - React
+    - React-callinvoker
+    - React-Core
   - boost (1.76.0)
   - CatCrypto (0.3.2)
   - CocoaAsyncSocket (7.6.5)
@@ -16,6 +24,10 @@ PODS:
   - hermes-engine (0.9.0)
   - indy-sdk-react-native (0.2.2):
     - React
+  - indy-vdr (0.1.0):
+    - React
+    - React-callinvoker
+    - React-Core
   - libevent (2.1.12)
   - Permission-Camera (3.8.0):
     - RNPermissions
@@ -386,6 +398,8 @@ PODS:
   - Yoga (1.14.0)
 
 DEPENDENCIES:
+  - "anoncreds (from `../node_modules/@hyperledger/anoncreds-react-native`)"
+  - "aries-askar (from `../node_modules/@hyperledger/aries-askar-react-native`)"
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -393,6 +407,7 @@ DEPENDENCIES:
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (~> 0.9.0)
   - indy-sdk-react-native (from `../node_modules/indy-sdk-react-native`)
+  - "indy-vdr (from `../node_modules/@hyperledger/indy-vdr-react-native`)"
   - libevent (~> 2.1.12)
   - Permission-Camera (from `../node_modules/react-native-permissions/ios/Camera`)
   - RCT-Folly (from `../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
@@ -456,6 +471,10 @@ SPEC REPOS:
     - libevent
 
 EXTERNAL SOURCES:
+  anoncreds:
+    :path: "../node_modules/@hyperledger/anoncreds-react-native"
+  aries-askar:
+    :path: "../node_modules/@hyperledger/aries-askar-react-native"
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DoubleConversion:
@@ -468,6 +487,8 @@ EXTERNAL SOURCES:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
   indy-sdk-react-native:
     :path: "../node_modules/indy-sdk-react-native"
+  indy-vdr:
+    :path: "../node_modules/@hyperledger/indy-vdr-react-native"
   Permission-Camera:
     :path: "../node_modules/react-native-permissions/ios/Camera"
   RCT-Folly:
@@ -570,6 +591,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
+  anoncreds: 8e6ab626d5250ae6301c3e96d6fc739186e083f0
+  aries-askar: fde2367dd2eec5c646e71cd909f518a3585b0f17
   boost: a7c83b31436843459a1961bfd74b96033dc77234
   CatCrypto: a477899b6be4954e75be4897e732da098cc0a5a8
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
@@ -580,6 +603,7 @@ SPEC CHECKSUMS:
   glog: 5337263514dd6f09803962437687240c5dc39aa4
   hermes-engine: bf7577d12ac6ccf53ab8b5af3c6ccf0dd8458c5c
   indy-sdk-react-native: 52c3fdd11b673d11cdae5c28fa79a184084c6688
+  indy-vdr: 85cd66089f151256581323440e78988891f4082e
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   Permission-Camera: e6d142d7d8b714afe0a83e5e6ae17eb949f1e3e9
   RCT-Folly: a21c126816d8025b547704b777a2ba552f3d9fa9
@@ -632,6 +656,6 @@ SPEC CHECKSUMS:
   RNVectorIcons: 31cebfcf94e8cf8686eb5303ae0357da64d7a5a4
   Yoga: b316a990bb6d115afa1b436b5626ac7c61717d17
 
-PODFILE CHECKSUM: ac6fb920404abfaf943a3b94ff54624a7f9c89e8
+PODFILE CHECKSUM: 4266f539fd5c242abd4005c88814b151329c70f6
 
 COCOAPODS: 1.12.1
