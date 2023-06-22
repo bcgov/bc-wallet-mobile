@@ -1,6 +1,5 @@
 import {
   Agent,
-  AutoAcceptCredential,
   ConsoleLogger,
   HttpOutboundTransport,
   LogLevel,
@@ -37,6 +36,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { BCDispatchAction, BCLocalStorageKeys } from '../store'
+import { getAgentModules } from '../utils/agent'
 
 enum InitErrorTypes {
   Onboarding,
@@ -291,18 +291,37 @@ const Splash: React.FC = () => {
         const options = {
           config: {
             label: 'BC Wallet',
-            mediatorConnectionsInvite: Config.MEDIATOR_URL,
-            mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
-            walletConfig: { id: credentials.id, key: credentials.key },
-            autoAcceptConnections: true,
-            autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
+            walletConfig: {
+              id: credentials.id,
+              key: credentials.key,
+            },
             logger: new ConsoleLogger(LogLevel.trace),
-            indyLedgers,
-            connectToIndyLedgersOnStartup: false,
+            mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             autoUpdateStorageOnStartup: true,
+            autoAcceptConnections: true,
           },
           dependencies: agentDependencies,
+          modules: getAgentModules({
+            indyNetworks: indyLedgers,
+            mediatorInvitationUrl: Config.MEDIATOR_URL,
+          }),
         }
+
+        // const options = {
+        //   config: {
+        //     label: 'BC Wallet',
+        //     mediatorConnectionsInvite: Config.MEDIATOR_URL,
+        //     mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
+        //     walletConfig: { id: credentials.id, key: credentials.key },
+        //     autoAcceptConnections: true,
+        //     autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
+        //     logger: new ConsoleLogger(LogLevel.trace),
+        //     indyLedgers,
+        //     connectToIndyLedgersOnStartup: false,
+        //     autoUpdateStorageOnStartup: true,
+        //   },
+        //   dependencies: agentDependencies,
+        // }
 
         const newAgent = new Agent(options)
         const wsTransport = new WsOutboundTransport()
@@ -314,8 +333,9 @@ const Splash: React.FC = () => {
         setStep(6)
         await newAgent.initialize()
 
-        setStep(7)
-        await newAgent.ledger.connectToPools()
+        setStep(7) // TODO(jl): I think this can go because
+        // the API is gone.
+        // await newAgent.ledger.connectToPools()
 
         setStep(8)
         setAgent(newAgent)

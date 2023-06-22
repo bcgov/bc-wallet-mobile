@@ -22,8 +22,6 @@ PODS:
   - fmt (6.2.1)
   - glog (0.3.5)
   - hermes-engine (0.9.0)
-  - indy-sdk-react-native (0.2.2):
-    - React
   - indy-vdr (0.1.0):
     - React
     - React-callinvoker
@@ -406,7 +404,6 @@ DEPENDENCIES:
   - FBReactNativeSpec (from `../node_modules/react-native/React/FBReactNativeSpec`)
   - glog (from `../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (~> 0.9.0)
-  - indy-sdk-react-native (from `../node_modules/indy-sdk-react-native`)
   - "indy-vdr (from `../node_modules/@hyperledger/indy-vdr-react-native`)"
   - libevent (~> 2.1.12)
   - Permission-Camera (from `../node_modules/react-native-permissions/ios/Camera`)
@@ -485,8 +482,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/React/FBReactNativeSpec"
   glog:
     :podspec: "../node_modules/react-native/third-party-podspecs/glog.podspec"
-  indy-sdk-react-native:
-    :path: "../node_modules/indy-sdk-react-native"
   indy-vdr:
     :path: "../node_modules/@hyperledger/indy-vdr-react-native"
   Permission-Camera:
@@ -602,7 +597,6 @@ SPEC CHECKSUMS:
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 5337263514dd6f09803962437687240c5dc39aa4
   hermes-engine: bf7577d12ac6ccf53ab8b5af3c6ccf0dd8458c5c
-  indy-sdk-react-native: 52c3fdd11b673d11cdae5c28fa79a184084c6688
   indy-vdr: 85cd66089f151256581323440e78988891f4082e
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   Permission-Camera: e6d142d7d8b714afe0a83e5e6ae17eb949f1e3e9

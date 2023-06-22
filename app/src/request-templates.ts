@@ -1,4 +1,3 @@
-import { PredicateType } from '@aries-framework/core'
 import { ProofRequestTemplate, ProofRequestType } from 'aries-bifold'
 
 const calculatePreviousYear = (yearOffset: number) => {
@@ -14,7 +13,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
     description: 'Verify the full name of a person',
     version: '0.0.1',
     payload: {
-      type: ProofRequestType.Indy,
+      type: ProofRequestType.AnonCreds,
       data: [
         {
           schema: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
@@ -54,7 +53,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
     description: 'Verify if a person is 19 years end up and full name.',
     version: '0.0.1',
     payload: {
-      type: ProofRequestType.Indy,
+      type: ProofRequestType.AnonCreds,
       data: [
         {
           schema: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
@@ -75,7 +74,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
           requestedPredicates: [
             {
               name: 'birthdate_dateint',
-              predicateType: PredicateType.GreaterThanOrEqualTo,
+              predicateType: '>=',
               predicateValue: calculatePreviousYear(19),
               restrictions: [
                 // IDIM Person credential
@@ -98,14 +97,14 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
     description: 'Verify if a person is 19 years end up.',
     version: '0.0.1',
     payload: {
-      type: ProofRequestType.Indy,
+      type: ProofRequestType.AnonCreds,
       data: [
         {
           schema: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
           requestedPredicates: [
             {
               name: 'birthdate_dateint',
-              predicateType: PredicateType.GreaterThanOrEqualTo,
+              predicateType: '>=',
               predicateValue: calculatePreviousYear(19),
               restrictions: [
                 // IDIM Person credential
@@ -128,7 +127,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
     description: 'Verify if a person`is a practicing lawyer.',
     version: '0.0.1',
     payload: {
-      type: ProofRequestType.Indy,
+      type: ProofRequestType.AnonCreds,
       data: [
         {
           schema: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1',
@@ -155,7 +154,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
     description: 'Verify if a person`is a practicing lawyer using two different credentials for extra assurance',
     version: '0.0.1',
     payload: {
-      type: ProofRequestType.Indy,
+      type: ProofRequestType.AnonCreds,
       data: [
         {
           schema: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
@@ -199,14 +198,14 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
     description: 'Verify if a person is over some years ends up.',
     version: '0.0.1',
     payload: {
-      type: ProofRequestType.Indy,
+      type: ProofRequestType.AnonCreds,
       data: [
         {
           schema: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0',
           requestedPredicates: [
             {
               name: 'birthdate_dateint',
-              predicateType: PredicateType.GreaterThanOrEqualTo,
+              predicateType: '>=',
               predicateValue: calculatePreviousYear(19),
               parameterizable: true,
               restrictions: [

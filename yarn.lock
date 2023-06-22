@@ -6798,7 +6798,6 @@ __metadata:
     eslint-plugin-prettier: ^3.3.1
     husky: ^7.0.0
     i18next: 21.4.0
-    indy-sdk-react-native: 0.2.2
     jest: ^27.5.1
     lint-staged: ^11.2.6
     lodash.flatten: 4.4.0
@@ -7211,7 +7210,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"buffer@npm:^6.0.2, buffer@npm:^6.0.3":
+"buffer@npm:^6.0.3":
   version: 6.0.3
   resolution: "buffer@npm:6.0.3"
   dependencies:
@@ -12006,18 +12005,6 @@ __metadata:
   version: 4.0.0
   resolution: "indent-string@npm:4.0.0"
   checksum: 824cfb9929d031dabf059bebfe08cf3137365e112019086ed3dcff6a0a7b698cb80cf67ccccde0e25b9e2d7527aa6cc1fed1ac490c752162496caba3e6699612
-  languageName: node
-  linkType: hard
-
-"indy-sdk-react-native@npm:0.2.2":
-  version: 0.2.2
-  resolution: "indy-sdk-react-native@npm:0.2.2"
-  dependencies:
-    buffer: ^6.0.2
-  peerDependencies:
-    react: ">= 16"
-    react-native: ">=0.59.0-rc.0 <1.0.x"
-  checksum: 39055eea81c2aa6279dc2df788571c0287a03037a16e330d0b47a2668b6bfa7092ee2d2475ab66f4acf04b290452a3b6fd710d2a732493132ed0f69a3c253be8
   languageName: node
   linkType: hard
 
