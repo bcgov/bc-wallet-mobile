@@ -6830,7 +6830,6 @@ __metadata:
     metro-react-native-babel-preset: 0.66.2
     mockdate: ^3.0.5
     moment: ^2.29.4
-    patch-package: ^6.4.7
     prettier: ^2.1.2
     query-string: 7.0.1
     react: 17.0.2
@@ -16442,7 +16441,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"patch-package@npm:^6.4.4, patch-package@npm:^6.4.7":
+"patch-package@npm:^6.4.4":
   version: 6.5.1
   resolution: "patch-package@npm:6.5.1"
   dependencies:
