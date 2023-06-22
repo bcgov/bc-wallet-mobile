@@ -105,8 +105,9 @@ jobs:
           yarn install --immutable  && \
           git status
 
-      - name: Updaet ledgers
-        uses: ./.github/workflows/actions/update-ledgers
+      # Ledgers are missing namespace, not compatible.
+      # - name: Updaet ledgers
+      #   uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
@@ -155,9 +156,6 @@ jobs:
           CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
         run: |
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
-
-      - name: Updaet ledgers
-        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Release build
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -246,19 +244,9 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
-      - name: Update ledgers
-        run: |
-          node bifold/scripts/make-blocks.js
-
-          # the ledgers file should be about 344K
-          ls -lah ledgers.json
-          # note md5
-          shasum ledgers.json
-          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-
-          mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-
+      # Ledgers are missing namespace, not compatible.
+      # - name: Updaet ledgers
+      #   uses: ./.github/workflows/actions/update-ledgers
       - name: Install dependencies
         working-directory: ./
         run: |
