@@ -99,11 +99,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-
 
-      - name: Install react native dependencies
+      - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable && \
+          yarn install --immutable  && \
           git status
+
+      - name: Updaet ledgers
+        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
@@ -153,15 +156,8 @@ jobs:
         run: |
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
-      - name: Update ledgers
-        run: |
-          node bifold/scripts/make-blocks.js
-
-          # the ledgers file should be about 344K
-          ls -lah ledgers.json
-
-          mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
+      - name: Updaet ledgers
+        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Release build
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -241,11 +237,10 @@ jobs:
     # container:
     #   image: docker.io/fullboar/android-builder:latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Pull & update submodules recursively
         run: |
-          git config --global --add safe.directory '*'
           git submodule update --init --recursive
 
       - name: Setup NodeJS
