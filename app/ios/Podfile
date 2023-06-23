@@ -1,7 +1,8 @@
+source 'https://cdn.cocoapods.org'
 require_relative '../node_modules/react-native/scripts/react_native_pods'
 require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
 
-platform :ios, '11.0'
+platform :ios, '12.0'
 
 # This is used to allow the CI build to work. The pod(s) are
 # signed with the credentials / profile provided and xcodebuild
