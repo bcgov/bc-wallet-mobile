@@ -29,6 +29,8 @@ import {
   testIdWithKey,
   didMigrateToAskar,
   migrateToAskar,
+  getAgentModules,
+  createLinkSecretIfRequired,
 } from 'aries-bifold'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -39,7 +41,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { BCDispatchAction, BCLocalStorageKeys } from '../store'
-import { getAgentModules } from '../utils/agent'
 
 enum InitErrorTypes {
   Onboarding,
@@ -343,9 +344,8 @@ const Splash: React.FC = () => {
         setStep(6)
         await newAgent.initialize()
 
-        setStep(7) // TODO(jl): I think this can go because
-        // the API is gone.
-        // await newAgent.ledger.connectToPools()
+        setStep(7)
+        await createLinkSecretIfRequired(newAgent)
 
         setStep(8)
         setAgent(newAgent)
