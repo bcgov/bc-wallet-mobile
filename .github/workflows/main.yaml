@@ -229,6 +229,13 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Send notification for iOS failure
+        if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        uses: ./.github/workflows/actions/send-rocketchat-notification
+        with:
+          job_title: 'BC Wallet iOS Build - Run number ${{ github.run_number }}'
+          job_status: ${{ job.status }}
+
   build-android:
     needs: [check-android-secrets]
     runs-on: ubuntu-22.04
@@ -326,6 +333,13 @@ jobs:
           path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
+
+      - name: Send notification for Android failure
+        if: failure() && github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        uses: ./.github/workflows/actions/send-rocketchat-notification
+        with:
+          job_title: 'BC Wallet Android Build - Run number ${{ github.run_number }}'
+          job_status: ${{ job.status }}
 
   ship-to-saucelabs:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
