@@ -229,18 +229,12 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Rocket.Chat iOS Notification
+      - name: Send notification for iOS failure
         if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
+        uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
-          type: ${{ job.status }}
-          job_name: 'BC Wallet iOS Build - Run number ${{ github.run_number }}'
-          mention: 'jason.leach @cvarjao @wade.king @bryce.mcmath'
-          mention_if: 'failure'
-          channel: '#test'
-          url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          commit: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          job_title: 'BC Wallet iOS Build - Run number ${{ github.run_number }}'
+          job_status: ${{ job.status }}
 
   build-android:
     needs: [check-android-secrets]
@@ -340,18 +334,12 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      - name: Rocket.Chat Android Notification
+      - name: Send notification for Android failure
         if: failure() && github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
-        uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
+        uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
-          type: ${{ job.status }}
-          job_name: 'BC Wallet Android Build - Run number ${{ github.run_number }}'
-          mention: 'jason.leach @cvarjao @wade.king @bryce.mcmath'
-          mention_if: 'failure'
-          channel: '#test'
-          url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          commit: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          job_title: 'BC Wallet Android Build - Run number ${{ github.run_number }}'
+          job_status: ${{ job.status }}
 
   ship-to-saucelabs:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
