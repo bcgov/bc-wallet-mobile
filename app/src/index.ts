@@ -32,8 +32,7 @@ const localization = merge({}, translationResources, {
   fr: { translation: fr },
   'pt-BR': { translation: ptBr },
 })
-
-const selectedLedgers = indyLedgers.filter((item) => !item.id.startsWith('Indicio'))
+const selectedLedgers = indyLedgers.filter((ledger) => ledger.indyNamespace !== 'indicio')
 const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,
@@ -66,6 +65,7 @@ const configuration: ConfigurationContext = {
   useCustomNotifications: useNotifications,
   proofRequestTemplates,
   enableTours: true,
+  enableWalletNaming: false,
 }
 
 export default { theme, localization, configuration }

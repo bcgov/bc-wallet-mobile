@@ -1,4 +1,5 @@
-import { DidRepository, CredentialMetadataKeys, CredentialExchangeRecord } from '@aries-framework/core'
+import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
+import { DidRepository, CredentialExchangeRecord } from '@aries-framework/core'
 import { BifoldError, Agent, EventTypes as BifoldEventTypes } from 'aries-bifold'
 import React from 'react'
 import { TFunction } from 'react-i18next'
@@ -58,7 +59,7 @@ export const getInvitationCredentialDate = (
   canUseLSBCCredential: boolean
 ): Date | undefined => {
   const invitationCredential = credentials.find((c) => {
-    const credDef = c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
+    const credDef = c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     if (
       trustedInvitationIssuerRe.test(credDef) ||
       (trustedLSBCCredentialIssuerRe.test(credDef) && canUseLSBCCredential)

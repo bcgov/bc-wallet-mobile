@@ -1,4 +1,5 @@
-import { CredentialMetadataKeys, CredentialState } from '@aries-framework/core'
+import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
+import { CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/native'
 import { useTheme, Screens, Stacks, testIdWithKey } from 'aries-bifold'
@@ -84,7 +85,7 @@ const AddCredentialSlider: React.FC = () => {
 
   useEffect(() => {
     const credentialDefinitionIDs = credentials.map(
-      (c) => c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
+      (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     )
 
     setShowGetFoundationCredential(showBCIDSelector(credentialDefinitionIDs, true))
