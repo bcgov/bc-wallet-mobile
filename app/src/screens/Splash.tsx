@@ -47,14 +47,8 @@ enum InitErrorTypes {
   Agent,
 }
 
-const onboardingComplete = (state: OnboardingState, enableWalletNaming: boolean | undefined): boolean => {
-  return (
-    state.didCompleteTutorial &&
-    state.didAgreeToTerms &&
-    state.didCreatePIN &&
-    (state.didNameWallet || !enableWalletNaming) &&
-    state.didConsiderBiometry
-  )
+const onboardingComplete = (state: OnboardingState): boolean => {
+  return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
 }
 
 const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean | undefined): Screens => {
@@ -264,7 +258,7 @@ const Splash: React.FC = () => {
             payload: [dataAsJSON],
           })
 
-          if (onboardingComplete(dataAsJSON, enableWalletNaming) && !attemptData?.lockoutDate) {
+          if (onboardingComplete(dataAsJSON) && !attemptData?.lockoutDate) {
             navigation.dispatch(
               CommonActions.reset({
                 index: 0,
@@ -272,7 +266,7 @@ const Splash: React.FC = () => {
               })
             )
             return
-          } else if (onboardingComplete(dataAsJSON, enableWalletNaming) && attemptData?.lockoutDate) {
+          } else if (onboardingComplete(dataAsJSON) && attemptData?.lockoutDate) {
             // return to lockout screen if lockout date is set
             navigation.dispatch(
               CommonActions.reset({
