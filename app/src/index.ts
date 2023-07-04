@@ -30,9 +30,7 @@ const localization = merge({}, translationResources, {
   en: { translation: en },
   fr: { translation: fr },
 })
-
-const selectedLedgers = indyLedgers.filter((item: any) => !item.id.startsWith('Indicio'))
-
+const selectedLedgers = indyLedgers.filter((ledger) => ledger.indyNamespace !== 'indicio')
 const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,

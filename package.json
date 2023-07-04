@@ -3,34 +3,57 @@
   "version": "1.0.0",
   "description": "![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)",
   "main": "index.js",
-  "scripts": {
-    "install:bifold": "cd bifold/packages/legacy/core && yarn install --frozen-lockfile",
-    "install:app": "cd app && npm ci",
-    "install:all": "run-s install:bifold install:app",
-    "build:bifold": "cd bifold/packages/legacy/core && yarn typecheck && yarn prepack",
-    "build:app": "cd app && npm run typecheck && npm run prepack --if-present",
-    "build:all": "run-s build:bifold build:app",
-    "prepare": "run-s install:all build:all",
-    "lint:app": "cd app && npm run lint --if-present",
-    "lint": "run-s lint:app",
-    "prettier:app": "cd app && npm run prettier --if-present",
-    "prettier": "run-s prettier:app",
-    "test": "cd app && npm test",
-    "pre-commit-lint:app": "cd app && npm run pre-commit-lint",
-    "pre-commit-lint": "run-s pre-commit-lint:app",
-    "typecheck": "cd app && npm run typecheck"
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=16.15.0 <18.0.0",
+    "yarn": "^3.3.1"
+  },
+  "packageManager": "yarn@3.3.1",
+  "workspaces": {
+    "packages": [
+      "app",
+      "bifold-core"
+    ]
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/bcgov/bc-wallet-mobile.git"
   },
-  "author": "",
-  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/bcgov/bc-wallet-mobile/issues"
   },
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
+  "scripts": {
+    "build:bifold": "yarn workspace aries-bifold prepack",
+    "preinstall": "yarn build:bifold && npx husky install .husky",
+    "lint:app": "cd app && yarn lint",
+    "lint": "yarn lint:app",
+    "prettier:app": "cd app && yarn prettier",
+    "prettier": "yarn prettier:app",
+    "test": "cd app && yarn test",
+    "pre-commit-lint:app": "cd app && yarn pre-commit-lint",
+    "pre-commit-lint": "yarn pre-commit-lint:app",
+    "typecheck": "cd app && yarn typecheck"
+  },
   "devDependencies": {
+    "@commitlint/cli": "^11.0.0",
+    "commitlint": "^11.0.0",
+    "husky": "^7.0.0",
     "npm-run-all": "^4.1.5"
+  },
+  "resolutions": {
+    "@types/react": "17.0.2",
+    "@types/react-dom": "17.0.2",
+    "@react-navigation/core": "6.1.0",
+    "@react-navigation/native": "6.0.6",
+    "@react-navigation/stack": "6.0.11",
+    "@types/node": "16.9.6",
+    "did-resolver": "3.1.5",
+    "react-native@0.66.5": "patch:react-native@npm:0.66.5#.yarn/patches/react-native-npm-0.66.5-22e5dd8ec5.patch",
+    "react-native-gifted-chat@0.16.3": "patch:react-native-gifted-chat@npm:0.16.3#./.yarn/patches/react-native-gifted-chat-npm-0.16.3-9cbc12a602.patch",
+    "@aries-framework/core@0.3.3": "patch:@aries-framework/core@npm:0.3.3#./.yarn/patches/@aries-framework-core-npm-0.3.3-dd6486de3d.patch",
+    "@aries-framework/react-hooks@^0.4.2": "patch:@aries-framework/react-hooks@npm:0.4.2#./.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch",
+    "@aries-framework/react-native@0.4.0": "patch:@aries-framework/react-native@npm:0.3.3#./.yarn/patches/@aries-framework-react-native-npm-0.3.3-bb75ece22d.patch"
   }
 }

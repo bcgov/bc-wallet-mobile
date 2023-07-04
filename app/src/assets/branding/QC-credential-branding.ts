@@ -1,5 +1,7 @@
 import { types } from 'aries-bifold'
 
+import { DEMO_ADDRESS_Bundle, DEMO_ANIG_Bundle, DEMO_CREDENTIALS, DEMO_PHOTO_Bundle } from './QC-demo-schemas'
+
 type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
 type MetaOverlay = types.oca.MetaOverlay
 type FormatOverlay = types.oca.FormatOverlay
@@ -404,4 +406,7 @@ export default {
   [CREDENTIALS.ANIG_L]: ANIG_LBundle,
   [CREDENTIALS.ADRESSE_L]: ADRESSE_LBundle,
   [CREDENTIALS.PHOTO_L]: PHOTO_LBundle,
+  [DEMO_CREDENTIALS.DEMO_ANIG]: DEMO_ANIG_Bundle,
+  [DEMO_CREDENTIALS.DEMO_ADDRESS]: DEMO_ADDRESS_Bundle,
+  [DEMO_CREDENTIALS.DEMO_PHOTO]: DEMO_PHOTO_Bundle,
 }

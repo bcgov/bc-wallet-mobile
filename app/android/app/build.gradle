@@ -1,5 +1,4 @@
 apply plugin: "com.android.application"
-apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 
 import com.android.build.OutputFile
 
@@ -94,7 +93,6 @@ project.ext.react = [
 ]
 
 apply from: "../../node_modules/react-native/react.gradle"
-apply plugin: "com.bugsnag.android.gradle"
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
 /**
@@ -157,14 +155,13 @@ android {
 
 
         missingDimensionStrategy 'react-native-camera', 'general'
-        manifestPlaceholders = [API_KEY: project.env.get("BUGSNAG_API_KEY")]
     }
     splits {
         abi {
             reset()
             enable enableSeparateBuildPerCPUArchitecture
             universalApk false  // If true, also generate a universal APK
-            include "armeabi-v7a", "x86", "arm64-v8a"/*, "x86_64" */ //TODO(JamesKEbert): add x86_64 support from libindy
+            include "armeabi-v7a", "x86", "arm64-v8a"/*, "x86_64" */
         }
     }
     signingConfigs {
@@ -240,8 +237,5 @@ task copyDownloadableDepsToLibs(type: Copy) {
     into 'libs'
 }
 
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
 apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
-
-bugsnag {
-  uploadReactNativeMappings = true
-}

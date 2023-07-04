@@ -72,7 +72,7 @@ const BrandColors: IBrandColors = {
   link: '#095797',
   modalPrimary: '#095797',
   modalSecondary: '#FFFFFFFF',
-  unorderedList: GrayscaleColors.white,
+  unorderedList: GrayscaleColors.darkGrey,
   unorderedListModal: GrayscaleColors.darkGrey,
   text: GrayscaleColors.white,
   icon: GrayscaleColors.white,
@@ -387,7 +387,7 @@ export const ListItems = StyleSheet.create({
   },
   avatarCircle: {
     borderRadius: TextTheme.headingTwo.fontSize,
-    borderColor: TextTheme.headingTwo.color,
+    borderColor: ColorPallet.grayscale.lightGrey,
     width: TextTheme.headingTwo.fontSize * 2,
     height: TextTheme.headingTwo.fontSize * 2,
   },

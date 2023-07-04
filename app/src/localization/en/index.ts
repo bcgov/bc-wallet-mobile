@@ -328,10 +328,23 @@ const translation = {
     Contacts: 'Contacts',
     Settings: 'Settings',
   },
-  QRScanner: {
-    PermissionToUseCamera: 'Permission to use camera',
-    WeNeedYourPermissionToUseYourCamera: 'We need your permission to use your camera',
-    Ok: 'Ok',
+  Onboarding: {
+    Welcome: 'Welcome',
+    WelcomeParagraph1: 'QC Wallet lets you receive, store and use digital credentials.',
+    WelcomeParagraph2: 'It is highly secure, and helps protect your privacy online.',
+    WelcomeParagraph3:
+      'QC Wallet is currently in its early stages and the technology is being explored. Most people will not have a use for QC Wallet yet, because very few digital credentials are available.',
+    StoredSecurelyTitle: 'Digital credentials, stored securely',
+    StoredSecurelyBody:
+      'BC Wallet holds digital credentials—the digital versions of things like licenses, identities and permits.\n\nThey are stored securely, only on this device.',
+    UsingCredentialsTitle: 'Receiving and using credentials',
+    UsingCredentialsBody:
+      'To receive and use credentials you use the “Scan” feature in the app to scan a special QR code.\n\nInformation is sent and received over a private, encrypted connection.',
+    PrivacyConfidentiality: 'Privacy and confidentiality',
+    PrivacyParagraph:
+      'You approve every use of information from your QC Wallet. You also only share what is needed for a situation.\n\nThe Government of Québec is not told when you use your digital credentials.',
+    GetStarted: 'Get Started',
+    SkipA11y: 'Skip introduction to QC Wallet',
   },
   Record: {
     Hide: 'Hide',

@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/core'
+import { useNavigation } from '@react-navigation/native'
 import {
   Stacks,
   Screens,
@@ -26,8 +26,6 @@ import Toast from 'react-native-toast-message'
 
 import qcwallet from './src'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
-// import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
-// import WebDisplay from './src/screens/WebDisplay'
 import { initialState, reducer } from './src/store'
 
 const { theme, localization, configuration } = qcwallet
@@ -40,10 +38,10 @@ const App = () => {
   }, [])
 
   const [agent] = useState<Agent | undefined>(undefined)
-  // const [surveyVisible, setSurveyVisible] = useState(false)
+  const [surveyVisible, setSurveyVisible] = useState(false)
   const { t } = useTranslation()
   const { navigate } = useNavigation()
-  // const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
+  const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
 
   const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
 
@@ -60,18 +58,18 @@ const App = () => {
           testID: testIdWithKey('HelpUsingBCWallet'),
           onPress: () => Linking.openURL(helpLink),
         },
-        // {
-        //   title: t('Settings.GiveFeedback'),
-        //   accessibilityLabel: t('Settings.GiveFeedback'),
-        //   testID: testIdWithKey('GiveFeedback'),
-        //   onPress: toggleSurveyVisibility,
-        // },
-        // {
-        //   title: t('Settings.ReportAProblem'),
-        //   accessibilityLabel: t('Settings.ReportAProblem'),
-        //   testID: testIdWithKey('ReportAProblem'),
-        //   onPress: toggleSurveyVisibility,
-        // },
+        {
+          title: t('Settings.GiveFeedback'),
+          accessibilityLabel: t('Settings.GiveFeedback'),
+          testID: testIdWithKey('GiveFeedback'),
+          onPress: toggleSurveyVisibility,
+        },
+        {
+          title: t('Settings.ReportAProblem'),
+          accessibilityLabel: t('Settings.ReportAProblem'),
+          testID: testIdWithKey('ReportAProblem'),
+          onPress: toggleSurveyVisibility,
+        },
       ],
     },
     {
@@ -119,12 +117,6 @@ const App = () => {
                 />
                 <NetInfo />
                 <ErrorModal />
-                {/* <WebDisplay
-                  destinationUrl={surveyMonkeyUrl}
-                  exitUrl={surveyMonkeyExitUrl}
-                  visible={surveyVisible}
-                  onClose={toggleSurveyVisibility}
-                /> */}
                 <TourProvider steps={homeTourSteps} overlayColor={'black'} overlayOpacity={0.6}>
                   <RootStack />
                 </TourProvider>

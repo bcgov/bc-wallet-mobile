@@ -1,0 +1,15 @@
+diff --git a/build/ReactNativeFileSystem.js b/build/ReactNativeFileSystem.js
+index b7d76fa730851136a424d34ecfb12e4c273d6afc..202942b7602941873ffb31fa158efe9b06f4156e 100644
+--- a/build/ReactNativeFileSystem.js
++++ b/build/ReactNativeFileSystem.js
+@@ -51,8 +51,9 @@ class ReactNativeFileSystem {
+     async downloadToFile(url, path) {
+         // Make sure parent directories exist
+         await RNFS.mkdir((0, core_1.getDirFromFilePath)(path));
++        const fromUrl = encodeURI(decodeURI(url))
+         const { promise } = RNFS.downloadFile({
+-            fromUrl: url,
++            fromUrl,
+             toFile: path,
+         });
+         await promise;

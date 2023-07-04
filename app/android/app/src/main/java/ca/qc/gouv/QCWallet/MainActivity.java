@@ -1,7 +1,5 @@
 package ca.qc.gouv.portefeuillemobileqc;
 import android.os.Bundle;
-import android.system.ErrnoException;
-import android.system.Os;
 import java.io.File;
 
 import com.facebook.react.ReactActivity;
@@ -15,14 +13,8 @@ public class MainActivity extends ReactActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-
-    try {
-      Os.setenv("EXTERNAL_STORAGE", getExternalFilesDir(null).getAbsolutePath(), true);
-      System.loadLibrary("indy");
-    } catch (ErrnoException e) {
-      e.printStackTrace();
-    }
   }
+  
   protected String getMainComponentName() {
     return "QCWallet";
   }

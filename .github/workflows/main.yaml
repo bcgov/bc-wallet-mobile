@@ -57,11 +57,8 @@ jobs:
         run: |
           git submodule update --init --recursive
 
-      - name: Configure node
-        uses: actions/setup-node@v1
-        with:
-          node-version: "16.15.0"
-          registry-url: "https://registry.npmjs.org"
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
 
       - name: Configure ruby
         uses: ruby/setup-ruby@v1
@@ -85,18 +82,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-        # GitHub recommends not caching node_modules but rather
-        # .npm because it can break across Node versions and
-        #  won't work with npm ci.
-      - name: Cache node modules
-        uses: actions/cache@v1
-        id: npm-cache
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ env.cacheId }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ env.cacheId }}-
-
       - name: Cache pod dependencies
         id: pod-cache
         uses: actions/cache@v1
@@ -114,11 +99,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-
 
-      - name: Install react native dependencies
+      - name: Install dependencies
         working-directory: ./
         run: |
-          npm ci && \
+          yarn install --immutable  && \
           git status
+
+      # Ledgers are missing namespace, not compatible.
+      # - name: Updaet ledgers
+      #   uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
@@ -141,14 +130,12 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null || env.BUGSNAG_API_KEY != null
+        if: env.MEDIATOR_URL != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env |
-          echo "BUGSNAG_API_KEY=${BUGSNAG_API_KEY}" >>.env
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       - name: Create Provisioning Profile
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -164,16 +151,6 @@ jobs:
           CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
         run: |
           scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
-
-      - name: Update ledgers
-        run: |
-          node bifold/scripts/make-blocks.js
-
-          # the ledgers file should be about 344K
-          ls -lah ledgers.json
-
-          mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
 
       - name: Release build
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -253,56 +230,33 @@ jobs:
     # container:
     #   image: docker.io/fullboar/android-builder:latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Pull & update submodules recursively
         run: |
-          git config --global --add safe.directory '*'
           git submodule update --init --recursive
 
-      - name: Configure node
-        uses: actions/setup-node@v1
-        with:
-          node-version: "16.15.0"
-          registry-url: "https://registry.npmjs.org"
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
 
-      - name: Update ledgers
-        run: |
-          node bifold/scripts/make-blocks.js
-
-          # the ledgers file should be about 344K
-          ls -lah ledgers.json
-          # note md5
-          shasum ledgers.json
-          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-
-          mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-          shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-
-      - name: Cache node modules
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
+      # Ledgers are missing namespace, not compatible.
+      # - name: Updaet ledgers
+      #   uses: ./.github/workflows/actions/update-ledgers
       - name: Install dependencies
         working-directory: ./
         run: |
-          npm ci
+          yarn install --immutable  && \
+          git status
 
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null || env.BUGSNAG_API_KEY != null
+        if: env.MEDIATOR_URL != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
-          BUGSNAG_API_KEY: ${{ secrets.BUGSNAG_API_KEY }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env |
-          echo "BUGSNAG_API_KEY=${BUGSNAG_API_KEY}" >>.env
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
 
       - name: Android debug build
         if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
@@ -350,6 +304,8 @@ jobs:
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
+          # when we updated to yarn we started getting an error with paths
+          # and had to add `/android` to the path.
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           node ./deploy-to-playstore.js
 

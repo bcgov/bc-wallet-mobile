@@ -359,9 +359,24 @@ const translation = {
     Scan: 'Lire un code QR',
     Credentials: 'Attestations',
   },
-  RootStack: {
-    Contacts: 'Contacts',
-    Settings: 'Paramètres',
+  Onboarding: {
+    Welcome: 'Bienvenue',
+    WelcomeParagraph1:
+      'Le portefeuille QC vous permet de recevoir, de stocker et d’utiliser des attestations numériques.',
+    WelcomeParagraph2: 'Il est hautement sécurisé et protège votre vie privée en ligne.',
+    WelcomeParagraph3:
+      'LE portefeuille QC est en cours de développement. Il est actuellement en version bêta et est disponible pour les tests.',
+    StoredSecurelyTitle: 'Attestations numériques, stockées en toute sécurité',
+    StoredSecurelyBody:
+      'Le portefeuille QC stocke les attestations numériques, les versions numériques de choses comme les permis, les identités et les licences.\n\nElles sont stockées en toute sécurité, uniquement sur cet appareil.',
+    UsingCredentialsTitle: 'Recevez et utilisez des attestations',
+    UsingCredentialsBody:
+      'Pour recevoir et utiliser des attestations, vous utilisez la fonction « Scanner » de l’application pour scanner un code QR spécial.\n\nLes informations sont envoyées et reçues via une connexion privée et chiffrée.',
+    PrivacyConfidentiality: 'Vie privée et confidentialité',
+    PrivacyParagraph:
+      'Vous approuvez chaque utilisation des informations de votre portefeuille QC. Vous ne partagez que ce qui est nécessaire pour une situation donnée.\n\nLe gouvernement du Québec n’est pas informé lorsque vous utilisez vos attestations numériques.',
+    GetStarted: 'Commencer',
+    SkipA11y: 'Passer l’introduction au portefeuille QC',
   },
   QRScanner: {
     PermissionToUseCamera: "Permission d'utiliser l'appareil photo",

@@ -10,7 +10,7 @@ type CaptureBaseOverlay = types.oca.CaptureBaseOverlay
 export enum CREDENTIALS {
   LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
   LSBC_PROD = '4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default',
-  SHOWCASE_LAWYER_DEV = '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.1',
+  SHOWCASE_LAWYER_DEV = '2K2h7kf8VGTLtfoxJgWazf:2:member_card:1.51',
   SHOWCASE_LAWYER_TEST = '63ZiwyeZeazA6AhYRYm2zD:2:Member Card:1.5.1',
   SHOWCASE_LAWYER_PROD = 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1',
   SHOWCASE_STUDENT_DEV = '2K2h7kf8VGTLtfoxJgWazf:2:student_card:1.0',
@@ -25,9 +25,9 @@ export enum CREDENTIALS {
   PILOT_INVITE_DEV = 'Mp2pDQqS2eSjNVA7kXc8ut:2:BC VC Pilot Certificate:1.0.1',
   PILOT_INVITE_TEST = '4zBepKVWZcGTzug4X49vAN:2:BC VC Pilot Certificate:1.0.1',
   PILOT_INVITE_PROD = 'E2h4RUJxyh48PLJ1CtGJrq:2:BC VC Pilot Certificate:1.0.1',
-  BC_DIGITAL_ID_QA = 'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:Person (QA)',
-  BC_DIGITAL_ID_SIT = '7xjfawcnyTUcduWVysLww5:3:CL:28075:Person (SIT)',
-  BC_DIGITAL_ID_DEV = 'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:Person (DEV)',
+  BC_DIGITAL_ID_QA = 'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
+  BC_DIGITAL_ID_SIT = '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
+  BC_DIGITAL_ID_DEV = 'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
   BC_DIGITAL_ID_PROD = 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
 }
 

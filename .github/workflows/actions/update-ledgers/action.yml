@@ -1,0 +1,17 @@
+name: Update ledgers
+description: Update Aries ledgers
+runs:
+  using: composite
+  steps:
+    - name: Update ledgers
+      run: |
+        node bifold/scripts/make-blocks.js
+
+        # the ledgers file should be about 344K
+        ls -lah ledgers.json
+        # note md5
+        shasum ledgers.json
+        shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
+
+        mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
+        shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json

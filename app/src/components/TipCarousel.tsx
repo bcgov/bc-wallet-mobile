@@ -1,7 +1,7 @@
 import { useTheme } from 'aries-bifold'
 import React, { memo, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem } from 'react-native'
+import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem, AccessibilityInfo } from 'react-native'
 
 // used for randomizng tip order
 const shuffleArray = (arr: number[]) => {
@@ -129,6 +129,18 @@ const TipCarousel: React.FC = () => {
       }
     }
   }, [])
+
+  useEffect(() => {
+    // Function to announce the current item to VoiceOver
+    const currentTip = tipOrder[currentPosition - 1]
+    if (currentTip) {
+      const tipBody = t(`Tips.Tip${tipOrder[currentPosition - 1]}`)
+      const tipHeader = t('Tips.Header')
+      AccessibilityInfo.announceForAccessibility(`${tipHeader}, ${tipBody}`)
+    } else if (currentPosition === 0) {
+      AccessibilityInfo.announceForAccessibility(t('Tips.GettingReady'))
+    }
+  }, [currentPosition])
 
   // translating once here to prevent many repeated translations for each tip item
   const tipHeader = t('Tips.Header')

@@ -1,4 +1,3 @@
-#import <Bugsnag/Bugsnag.h>
 #import "AppDelegate.h"
 
 #import <React/RCTBridge.h>
@@ -10,10 +9,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-
-    [Bugsnag start];
-
-RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
+  RCTBridge *bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
   RCTRootView *rootView = [[RCTRootView alloc] initWithBridge:bridge
                                                    moduleName:@"QCWallet"
                                             initialProperties:nil];

@@ -1,6 +1,6 @@
+import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
 import {
   CredentialExchangeRecord as CredentialRecord,
-  CredentialMetadataKeys,
   CredentialState,
   ProofExchangeRecord,
   ProofState,
@@ -49,7 +49,7 @@ export const useNotifications = (): Notifications => {
     ...useCredentialByState(CredentialState.Done),
   ]
   const credentialDefinitionIDs = credentials.map(
-    (c) => c.metadata.data[CredentialMetadataKeys.IndyCredential].credentialDefinitionId as string
+    (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
   )
   const invitationDate = getInvitationCredentialDate(credentials, true)
   const custom: CustomNotification[] =
