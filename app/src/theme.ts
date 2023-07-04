@@ -168,7 +168,7 @@ export const TextTheme: ITextTheme = {
     color: ColorPallet.grayscale.darkGrey,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
     color: ColorPallet.grayscale.darkGrey,
   },
