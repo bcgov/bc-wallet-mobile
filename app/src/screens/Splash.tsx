@@ -321,7 +321,7 @@ const Splash: React.FC = () => {
         setStep(5)
         const options = {
           config: {
-            label: store.preferences.walletName,
+            label: store.preferences.walletName || 'BC Wallet',
             walletConfig: {
               id: credentials.id,
               key: credentials.key,
