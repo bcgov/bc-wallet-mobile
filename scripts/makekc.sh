@@ -3,6 +3,7 @@ set -xaou pipefail
 
 CERT_PATH=$RUNNER_TEMP/certificates.p12
 KC_NAME=cicd.keychain
+KC_FILE_COUNT=$(find /Users/runner/Library/Keychains -iname '$KC_NAME-db' | wc -l | tr -d " ")
 
 echo ">> Build Keychain Starting... 🤞"
 
@@ -11,12 +12,15 @@ echo ">> Extracting Artifats"
 echo "${CERTIFICATE}" | base64 -d >"${CERT_PATH}"
 md5 "$CERT_PATH"
 
-echo ">> Create Keychain $KC_NAME"
-/usr/bin/security create-keychain -p $1 $KC_NAME
-/usr/bin/security default-keychain -s $KC_NAME
-/usr/bin/security unlock-keychain -p $1 $KC_NAME
-/usr/bin/security list-keychains -d user -s $KC_NAME
-
+if [[ $KC_FILE_COUNT -eq 0 ]]; then
+  echo ">> Create keychain $KC_NAME"
+  /usr/bin/security create-keychain -p $1 $KC_NAME
+  /usr/bin/security default-keychain -s $KC_NAME
+  /usr/bin/security unlock-keychain -p $1 $KC_NAME
+  /usr/bin/security list-keychains -d user -s $KC_NAME
+else
+  echo ">> Keychain $KC_NAME exists. Skipping create..."
+fi  
 # # create temporary keychain
 # security create-keychain -p "$1" $KEYCHAIN_PATH
 # security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
