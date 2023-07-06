@@ -58,21 +58,20 @@ jobs:
           git submodule update --init --recursive
 
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-      - name: Build Keychain
+      - name: Build Produciton Keychain
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         env:
           CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
         run: |
-          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD_DEV }}
+          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
-      - name: Build Keychain
+      - name: Build Developer Keychain
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         env:
           CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
         run: |
-          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
+          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD_DEV }}
 
-          
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
