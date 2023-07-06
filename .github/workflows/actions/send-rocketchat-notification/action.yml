@@ -10,6 +10,12 @@ inputs:
   job_status:
     description: The status of the job
     required: true
+  webhook_url:
+    description: The RocketChat Webhook URL
+    required: true
+  webhook_token:
+    description: The access token for the Webhook URL
+    required: true
 
 runs:
   using: composite
@@ -22,6 +28,6 @@ runs:
         mention: 'jason.leach @cvarjao @wade.king @bryce.mcmath'
         mention_if: always
         channel: '#test'
-        url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+        url: ${{ inputs.webhook_url }}
         commit: true
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ inputs.webhook_token }}
