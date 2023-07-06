@@ -142,13 +142,21 @@ jobs:
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
 
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-      - name: Create Provisioning Profile
+      - name: Create Distribution Provisioning Profile
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         env:
           PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
         run: |
           scripts/makepp.sh
 
+      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      - name: Create Develop Provisioning Profile
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        env:
+          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
+        run: |
+          scripts/makepp.sh
+          
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       - name: Build Keychain
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -220,7 +228,7 @@ jobs:
           -exportArchive \
           -archivePath AriesBifold.xcarchive \
           -exportPath export \
-          -exportOptionsPlist ../../options.plist \
+          -exportOptionsPlist ../../options-develop.plist \
           -verbose
 
       - name: Upload iOS artifact
