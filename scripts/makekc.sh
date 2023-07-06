@@ -3,6 +3,9 @@ set -xaou pipefail
 
 CERT_PATH=$RUNNER_TEMP/certificates.p12
 KC_NAME=cicd.keychain
+echo "1find /Users/runner/Library/Keychains -iname '$KC_NAME-db'"
+echo "2find /Users/runner/Library/Keychains -iname '${KC_NAME}-db'"
+
 KC_FILE_COUNT=$(find /Users/runner/Library/Keychains -iname '$KC_NAME-db' | wc -l | tr -d " ")
 
 echo ">> Build Keychain Starting... 🤞"
