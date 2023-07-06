@@ -63,7 +63,7 @@ jobs:
         env:
           CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
         run: |
-          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
+          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD_DEV }}
 
       - name: Build Keychain
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
