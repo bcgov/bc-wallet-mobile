@@ -239,7 +239,8 @@ jobs:
           pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        if: ${{ false }}
+        # if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -336,8 +337,18 @@ jobs:
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
           ./gradlew bundleRelease
 
-      - name: Ship to Google Play
+      - name: Upload Android artifact
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-artifact
+          path: app/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Ship to Google Play
+        if: ${{ false }}
+        # if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -351,15 +362,6 @@ jobs:
           # and had to add `/android` to the path.
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
           GOOGLE_API_CREDENTIALS="./android/api_keys.json" npx @bcgov/gpublish
-
-      - name: Upload Android artifact
-        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
-        uses: actions/upload-artifact@v3
-        with:
-          name: android-artifact
-          path: app/android/app/build/outputs/bundle/release/app-release.aab
-          if-no-files-found: error
-          retention-days: 7
 
       - name: Send notification for Android failure
         if: failure() && github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
