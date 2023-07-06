@@ -18,6 +18,8 @@ if [[ $KC_FILE_COUNT -eq 0 ]]; then
   /usr/bin/security default-keychain -s $KC_NAME
   /usr/bin/security unlock-keychain -p $1 $KC_NAME
   /usr/bin/security list-keychains -d user -s $KC_NAME
+
+  find /Users/runner/Library/Keychains
 else
   echo ">> Keychain $KC_NAME exists. Skipping create..."
 fi  
