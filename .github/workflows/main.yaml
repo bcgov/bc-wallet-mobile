@@ -375,39 +375,25 @@ jobs:
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     steps:
-      - name: Download iOS artifact
-        uses: actions/download-artifact@v3
+      - name: Ship iOS Artifact to SauceLabs
+        uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
-          name: ios-artifact-dev
-
-      - name: Download Android artifact
-        uses: actions/download-artifact@v3
+          sauce_labs_username: ${{ secrets.SAUCE_USERNAME }}
+          sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
+          sauce_labs_name: BCWallet-${{ github.run_number }}.ipa
+          sauce_labs_description: iOS BC Wallet App
+          artifact_ref: ios-artifact-dev
+          artifact_name: BCWallet.ipa
+      
+      - name: Ship Android Artifact to SauceLabs
+        uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
-          name: android-artifact
-
-      - name: Ship iOS to SauceLabs
-        env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-        run: |
-          curl \
-          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-          -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-          --form "payload=@BCWallet.ipa" \
-          --form "name=BCWallet-$GITHUB_RUN_NUMBER.ipa" \
-          --form "description=iOS BC Wallet app"
-
-      - name: Ship Android to SauceLabs
-        env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
-        run: |
-          curl \
-          -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
-          -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
-          --form "payload=@app-release.aab" \
-          --form "name=BCWallet-$GITHUB_RUN_NUMBER.aab" \
-          --form "description=Android Bifold BC wallet app"
+          sauce_labs_username: ${{ secrets.SAUCE_USERNAME }}
+          sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
+          sauce_labs_name: BCWallet-${{ github.run_number }}.aab
+          sauce_labs_description: Android BC Wallet App
+          artifact_ref: ios-artifact-dev
+          artifact_name: app-release.aab
 
   run-on-device-tests:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
