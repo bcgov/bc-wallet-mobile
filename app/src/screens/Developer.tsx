@@ -35,6 +35,7 @@ const Settings: React.FC = () => {
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
     !!store.preferences.useConnectionInviterCapability
   )
+  const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
 
   const styles = StyleSheet.create({
     container: {
@@ -168,6 +169,14 @@ const Settings: React.FC = () => {
     setConnectionInviterCapability((previousState) => !previousState)
   }
 
+  const toggleDevVerifierTemplatesSwitch = () => {
+    dispatch({
+      type: DispatchAction.USE_DEV_VERIFIER_TEMPLATES,
+      payload: [!useDevVerifierTemplates],
+    })
+    setDevVerifierTemplates((previousState) => !previousState)
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -246,6 +255,19 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleConnectionInviterCapabilitySwitch}
             value={useConnectionInviterCapability}
+          />
+        </SectionRow>
+        <SectionRow
+          title={t('Verifier.UseDevVerifierTemplates')}
+          accessibilityLabel={t('Verifier.ToggleDevTemplates')}
+          testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={useDevVerifierTemplates ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleDevVerifierTemplatesSwitch}
+            value={useDevVerifierTemplates}
           />
         </SectionRow>
       </View>
