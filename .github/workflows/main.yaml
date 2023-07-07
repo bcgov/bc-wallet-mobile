@@ -57,13 +57,13 @@ jobs:
         run: |
           git submodule update --init --recursive
 
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-      - name: Build Produciton Keychain
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        env:
-          CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-        run: |
-          scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
+      # # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      # - name: Build Produciton Keychain
+      #   if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+      #   env:
+      #     CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+      #   run: |
+      #     scripts/makekc.sh ${{ secrets.KEYCHIAN_PASSWD }}
 
       - name: Build Developer Keychain
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -156,13 +156,13 @@ jobs:
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
 
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-      - name: Create Distribution Provisioning Profile
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        env:
-          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-        run: |
-          scripts/makepp.sh
+      # # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
+      # - name: Create Distribution Provisioning Profile
+      #   if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+      #   env:
+      #     PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+      #   run: |
+      #     scripts/makepp.sh
 
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       - name: Create Develop Provisioning Profile
@@ -171,7 +171,7 @@ jobs:
           PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
         run: |
           scripts/makepp.sh
-          
+
       # here
 
       - name: Release build
@@ -202,25 +202,25 @@ jobs:
           CODE_SIGNING_ALLOWED=NO \
           CODE_SIGNING_REQUIRED=NO
 
-      - name: Distribution Archive & Sign
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/ios
-        run: |
-          xcodebuild \
-          -exportArchive \
-          -archivePath AriesBifold.xcarchive \
-          -exportPath export \
-          -exportOptionsPlist ../../options.plist \
-          -verbose
+      # - name: Distribution Archive & Sign
+      #   if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+      #   working-directory: app/ios
+      #   run: |
+      #     xcodebuild \
+      #     -exportArchive \
+      #     -archivePath AriesBifold.xcarchive \
+      #     -exportPath export \
+      #     -exportOptionsPlist ../../options.plist \
+      #     -verbose
 
-      - name: Upload iOS artifact
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        uses: actions/upload-artifact@v3
-        with:
-          name: ios-artifact
-          path: app/ios/export/BCWallet.ipa
-          if-no-files-found: error
-          retention-days: 7
+      # - name: Upload iOS artifact
+      #   if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: ios-artifact
+      #     path: app/ios/export/BCWallet.ipa
+      #     if-no-files-found: error
+      #     retention-days: 7
 
       - name: Develop Archive & Sign
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -230,7 +230,7 @@ jobs:
           -exportArchive \
           -archivePath AriesBifold.xcarchive \
           -exportPath export \
-          -exportOptionsPlist ../../options-develop.plist \
+          -exportOptionsPlist ../../options-dev.plist \
           -verbose
 
       - name: Upload iOS artifact
@@ -241,7 +241,7 @@ jobs:
           path: app/ios/export/BCWallet.ipa
           if-no-files-found: error
           retention-days: 7
-  
+
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -271,7 +271,7 @@ jobs:
         if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
-          job_title: 'BC Wallet iOS Build - Run number ${{ github.run_number }}'
+          job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
           job_status: ${{ job.status }}
           webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
           webhook_token: ${{ secrets.GITHUB_TOKEN }}
@@ -379,7 +379,7 @@ jobs:
         if: failure() && github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
-          job_title: 'BC Wallet Android Build - Run number ${{ github.run_number }}'
+          job_title: "BC Wallet Android Build - Run number ${{ github.run_number }}"
           job_status: ${{ job.status }}
           webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
           webhook_token: ${{ secrets.GITHUB_TOKEN }}
@@ -398,7 +398,7 @@ jobs:
           sauce_labs_description: iOS BC Wallet App
           artifact_ref: ios-artifact-dev
           artifact_name: BCWallet.ipa
-      
+
       - name: Ship Android Artifact to SauceLabs
         uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
