@@ -187,7 +187,9 @@ jobs:
           -archivePath AriesBifold.xcarchive \
           -sdk iphoneos \
           -verbose \
-          archive
+          archive \
+          CODE_SIGNING_ALLOWED=NO \
+          CODE_SIGNING_REQUIRED=NO
 
       - name: Debug build
         if: github.ref_name != 'main' || needs.check-ios-secrets.outputs.isReleaseBuild != 'true'
