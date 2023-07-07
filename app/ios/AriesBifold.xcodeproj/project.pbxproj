@@ -519,8 +519,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 444;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -544,7 +542,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
 				PRODUCT_NAME = BCWallet;
-				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet - 2023";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -557,8 +554,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -582,7 +577,6 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ca.bc.gov.BCWallet;
 				PRODUCT_NAME = BCWallet;
-				PROVISIONING_PROFILE_SPECIFIER = "BC Secure Wallet - 2023";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
