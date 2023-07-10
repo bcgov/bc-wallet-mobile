@@ -12,15 +12,16 @@ echo ">> Extracting Artifats"
 echo "${CERTIFICATE}" | base64 -d >"${CERT_PATH}"
 md5 "$CERT_PATH"
 
-if [[ $KC_FILE_COUNT -eq 0 ]]; then
-  echo ">> Create keychain $KC_NAME"
-  /usr/bin/security create-keychain -p $1 $KC_NAME
-  /usr/bin/security default-keychain -s $KC_NAME
-  /usr/bin/security unlock-keychain -p $1 $KC_NAME
-  /usr/bin/security list-keychains -d user -s $KC_NAME
-else
-  echo ">> Keychain $KC_NAME exists. Skipping create..."
+if [[ $KC_FILE_COUNT -gt 0 ]]; then
+  echo ">> Keychain $KC_NAME exists. Removing."
+  /usr/bin/security delete-keychain /Users/runner/Library/Keychains/$KC_NAME-db
 fi
+
+echo ">> Create keychain $KC_NAME"
+/usr/bin/security create-keychain -p $1 $KC_NAME
+/usr/bin/security default-keychain -s $KC_NAME
+/usr/bin/security unlock-keychain -p $1 $KC_NAME
+/usr/bin/security list-keychains -d user -s $KC_NAME
 
 echo ">> Importing Certificate"
 /usr/bin/security import $CERT_PATH -P "$1" -t cert -f pkcs12 -k $KC_NAME -T /usr/bin/codesign -T /usr/bin/security
