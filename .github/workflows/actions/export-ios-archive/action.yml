@@ -56,7 +56,7 @@ runs:
     - name: Unzip artifact
       shell: bash
       run: |
-        unzip ${{ inputs.artifact_ref }}.zip
+        unzip ${{ inputs.artifact_ref }}
 
     - name: Sign & Export
       shell: bash
