@@ -169,7 +169,7 @@ jobs:
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: actions/upload-artifact@v3
         with:
-          name: ios-xcarchive.zip
+          name: ios-xcarchive
           path: app/ios/AriesBifold.xcarchive.zip
           if-no-files-found: error
           retention-days: 7
@@ -178,7 +178,8 @@ jobs:
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          artifact_ref: ios-xcarchive.zip
+          artifact_ref: ios-xcarchive
+          artifact_name: AriesBifold.xcarchive.zip
           certificate: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.KEYCHIAN_PASSWD }}
           provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
@@ -232,14 +233,14 @@ jobs:
           --beta-group "The Team" "IDIM Team" \
           --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
-      - name: Send notification for iOS failure
-        if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        uses: ./.github/workflows/actions/send-rocketchat-notification
-        with:
-          job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
-          job_status: ${{ job.status }}
-          webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          webhook_token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Send notification for iOS failure
+      #   if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+      #   uses: ./.github/workflows/actions/send-rocketchat-notification
+      #   with:
+      #     job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
+      #     job_status: ${{ job.status }}
+      #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+      #     webhook_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
     needs: [check-android-secrets]
