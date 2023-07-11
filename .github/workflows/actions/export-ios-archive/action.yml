@@ -78,12 +78,6 @@ runs:
         -exportOptionsPlist ./options.plist \
         -verbose
 
-    - name: List files
-      shell: bash
-      run: |
-        ls -lah
-        ls -la export
-
     - name: Upload signed artifact
       uses: actions/upload-artifact@v3
       with:
