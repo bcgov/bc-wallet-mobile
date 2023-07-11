@@ -2,16 +2,6 @@ name: Export Signed iOS Archive
 description: Export a signed iOS Archive
 
 inputs:
-  artifact_ref:
-    description: |
-      The referene ID / name of the uploaded GitHub artifact
-      stored in GitHub by the upload action. This should
-      be an xcarchive file compressed with ZIP.
-    requred: true
-  artifact_name:
-    description: |
-      dxx
-    requred: true
   certificate:
     description: |
       The Base64 encoded certificate to use for 
@@ -25,6 +15,11 @@ inputs:
     description: |
       The Base64 encoded provisioning profile to use for 
       signing the archive. This should be in mobileprovision format.
+    requred: true
+  export_options:
+    description: |
+      The file containing the export options to use 
+      for signing the archive.
     requred: true
   ouput_artifact_ref:
     description: |
@@ -52,22 +47,6 @@ runs:
       run: |
         scripts/makepp.sh
 
-    - name: Download artifact
-      uses: actions/download-artifact@v3
-      with:
-        name: ${{ inputs.artifact_ref }}
-
-    # Artifact ios-xcarchive.zip was downloaded
-    # to /Users/runner/work/bc-wallet-mobile/
-    # bc-wallet-mobile/
-
-    - name: Unzip artifact
-      shell: bash
-      run: |
-        pwd
-        ls -la
-        unzip ${{ inputs.artifact_name }}
-
     - name: Sign & Export
       shell: bash
       run: |
@@ -75,7 +54,7 @@ runs:
         -exportArchive \
         -archivePath AriesBifold.xcarchive \
         -exportPath export \
-        -exportOptionsPlist ./options.plist \
+        -exportOptionsPlist ./${{ inputs.export_options }} \
         -verbose
 
     - name: Upload signed artifact

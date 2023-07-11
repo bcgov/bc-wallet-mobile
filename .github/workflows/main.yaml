@@ -147,7 +147,7 @@ jobs:
           -configuration Release \
           -derivedDataPath xbuild \
           -xcconfig ../../release.xcconfig \
-          -archivePath AriesBifold.xcarchive \
+          -archivePath ../../AriesBifold.xcarchive \
           -sdk iphoneos \
           -verbose \
           archive
@@ -161,7 +161,6 @@ jobs:
 
       - name: Compress xcarchive
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/ios
         run: |
           zip -r AriesBifold.xcarchive.zip AriesBifold.xcarchive
 
@@ -170,43 +169,29 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ios-xcarchive
-          path: app/ios/AriesBifold.xcarchive.zip
+          path: AriesBifold.xcarchive.zip
           if-no-files-found: error
           retention-days: 7
-
-      - name: Export distribution archive
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        uses: ./.github/workflows/actions/export-ios-archive
-        with:
-          artifact_ref: ios-xcarchive
-          artifact_name: AriesBifold.xcarchive.zip
-          certificate: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          certificate_password: ${{ secrets.KEYCHIAN_PASSWD }}
-          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          ouput_artifact_ref: ios-artifact
 
       - name: Export development archive
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          artifact_ref: ios-xcarchive
           certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
           certificate_password: ${{ secrets.KEYCHIAN_PASSWD_DEV }}
           provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
-          ouput_artifacet_ref: ios-artifact-dev
+          export_options: options-dev.plist
+          ouput_artifact_ref: ios-artifact-dev
 
-      # - name: Debug build
-      #   if: github.ref_name != 'main' || needs.check-ios-secrets.outputs.isReleaseBuild != 'true'
-      #   working-directory: app/ios
-      #   run: |
-      #     xcodebuild \
-      #     -workspace AriesBifold.xcworkspace \
-      #     -scheme AriesBifold \
-      #     -configuration Debug \
-      #     -derivedDataPath xbuild \
-      #     build \
-      #     CODE_SIGNING_ALLOWED=NO \
-      #     CODE_SIGNING_REQUIRED=NO
+      - name: Export distribution archive
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        uses: ./.github/workflows/actions/export-ios-archive
+        with:
+          certificate: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          certificate_password: ${{ secrets.KEYCHIAN_PASSWD }}
+          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          export_options: options.plist
+          ouput_artifact_ref: ios-artifact
 
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
@@ -215,9 +200,7 @@ jobs:
           pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
-        if: ${{ false }}
-        # if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/ios
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
@@ -233,20 +216,18 @@ jobs:
           --beta-group "The Team" "IDIM Team" \
           --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
-      # - name: Send notification for iOS failure
-      #   if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-      #   uses: ./.github/workflows/actions/send-rocketchat-notification
-      #   with:
-      #     job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
-      #     job_status: ${{ job.status }}
-      #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-      #     webhook_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Send notification for iOS failure
+        if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        uses: ./.github/workflows/actions/send-rocketchat-notification
+        with:
+          job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
+          job_status: ${{ job.status }}
+          webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+          webhook_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
     needs: [check-android-secrets]
     runs-on: ubuntu-22.04
-    # container:
-    #   image: docker.io/fullboar/android-builder:latest
     steps:
       - uses: actions/checkout@v2
 
