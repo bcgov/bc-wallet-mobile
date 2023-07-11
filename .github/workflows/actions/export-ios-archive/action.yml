@@ -8,6 +8,10 @@ inputs:
       stored in GitHub by the upload action. This should
       be an xcarchive file compressed with ZIP.
     requred: true
+  artifact_name:
+    description: |
+      dxx
+    requred: true
   certificate:
     description: |
       The Base64 encoded certificate to use for 
@@ -53,10 +57,16 @@ runs:
       with:
         name: ${{ inputs.artifact_ref }}
 
+    # Artifact ios-xcarchive.zip was downloaded
+    # to /Users/runner/work/bc-wallet-mobile/
+    # bc-wallet-mobile/
+
     - name: Unzip artifact
       shell: bash
       run: |
-        unzip ${{ inputs.artifact_ref }}
+        pwd
+        ls -la
+        unzip ${{ inputs.artifact_name }}
 
     - name: Sign & Export
       shell: bash
@@ -65,8 +75,14 @@ runs:
         -exportArchive \
         -archivePath AriesBifold.xcarchive \
         -exportPath export \
-        -exportOptionsPlist ../../options.plist \
+        -exportOptionsPlist ./options.plist \
         -verbose
+
+    - name: List files
+      shell: bash
+      run: |
+        ls -lah
+        ls -la export
 
     - name: Upload signed artifact
       uses: actions/upload-artifact@v3
