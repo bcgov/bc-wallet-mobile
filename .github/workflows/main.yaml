@@ -183,7 +183,7 @@ jobs:
           certificate: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.KEYCHIAN_PASSWD }}
           provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          ouput_artifacet_ref: ios-artifact
+          ouput_artifact_ref: ios-artifact
 
       - name: Export development archive
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'

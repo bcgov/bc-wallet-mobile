@@ -26,7 +26,7 @@ inputs:
       The Base64 encoded provisioning profile to use for 
       signing the archive. This should be in mobileprovision format.
     requred: true
-  ouput_artifacet_ref:
+  ouput_artifact_ref:
     description: |
       The reference ID / name of the uploaded GitHub artifact
       stored in GitHub by the upload action.
@@ -81,7 +81,7 @@ runs:
     - name: Upload signed artifact
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ inputs.output_artifact_ref }}
+        name: ${{ inputs.ouput_artifact_ref }}
         path: export/BCWallet.ipa
         if-no-files-found: error
         retention-days: 1
