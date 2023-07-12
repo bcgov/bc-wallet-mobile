@@ -35,6 +35,10 @@ runs:
       with:
         name: ${{ inputs.artifact_ref }}
 
+    - name: list files
+      shell: bash
+      run: pwd && ls -la
+
     - name: Upload artifact to SauceLabs
       shell: bash
       env:
