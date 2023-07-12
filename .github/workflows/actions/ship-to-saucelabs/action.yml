@@ -30,8 +30,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: actions/checkout@v2
-
     - name: Download artifact
       uses: actions/download-artifact@v3
       with:

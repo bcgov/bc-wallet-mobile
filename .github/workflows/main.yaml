@@ -336,6 +336,8 @@ jobs:
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v2
+
       - name: Ship iOS Artifact to SauceLabs
         uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
