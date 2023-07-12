@@ -8,23 +8,23 @@ inputs:
   sauce_labs_password:
     description: SauceLabs password
     required: true
+  sauce_labs_name:
+    description: |
+      The name of the artifact shown in SauceLabs
+    requred: true
+  sauce_labs_description:
+    description: |
+      The description of the artifact show in SauceLabs.
+    required: true
   artifact_ref:
     description: |
       The referene ID / name of the uploaded GitHub artifact
       stored in GitHub by the upload action. i.e my-artifact
     requred: true
-  artifact_name: 
-      description: |
-        The actual name of the artifact that would be
-        recognized by a human i.e MyApp.ipa
-    required: true
-  sauce_labs_name:
-      description: |
-        The name of the artifact shown in SauceLabs
-      requred: true
-  sauce_labs_description:
+  artifact_name:
     description: |
-      The description of the artifact show in SauceLabs.
+      The actual name of the artifact that would be
+      recognized by a human i.e MyApp.ipa
     required: true
 
 runs:
