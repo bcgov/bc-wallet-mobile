@@ -159,20 +159,6 @@ jobs:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
-      - name: Compress xcarchive
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        run: |
-          zip -r AriesBifold.xcarchive.zip AriesBifold.xcarchive
-
-      - name: Upload xcarchive artifact
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        uses: actions/upload-artifact@v3
-        with:
-          name: ios-xcarchive
-          path: AriesBifold.xcarchive.zip
-          if-no-files-found: error
-          retention-days: 7
-
       - name: Export development archive
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/export-ios-archive
