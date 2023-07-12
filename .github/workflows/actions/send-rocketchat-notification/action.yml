@@ -25,9 +25,9 @@ runs:
       with:
         type: ${{ inputs.job_status }}
         job_name: ${{ inputs.job_title }}
-        mention: 'jason.leach @cvarjao @wade.king @bryce.mcmath'
+        mention: "jason.leach @cvarjao @wade.king @bryce.mcmath"
         mention_if: always
-        channel: '#test'
+        channel: "#bc-digital-wallet-core-team"
         url: ${{ inputs.webhook_url }}
         commit: true
         token: ${{ inputs.webhook_token }}

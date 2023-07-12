@@ -209,7 +209,7 @@ jobs:
           job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
           job_status: ${{ job.status }}
           webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          webhook_token: ${{ secrets.GITHUB_TOKEN }}
+          webhook_token: ${{ secrets.ROCKETCHAT_TOKEN }}
 
   build-android:
     needs: [check-android-secrets]
