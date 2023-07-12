@@ -36,6 +36,7 @@ runs:
         name: ${{ inputs.artifact_ref }}
 
     - name: Upload artifact to SauceLabs
+      shell: bash
       env:
         SAUCE_USERNAME: ${{ inputs.sauce_labs_username }}
         SAUCE_ACCESS_KEY: ${{ inputs.sauce_labs_password }}
