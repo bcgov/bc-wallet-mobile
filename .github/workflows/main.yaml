@@ -341,7 +341,7 @@ jobs:
           sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
           sauce_labs_name: BCWallet-${{ github.run_number }}.aab
           sauce_labs_description: Android BC Wallet App
-          artifact_ref: ios-artifact-dev
+          artifact_ref: android-artifact
           artifact_name: app-release.aab
 
   run-on-device-tests:
