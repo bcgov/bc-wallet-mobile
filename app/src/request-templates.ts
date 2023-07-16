@@ -184,6 +184,35 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
     },
   },
   {
+    id: 'BC:5:FullNameAndPicture:0.0.1:indy',
+    name: 'Person Full Name and Picture',
+    description: 'Verify the full name of a person and see their picture',
+    devOnly: true,
+    version: '0.0.1',
+    payload: {
+      type: ProofRequestType.AnonCreds,
+      data: [
+        {
+          schema: personSchema,
+          requestedAttributes: [
+            {
+              name: 'given_names',
+              restrictions: personRestrictions,
+            },
+            {
+              name: 'family_name',
+              restrictions: personRestrictions,
+            },
+            {
+              name: 'picture',
+              restrictions: personRestrictions,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     id: 'BC:5:OpenvpFullName:0.0.1:indy',
     name: 'Unverified Person Full name',
     description: 'Verify the full name of a person',
