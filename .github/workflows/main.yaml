@@ -292,8 +292,7 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        if: ${{ false }}
-        # if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
