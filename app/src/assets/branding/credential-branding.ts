@@ -216,6 +216,7 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
           given_names: 'Given Names',
           family_name: 'Family Name',
           birthdate_dateint: 'Date of Birth',
+          picture: 'Picture',
         },
       } as LabelOverlay,
       {
@@ -225,6 +226,8 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         attributeLabels: {
           given_names: 'Prénoms',
           family_name: 'Nom de famille',
+          birthdate_dateint: 'Date de naissance',
+          picture: 'Image',
         },
       } as LabelOverlay,
     ],
