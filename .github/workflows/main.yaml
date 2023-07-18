@@ -69,45 +69,39 @@ jobs:
         run: |
           xcode-select -p
 
-      # Watch for changes to the HEAD ref, use
-      # git for cache keys.
-      - name: Generate cache key
-        run: |
-          echo $(git rev-parse HEAD:app/ios) > ./dd-cache-key.txt
-
-      - uses: actions/cache@v2
+      - name: Cached pip dependencies
+        uses: actions/cache@v3
+        id: pip-cache
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
+          key: ${{ runner.os }}-pip
           restore-keys: |
             ${{ runner.os }}-pip-
 
       - name: Cache pod dependencies
         id: pod-cache
-        uses: actions/cache@v1
+        uses: actions/cache@v3
         with:
-          path: app/ios/Pods
-          key: ${{ runner.os }}-pods-${{ env.cacheId }}-${{ hashFiles('**/Podfile.lock ') }}
+          path: |
+            app/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock ') }}
           restore-keys: |
-            ${{ runner.os }}-pods-${{ env.cacheId }}-
+            ${{ runner.os }}-pods-
 
-      - name: Cache derived data
-        uses: actions/cache@v1
+      - name: Restore cached derived data
+        id: cache-dd-restore
+        uses: actions/cache/restore@v3
         with:
           path: app/ios/xbuild/Build
-          key: ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-${{ hashFiles('**/dd-cache-key.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-dd-xcode-${{ env.cacheId }}-
+          key: ${{ runner.os }}-dd-xcode
 
       - name: Install dependencies
         working-directory: ./
         run: |
           yarn install --immutable  && \
           git status
-
-      # Ledgers are missing namespace, not compatible.
-      # - name: Updaet ledgers
-      #   uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
@@ -162,34 +156,37 @@ jobs:
           -configuration Release \
           -derivedDataPath xbuild \
           -xcconfig ../../release.xcconfig \
-          -archivePath AriesBifold.xcarchive \
+          -archivePath ../../AriesBifold.xcarchive \
           -sdk iphoneos \
           -verbose \
           archive
 
-      - name: Debug build
-        if: github.ref_name != 'main' || needs.check-ios-secrets.outputs.isReleaseBuild != 'true'
-        working-directory: app/ios
-        run: |
-          xcodebuild \
-          -workspace AriesBifold.xcworkspace \
-          -scheme AriesBifold \
-          -configuration Debug \
-          -derivedDataPath xbuild \
-          build \
-          CODE_SIGNING_ALLOWED=NO \
-          CODE_SIGNING_REQUIRED=NO
+      - name: Save cache for derived data
+        id: cache-dd-save
+        uses: actions/cache/save@v3
+        with:
+          path: app/ios/xbuild/Build
+          key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
-      - name: Archive & Sign
+      - name: Export development archive
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/ios
-        run: |
-          xcodebuild \
-          -exportArchive \
-          -archivePath AriesBifold.xcarchive \
-          -exportPath export \
-          -exportOptionsPlist ../../options.plist \
-          -verbose
+        uses: ./.github/workflows/actions/export-ios-archive
+        with:
+          certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
+          certificate_password: ${{ secrets.KEYCHIAN_PASSWD_DEV }}
+          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
+          export_options: options-dev.plist
+          ouput_artifact_ref: ios-artifact-dev
+
+      - name: Export distribution archive
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        uses: ./.github/workflows/actions/export-ios-archive
+        with:
+          certificate: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          certificate_password: ${{ secrets.KEYCHIAN_PASSWD }}
+          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          export_options: options.plist
+          ouput_artifact_ref: ios-artifact
 
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
@@ -199,7 +196,6 @@ jobs:
 
       - name: Ship to iTunes
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
@@ -227,8 +223,6 @@ jobs:
   build-android:
     needs: [check-android-secrets]
     runs-on: ubuntu-22.04
-    # container:
-    #   image: docker.io/fullboar/android-builder:latest
     steps:
       - uses: actions/checkout@v2
 
@@ -293,6 +287,15 @@ jobs:
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
           ./gradlew bundleRelease
 
+      - name: Upload Android artifact
+        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-artifact
+          path: app/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Ship to Google Play
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/
@@ -304,6 +307,8 @@ jobs:
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
+          # when we updated to yarn we started getting an error with paths
+          # and had to add `/android` to the path.
           # when we updated to yarn we started getting an error with paths
           # and had to add `/android` to the path.
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
