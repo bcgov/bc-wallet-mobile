@@ -33,12 +33,14 @@ export const DEMO_ANIG_Bundle = {
       language: 'fr',
       name: 'ANIG',
       issuerName: 'Ministère de la cybersécurité et du numérique',
+      watermark: 'NON-PRODUCTION',
     } as MetaOverlay,
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'ANIG',
       issuerName: 'Ministry of Cybersecurity and Digital',
+      watermark: 'NON-PRODUCTION',
     } as MetaOverlay,
     {
       type: 'spec/overlays/character_encoding/1.0',
@@ -84,7 +86,7 @@ export const DEMO_ANIG_Bundle = {
       primaryBackgroundColor: '#FFFFFF',
       secondaryBackgroundColor: '#095797',
       backgroundImage: {
-        src: require('./carte-anig-demo.png'),
+        src: require('./background-qc.png'),
       },
     } as CardLayoutOverlay11,
   ],
@@ -109,12 +111,14 @@ export const DEMO_ADDRESS_Bundle = {
       language: 'fr',
       name: 'Adresse',
       issuerName: 'Ministère de la cybersécurité et du numérique',
+      watermark: 'NON-PRODUCTION',
     } as MetaOverlay,
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Address',
       issuerName: 'Ministry of Cybersecurity and Digital',
+      watermark: 'NON-PRODUCTION',
     } as MetaOverlay,
     {
       type: 'spec/overlays/character_encoding/1.0',
@@ -160,7 +164,7 @@ export const DEMO_ADDRESS_Bundle = {
       primaryBackgroundColor: '#FFFFFF',
       secondaryBackgroundColor: '#095797',
       backgroundImage: {
-        src: require('./carte-anig-demo.png'),
+        src: require('./background-qc.png'),
       },
     } as CardLayoutOverlay11,
   ],
@@ -182,12 +186,14 @@ export const DEMO_PHOTO_Bundle = {
       language: 'fr',
       name: 'Photo',
       issuerName: 'Ministère de la cybersécurité et du numérique',
+      watermark: 'NON-PRODUCTION',
     } as MetaOverlay,
     {
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Photo',
       issuerName: 'Ministry of Cybersecurity and Digital',
+      watermark: 'NON-PRODUCTION',
     } as MetaOverlay,
     {
       type: 'spec/overlays/character_encoding/1.0',
@@ -231,7 +237,7 @@ export const DEMO_PHOTO_Bundle = {
       primaryBackgroundColor: '#FFFFFF',
       secondaryBackgroundColor: '#095797',
       backgroundImage: {
-        src: require('./carte-anig-demo.png'),
+        src: require('./background-qc.png'),
       },
     } as CardLayoutOverlay11,
   ],
