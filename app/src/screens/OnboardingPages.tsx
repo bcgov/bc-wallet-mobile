@@ -1,7 +1,20 @@
-import { useStore, Button, ButtonType, ITheme, createStyles, GenericFn, testIdWithKey } from 'aries-bifold'
-import React from 'react'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import {
+  useStore,
+  Button,
+  ButtonType,
+  ITheme,
+  createStyles,
+  GenericFn,
+  testIdWithKey,
+  DispatchAction,
+  Screens,
+  OnboardingStackParams,
+} from 'aries-bifold'
+import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Text, View } from 'react-native'
+import { Text, TouchableWithoutFeedback, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { SvgProps } from 'react-native-svg'
 
@@ -52,9 +65,33 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
 const StartPages = (theme: ITheme) => {
   const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
+  const [store, dispatch] = useStore()
+  const developerOptionCount = useRef(0)
+  const touchCountToEnableBiometrics = 9
+  const navigation = useNavigation<StackNavigationProp<OnboardingStackParams>>()
+
+  const incrementDeveloperMenuCounter = () => {
+    if (developerOptionCount.current >= touchCountToEnableBiometrics) {
+      developerOptionCount.current = 0
+      dispatch({
+        type: DispatchAction.ENABLE_DEVELOPER_MODE,
+        payload: [true],
+      })
+      navigation.navigate(Screens.Developer)
+      return
+    }
+
+    developerOptionCount.current = developerOptionCount.current + 1
+  }
+
   return (
     <ScrollView style={{ padding: 20, paddingTop: 30 }}>
-      <Text style={[defaultStyle.headerText]}>{t('Onboarding.Welcome')}</Text>
+      <TouchableWithoutFeedback
+        onPress={incrementDeveloperMenuCounter}
+        disabled={store.preferences.developerModeEnabled}
+      >
+        <Text style={[defaultStyle.headerText]}>{t('Onboarding.Welcome')}</Text>
+      </TouchableWithoutFeedback>
       <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t('Onboarding.WelcomeParagraph1')}</Text>
       <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t('Onboarding.WelcomeParagraph2')}</Text>
       <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t('Onboarding.WelcomeParagraph3')}</Text>
