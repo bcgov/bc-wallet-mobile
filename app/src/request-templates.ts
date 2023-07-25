@@ -35,8 +35,30 @@ const memberCardRestrictions = [
   { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
   { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
 ]
+const memberCardCodeRestrictions = memberCardRestrictions.map((restriction) => {
+  return { ...restriction, 'attr::Membership Status::value': 'Practising', 'attr::Member Status Code::value': 'PRAC' }
+})
 
 export const proofRequestTemplates: Array<ProofRequestTemplate> = [
+  {
+    id: 'BC:5:PracticingLawyerAndPhoto:0.0.1:indy',
+    name: 'Practicing Lawyer and Person Photo Attribute',
+    description: 'Verify that someone is a practising lawyer with photo ID',
+    version: '0.0.1',
+    payload: {
+      type: ProofRequestType.AnonCreds,
+      data: [
+        {
+          schema: personSchema,
+          requestedAttributes: [{ names: ['given_names', 'family_name', 'picture'], restrictions: personRestrictions }],
+        },
+        {
+          schema: memberCardSchema,
+          requestedAttributes: [{ names: ['Given Name', 'Surname'], restrictions: memberCardCodeRestrictions }],
+        },
+      ],
+    },
+  },
   {
     id: 'BC:5:FullName:0.0.1:indy',
     name: 'Full name',
