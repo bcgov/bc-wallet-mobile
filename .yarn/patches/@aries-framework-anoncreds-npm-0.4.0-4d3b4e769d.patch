@@ -1,0 +1,18 @@
+diff --git a/build/utils/revocationInterval.js b/build/utils/revocationInterval.js
+index 728732d5119b879a2a2399eab6e6430b62796106..5c69ea0731c0fbdc0ff4820891d67773c7105b3b 100644
+--- a/build/utils/revocationInterval.js
++++ b/build/utils/revocationInterval.js
+@@ -7,9 +7,9 @@ function assertBestPracticeRevocationInterval(revocationInterval) {
+     if (!revocationInterval.to) {
+         throw new core_1.AriesFrameworkError(`Presentation requests proof of non-revocation with no 'to' value specified`);
+     }
+-    if ((revocationInterval.from || revocationInterval.from === 0) && revocationInterval.to !== revocationInterval.from) {
+-        throw new core_1.AriesFrameworkError(`Presentation requests proof of non-revocation with an interval from: '${revocationInterval.from}' that does not match the interval to: '${revocationInterval.to}', as specified in Aries RFC 0441`);
+-    }
++    // if ((revocationInterval.from || revocationInterval.from === 0) && revocationInterval.to !== revocationInterval.from) {
++    //     throw new core_1.AriesFrameworkError(`Presentation requests proof of non-revocation with an interval from: '${revocationInterval.from}' that does not match the interval to: '${revocationInterval.to}', as specified in Aries RFC 0441`);
++    // }
+ }
+ exports.assertBestPracticeRevocationInterval = assertBestPracticeRevocationInterval;
+ //# sourceMappingURL=revocationInterval.js.map
+\ No newline at end of file
