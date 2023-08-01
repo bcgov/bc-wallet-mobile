@@ -1,0 +1,53 @@
+name: Ship to SauceLabs
+description: Upload an artifact to saucelabs
+
+inputs:
+  sauce_labs_username:
+    description: SauceLabs username
+    required: true
+  sauce_labs_password:
+    description: SauceLabs password
+    required: true
+  sauce_labs_name:
+    description: |
+      The name of the artifact shown in SauceLabs
+    requred: true
+  sauce_labs_description:
+    description: |
+      The description of the artifact show in SauceLabs.
+    required: true
+  artifact_ref:
+    description: |
+      The referene ID / name of the uploaded GitHub artifact
+      stored in GitHub by the upload action. i.e my-artifact
+    requred: true
+  artifact_name:
+    description: |
+      The actual name of the artifact that would be
+      recognized by a human i.e MyApp.ipa
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Download artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ inputs.artifact_ref }}
+
+    - name: list files
+      shell: bash
+      run: pwd && ls -la
+
+    - name: Upload artifact to SauceLabs
+      shell: bash
+      env:
+        SAUCE_USERNAME: ${{ inputs.sauce_labs_username }}
+        SAUCE_ACCESS_KEY: ${{ inputs.sauce_labs_password }}
+      run: |
+        curl \
+        -u "$SAUCE_USERNAME:$SAUCE_ACCESS_KEY" \
+        -X POST 'https://api.us-west-1.saucelabs.com/v1/storage/upload' \
+        --form "payload=@${{ inputs.artifact_name }}" \
+        --form "name=${{ inputs.sauce_labs_name}}" \
+        --form "description=${{ inputs.sauce_labs_description }}"

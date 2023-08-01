@@ -39,7 +39,7 @@ const translation = {
     AllowCameraUse: 'Allow camera use',
     CameraDisclosure:
       'The camera is used to scan QR codes that initiate a credential offer or credential request. No information about the images is stored, used for analytics, or shared.',
-    ToContinueUsing: 'To continue using the BC Wallet scan feature, please allow camera permissions.',
+    ToContinueUsing: 'To continue using the QC Wallet scan feature, please allow camera permissions.',
     Allow: 'Allow',
     OpenSettings: 'Open settings',
   },
@@ -66,13 +66,13 @@ const translation = {
     ButtonTitle: 'Start',
   },
   PersonCredential: {
-    Issuer: 'Service BC',
+    Issuer: 'Service QC',
     Name: 'Person',
     GivenName: 'Sample Given Name',
     FamilyName: 'Sample Family Name',
     Description:
-      "Add your Person credential to your wallet to prove your personal information online and get access to services online.\n\nYou'll need the BC Service Card app set up on this mobile device.",
-    LinkDescription: 'Get the BC Services Card app',
+      "Add your Person credential to your wallet to prove your personal information online and get access to services online.\n\nYou'll need the QC Service Card app set up on this mobile device.",
+    LinkDescription: 'Get the QC Services Card app',
     GetCredential: 'Get your Person credential',
     Decline: 'Get this later',
     PageTitle: 'Person Credential',
@@ -336,7 +336,7 @@ const translation = {
       'QC Wallet is currently in its early stages and the technology is being explored. Most people will not have a use for QC Wallet yet, because very few digital credentials are available.',
     StoredSecurelyTitle: 'Digital credentials, stored securely',
     StoredSecurelyBody:
-      'BC Wallet holds digital credentials—the digital versions of things like licenses, identities and permits.\n\nThey are stored securely, only on this device.',
+      'QC Wallet holds digital credentials—the digital versions of things like licenses, identities and permits.\n\nThey are stored securely, only on this device.',
     UsingCredentialsTitle: 'Receiving and using credentials',
     UsingCredentialsBody:
       'To receive and use credentials you use the “Scan” feature in the app to scan a special QR code.\n\nInformation is sent and received over a private, encrypted connection.',
@@ -383,7 +383,7 @@ const translation = {
   Settings: {
     Help: 'Help',
     MoreInformation: 'More Information',
-    HelpUsingBCWallet: 'Help using BC Wallet',
+    HelpUsingBCWallet: 'Help using QC Wallet',
     GiveFeedback: 'Give feedback',
     ReportAProblem: 'Report A Problem',
     TermsOfUse: 'Terms of use',
@@ -398,8 +398,8 @@ const translation = {
     Language: 'Language',
   },
   Tour: {
-    GuideTitle: 'Welcome to BC Wallet',
-    WouldYouLike: 'Would you like some guidance on how to use BC Wallet?',
+    GuideTitle: 'Welcome to QC Wallet',
+    WouldYouLike: 'Would you like some guidance on how to use QC Wallet?',
     UseAppGuides: 'Use app guides',
     DoNotUseAppGuides: "Don't use app guides",
     AddAndShare: 'Add and share credentials',
@@ -418,7 +418,7 @@ const translation = {
   Tips: {
     Header: 'Tips',
     GettingReady: 'Getting your wallet ready...',
-    Tip1: 'For extra security, BC Wallet locks the app after 5 minutes of inactivity',
+    Tip1: 'For extra security, QC Wallet locks the app after 5 minutes of inactivity',
     Tip2: 'Unlike showing physical cards, you share only what is necessary from your credentials',
     Tip3: 'Your credentials are stored only on this phone, nowhere else',
     Tip4: 'Information is sent and received over an untraceable encrypted connection',

@@ -11,8 +11,7 @@
 
 ## Prerequisite software
 
-Before you can proceed with building and testing the BC Wallet app, you must install and configure the
-following products on your development machine:
+Before you can proceed with building and testing the BC Wallet app, you must install and configure the following products on your development machine:
 
 - [Git](https://git-scm.com/)
 - [Node.js](https://nodejs.org) & [npm](https://docs.npmjs.com/cli/) - (version specified in the `engines` field

@@ -108,8 +108,8 @@ const translation = {
     Name: 'Personne',
     Description:
       "Ajoutez vos justificatifs d’identités à votre portefeuille pour prouver vos informations personnelles en ligne et accéder aux services en ligne.\n\nVous aurez besoin de l'application BC Service Card configurée sur cet appareil mobile.",
-    LinkDescription: "Obtenez l'application BC Services Card",
-    GetCredential: "Obtenez l'application BC Services Card",
+    LinkDescription: "Obtenez l'application QC Services Card",
+    GetCredential: "Obtenez l'application QC Services Card",
     Decline: 'Obtenez ceci plus tard',
     PageTitle: 'Justificatifs d’identité',
   },
@@ -365,7 +365,7 @@ const translation = {
       'Le portefeuille QC vous permet de recevoir, de stocker et d’utiliser des attestations numériques.',
     WelcomeParagraph2: 'Il est hautement sécurisé et protège votre vie privée en ligne.',
     WelcomeParagraph3:
-      'LE portefeuille QC est en cours de développement. Il est actuellement en version bêta et est disponible pour les tests.',
+      'Le portefeuille QC est en cours de développement. Il est actuellement en version bêta et est disponible pour les tests.',
     StoredSecurelyTitle: 'Attestations numériques, stockées en toute sécurité',
     StoredSecurelyBody:
       'Le portefeuille QC stocke les attestations numériques, les versions numériques de choses comme les permis, les identités et les licences.\n\nElles sont stockées en toute sécurité, uniquement sur cet appareil.',
@@ -437,7 +437,7 @@ const translation = {
   Settings: {
     Help: 'Aide',
     MoreInformation: "Plus d'information",
-    HelpUsingBCWallet: "Aide à l'utilisation du portefeuille BC",
+    HelpUsingBCWallet: "Aide à l'utilisation du portefeuille QC",
     GiveFeedback: 'Donner son avis',
     ReportAProblem: 'Signaler un problème',
     TermsOfUse: "Conditions d'utilisation",

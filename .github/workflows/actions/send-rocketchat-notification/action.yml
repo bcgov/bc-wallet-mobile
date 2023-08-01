@@ -1,0 +1,33 @@
+# Makes use of https://github.com/RocketChat/Rocket.Chat.GitHub.Action.Notification
+name: Rocketchat Notification
+description: Send a rocketchat notification
+author: "bryce.j.mcmath@gmail.com"
+
+inputs:
+  job_title:
+    description: The title of the notification
+    required: true
+  job_status:
+    description: The status of the job
+    required: true
+  webhook_url:
+    description: The RocketChat Webhook URL
+    required: true
+  webhook_token:
+    description: The access token for the Webhook URL
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Notification
+      uses: RocketChat/Rocket.Chat.GitHub.Action.Notification@master
+      with:
+        type: ${{ inputs.job_status }}
+        job_name: ${{ inputs.job_title }}
+        mention: "jason.leach @cvarjao @wade.king @bryce.mcmath"
+        mention_if: always
+        channel: "#bc-digital-wallet-core-team"
+        url: ${{ inputs.webhook_url }}
+        commit: true
+        token: ${{ inputs.webhook_token }}

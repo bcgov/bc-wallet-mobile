@@ -40,7 +40,7 @@ export interface AccordionItemProps {
    */
   onPress?: (isOpen: boolean) => void
   /**
-   *  An optional param to support test ID 
+   *  An optional param to support test ID
    *  default value is ''
    */
   testID?: string

@@ -4,13 +4,13 @@ import { useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/native'
 import { useTheme, Screens, Stacks, testIdWithKey } from 'aries-bifold'
 import React, { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { hitSlop } from '../constants'
 import { BCWalletEventTypes } from '../events/eventTypes'
 import { showBCIDSelector } from '../helpers/BCIDHelper'
-import { useTranslation } from 'react-i18next'
 
 const AddCredentialSlider: React.FC = () => {
   const { ColorPallet, TextTheme } = useTheme()

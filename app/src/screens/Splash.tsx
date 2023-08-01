@@ -51,9 +51,25 @@ const onboardingComplete = (state: OnboardingState): boolean => {
   return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
 }
 
-const resumeOnboardingAt = (state: OnboardingState): Screens => {
-  if (state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && !state.didConsiderBiometry) {
+const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean | undefined): Screens => {
+  if (
+    state.didCompleteTutorial &&
+    state.didAgreeToTerms &&
+    state.didCreatePIN &&
+    (state.didNameWallet || !enableWalletNaming) &&
+    !state.didConsiderBiometry
+  ) {
     return Screens.UseBiometry
+  }
+
+  if (
+    state.didCompleteTutorial &&
+    state.didAgreeToTerms &&
+    state.didCreatePIN &&
+    enableWalletNaming &&
+    !state.didNameWallet
+  ) {
+    return Screens.NameWallet
   }
 
   if (state.didCompleteTutorial && state.didAgreeToTerms && !state.didCreatePIN) {
@@ -66,6 +82,7 @@ const resumeOnboardingAt = (state: OnboardingState): Screens => {
 
   return Screens.Onboarding
 }
+
 /*
   To customize this splash screen set the background color of the
   iOS and Android launch screen to match the background color of
@@ -78,7 +95,7 @@ const Splash: React.FC = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet } = useTheme()
-  const { indyLedgers } = useConfiguration()
+  const { indyLedgers, enableWalletNaming } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -272,7 +289,7 @@ const Splash: React.FC = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON) }],
+              routes: [{ name: resumeOnboardingAt(dataAsJSON, enableWalletNaming) }],
             })
           )
 
@@ -312,7 +329,7 @@ const Splash: React.FC = () => {
         setStep(5)
         const options = {
           config: {
-            label: 'QC Wallet',
+            label: store.preferences.walletName || 'Portefeuille QC',
             walletConfig: {
               id: credentials.id,
               key: credentials.key,

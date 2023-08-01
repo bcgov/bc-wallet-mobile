@@ -168,7 +168,7 @@ export const TextTheme: ITextTheme = {
     color: ColorPallet.grayscale.darkGrey,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
     color: ColorPallet.grayscale.darkGrey,
   },
@@ -198,13 +198,13 @@ export const Inputs: IInputs = StyleSheet.create({
     borderRadius,
     fontFamily: TextTheme.normal.fontFamily,
     fontSize: 16,
-    backgroundColor: ColorPallet.brand.primaryBackground,
-    color: ColorPallet.notification.infoText,
-    borderWidth: 2,
-    borderColor: ColorPallet.brand.secondary,
+    backgroundColor: ColorPallet.grayscale.lightGrey,
+    color: TextTheme.normal.color,
+    borderWidth: 1,
+    borderColor: ColorPallet.grayscale.lightGrey,
   },
   inputSelected: {
-    borderColor: ColorPallet.brand.primary,
+    borderColor: TextTheme.normal.color,
   },
   singleSelect: {
     padding: 12,
