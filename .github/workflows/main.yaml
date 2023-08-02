@@ -156,7 +156,7 @@ jobs:
           -configuration Release \
           -derivedDataPath xbuild \
           -xcconfig ../../release.xcconfig \
-          -archivePath ../../AriesBifold.xcarchive \
+          -archivePath AriesBifold.xcarchive \
           -sdk iphoneos \
           -verbose \
           archive
