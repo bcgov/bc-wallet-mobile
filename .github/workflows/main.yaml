@@ -168,26 +168,6 @@ jobs:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
-      - name: Export development archive
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        uses: ./.github/workflows/actions/export-ios-archive
-        with:
-          certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
-          certificate_password: ${{ secrets.KEYCHIAN_PASSWD_DEV }}
-          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
-          export_options: options-dev.plist
-          ouput_artifact_ref: ios-artifact-dev
-
-      - name: Export distribution archive
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
-        uses: ./.github/workflows/actions/export-ios-archive
-        with:
-          certificate: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          certificate_password: ${{ secrets.KEYCHIAN_PASSWD }}
-          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          export_options: options.plist
-          ouput_artifact_ref: ios-artifact
-
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
