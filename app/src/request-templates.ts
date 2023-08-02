@@ -14,7 +14,7 @@ const personRestrictions = [
   { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
   // BC Wallet Showcase
   { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
-  { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Person:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
+  { schema_id: 'L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.1', issuer_did: 'L6ASjmDDbDH7yPL1t2yFj9' }, // Dev & Test
   // openvp candy
   { schema_id: 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0', issuer_did: 'Ui6HA36FvN83cEtmYYHxrn' },
 ]
@@ -33,10 +33,32 @@ const memberCardRestrictions = [
   { schema_id: 'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1', issuer_did: 'AuJrigKQGRLJajKAebTgWu' }, // Test
   // BC Wallet Showcase
   { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
-  { schema_id: '2K2h7kf8VGTLtfoxJgWazf:2:Member Card:1.1', issuer_did: '2K2h7kf8VGTLtfoxJgWazf' }, // Dev & Test
+  { schema_id: 'L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.51', issuer_did: 'L6ASjmDDbDH7yPL1t2yFj9' }, // Dev & Test
 ]
+const memberCardCodeRestrictions = memberCardRestrictions.map((restriction) => {
+  return { ...restriction, 'attr::Member Status::value': 'Practising', 'attr::Member Status Code::value': 'PRAC' }
+})
 
 export const proofRequestTemplates: Array<ProofRequestTemplate> = [
+  {
+    id: 'BC:5:PracticingLawyerAndPhoto:0.0.1:indy',
+    name: 'Practicing Lawyer and Person Photo Attribute',
+    description: 'Verify that someone is a practising lawyer with photo ID',
+    version: '0.0.1',
+    payload: {
+      type: ProofRequestType.AnonCreds,
+      data: [
+        {
+          schema: personSchema,
+          requestedAttributes: [{ names: ['given_names', 'family_name', 'picture'], restrictions: personRestrictions }],
+        },
+        {
+          schema: memberCardSchema,
+          requestedAttributes: [{ names: ['Given Name', 'Surname'], restrictions: memberCardCodeRestrictions }],
+        },
+      ],
+    },
+  },
   {
     id: 'BC:5:FullName:0.0.1:indy',
     name: 'Full name',
