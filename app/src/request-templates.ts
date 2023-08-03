@@ -5,9 +5,15 @@ const calculatePreviousYear = (yearOffset: number) => {
   pastDate.setFullYear(pastDate.getFullYear() - yearOffset)
   return parseInt(pastDate.toISOString().split('T')[0].replace(/-/g, ''))
 }
+const openvpSchema = '4eCXHS79ykiMv2PoBxPK23:2:unverified_person:0.1.0'
+const openvpRestrictions = [
+  { schema_id: '4eCXHS79ykiMv2PoBxPK23:2:unverified_person:0.1.0', issuer_did: '4eCXHS79ykiMv2PoBxPK23' },
+  { schema_id: 'HTkhhCW1bAXWnxC1u3YVoa:2:unverified_person:0.1.0', issuer_did: 'HTkhhCW1bAXWnxC1u3YVoa' },
+  { schema_id: 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0', issuer_did: 'Ui6HA36FvN83cEtmYYHxrn' },
+]
 
 const personSchema = 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0'
-const personRestrictions = [
+const verifiedPersonRestrictions = [
   // IDIM Person credential
   { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
   { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
@@ -15,16 +21,9 @@ const personRestrictions = [
   // BC Wallet Showcase
   { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
   { schema_id: 'L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.1', issuer_did: 'L6ASjmDDbDH7yPL1t2yFj9' }, // Dev & Test
-  // openvp candy
-  { schema_id: 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0', issuer_did: 'Ui6HA36FvN83cEtmYYHxrn' },
 ]
 
-const openvpSchema = '9wVuYYDEDtpZ6CYMqSiWop:2:unverified_person:0.1.0'
-const openvpRestrictions = [
-  { schema_id: '9wVuYYDEDtpZ6CYMqSiWop:2:unverified_person:0.1.0', issuer_did: '9wVuYYDEDtpZ6CYMqSiWop' },
-  { schema_id: 'XZQpyaFa9hBUdJXfKHUvVg:2:unverified_person:0.1.0', issuer_did: 'XZQpyaFa9hBUdJXfKHUvVg' },
-  { schema_id: 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0', issuer_did: 'Ui6HA36FvN83cEtmYYHxrn' },
-]
+const personRestrictions = [...verifiedPersonRestrictions, ...openvpRestrictions]
 
 const memberCardSchema = 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1'
 const memberCardRestrictions = [
@@ -50,7 +49,9 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
       data: [
         {
           schema: personSchema,
-          requestedAttributes: [{ names: ['given_names', 'family_name', 'picture'], restrictions: personRestrictions }],
+          requestedAttributes: [
+            { names: ['given_names', 'family_name', 'picture'], restrictions: verifiedPersonRestrictions },
+          ],
         },
         {
           schema: memberCardSchema,
@@ -96,7 +97,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
           requestedAttributes: [
             {
               names: ['given_names', 'family_name'],
-              restrictions: personRestrictions,
+              restrictions: verifiedPersonRestrictions,
             },
           ],
           requestedPredicates: [
@@ -104,7 +105,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               name: 'birthdate_dateint',
               predicateType: '<=',
               predicateValue: calculatePreviousYear(19),
-              restrictions: personRestrictions,
+              restrictions: verifiedPersonRestrictions,
             },
           ],
         },
@@ -126,7 +127,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               name: 'birthdate_dateint',
               predicateType: '<=',
               predicateValue: calculatePreviousYear(19),
-              restrictions: personRestrictions,
+              restrictions: verifiedPersonRestrictions,
             },
           ],
         },
@@ -198,7 +199,7 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
               predicateType: '<=',
               predicateValue: calculatePreviousYear(19),
               parameterizable: true,
-              restrictions: personRestrictions,
+              restrictions: verifiedPersonRestrictions,
             },
           ],
         },
@@ -219,15 +220,15 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
           requestedAttributes: [
             {
               name: 'given_names',
-              restrictions: personRestrictions,
+              restrictions: verifiedPersonRestrictions,
             },
             {
               name: 'family_name',
-              restrictions: personRestrictions,
+              restrictions: verifiedPersonRestrictions,
             },
             {
               name: 'picture',
-              restrictions: personRestrictions,
+              restrictions: verifiedPersonRestrictions,
             },
           ],
         },
