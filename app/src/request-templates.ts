@@ -19,8 +19,9 @@ const verifiedPersonRestrictions = [
   { schema_id: 'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0', issuer_did: 'KCxVC8GkKywjhWJnUfCmkW' }, // QA
   { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
   // BC Wallet Showcase
-  { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
-  { schema_id: 'L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.1', issuer_did: 'L6ASjmDDbDH7yPL1t2yFj9' }, // Dev & Test
+  { schema_id: 'QEquAHkM35w4XVT3Ku5yat:2:Person:1.2', issuer_did: 'QEquAHkM35w4XVT3Ku5yat' }, // Prod
+  { schema_id: 'M6dhuFj5UwbhWkSLmvYSPc:2:Person:1.2', issuer_did: 'M6dhuFj5UwbhWkSLmvYSPc' }, // Test
+  { schema_id: 'L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2', issuer_did: 'L6ASjmDDbDH7yPL1t2yFj9' }, // Dev
 ]
 
 const personRestrictions = [...verifiedPersonRestrictions, ...openvpRestrictions]
@@ -31,11 +32,14 @@ const memberCardRestrictions = [
   { schema_id: '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1', issuer_did: '4xE68b6S5VRFrKMMG1U95M' }, // Prod
   { schema_id: 'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1', issuer_did: 'AuJrigKQGRLJajKAebTgWu' }, // Test
   // BC Wallet Showcase
-  { schema_id: 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1', issuer_did: 'XUxBrVSALWHLeycAUhrNr9' }, // Prod
-  { schema_id: 'L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.51', issuer_did: 'L6ASjmDDbDH7yPL1t2yFj9' }, // Dev & Test
+  { schema_id: 'QEquAHkM35w4XVT3Ku5yat:2:member_card:1.53', issuer_did: 'QEquAHkM35w4XVT3Ku5yat' }, // Prod
+  { schema_id: 'M6dhuFj5UwbhWkSLmvYSPc:2:member_card:1.53', issuer_did: 'M6dhuFj5UwbhWkSLmvYSPc' }, // Test
+  { schema_id: 'L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.53', issuer_did: 'L6ASjmDDbDH7yPL1t2yFj9' }, // Dev
 ]
+
+// TODO: (WK) will add member card code attribute restrictions
 const memberCardCodeRestrictions = memberCardRestrictions.map((restriction) => {
-  return { ...restriction, 'attr::Member Status::value': 'Practising', 'attr::Member Status Code::value': 'PRAC' }
+  return { ...restriction }
 })
 
 export const proofRequestTemplates: Array<ProofRequestTemplate> = [
