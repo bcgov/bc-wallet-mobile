@@ -1,0 +1,71 @@
+import { Button, ButtonType, testIdWithKey, useTheme } from 'aries-bifold'
+import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { StyleSheet, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+
+import { surveyMonkeyUrl, surveyMonkeyExitUrl } from '../constants'
+import WebDisplay from '../screens/WebDisplay'
+
+const offset = 25
+
+interface HomeFooterViewProps {
+  children?: any
+}
+
+const HomeFooterView: React.FC<HomeFooterViewProps> = ({ children }) => {
+  const { ColorPallet } = useTheme()
+  const { t } = useTranslation()
+  const [surveyVisible, setSurveyVisible] = useState(false)
+
+  const styles = StyleSheet.create({
+    container: {
+      paddingHorizontal: offset,
+      paddingBottom: offset * 3,
+    },
+    messageContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 35,
+      marginHorizontal: offset,
+    },
+    feedbackContainer: {
+      paddingTop: 15,
+      marginHorizontal: offset,
+      backgroundColor: ColorPallet.grayscale.white,
+    },
+    feedbackIcon: {
+      paddingRight: 10,
+    },
+  })
+
+  const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
+
+  return (
+    <View style={[styles.feedbackContainer]}>
+      <Button
+        title={t('Feedback.GiveFeedback')}
+        accessibilityLabel={t('Feedback.GiveFeedback')}
+        testID={testIdWithKey('GiveFeedback')}
+        onPress={toggleSurveyVisibility}
+        buttonType={ButtonType.Secondary}
+      >
+        <Icon
+          name="message-draw"
+          style={[styles.feedbackIcon, { color: ColorPallet.brand.primary }]}
+          size={26}
+          color={ColorPallet.grayscale.white}
+        />
+      </Button>
+      <WebDisplay
+        destinationUrl={surveyMonkeyUrl}
+        exitUrl={surveyMonkeyExitUrl}
+        visible={surveyVisible}
+        onClose={toggleSurveyVisibility}
+      />
+      {children}
+    </View>
+  )
+}
+
+export default HomeFooterView
