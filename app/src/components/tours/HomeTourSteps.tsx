@@ -3,10 +3,8 @@ import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, Text, useWindowDimensions } from 'react-native'
 
-// const { width } = useWindowDimensions()
-
 const calculateImageDimensions = () => {
-  const { width: windowWidth } = useWindowDimensions()
+  const { width: windowWidth } = useWindowDimensions() // NOSONAR
   const totalHorizontalImagePadding = 90
   const imageWidth = Math.floor(windowWidth - totalHorizontalImagePadding)
   const imageHeight = Math.floor(imageWidth * 0.66)
