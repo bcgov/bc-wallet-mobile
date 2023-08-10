@@ -7,8 +7,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from '../constants'
 import WebDisplay from '../screens/WebDisplay'
 
-const offset = 25
-
 interface HomeFooterViewProps {
   children?: any
 }
@@ -19,19 +17,8 @@ const HomeFooterView: React.FC<HomeFooterViewProps> = ({ children }) => {
   const [surveyVisible, setSurveyVisible] = useState(false)
 
   const styles = StyleSheet.create({
-    container: {
-      paddingHorizontal: offset,
-      paddingBottom: offset * 3,
-    },
-    messageContainer: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginTop: 35,
-      marginHorizontal: offset,
-    },
     feedbackContainer: {
-      paddingTop: 15,
-      marginHorizontal: offset,
+      marginHorizontal: 20,
       backgroundColor: ColorPallet.grayscale.white,
     },
     feedbackIcon: {
