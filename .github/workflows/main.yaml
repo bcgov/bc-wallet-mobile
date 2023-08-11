@@ -1,7 +1,7 @@
 name: Native Build & Test
 
 env:
-  cacheId: "2" # increment to expire the cache
+  cacheId: "3" # increment to expire the cache
   appBuildNumber: ${{ github.run_number }}
   appBuildVersion: "0.0.2"
 
@@ -169,6 +169,7 @@ jobs:
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
       - name: Archive & Sign
+        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/ios
         run: |
           xcodebuild \
