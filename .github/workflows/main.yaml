@@ -314,7 +314,7 @@ jobs:
           job_title: "BC Wallet Android Build - Run number ${{ github.run_number }}"
           job_status: ${{ job.status }}
           webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          webhook_token: ${{ secrets.GITHUB_TOKEN }}
+          webhook_token: ${{ secrets.ROCKETCHAT_TOKEN }}
 
   ship-to-saucelabs:
     if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
