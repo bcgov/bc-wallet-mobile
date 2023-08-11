@@ -1,12 +1,16 @@
 import { useTheme, TourStep, TourBox } from 'aries-bifold'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, Text, Dimensions } from 'react-native'
+import { Image, Text, useWindowDimensions } from 'react-native'
 
-const { width: windowWidth } = Dimensions.get('window')
-const totalHorizontalImagePadding = 90
-const imageWidth = Math.floor(windowWidth - totalHorizontalImagePadding)
-const imageHeight = Math.floor(imageWidth * 0.66)
+const calculateImageDimensions = () => {
+  const { width: windowWidth } = useWindowDimensions() // NOSONAR
+  const totalHorizontalImagePadding = 90
+  const imageWidth = Math.floor(windowWidth - totalHorizontalImagePadding)
+  const imageHeight = Math.floor(imageWidth * 0.66)
+
+  return { imageWidth, imageHeight }
+}
 
 export const homeTourSteps: TourStep[] = [
   {
@@ -14,6 +18,8 @@ export const homeTourSteps: TourStep[] = [
       const { current, next, stop, previous } = props
       const { t } = useTranslation()
       const { ColorPallet, TextTheme } = useTheme()
+      const { imageWidth, imageHeight } = calculateImageDimensions()
+
       return (
         <TourBox
           title={t('Tour.AddAndShare')}
@@ -55,6 +61,7 @@ export const homeTourSteps: TourStep[] = [
       const { current, next, stop, previous } = props
       const { t } = useTranslation()
       const { ColorPallet, TextTheme } = useTheme()
+
       return (
         <TourBox
           title={t('Tour.Notifications')}
@@ -86,6 +93,8 @@ export const homeTourSteps: TourStep[] = [
       const { current, next, stop, previous } = props
       const { t } = useTranslation()
       const { ColorPallet, TextTheme } = useTheme()
+      const { imageWidth, imageHeight } = calculateImageDimensions()
+
       return (
         <TourBox
           title={t('Tour.YourCredentials')}
