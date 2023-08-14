@@ -1,0 +1,39 @@
+{
+    "project_info": {
+        "project_number": "287275049656",
+        "project_id": "ca-bc-gov-bcwallet",
+        "storage_bucket": "ca-bc-gov-bcwallet.appspot.com"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:287275049656:android:d707f471af1d6b31b2ca4d",
+                "android_client_info": {
+                    "package_name": "ca.bc.gov.BCWallet"
+                }
+            },
+            "oauth_client": [
+                {
+                    "client_id": "287275049656-g8s9ccd0erc2eqe0o05qbtsb95q7r399.apps.googleusercontent.com",
+                    "client_type": 3
+                }
+            ],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyBpQYLmPFL-3aq8h97us9qCo1bnMeI9npU"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": [
+                        {
+                            "client_id": "287275049656-g8s9ccd0erc2eqe0o05qbtsb95q7r399.apps.googleusercontent.com",
+                            "client_type": 3
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}
