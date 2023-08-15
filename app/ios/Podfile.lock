@@ -3,7 +3,7 @@ PODS:
     - React
     - React-callinvoker
     - React-Core
-  - aries-askar (0.1.0):
+  - aries-askar (0.1.1):
     - React
     - React-callinvoker
     - React-Core
@@ -587,7 +587,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   anoncreds: 8e6ab626d5250ae6301c3e96d6fc739186e083f0
-  aries-askar: fde2367dd2eec5c646e71cd909f518a3585b0f17
+  aries-askar: 738c677e194913ed3c256adc953db3fe0494f8f8
   boost: a7c83b31436843459a1961bfd74b96033dc77234
   CatCrypto: a477899b6be4954e75be4897e732da098cc0a5a8
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
@@ -652,4 +652,4 @@ SPEC CHECKSUMS:
 
 PODFILE CHECKSUM: 4266f539fd5c242abd4005c88814b151329c70f6
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.11.3
