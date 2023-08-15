@@ -149,6 +149,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aries-framework/push-notifications@npm:0.5.0, @aries-framework/push-notifications@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "@aries-framework/push-notifications@npm:0.5.0"
+  dependencies:
+    class-transformer: 0.5.1
+    class-validator: 0.14.0
+    reflect-metadata: ^0.1.13
+    tsyringe: ^4.6.0
+  peerDependencies:
+    "@aries-framework/core": ^0.4.0
+  checksum: fb7f5df97473e15c7fb8a193ac6fb8b30927e2eb0abdc196cf78f151632a2bb6148b2390c5fe0e22532faab83e494b4307f03aeca530d987c3cd2f2b5da1b936
+  languageName: node
+  linkType: hard
+
 "@aries-framework/react-hooks@npm:0.4.2":
   version: 0.4.2
   resolution: "@aries-framework/react-hooks@npm:0.4.2"
@@ -5724,6 +5738,7 @@ __metadata:
     "@aries-framework/core": ^0.4.0
     "@aries-framework/indy-sdk-to-askar-migration": 0.4.0
     "@aries-framework/indy-vdr": ^0.4.0
+    "@aries-framework/push-notifications": 0.5.0
     "@aries-framework/react-hooks": ^0.4.2
     "@aries-framework/react-native": ^0.4.0
     "@babel/core": ^7.12.9
@@ -5825,6 +5840,7 @@ __metadata:
     "@aries-framework/core": ^0.4.0
     "@aries-framework/indy-sdk-to-askar-migration": 0.4.0
     "@aries-framework/indy-vdr": ^0.4.0
+    "@aries-framework/push-notifications": 0.5.0
     "@aries-framework/react-hooks": ^0.4.2
     "@aries-framework/react-native": ^0.4.0
     "@formatjs/intl-datetimeformat": ^4.2.3
@@ -6780,6 +6796,7 @@ __metadata:
     "@aries-framework/core": ^0.4.0
     "@aries-framework/indy-sdk-to-askar-migration": 0.4.0
     "@aries-framework/indy-vdr": ^0.4.0
+    "@aries-framework/push-notifications": ^0.5.0
     "@aries-framework/react-hooks": ^0.4.2
     "@aries-framework/react-native": ^0.4.0
     "@babel/core": 7.15.5
@@ -20877,7 +20894,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsyringe@npm:^4.7.0":
+"tsyringe@npm:^4.6.0, tsyringe@npm:^4.7.0":
   version: 4.8.0
   resolution: "tsyringe@npm:4.8.0"
   dependencies:
