@@ -23,7 +23,7 @@
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios --device",
+    "ios": "react-native run-ios",
     "start": "react-native start --reset-cache",
     "style-check": "yarn prettier -- --check",
     "style-format": "yarn prettier -- --write",

@@ -141,6 +141,14 @@ jobs:
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
+      
+      - name: Set Push Notification Capability
+        working-directory: app/ios/AriesBifold
+        env:
+          MEDIATOR_USE_PUSH_NOTIFICATIONS: false
+          MEDIATOR_LABEL: Mediator
+        run: |
+          mv DEVELOPMENT.AriesBifold.entitlements AriesBifold.entitlements
 
       - name: Archive build
         working-directory: app/ios

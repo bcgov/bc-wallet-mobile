@@ -23,6 +23,11 @@ const useAgent = () => ({
   agent: {
     credentials: mockCredentialModule,
     proofs: mockProofModule,
+    config: {
+      logger: {
+        info: jest.fn(),
+      },
+    },
   },
 })
 const useCredentialById = jest.fn()
