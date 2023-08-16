@@ -25,7 +25,10 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import bcwallet from './src'
+import { credentialOfferTourSteps } from './src/components/tours/CredentialOfferTourSteps'
+import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
+import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
 import WebDisplay from './src/screens/WebDisplay'
 import { initialState, reducer } from './src/store'
@@ -125,7 +128,14 @@ const App = () => {
                   visible={surveyVisible}
                   onClose={toggleSurveyVisibility}
                 />
-                <TourProvider steps={homeTourSteps} overlayColor={'black'} overlayOpacity={0.6}>
+                <TourProvider
+                  homeTourSteps={homeTourSteps}
+                  credentialsTourSteps={credentialsTourSteps}
+                  credentialOfferTourSteps={credentialOfferTourSteps}
+                  proofRequestTourSteps={proofRequestTourSteps}
+                  overlayColor={'gray'}
+                  overlayOpacity={0.7}
+                >
                   <RootStack />
                 </TourProvider>
                 <Toast topOffset={15} config={toastConfig} />
