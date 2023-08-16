@@ -589,10 +589,10 @@ export const ChatTheme = {
     textAlign: 'center',
   },
   documentIconContainer: {
-    backgroundColor: ColorPallet.brand.primary,
+    backgroundColor: '#1c70bf',
     alignSelf: 'flex-start',
     padding: 4,
-    borderRadius: 4,
+    borderRadius: 8,
     marginBottom: 8,
   },
   documentIcon: {
