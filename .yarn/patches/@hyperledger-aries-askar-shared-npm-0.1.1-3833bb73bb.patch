@@ -1,0 +1,20 @@
+diff --git a/build/store/Entry.js b/build/store/Entry.js
+index 4ef6a1cebc4847c69f0cafcdfffb01f81e7e254a..98c8b9ef84940726c9631aef62ab08e1700f8746 100644
+--- a/build/store/Entry.js
++++ b/build/store/Entry.js
+@@ -16,9 +16,12 @@ class Entry {
+         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+         // @ts-ignore
+         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+-        const decoder = new TextDecoder();
+-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+-        return decoder.decode(this.rawValue);
++        const raw = this.rawValue
++        const results = []
++        for (var i = 0; i < raw.length; i+=50000) {
++            results.push(String.fromCharCode.apply(null, this.rawValue.slice(i, i+50000)));
++        }
++        return results.join('')
+     }
+     get rawValue() {
+         return this._list.getValue(this._pos);
