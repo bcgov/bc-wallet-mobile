@@ -59,7 +59,12 @@ export const proofRequestTemplates: Array<ProofRequestTemplate> = [
         },
         {
           schema: memberCardSchema,
-          requestedAttributes: [{ names: ['Given Name', 'Surname'], restrictions: memberCardCodeRestrictions }],
+          requestedAttributes: [
+            {
+              names: ['Given Name', 'Surname', 'Member Status', 'Member Status Code'],
+              restrictions: memberCardCodeRestrictions,
+            },
+          ],
         },
       ],
     },
