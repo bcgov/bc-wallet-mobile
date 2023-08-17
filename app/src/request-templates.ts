@@ -45,8 +45,8 @@ const memberCardCodeRestrictions = memberCardRestrictions.map((restriction) => {
 export const proofRequestTemplates: Array<ProofRequestTemplate> = [
   {
     id: 'BC:5:PracticingLawyerAndPhoto:0.0.1:indy',
-    name: 'Practicing Lawyer and Person Photo Attribute',
-    description: 'Verify that someone is a practising lawyer with photo ID',
+    name: 'Lawyer Status and Photo',
+    description: "Verify someone's lawyer status and photo ID",
     version: '0.0.1',
     payload: {
       type: ProofRequestType.AnonCreds,
