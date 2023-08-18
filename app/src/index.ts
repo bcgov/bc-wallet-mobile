@@ -67,7 +67,6 @@ const configuration: ConfigurationContext = {
   useCustomNotifications: useNotifications,
   proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
-  enableWalletNaming: false,
 }
 
 export default { theme, localization, configuration }

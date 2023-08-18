@@ -96,7 +96,7 @@ const Splash: React.FC = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
-  const { indyLedgers, enableWalletNaming } = useConfiguration()
+  const { indyLedgers } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -258,22 +258,29 @@ const Splash: React.FC = () => {
             payload: [dataAsJSON],
           })
 
-          if (onboardingComplete(dataAsJSON) && !attemptData?.lockoutDate) {
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: Screens.EnterPIN }],
-              })
-            )
-            return
-          } else if (onboardingComplete(dataAsJSON) && attemptData?.lockoutDate) {
-            // return to lockout screen if lockout date is set
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: Screens.AttemptLockout }],
-              })
-            )
+          if (onboardingComplete(dataAsJSON)) {
+            // if they previously completed onboarding before wallet naming was enabled, mark complete
+            if (!store.onboarding.didNameWallet) {
+              dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
+            }
+
+            if (!attemptData?.lockoutDate) {
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: Screens.EnterPIN }],
+                })
+              )
+            } else {
+              // return to lockout screen if lockout date is set
+              navigation.dispatch(
+                CommonActions.reset({
+                  index: 0,
+                  routes: [{ name: Screens.AttemptLockout }],
+                })
+              )
+            }
+
             return
           }
 
@@ -281,7 +288,7 @@ const Splash: React.FC = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON, enableWalletNaming) }],
+              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming) }],
             })
           )
 
