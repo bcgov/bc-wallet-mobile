@@ -14,7 +14,6 @@ import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
 import HomeFooterView from './components/HomeFooterView'
-import HomeHeaderView from './components/HomeHeaderView'
 import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import fr from './localization/fr'
@@ -39,7 +38,6 @@ const configuration: ConfigurationContext = {
   pages,
   splash: Splash,
   terms: Terms,
-  homeHeaderView: HomeHeaderView,
   homeFooterView: HomeFooterView,
   credentialListHeaderRight: AddCredentialButton,
   credentialListOptions: AddCredentialSlider,
