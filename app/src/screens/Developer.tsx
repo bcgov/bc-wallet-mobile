@@ -32,6 +32,7 @@ const Settings: React.FC = () => {
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
+  const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
     !!store.preferences.useConnectionInviterCapability
   )
@@ -170,6 +171,14 @@ const Settings: React.FC = () => {
     setUseVerifierCapability((previousState) => !previousState)
   }
 
+  const toggleAcceptDevCredentialsSwitch = () => {
+    dispatch({
+      type: DispatchAction.ACCEPT_DEV_CREDENTIALS,
+      payload: [!acceptDevCredentials],
+    })
+    setAcceptDevCredentials((previousState) => !previousState)
+  }
+
   const toggleConnectionInviterCapabilitySwitch = () => {
     dispatch({
       type: DispatchAction.USE_CONNECTION_INVITER_CAPABILITY,
@@ -267,6 +276,19 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleVerifierCapabilitySwitch}
             value={useVerifierCapability}
+          />
+        </SectionRow>
+        <SectionRow
+          title={t('Verifier.AcceptDevCredentials')}
+          accessibilityLabel={t('Verifier.Toggle')}
+          testID={testIdWithKey('ToggleAcceptDevCredentials')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={acceptDevCredentials ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleAcceptDevCredentialsSwitch}
+            value={acceptDevCredentials}
           />
         </SectionRow>
         <SectionRow

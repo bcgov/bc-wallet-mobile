@@ -19,7 +19,7 @@ import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import fr from './localization/fr'
 import ptBr from './localization/pt-br'
-import { proofRequestTemplates } from './request-templates'
+import { useProofRequestTemplates } from './request-templates'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import PersonCredential from './screens/PersonCredential'
@@ -65,7 +65,7 @@ const configuration: ConfigurationContext = {
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
   useCustomNotifications: useNotifications,
-  proofRequestTemplates,
+  proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
 }
 
