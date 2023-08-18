@@ -58,7 +58,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
     {
       id: 'BC:5:PracticingLawyerAndPhoto:0.0.1:indy',
       name: 'Lawyer Status and Photo',
-      description: "Verify someone's lawyer status and photo ID",
+      description: 'Verify lawyer status and photo ID',
       version: '0.0.1',
       payload: {
         type: ProofRequestType.AnonCreds,
