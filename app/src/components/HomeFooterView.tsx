@@ -18,7 +18,9 @@ const HomeFooterView: React.FC<HomeFooterViewProps> = ({ children }) => {
 
   const styles = StyleSheet.create({
     feedbackContainer: {
-      marginHorizontal: 20,
+      marginTop: 10,
+      paddingHorizontal: 20,
+      paddingVertical: 20,
       backgroundColor: ColorPallet.grayscale.white,
     },
     feedbackIcon: {
@@ -29,7 +31,7 @@ const HomeFooterView: React.FC<HomeFooterViewProps> = ({ children }) => {
   const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
 
   return (
-    <View style={[styles.feedbackContainer]}>
+    <View style={styles.feedbackContainer}>
       <Button
         title={t('Feedback.GiveFeedback')}
         accessibilityLabel={t('Feedback.GiveFeedback')}
