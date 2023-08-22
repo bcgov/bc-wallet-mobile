@@ -38,6 +38,7 @@ const Settings: React.FC = () => {
   )
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
+  const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
 
   const styles = StyleSheet.create({
     container: {
@@ -211,6 +212,14 @@ const Settings: React.FC = () => {
     setEnableWalletNaming((previousState) => !previousState)
   }
 
+  const togglePreventAutoLockSwitch = () => {
+    dispatch({
+      type: DispatchAction.PREVENT_AUTO_LOCK,
+      payload: [!preventAutoLock],
+    })
+    setPreventAutoLock((previousState) => !previousState)
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -332,6 +341,19 @@ const Settings: React.FC = () => {
             />
           </SectionRow>
         )}
+        <SectionRow
+          title={t('Settings.PreventAutoLock')}
+          accessibilityLabel={t('Settings.TogglePreventAutoLock')}
+          testID={testIdWithKey('TogglePreventAutoLockSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={preventAutoLock ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={togglePreventAutoLockSwitch}
+            value={preventAutoLock}
+          />
+        </SectionRow>
       </View>
     </SafeAreaView>
   )
