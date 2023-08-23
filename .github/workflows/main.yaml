@@ -11,12 +11,14 @@ on:
     paths:
       - app/**
       - bifold
+      - .yarn/**
       - .github/workflows/**
   pull_request:
     branches: [main]
     paths:
       - app/**
       - bifold
+      - .yarn/**
       - .github/workflows/**
 
 jobs:
