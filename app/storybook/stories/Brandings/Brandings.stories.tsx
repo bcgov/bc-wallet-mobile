@@ -7,6 +7,8 @@ import {
   CredentialState,
   RevocationNotification,
 } from '@aries-framework/core'
+import { IOverlayBundleData } from '@hyperledger/aries-oca'
+import { BrandingOverlayType, DefaultOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { select } from '@storybook/addon-knobs'
 import { storiesOf } from '@storybook/react-native'
 import {
@@ -14,7 +16,6 @@ import {
   ConfigurationContext,
   ConfigurationProvider,
   StoreContext,
-  types,
   contexts,
   ThemeProvider,
 } from 'aries-bifold'
@@ -126,8 +127,8 @@ const Credentials: FC<CredentialsProps> = ({ items }) => {
   )
 }
 
-const OCABundleResolver = new types.oca.OCABundleResolver(bundles as unknown as Record<string, types.oca.Bundle>, {
-  cardOverlayType: types.oca.CardOverlayType.CardLayout11,
+const OCABundleResolver = new DefaultOCABundleResolver(bundles as unknown as Record<string, IOverlayBundleData>, {
+  brandingOverlayType: BrandingOverlayType.Branding10,
 })
 
 storiesOf('Brandings', module)
