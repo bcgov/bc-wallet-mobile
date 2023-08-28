@@ -101,7 +101,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable  && \
+          yarn install  && \
           git status
 
       # Ledgers are missing namespace, not compatible.
@@ -242,7 +242,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable  && \
+          yarn install  && \
           git status
 
         # Actual environment variables are not being picked up
