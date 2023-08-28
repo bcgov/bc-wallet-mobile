@@ -242,7 +242,9 @@ jobs:
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install  && \
+          rm bifold/package.json && \
+          rm bifold/yarn.lock && \
+          yarn install && \
           git status
 
         # Actual environment variables are not being picked up
