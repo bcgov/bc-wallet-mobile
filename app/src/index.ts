@@ -1,11 +1,5 @@
-import {
-  translationResources,
-  ConfigurationContext,
-  types,
-  Record,
-  indyLedgers,
-  defaultConfiguration,
-} from 'aries-bifold'
+import { BrandingOverlayType, DefaultOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+import { translationResources, ConfigurationContext, Record, indyLedgers, defaultConfiguration } from 'aries-bifold'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 
@@ -43,7 +37,9 @@ const configuration: ConfigurationContext = {
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
   developer: Developer,
-  OCABundleResolver: new types.oca.OCABundleResolver(bundles as unknown as types.oca.Bundles),
+  OCABundleResolver: new DefaultOCABundleResolver(bundles, {
+    brandingOverlayType: BrandingOverlayType.Branding10,
+  }),
   record: Record,
   indyLedgers: selectedLedgers,
   settings: [],
