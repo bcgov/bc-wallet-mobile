@@ -1,11 +1,12 @@
-import { types } from 'aries-bifold'
-
-type CardLayoutOverlay11 = types.oca.CardLayoutOverlay11
-type MetaOverlay = types.oca.MetaOverlay
-type FormatOverlay = types.oca.FormatOverlay
-type CharacterEncodingOverlay = types.oca.CharacterEncodingOverlay
-type LabelOverlay = types.oca.LabelOverlay
-type CaptureBaseOverlay = types.oca.CaptureBaseOverlay
+import {
+  IBrandingOverlayData,
+  IOverlayBundleData,
+  IMetaOverlayData,
+  ICaptureBaseData,
+  IFormatOverlayData,
+  ICharacterEncodingOverlayData,
+  ILabelOverlayData,
+} from '@hyperledger/aries-oca'
 
 export enum CREDENTIALS {
   LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
@@ -31,136 +32,203 @@ export enum CREDENTIALS {
   BC_DIGITAL_ID_PROD = 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
 }
 
-const digitalIdInvitationCardOverlay: CardLayoutOverlay11 = {
-  captureBase: '',
-  type: 'spec/overlays/card_layout/1.1',
-  logo: {
-    src: require('./invitation-logo.png'),
+// Pilot overlay data
+const digitalIdInvitationCardCaptureBaseData: ICaptureBaseData = {
+  classification: '',
+  attributes: {
+    iss_dateint: 'Text',
+    emailAddress: 'Text',
+    name: 'Text',
+    program: 'Text',
   },
-  primaryBackgroundColor: '#003366',
-  backgroundImageSlice: {
-    src: require('./invitation-background-image-slice.png'),
-  },
-  backgroundImage: {
-    src: require('./invitation-primary-background.png'),
-  },
+  flagged_attributes: [],
+  type: 'spec/capture_base/1.0',
+}
+const digitalIdInvitationCardBrandingOverlayData: IBrandingOverlayData = {
+  capture_base: '',
+  type: 'aries/overlays/branding/1.0',
+  logo: require('./invitation-logo.png'),
+  primary_background_color: '#003366',
+  background_image_slice: require('./invitation-background-image-slice.png'),
+  background_image: require('./invitation-primary-background.png'),
+}
+const digitalIdInvitationCardMetaOverlayData: IMetaOverlayData = {
+  capture_base: '',
+  type: 'spec/overlays/meta/1.0',
+  language: 'en',
+  name: 'Pilot Invitation',
+  issuer: 'Digital Identity and Trust Program',
+  description: '',
+  credential_help_text: '',
+  credential_support_url: '',
+  issuer_description: '',
+  issuer_url: '',
 }
 
-const studentCardOverlay: CardLayoutOverlay11 = {
-  captureBase: '',
-  type: 'spec/overlays/card_layout/1.1',
-  logo: {
-    src: require('./best-bc-logo.png'),
+// Student card overlay data
+const studentCardCaptureBaseData: ICaptureBaseData = {
+  classification: '',
+  attributes: {
+    student_first_name: 'Text',
+    student_last_name: 'Text',
+    expiry_date: 'DateInt',
   },
-  primaryBackgroundColor: '#32674e',
-  backgroundImage: {
-    src: require('./best-bc-background-image.jpg'),
-  },
-  backgroundImageSlice: {
-    src: require('./best-bc-background-image-slice.jpg'),
-  },
+  flagged_attributes: [],
+  type: 'spec/capture_base/1.0',
+}
+const studentCardBrandingOverlayData: IBrandingOverlayData = {
+  capture_base: '',
+  type: 'aries/overlays/branding/1.0',
+  logo: require('./best-bc-logo.png'),
+  primary_background_color: '#32674e',
+  background_image: require('./best-bc-background-image.jpg'),
+  background_image_slice: require('./best-bc-background-image-slice.jpg'),
+}
+const studentCardMetaOverlayDataEn: IMetaOverlayData = {
+  capture_base: '',
+  type: 'spec/overlays/meta/1.0',
+  language: 'en',
+  name: 'Student',
+  issuer: 'BestBC College DEMO',
+  description: '',
+  credential_help_text: '',
+  credential_support_url: '',
+  issuer_description: '',
+  issuer_url: '',
+}
+const studentCardMetaOverlayDataFr: IMetaOverlayData = {
+  capture_base: '',
+  type: 'spec/overlays/meta/1.0',
+  language: 'fr',
+  name: 'Student',
+  issuer: 'BestBC College DEMO',
+  description: '',
+  credential_help_text: '',
+  credential_support_url: '',
+  issuer_description: '',
+  issuer_url: '',
 }
 
-const memberCardOverlay: CardLayoutOverlay11 = {
-  captureBase: '',
-  type: 'spec/overlays/card_layout/1.1',
-  logo: {
-    src: require('./lsbc-logo.jpg'),
+// LSBC overlay data
+const memberCardCaptureBaseData: ICaptureBaseData = {
+  classification: '',
+  attributes: {
+    'Member Status': 'Text',
+    'Given Name': 'Text',
+    PPID: 'Text',
+    'Member Status Code': 'Text',
+    Surname: 'Text',
   },
-  primaryBackgroundColor: '#23485A',
-  secondaryBackgroundColor: '#00698C',
-  backgroundImage: {
-    src: require('./lsbc-background-image.jpg'),
-  },
+  flagged_attributes: [],
+  type: 'spec/capture_base/1.0',
+}
+const memberCardBrandingOverlayData: IBrandingOverlayData = {
+  capture_base: '',
+  type: 'aries/overlays/branding/1.0',
+  logo: require('./lsbc-logo.jpg'),
+  primary_background_color: '#23485A',
+  secondary_background_color: '#00698C',
+  background_image: require('./lsbc-background-image.jpg'),
 }
 
-const digitalIdInvitationCardBundle = {
-  captureBase: {} as CaptureBaseOverlay,
-  overlays: [
-    {
-      type: 'spec/overlays/meta/1.0',
-      language: 'en',
-      name: 'Pilot Invitation',
-      issuerName: 'Digital Identity and Trust Program',
-    } as MetaOverlay,
-    digitalIdInvitationCardOverlay,
-  ],
+const digitalIdInvitationCardBundle: IOverlayBundleData = {
+  capture_base: digitalIdInvitationCardCaptureBaseData,
+  overlays: [digitalIdInvitationCardMetaOverlayData, digitalIdInvitationCardBrandingOverlayData],
 }
 
-const studentCardBundle = {
-  captureBase: {} as CaptureBaseOverlay,
-  overlays: [
-    {
-      type: 'spec/overlays/meta/1.0',
-      language: 'en',
-      name: 'Student',
-      issuerName: 'BestBC College DEMO',
-    } as MetaOverlay,
-    {
-      type: 'spec/overlays/meta/1.0',
-      language: 'fr',
-      name: 'Student',
-      issuerName: 'BestBC College DEMO',
-    } as MetaOverlay,
-    studentCardOverlay,
-  ],
+const studentCardBundle: IOverlayBundleData = {
+  capture_base: studentCardCaptureBaseData,
+  overlays: [studentCardMetaOverlayDataEn, studentCardMetaOverlayDataFr, studentCardBrandingOverlayData],
 }
 
-const createMemberCardBundle = (demo = false) => {
+const createMemberCardBundle = (demo = false): IOverlayBundleData => {
   return {
-    captureBase: {} as CaptureBaseOverlay,
+    capture_base: memberCardCaptureBaseData,
     overlays: [
       {
+        capture_base: '',
         type: 'spec/overlays/meta/1.0',
         language: 'en',
         name: 'Member Card',
-        issuerName: demo ? 'Law Society of BC DEMO' : 'Law Society of BC',
+        issuer: demo ? 'Law Society of BC DEMO' : 'Law Society of BC',
         watermark: demo ? 'NON-PRODUCTION' : undefined,
-      } as MetaOverlay,
-      memberCardOverlay,
+        description: '',
+        credential_help_text: '',
+        credential_support_url: '',
+        issuer_description: '',
+        issuer_url: '',
+      } as IMetaOverlayData,
+      memberCardBrandingOverlayData,
     ],
   }
 }
 
-const createPersonCredentialBundle = (backgroundImageSource: string, verified = true, demo = false) => {
-  const metaOverlays: MetaOverlay[] = []
+const createPersonCredentialBundle = (verified = true, demo = false): IOverlayBundleData => {
+  const metaOverlays: IMetaOverlayData[] = []
   if (verified) {
     metaOverlays.push({
-      captureBase: '',
+      capture_base: '',
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Person',
-      issuerName: demo ? 'Service BC DEMO' : 'Service BC',
+      issuer: demo ? 'Service BC DEMO' : 'Service BC',
       watermark: demo ? 'NON-PRODUCTION' : undefined,
+      description: '',
+      credential_help_text: '',
+      credential_support_url: '',
+      issuer_description: '',
+      issuer_url: '',
+      digest: '',
     })
     metaOverlays.push({
-      captureBase: '',
+      capture_base: '',
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Personne',
-      issuerName: demo ? 'Service BC DEMO' : 'Service BC',
+      issuer: demo ? 'Service BC DEMO' : 'Service BC',
       watermark: demo ? 'NON-PRODUCTION (FR)' : undefined,
+      description: '',
+      credential_help_text: '',
+      credential_support_url: '',
+      issuer_description: '',
+      issuer_url: '',
+      digest: '',
     })
   } else {
     metaOverlays.push({
-      captureBase: '',
+      capture_base: '',
       type: 'spec/overlays/meta/1.0',
       language: 'en',
       name: 'Unverified Person',
-      issuerName: 'Digital Identity and Trust Program',
+      issuer: 'Digital Identity and Trust Program',
+      watermark: undefined,
+      description: '',
+      credential_help_text: '',
+      credential_support_url: '',
+      issuer_description: '',
+      issuer_url: '',
+      digest: '',
     })
     metaOverlays.push({
-      captureBase: '',
+      capture_base: '',
       type: 'spec/overlays/meta/1.0',
       language: 'fr',
       name: 'Unverified Personne',
-      issuerName: 'Digital Identity and Trust Program',
+      issuer: 'Digital Identity and Trust Program',
+      watermark: undefined,
+      description: '',
+      credential_help_text: '',
+      credential_support_url: '',
+      issuer_description: '',
+      issuer_url: '',
+      digest: '',
     })
   }
   const overlay = {
-    captureBase: {
-      captureBase: '',
-      type: 'spec/overlays/capture_base/1.0',
+    capture_base: {
+      type: 'spec/capture_base/1.0',
+      classification: '',
+      digest: '',
       attributes: {
         postal_code: 'Text',
         given_names: 'Text',
@@ -171,81 +239,78 @@ const createPersonCredentialBundle = (backgroundImageSource: string, verified = 
         country: 'Text',
         birthdate_dateint: 'DateInt',
       },
-    } as CaptureBaseOverlay,
+      flagged_attributes: [''],
+    } as ICaptureBaseData,
     overlays: [
       ...metaOverlays,
       {
-        captureBase: '',
-        type: 'spec/overlays/card_layout/1.1',
-        logo: {
-          src: require('./bc-logo.jpg'),
-        },
-        primaryBackgroundColor: '#003366',
-        backgroundImage: {
-          src: backgroundImageSource,
-        },
-        primaryAttribute: {
-          name: 'given_names',
-        },
-        secondaryAttribute: {
-          name: 'family_name',
-        },
-      } as CardLayoutOverlay11,
+        capture_base: '',
+        type: 'aries/overlays/branding/1.0',
+        logo: require('./bc-logo.jpg'),
+        primary_background_color: '#003366',
+        background_image: require('./person-background-image.png'),
+        primary_attribute: 'given_names',
+        secondary_attribute: 'family_name',
+      } as IBrandingOverlayData,
       {
-        captureBase: '',
+        capture_base: '',
         type: 'spec/overlays/format/1.0',
         language: 'en',
-        attributeFormats: {
+        attribute_formats: {
           birthdate_dateint: 'YYYYMMDD',
           picture: 'image/jpeg',
         },
-      } as FormatOverlay,
+      } as IFormatOverlayData,
       {
-        captureBase: '',
+        capture_base: '',
         type: 'spec/overlays/character_encoding/1.0',
-        language: 'en',
-        attributeCharacterEncoding: {
+        attribute_character_encoding: {
           picture: 'base64',
         },
-      } as CharacterEncodingOverlay,
+        attr_character_encoding: {
+          picture: 'base64',
+        },
+        default_character_encoding: 'utf-8',
+      } as ICharacterEncodingOverlayData,
       {
-        captureBase: '',
+        capture_base: '',
         type: 'spec/overlays/label/1.0',
         language: 'en',
-        attributeLabels: {
+        attribute_labels: {
           given_names: 'Given Names',
           family_name: 'Family Name',
           birthdate_dateint: 'Date of Birth',
           picture: 'Picture',
         },
-      } as LabelOverlay,
+        attribute_categories: [],
+        category_labels: {},
+      } as ILabelOverlayData,
       {
-        captureBase: '',
+        capture_base: '',
         type: 'spec/overlays/label/1.0',
         language: 'fr',
-        attributeLabels: {
+        attribute_labels: {
           given_names: 'Prénoms',
           family_name: 'Nom de famille',
           birthdate_dateint: 'Date de naissance',
           picture: 'Image',
         },
-      } as LabelOverlay,
+        attribute_categories: [],
+        category_labels: {},
+      } as ILabelOverlayData,
     ],
   }
-  if (demo && overlay.captureBase.attributes) {
-    overlay.captureBase.attributes.picture = 'Binary'
+  if (demo && overlay.capture_base.attributes) {
+    overlay.capture_base.attributes.picture = 'Binary'
   }
   return overlay
 }
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const unverifiedPersonCardBundle = createPersonCredentialBundle(require('./person-background-image.png'), false)
+const unverifiedPersonCardBundle = createPersonCredentialBundle(false)
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const digitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'))
+const digitalIdCardBundle = createPersonCredentialBundle()
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const demoDigitalIdCardBundle = createPersonCredentialBundle(require('./person-background-image.png'), true, true)
+const demoDigitalIdCardBundle = createPersonCredentialBundle(true, true)
 
 const memberCardBundle = createMemberCardBundle()
 
