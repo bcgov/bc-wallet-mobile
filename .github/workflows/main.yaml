@@ -188,7 +188,7 @@ jobs:
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
       - name: Export development archive
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        #if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
@@ -198,7 +198,7 @@ jobs:
           ouput_artifact_ref: ios-artifact-dev
 
       - name: Export distribution archive
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        #if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
