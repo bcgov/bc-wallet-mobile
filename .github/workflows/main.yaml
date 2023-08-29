@@ -20,6 +20,11 @@ on:
       - bifold
       - .yarn/**
       - .github/workflows/**
+      - .gitmodules
+      - package.json
+      - yarn.lock
+      - .yarnrc.yml
+      - .yarn/**
 
 jobs:
   check-android-secrets:
