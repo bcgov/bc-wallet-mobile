@@ -66,6 +66,15 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+          cache: 'gradle'
+          server-id: github
+          settings-path: ${{ github.workspace }}
+
       - name: Configure ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -198,6 +207,11 @@ jobs:
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
 
+      - name: Publish to GitHub Packages Registry
+        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=ios -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=export/BCWallet.ipa
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
@@ -318,7 +332,7 @@ jobs:
           ./gradlew bundleRelease
 
       - name: Publish to GitHub Packages Registry
-        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=png -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
+        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=android -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
