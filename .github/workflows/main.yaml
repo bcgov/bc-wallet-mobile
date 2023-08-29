@@ -272,18 +272,8 @@ jobs:
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
 
-      - name: Android debug build
-        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
-        working-directory: app/android
-        env:
-          VERSION_CODE: ${{ env.appBuildNumber }}
-          VERSION_NAME: ${{ env.appBuildVersion }}
-
-        run: |
-          ./gradlew --no-daemon bundleRelease
-
       - name: Create release keystore
-        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android/app
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
@@ -294,8 +284,17 @@ jobs:
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
           grep "SHA1"
 
+#      - name: Android debug build
+#        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
+#        working-directory: app/android
+#        env:
+#          VERSION_CODE: ${{ env.appBuildNumber }}
+#          VERSION_NAME: ${{ env.appBuildVersion }}
+#        run: |
+#          ./gradlew --no-daemon bundleRelease
+
       - name: Android release build
-        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
@@ -303,7 +302,6 @@ jobs:
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
-          cp ../node_modules/react-native-vector-icons/Fonts/* ./app/src/main/assets/fonts/ && \
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
           ./gradlew bundleRelease
 
