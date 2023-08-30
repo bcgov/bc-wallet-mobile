@@ -344,10 +344,12 @@ jobs:
 #        env:
 #          GITHUB_TOKEN: ${{ github.token }}
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: android
-          path: app/android/app/build/outputs/bundle/release/app-release.aab
+          path: |
+            app/android/app/build/outputs/bundle/release/app-release.aab
+            app/android/app/build/outputs/bundle/release/app-release.apk
       - name: Upload Android artifact
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         uses: actions/upload-artifact@v3
