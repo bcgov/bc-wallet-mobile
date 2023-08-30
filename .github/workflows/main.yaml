@@ -343,6 +343,10 @@ jobs:
 #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=android -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
 #        env:
 #          GITHUB_TOKEN: ${{ github.token }}
+      - name: List Artifacts
+        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        run: |
+          find . -type f -name '*.apk'
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
