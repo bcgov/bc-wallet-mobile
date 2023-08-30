@@ -110,7 +110,7 @@ const App = () => {
 
   return (
     <StoreProvider initialState={initialState} reducer={reducer}>
-      <AgentProvider agent={agent}>
+      <AgentProvider>
         <ThemeProvider value={theme}>
           <ConfigurationProvider value={configuration}>
             <AuthProvider>

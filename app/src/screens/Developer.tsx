@@ -82,7 +82,8 @@ const Settings: React.FC = () => {
   const SectionRow: React.FC<{
     title: string
     accessibilityLabel?: string
-    testID?: string
+    testID?: string,
+    children?: React.ReactNode
     onPress?: () => void
   }> = ({ title, accessibilityLabel, testID, onPress, children }) => (
     <View style={[styles.section, { flexDirection: 'row' }]}>
