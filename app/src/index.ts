@@ -21,6 +21,9 @@ import Terms from './screens/Terms'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
 
+import { IOverlayBundleData } from '@hyperledger/aries-oca'
+import { DefaultOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+
 const localization = merge({}, translationResources, {
   en: { translation: en },
   fr: { translation: fr },
