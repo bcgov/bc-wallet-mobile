@@ -1,29 +1,13 @@
 import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, SectionList, StyleSheet, Switch, Text, Pressable, View } from 'react-native'
+import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import { BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
-
-interface Setting {
-  title: string
-  value?: string
-  onPress?: () => void
-  accessibilityLabel?: string
-  testID?: string
-}
-
-interface SettingSection {
-  header: {
-    title: string
-    icon: string
-  }
-  data: Setting[]
-}
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
@@ -54,7 +38,6 @@ const Settings: React.FC = () => {
       flexDirection: 'row',
       alignItems: 'center',
       paddingBottom: 0,
-      marginBottom: -11,
     },
     sectionSeparator: {
       marginBottom: 10,
@@ -84,43 +67,6 @@ const Settings: React.FC = () => {
     setEnvironmentModalVisible(false)
   }
 
-  const settingsSections: SettingSection[] = [
-    {
-      header: {
-        icon: 'apartment',
-        title: 'IAS',
-      },
-      data: [
-        {
-          title: t('Developer.Environment'),
-          value: store.developer.environment.name,
-          accessibilityLabel: t('Developer.Environment'),
-          testID: testIdWithKey('Environment'),
-          onPress: () => {
-            setEnvironmentModalVisible(true)
-          },
-        },
-      ],
-    },
-  ]
-
-  if (store.preferences.developerModeEnabled) {
-    const section = settingsSections.find((item) => item.header.title === t('Settings.AppSettings'))
-    if (section) {
-      section.data = [
-        ...section.data,
-        {
-          title: t('Settings.Developer'),
-          accessibilityLabel: t('Settings.Developer'),
-          testID: testIdWithKey('Developer'),
-          onPress: () => {
-            return
-          },
-        },
-      ]
-    }
-  }
-
   const SectionHeader: React.FC<{ icon: string; title: string }> = ({ icon, title }) => (
     <View style={[styles.section, styles.sectionHeader]}>
       <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
@@ -135,7 +81,7 @@ const Settings: React.FC = () => {
     onPress?: () => void
   }> = ({ title, accessibilityLabel, testID, onPress, children }) => (
     <View style={[styles.section, { flexDirection: 'row' }]}>
-      <Text style={[TextTheme.headingFour, { flexGrow: 1, fontWeight: 'normal' }]}>{title}</Text>
+      <Text style={[TextTheme.headingFour, { flex: 1, fontWeight: 'normal', flexWrap: 'wrap' }]}>{title}</Text>
       <Pressable
         onPress={onPress}
         accessible={true}
@@ -232,7 +178,7 @@ const Settings: React.FC = () => {
       >
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </Modal>
-      <View style={styles.container}>
+      <ScrollView style={styles.container}>
         <SectionRow
           title={t('Developer.DeveloperMode')}
           accessibilityLabel={t('Developer.Toggle')}
@@ -247,33 +193,20 @@ const Settings: React.FC = () => {
           />
         </SectionRow>
         <View style={[styles.sectionSeparator]}></View>
-        <SectionList
-          renderItem={({ item: { title, value, onPress } }) => (
-            <SectionRow
-              title={title}
-              accessibilityLabel={title}
-              testID={testIdWithKey(title.toLowerCase())}
-              onPress={onPress}
-            >
-              <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>
-                {value}
-              </Text>
-            </SectionRow>
-          )}
-          renderSectionHeader={({
-            section: {
-              header: { title, icon },
-            },
-          }) => <SectionHeader icon={icon} title={title} />}
-          ItemSeparatorComponent={() => (
-            <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-              <View style={[styles.itemSeparator]}></View>
-            </View>
-          )}
-          SectionSeparatorComponent={() => <View style={[styles.sectionSeparator]}></View>}
-          sections={settingsSections}
-          stickySectionHeadersEnabled={false}
-        />
+        <SectionHeader icon={'apartment'} title={'IAS'} />
+        <SectionRow
+          title={t('Developer.Environment')}
+          accessibilityLabel={t('Developer.Environment')}
+          testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
+          onPress={() => {
+            setEnvironmentModalVisible(true)
+          }}
+        >
+          <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>
+            {store.developer.environment.name}
+          </Text>
+        </SectionRow>
+        <View style={[styles.sectionSeparator]}></View>
         <SectionRow
           title={t('Verifier.UseVerifierCapability')}
           accessibilityLabel={t('Verifier.Toggle')}
@@ -354,7 +287,7 @@ const Settings: React.FC = () => {
             value={preventAutoLock}
           />
         </SectionRow>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
