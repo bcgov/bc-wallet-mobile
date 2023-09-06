@@ -1,9 +1,9 @@
-import { BrandingOverlayType, DefaultOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { translationResources, ConfigurationContext, Record, indyLedgers, defaultConfiguration } from 'aries-bifold'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
+import Config from 'react-native-config'
 
-import bundles from './assets/branding/credential-branding'
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
@@ -37,7 +37,7 @@ const configuration: ConfigurationContext = {
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
   developer: Developer,
-  OCABundleResolver: new DefaultOCABundleResolver(bundles, {
+  OCABundleResolver: new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
     brandingOverlayType: BrandingOverlayType.Branding10,
   }),
   record: Record,
