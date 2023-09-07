@@ -129,16 +129,18 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null
+        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null && env.OCA_URL != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          OCA_URL: ${{ vars.OCA_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
+          echo "OCA_URL=${OCA_URL}" >>.env
 
       - name: Archive build
         working-directory: app/ios
@@ -238,16 +240,18 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null
+        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null && env.OCA_URL != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          OCA_URL: ${{ vars.OCA_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
+          echo "OCA_URL=${OCA_URL}" >>.env
 
       - name: Android debug build
         if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
