@@ -13,7 +13,7 @@ const PushNotifications = () => {
   const setupPushNotifications = async () => {
     setInfoModalVisible(false)
     if (!agent || (await isUserDenied())) return
-    setup(agent)
+    setup(agent, true)
   }
 
   const initializeCapabilityRequest = async () => {

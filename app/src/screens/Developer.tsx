@@ -178,7 +178,7 @@ const Settings: React.FC = () => {
   }
 
   const initializePushNotificationsToggle = async () => {
-    setEnablePushNotifications(await PushNotificationHelper.isRegistered())
+    setEnablePushNotifications(await PushNotificationHelper.isEnabled())
   }
 
   const toggleDevPushNotificationsSwitch = () => {
