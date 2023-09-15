@@ -54,7 +54,7 @@ const App = () => {
     {
       header: {
         title: t('Settings.Help'),
-        icon: 'help',
+        icon: { name: 'help' },
       },
       data: [
         {
@@ -80,7 +80,7 @@ const App = () => {
     {
       header: {
         title: t('Settings.MoreInformation'),
-        icon: 'info',
+        icon: { name: 'info' },
       },
       data: [
         {
