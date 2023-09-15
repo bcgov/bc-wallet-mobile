@@ -66,7 +66,11 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
           {
             schema: personSchema,
             requestedAttributes: [
-              { names: ['given_names', 'family_name', 'picture'], restrictions: verifiedPersonRestrictions },
+              {
+                names: ['given_names', 'family_name', 'picture'],
+                restrictions: verifiedPersonRestrictions,
+                nonRevoked: { to: 1694794371 },
+              },
             ],
           },
           {
@@ -75,6 +79,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 names: ['Given Name', 'Surname', 'Member Status', 'Member Status Code'],
                 restrictions: memberCardCodeRestrictions,
+                nonRevoked: { to: 1694794371 },
               },
             ],
           },
