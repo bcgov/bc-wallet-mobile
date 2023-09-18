@@ -7,6 +7,7 @@ import {
   CredentialState,
   RevocationNotification,
 } from '@aries-framework/core'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { select } from '@storybook/addon-knobs'
 import { storiesOf } from '@storybook/react-native'
 import {
@@ -14,18 +15,41 @@ import {
   ConfigurationContext,
   ConfigurationProvider,
   StoreContext,
-  types,
   contexts,
   ThemeProvider,
 } from 'aries-bifold'
 import React, { FC, Dispatch, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, ListRenderItem, View } from 'react-native'
+import Config from 'react-native-config'
 
 import qcwallet from '../../../src'
-import bundles, { CREDENTIALS } from '../../../src/assets/branding/credential-branding'
 
-const { theme } = qcwallet
+const { theme } = bcwallet
+
+enum CREDENTIALS {
+  LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
+  LSBC_PROD = '4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default',
+  SHOWCASE_LAWYER_DEV = 'L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.53',
+  SHOWCASE_LAWYER_TEST = 'M6dhuFj5UwbhWkSLmvYSPc:2:member_card:1.53',
+  SHOWCASE_LAWYER_PROD = 'QEquAHkM35w4XVT3Ku5yat:2:member_card:1.53',
+  SHOWCASE_STUDENT_DEV = 'L6ASjmDDbDH7yPL1t2yFj9:2:student_card:1.2',
+  SHOWCASE_STUDENT_TEST = 'M6dhuFj5UwbhWkSLmvYSPc:2:student_card:1.2',
+  SHOWCASE_STUDENT_PROD = 'QEquAHkM35w4XVT3Ku5yat:2:student_card:1.2',
+  SHOWCASE_LAWYER2_PERSON_DEV = 'L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2',
+  SHOWCASE_LAWYER2_PERSON_TEST = 'M6dhuFj5UwbhWkSLmvYSPc:2:Person:1.2',
+  SHOWCASE_LAWYER2_PERSON_PROD = 'QEquAHkM35w4XVT3Ku5yat:2:Person:1.2',
+  UNVERIFIED_PERSON_DEV = 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0',
+  UNVERIFIED_PERSON_TEST = 'HTkhhCW1bAXWnxC1u3YVoa:2:unverified_person:0.1.0',
+  UNVERIFIED_PERSON_PROD = 'YXCtXE4YhVjULgj5hrk4ML:2:unverified_person:0.1.0',
+  PILOT_INVITE_DEV = 'Mp2pDQqS2eSjNVA7kXc8ut:2:BC VC Pilot Certificate:1.0.1',
+  PILOT_INVITE_TEST = '4zBepKVWZcGTzug4X49vAN:2:BC VC Pilot Certificate:1.0.1',
+  PILOT_INVITE_PROD = 'E2h4RUJxyh48PLJ1CtGJrq:2:BC VC Pilot Certificate:1.0.1',
+  BC_DIGITAL_ID_QA = 'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
+  BC_DIGITAL_ID_SIT = '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
+  BC_DIGITAL_ID_DEV = 'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
+  BC_DIGITAL_ID_PROD = 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
+}
 
 enum CREDENTIAL_DEFINITION {
   Generic = 'asdasdasd:2:generic:1.0:Generic',
@@ -126,8 +150,8 @@ const Credentials: FC<CredentialsProps> = ({ items }) => {
   )
 }
 
-const OCABundleResolver = new types.oca.OCABundleResolver(bundles as unknown as Record<string, types.oca.Bundle>, {
-  cardOverlayType: types.oca.CardOverlayType.CardLayout11,
+const OCABundleResolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
+  brandingOverlayType: BrandingOverlayType.Branding10,
 })
 
 storiesOf('Brandings', module)

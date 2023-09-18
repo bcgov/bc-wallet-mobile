@@ -25,7 +25,10 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import qcwallet from './src'
+import { credentialOfferTourSteps } from './src/components/tours/CredentialOfferTourSteps'
+import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
+import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
 import { initialState, reducer } from './src/store'
 
 const { theme, localization, configuration } = qcwallet
@@ -49,7 +52,7 @@ const App = () => {
     {
       header: {
         title: t('Settings.Help'),
-        icon: 'help',
+        icon: { name: 'help' },
       },
       data: [
         {
@@ -75,7 +78,7 @@ const App = () => {
     {
       header: {
         title: t('Settings.MoreInformation'),
-        icon: 'info',
+        icon: { name: 'info' },
       },
       data: [
         {
@@ -117,7 +120,14 @@ const App = () => {
                 />
                 <NetInfo />
                 <ErrorModal />
-                <TourProvider steps={homeTourSteps} overlayColor={'black'} overlayOpacity={0.6}>
+                <TourProvider
+                  homeTourSteps={homeTourSteps}
+                  credentialsTourSteps={credentialsTourSteps}
+                  credentialOfferTourSteps={credentialOfferTourSteps}
+                  proofRequestTourSteps={proofRequestTourSteps}
+                  overlayColor={'gray'}
+                  overlayOpacity={0.7}
+                >
                   <RootStack />
                 </TourProvider>
                 <Toast topOffset={15} config={toastConfig} />

@@ -31,7 +31,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/anoncreds@npm:0.4.0, @aries-framework/anoncreds@npm:^0.4.0":
+"@aries-framework/anoncreds@npm:0.4.0":
   version: 0.4.0
   resolution: "@aries-framework/anoncreds@npm:0.4.0"
   dependencies:
@@ -41,6 +41,19 @@ __metadata:
     class-validator: 0.14.0
     reflect-metadata: ^0.1.13
   checksum: 006761a28946e1ddab6fdf877ced98dd39e13624cc444bac5ceafd6a9376308d27054bda8bb8c53d83f29c3f96c03ceb0ffb669d9d2391fad4cbfecea26cd0f8
+  languageName: node
+  linkType: hard
+
+"@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.4.0
+  resolution: "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::version=0.4.0&hash=effd16&locator=bc-wallet-mobile%40workspace%3A."
+  dependencies:
+    "@aries-framework/core": 0.4.0
+    bn.js: ^5.2.1
+    class-transformer: 0.5.1
+    class-validator: 0.14.0
+    reflect-metadata: ^0.1.13
+  checksum: 7f4d2e15f86ce64a402c65436f05d9a9a66e7b8dcaf50b9206985f8e5a4544ca1a4a1bbda0a6c953fc683859e2ba270464ece54b0f323fc6c10498cadc67f610
   languageName: node
   linkType: hard
 
@@ -133,6 +146,20 @@ __metadata:
     ref-napi: ^3.0.3
     ws: ^8.13.0
   checksum: c801bb67dc326f6ea1836eeed5dc673d35d2161609ffc348404ccdd09d1efb414c4d9712b9186a40afa7a84134341d0b7877f7aff3f2eb71ec598bbace457d2e
+  languageName: node
+  linkType: hard
+
+"@aries-framework/push-notifications@npm:0.5.0, @aries-framework/push-notifications@npm:^0.5.0":
+  version: 0.5.0
+  resolution: "@aries-framework/push-notifications@npm:0.5.0"
+  dependencies:
+    class-transformer: 0.5.1
+    class-validator: 0.14.0
+    reflect-metadata: ^0.1.13
+    tsyringe: ^4.6.0
+  peerDependencies:
+    "@aries-framework/core": ^0.4.0
+  checksum: fb7f5df97473e15c7fb8a193ac6fb8b30927e2eb0abdc196cf78f151632a2bb6148b2390c5fe0e22532faab83e494b4307f03aeca530d987c3cd2f2b5da1b936
   languageName: node
   linkType: hard
 
@@ -2605,25 +2632,46 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-askar-react-native@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@hyperledger/aries-askar-react-native@npm:0.1.0"
+"@hyperledger/aries-askar-react-native@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@hyperledger/aries-askar-react-native@npm:0.1.1"
   dependencies:
-    "@hyperledger/aries-askar-shared": 0.1.0
+    "@hyperledger/aries-askar-shared": 0.1.1
     "@mapbox/node-pre-gyp": ^1.0.10
   peerDependencies:
     react: ">= 16"
     react-native: ">= 0.66.0"
-  checksum: aee362450a0758a03fb4074531ba2073f5a9d3a09069dc19f955dd7a6dad9871f9f0226302503fca54490f596b206766b3a7bceabe6a8355ab33b9f24a18464e
+  checksum: c16d1bfb8fbc732e624944138c7a8a9b0c461aae6bd41db3cdb89382c8d750b384d056ef018a8bc5d26fa6dca6f7e3c59c6e8122deeac0c1c48e162e559cfeef
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-askar-shared@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@hyperledger/aries-askar-shared@npm:0.1.0"
+"@hyperledger/aries-askar-shared@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@hyperledger/aries-askar-shared@npm:0.1.1"
   dependencies:
     fast-text-encoding: ^1.0.3
-  checksum: 024d1fa121e923f60b297b565aed1ebf9c31a100f5487d687b5dadade99734a7c6f792c1a025dbaeed865570bffda473dc9355aa034d1169d52303f343ac13a1
+  checksum: ffe150d5baedb4a9cf1b79e4482641bdd974e2ba17dd0fb0dee9e2b5950a4ba8a62f482cdb54335c67a77eaac2af15cb5dbf03eecdd2b05798101e920ce15e00
+  languageName: node
+  linkType: hard
+
+"@hyperledger/aries-askar-shared@patch:@hyperledger/aries-askar-shared@npm%3A0.1.1#./.yarn/patches/@hyperledger-aries-askar-shared-npm-0.1.1-3833bb73bb.patch::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.1.1
+  resolution: "@hyperledger/aries-askar-shared@patch:@hyperledger/aries-askar-shared@npm%3A0.1.1#./.yarn/patches/@hyperledger-aries-askar-shared-npm-0.1.1-3833bb73bb.patch::version=0.1.1&hash=1cf456&locator=bc-wallet-mobile%40workspace%3A."
+  dependencies:
+    fast-text-encoding: ^1.0.3
+  checksum: 67d9f24144c5e9dc09c4a48b59c4066caf7aa32b420b995910bb5a899e8940123d9fc255107d2cb79d9da75a17e9d4a9514150e2e2ec4158d107c4fb4222049f
+  languageName: node
+  linkType: hard
+
+"@hyperledger/aries-oca@npm:1.0.0-alpha.72":
+  version: 1.0.0-alpha.72
+  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.72"
+  dependencies:
+    "@aries-framework/anoncreds": ^0.4.0
+    "@aries-framework/core": 0.4.0
+    axios: ^1.4.0
+    lodash.startcase: ^4.4.0
+  checksum: fb0521334e43981f9f39c913ad1a007c3aad36cf39c1288ae75d274c61fac33d55413b54247d44636c821d9e5e739d4bd00e6879cd461ecfd05d17f596b7e0fd
   languageName: node
   linkType: hard
 
@@ -5729,6 +5777,7 @@ __metadata:
     "@aries-framework/core": ^0.4.0
     "@aries-framework/indy-sdk-to-askar-migration": 0.4.0
     "@aries-framework/indy-vdr": ^0.4.0
+    "@aries-framework/push-notifications": 0.5.0
     "@aries-framework/react-hooks": ^0.4.2
     "@aries-framework/react-native": ^0.4.0
     "@babel/core": ^7.12.9
@@ -5743,7 +5792,8 @@ __metadata:
     "@formatjs/intl-pluralrules": ^4.1.3
     "@formatjs/intl-relativetimeformat": ^9.2.3
     "@hyperledger/anoncreds-react-native": ^0.1.0
-    "@hyperledger/aries-askar-react-native": ^0.1.0
+    "@hyperledger/aries-askar-react-native": ^0.1.1
+    "@hyperledger/aries-oca": 1.0.0-alpha.72
     "@hyperledger/indy-vdr-react-native": ^0.1.0
     "@react-native-async-storage/async-storage": ^1.12.1
     "@react-native-community/eslint-config": ^2.0.0
@@ -5830,6 +5880,7 @@ __metadata:
     "@aries-framework/core": ^0.4.0
     "@aries-framework/indy-sdk-to-askar-migration": 0.4.0
     "@aries-framework/indy-vdr": ^0.4.0
+    "@aries-framework/push-notifications": 0.5.0
     "@aries-framework/react-hooks": ^0.4.2
     "@aries-framework/react-native": ^0.4.0
     "@formatjs/intl-datetimeformat": ^4.2.3
@@ -5841,7 +5892,8 @@ __metadata:
     "@formatjs/intl-pluralrules": ^4.1.3
     "@formatjs/intl-relativetimeformat": ^9.2.3
     "@hyperledger/anoncreds-react-native": ^0.1.0
-    "@hyperledger/aries-askar-react-native": ^0.1.0
+    "@hyperledger/aries-askar-react-native": ^0.1.1
+    "@hyperledger/aries-oca": 1.0.0-alpha.72
     "@hyperledger/indy-vdr-react-native": ^0.1.0
     "@react-native-async-storage/async-storage": ^1.12.1
     "@react-native-community/masked-view": ^0.1.11
@@ -6210,6 +6262,17 @@ __metadata:
   dependencies:
     follow-redirects: ^1.14.0
   checksum: 44245f24ac971e7458f3120c92f9d66d1fc695e8b97019139de5b0cc65d9b8104647db01e5f46917728edfc0cfd88eb30fc4c55e6053eef4ace76768ce95ff3c
+  languageName: node
+  linkType: hard
+
+"axios@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "axios@npm:1.4.0"
+  dependencies:
+    follow-redirects: ^1.15.0
+    form-data: ^4.0.0
+    proxy-from-env: ^1.1.0
+  checksum: 7fb6a4313bae7f45e89d62c70a800913c303df653f19eafec88e56cea2e3821066b8409bc68be1930ecca80e861c52aa787659df0ffec6ad4d451c7816b9386b
   languageName: node
   linkType: hard
 
@@ -6781,6 +6844,123 @@ __metadata:
   checksum: 5519b024f6cd0e95a543bb3edf0ae19e5badae0c32b30b41839b4469bbb1f91e14fc04bff3759cd9c2621aa9e16def48c938783e9027e7ec977fba62d537a468
   languageName: node
   linkType: hard
+
+"bc-wallet-mobile-app@workspace:app":
+  version: 0.0.0-use.local
+  resolution: "bc-wallet-mobile-app@workspace:app"
+  dependencies:
+    "@aries-framework/anoncreds": ^0.4.0
+    "@aries-framework/anoncreds-rs": ^0.4.0
+    "@aries-framework/askar": ^0.4.0
+    "@aries-framework/core": ^0.4.0
+    "@aries-framework/indy-sdk-to-askar-migration": 0.4.0
+    "@aries-framework/indy-vdr": ^0.4.0
+    "@aries-framework/push-notifications": ^0.5.0
+    "@aries-framework/react-hooks": ^0.4.2
+    "@aries-framework/react-native": ^0.4.0
+    "@babel/core": 7.15.5
+    "@babel/runtime": 7.15.4
+    "@commitlint/cli": ^11.0.0
+    "@formatjs/intl-datetimeformat": 4.2.4
+    "@formatjs/intl-displaynames": 5.2.4
+    "@formatjs/intl-getcanonicallocales": 1.7.3
+    "@formatjs/intl-listformat": 6.3.4
+    "@formatjs/intl-locale": 2.4.38
+    "@formatjs/intl-numberformat": 7.2.4
+    "@formatjs/intl-pluralrules": 4.1.4
+    "@formatjs/intl-relativetimeformat": 9.3.1
+    "@hyperledger/anoncreds-react-native": ^0.1.0
+    "@hyperledger/aries-askar-react-native": ^0.1.1
+    "@hyperledger/aries-oca": 1.0.0-alpha.72
+    "@hyperledger/indy-vdr-react-native": ^0.1.0
+    "@react-native-async-storage/async-storage": 1.15.11
+    "@react-native-community/eslint-config": ^2.0.0
+    "@react-native-community/masked-view": 0.1.11
+    "@react-native-community/netinfo": 9.3.0
+    "@react-navigation/bottom-tabs": 6.0.9
+    "@react-navigation/devtools": 6.0.8
+    "@react-navigation/native": 6.0.6
+    "@react-navigation/stack": 6.0.11
+    "@storybook/addon-actions": ^5.3.21
+    "@storybook/addon-knobs": ^5.3.21
+    "@storybook/addon-links": ^5.3.21
+    "@storybook/addon-ondevice-actions": ^5.3.23
+    "@storybook/addon-ondevice-knobs": ^5.3.26
+    "@storybook/react-native": ^5.3.25
+    "@storybook/react-native-server": ^5.3.23
+    "@testing-library/jest-native": ^4.0.13
+    "@testing-library/react-native": ^9.0.0
+    "@types/jest": ^27.4.0
+    "@types/lodash.flatten": ^4.4.6
+    "@types/lodash.merge": ^4.6.7
+    "@types/lodash.startcase": ^4.4.6
+    "@types/react": 16.14.15
+    "@types/react-native": 0.63.53
+    "@types/react-native-vector-icons": ^6.4.12
+    "@types/react-test-renderer": ^16.9.5
+    "@typescript-eslint/eslint-plugin": ^4.20.0
+    "@typescript-eslint/parser": ^4.33.0
+    aries-bifold: "link:../bifold-core"
+    axios: 0.21.4
+    babel-jest: ^27.5.1
+    babel-plugin-module-resolver: 4.1.0
+    commitlint: ^11.0.0
+    copyfiles: ^2.4.1
+    eslint: ^7.14.0
+    eslint-import-resolver-typescript: ^2.5.0
+    eslint-plugin-import: ^2.25.2
+    eslint-plugin-prettier: ^3.3.1
+    husky: ^7.0.0
+    i18next: 21.4.0
+    jest: ^27.5.1
+    lint-staged: ^11.2.6
+    lodash.flatten: 4.4.0
+    lodash.merge: ^4.6.2
+    lodash.startcase: 4.4.0
+    metro-react-native-babel-preset: 0.66.2
+    mockdate: ^3.0.5
+    moment: ^2.29.4
+    prettier: ^2.1.2
+    query-string: 7.0.1
+    react: 17.0.2
+    react-dom: ^17.0.2
+    react-i18next: 11.13.0
+    react-native: 0.66.5
+    react-native-animated-pagination-dots: 0.1.72
+    react-native-argon2: 2.0.1
+    react-native-bouncy-checkbox: ^3.0.5
+    react-native-camera: 3.44.3
+    react-native-collapsible: 1.6.0
+    react-native-config: 1.4.4
+    react-native-confirmation-code-field: 7.3.0
+    react-native-device-info: 8.4.9
+    react-native-encrypted-storage: 4.0.2
+    react-native-fs: 2.18.0
+    react-native-gesture-handler: 1.10.3
+    react-native-get-random-values: 1.7.0
+    react-native-gifted-chat: 0.16.3
+    react-native-inappbrowser-reborn: ^3.7.0
+    react-native-keychain: ^7.0.0
+    react-native-localize: ^2.2.4
+    react-native-permissions: ^3.6.1
+    react-native-qrcode-svg: 6.1.1
+    react-native-reanimated: 2.2.4
+    react-native-safe-area-context: 3.3.2
+    react-native-scalable-image: ^1.1.0
+    react-native-screens: 3.7.2
+    react-native-splash-screen: 3.3.0
+    react-native-svg: 12.1.1
+    react-native-svg-transformer: 0.14.3
+    react-native-tcp-socket: ^6.0.3
+    react-native-toast-message: 2.0.1
+    react-native-uuid: 2.0.1
+    react-native-vector-icons: 8.1.0
+    react-native-webview: 11.23.0
+    react-test-renderer: ^17.0.2
+    typescript: 4.4.3
+    uuid: 8.3.2
+  languageName: unknown
+  linkType: soft
 
 "bc-wallet-mobile@workspace:.":
   version: 0.0.0-use.local
@@ -10760,7 +10940,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"follow-redirects@npm:^1.14.0":
+"follow-redirects@npm:^1.14.0, follow-redirects@npm:^1.15.0":
   version: 1.15.2
   resolution: "follow-redirects@npm:1.15.2"
   peerDependenciesMeta:
@@ -10836,6 +11016,17 @@ __metadata:
     combined-stream: ^1.0.8
     mime-types: ^2.1.12
   checksum: b019e8d35c8afc14a2bd8a7a92fa4f525a4726b6d5a9740e8d2623c30e308fbb58dc8469f90415a856698933c8479b01646a9dff33c87cc4e76d72aedbbf860d
+  languageName: node
+  linkType: hard
+
+"form-data@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "form-data@npm:4.0.0"
+  dependencies:
+    asynckit: ^0.4.0
+    combined-stream: ^1.0.8
+    mime-types: ^2.1.12
+  checksum: 01135bf8675f9d5c61ff18e2e2932f719ca4de964e3be90ef4c36aacfc7b9cb2fceb5eca0b7e0190e3383fe51c5b37f4cb80b62ca06a99aaabfcfd6ac7c9328c
   languageName: node
   linkType: hard
 
@@ -17172,6 +17363,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"proxy-from-env@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "proxy-from-env@npm:1.1.0"
+  checksum: ed7fcc2ba0a33404958e34d95d18638249a68c430e30fcb6c478497d72739ba64ce9810a24f53a7d921d0c065e5b78e3822759800698167256b04659366ca4d4
+  languageName: node
+  linkType: hard
+
 "prr@npm:~1.0.1":
   version: 1.0.1
   resolution: "prr@npm:1.0.1"
@@ -21094,7 +21292,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsyringe@npm:^4.7.0":
+"tsyringe@npm:^4.6.0, tsyringe@npm:^4.7.0":
   version: 4.8.0
   resolution: "tsyringe@npm:4.8.0"
   dependencies:

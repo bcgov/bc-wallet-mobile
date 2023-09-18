@@ -1,18 +1,23 @@
 import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
 import {
+  BasicMessageRecord,
   CredentialExchangeRecord as CredentialRecord,
   CredentialState,
   ProofExchangeRecord,
   ProofState,
 } from '@aries-framework/core'
-import { useCredentialByState, useProofByState } from '@aries-framework/react-hooks'
+import { useCredentialByState, useProofByState, useBasicMessages } from '@aries-framework/react-hooks'
 import { useStore } from 'aries-bifold'
-import { CredentialMetadata, customMetadata } from 'aries-bifold/App/types/metadata'
+import {
+  BasicMessageMetadata,
+  CredentialMetadata,
+  basicMessageCustomMetadata,
+  credentialCustomMetadata,
+} from 'aries-bifold/App/types/metadata'
 import { ProofCustomMetadata, ProofMetadata } from 'aries-bifold/verifier'
 
 import { getInvitationCredentialDate, showBCIDSelector } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
-
 interface CustomNotification {
   type: 'CustomNotification'
   createdAt: Date
@@ -21,13 +26,28 @@ interface CustomNotification {
 
 interface Notifications {
   total: number
-  notifications: Array<CredentialRecord | ProofExchangeRecord | CustomNotification>
+  notifications: Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord | CustomNotification>
 }
 
 export const useNotifications = (): Notifications => {
   const [store] = useStore<BCState>()
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const proofsRequested = useProofByState(ProofState.RequestReceived)
+  const { records: basicMessages } = useBasicMessages()
+  // get all unseen messages
+  const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg) => {
+    const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
+    return !meta?.seen
+  })
+  // add one unseen message per contact to notifications
+  const contactsWithUnseenMessages: string[] = []
+  const messagesToShow: BasicMessageRecord[] = []
+  unseenMessages.forEach((msg) => {
+    if (!contactsWithUnseenMessages.includes(msg.connectionId)) {
+      contactsWithUnseenMessages.push(msg.connectionId)
+      messagesToShow.push(msg)
+    }
+  })
   const proofsDone = useProofByState([ProofState.Done, ProofState.PresentationReceived]).filter(
     (proof: ProofExchangeRecord) => {
       if (proof.isVerified === undefined) return false
@@ -38,7 +58,7 @@ export const useNotifications = (): Notifications => {
   )
   const revoked = useCredentialByState(CredentialState.Done).filter((cred: CredentialRecord) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const metadata = cred!.metadata.get(CredentialMetadata.customMetadata) as customMetadata
+    const metadata = cred!.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata
     if (cred?.revocationNotification && metadata?.revoked_seen == undefined) {
       return cred
     }
@@ -59,9 +79,15 @@ export const useNotifications = (): Notifications => {
       ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
       : []
 
-  const notifications = [...offers, ...proofsRequested, ...proofsDone, ...revoked, ...custom].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
+  let notifications: (BasicMessageRecord | CredentialRecord | ProofExchangeRecord | CustomNotification)[] = [
+    ...messagesToShow,
+    ...offers,
+    ...proofsRequested,
+    ...proofsDone,
+    ...revoked,
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+  notifications = [...custom, ...notifications]
 
   return { total: notifications.length, notifications }
 }
