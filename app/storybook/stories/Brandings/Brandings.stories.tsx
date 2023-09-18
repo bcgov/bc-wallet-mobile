@@ -21,11 +21,11 @@ import {
 import React, { FC, Dispatch, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, ListRenderItem, View } from 'react-native'
-import Config from 'react-native-config'
+import { Config } from 'react-native-config'
 
 import qcwallet from '../../../src'
 
-const { theme } = bcwallet
+const { theme } = qcwallet
 
 enum CREDENTIALS {
   LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',

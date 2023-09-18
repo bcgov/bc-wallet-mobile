@@ -2,7 +2,7 @@ import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries
 import { translationResources, ConfigurationContext, Record, indyLedgers, defaultConfiguration } from 'aries-bifold'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
-import Config from 'react-native-config'
+import { Config } from 'react-native-config'
 
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
