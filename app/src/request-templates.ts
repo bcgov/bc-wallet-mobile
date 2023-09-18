@@ -54,7 +54,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
     return { ...restriction }
   })
 
-  const now = Math.floor(new Date().getTime() / 1000)
+  const now = () => Math.floor(new Date().getTime() / 1000)
 
   const proofRequestTemplates: Array<ProofRequestTemplate> = [
     {
@@ -71,7 +71,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 names: ['given_names', 'family_name', 'picture'],
                 restrictions: verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -81,7 +81,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 names: ['Given Name', 'Surname', 'Member Status', 'Member Status Code'],
                 restrictions: memberCardCodeRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -102,12 +102,12 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 name: 'given_names',
                 restrictions: useDevRestrictions ? personRestrictions : verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
               {
                 name: 'family_name',
                 restrictions: useDevRestrictions ? personRestrictions : verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -128,7 +128,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 names: ['given_names', 'family_name'],
                 restrictions: verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
             requestedPredicates: [
@@ -137,7 +137,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
                 predicateType: '<=',
                 predicateValue: calculatePreviousYear(19),
                 restrictions: verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -160,7 +160,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
                 predicateType: '<=',
                 predicateValue: calculatePreviousYear(19),
                 restrictions: verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -181,7 +181,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 names: ['Given Name', 'Surname', 'PPID', 'Member Status'],
                 restrictions: memberCardRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -202,7 +202,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 names: ['given_names', 'family_name'],
                 restrictions: useDevRestrictions ? personRestrictions : verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -212,7 +212,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 names: ['Given Name', 'Surname', 'PPID', 'Member Status'],
                 restrictions: memberCardRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -236,7 +236,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
                 predicateValue: calculatePreviousYear(19),
                 parameterizable: true,
                 restrictions: verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -258,17 +258,17 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 name: 'given_names',
                 restrictions: verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
               {
                 name: 'family_name',
                 restrictions: verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
               {
                 name: 'picture',
                 restrictions: verifiedPersonRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -290,12 +290,12 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 name: 'given_names',
                 restrictions: openvpRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
               {
                 name: 'family_name',
                 restrictions: openvpRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
@@ -317,17 +317,17 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
               {
                 name: 'given_names',
                 restrictions: openvpRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
               {
                 name: 'family_name',
                 restrictions: openvpRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
               {
                 name: 'birthdate',
                 restrictions: openvpRestrictions,
-                nonRevoked: { to: now },
+                nonRevoked: { to: now() },
               },
             ],
           },
