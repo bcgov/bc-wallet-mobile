@@ -163,6 +163,7 @@ const translation = {
     "NotAvailable": " (Not Available) (PT-BR)",
     "Title": "Notifications (PT-BR)",
     "PushNotifications": "Push Notifications (PT-BR)",
+    "Continue": "Continue (PT-BR)",
   }
 }
 

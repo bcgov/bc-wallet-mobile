@@ -86,7 +86,9 @@ const isUserDenied = async (): Promise<boolean> => {
  * @returns {Promise<boolean>}
  */
 const isMediatorCapable = async (agent: Agent<any>): Promise<boolean | undefined> => {
-  if (!Config.MEDIATOR_LABEL || Config.MEDIATOR_USE_PUSH_NOTIFICATIONS === 'false') return false
+  if (!Config.MEDIATOR_LABEL || Config.MEDIATOR_USE_PUSH_NOTIFICATIONS === 'false') {
+    return false
+  }
 
   const mediator = await _getMediatorConnection(agent)
   if (!mediator) return
@@ -102,7 +104,9 @@ const isMediatorCapable = async (agent: Agent<any>): Promise<boolean | undefined
       },
     ],
   })
-  if (response.features && response.features?.length > 0) return true
+  if (response.features && response.features?.length > 0) {
+    return true
+  }
   return false
 }
 
@@ -115,10 +119,13 @@ const isRegistered = async (): Promise<boolean> => {
   const authorized = (await messaging().hasPermission()) === messaging.AuthorizationStatus.AUTHORIZED
 
   // Need to register for push notification capability on iOS
-  if (Platform.OS === 'ios' && !messaging().isDeviceRegisteredForRemoteMessages)
+  if (Platform.OS === 'ios' && !messaging().isDeviceRegisteredForRemoteMessages) {
     await messaging().registerDeviceForRemoteMessages()
+  }
 
-  if (authorized && (await AsyncStorage.getItem(TOKEN_STORAGE_KEY)) !== null) return true
+  if (authorized && (await AsyncStorage.getItem(TOKEN_STORAGE_KEY)) !== null) {
+    return true
+  }
   return false
 }
 
@@ -138,19 +145,27 @@ const isEnabled = async (): Promise<boolean> => {
  */
 const setDeviceInfo = async (agent: Agent<any>, blankDeviceToken = false): Promise<void> => {
   let token
-  if (blankDeviceToken) token = ''
-  else token = await messaging().getToken()
+  if (blankDeviceToken) {
+    token = ''
+  } else {
+    token = await messaging().getToken()
+  }
 
   const mediator = await _getMediatorConnection(agent)
-  if (!mediator) return
+  if (!mediator) {
+    return
+  }
 
   agent.config.logger.info(`Trying to send device info to mediator with connection [${mediator.id}]`)
   try {
     await agent.modules.pushNotificationsFcm.setDeviceInfo(mediator.id, {
       deviceToken: token,
     })
-    if (blankDeviceToken) AsyncStorage.setItem(TOKEN_STORAGE_KEY, 'blank')
-    else AsyncStorage.setItem(TOKEN_STORAGE_KEY, token)
+    if (blankDeviceToken) {
+      AsyncStorage.setItem(TOKEN_STORAGE_KEY, 'blank')
+    } else {
+      AsyncStorage.setItem(TOKEN_STORAGE_KEY, token)
+    }
   } catch (error) {
     agent.config.logger.error('Error sending device token info to mediator agent')
   }

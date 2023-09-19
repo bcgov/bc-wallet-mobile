@@ -182,9 +182,16 @@ const Settings: React.FC = () => {
   }
 
   const toggleDevPushNotificationsSwitch = () => {
-    if (!pushNotificationCapable || !agent) return
-    if (enablePushNotifications) PushNotificationHelper.setDeviceInfo(agent, true)
-    else PushNotificationHelper.setup(agent)
+    if (!pushNotificationCapable || !agent) {
+      return
+    }
+
+    if (enablePushNotifications) {
+      PushNotificationHelper.setDeviceInfo(agent, true)
+    } else {
+      PushNotificationHelper.setup(agent)
+    }
+
     setEnablePushNotifications(!enablePushNotifications)
   }
 

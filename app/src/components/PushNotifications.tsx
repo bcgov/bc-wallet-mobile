@@ -12,12 +12,16 @@ const PushNotifications = () => {
 
   const setupPushNotifications = async () => {
     setInfoModalVisible(false)
-    if (!agent || (await isUserDenied())) return
+    if (!agent || (await isUserDenied())) {
+      return
+    }
     setup(agent, true)
   }
 
   const initializeCapabilityRequest = async () => {
-    if (!agent || !(await isMediatorCapable(agent)) || (await isRegistered())) return
+    if (!agent || !(await isMediatorCapable(agent)) || (await isRegistered())) {
+      return
+    }
     setInfoModalVisible(true)
   }
 

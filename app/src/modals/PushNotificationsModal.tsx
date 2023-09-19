@@ -82,8 +82,8 @@ const PushNotificationsModal: React.FC<PushNotificationsModalProps> = ({ title, 
         <View style={[styles.controlsContainer]}>
           <View style={styles.buttonContainer}>
             <Button
-              title={t('CameraDisclosure.Allow')}
-              accessibilityLabel={t('CameraDisclosure.Allow')}
+              title={t('PushNotifications.Continue')}
+              accessibilityLabel={t('PushNotifications.Continue')}
               onPress={onDone}
               buttonType={ButtonType.ModalPrimary}
             />
