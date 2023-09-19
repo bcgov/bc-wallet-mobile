@@ -2654,15 +2654,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-askar-shared@patch:@hyperledger/aries-askar-shared@npm%3A0.1.1#./.yarn/patches/@hyperledger-aries-askar-shared-npm-0.1.1-3833bb73bb.patch::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.1.1
-  resolution: "@hyperledger/aries-askar-shared@patch:@hyperledger/aries-askar-shared@npm%3A0.1.1#./.yarn/patches/@hyperledger-aries-askar-shared-npm-0.1.1-3833bb73bb.patch::version=0.1.1&hash=1cf456&locator=bc-wallet-mobile%40workspace%3A."
-  dependencies:
-    fast-text-encoding: ^1.0.3
-  checksum: 67d9f24144c5e9dc09c4a48b59c4066caf7aa32b420b995910bb5a899e8940123d9fc255107d2cb79d9da75a17e9d4a9514150e2e2ec4158d107c4fb4222049f
-  languageName: node
-  linkType: hard
-
 "@hyperledger/aries-oca@npm:1.0.0-alpha.72":
   version: 1.0.0-alpha.72
   resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.72"
