@@ -589,7 +589,7 @@ export const ChatTheme = {
     textAlign: 'center',
   },
   documentIconContainer: {
-    backgroundColor: '#1c70bf',
+    backgroundColor: ColorPallet.brand.primary,
     alignSelf: 'flex-start',
     padding: 4,
     borderRadius: 8,
