@@ -23,13 +23,6 @@ type ChallengeResponseInfrastructureMessage = InfrastructureMessage & {
   attestation_object: string
 }
 
-// const markMessageAsProcessed = async (agent: Agent, record: BasicMessageRecord) => {
-//   const meta = record.metadata.get(BasicMessageMetadata.customMetadata) as InfrastructureMessageMetadata
-//   record.metadata.set(BasicMessageMetadata.customMetadata, { ...meta, processed: true, seen: true, hiden: true })
-//   const basicMessageRepository = agent.context.dependencyManager.resolve(BasicMessageRepository)
-//   await basicMessageRepository.update(agent.context, record)
-// }
-
 const isInfrastructureMessage = (record: BasicMessageRecord): boolean => {
   if (record.content) {
     try {
@@ -44,15 +37,6 @@ const isInfrastructureMessage = (record: BasicMessageRecord): boolean => {
 
   return false
 }
-
-// const customMetadataForMessage = (
-//   record: BasicMessageRecord
-// ): (BasicMessageCustomMetadata & InfrastructureMessageMetadata) | null => {
-//   const meta = record.metadata.get(BasicMessageMetadata.customMetadata) as BasicMessageCustomMetadata &
-//     InfrastructureMessageMetadata
-
-//   return meta
-// }
 
 const decodeInfrastructureMessage = (record: BasicMessageRecord): InfrastructureMessage | null => {
   try {
@@ -75,7 +59,6 @@ const handleInfrastructureMessage = async (
       try {
         console.log('generating key')
         const keyId = await generateKey()
-        // const keyId = knownGoodKey
         console.log('keyId = ', keyId)
 
         console.log('generating attestation')
@@ -95,7 +78,7 @@ const handleInfrastructureMessage = async (
 
         return attestationResponse
       } catch (error: unknown) {
-        console.log('error X = ', (error as Error).message)
+        console.log('error processing infra message = ', (error as Error).message)
         return null
       }
     }
