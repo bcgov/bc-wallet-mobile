@@ -40,6 +40,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
+import { startAttestationMonitor, stopAttestationMonitor } from '../services/attestation'
 import { BCDispatchAction, BCLocalStorageKeys } from '../store'
 
 enum InitErrorTypes {
@@ -90,7 +91,7 @@ const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean 
 */
 const Splash: React.FC = () => {
   const { width } = useWindowDimensions()
-  const { setAgent } = useAgent()
+  const { agent, setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore()
   const navigation = useNavigation()
@@ -157,7 +158,6 @@ const Splash: React.FC = () => {
     },
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
     try {
       const data = await AsyncStorage.getItem(key)
