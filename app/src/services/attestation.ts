@@ -89,37 +89,41 @@ const handleInfrastructureMessage = async (
 }
 
 export const handleMessages = async (message: BasicMessageRecord, agent: Agent): Promise<void> => {
-  if (message.role === BasicMessageRole.Sender) {
-    // We don't want to process or keep messages from
-    // ourselves
-    agent?.basicMessages.deleteById(message.id)
-    return
+  try {
+    if (message.role === BasicMessageRole.Sender) {
+      // We don't want to process or keep messages from
+      // ourselves
+      await agent?.basicMessages.deleteById(message.id)
+      return
+    }
+
+    if (!isInfrastructureMessage(message)) {
+      // We don't care about non-infrastructure messages
+      return
+    }
+
+    console.log(`processing message ${message.id}, role = ${message.role}`)
+
+    const imessage = decodeInfrastructureMessage(message)
+    if (!imessage) {
+      return
+    }
+
+    const result = await handleInfrastructureMessage(imessage)
+
+    if (result) {
+      const responseMessageContent = Buffer.from(JSON.stringify(result)).toString('base64')
+      console.log('sending response message')
+      await agent?.basicMessages.sendMessage(message.connectionId, responseMessageContent)
+      console.log('sent response message')
+    }
+
+    console.log('deleting message')
+    await agent?.basicMessages.deleteById(message.id)
+    console.log('deleted message')
+  } catch (error: unknown) {
+    console.log('error processing message = ', (error as Error).message)
   }
-
-  if (!isInfrastructureMessage(message)) {
-    // We don't care about non-infrastructure messages
-    return
-  }
-
-  console.log(`processing message ${message.id}, role = ${message.role}`)
-
-  const imessage = decodeInfrastructureMessage(message)
-  if (!imessage) {
-    return
-  }
-
-  const result = await handleInfrastructureMessage(imessage)
-
-  if (result) {
-    const responseMessageContent = Buffer.from(JSON.stringify(result)).toString('base64')
-    console.log('sending response message')
-    await agent?.basicMessages.sendMessage(message.connectionId, responseMessageContent)
-    console.log('sent response message')
-  }
-
-  console.log('deleting message')
-  await agent?.basicMessages.deleteById(message.id)
-  console.log('deleted message')
 }
 
 export const startAttestationMonitor = async (agent: Agent): Promise<void> => {
