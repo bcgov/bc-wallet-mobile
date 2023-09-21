@@ -592,7 +592,7 @@ export const ChatTheme = {
     backgroundColor: ColorPallet.brand.primary,
     alignSelf: 'flex-start',
     padding: 4,
-    borderRadius: 4,
+    borderRadius: 8,
     marginBottom: 8,
   },
   documentIcon: {

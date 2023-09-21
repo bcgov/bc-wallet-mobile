@@ -1,29 +1,13 @@
 import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, SectionList, StyleSheet, Switch, Text, Pressable, View } from 'react-native'
+import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import { BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
-
-interface Setting {
-  title: string
-  value?: string
-  onPress?: () => void
-  accessibilityLabel?: string
-  testID?: string
-}
-
-interface SettingSection {
-  header: {
-    title: string
-    icon: string
-  }
-  data: Setting[]
-}
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
@@ -32,10 +16,13 @@ const Settings: React.FC = () => {
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
+  const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
     !!store.preferences.useConnectionInviterCapability
   )
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
+  const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
+  const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
 
   const styles = StyleSheet.create({
     container: {
@@ -51,7 +38,6 @@ const Settings: React.FC = () => {
       flexDirection: 'row',
       alignItems: 'center',
       paddingBottom: 0,
-      marginBottom: -11,
     },
     sectionSeparator: {
       marginBottom: 10,
@@ -81,43 +67,6 @@ const Settings: React.FC = () => {
     setEnvironmentModalVisible(false)
   }
 
-  const settingsSections: SettingSection[] = [
-    {
-      header: {
-        icon: 'apartment',
-        title: 'IAS',
-      },
-      data: [
-        {
-          title: t('Developer.Environment'),
-          value: store.developer.environment.name,
-          accessibilityLabel: t('Developer.Environment'),
-          testID: testIdWithKey('Environment'),
-          onPress: () => {
-            setEnvironmentModalVisible(true)
-          },
-        },
-      ],
-    },
-  ]
-
-  if (store.preferences.developerModeEnabled) {
-    const section = settingsSections.find((item) => item.header.title === t('Settings.AppSettings'))
-    if (section) {
-      section.data = [
-        ...section.data,
-        {
-          title: t('Settings.Developer'),
-          accessibilityLabel: t('Settings.Developer'),
-          testID: testIdWithKey('Developer'),
-          onPress: () => {
-            return
-          },
-        },
-      ]
-    }
-  }
-
   const SectionHeader: React.FC<{ icon: string; title: string }> = ({ icon, title }) => (
     <View style={[styles.section, styles.sectionHeader]}>
       <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
@@ -132,7 +81,7 @@ const Settings: React.FC = () => {
     onPress?: () => void
   }> = ({ title, accessibilityLabel, testID, onPress, children }) => (
     <View style={[styles.section, { flexDirection: 'row' }]}>
-      <Text style={[TextTheme.headingFour, { flexGrow: 1, fontWeight: 'normal' }]}>{title}</Text>
+      <Text style={[TextTheme.headingFour, { flex: 1, fontWeight: 'normal', flexWrap: 'wrap' }]}>{title}</Text>
       <Pressable
         onPress={onPress}
         accessible={true}
@@ -169,6 +118,14 @@ const Settings: React.FC = () => {
     setUseVerifierCapability((previousState) => !previousState)
   }
 
+  const toggleAcceptDevCredentialsSwitch = () => {
+    dispatch({
+      type: DispatchAction.ACCEPT_DEV_CREDENTIALS,
+      payload: [!acceptDevCredentials],
+    })
+    setAcceptDevCredentials((previousState) => !previousState)
+  }
+
   const toggleConnectionInviterCapabilitySwitch = () => {
     dispatch({
       type: DispatchAction.USE_CONNECTION_INVITER_CAPABILITY,
@@ -193,6 +150,22 @@ const Settings: React.FC = () => {
     setDevVerifierTemplates((previousState) => !previousState)
   }
 
+  const toggleWalletNamingSwitch = () => {
+    dispatch({
+      type: DispatchAction.ENABLE_WALLET_NAMING,
+      payload: [!enableWalletNaming],
+    })
+    setEnableWalletNaming((previousState) => !previousState)
+  }
+
+  const togglePreventAutoLockSwitch = () => {
+    dispatch({
+      type: DispatchAction.PREVENT_AUTO_LOCK,
+      payload: [!preventAutoLock],
+    })
+    setPreventAutoLock((previousState) => !previousState)
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -205,7 +178,7 @@ const Settings: React.FC = () => {
       >
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </Modal>
-      <View style={styles.container}>
+      <ScrollView style={styles.container}>
         <SectionRow
           title={t('Developer.DeveloperMode')}
           accessibilityLabel={t('Developer.Toggle')}
@@ -220,33 +193,20 @@ const Settings: React.FC = () => {
           />
         </SectionRow>
         <View style={[styles.sectionSeparator]}></View>
-        <SectionList
-          renderItem={({ item: { title, value, onPress } }) => (
-            <SectionRow
-              title={title}
-              accessibilityLabel={title}
-              testID={testIdWithKey(title.toLowerCase())}
-              onPress={onPress}
-            >
-              <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>
-                {value}
-              </Text>
-            </SectionRow>
-          )}
-          renderSectionHeader={({
-            section: {
-              header: { title, icon },
-            },
-          }) => <SectionHeader icon={icon} title={title} />}
-          ItemSeparatorComponent={() => (
-            <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-              <View style={[styles.itemSeparator]}></View>
-            </View>
-          )}
-          SectionSeparatorComponent={() => <View style={[styles.sectionSeparator]}></View>}
-          sections={settingsSections}
-          stickySectionHeadersEnabled={false}
-        />
+        <SectionHeader icon={'apartment'} title={'IAS'} />
+        <SectionRow
+          title={t('Developer.Environment')}
+          accessibilityLabel={t('Developer.Environment')}
+          testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
+          onPress={() => {
+            setEnvironmentModalVisible(true)
+          }}
+        >
+          <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>
+            {store.developer.environment.name}
+          </Text>
+        </SectionRow>
+        <View style={[styles.sectionSeparator]}></View>
         <SectionRow
           title={t('Verifier.UseVerifierCapability')}
           accessibilityLabel={t('Verifier.Toggle')}
@@ -258,6 +218,19 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleVerifierCapabilitySwitch}
             value={useVerifierCapability}
+          />
+        </SectionRow>
+        <SectionRow
+          title={t('Verifier.AcceptDevCredentials')}
+          accessibilityLabel={t('Verifier.Toggle')}
+          testID={testIdWithKey('ToggleAcceptDevCredentials')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={acceptDevCredentials ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleAcceptDevCredentialsSwitch}
+            value={acceptDevCredentials}
           />
         </SectionRow>
         <SectionRow
@@ -286,7 +259,35 @@ const Settings: React.FC = () => {
             value={useDevVerifierTemplates}
           />
         </SectionRow>
-      </View>
+        {!store.onboarding.didCreatePIN && (
+          <SectionRow
+            title={t('NameWallet.EnableWalletNaming')}
+            accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
+            testID={testIdWithKey('ToggleWalletNamingSwitch')}
+          >
+            <Switch
+              trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+              thumbColor={enableWalletNaming ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+              ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+              onValueChange={toggleWalletNamingSwitch}
+              value={enableWalletNaming}
+            />
+          </SectionRow>
+        )}
+        <SectionRow
+          title={t('Settings.PreventAutoLock')}
+          accessibilityLabel={t('Settings.TogglePreventAutoLock')}
+          testID={testIdWithKey('TogglePreventAutoLockSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={preventAutoLock ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={togglePreventAutoLockSwitch}
+            value={preventAutoLock}
+          />
+        </SectionRow>
+      </ScrollView>
     </SafeAreaView>
   )
 }

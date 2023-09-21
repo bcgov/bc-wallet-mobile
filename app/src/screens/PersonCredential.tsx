@@ -78,6 +78,7 @@ const PersonCredential: React.FC = () => {
           <Button
             title={t('PersonCredential.GetCredential')}
             accessibilityLabel={t('PersonCredential.GetCredential')}
+            testID={testIdWithKey('GetYourPersonCredential')}
             onPress={acceptPersonCredentialOffer}
             disabled={workflowInProgress}
             buttonType={ButtonType.Primary}
@@ -91,6 +92,7 @@ const PersonCredential: React.FC = () => {
           <Button
             title={t('PersonCredential.Decline')}
             accessibilityLabel={t('PersonCredential.Decline')}
+            testID={testIdWithKey('GetThisLater')}
             onPress={dismissPersonCredentialOffer}
             disabled={workflowInProgress}
             buttonType={ButtonType.Secondary}

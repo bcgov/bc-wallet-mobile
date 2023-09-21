@@ -53,6 +53,7 @@ const endPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
 const startPages = (theme: ITheme) => {
   const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
+
   return (
     <ScrollView style={{ padding: 20, paddingTop: 30 }}>
       <Text style={[defaultStyle.headerText]}>{t('OnboardingPages.FirstPageTitle')}</Text>

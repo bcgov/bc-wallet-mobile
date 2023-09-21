@@ -1,15 +1,9 @@
-import {
-  translationResources,
-  ConfigurationContext,
-  types,
-  Record,
-  indyLedgers,
-  defaultConfiguration,
-} from 'aries-bifold'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+import { translationResources, ConfigurationContext, Record, indyLedgers, defaultConfiguration } from 'aries-bifold'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
+import { Config } from 'react-native-config'
 
-import bundle from './assets/branding/QC-credential-branding'
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
@@ -18,7 +12,7 @@ import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import fr from './localization/fr'
 import TermsStack from './navigators/TermsStack'
-import { proofRequestTemplates } from './request-templates'
+import { useProofRequestTemplates } from './request-templates'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import PersonCredential from './screens/PersonCredential'
@@ -40,11 +34,9 @@ const configuration: ConfigurationContext = {
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
   developer: Developer,
-  OCABundleResolver: new types.oca.OCABundleResolver(
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    bundle as unknown as types.oca.Bundles,
-    { cardOverlayType: types.oca.CardOverlayType.CardLayout11 }
-  ),
+  OCABundleResolver: new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
+    brandingOverlayType: BrandingOverlayType.Branding10,
+  }),
   record: Record,
   PINSecurity: { rules: PINValidationRules, displayHelper: true },
   indyLedgers: selectedLedgers,
@@ -65,9 +57,8 @@ const configuration: ConfigurationContext = {
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
   useCustomNotifications: useNotifications,
-  proofRequestTemplates,
+  proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
-  enableWalletNaming: false,
 }
 
 export default { theme, localization, configuration }
