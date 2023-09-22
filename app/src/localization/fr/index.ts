@@ -40,8 +40,8 @@ const translation = {
     Portuguese: 'Portugais',
   },
   Date: {
-    ShortFormat: 'D MMM YYYY',
-    LongFormat: 'D MMMM YYYY, HH:mm:ss',
+    ShortFormat: 'D MMM',
+    LongFormat: 'D MMMM',
     MonthLong: {
       January: 'janvier',
       February: 'février',
