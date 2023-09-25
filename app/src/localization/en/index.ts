@@ -3,7 +3,11 @@ const translation = {
     GetID: 'Get BCID',
     GetDigitalID: 'Get your QC Digital ID',
   },
+  Onboarding: {
+    SkipA11y: 'Skip',
+  },
   Global: {
+    Enter: 'Enter',
     EnterPin: 'Enter Pin',
     '6DigitPin': '6 Digit Pin',
     Submit: 'Submit',
@@ -30,6 +34,16 @@ const translation = {
     ErrorCode: 'Error Code',
     Okay: 'Okay',
     Close: 'Close',
+    Save: 'Save',
+    GetStarted: 'Get Started',
+    GoBack: 'Go Back',
+    Dismiss: 'Dismiss',
+    ShowDetails: 'Show Details',
+    Biometrics: 'Biometrics',
+    TryAgain: 'Try Again',
+    On: 'On',
+    Off: 'Off',
+    Remove: 'Remove',
   },
   Language: {
     English: 'English',
@@ -39,6 +53,9 @@ const translation = {
   Date: {
     ShortFormat: 'MMM D',
     LongFormat: 'MMMM D',
+    MinuteAgo: 'minute ago',
+    MinutesAgo: 'minutes ago',
+    JustNow: 'just now',
     MonthLong: {
       January: 'January',
       February: 'February',
@@ -68,13 +85,11 @@ const translation = {
       December: 'Dec',
     },
   },
-
   ActivityLog: {
     Your: 'Your',
     Activity: 'activity log',
     Updated: 'has been updated',
   },
-
   CameraDisclosure: {
     AllowCameraUse: 'Allow camera use',
     CameraDisclosure:
@@ -107,6 +122,8 @@ const translation = {
     CredentialsNotFound: 'Credentials not found',
     AddFirstCredential: 'Add your first credential',
     CredentialDetails: 'Credential Details',
+    IssuedBy: 'Issued by',
+    Credential: 'credential',
   },
   PersonCredentialNotification: {
     Title: 'Get your Person credential',
@@ -164,6 +181,10 @@ const translation = {
     RecreatePIN: 'Change PIN',
     CustomNotification: 'Custom Notification',
     ProofRequesting: 'Proof Requesting',
+    NameWallet: 'Name your Wallet',
+    CreatePIN: 'Create a PIN',
+    EnterPIN: 'Enter PIN',
+    DataRetention: 'Data retention',
   },
   Error: {
     Title2020: 'Unable to parse invitation',
@@ -211,6 +232,21 @@ const translation = {
     Title1033: 'Unable to fetch credential.',
     Message1033: 'Credential could not be found.',
     Title1038: 'Unable to generate a proof request.',
+    Message1038: 'There was a problem while generating a proof request.',
+    Title1039: 'Unable to handle deeplink.',
+    Message1039: 'There was a problem while handling a deeplink.',
+    Title1040: 'Unable to create PIN.',
+    Message1040: 'There was a problem while creating the PIN.',
+    Title1041: 'Unable to unlock with PIN.',
+    Message1041: 'There was a problem while unlocking with PIN.',
+    Title1042: 'Unable to verify PIN.',
+    Message1042: 'There was a problem while verifying the PIN.',
+    Title1043: 'Unable to retrieve credentials for proof.',
+    Message1043: 'There was a problem while retrieving credentials for the proof.',
+    Title1044: 'Unable to initialize onboarding.',
+    Message1044: 'There was a problem while initializing onboarding.',
+    Title1045: 'Unable to initialize agent.',
+    Message1045: 'There was a problem while initializing agent.',
   },
   StatusMessages: {
     InitAgent: 'Initializing agent ..',
@@ -294,7 +330,7 @@ const translation = {
       },
     },
   },
-  PinCreate: {
+  PINCreate: {
     UserAuthenticationPin: 'User authentication pin',
     PinMustBe6DigitsInLength: 'Pin must be 6 digits in length',
     PinsEnteredDoNotMatch: 'Pins entered do not match',
@@ -321,8 +357,35 @@ const translation = {
     ChangePIN: 'Change PIN',
     Continue: 'Continue',
     EnterYourCurrentPIN: 'Enter your current PIN',
+    PinChangeSuccessTitle: 'Successfully changed your PIN',
+    PinChangeSuccessMessage: 'Your PIN was successsfully changed. You can now log in with your new PIN.',
+    EnterOldPINTitle: 'Enter your old PIN',
+    NewPIN: 'new',
+    RememberChangePIN: 'Change your PIN to secure your wallet.',
+    Message: {
+      CrossPatternValidation: 'A pattern of cross was detected in your PIN. Please try again.',
+      OddOrEvenSequenceValidation: 'An odd or even sequence was detected in your PIN. Please try again.',
+      NoRepetitionOfTheSameNumbersValidation: "The PIN can't have a repetition of the same digit. Please try again.",
+      NoRepetitionOfTheTwoSameNumbersValidation:
+        'A repeated two-digit sequence was detected in your PIN. Please try again.',
+      NoSeriesOfNumbersValidation: 'A series was detected in your PIN. Please try again.',
+      PINOnlyContainDigitsValidation: 'Your PIN needs to only contain digits. Please try again.',
+      PINTooShortValidation: 'Your PIN is too short. Please try again.',
+      PINTooLongValidation: 'Your PIN is too long. Please try again.',
+      OldPINIncorrect: 'Your old pin is incorrect. Please try again.',
+    },
+    Helper: {
+      CrossPatternValidation: 'Does not contain a pattern of cross.',
+      OddOrEvenSequenceValidation: 'Does not contain an odd or even sequence.',
+      NoRepetitionOfTheSameNumbersValidation: 'Does not contain the same repeating number.',
+      NoRepetitionOfTheTwoSameNumbersValidation: 'Does not contain repeating two-digit sequence.',
+      NoSeriesOfNumbersValidation: 'Does not contain a series of numbers (123).',
+      PINOnlyContainDigitsValidation: 'Must contain only digits.',
+      PINTooShortValidation: 'The PIN is long enought.',
+      PINTooLongValidation: 'The PIN is long enought.',
+    },
   },
-  PinEnter: {
+  PINEnter: {
     IncorrectPin: 'Incorrect Pin',
     EnterPIN: 'Enter your wallet PIN',
     Unlock: 'Unlock',
@@ -367,6 +430,7 @@ const translation = {
     RemoveContactsBulletPoint2: 'Get offered new credentials from this Contact',
     RemoveContactsBulletPoint3: 'Get notified of updates to your credentials issued by this Contact',
     RemoveContactsBulletPoint4: 'Request for information from this Contact or they request information from you',
+    RemoveContact: 'Remove Contact',
   },
   WhatAreContacts: {
     Title: 'What are Contacts?',
@@ -377,10 +441,16 @@ const translation = {
     RemoveContacts: 'You can always remove Contacts at any time from your ',
     ContactsLink: 'Contacts list',
     ContactSharing: 'Use of your credentials is never shared with your Contacts.',
+    ListItemDirectMessage: 'Direct message your Contacts',
+    ListItemNotifiedOfUpdates: 'Get notified of updates to your credentials issued by them',
+    ListItemRequest: 'Request for information from your Contact or they request information from you',
   },
   Contacts: {
     EmptyList: 'Your wallet is empty. Your connected contacts will be added here.',
     TypeHere: 'Type Message Here',
+    PeopleAndOrganizations: "People and organizations you've interacted with are listed here.",
+    WhatAreContacts: 'What are Contacts?',
+    AddContact: 'Add Contact',
   },
   CredentialDetails: {
     Id: 'Id:',
@@ -404,6 +474,12 @@ const translation = {
     CredentialRemoved: 'Credential removed',
     IssuedBy: 'Issued by:',
     RemoveCredential: 'Remove Credential',
+    YouWillNotLose: 'You will NOT lose',
+    YouWillNotLoseListItem1: 'Your credential within the system that issued you your credential.',
+    YouWillNotLoseListItem2: 'The issuing organization as a Contact.',
+    HowToGetThisCredentialBack: 'How to get this credential back',
+    HowToGetThisCredentialBackListItem1:
+      'You will have to go to the organization that issued you this credential and request it again.',
   },
   Home: {
     Welcome: 'Welcome',
@@ -418,6 +494,10 @@ const translation = {
     Credential: 'credential',
     Credentials: 'credentials',
     InYourWallet: 'in your wallet',
+    NewMessage: 'New message',
+    SentMessage: 'sent a message',
+    ReceivedMessage: 'You received a new message',
+    ViewMessage: 'View message',
   },
   Scan: {
     SuccessfullyAcceptedConnection: 'Successfully Accepted Connection',
@@ -429,6 +509,9 @@ const translation = {
     UnableToHandleRedirection: 'Unable to handle redirection',
     Close: 'Close',
     Torch: 'Flash',
+    WillScanAutomatically: 'A valid QR code will scan automatically.',
+    ScanQRCode: 'Scan QR code',
+    MyQRCode: 'My QR code',
   },
   Connection: {
     JustAMoment: 'Just a moment while we make a secure connection...',
@@ -441,6 +524,7 @@ const translation = {
     Toggle: 'Toggle connection inviter capability',
     UseConnectionInviterCapability: 'Use connection inviter capability?',
     OpenContact: 'Open Contact',
+    ShareQR: 'Sharing this QR code with someone will add them as a Contact.',
   },
   CredentialOffer: {
     ThisIsTakingLongerThanExpected: 'This is taking Longer than expected. Check back later for your new credential.',
@@ -530,6 +614,11 @@ const translation = {
     DeclineBulletPoint2:
       'In order to receive the proof request again, you will need to restart the process with the service.',
     DeclineBulletPoint3: 'Are you sure you want to decline this proof request?',
+    SensitiveInformation: 'This request is asking for sensitive information.',
+    PredicateNotSatisfied: 'Requirement not met',
+    YouDoNotHaveDataPredicate: 'You do not meet the requirements of this proof request from',
+    ReviewSentInformation_one: 'You shared the following information from {{count}} credential with',
+    ReviewSentInformation_other: 'You shared the following information from {{count}} credentials with',
   },
   TabStack: {
     Home: 'Home',
@@ -545,15 +634,33 @@ const translation = {
     WeNeedYourPermissionToUseYourCamera: 'We need your permission to use your camera',
     Ok: 'Ok',
   },
+  QRRender: {
+    GenerationError: 'Unable to generate QR code',
+  },
   Record: {
     Hide: 'Hide',
     Show: 'Show',
     HideAll: 'Hide all',
     Hidden: 'Hidden',
+    ShowAll: 'Show all',
+    InvalidDate: 'Invalid Date: ',
+    Zoom: 'Zoom',
   },
   Loading: {
     TakingTooLong: 'This is taking longer than usual. You can return to home or continue waiting.',
     BackToHome: 'Go back to home',
+  },
+  NameWallet: {
+    EnableWalletNaming: 'Enable wallet naming?',
+    ToggleWalletNaming: 'Toggle wallet naming',
+    NameYourWallet: 'Name your wallet',
+    EditWalletName: 'Edit wallet name',
+    ThisIsTheName: 'This is the name people see when connecting with you.',
+    CharCountTitle: 'Character count exceeded',
+    CharCountDescription:
+      "You've exceeded the maximum character count of 50 characters. Please reduce your character count.",
+    EmptyNameTitle: "Wallet name can't be empty",
+    EmptyNameDescription: 'This is the name people see when connecting with you.\n\nPlease enter a wallet name.',
   },
   NetInfo: {
     NoInternetConnectionTitle: 'No internet connection',
@@ -599,6 +706,12 @@ const translation = {
     Build: 'Build',
     WhatAreContacts: 'What are Contacts?',
     Developer: 'Developer options',
+    GiveFeedback: 'Give Feedback',
+    ChangePin: 'Change PIN',
+    DataRetention: 'Data retention',
+    PreventAutoLock: 'Prevent auto-lock',
+    TogglePreventAutoLock: 'Toggle prevent auto-lock',
+    ScanMyQR: 'Scan my QR code',
   },
   Tour: {
     GuideTitle: 'Welcome to QC Wallet',
@@ -617,6 +730,14 @@ const translation = {
     Next: 'Next',
     Back: 'Back',
     Done: 'Done',
+    AddCredentials: 'Add credentials',
+    AddCredentialsDescription: 'Add credentials by scanning a QR code displayed on the issuer service.',
+    CredentialOffers: 'Credential offers',
+    CredentialOffersDescription:
+      'An organization has offered you a credential. Review the credentials details and choose to accept or decline it. Accepted credentials will be added to your wallet.',
+    ProofRequests: 'Proof requests',
+    ProofRequestsDescription:
+      "An organization is asking you to prove your credentials. Review what they're asking for and choose to accept or decline it.",
   },
   Tips: {
     Header: 'Tips',
@@ -650,6 +771,10 @@ const translation = {
     ProofRequestRejected: 'rejected a proof request',
     ProofRequestRejectReceived: 'rejected a proof request',
     ProofRequestSatisfied: 'shared information',
+    OpenPresentation: 'Open presentation',
+    ViewRequest: 'View request',
+    ViewOffer: 'View offer',
+    YouConnected: 'You connected with',
   },
   Init: {
     Retry: 'Retry',
@@ -666,27 +791,6 @@ const translation = {
   },
   Feedback: {
     GiveFeedback: 'Give Feedback',
-  },
-  MessageB: {
-    CrossPatternValidation: 'A pattern of cross was detected in your PIN. Please try again.',
-    OddOrEvenSequenceValidation: 'An odd or even sequence was detected in your PIN. Please try again.',
-    NoRepetitionOfTheSameNumbersValidation: "The PIN can't have a repetition of the same digit. Please try again.",
-    NoRepetitionOfTheTwoSameNumbersValidation:
-      'A repeated two-digit sequence was detected in your PIN. Please try again.',
-    NoSeriesOfNumbersValidation: 'A series was detected in your PIN. Please try again.',
-    PINOnlyContainDigitsValidation: 'Your PIN needs to only contain digits. Please try again.',
-    PINTooShortValidation: 'Your PIN is too short. Please try again.',
-    PINTooLongValidation: 'Your PIN is too long. Please try again.',
-  },
-  HelperB: {
-    CrossPatternValidation: 'Does not contain a pattern of cross.',
-    OddOrEvenSequenceValidation: 'Does not contain an odd or even sequence.',
-    NoRepetitionOfTheSameNumbersValidation: 'Does not contain the same repeating number.',
-    NoRepetitionOfTheTwoSameNumbersValidation: 'Does not contain repeating two-digit sequence.',
-    NoSeriesOfNumbersValidation: 'Does not contain a series of numbers (123).',
-    PINOnlyContainDigitsValidation: 'Must contain only digits.',
-    PINTooShortValidation: 'The PIN is long enought.',
-    PINTooLongValidation: 'The PIN is long enought.',
   },
   Terms: {
     TermsOfService: 'Terms of Service',
@@ -726,6 +830,18 @@ const translation = {
     InvalidPredicateValueTitle: 'Invalid value for {{ predicate }}',
     InvalidPredicateValueDetails: 'Must be a number',
     ConnectionLessLabel: 'Anonymous',
+    AcceptDevCredentials: 'Accept non-production credentials?',
+    UseDevVerifierTemplates: 'Use development verifier templates?',
+    ToggleDevTemplates: 'Toggle Verifier Development Templates',
+    RefreshQR: 'Refresh QR Code',
+  },
+  Developer: {
+    Environment: 'Environment',
+    Production: 'Production',
+    Development: 'Development',
+    Test: 'Test',
+    DeveloperMode: 'Developer mode',
+    Toggle: 'Toggle Developer Mode',
   },
 }
 

@@ -1,5 +1,13 @@
 const translation = {
+  BCID: {
+    GetID: 'Obtenir BCID',
+    GetDigitalID: 'Obtenez votre identité numérique QC.',
+  },
+  Onboarding: {
+    SkipA11y: 'Sauter',
+  },
   Global: {
+    Enter: 'Entrer',
     EnterPin: 'Saisir le NIP',
     '6DigitPin': 'NIP à 6 chiffres',
     Submit: 'Soumettre',
@@ -32,8 +40,11 @@ const translation = {
     On: 'Activé',
     Off: 'Fermer',
     Close: 'Retirer',
+    Save: 'Enregistrer',
+    ShowDetails: 'Afficher les détails',
+    Biometrics: 'Biométrie',
+    Remove: 'Supprimer',
   },
-
   Language: {
     English: 'Anglais',
     French: 'Français',
@@ -42,6 +53,9 @@ const translation = {
   Date: {
     ShortFormat: 'D MMM',
     LongFormat: 'D MMMM',
+    MinuteAgo: 'Il y a une minute',
+    MinutesAgo: 'Il y a quelques minutes',
+    JustNow: 'À l’instant',
     MonthLong: {
       January: 'janvier',
       February: 'février',
@@ -71,7 +85,6 @@ const translation = {
       December: 'déc.',
     },
   },
-
   ActivityLog: {
     Your: 'Votre ',
     Activity: "journal d'activité",
@@ -156,6 +169,21 @@ const translation = {
     Title1033: "Impossible de récupérer l'attestation.",
     Message1033: "L'attestation est introuvable.",
     Title1038: 'Impossible de générer une demande de preuve.',
+    Message1038: 'Un problème est survenu lors de la génération de la demande de preuve.',
+    Title1039: 'Impossible de gérer le lien profond.',
+    Message1039: "Un problème est survenu lors de la gestion d'un lien profond.",
+    Title1040: 'Impossible de créer le NIP.',
+    Message1040: 'Un problème est survenu lors de la création du NIP.',
+    Title1041: 'Impossible de déverrouiller avec le NIP.',
+    Message1041: 'Un problème est survenu lors du déverrouillage avec le NIP.',
+    Title1042: 'Impossible de vérifier le NIP.',
+    Message1042: 'Un problème est survenu lors de la vérification du NIP.',
+    Title1043: 'Impossible de récupérer les attestations pour la preuve.',
+    Message1043: 'Un problème est survenu lors de la récupération des attestations pour la preuve.',
+    Title1044: "Impossible d'initialiser l'onboarding.",
+    Message1044: "Un problème est survenu lors de l'initialisation de l'onboarding.",
+    Title1045: "Impossible d'initialiser l'agent.",
+    Message1045: "Un problème est survenu lors de l'initialisation de l'agent.",
   },
   Credentials: {
     AddCredential: 'Ajouter une attestation',
@@ -163,6 +191,8 @@ const translation = {
     CredentialsNotFound: 'Attestations introuvables',
     CredentialDetails: 'Détails des attestations',
     EmptyList: 'Votre portefeuille est vide. Vos attestations valides seront ajoutées ici.',
+    IssuedBy: 'Délivré par',
+    Credential: 'attestation',
   },
   PersonCredentialNotification: {
     Title: "Obtenez votre attestation d'identité",
@@ -262,8 +292,7 @@ const translation = {
       },
     },
   },
-
-  PinCreate: {
+  PINCreate: {
     UserAuthenticationPin: "NIP d'authentification de l'utilisateur",
     PinMustBe6DigitsInLength: 'Le NIP doit être composé de 6 chiffres',
     PinsEnteredDoNotMatch: 'Les NIP saisis ne correspondent pas',
@@ -291,27 +320,35 @@ const translation = {
     ChangePIN: 'Modifier le NIP',
     Continue: 'Continuer',
     EnterYourCurrentPIN: 'Veuiller saisir votre NIP',
-  },
-  PinEnter: {
-    IncorrectPin: 'NIP erroné',
-    EnterPIN: 'Veuiller saisir votre NIP',
-    Unlock: 'Déverrouiller',
-    Or: 'Ou',
-    BiometricsUnlock: 'Déverrouiller avec la biométrie',
-    LoggedOut: 'Vous êtes déconnecté',
-    LoggedOutDescription:
-      "Pour protéger vos informations, vous êtes déconnecté de votre portefeuille si vous ne l'avez pas utilisé pendant 5 minutes.",
-    RepeatPIN: 'Veuillez réessayer avec votre code NIP.',
-    AttemptLockoutWarning:
-      "Note: pour votre sécurité, la saisie d'un autre code NIP incorrect verrouillera temporairement le portefeuille.",
-    IncorrectPIN: ' NIP erroné',
-    EnableBiometrics: 'Vous devez activer la biométrie pour utiliser le portefeuille.',
-    BiometricsNotProvided: 'La biométrie est indisponible. Veuillez saisir le NIP du portefeuille.',
-    BiometricsError: 'Échec de la biométrie.',
-    BiometricsErrorEnterPIN: 'Veuillez saisir le NIP du portefeuille.',
-    BiometricsChanged:
-      'Vous ne pouvez pas utiliser le déverrouillage avec la biométrie, car les données biométriques de votre appareil ont été modifiées.',
-    BiometricsChangedEnterPIN: 'Veuillez saisir le NIP du portefeuille.',
+    PinChangeSuccessTitle: 'Changement de NIP réussi',
+    PinChangeSuccessMessage:
+      'Votre NIP a été changé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau NIP.',
+    EnterOldPINTitle: 'Entrez votre ancien NIP',
+    NewPIN: 'nouveau',
+    RememberChangePIN: 'Changez votre NIP pour sécuriser votre portefeuille.',
+    Message: {
+      CrossPatternValidation: 'Votre NIP contient une séquence en forme de croix. Veuillez choisir un autre NIP.',
+      OddOrEvenSequenceValidation: 'Votre NIP contient une suite paire ou impaire. Veuillez choisir un autre NIP. ',
+      NoRepetitionOfTheTwoSameNumbersValidation:
+        'Votre NIP contient une répétition (p. ex.: 111). Veuillez choisir un autre NIP.',
+      NoRepetitionOfTheSameNumbersValidation:
+        'Votre NIP contient une répétition de deux (2) chiffres (p. ex.: 1313). Veuillez choisir un autre NIP. ',
+      NoSeriesOfNumbersValidation: 'Une série de nombres consécutifs a été détectée dans votre NIP.',
+      PINOnlyContainDigitsValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
+      PINTooShortValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
+      PINTooLongValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
+      AncienPINIncorrect: 'Votre ancien NIP est incorrect. Veuillez réessayer.',
+    },
+    Helper: {
+      CrossPatternValidation: 'Ne doit pas contenir une séquence en forme de croix.',
+      OddOrEvenSequenceValidation: 'Ne doit pas contenir de série paire ou impaire.',
+      NoRepetitionOfTheTwoSameNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
+      NoRepetitionOfTheSameNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
+      NoSeriesOfNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
+      PINOnlyContainDigitsValidation: 'Doit contenir des chiffres seulement.',
+      PINTooShortValidation: 'Votre NIP doit contenir 6 chiffres.',
+      PINTooLongValidation: 'Votre NIP doit contenir 6 chiffres.',
+    },
   },
   AttemptLockout: {
     Title: 'Votre portefeuille est temporairement verrouillé ',
@@ -340,6 +377,7 @@ const translation = {
     RemoveContactsBulletPoint3:
       "Soyez informé des mises à jour de vos informations d'identification émises par ce contact.",
     RemoveContactsBulletPoint4: 'Demander des informations à ce contact ou celui-ci vous demande des informations.',
+    RemoveContact: 'Supprimer le contact',
   },
   WhatAreContacts: {
     Title: "Qu'est-ce qu'un contact?",
@@ -350,10 +388,17 @@ const translation = {
     RemoveContacts: 'Vous pouvez à tout moment supprimer des contacts de votre  liste. ',
     ContactsLink: 'liste de contacts',
     ContactSharing: "L'utilisation de vos justificatifs d'identité n'est jamais partagée avec vos contacts.",
+    ListItemDirectMessage: 'Envoyer un message direct à vos contacts',
+    ListItemNotifiedOfUpdates: 'Être informé des mises à jour de vos attestations émises par eux',
+    ListItemRequest: "Demander des informations à votre contact ou qu'il vous demande des informations",
   },
   Contacts: {
     EmptyList: 'Votre portefeuille est vide. Vos contacts connectés seront ajoutés ici.',
     TypeHere: 'Saisissez votre message ici.',
+    PeopleAndOrganizations:
+      'Les personnes et les organisations avec lesquelles vous avez interagi sont répertoriées ici.',
+    WhatAreContacts: "Qu'est-ce que les contacts?",
+    AddContact: 'Ajouter un contact',
   },
   CredentialDetails: {
     Id: 'Identifiant :',
@@ -377,6 +422,12 @@ const translation = {
     CredentialRemoved: 'Attestation retirée',
     IssuedBy: 'Attestation émise par:',
     RemoveCredential: "Supprimer l'attestation",
+    YouWillNotLose: 'Vous ne perdrez pas',
+    YouWillNotLoseListItem1: 'Votre attestation dans le système qui vous a délivré votre attestation.',
+    YouWillNotLoseListItem2: "L'organisation émettrice en tant que contact.",
+    HowToGetThisCredentialBack: 'Comment récupérer cette attestation',
+    HowToGetThisCredentialBackListItem1:
+      'Vous devrez vous rendre auprès de l’organisation qui vous a délivré cette attestation et la demander à nouveau.',
   },
   Home: {
     Welcome: 'Bienvenue',
@@ -391,6 +442,10 @@ const translation = {
     Credential: 'attestation',
     Credentials: 'attestations',
     InYourWallet: 'dans votre portefeuille',
+    NewMessage: 'Nouveau message',
+    SentMessage: 'a envoyé un message',
+    ReceivedMessage: 'Vous avez reçu un nouveau message',
+    ViewMessage: 'Voir le message',
   },
   PrivacyPolicy: {
     Title: 'Politique de confidentialité',
@@ -407,6 +462,9 @@ const translation = {
     UnableToHandleRedirection: 'Impossible de traiter la redirection',
     Close: 'Fermer',
     Torch: 'Flash',
+    WillScanAutomatically: 'Un code QR valide sera scanné automatiquement.',
+    ScanQRCode: 'Scanner le code QR',
+    MyQRCode: 'Mon code QR',
   },
   Connection: {
     JustAMoment: 'Veuillez patienter pendant que nous établissons une connexion sécurisée...',
@@ -420,6 +478,7 @@ const translation = {
     Toggle: "Activer la fonctionnalité d'invitation à la connexion",
     UseConnectionInviterCapability: "Utiliser la fonctionnalité d'invitation à la connexion ?",
     OpenContact: 'Ouvrir le contact',
+    ShareQR: "Partager ce code QR avec quelqu'un l'ajoutera en tant que contact.",
   },
   CredentialOffer: {
     ThisIsTakingLongerThanExpected:
@@ -456,7 +515,7 @@ const translation = {
     DeclineParagraph2: 'Êtes-vous sûr de vouloir refuser cette attestation?',
     CustomOfferTitle: 'Supprimer cette offre?',
     CustomOfferParagraph1: 'En supprimant cette offre, vous supprimez la notification de votre liste.',
-    CustomOfferParagrap2:
+    CustomOfferParagraph2:
       "Vous ne reconnaissez pas l'émetteur? Vérifiez votre liste de contacts. Seuls les contacts qui y figurent peuvent vous envoyer des notifications.",
   },
   ConnectionAlert: {
@@ -513,6 +572,11 @@ const translation = {
     DeclineBulletPoint2:
       "Afin de recevoir à nouveau la demande de preuve, vous devrez recommencer le processus en communiquant avec l'organisation émettrice (émetteur, le service…).",
     DeclineBulletPoint3: 'Etes-vous sûr de vouloir refuser cette demande de preuve?',
+    SensitiveInformation: 'Cette demande nécessite des informations sensibles.',
+    PredicateNotSatisfied: 'Condition non satisfaite',
+    YouDoNotHaveDataPredicate: 'Vous ne répondez pas aux exigences de cette demande de preuve de',
+    ReviewSentInformation_one: 'Vous avez partagé les informations suivantes de {{count}} attestation avec',
+    ReviewSentInformation_other: 'Vous avez partagé les informations suivantes de {{count}} attestations avec',
   },
   TabStack: {
     Home: 'Accueil',
@@ -528,16 +592,35 @@ const translation = {
     WeNeedYourPermissionToUseYourCamera: 'Nous avons besoin de votre autorisation pour utiliser votre appareil photo.',
     Ok: 'Ok',
   },
+  QRRender: {
+    GenerationError: 'Impossible de générer le code QR',
+  },
   Record: {
     Hide: 'Masquer',
     Show: 'Afficher',
     HideAll: 'Masquer tout',
     Hidden: 'Masqué',
+    ShowAll: 'Afficher tout',
+    InvalidDate: 'Date invalide: ',
+    Zoom: 'Zoom',
   },
   Loading: {
     TakingTooLong:
       "La tentative de connexion prend plus de temps que prévu. Vous pouvez retourner à l'accueil ou continuer à patienter.",
     BackToHome: "Retour à l'accueil",
+  },
+  NameWallet: {
+    EnableWalletNaming: 'Activer le nommage du portefeuille ?',
+    ToggleWalletNaming: 'Basculer le nommage du portefeuille',
+    NameYourWallet: 'Nommez votre portefeuille',
+    EditWalletName: 'Modifier le nom du portefeuille',
+    ThisIsTheName: "Ceci est le nom que les gens voient lorsqu'ils se connectent avec vous.",
+    CharCountTitle: 'Nombre de caractères dépassé',
+    CharCountDescription:
+      'Vous avez dépassé le nombre maximum de 50 caractères. Veuillez réduire votre nombre de caractères.',
+    EmptyNameTitle: 'Le nom du portefeuille ne peut pas être vide',
+    EmptyNameDescription:
+      "Ceci est le nom que les gens voient lorsqu'ils se connectent avec vous.\n\nVeuillez entrer un nom de portefeuille.",
   },
   Screens: {
     Splash: 'Page de garde',
@@ -578,6 +661,10 @@ const translation = {
     RecreatePIN: 'Changer le NIP',
     CustomNotification: 'Notification personnalisée',
     ProofRequesting: 'Demande de preuve',
+    NameWallet: 'Nommer le portefeuille',
+    CreatePIN: 'Créer un NIP',
+    EnterPIN: 'Entrer le NIP',
+    DataRetention: 'Conservation des données',
   },
   OnboardingPages: {
     FirstPageTitle: 'Bienvenue dans le portefeuille numérique du Québec',
@@ -625,6 +712,12 @@ const translation = {
     Developer: 'Options de développeur',
     AppGuides: "Guides de l'application",
     Build: 'Créer',
+    GiveFeedback: 'Donner votre avis',
+    ChangePin: 'Changer le NIP',
+    DataRetention: 'Conservation des données',
+    PreventAutoLock: 'Empêcher le verrouillage automatique',
+    TogglePreventAutoLock: 'Basculer le verrouillage automatique',
+    ScanMyQR: 'Scanner mon code QR',
   },
   Tour: {
     GuideTitle: 'Bienvenue à Aries Bifold',
@@ -644,6 +737,14 @@ const translation = {
     Next: 'Suivant',
     Back: 'Précédent',
     Done: 'Terminer',
+    AddCredentials: 'Ajouter des justificatifs',
+    AddCredentialsDescription: 'Ajoutez des justificatifs en balayant un code QR affiché sur le service émetteur.',
+    CredentialOffers: 'Offres de justificatifs',
+    CredentialOffersDescription:
+      "Une organisation vous a offert un justificatif. Examinez les détails du justificatif et choisissez de l'accepter ou de le refuser. Les justificatifs acceptés seront ajoutés à votre portefeuille.",
+    ProofRequests: 'Demandes de preuve',
+    ProofRequestsDescription:
+      "Une organisation vous demande de prouver vos justificatifs. Examinez ce qu'ils demandent et choisissez de l'accepter ou de le refuser.",
   },
   Tips: {
     Header: 'Conseils',
@@ -679,6 +780,10 @@ const translation = {
     ProofRequestRejected: 'rejeté une demande de preuve',
     ProofRequestRejectReceived: 'rejeté une demande de preuve',
     ProofRequestSatisfied: 'informations partagées',
+    OpenPresentation: 'Ouvrir la présentation',
+    ViewRequest: 'Voir la demande',
+    ViewOffer: "Voir l'offre",
+    YouConnected: 'Vous êtes connecté avec',
   },
   Init: {
     Retry: 'Réessayer',
@@ -696,48 +801,25 @@ const translation = {
   Feedback: {
     GiveFeedback: 'Donnez votre avis',
   },
-  MessageB: {
-    CrossPatternValidation: 'Votre NIP contient une séquence en forme de croix. Veuillez choisir un autre NIP.',
-    OddOrEvenSequenceValidation: 'Votre NIP contient une suite paire ou impaire. Veuillez choisir un autre NIP. ',
-    NoRepetitionOfTheTwoSameNumbersValidation:
-      'Votre NIP contient une répétition (p. ex.: 111). Veuillez choisir un autre NIP.',
-    NoRepetitionOfTheSameNumbersValidation:
-      'Votre NIP contient une répétition de deux (2) chiffres (p. ex.: 1313). Veuillez choisir un autre NIP. ',
-    NoSeriesOfNumbersValidation: 'Une série de nombres consécutifs a été détectée dans votre NIP.',
-    PINOnlyContainDigitsValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
-    PINTooShortValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
-    PINTooLongValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
-  },
-  HelperB: {
-    CrossPatternValidation: 'Ne doit pas contenir une séquence en forme de croix.',
-    OddOrEvenSequenceValidation: 'Ne doit pas contenir de série paire ou impaire.',
-    NoRepetitionOfTheTwoSameNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
-    NoRepetitionOfTheSameNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
-    NoSeriesOfNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
-    PINOnlyContainDigitsValidation: 'Doit contenir des chiffres seulement.',
-    PINTooShortValidation: 'Votre NIP doit contenir 6 chiffres.',
-    PINTooLongValidation: 'Votre NIP doit contenir 6 chiffres.',
-  },
-
   PINEnter: {
-    EnterPIN: 'Veuillez saisir votre NIP',
+    EnterPIN: 'Veuiller saisir votre NIP',
     Unlock: 'Déverrouiller',
     Or: 'Ou',
     BiometricsUnlock: 'Déverrouiller avec la biométrie',
-    IncorrectPIN: 'NIP erroné',
-    RepeatPIN: 'Essayez votre NIP à nouveau',
-    EnableBiometrics: 'Vous devez activer la biométrie pour pouvoir charger le portefeuille.',
-    BiometricsNotProvided: 'Biométrie non fournie, vous pouvez utiliser le NIP pour vous connecter au portefeuille.',
-    BiometricsError: "La biométrie n'a pas réussi.",
-    BiometricsErrorEnterPIN: 'Veuillez saisir le code NIP de votre portefeuille.',
-    LoggedOut: 'Vous avez été déconnecté du portefeuille.',
     LoggedOutDescription:
       "Pour protéger vos informations, vous êtes déconnecté de votre portefeuille si vous ne l'avez pas utilisé pendant 5 minutes.",
+    AttemptLockoutWarning:
+      "Note: pour votre sécurité, la saisie d'un autre code NIP incorrect verrouillera temporairement le portefeuille.",
+    IncorrectPIN: ' NIP erroné',
+    EnableBiometrics: 'Vous devez activer la biométrie pour utiliser le portefeuille.',
+    BiometricsNotProvided: 'La biométrie est indisponible. Veuillez saisir le NIP du portefeuille.',
+    BiometricsError: 'Échec de la biométrie.',
+    BiometricsErrorEnterPIN: 'Veuillez saisir le NIP du portefeuille.',
+    BiometricsChangedEnterPIN: 'Veuillez saisir le NIP du portefeuille.',
+    RepeatPIN: 'Essayez votre NIP à nouveau',
+    LoggedOut: 'Vous avez été déconnecté du portefeuille.',
     BiometricsChanged:
       'Le déverrouillage avec la biométrie a été désactivé, car les données biométriques de votre appareil ont changé.',
-    BiometricsChangedEnterPIN: 'Veuillez saisir le code NIP de votre portefeuille.',
-    AttemptLockoutWarning:
-      "Note: pour votre sécurité, la saisie d'un autre NIP incorrect verrouillera temporairement le portefeuille.",
   },
 
   Terms: {
@@ -778,6 +860,18 @@ const translation = {
     InvalidPredicateValueTitle: 'Valeur invalide pour {{ predicate }}',
     InvalidPredicateValueDetails: 'Doit être un chiffre',
     ConnectionLessLabel: 'Anonyme',
+    AcceptDevCredentials: 'Accepter les identifiants de développement?',
+    UseDevVerifierTemplates: 'Utiliser les modèles de vérificateur de développement?',
+    ToggleDevTemplates: 'Basculer les modèles de vérificateur de développement',
+    RefreshQR: 'Actualiser le code QR',
+  },
+  Developer: {
+    Environment: 'Environnement',
+    Production: 'Production',
+    Development: 'Développement',
+    Test: 'Test',
+    DeveloperMode: 'Mode développeur',
+    Toggle: 'Basculer le mode développeur',
   },
 }
 
