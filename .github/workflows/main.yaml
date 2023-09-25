@@ -177,8 +177,8 @@ jobs:
         if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          certificate: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          certificate_password: ${{ secrets.KEYCHIAN_PASSWD }}
+          certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
+          certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
