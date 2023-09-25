@@ -17,11 +17,7 @@
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>ca.bc.gov.BCWallet</key>
-<<<<<<< HEAD
-		<string>b2ef928b-6236-4afa-b150-5124e660c775</string>
-=======
 		<string>30dd4887-0747-40a7-a519-637253d21fff</string>
->>>>>>> 7554c39 (fix: profile ID)
 	</dict>
 </dict>
 </plist>
