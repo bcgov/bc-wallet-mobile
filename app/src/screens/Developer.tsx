@@ -1,16 +1,19 @@
+import { useAgent } from '@aries-framework/react-hooks'
 import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
+import * as PushNotificationHelper from '../helpers/PushNotificationsHelper'
 import { BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
+  const { agent } = useAgent()
   const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
@@ -23,6 +26,8 @@ const Settings: React.FC = () => {
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
+  const [enablePushNotifications, setEnablePushNotifications] = useState(false)
+  const [pushNotificationCapable, setPushNotificationCapable] = useState(true)
 
   const styles = StyleSheet.create({
     container: {
@@ -166,6 +171,37 @@ const Settings: React.FC = () => {
     setPreventAutoLock((previousState) => !previousState)
   }
 
+  const getPushNotificationCapable = async () => {
+    if (!agent) return
+    if ((await PushNotificationHelper.isMediatorCapable(agent)) === true) setPushNotificationCapable(true)
+    else setPushNotificationCapable(false)
+  }
+
+  const initializePushNotificationsToggle = async () => {
+    setEnablePushNotifications(await PushNotificationHelper.isEnabled())
+  }
+
+  const toggleDevPushNotificationsSwitch = () => {
+    if (!pushNotificationCapable || !agent) {
+      return
+    }
+
+    if (enablePushNotifications) {
+      PushNotificationHelper.setDeviceInfo(agent, true)
+    } else {
+      PushNotificationHelper.setup(agent)
+    }
+
+    setEnablePushNotifications(!enablePushNotifications)
+  }
+
+  useEffect(() => {
+    if (agent) {
+      getPushNotificationCapable()
+      initializePushNotificationsToggle()
+    }
+  }, [agent])
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -285,6 +321,25 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={togglePreventAutoLockSwitch}
             value={preventAutoLock}
+          />
+        </SectionRow>
+        <SectionRow
+          title={
+            t('PushNotifications.PushNotifications') +
+            (pushNotificationCapable ? '' : t('PushNotifications.NotAvailable'))
+          }
+          accessibilityLabel={
+            t('PushNotifications.PushNotifications') +
+            (pushNotificationCapable ? '' : t('PushNotifications.NotAvailable'))
+          }
+          testID={testIdWithKey('PushNotificationsSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={enablePushNotifications ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleDevPushNotificationsSwitch}
+            value={enablePushNotifications}
           />
         </SectionRow>
       </ScrollView>

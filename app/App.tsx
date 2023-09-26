@@ -25,6 +25,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import bcwallet from './src'
+import PushNotifications from './src/components/PushNotifications'
 import { credentialOfferTourSteps } from './src/components/tours/CredentialOfferTourSteps'
 import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
@@ -139,6 +140,7 @@ const App = () => {
                   <RootStack />
                 </TourProvider>
                 <Toast topOffset={15} config={toastConfig} />
+                <PushNotifications />
               </NetworkProvider>
             </AuthProvider>
           </ConfigurationProvider>

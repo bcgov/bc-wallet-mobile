@@ -62,11 +62,15 @@ yarn install
 
 ## Configuration
 
-In the `./app/` directory add an `.env` file containing:
+In the `./app/` directory copy the .env.sample `cp .env.sample .env`
 
 ```
 MEDIATOR_URL=<url>
+
+MEDIATOR_USE_PUSH_NOTIFICATIONS=false
+MEDIATOR_LABEL=Mediator
 ```
+Push notifications can be used locally on android if the mediator service has the firebase plugin and it's configured correctly. 
 
 ### Adding ledger configurations
 
