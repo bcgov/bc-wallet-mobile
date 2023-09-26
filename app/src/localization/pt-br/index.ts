@@ -151,6 +151,19 @@ const translation = {
   },
   "Feedback": {
     "GiveFeedback": "Give Feedback (PT-BR)",
+  },
+  "PushNotifications": {
+    "BulletFour": "new messages (PT-BR)",
+    "BulletOne": "new credential offers (PT-BR)",
+    "BulletThree": "updates to your credentials (PT-BR)",
+    "BulletTwo": "new proof requests (PT-BR)",
+    "DeveloperTitle": "Push Notifications (PT-BR)",
+    "HeadingOne": "It is recommended you allow this app to receive push notifications. (PT-BR)",
+    "HeadingTwo": "Notifications will be sent to you when you receive: (PT-BR)",
+    "NotAvailable": " (Not Available) (PT-BR)",
+    "Title": "Notifications (PT-BR)",
+    "PushNotifications": "Push Notifications (PT-BR)",
+    "Continue": "Continue (PT-BR)",
   }
 }
 
