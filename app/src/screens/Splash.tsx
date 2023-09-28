@@ -170,7 +170,6 @@ const Splash: React.FC = () => {
     }
 
     start()
-    start()
   }, [agent, store.developer.attestationSupportEnabled])
 
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
