@@ -373,8 +373,8 @@ const Settings: React.FC = () => {
           />
         </SectionRow>
         <SectionRow
-          title={'Attestation Support'}
-          accessibilityLabel={'Attestation Support'}
+          title={t('Developer.AttestationSupport')}
+          accessibilityLabel={t('Developer.AttestationSupport')}
           testID={testIdWithKey('AttestationSupportSwitch')}
         >
           <Switch
