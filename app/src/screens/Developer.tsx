@@ -7,11 +7,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import * as PushNotificationHelper from '../helpers/PushNotificationsHelper'
-import { BCState } from '../store'
+import { useAttestation } from '../services/attestation'
+import { BCDispatchAction, BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 
 const Settings: React.FC = () => {
+  const { agent } = useAgent()
   const { t } = useTranslation()
   const { agent } = useAgent()
   const [store, dispatch] = useStore<BCState>()
@@ -28,6 +30,10 @@ const Settings: React.FC = () => {
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
   const [enablePushNotifications, setEnablePushNotifications] = useState(false)
   const [pushNotificationCapable, setPushNotificationCapable] = useState(true)
+  const [attestationSupportEnabled, setAttestationSupportEnabled] = useState(
+    !!store.developer.attestationSupportEnabled
+  )
+  const { start, stop } = useAttestation()
 
   const styles = StyleSheet.create({
     container: {
@@ -67,6 +73,19 @@ const Settings: React.FC = () => {
       alignItems: 'center',
     },
   })
+
+  useEffect(() => {
+    if (!agent) {
+      return
+    }
+
+    if (!attestationSupportEnabled) {
+      stop()
+      return
+    }
+
+    start()
+  }, [attestationSupportEnabled])
 
   const shouldDismissModal = () => {
     setEnvironmentModalVisible(false)
@@ -141,7 +160,8 @@ const Settings: React.FC = () => {
   }
 
   const toggleDevVerifierTemplatesSwitch = () => {
-    // if we switch on dev templates we can assume the user also wants to enable the verifier capability
+    // if we switch on dev templates we can assume the user also
+    // wants to enable the verifier capability
     if (!useDevVerifierTemplates) {
       dispatch({
         type: DispatchAction.USE_VERIFIER_CAPABILITY,
@@ -169,6 +189,7 @@ const Settings: React.FC = () => {
       type: DispatchAction.PREVENT_AUTO_LOCK,
       payload: [!preventAutoLock],
     })
+
     setPreventAutoLock((previousState) => !previousState)
   }
 
@@ -202,6 +223,15 @@ const Settings: React.FC = () => {
       initializePushNotificationsToggle()
     }
   }, [agent])
+
+  const toggleAttestationSupport = () => {
+    dispatch({
+      type: BCDispatchAction.ATTESTATION_SUPPORT,
+      payload: [!attestationSupportEnabled],
+    })
+
+    setAttestationSupportEnabled((previousState) => !previousState)
+  }
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
@@ -341,6 +371,19 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleDevPushNotificationsSwitch}
             value={enablePushNotifications}
+          />
+        </SectionRow>
+        <SectionRow
+          title={'Attestation Support'}
+          accessibilityLabel={'Attestation Support'}
+          testID={testIdWithKey('AttestationSupportSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={preventAutoLock ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleAttestationSupport}
+            value={attestationSupportEnabled}
           />
         </SectionRow>
       </ScrollView>

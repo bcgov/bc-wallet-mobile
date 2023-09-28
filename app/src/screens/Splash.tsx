@@ -40,8 +40,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
-import { startAttestationMonitor, stopAttestationMonitor } from '../services/attestation'
-import { BCDispatchAction, BCLocalStorageKeys } from '../store'
+import { useAttestation } from '../services/attestation'
+import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
 enum InitErrorTypes {
   Onboarding,
@@ -93,7 +93,7 @@ const Splash: React.FC = () => {
   const { width } = useWindowDimensions()
   const { agent, setAgent } = useAgent()
   const { t } = useTranslation()
-  const [store, dispatch] = useStore()
+  const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
@@ -116,6 +116,7 @@ const Splash: React.FC = () => {
     t('Init.SettingAgent'),
     t('Init.Finishing'),
   ]
+  const { start, stop } = useAttestation()
 
   const setStep = (stepIdx: number) => {
     setStepText(steps[stepIdx])
@@ -157,6 +158,20 @@ const Splash: React.FC = () => {
       marginBottom: 30,
     },
   })
+
+  useEffect(() => {
+    if (!agent) {
+      return
+    }
+
+    if (!store.developer.attestationSupportEnabled) {
+      stop()
+      return
+    }
+
+    start()
+    start()
+  }, [agent, store.developer.attestationSupportEnabled])
 
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
     try {
@@ -201,6 +216,16 @@ const Splash: React.FC = () => {
     }
   }
 
+  const loadAttestationSupportOption = async (): Promise<void> => {
+    const value = await loadObjectFromStorage(BCLocalStorageKeys.Attestation)
+    if (value) {
+      dispatch({
+        type: BCDispatchAction.ATTESTATION_SUPPORT,
+        payload: [value],
+      })
+    }
+  }
+
   useEffect(() => {
     const initOnboarding = async (): Promise<void> => {
       try {
@@ -217,6 +242,8 @@ const Splash: React.FC = () => {
         await loadPersonNotificationDismissed()
 
         await loadIASEnvironment()
+
+        await loadAttestationSupportOption()
 
         setStep(2)
         const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
