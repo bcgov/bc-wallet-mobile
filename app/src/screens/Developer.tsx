@@ -15,7 +15,6 @@ import IASEnvironment from './IASEnvironment'
 const Settings: React.FC = () => {
   const { agent } = useAgent()
   const { t } = useTranslation()
-  const { agent } = useAgent()
   const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
