@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native'
 import {
   Stacks,
   Screens,
-  Agent,
   AgentProvider,
   TourProvider,
   AuthProvider,
@@ -42,8 +41,6 @@ const App = () => {
   useMemo(() => {
     initStoredLanguage().then()
   }, [])
-
-  const [agent] = useState<Agent | undefined>(undefined)
   const [surveyVisible, setSurveyVisible] = useState(false)
   const { t } = useTranslation()
   const { navigate } = useNavigation()
@@ -110,7 +107,7 @@ const App = () => {
 
   return (
     <StoreProvider initialState={initialState} reducer={reducer}>
-      <AgentProvider agent={agent}>
+      <AgentProvider>
         <ThemeProvider value={theme}>
           <ConfigurationProvider value={configuration}>
             <AuthProvider>

@@ -43,20 +43,20 @@
     "npm-run-all": "^4.1.5"
   },
   "resolutions": {
-    "@types/react": "17.0.2",
-    "@types/react-dom": "17.0.2",
+    "react": "18.2.0",
+    "@types/react": "18.0.24",
     "@react-navigation/core": "6.1.0",
     "@react-navigation/native": "6.0.6",
     "@react-navigation/stack": "6.0.11",
     "@types/node": "16.9.6",
     "did-resolver": "3.1.5",
-    "react-native@0.66.5": "patch:react-native@npm:0.66.5#.yarn/patches/react-native-npm-0.66.5-22e5dd8ec5.patch",
-    "react-native-gifted-chat@0.16.3": "patch:react-native-gifted-chat@npm:0.16.3#./.yarn/patches/react-native-gifted-chat-npm-0.16.3-9cbc12a602.patch",
+    "react-native": "0.72.5",
+    "@types/react-native": "0.72.3",
+    "react-i18next": "11.18.6",
     "@aries-framework/core@0.3.3": "patch:@aries-framework/core@npm:0.3.3#./.yarn/patches/@aries-framework-core-npm-0.3.3-dd6486de3d.patch",
     "@aries-framework/react-hooks@^0.4.2": "patch:@aries-framework/react-hooks@npm:0.4.2#./.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch",
     "@aries-framework/react-native@0.4.0": "patch:@aries-framework/react-native@npm:0.3.3#./.yarn/patches/@aries-framework-react-native-npm-0.3.3-bb75ece22d.patch",
     "@aries-framework/anoncreds@^0.4.0": "patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch",
-    "@aries-framework/anoncreds@0.4.0": "patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch",
-    "@hyperledger/aries-askar-shared@0.1.1": "patch:@hyperledger/aries-askar-shared@npm%3A0.1.1#./.yarn/patches/@hyperledger-aries-askar-shared-npm-0.1.1-3833bb73bb.patch"
+    "@aries-framework/anoncreds@0.4.0": "patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch"
   }
 }

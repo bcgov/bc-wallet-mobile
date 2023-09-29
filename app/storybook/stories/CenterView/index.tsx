@@ -1,9 +1,7 @@
-import React from 'react'
+import React, { PropsWithChildren } from 'react'
 import { StyleSheet, View } from 'react-native'
 
-interface Props {
-  children: any
-}
+interface Props extends PropsWithChildren {}
 
 const styles = StyleSheet.create({
   main: {
