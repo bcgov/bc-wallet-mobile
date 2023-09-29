@@ -2,7 +2,7 @@ import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries
 import { translationResources, ConfigurationContext, Record, indyLedgers, defaultConfiguration } from 'aries-bifold'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
-import Config from 'react-native-config'
+import { Config } from 'react-native-config'
 
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
@@ -26,7 +26,8 @@ const localization = merge({}, translationResources, {
   fr: { translation: fr },
   'pt-BR': { translation: ptBr },
 })
-const selectedLedgers = indyLedgers.filter((ledger) => ledger.indyNamespace !== 'indicio')
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const selectedLedgers = indyLedgers.filter((ledger: any) => ledger.indyNamespace !== 'indicio')
 const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,
@@ -45,6 +46,7 @@ const configuration: ConfigurationContext = {
   settings: [],
   customNotification: {
     component: PersonCredential,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onCloseAction: (dispatch?: React.Dispatch<ReducerAction<any>>) => {
       if (dispatch) {
         dispatch({
