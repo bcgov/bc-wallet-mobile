@@ -3,11 +3,10 @@
 exports[`LoadingIcon Component renders correctly 1`] = `
 <View
   collapsable={false}
-  nativeID="animatedComponent"
   style={
-    Object {
-      "transform": Array [
-        Object {
+    {
+      "transform": [
+        {
           "rotate": "0deg",
         },
       ],
@@ -16,21 +15,22 @@ exports[`LoadingIcon Component renders correctly 1`] = `
 >
   <Text
     allowFontScaling={false}
+    selectable={false}
     style={
-      Array [
-        Object {
+      [
+        {
           "color": undefined,
           "fontSize": 50,
         },
-        Object {
+        {
           "color": "#333",
         },
-        Object {
+        {
           "fontFamily": "Material Icons",
           "fontStyle": "normal",
           "fontWeight": "normal",
         },
-        Object {},
+        {},
       ]
     }
   >
