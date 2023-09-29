@@ -29,10 +29,11 @@ target 'AriesBifold' do
   pod 'FirebaseCoreInternal', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
 
-  permissions_path = '../node_modules/react-native-permissions/ios'
+  #permissions_path = '../node_modules/react-native-permissions/ios'
+  #pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
+  #pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"
+  # use reactNativePermissionsIOS.json for permissions instead!!!
 
-  pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
-  pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"
   # Flags change depending on the env values.
   flags = get_default_flags()
 
