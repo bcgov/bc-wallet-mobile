@@ -113,11 +113,9 @@ jobs:
           key: ${{ runner.os }}-dd-xcode
 
       - name: Install dependencies
-        env:
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
         working-directory: ./
         run: |
-          yarn install  && \
+          yarn install --immutable && \
           git status
 
       # Ledgers are missing namespace, not compatible.
@@ -279,13 +277,11 @@ jobs:
       # - name: Updaet ledgers
       #   uses: ./.github/workflows/actions/update-ledgers
       - name: Install dependencies
-        env:
-          YARN_ENABLE_IMMUTABLE_INSTALLS: false
         working-directory: ./
         run: |
           rm bifold/package.json && \
           rm bifold/yarn.lock && \
-          yarn install && \
+          yarn install --immutable && \
           git status
 
         # Actual environment variables are not being picked up
