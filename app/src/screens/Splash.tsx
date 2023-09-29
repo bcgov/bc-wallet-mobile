@@ -157,6 +157,7 @@ const Splash: React.FC = () => {
     },
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
     try {
       const data = await AsyncStorage.getItem(key)
