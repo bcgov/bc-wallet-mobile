@@ -519,9 +519,9 @@ const translation = {
       "Vous ne reconnaissez pas l'émetteur? Vérifiez votre liste de contacts. Seuls les contacts qui y figurent peuvent vous envoyer des notifications.",
   },
   ConnectionAlert: {
-    AddedContacts: 'Ajouté aux contacts',
+    AddedContacts: 'Nouveau contact ajouté',
     WhatAreContacts: 'Que sont les contacts ?',
-    NotificationBodyUpper: 'Vous pouvez les trouver',
+    NotificationBodyUpper: 'Vouz pouvez trouver ',
     NotificationBodyLower: ' dans vos contacts. Gérer vos contacts dans les paramètres.',
     PopupIntro: "L'ajout d'organisations aux contacts vous permettra d': ",
     PopupPoint1: 'Obtenir les mises à jour des attestations délivrées par cette organisation.',
