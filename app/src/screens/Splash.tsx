@@ -198,7 +198,7 @@ const Splash: React.FC = () => {
     }
   }
 
-  const loadIASEnvironment = async (): Promise<void> => {
+  const loadIASEnvironment = async (): Promise<string> => {
     const environment = await loadObjectFromStorage(BCLocalStorageKeys.Environment)
     if (environment) {
       dispatch({
@@ -206,6 +206,7 @@ const Splash: React.FC = () => {
         payload: [environment],
       })
     }
+    return environment?.iasAgentInviteUrl ?? Config.CQEN_MEDIATOR_URL
   }
 
   useEffect(() => {
@@ -222,8 +223,6 @@ const Splash: React.FC = () => {
 
         // load BCID person credential notification dismissed state from storage
         await loadPersonNotificationDismissed()
-
-        await loadIASEnvironment()
 
         setStep(2)
         const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
@@ -325,6 +324,8 @@ const Splash: React.FC = () => {
           return
         }
 
+        const environment = await loadIASEnvironment()
+
         setStep(4)
         const credentials = await getWalletCredentials()
 
@@ -349,7 +350,7 @@ const Splash: React.FC = () => {
           dependencies: agentDependencies,
           modules: getAgentModules({
             indyNetworks: indyLedgers,
-            mediatorInvitationUrl: Config.MEDIATOR_URL,
+            mediatorInvitationUrl: environment,
           }),
         }
 

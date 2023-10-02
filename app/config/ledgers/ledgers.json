@@ -1,0 +1,30 @@
+[
+    {
+        "genesisTransactions": "{\"reqSignature\": {},\"txn\": {\"data\": {\"data\": {\"alias\": \"beta-qc-1\",\"blskey\": \"3pBgM79823bLWJCKxG2az2CTRbtjLUDZS96pEjiVAiVZ9Lu2P9tq5BdztkmmFamT4nVSW9NS1jvCs68ttHh6mGEv8JdYVgfMekX6YqPSEfePKHhD5dKkxEpCH3Y1c3GdcT2tD66WFkJvx847XUGH7nZb6H2UPmVL8JA8zfuzZ9agfAz\",\"blskey_pop\": \"R4YAKVycBTpLpr3sXs5vd5HqbJ73EVE4fZj9HLwMbnsuYvL5YQJ38uqbcNrWyptfXpo51kbGa17QsABtg5cRGHBXwt77UdwstXRt6ZuuJ1gd9YeKMyyseXYxzAF5emioD3sDHsCnxZNFQYtZPDgoGdKas6AmMqf3UQJscWCEMLqoGs\",\"client_ip\": \"15.156.178.218\",\"client_port\": \"9702\",\"node_ip\": \"3.96.249.13\",\"node_port\": \"9701\",\"services\": [\"VALIDATOR\"]},\"dest\": \"9jikaYwztxemoQ34vLjPGzK3qXSqdEMwkKh4T2uxebwh\"},\"metadata\": {\"from\": \"MYb84uVfZS61rbHazcVALk\"},\"type\": \"0\"},\"txnMetadata\": {\"seqNo\": 1,\"txnId\": \"ece181d4ef6ed09990012a23e0e94233f01f9a70b97f113c22a79370abd49e0f\"},\"ver\": \"1\"}",
+        "id": "QCBETA",
+        "isProduction": false,
+        "indyNamespace": "QCBETA:test",
+        "connectionOnStartup": true
+    },
+    {
+        "genesisTransactions": "{\"reqSignature\": {},\"txn\": {\"data\": {\"data\": {\"alias\": \"beta-qc-2\",\"blskey\": \"16gvFGcY3cxtu7wXdsF839k9GD47jiHdad7vsw49HkzARrrtp9DW8P2BXfGQ9whZUE1j4jGLsUqweLyUUkC4L5YDACLz6WF9ZVnNp2cHKLURAv8BgBHPHc3SzFf8nLtcSKmEqUviXfXTEB8zh32yiz8HyPiQv9vMaevHB46WV2zXnBf\",\"blskey_pop\": \"QncWt7NMpUrtC9xk8UrQVxHUworPJdscAf7p6NVF9zDZHrD3juHoSDktG3z2fcig8k4nd9CjxcJMZwFXNdrtfZki3Dm4HK3D5YAQckynL2qUyANZ7k7apfqusHXWYtdWjq7jmQ2xfZjvPEJwHgf41E83C786LcmRAV4jswmAZGiyaF\",\"client_ip\": \"3.97.230.166\",\"client_port\": \"9702\",\"node_ip\": \"3.96.77.189\",\"node_port\": \"9701\",\"services\": [\"VALIDATOR\"]},\"dest\": \"EystSYN6EyVdxJqtgatY9eXSXhCffVgYcrC3VH4oqYyg\"},\"metadata\": {\"from\": \"8DbTCFzTEFrPT55Tu6Crx5\"},\"type\": \"0\"},\"txnMetadata\": {\"seqNo\": 2,\"txnId\": \"845eb8c53735dc891fd347a7143b6098334328b769158bbdb34e213da1451331\"},\"ver\": \"1\"}",
+        "id": "QCBETA",
+        "isProduction": false,
+        "indyNamespace": "QCBETA:test",
+        "connectionOnStartup": true
+    },
+    {
+        "genesisTransactions": "{\"reqSignature\": {},\"txn\": {\"data\": {\"data\": {\"alias\": \"beta-qc-3\",\"blskey\": \"2Zo9ms9SbrxzsKYeZmazBEeHQJRtw9Vdksv6wiAPEr6woLv5vpMZ4hCCLfnETM5fx9P941KSDLnZzygTVUmQAgBKT1asE8YK61bQ23aCi5KKt32zqCtFP1q9Li8EggP7MsLtYtcwGc1PY4RouNBdVXac6yXo41bVzBSZeukmBduSAqy\",\"blskey_pop\": \"RREst31rxfiwwYnv9yRTVAzz1A5FPGg5USFRfkwQW8Zgp7LZMMud3MhDBhu7BhPssMffFhT6QD4FgoQtVUU5sazZaZnTPTuaGFjfPmdd8T1rVkGcudJaGr6k2TVBYa3ARmKEWw3a6Rw31qo2qbrWBzM8gkUdSNDWmhzefezAtfu6F1\",\"client_ip\": \"52.60.42.3\",\"client_port\": \"9702\",\"node_ip\": \"15.156.211.40\",\"node_port\": \"9701\",\"services\": [\"VALIDATOR\"]},\"dest\": \"AeiKcN7bjrmy7crUDTbNt8TkhTBUcsyXNNesBm9AY9QB\"},\"metadata\": {\"from\": \"DuA9q44Poj5BvGB3XYrhkd\"},\"type\": \"0\"},\"txnMetadata\": {\"seqNo\": 3,\"txnId\": \"73d91a181af527f7f15a27dcfc53b71c23933cbbe26cead5b03058c58c085e0e\"},\"ver\": \"1\"}",
+        "id": "QCBETA",
+        "isProduction": false,
+        "indyNamespace": "QCBETA:test",
+        "connectionOnStartup": true
+    },
+    {
+        "genesisTransactions": "{\"reqSignature\": {},\"txn\": {\"data\": {\"data\": {\"alias\": \"beta-qc-4\",\"blskey\": \"2LHGhtbNaGt9oqmESxtdCoNdgJ9nHNMSEtbcLsbbwcrERQCeujmmpLPYiJGTYjmCc9nhu5NeSCjdjmfeytGhnpe8KZFnuJsay3VmTJQLmDMk5a8NRoG2mhbkrvxVufo5Zh9nhxxkUYXr2vWWQU8AgcLN36VnJmqdGRYCHjRFE2BQVo3\",\"blskey_pop\": \"QsUSDWqn4FZy62gYXzi2Yy2hPuxBS7FbEVyLKw9Psig461c1QdFASNpd4NWPsyLAsofSSqjssNNeqYCYyBvPUYeybYePKT2JqZfA2txqR5KdiWXNadPNzkrVFSnQtzr8VynMWGAU2UkiHpsSymj5tSh4TvnYSnWWkBdPbEQg8oLTq1\",\"client_ip\": \"3.99.19.163\",\"client_port\": \"9702\",\"node_ip\": \"3.99.34.83\",\"node_port\": \"9701\",\"services\": [\"VALIDATOR\"]},\"dest\": \"2Reue6BaKWukGTj4Je6JbkezJxWHn4sMCqPYjPzLqsZP\"},\"metadata\": {\"from\": \"7KXZ21GWpbEMdNDxiUUk5v\"},\"type\": \"0\"},\"txnMetadata\": {\"seqNo\": 4,\"txnId\": \"e864839076d62ef062a81e2578a8766fdf1a4009e90b4a6f76955165fef05e4f\"},\"ver\": \"1\"}",
+        "id": "QCBETA",
+        "isProduction": false,
+        "indyNamespace": "QCBETA:test",
+        "connectionOnStartup": true
+    }
+]

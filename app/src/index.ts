@@ -4,6 +4,8 @@ import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 import { Config } from 'react-native-config'
 
+import qcLedgers from '../config/ledgers'
+
 import AddCredentialButton from './components/AddCredentialButton'
 import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
@@ -24,7 +26,9 @@ const localization = merge({}, translationResources, {
   en: { translation: en },
   fr: { translation: fr },
 })
-const selectedLedgers = indyLedgers.filter((ledger) => ledger.indyNamespace !== 'indicio')
+
+const ledgers = [...qcLedgers, ...indyLedgers]
+const selectedLedgers = ledgers.filter((ledger) => ledger.indyNamespace !== 'indicio')
 const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,

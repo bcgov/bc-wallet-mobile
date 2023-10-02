@@ -842,6 +842,8 @@ const translation = {
     Test: 'Test',
     DeveloperMode: 'Developer mode',
     Toggle: 'Toggle Developer Mode',
+    CQEN: 'CQEN',
+    MCN: 'MCN',
   },
 }
 

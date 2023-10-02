@@ -126,13 +126,15 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null && env.OCA_URL != null
+        if: env.CQEN_MEDIATOR_URL != null && env.OCA_URL != null && env.MCN_MEDIATOR_URL != null
         working-directory: app
         env:
-          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          CQEN_MEDIATOR_URL: ${{ secrets.CQEN_MEDIATOR_URL }}
+          MCN_MEDIATOR_URL: ${{ secrets.MCN_MEDIATOR_URL }}
           OCA_URL: ${{ vars.OCA_URL }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+          echo "CQEN_MEDIATOR_URL=${CQEN_MEDIATOR_URL}" >.env
+          echo "MCN_MEDIATOR_URL=${MCN_MEDIATOR_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
 
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
@@ -242,13 +244,15 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null && env.OCA_URL != null
+        if: env.CQEN_MEDIATOR_URL != null && env.OCA_URL != null && env.MCN_MEDIATOR_URL != null
         working-directory: app
         env:
-          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          CQEN_MEDIATOR_URL: ${{ secrets.CQEN_MEDIATOR_URL }}
+          MCN_MEDIATOR_URL: ${{ secrets.MCN_MEDIATOR_URL }}
           OCA_URL: ${{ vars.OCA_URL }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+          echo "CQEN_MEDIATOR_URL=${CQEN_MEDIATOR_URL}" >.env
+          echo "MCN_MEDIATOR_URL=${MCN_MEDIATOR_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
 
       - name: Android debug build
