@@ -677,7 +677,7 @@ const translation = {
     SecondPageBody:
       'Le portefeuille Québec protège vos attestations numériques, une version digitale de vos permis et cartes d’identité.\n\nElles sont enregistrées de manière sécurisée, seulement sur votre appareil.',
     ThirdPageTitle: 'Partager uniquement ce qui est nécessaire',
-    ThirdPageBogy:
+    ThirdPageBoby:
       'Pour recevoir une attestation, vous devez lire le code QR qui vous sera présenté. \n\nLes informations seront communiquées grace à une communication privée et protégée.',
     FourthPageTitle: 'Prenez le contrôle de vos informations',
     FourthPageBody:

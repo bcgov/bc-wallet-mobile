@@ -679,7 +679,7 @@ const translation = {
     SecondPageBody:
       'The Quebec wallet protects your digital credentials, a digital version of your permits and identity card. \n\nThey are stored securely, only on your device.',
     ThirdPageTitle: 'Share only what is necessary',
-    ThirdPageBogy:
+    ThirdPageBoby:
       'To receive a credential, you must Capture the QR code that will be presented to you. \n\nThe information will be communicated through a private and protected communication.',
     FourthPageTitle: 'Take control of your information',
     FourthPageBody:
