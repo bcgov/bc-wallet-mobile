@@ -343,7 +343,7 @@ const translation = {
       CrossPatternValidation: 'Ne doit pas contenir une séquence en forme de croix.',
       OddOrEvenSequenceValidation: 'Ne doit pas contenir de série paire ou impaire.',
       NoRepetitionOfTheTwoSameNumbersValidation: 'Ne doit pas contenir de répétition de deux chiffres. (ex: 1212)',
-      NoRepetitionOfTheSameNumbersValidation: 'Ne doit pas contenir de répétition. (ex: 22)',
+      NoRepetitionOfTheSameNumbersValidation: 'Ne doit pas contenir de répétition. (ex: 222)',
       NoSeriesOfNumbersValidation: 'Ne doit pas contenir de série. (ex: 123)',
       PINOnlyContainDigitsValidation: 'Doit contenir des chiffres seulement.',
       PINTooShortValidation: 'Votre NIP doit contenir 6 chiffres.',
