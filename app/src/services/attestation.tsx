@@ -3,6 +3,8 @@ import { useAgent } from '@aries-framework/react-hooks'
 import { generateKey, appleAttestation } from '@hyperledger/aries-react-native-attestation'
 import { Buffer } from 'buffer'
 import React, { createContext, useContext, useState } from 'react'
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Subscription } from 'rxjs'
 
 enum Action {
   RequestAttestation = 'request_attestation',
@@ -25,6 +27,10 @@ type ChallengeResponseInfrastructureMessage = InfrastructureMessage & {
   attestation_object: string
 }
 
+type AttestationProviderParams = {
+  children: React.ReactNode
+}
+
 export type EventListenerFn = (event: BaseEvent) => void
 
 export interface AttestationX {
@@ -34,9 +40,9 @@ export interface AttestationX {
 
 export const AttestationContext = createContext<AttestationX>(null as unknown as AttestationX)
 
-export const AttestationProvider: React.FC = ({ children }) => {
+export const AttestationProvider: React.FC<AttestationProviderParams> = ({ children }) => {
   const { agent } = useAgent()
-  const [subscription, setSubscription] = useState<any>()
+  const [subscription, setSubscription] = useState<Subscription>()
 
   const isInfrastructureMessage = (record: BasicMessageRecord): boolean => {
     if (record.content) {
