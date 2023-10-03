@@ -116,7 +116,8 @@ const translation = {
     "Development": "Development (PT-BR)",
     "Test": "Test (PT-BR)",
     "DeveloperMode": "Developer mode",
-    "Toggle": "Toggle Developer Mode"
+    "Toggle": "Toggle Developer Mode",
+    "AttestationSupport": "Attestation support (PT-BR)",
   },
   "Tips": {
     "Header": "Tips (PT-BR)",

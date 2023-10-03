@@ -31,6 +31,7 @@ import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
 import WebDisplay from './src/screens/WebDisplay'
+import { AttestationProvider } from './src/services/attestation'
 import { initialState, reducer } from './src/store'
 
 const { theme, localization, configuration } = bcwallet
@@ -112,32 +113,34 @@ const App = () => {
           <ConfigurationProvider value={configuration}>
             <AuthProvider>
               <NetworkProvider>
-                <StatusBar
-                  barStyle="light-content"
-                  hidden={false}
-                  backgroundColor={theme.ColorPallet.brand.primary}
-                  translucent={false}
-                />
-                <NetInfo />
-                <ErrorModal />
-                <WebDisplay
-                  destinationUrl={surveyMonkeyUrl}
-                  exitUrl={surveyMonkeyExitUrl}
-                  visible={surveyVisible}
-                  onClose={toggleSurveyVisibility}
-                />
-                <TourProvider
-                  homeTourSteps={homeTourSteps}
-                  credentialsTourSteps={credentialsTourSteps}
-                  credentialOfferTourSteps={credentialOfferTourSteps}
-                  proofRequestTourSteps={proofRequestTourSteps}
-                  overlayColor={'gray'}
-                  overlayOpacity={0.7}
-                >
-                  <RootStack />
-                </TourProvider>
-                <Toast topOffset={15} config={toastConfig} />
-                <PushNotifications />
+                <AttestationProvider>
+                  <StatusBar
+                    barStyle="light-content"
+                    hidden={false}
+                    backgroundColor={theme.ColorPallet.brand.primary}
+                    translucent={false}
+                  />
+                  <NetInfo />
+                  <ErrorModal />
+                  <WebDisplay
+                    destinationUrl={surveyMonkeyUrl}
+                    exitUrl={surveyMonkeyExitUrl}
+                    visible={surveyVisible}
+                    onClose={toggleSurveyVisibility}
+                  />
+                  <TourProvider
+                    homeTourSteps={homeTourSteps}
+                    credentialsTourSteps={credentialsTourSteps}
+                    credentialOfferTourSteps={credentialOfferTourSteps}
+                    proofRequestTourSteps={proofRequestTourSteps}
+                    overlayColor={'gray'}
+                    overlayOpacity={0.7}
+                  >
+                    <RootStack />
+                  </TourProvider>
+                  <Toast topOffset={15} config={toastConfig} />
+                  <PushNotifications />
+                </AttestationProvider>
               </NetworkProvider>
             </AuthProvider>
           </ConfigurationProvider>
