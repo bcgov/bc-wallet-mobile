@@ -330,9 +330,9 @@ const translation = {
       CrossPatternValidation: 'Votre NIP contient une séquence en forme de croix. Veuillez choisir un autre NIP.',
       OddOrEvenSequenceValidation: 'Votre NIP contient une suite paire ou impaire. Veuillez choisir un autre NIP. ',
       NoRepetitionOfTheTwoSameNumbersValidation:
-        'Votre NIP contient une répétition (p. ex.: 111). Veuillez choisir un autre NIP.',
+        'Votre NIP contient une répétition de deux chiffres (p. ex.: 1212). Veuillez choisir un autre NIP.',
       NoRepetitionOfTheSameNumbersValidation:
-        'Votre NIP contient une répétition de deux (2) chiffres (p. ex.: 1313). Veuillez choisir un autre NIP. ',
+        'Votre NIP contient une répétition de deux (2) chiffres (p. ex.: 22). Veuillez choisir un autre NIP. ',
       NoSeriesOfNumbersValidation: 'Une série de nombres consécutifs a été détectée dans votre NIP.',
       PINOnlyContainDigitsValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
       PINTooShortValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
@@ -342,9 +342,9 @@ const translation = {
     Helper: {
       CrossPatternValidation: 'Ne doit pas contenir une séquence en forme de croix.',
       OddOrEvenSequenceValidation: 'Ne doit pas contenir de série paire ou impaire.',
-      NoRepetitionOfTheTwoSameNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
-      NoRepetitionOfTheSameNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
-      NoSeriesOfNumbersValidation: 'Ne doit pas contenir de série ou de répétition.',
+      NoRepetitionOfTheTwoSameNumbersValidation: 'Ne doit pas contenir de répétition de deux chiffres. (ex: 1212)',
+      NoRepetitionOfTheSameNumbersValidation: 'Ne doit pas contenir de répétition. (ex: 22)',
+      NoSeriesOfNumbersValidation: 'Ne doit pas contenir de série. (ex: 123)',
       PINOnlyContainDigitsValidation: 'Doit contenir des chiffres seulement.',
       PINTooShortValidation: 'Votre NIP doit contenir 6 chiffres.',
       PINTooLongValidation: 'Votre NIP doit contenir 6 chiffres.',
