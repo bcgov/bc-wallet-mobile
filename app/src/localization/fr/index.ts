@@ -115,8 +115,9 @@ const translation = {
     "Production": "Production (FR)",
     "Development": "Development (FR)",
     "Test": "Test (FR)",
-    "DeveloperMode": "Developer mode",
-    "Toggle": "Toggle Developer Mode"
+    "DeveloperMode": "Developer mode (FR)",
+    "Toggle": "Toggle Developer Mode (FR)",
+    "AttestationSupport": "Attestation support (FR)",
   },
   "Tips": {
     "Header": "Tips (FR)",
