@@ -118,9 +118,8 @@ jobs:
           yarn install --immutable && \
           git status
 
-      # Ledgers are missing namespace, not compatible.
-      # - name: Update ledgers
-      #   uses: ./.github/workflows/actions/update-ledgers
+      - name: Update ledgers
+        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
