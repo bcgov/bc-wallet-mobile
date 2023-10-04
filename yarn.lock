@@ -3915,15 +3915,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-oca@npm:1.0.0-alpha.72":
-  version: 1.0.0-alpha.72
-  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.72"
+"@hyperledger/aries-oca@npm:1.0.0-alpha.108":
+  version: 1.0.0-alpha.108
+  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.108"
   dependencies:
     "@aries-framework/anoncreds": ^0.4.0
-    "@aries-framework/core": 0.4.0
+    "@aries-framework/core": ^0.4.0
     axios: ^1.4.0
     lodash.startcase: ^4.4.0
-  checksum: fb0521334e43981f9f39c913ad1a007c3aad36cf39c1288ae75d274c61fac33d55413b54247d44636c821d9e5e739d4bd00e6879cd461ecfd05d17f596b7e0fd
+  checksum: 3fc7887c3f7d341b5b8cce0605fa81905a3461225ff33764cc3ac774c0905fa21d6391addf54167eace5eb11b0904d631d102fe1b8503f1f21b7053ad3df2657
   languageName: node
   linkType: hard
 
