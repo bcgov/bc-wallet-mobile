@@ -69,9 +69,9 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
+          distribution: "zulu"
           java-version: 11
-          cache: 'gradle'
+          cache: "gradle"
           server-id: github
           settings-path: ${{ github.workspace }}
 
@@ -118,9 +118,8 @@ jobs:
           yarn install --immutable && \
           git status
 
-      # Ledgers are missing namespace, not compatible.
-      # - name: Update ledgers
-      #   uses: ./.github/workflows/actions/update-ledgers
+      - name: Update ledgers
+        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
@@ -155,7 +154,7 @@ jobs:
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
-      
+
       - name: Set Push Notification Capability
         working-directory: app/ios/AriesBifold
         env:
@@ -205,10 +204,10 @@ jobs:
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
 
-#      - name: Publish to GitHub Packages Registry
-#        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=ios -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=export/BCWallet.ipa
-#        env:
-#          GITHUB_TOKEN: ${{ github.token }}
+      #      - name: Publish to GitHub Packages Registry
+      #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=ios -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=export/BCWallet.ipa
+      #        env:
+      #          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
@@ -267,15 +266,15 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
+          distribution: "zulu"
           java-version: 11
-          cache: 'gradle'
+          cache: "gradle"
           server-id: github
           settings-path: ${{ github.workspace }}
 
-      # Ledgers are missing namespace, not compatible.
-      # - name: Updaet ledgers
-      #   uses: ./.github/workflows/actions/update-ledgers
+      - name: Update ledgers
+        uses: ./.github/workflows/actions/update-ledgers
+
       - name: Install dependencies
         working-directory: ./
         run: |
@@ -312,14 +311,14 @@ jobs:
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
           grep "SHA1"
 
-#      - name: Android debug build
-#        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
-#        working-directory: app/android
-#        env:
-#          VERSION_CODE: ${{ env.appBuildNumber }}
-#          VERSION_NAME: ${{ env.appBuildVersion }}
-#        run: |
-#          ./gradlew --no-daemon bundleRelease
+      #      - name: Android debug build
+      #        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
+      #        working-directory: app/android
+      #        env:
+      #          VERSION_CODE: ${{ env.appBuildNumber }}
+      #          VERSION_NAME: ${{ env.appBuildVersion }}
+      #        run: |
+      #          ./gradlew --no-daemon bundleRelease
 
       - name: Android release build
         #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
@@ -335,10 +334,10 @@ jobs:
           ./gradlew assembleRelease && \
           find . -type f -name '*.apk'
 
-#      - name: Publish to GitHub Packages Registry
-#        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=android -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
-#        env:
-#          GITHUB_TOKEN: ${{ github.token }}
+      #      - name: Publish to GitHub Packages Registry
+      #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=android -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
+      #        env:
+      #          GITHUB_TOKEN: ${{ github.token }}
       - name: List Artifacts
         #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         run: |
