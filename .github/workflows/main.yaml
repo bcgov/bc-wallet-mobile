@@ -68,19 +68,10 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: "zulu"
-          java-version: 11
-          cache: "gradle"
-          server-id: github
-          settings-path: ${{ github.workspace }}
-
       - name: Configure ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7
+          working-directory: ./packages/legacy/app
 
       - name: What XCode are we using?
         run: |
