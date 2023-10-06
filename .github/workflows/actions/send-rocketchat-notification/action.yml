@@ -11,11 +11,14 @@ inputs:
     description: The status of the job
     required: true
   webhook_url:
-    description: The RocketChat Webhook URL
+    description: |
+      The RocketChat Webhook URL as copied from Rocket.Chat.
     required: true
-  webhook_token:
-    description: The access token for the Webhook URL
-    required: true
+  github_token:
+    description: |
+      The GitHub access token for the action so it can fetch
+      information from the GitHub API.
+    required: false
 
 runs:
   using: composite
@@ -30,4 +33,4 @@ runs:
         channel: "#bc-digital-wallet-core-team"
         commit: true
         url: ${{ inputs.webhook_url }}
-        token: ${{ inputs.webhook_token }}
+        token: ${{ inputs.github_token }}
