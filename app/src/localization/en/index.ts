@@ -845,6 +845,15 @@ const translation = {
     CQEN: 'CQEN',
     MCN: 'MCN',
   },
+  ProofRequestTemplates: {
+    ProofRequestForAgeValidationName: 'Age validation (18+)',
+    ProofRequestForAgeValidationDescription: 'Verify that the user is 18 years old or older',
+    ProofRequestForFullNameName: 'Request for full name',
+    ProofRequestForFullNameDescription: "Request the user's full name",
+    ProofRequestForFullNameAndAgeName: 'Request for full name and age validation (18+)',
+    ProofRequestForFullNameAndAgeDescription:
+      "Request the user's full name and validation that they are 18 years old or older",
+  },
 }
 
 export default translation
