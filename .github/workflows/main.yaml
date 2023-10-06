@@ -118,7 +118,7 @@ jobs:
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
         working-directory: app/ios
         run: |
-          bundle install --frozen --gemfile=${BUNDLE_GEMFILE} && \ && \
+          bundle install --frozen --gemfile=${BUNDLE_GEMFILE} && \
           pod install && \
           git status && \
           git diff Podfile.lock
