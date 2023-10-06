@@ -59,3 +59,7 @@ app/patches/react-native-gifted-chat*.patch
 
 # xcode
 xcuserdata/
+.xcode.env.local
+
+# gem
+app/vendor/bundle/**
