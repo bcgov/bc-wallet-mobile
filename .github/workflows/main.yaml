@@ -71,7 +71,7 @@ jobs:
       - name: Configure ruby
         uses: ruby/setup-ruby@v1
         with:
-          working-directory: ./packages/legacy/app
+          working-directory: ./app
 
       - name: What XCode are we using?
         run: |
