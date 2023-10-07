@@ -1,11 +1,11 @@
-import { testIdWithKey, HeaderButton, ButtonLocation } from 'aries-bifold'
+import { testIdWithKey, HeaderButton, ButtonLocation } from '@hyperledger/aries-bifold-core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter } from 'react-native'
 
 import { BCWalletEventTypes } from '../events/eventTypes'
 
-const AddCredentialButton: React.FC = () => {
+const AddCredentialButton = () => {
   const { t } = useTranslation()
 
   const activateSlider = useCallback(() => {

@@ -24,8 +24,7 @@
   },
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "scripts": {
-    "build:bifold": "yarn workspace aries-bifold prepack",
-    "preinstall": "yarn build:bifold && npx husky install .husky",
+    "preinstall": "npx husky install .husky",
     "lint:app": "cd app && yarn lint",
     "lint": "yarn lint:app",
     "prettier:app": "cd app && yarn prettier",
@@ -37,7 +36,7 @@
   },
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
-    "commitlint": "^11.0.0",
+    "commitlint": "^17.7.1",
     "husky": "^7.0.0",
     "npm-run-all": "^4.1.5"
   },
@@ -45,7 +44,7 @@
     "@hyperledger/aries-oca": "1.0.0-alpha.108",
     "@hyperledger/indy-vdr-react-native@^0.1.0": "patch:@hyperledger/indy-vdr-react-native@npm:0.1.0#./.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.1.0-10c696b320.patch",
     "react": "18.2.0",
-    "@types/react": "18.0.24",
+    "@types/react": "18.2.25",
     "@react-navigation/core": "6.1.0",
     "@react-navigation/native": "6.0.6",
     "@react-navigation/stack": "6.0.11",
@@ -61,6 +60,7 @@
     "@aries-framework/anoncreds@0.4.0": "patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch",
     "@hyperledger/aries-bifold-core": "portal:bifold/packages/legacy/core",
     "@hyperledger/aries-oca": "portal:bifold/packages/oca",
-    "@hyperledger/aries-react-native-attestation": "portal:bifold/packages/react-native-attestation"
+    "@hyperledger/aries-react-native-attestation": "portal:bifold/packages/react-native-attestation",
+    "@hyperledger/aries-bifold-verifier": "portal:bifold/packages/verifier"
   }
 }

@@ -1,5 +1,3 @@
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import {
   Button,
   ButtonType,
@@ -11,7 +9,9 @@ import {
   testIdWithKey,
   useTheme,
   useStore,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
@@ -23,7 +23,7 @@ const digitalTrustHomeUrl = 'https://digital.gov.bc.ca/digital-trust/'
 const bcWebPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/home/privacy'
 const digitalWalletPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy'
 
-const Terms: React.FC = () => {
+const Terms = () => {
   const [store, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()

@@ -32,7 +32,7 @@ import {
   migrateToAskar,
   getAgentModules,
   createLinkSecretIfRequired,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
 import moment from 'moment'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -106,7 +106,7 @@ const resumeOnboardingAt = (
   iOS and Android launch screen to match the background color of
   of this view.
 */
-const Splash: React.FC = () => {
+const Splash = () => {
   const { width } = useWindowDimensions()
   const { agent, setAgent } = useAgent()
   const { t } = useTranslation()

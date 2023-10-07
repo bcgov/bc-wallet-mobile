@@ -1,4 +1,4 @@
-import { useTheme, TourStep, TourBox } from 'aries-bifold'
+import { useTheme, TourStep, TourBox } from '@hyperledger/aries-bifold-core'
 import * as React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, Text } from 'react-native'

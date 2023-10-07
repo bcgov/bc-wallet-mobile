@@ -5,7 +5,7 @@ import {
   reducer as bifoldReducer,
   defaultState,
   ReducerAction,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
 
 export interface IASEnvironment {
   name: string

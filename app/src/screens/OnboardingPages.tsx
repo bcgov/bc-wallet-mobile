@@ -12,7 +12,7 @@ import {
   Screens,
   OnboardingStackParams,
   ContentGradient,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native'
