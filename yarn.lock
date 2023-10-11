@@ -53,14 +53,14 @@ __metadata:
 
 "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.4.0
-  resolution: "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::version=0.4.0&hash=effd16&locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::version=0.4.0&hash=c6c7d3&locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@aries-framework/core": 0.4.0
     bn.js: ^5.2.1
     class-transformer: 0.5.1
     class-validator: 0.14.0
     reflect-metadata: ^0.1.13
-  checksum: 7f4d2e15f86ce64a402c65436f05d9a9a66e7b8dcaf50b9206985f8e5a4544ca1a4a1bbda0a6c953fc683859e2ba270464ece54b0f323fc6c10498cadc67f610
+  checksum: 64d2c17e308e6fcbea6da97d0f337af5f5d0e37ba5b9e1e458eb59dec0252a85b20ba11fa876d8bb1d279e2a69ebe1a77cc117d3062a7f14dff063e2c9d34aba
   languageName: node
   linkType: hard
 
@@ -6096,7 +6096,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash.startcase@npm:^4.4.6":
+"@types/lodash.startcase@npm:^4.4.6, @types/lodash.startcase@npm:^4.4.7":
   version: 4.4.7
   resolution: "@types/lodash.startcase@npm:4.4.7"
   dependencies:
@@ -7503,7 +7503,7 @@ __metadata:
     "@formatjs/intl-relativetimeformat": 9.3.1
     "@hyperledger/anoncreds-react-native": ^0.1.0
     "@hyperledger/aries-askar-react-native": ^0.1.1
-    "@hyperledger/aries-oca": 1.0.0-alpha.72
+    "@hyperledger/aries-oca": ^1.0.0
     "@hyperledger/indy-vdr-react-native": ^0.1.0
     "@react-native-async-storage/async-storage": 1.15.11
     "@react-native-community/eslint-config": ^3.2.0
@@ -7520,21 +7520,21 @@ __metadata:
     "@testing-library/react-native": ^12.3.0
     "@types/jest": ^29.5.5
     "@types/lodash.flatten": ^4.4.6
-    "@types/lodash.startcase": ^4.4.6
+    "@types/lodash.startcase": ^4.4.7
     "@types/react": ^18.0.24
-    "@types/react-native": 0.63.53
+    "@types/react-native": 0.71.5
     "@types/react-native-vector-icons": ^6.4.6
     "@types/react-test-renderer": ^18.0.1
     "@typescript-eslint/eslint-plugin": ^6.6.0
     "@typescript-eslint/parser": ^6.6.0
-    axios: ^0.21.0
+    axios: ^1.4.0
     babel-jest: ^27.5.1
     babel-plugin-module-resolver: ^5.0.0
     commitlint: ^17.7.1
     eslint: ^8.48.0
     eslint-import-resolver-typescript: ^2.5.0
     eslint-plugin-import: ^2.28.1
-    eslint-plugin-prettier: ^3.3.1
+    eslint-plugin-prettier: ^4.0.0
     husky: ^7.0.0
     i18next: ^21.4.0
     install-peerdeps: ^3.0.3
@@ -7549,13 +7549,13 @@ __metadata:
     patch-package: ^6.4.4
     prettier: ^2.8.4
     query-string: ^7.0.1
-    react: ^18.2.0
+    react: "*"
     react-i18next: 11.13.0
-    react-native: ^0.72.4
+    react-native: "*"
     react-native-animated-pagination-dots: ^0.1.72
     react-native-argon2: ^2.0.1
     react-native-bouncy-checkbox: ^3.0.5
-    react-native-builder-bob: ^0.18.2
+    react-native-builder-bob: ^0.21.3
     react-native-camera: ^3.31.1
     react-native-collapsible: ^1.6.1
     react-native-config: ^1.4.2
@@ -7565,9 +7565,9 @@ __metadata:
     react-native-fs: ^2.16.6
     react-native-gesture-handler: ^1.10.3
     react-native-get-random-values: ^1.7.0
-    react-native-gifted-chat: ^2.4.0
+    react-native-gifted-chat: "*"
     react-native-keychain: ^8.1.1
-    react-native-localize: ^2.1.5
+    react-native-localize: ^2.2.4
     react-native-permissions: ^3.8.4
     react-native-qrcode-svg: ^6.2.0
     react-native-reanimated: ^3.4.2
@@ -7582,7 +7582,7 @@ __metadata:
     react-native-uuid: ^2.0.1
     react-native-vector-icons: ^10.0.0
     react-test-renderer: ^18.2.0
-    typescript: 4.4.3
+    typescript: ^5.0.4
     uuid: ^9.0.0
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
@@ -7604,7 +7604,7 @@ __metadata:
     "@formatjs/intl-relativetimeformat": 9.3.1
     "@hyperledger/anoncreds-react-native": ^0.1.0
     "@hyperledger/aries-askar-react-native": ^0.1.1
-    "@hyperledger/aries-oca": 1.0.0-alpha.72
+    "@hyperledger/aries-oca": 0.0.0
     "@hyperledger/indy-vdr-react-native": ^0.1.0
     "@react-native-async-storage/async-storage": 1.15.11
     "@react-native-community/masked-view": 0.1.11
@@ -7614,15 +7614,15 @@ __metadata:
     "@react-navigation/devtools": ^6.0.8
     "@react-navigation/native": 6.0.6
     "@react-navigation/stack": 6.0.11
-    axios: ^0.21.0
+    axios: ^1.4.0
     i18next: ^21.4.0
     lodash.flatten: ^4.4.0
     lodash.startcase: ^4.4.0
     moment: ^2.29.4
     query-string: ^7.0.1
-    react: ^18.2.0
+    react: "*"
     react-i18next: 11.13.0
-    react-native: ^0.72.4
+    react-native: "*"
     react-native-animated-pagination-dots: ^0.1.72
     react-native-argon2: ^2.0.1
     react-native-bouncy-checkbox: ^3.0.5
@@ -7649,7 +7649,7 @@ __metadata:
     react-native-toast-message: ^2.1.6
     react-native-uuid: ^2.0.1
     react-native-vector-icons: ^10.0.0
-    uuid: 8.3.2
+    uuid: ^9.0.0
   bin:
     bifold: bin/bifold
   languageName: unknown
@@ -11998,7 +11998,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-prettier@npm:^4.2.1":
+"eslint-plugin-prettier@npm:^4.0.0, eslint-plugin-prettier@npm:^4.2.1":
   version: 4.2.1
   resolution: "eslint-plugin-prettier@npm:4.2.1"
   dependencies:
@@ -19776,9 +19776,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-builder-bob@npm:^0.18.2":
-  version: 0.18.3
-  resolution: "react-native-builder-bob@npm:0.18.3"
+"react-native-builder-bob@npm:^0.21.3":
+  version: 0.21.3
+  resolution: "react-native-builder-bob@npm:0.21.3"
   dependencies:
     "@babel/core": ^7.18.5
     "@babel/plugin-proposal-class-properties": ^7.17.12
@@ -19805,7 +19805,7 @@ __metadata:
       optional: true
   bin:
     bob: bin/bob
-  checksum: 98770d20cecfde7f2b44bc0ad0222b4764f35703a2a20981b96b20250ccbe9ab946140a635e38f3786554286020a958cfc85c2b2934c66863f44678bd1bc22f0
+  checksum: 0a7b05926556dcba0ed9dbadd1316136886bcb054b2229ff58af6ba71178c0add0bcbd31d78b11683f05cacfd8ba408f1d50d7ec6c413ae694a51b11f02ea2de
   languageName: node
   linkType: hard
 
@@ -19944,7 +19944,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gifted-chat@npm:^2.4.0":
+"react-native-gifted-chat@npm:*, react-native-gifted-chat@npm:^2.4.0":
   version: 2.4.0
   resolution: "react-native-gifted-chat@npm:2.4.0"
   dependencies:
@@ -20003,7 +20003,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-localize@npm:^2.1.5":
+"react-native-localize@npm:^2.1.5, react-native-localize@npm:^2.2.4":
   version: 2.2.6
   resolution: "react-native-localize@npm:2.2.6"
   peerDependencies:
@@ -23062,16 +23062,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:4.4.3":
-  version: 4.4.3
-  resolution: "typescript@npm:4.4.3"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 05823f21796d450531a7e4ab299715d38fd9ded0e4ce7400876053f4b5166ca3dde7a68cecfe72d9086039f03c0b6edba36516fb10ed83c5837d9600532ea4c2
-  languageName: node
-  linkType: hard
-
 "typescript@npm:4.9.5":
   version: 4.9.5
   resolution: "typescript@npm:4.9.5"
@@ -23082,23 +23072,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.6.4 || ^5.0.0":
+"typescript@npm:^4.6.4 || ^5.0.0, typescript@npm:^5.0.4":
   version: 5.2.2
   resolution: "typescript@npm:5.2.2"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
   checksum: 7912821dac4d962d315c36800fe387cdc0a6298dba7ec171b350b4a6e988b51d7b8f051317786db1094bd7431d526b648aba7da8236607febb26cf5b871d2d3c
-  languageName: node
-  linkType: hard
-
-"typescript@patch:typescript@4.4.3#~builtin<compat/typescript>":
-  version: 4.4.3
-  resolution: "typescript@patch:typescript@npm%3A4.4.3#~builtin<compat/typescript>::version=4.4.3&hash=bbeadb"
-  bin:
-    tsc: bin/tsc
-    tsserver: bin/tsserver
-  checksum: 33a916819907e819430802c50405f18c187448d678696a81545f494a7ec16207f8c15340c945df62109bd1d951091a9f15f3d2eb931a3c889f962c8509017697
   languageName: node
   linkType: hard
 
@@ -23112,7 +23092,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.6.4 || ^5.0.0#~builtin<compat/typescript>":
+"typescript@patch:typescript@^4.6.4 || ^5.0.0#~builtin<compat/typescript>, typescript@patch:typescript@^5.0.4#~builtin<compat/typescript>":
   version: 5.2.2
   resolution: "typescript@patch:typescript@npm%3A5.2.2#~builtin<compat/typescript>::version=5.2.2&hash=ad5954"
   bin:
