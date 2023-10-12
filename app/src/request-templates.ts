@@ -14,7 +14,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
     { schema_id: 'Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0', issuer_did: 'Ui6HA36FvN83cEtmYYHxrn' },
   ]
 
-  const personSchema = 'XUxBrVSALWHLeycAUhrNr9:2:Person:1.0'
+  const personSchema = 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0'
   const verifiedPersonDevRestrictions = [
     // IDIM Person credential
     { schema_id: 'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0', issuer_did: '7xjfawcnyTUcduWVysLww5' }, // SIT
@@ -28,12 +28,13 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
   const verifiedPersonRestrictions = [
     // IDIM Person credential
     { schema_id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0', issuer_did: 'RGjWbW1eycP7FrMf4QJvX8' }, // Prod
+    { cred_def_id: 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person' },
     ...(useDevRestrictions ? verifiedPersonDevRestrictions : []),
   ]
 
   const personRestrictions = [...verifiedPersonRestrictions, ...openvpRestrictions]
 
-  const memberCardSchema = 'XUxBrVSALWHLeycAUhrNr9:2:Member Card:1.5.1'
+  const memberCardSchema = '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1'
   const memberCardDevRestrictions = [
     // LSBC Member Card
     { schema_id: '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1', issuer_did: '4xE68b6S5VRFrKMMG1U95M' }, // Prod
@@ -46,6 +47,7 @@ export const useProofRequestTemplates = (useDevRestrictions: boolean) => {
   const memberCardRestrictions = [
     // LSBC Member Card
     { schema_id: '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1', issuer_did: '4xE68b6S5VRFrKMMG1U95M' }, // Prod
+    { cred_def_id: '4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default' },
     ...(useDevRestrictions ? memberCardDevRestrictions : []),
   ]
 
