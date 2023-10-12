@@ -52,6 +52,8 @@ jobs:
   build-ios:
     needs: [check-ios-secrets]
     runs-on: macos-latest
+    env:
+      BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
     steps:
       - uses: actions/checkout@v2
 
@@ -65,7 +67,7 @@ jobs:
       - name: Configure ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7
+          working-directory: ./app
 
       - name: What XCode are we using?
         run: |
@@ -109,7 +111,7 @@ jobs:
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
         working-directory: app/ios
         run: |
-          gem install cocoapods && \
+          bundle install --frozen --gemfile=${BUNDLE_GEMFILE} && \
           pod install && \
           git status && \
           git diff Podfile.lock
