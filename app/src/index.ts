@@ -47,6 +47,7 @@ const configuration: ConfigurationContext = {
   settings: [],
   customNotification: {
     component: PersonCredential,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onCloseAction: (dispatch?: React.Dispatch<ReducerAction<any>>) => {
       if (dispatch) {
         dispatch({

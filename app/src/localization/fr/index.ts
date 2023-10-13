@@ -883,6 +883,19 @@ const translation = {
     ProofRequestForFullNameAndAgeName: "Demande du nom complet et preuve d'âge (18+)",
     ProofRequestForFullNameAndAgeDescription: "Demander le nom complet et la preuve que l'utilisateur a 18 ans ou plus",
   },
+  PushNotifications: {
+    BulletFour: 'new messages (FR)',
+    BulletOne: 'new credential offers (FR)',
+    BulletThree: 'updates to your credentials (FR)',
+    BulletTwo: 'new proof requests (FR)',
+    DeveloperTitle: 'Push Notifications (FR)',
+    HeadingOne: 'It is recommended you allow this app to receive push notifications. (FR)',
+    HeadingTwo: 'Notifications will be sent to you when you receive: (FR)',
+    NotAvailable: ' (Not Available) (FR)',
+    Title: 'Notifications (FR)',
+    PushNotifications: 'Push Notifications (FR)',
+    Continue: 'Continue (FR)',
+  },
 }
 
 export default translation

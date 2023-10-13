@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./lib",
     "declaration": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true
   },
   "exclude": ["node_modules", "metro.config.js", "babel.config.js", "jest.config.js", "jestSetup.js"]

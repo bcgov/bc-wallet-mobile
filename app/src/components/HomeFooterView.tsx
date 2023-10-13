@@ -1,12 +1,10 @@
 import { Button, ButtonType, testIdWithKey, useTheme } from 'aries-bifold'
-import React, { useState } from 'react'
+import React, { PropsWithChildren, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-interface HomeFooterViewProps {
-  children?: any
-}
+interface HomeFooterViewProps extends PropsWithChildren {}
 
 const HomeFooterView: React.FC<HomeFooterViewProps> = ({ children }) => {
   const { ColorPallet } = useTheme()

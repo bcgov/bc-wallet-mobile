@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native'
 import {
   Stacks,
   Screens,
-  Agent,
   AgentProvider,
   TourProvider,
   AuthProvider,
@@ -25,10 +24,12 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import qcwallet from './src'
+import PushNotifications from './src/components/PushNotifications'
 import { credentialOfferTourSteps } from './src/components/tours/CredentialOfferTourSteps'
 import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
+import { AttestationProvider } from './src/services/attestation'
 import { initialState, reducer } from './src/store'
 
 const { theme, localization, configuration } = qcwallet
@@ -39,8 +40,6 @@ const App = () => {
   useMemo(() => {
     initStoredLanguage().then()
   }, [])
-
-  const [agent] = useState<Agent | undefined>(undefined)
   const [surveyVisible, setSurveyVisible] = useState(false)
   const { t } = useTranslation()
   const { navigate } = useNavigation()
@@ -107,30 +106,33 @@ const App = () => {
 
   return (
     <StoreProvider initialState={initialState} reducer={reducer}>
-      <AgentProvider agent={agent}>
+      <AgentProvider>
         <ThemeProvider value={theme}>
           <ConfigurationProvider value={configuration}>
             <AuthProvider>
               <NetworkProvider>
-                <StatusBar
-                  barStyle="light-content"
-                  hidden={false}
-                  backgroundColor={theme.ColorPallet.brand.primary}
-                  translucent={false}
-                />
-                <NetInfo />
-                <ErrorModal />
-                <TourProvider
-                  homeTourSteps={homeTourSteps}
-                  credentialsTourSteps={credentialsTourSteps}
-                  credentialOfferTourSteps={credentialOfferTourSteps}
-                  proofRequestTourSteps={proofRequestTourSteps}
-                  overlayColor={'gray'}
-                  overlayOpacity={0.7}
-                >
-                  <RootStack />
-                </TourProvider>
-                <Toast topOffset={15} config={toastConfig} />
+                <AttestationProvider>
+                  <StatusBar
+                    barStyle="light-content"
+                    hidden={false}
+                    backgroundColor={theme.ColorPallet.brand.primary}
+                    translucent={false}
+                  />
+                  <NetInfo />
+                  <ErrorModal />
+                  <TourProvider
+                    homeTourSteps={homeTourSteps}
+                    credentialsTourSteps={credentialsTourSteps}
+                    credentialOfferTourSteps={credentialOfferTourSteps}
+                    proofRequestTourSteps={proofRequestTourSteps}
+                    overlayColor={'gray'}
+                    overlayOpacity={0.7}
+                  >
+                    <RootStack />
+                    <PushNotifications />
+                  </TourProvider>
+                  <Toast topOffset={15} config={toastConfig} />
+                </AttestationProvider>
               </NetworkProvider>
             </AuthProvider>
           </ConfigurationProvider>

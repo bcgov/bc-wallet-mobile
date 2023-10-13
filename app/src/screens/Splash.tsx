@@ -40,7 +40,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
-import { BCDispatchAction, BCLocalStorageKeys } from '../store'
+import { useAttestation } from '../services/attestation'
+import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
 enum InitErrorTypes {
   Onboarding,
@@ -89,9 +90,9 @@ const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean 
   of this view.
 */
 const Splash: React.FC = () => {
-  const { setAgent } = useAgent()
+  const { agent, setAgent } = useAgent()
   const { t } = useTranslation()
-  const [store, dispatch] = useStore()
+  const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet } = useTheme()
@@ -114,6 +115,7 @@ const Splash: React.FC = () => {
     t('Init.SettingAgent'),
     t('Init.Finishing'),
   ]
+  const { start, stop } = useAttestation()
 
   const setStep = (stepIdx: number) => {
     setStepText(steps[stepIdx])
@@ -165,6 +167,20 @@ const Splash: React.FC = () => {
     },
   })
 
+  useEffect(() => {
+    if (!agent) {
+      return
+    }
+
+    if (!store.developer.attestationSupportEnabled) {
+      stop()
+      return
+    }
+
+    start()
+  }, [agent, store.developer.attestationSupportEnabled])
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
     try {
       const data = await AsyncStorage.getItem(key)

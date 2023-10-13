@@ -1,15 +1,19 @@
+import { useAgent } from '@aries-framework/react-hooks'
 import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import { BCState } from '../store'
+import * as PushNotificationHelper from '../helpers/PushNotificationsHelper'
+import { useAttestation } from '../services/attestation'
+import { BCDispatchAction, BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 
 const Settings: React.FC = () => {
+  const { agent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
@@ -23,6 +27,12 @@ const Settings: React.FC = () => {
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
+  const [enablePushNotifications, setEnablePushNotifications] = useState(false)
+  const [pushNotificationCapable, setPushNotificationCapable] = useState(true)
+  const [attestationSupportEnabled, setAttestationSupportEnabled] = useState(
+    !!store.developer.attestationSupportEnabled
+  )
+  const { start, stop } = useAttestation()
 
   const styles = StyleSheet.create({
     container: {
@@ -63,6 +73,19 @@ const Settings: React.FC = () => {
     },
   })
 
+  useEffect(() => {
+    if (!agent) {
+      return
+    }
+
+    if (!attestationSupportEnabled) {
+      stop()
+      return
+    }
+
+    start()
+  }, [attestationSupportEnabled])
+
   const shouldDismissModal = () => {
     setEnvironmentModalVisible(false)
   }
@@ -78,6 +101,7 @@ const Settings: React.FC = () => {
     title: string
     accessibilityLabel?: string
     testID?: string
+    children?: React.ReactNode
     onPress?: () => void
   }> = ({ title, accessibilityLabel, testID, onPress, children }) => (
     <View style={[styles.section, { flexDirection: 'row' }]}>
@@ -135,7 +159,8 @@ const Settings: React.FC = () => {
   }
 
   const toggleDevVerifierTemplatesSwitch = () => {
-    // if we switch on dev templates we can assume the user also wants to enable the verifier capability
+    // if we switch on dev templates we can assume the user also
+    // wants to enable the verifier capability
     if (!useDevVerifierTemplates) {
       dispatch({
         type: DispatchAction.USE_VERIFIER_CAPABILITY,
@@ -163,7 +188,48 @@ const Settings: React.FC = () => {
       type: DispatchAction.PREVENT_AUTO_LOCK,
       payload: [!preventAutoLock],
     })
+
     setPreventAutoLock((previousState) => !previousState)
+  }
+
+  const getPushNotificationCapable = async () => {
+    if (!agent) return
+    if ((await PushNotificationHelper.isMediatorCapable(agent)) === true) setPushNotificationCapable(true)
+    else setPushNotificationCapable(false)
+  }
+
+  const initializePushNotificationsToggle = async () => {
+    setEnablePushNotifications(await PushNotificationHelper.isEnabled())
+  }
+
+  const toggleDevPushNotificationsSwitch = () => {
+    if (!pushNotificationCapable || !agent) {
+      return
+    }
+
+    if (enablePushNotifications) {
+      PushNotificationHelper.setDeviceInfo(agent, true)
+    } else {
+      PushNotificationHelper.setup(agent)
+    }
+
+    setEnablePushNotifications(!enablePushNotifications)
+  }
+
+  useEffect(() => {
+    if (agent) {
+      getPushNotificationCapable()
+      initializePushNotificationsToggle()
+    }
+  }, [agent])
+
+  const toggleAttestationSupport = () => {
+    dispatch({
+      type: BCDispatchAction.ATTESTATION_SUPPORT,
+      payload: [!attestationSupportEnabled],
+    })
+
+    setAttestationSupportEnabled((previousState) => !previousState)
   }
 
   return (
@@ -285,6 +351,38 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={togglePreventAutoLockSwitch}
             value={preventAutoLock}
+          />
+        </SectionRow>
+        <SectionRow
+          title={
+            t('PushNotifications.PushNotifications') +
+            (pushNotificationCapable ? '' : t('PushNotifications.NotAvailable'))
+          }
+          accessibilityLabel={
+            t('PushNotifications.PushNotifications') +
+            (pushNotificationCapable ? '' : t('PushNotifications.NotAvailable'))
+          }
+          testID={testIdWithKey('PushNotificationsSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={enablePushNotifications ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleDevPushNotificationsSwitch}
+            value={enablePushNotifications}
+          />
+        </SectionRow>
+        <SectionRow
+          title={t('Developer.AttestationSupport')}
+          accessibilityLabel={t('Developer.AttestationSupport')}
+          testID={testIdWithKey('AttestationSupportSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={preventAutoLock ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleAttestationSupport}
+            value={attestationSupportEnabled}
           />
         </SectionRow>
       </ScrollView>
