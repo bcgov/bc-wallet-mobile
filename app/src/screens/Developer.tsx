@@ -6,7 +6,6 @@ import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 're
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import * as PushNotificationHelper from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
 import { BCDispatchAction, BCState } from '../store'
 
@@ -27,8 +26,6 @@ const Settings: React.FC = () => {
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
-  const [enablePushNotifications, setEnablePushNotifications] = useState(false)
-  const [pushNotificationCapable, setPushNotificationCapable] = useState(true)
   const [attestationSupportEnabled, setAttestationSupportEnabled] = useState(
     !!store.developer.attestationSupportEnabled
   )
@@ -192,37 +189,6 @@ const Settings: React.FC = () => {
     setPreventAutoLock((previousState) => !previousState)
   }
 
-  const getPushNotificationCapable = async () => {
-    if (!agent) return
-    if ((await PushNotificationHelper.isMediatorCapable(agent)) === true) setPushNotificationCapable(true)
-    else setPushNotificationCapable(false)
-  }
-
-  const initializePushNotificationsToggle = async () => {
-    setEnablePushNotifications(await PushNotificationHelper.isEnabled())
-  }
-
-  const toggleDevPushNotificationsSwitch = () => {
-    if (!pushNotificationCapable || !agent) {
-      return
-    }
-
-    if (enablePushNotifications) {
-      PushNotificationHelper.setDeviceInfo(agent, true)
-    } else {
-      PushNotificationHelper.setup(agent)
-    }
-
-    setEnablePushNotifications(!enablePushNotifications)
-  }
-
-  useEffect(() => {
-    if (agent) {
-      getPushNotificationCapable()
-      initializePushNotificationsToggle()
-    }
-  }, [agent])
-
   const toggleAttestationSupport = () => {
     dispatch({
       type: BCDispatchAction.ATTESTATION_SUPPORT,
@@ -351,25 +317,6 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={togglePreventAutoLockSwitch}
             value={preventAutoLock}
-          />
-        </SectionRow>
-        <SectionRow
-          title={
-            t('PushNotifications.PushNotifications') +
-            (pushNotificationCapable ? '' : t('PushNotifications.NotAvailable'))
-          }
-          accessibilityLabel={
-            t('PushNotifications.PushNotifications') +
-            (pushNotificationCapable ? '' : t('PushNotifications.NotAvailable'))
-          }
-          testID={testIdWithKey('PushNotificationsSwitch')}
-        >
-          <Switch
-            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={enablePushNotifications ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
-            onValueChange={toggleDevPushNotificationsSwitch}
-            value={enablePushNotifications}
           />
         </SectionRow>
         <SectionRow

@@ -66,8 +66,6 @@
     "@react-native-async-storage/async-storage": "1.15.11",
     "@react-native-community/masked-view": "0.1.11",
     "@react-native-community/netinfo": "^9.3.0",
-    "@react-native-firebase/app": "^14.12.0",
-    "@react-native-firebase/messaging": "^14.12.0",
     "@react-navigation/bottom-tabs": "6.0.9",
     "@react-navigation/devtools": "6.0.18",
     "@react-navigation/native": "6.0.6",

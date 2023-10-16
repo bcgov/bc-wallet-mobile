@@ -24,11 +24,6 @@ end
 target 'AriesBifold' do
   config = use_native_modules!
 
-  pod 'Firebase', :modular_headers => true
-  pod 'FirebaseCore', :modular_headers => true
-  pod 'FirebaseCoreInternal', :modular_headers => true
-  pod 'GoogleUtilities', :modular_headers => true
-
   #permissions_path = '../node_modules/react-native-permissions/ios'
   #pod 'Permission-Camera', :path => "#{permissions_path}/Camera"
   #pod 'Permission-Notifications', :path => "#{permissions_path}/Notifications"
