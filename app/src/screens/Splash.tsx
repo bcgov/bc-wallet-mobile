@@ -222,7 +222,7 @@ const Splash: React.FC = () => {
         payload: [environment],
       })
     }
-    return environment?.iasAgentInviteUrl ?? Config.CQEN_MEDIATOR_URL
+    return environment?.iasAgentInviteUrl ?? Config.MCN_MEDIATOR_URL
   }
 
   useEffect(() => {

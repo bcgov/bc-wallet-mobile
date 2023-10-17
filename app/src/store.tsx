@@ -45,13 +45,13 @@ export const BCDispatchAction = {
 
 export const iasEnvironments: Array<IASEnvironment> = [
   {
-    name: 'CQEN',
-    iasAgentInviteUrl: Config.CQEN_MEDIATOR_URL ?? '',
+    name: 'MCN',
+    iasAgentInviteUrl: Config.MCN_MEDIATOR_URL ?? '',
     iasPortalUrl: '',
   },
   {
-    name: 'MCN',
-    iasAgentInviteUrl: Config.MCN_MEDIATOR_URL ?? '',
+    name: 'CQEN',
+    iasAgentInviteUrl: Config.CQEN_MEDIATOR_URL ?? '',
     iasPortalUrl: '',
   },
 ]
