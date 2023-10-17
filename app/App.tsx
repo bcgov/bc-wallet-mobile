@@ -17,9 +17,9 @@ import {
   initLanguages,
   testIdWithKey,
 } from 'aries-bifold'
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Linking, StatusBar } from 'react-native'
+import { StatusBar } from 'react-native'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
@@ -39,40 +39,10 @@ const App = () => {
   useMemo(() => {
     initStoredLanguage().then()
   }, [])
-  const [surveyVisible, setSurveyVisible] = useState(false)
   const { t } = useTranslation()
   const { navigate } = useNavigation()
-  const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
-
-  const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
 
   const settings = [
-    {
-      header: {
-        title: t('Settings.Help'),
-        icon: { name: 'help' },
-      },
-      data: [
-        {
-          title: t('Settings.HelpUsingBCWallet'),
-          accessibilityLabel: t('Settings.HelpUsingBCWallet'),
-          testID: testIdWithKey('HelpUsingBCWallet'),
-          onPress: () => Linking.openURL(helpLink),
-        },
-        {
-          title: t('Settings.GiveFeedback'),
-          accessibilityLabel: t('Settings.GiveFeedback'),
-          testID: testIdWithKey('GiveFeedback'),
-          onPress: toggleSurveyVisibility,
-        },
-        {
-          title: t('Settings.ReportAProblem'),
-          accessibilityLabel: t('Settings.ReportAProblem'),
-          testID: testIdWithKey('ReportAProblem'),
-          onPress: toggleSurveyVisibility,
-        },
-      ],
-    },
     {
       header: {
         title: t('Settings.MoreInformation'),
