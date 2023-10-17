@@ -62,7 +62,7 @@ yarn install
 
 ## Configuration
 
-In the `./app/` directory add an `.env` file containing:
+In the `./app/` directory copy the .env.sample `cp .env.sample .env`
 
 ```
 MEDIATOR_URL=<url>

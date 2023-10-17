@@ -21,6 +21,11 @@ on:
       - bifold
       - .yarn/**
       - .github/workflows/**
+      - .gitmodules
+      - package.json
+      - yarn.lock
+      - .yarnrc.yml
+      - .yarn/**
 
 jobs:
   check-android-secrets:
@@ -104,7 +109,7 @@ jobs:
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable  && \
+          yarn install --immutable && \
           git status
 
       - name: Install iOS dependencies
@@ -138,6 +143,14 @@ jobs:
           echo "CQEN_MEDIATOR_URL=${CQEN_MEDIATOR_URL}" >.env
           echo "MCN_MEDIATOR_URL=${MCN_MEDIATOR_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
+
+      - name: Set Push Notification Capability
+        working-directory: app/ios/AriesBifold
+        env:
+          MEDIATOR_USE_PUSH_NOTIFICATIONS: false
+          MEDIATOR_LABEL: Mediator
+        run: |
+          mv DEVELOPMENT.AriesBifold.entitlements AriesBifold.entitlements
 
       # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
       - name: Create Provisioning Profile
@@ -224,6 +237,9 @@ jobs:
   build-android:
     needs: [check-android-secrets]
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v2
 
@@ -234,13 +250,24 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
-      # Ledgers are missing namespace, not compatible.
-      # - name: Updaet ledgers
-      #   uses: ./.github/workflows/actions/update-ledgers
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: 11
+          cache: "gradle"
+          server-id: github
+          settings-path: ${{ github.workspace }}
+
+      - name: Update ledgers
+        uses: ./.github/workflows/actions/update-ledgers
+
       - name: Install dependencies
         working-directory: ./
         run: |
-          yarn install --immutable  && \
+          rm bifold/package.json && \
+          rm bifold/yarn.lock && \
+          yarn install --immutable && \
           git status
 
         # Actual environment variables are not being picked up
@@ -257,18 +284,8 @@ jobs:
           echo "MCN_MEDIATOR_URL=${MCN_MEDIATOR_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
 
-      - name: Android debug build
-        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
-        working-directory: app/android
-        env:
-          VERSION_CODE: ${{ env.appBuildNumber }}
-          VERSION_NAME: ${{ env.appBuildVersion }}
-
-        run: |
-          ./gradlew buildDebug
-
       - name: Create release keystore
-        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android/app
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
@@ -279,8 +296,17 @@ jobs:
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
           grep "SHA1"
 
+      #      - name: Android debug build
+      #        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
+      #        working-directory: app/android
+      #        env:
+      #          VERSION_CODE: ${{ env.appBuildNumber }}
+      #          VERSION_NAME: ${{ env.appBuildVersion }}
+      #        run: |
+      #          ./gradlew --no-daemon bundleRelease
+
       - name: Android release build
-        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
@@ -288,10 +314,26 @@ jobs:
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
-          cp ../node_modules/react-native-vector-icons/Fonts/* ./app/src/main/assets/fonts/ && \
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease && \
+          ./gradlew assembleRelease && \
+          find . -type f -name '*.apk'
 
+      #      - name: Publish to GitHub Packages Registry
+      #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=android -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
+      #        env:
+      #          GITHUB_TOKEN: ${{ github.token }}
+      - name: List Artifacts
+        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        run: |
+          find . -type f -name '*.apk'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android
+          path: |
+            app/android/app/build/outputs/bundle/release/app-release.aab
+            app/android/app/build/outputs/apk/release/app-release.apk
       - name: Upload Android artifact
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         uses: actions/upload-artifact@v3
