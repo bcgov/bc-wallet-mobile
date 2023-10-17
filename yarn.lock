@@ -53,14 +53,14 @@ __metadata:
 
 "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.4.0
-  resolution: "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::version=0.4.0&hash=effd16&locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::version=0.4.0&hash=c6c7d3&locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@aries-framework/core": 0.4.0
     bn.js: ^5.2.1
     class-transformer: 0.5.1
     class-validator: 0.14.0
     reflect-metadata: ^0.1.13
-  checksum: 7f4d2e15f86ce64a402c65436f05d9a9a66e7b8dcaf50b9206985f8e5a4544ca1a4a1bbda0a6c953fc683859e2ba270464ece54b0f323fc6c10498cadc67f610
+  checksum: 64d2c17e308e6fcbea6da97d0f337af5f5d0e37ba5b9e1e458eb59dec0252a85b20ba11fa876d8bb1d279e2a69ebe1a77cc117d3062a7f14dff063e2c9d34aba
   languageName: node
   linkType: hard
 
