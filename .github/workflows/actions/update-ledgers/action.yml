@@ -4,6 +4,7 @@ runs:
   using: composite
   steps:
     - name: Update ledgers
+      shell: bash
       run: |
         node bifold/scripts/make-blocks.js
 
