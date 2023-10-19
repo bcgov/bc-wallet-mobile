@@ -22,10 +22,14 @@ import Splash from './screens/Splash'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
 
-const localization = merge({}, translationResources, {
-  en: { translation: en },
-  fr: { translation: fr },
-})
+const localization = merge(
+  {},
+  { en: translationResources.en, fr: translationResources.fr },
+  {
+    en: { translation: en },
+    fr: { translation: fr },
+  }
+)
 
 const ledgers = [...qcLedgers, ...indyLedgers]
 const selectedLedgers = ledgers.filter((ledger) => ledger.indyNamespace !== 'indicio')
@@ -64,6 +68,7 @@ const configuration: ConfigurationContext = {
   useCustomNotifications: useNotifications,
   proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
+  supportedLanguages: localization,
 }
 
 export default { theme, localization, configuration }
