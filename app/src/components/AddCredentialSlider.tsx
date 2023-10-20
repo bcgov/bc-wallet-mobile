@@ -2,7 +2,7 @@ import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build
 import { CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/native'
-import { useTheme, Screens, Stacks, testIdWithKey } from 'aries-bifold'
+import { useTheme, Screens, Stacks, testIdWithKey, testIdForAccessabilityLabel } from 'aries-bifold'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
@@ -65,6 +65,9 @@ const AddCredentialSlider: React.FC = () => {
     drawerRowItem: {
       color: ColorPallet.grayscale.black,
     },
+    closeButton: {
+      alignSelf: 'flex-start',
+    },
   })
 
   const deactivateSlider = useCallback(() => {
@@ -113,19 +116,30 @@ const AddCredentialSlider: React.FC = () => {
             accessibilityRole={'button'}
             onPress={deactivateSlider}
             hitSlop={hitSlop}
+            style={styles.closeButton}
           >
             <Icon name="window-close" size={35} style={styles.drawerRowItem}></Icon>
           </TouchableOpacity>
-          <Text style={styles.drawerTitleText}>Choose</Text>
+          <Text style={styles.drawerTitleText}>{t('AddCredentialSlider.Choose')}</Text>
           {showGetFoundationCredential && (
-            <TouchableOpacity style={styles.drawerRow} onPress={goToPersonCredentialScreen}>
+            <TouchableOpacity
+              style={styles.drawerRow}
+              onPress={goToPersonCredentialScreen}
+              testID={testIdWithKey(testIdForAccessabilityLabel(t('BCID.GetDigitalID')))}
+              accessibilityLabel={t('BCID.GetDigitalID')}
+            >
               <Icon name="credit-card" size={30} style={styles.drawerRowItem}></Icon>
-              <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Get your Person credential</Text>
+              <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>{t('BCID.GetDigitalID')}</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity style={styles.drawerRow} onPress={goToScanScreen}>
+          <TouchableOpacity
+            style={styles.drawerRow}
+            onPress={goToScanScreen}
+            testID={testIdWithKey(testIdForAccessabilityLabel(t('AddCredentialSlider.ScanQRCode')))}
+            accessibilityLabel={t('AddCredentialSlider.ScanQRCode')}
+          >
             <Icon name="qrcode" size={30} style={styles.drawerRowItem}></Icon>
-            <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>Scan a QR code</Text>
+            <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>{t('AddCredentialSlider.ScanQRCode')}</Text>
           </TouchableOpacity>
         </View>
       </View>
