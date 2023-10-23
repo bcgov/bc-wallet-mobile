@@ -55,6 +55,7 @@ const translation = {
   },
   "Screens": {
     "Onboarding": "BC Wallet",
+    "Terms": "End User License Agreement",
     "Settings": "Menu",
   },
   "PersonCredentialNotification": {

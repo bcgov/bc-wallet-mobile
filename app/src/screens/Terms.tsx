@@ -28,7 +28,6 @@ const Terms: React.FC = () => {
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
-  navigation.setOptions({ title: 'End User License Agreement' })
   const { ColorPallet, TextTheme } = useTheme()
   const style = StyleSheet.create({
     container: {
