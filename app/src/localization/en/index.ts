@@ -167,6 +167,10 @@ const translation = {
     "Title": "Notifications",
     "PushNotifications": "Push Notifications",
     "Continue": "Continue",
+  },
+  "AddCredentialSlider": {
+    "Choose": "Choose",
+    "ScanQRCode": "Scan a QR code",
   }
 }
 

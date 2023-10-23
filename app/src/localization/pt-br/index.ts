@@ -166,6 +166,10 @@ const translation = {
     "Title": "Notifications (PT-BR)",
     "PushNotifications": "Push Notifications (PT-BR)",
     "Continue": "Continue (PT-BR)",
+  },
+  "AddCredentialSlider": {
+    "Choose": "Choose (PT-BR)",
+    "ScanQRCode": "Scan a QR code (PT-BR)",
   }
 }
 
