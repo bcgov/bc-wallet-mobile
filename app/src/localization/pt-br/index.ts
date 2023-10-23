@@ -55,6 +55,7 @@ const translation = {
   },
   "Screens": {
     "Onboarding": "BC Wallet (PT-BR)",
+    "Terms": "End User License Agreement (PT-BR)",
     "Settings": "Menu (PT-BR)",
   },
   "PersonCredentialNotification": {
