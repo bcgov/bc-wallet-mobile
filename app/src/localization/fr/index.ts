@@ -533,6 +533,15 @@ const translation = {
     PopupExit: "J'ai compris",
   },
   ProofRequest: {
+    PredicateGeDate: 'est après',
+    PredicateLeDate: 'est avant',
+    PredicateGe: 'est supérieur ou égal à',
+    PredicateGr: 'est supérieur à',
+    PredicateLe: 'est inférieur ou égal à',
+    PredicateLs: 'est inférieur à',
+    ChangeCredential: "Changer l'attestation",
+    'DeclineThisProof?': 'Refuser cette demande de preuve?',
+    MultipleCredentials: 'Vous avez plusieurs attestations parmi lesquelles choisir :',
     OfferDelay: "Retard de l'offre",
     'RejectThisProof?': 'Rejeter cette preuve?',
     AcceptingProof: 'Acceptation de la preuve',
@@ -577,6 +586,7 @@ const translation = {
     YouDoNotHaveDataPredicate: 'Vous ne répondez pas aux exigences de cette demande de preuve de',
     ReviewSentInformation_one: 'Vous avez partagé les informations suivantes de {{count}} attestation avec',
     ReviewSentInformation_other: 'Vous avez partagé les informations suivantes de {{count}} attestations avec',
+    ReviewSentInformation: 'Vous avez partagé les informations suivantes de {{count}} attestations avec',
   },
   TabStack: {
     Home: 'Accueil',
