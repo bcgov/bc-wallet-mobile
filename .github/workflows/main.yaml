@@ -313,6 +313,11 @@ jobs:
       #        run: |
       #          ./gradlew --no-daemon bundleRelease
 
+      # This is to debug
+      - name: Temporary patch Android for Testing
+        run: |
+          git apply --verbose ./patch/0001-chore-enable-android-cleartext-traffic.patch
+
       - name: Android release build
         #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
@@ -327,10 +332,6 @@ jobs:
           ./gradlew assembleRelease && \
           find . -type f -name '*.apk'
 
-      #      - name: Publish to GitHub Packages Registry
-      #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=android -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
-      #        env:
-      #          GITHUB_TOKEN: ${{ github.token }}
       - name: List Artifacts
         #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         run: |
@@ -342,6 +343,7 @@ jobs:
           path: |
             app/android/app/build/outputs/bundle/release/app-release.aab
             app/android/app/build/outputs/apk/release/app-release.apk
+      
       - name: Upload Android artifact
         if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         uses: actions/upload-artifact@v3
