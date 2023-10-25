@@ -254,7 +254,7 @@ const translation = {
   TermsV2: {
     Consent: {
       title: 'Consent',
-      body: 'Please read the general conditions for the use of the digital portfolio of the Government of Quebec.',
+      body: 'The terms of use below are for illustrative purposes only. The Quebec conditions are being drafted.',
       PersonalUse: {
         title: 'Exclusive Personal Use',
         body:
@@ -581,10 +581,9 @@ const translation = {
     PredicateGr: 'is greater than',
     PredicateLe: 'is less than or equal to',
     PredicateLs: 'is less than',
-    'DeclineThisProof?': 'Decline this Proof Request?',
-    MultipleCredentials: 'You have multiple credentials to choose from:',
     RequestProcessing: 'Just a moment...',
     OfferDelay: 'Offer delay',
+    'RejectThisProof?': 'Reject this Proof?',
     AcceptingProof: 'Accepting Proof',
     SuccessfullyAcceptedProof: 'Successfully Accepted Proof',
     ProofNotFound: 'Proof not Found',

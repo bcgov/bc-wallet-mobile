@@ -218,7 +218,7 @@ const translation = {
   TermsV2: {
     Consent: {
       title: 'Consentement',
-      body: "Veuillez prendre connaissance des conditions générales liées à l'utilisation du portefeuille numérique du gouvernement du Québec.",
+      body: "Les conditions d'utilisation ci-présente sont seulement à titre d'exemple. Les conditions québécoise sont en cours de rédaction.",
       PersonalUse: {
         title: 'Usage personnel exclusif',
         body: "Vous êtes responsable de la confidentialité de votre portefeuille numérique. Vous devez le réaliser à votre usage exclusif. Ne divulguez à personne votre code d'accès et protégez adéquatement votre téléphone mobile. Des recommandations vous sont présentées dans la rubrique *Sécurité* .",
