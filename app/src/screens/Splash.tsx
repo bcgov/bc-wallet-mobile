@@ -52,8 +52,13 @@ const onboardingComplete = (state: OnboardingState): boolean => {
   return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
 }
 
-const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean | undefined): Screens => {
+const resumeOnboardingAt = (
+  state: OnboardingState,
+  enableWalletNaming: boolean | undefined,
+  showPreface: boolean | undefined
+): Screens => {
   if (
+    (state.didSeePreface || !showPreface) &&
     state.didCompleteTutorial &&
     state.didAgreeToTerms &&
     state.didCreatePIN &&
@@ -64,6 +69,7 @@ const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean 
   }
 
   if (
+    (state.didSeePreface || !showPreface) &&
     state.didCompleteTutorial &&
     state.didAgreeToTerms &&
     state.didCreatePIN &&
@@ -73,15 +79,24 @@ const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean 
     return Screens.NameWallet
   }
 
-  if (state.didCompleteTutorial && state.didAgreeToTerms && !state.didCreatePIN) {
+  if (
+    (state.didSeePreface || !showPreface) &&
+    state.didCompleteTutorial &&
+    state.didAgreeToTerms &&
+    !state.didCreatePIN
+  ) {
     return Screens.CreatePIN
   }
 
-  if (state.didCompleteTutorial && !state.didAgreeToTerms) {
+  if ((state.didSeePreface || !showPreface) && state.didCompleteTutorial && !state.didAgreeToTerms) {
     return Screens.Terms
   }
 
-  return Screens.Onboarding
+  if (state.didSeePreface || !showPreface) {
+    return Screens.Onboarding
+  }
+
+  return Screens.Preface
 }
 
 /*
@@ -97,7 +112,7 @@ const Splash: React.FC = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
-  const { indyLedgers } = useConfiguration()
+  const { indyLedgers, showPreface } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -292,6 +307,11 @@ const Splash: React.FC = () => {
               dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
             }
 
+            // if they previously completed onboarding before preface was enabled, mark seen
+            if (!store.onboarding.didSeePreface) {
+              dispatch({ type: DispatchAction.DID_SEE_PREFACE })
+            }
+
             if (!attemptData?.lockoutDate) {
               navigation.dispatch(
                 CommonActions.reset({
@@ -316,7 +336,7 @@ const Splash: React.FC = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming) }],
+              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming, showPreface) }],
             })
           )
 
@@ -324,12 +344,21 @@ const Splash: React.FC = () => {
         }
 
         // We have no onboarding state, starting from step zero.
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: Screens.Onboarding }],
-          })
-        )
+        if (showPreface) {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: Screens.Preface }],
+            })
+          )
+        } else {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: Screens.Onboarding }],
+            })
+          )
+        }
       } catch (e: unknown) {
         setInitErrorType(InitErrorTypes.Onboarding)
         setInitError(e as Error)
