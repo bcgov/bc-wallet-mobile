@@ -1,0 +1,49 @@
+diff --git a/build/pool/IndyVdrPool.d.ts b/build/pool/IndyVdrPool.d.ts
+index cff86a7a020c7c6152a7c08f4ce0cb4e83b3838d..8b2cde35e778b85d7d76c6d32c2c636751718bcb 100644
+--- a/build/pool/IndyVdrPool.d.ts
++++ b/build/pool/IndyVdrPool.d.ts
+@@ -30,7 +30,7 @@ export declare class IndyVdrPool {
+     constructor(poolConfig: IndyVdrPoolConfig);
+     get indyNamespace(): string;
+     get config(): IndyVdrPoolConfig;
+-    connect(): void;
++    connect(): Promise<void>;
+     private get pool();
+     close(): void;
+     prepareWriteRequest<Request extends IndyVdrRequest>(agentContext: AgentContext, request: Request, signingKey: Key, endorserDid?: string): Promise<Request>;
+diff --git a/build/pool/IndyVdrPool.js b/build/pool/IndyVdrPool.js
+index 0ec57415429a0b97844b2d65a8ee83f68ad10466..1c693e7381dc19209ec928d26a05eb65b2e8d9f5 100644
+--- a/build/pool/IndyVdrPool.js
++++ b/build/pool/IndyVdrPool.js
+@@ -15,7 +15,7 @@ class IndyVdrPool {
+     get config() {
+         return this.poolConfig;
+     }
+-    connect() {
++    async connect() {
+         if (this._pool) {
+             throw new error_1.IndyVdrError('Cannot connect to pool, already connected.');
+         }
+@@ -24,10 +24,11 @@ class IndyVdrPool {
+                 transactions: this.config.genesisTransactions,
+             },
+         });
++        await this._pool.refresh()
+     }
+-    get pool() {
++    async pool() {
+         if (!this._pool)
+-            this.connect();
++            await this.connect();
+         if (!this._pool)
+             throw new error_1.IndyVdrError('Pool is not connected.');
+         return this._pool;
+@@ -60,7 +61,7 @@ class IndyVdrPool {
+      * @param writeRequest
+      */
+     async submitRequest(writeRequest) {
+-        return await this.pool.submitRequest(writeRequest);
++        return await (await this.pool()).submitRequest(writeRequest);
+     }
+     async appendTaa(request) {
+         const authorAgreement = await this.getTransactionAuthorAgreement();

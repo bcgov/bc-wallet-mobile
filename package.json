@@ -58,6 +58,7 @@
     "@aries-framework/react-hooks@^0.4.2": "patch:@aries-framework/react-hooks@npm:0.4.2#./.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch",
     "@aries-framework/react-native@0.4.0": "patch:@aries-framework/react-native@npm:0.3.3#./.yarn/patches/@aries-framework-react-native-npm-0.3.3-bb75ece22d.patch",
     "@aries-framework/anoncreds@^0.4.0": "patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch",
-    "@aries-framework/anoncreds@0.4.0": "patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch"
+    "@aries-framework/anoncreds@0.4.0": "patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch",
+    "@aries-framework/indy-vdr@^0.4.0": "patch:@aries-framework/indy-vdr@npm%3A0.4.0#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch"
   }
 }
