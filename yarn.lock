@@ -129,7 +129,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/indy-vdr@npm:^0.4.0":
+"@aries-framework/indy-vdr@npm:0.4.0":
   version: 0.4.0
   resolution: "@aries-framework/indy-vdr@npm:0.4.0"
   dependencies:
@@ -138,6 +138,18 @@ __metadata:
   peerDependencies:
     "@hyperledger/indy-vdr-shared": ^0.1.0
   checksum: 9ba82aa3994a1774f186fafbe793384ce42af9dfd5604189ac7786f0e31dc9ca1eba70e8b2e4aab474889775264d39a1e4c3bce997dd446f81f49b16ca2191a5
+  languageName: node
+  linkType: hard
+
+"@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@npm%3A0.4.0#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.4.0
+  resolution: "@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@npm%3A0.4.0#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch::version=0.4.0&hash=69134c&locator=bc-wallet-mobile%40workspace%3A."
+  dependencies:
+    "@aries-framework/anoncreds": 0.4.0
+    "@aries-framework/core": 0.4.0
+  peerDependencies:
+    "@hyperledger/indy-vdr-shared": ^0.1.0
+  checksum: baa7245703045d08fc0ca159cde9232421ec2b343457232f9fcbe355920a66f279bff4739ac34dadfecced5b0a758f52490a2c034e1c0531f9b1398084e9c651
   languageName: node
   linkType: hard
 
