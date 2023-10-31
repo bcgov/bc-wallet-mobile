@@ -16,6 +16,7 @@ import { useProofRequestTemplates } from './request-templates'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import PersonCredential from './screens/PersonCredential'
+import Preface from './screens/Preface'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { BCDispatchAction } from './store'
@@ -33,6 +34,7 @@ const configuration: ConfigurationContext = {
   pages,
   splash: Splash,
   terms: Terms,
+  preface: Preface,
   homeFooterView: HomeFooterView,
   credentialListHeaderRight: AddCredentialButton,
   credentialListOptions: AddCredentialSlider,
@@ -63,6 +65,7 @@ const configuration: ConfigurationContext = {
   useCustomNotifications: useNotifications,
   proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
+  showPreface: true,
 }
 
 export default { theme, localization, configuration }
