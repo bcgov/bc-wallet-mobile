@@ -50,7 +50,7 @@ index a21dca227076c7097bea4409233bf547eb229f11..fbe578777746097269aeaccb16c0cdf7
       * Get the most appropriate pool for the given indyNamespace
       */
 diff --git a/build/pool/IndyVdrPoolService.js b/build/pool/IndyVdrPoolService.js
-index e5abc0d40cae5a4d5777220fd0c36d85496df313..7d19fa1e2d87e1bee0e064baf0d079335a83d047 100644
+index e5abc0d40cae5a4d5777220fd0c36d85496df313..2e56a6684834492c088ffcfe4ada6f39af334021 100644
 --- a/build/pool/IndyVdrPoolService.js
 +++ b/build/pool/IndyVdrPoolService.js
 @@ -113,6 +113,12 @@ let IndyVdrPoolService = class IndyVdrPoolService {
@@ -60,8 +60,8 @@ index e5abc0d40cae5a4d5777220fd0c36d85496df313..7d19fa1e2d87e1bee0e064baf0d07933
 +    /**
 +     * Refresh the pool connections asynchronously
 +     */
-+    async refreshPoolConnections() {
-+        return await Promise.all(this.pools.map(async (pool) => await pool.refreshConnection()))
++    refreshPoolConnections() {
++        return Promise.allSettled(this.pools.map(async (pool) => await pool.refreshConnection()))
 +    }
      /**
       * Get the most appropriate pool for the given indyNamespace
