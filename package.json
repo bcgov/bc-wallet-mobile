@@ -34,7 +34,7 @@
     "test": "cd app && yarn test",
     "pre-commit-lint:app": "cd app && yarn pre-commit-lint",
     "pre-commit-lint": "yarn pre-commit-lint:app",
-    "typecheck": ""
+    "typecheck": "cd app && yarn typecheck"
   },
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
