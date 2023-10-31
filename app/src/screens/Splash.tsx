@@ -6,6 +6,7 @@ import {
   MediatorPickupStrategy,
   WsOutboundTransport,
 } from '@aries-framework/core'
+import { IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -395,6 +396,8 @@ const Splash: React.FC = () => {
 
         setStep(6)
         await newAgent.initialize()
+        const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
+        await poolService.refreshPoolConnections()
 
         setStep(7)
         await createLinkSecretIfRequired(newAgent)
