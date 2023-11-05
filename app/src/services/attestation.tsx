@@ -108,7 +108,6 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
         } catch (error: unknown) {
           return null
         }
-        break
 
       default:
         return null
