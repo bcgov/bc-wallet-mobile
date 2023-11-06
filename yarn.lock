@@ -3898,10 +3898,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/anoncreds-shared@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@hyperledger/anoncreds-shared@npm:0.1.0"
-  checksum: 1a9a46c80719640ef424f5802e527663167e49eb6dba8a7259eccdb7b6086e6e7a217e03e19a4b29559c51951938d6786aaa738b80c85dd3360f7ae9a4da70a6
+"@hyperledger/anoncreds-shared@npm:0.2.0-dev.4":
+  version: 0.2.0-dev.4
+  resolution: "@hyperledger/anoncreds-shared@npm:0.2.0-dev.4"
+  checksum: 9081a3a5eb847407f71b5cec043f013096e654025921748f5957177396c72e62a4fafb5b51dcf37c66274ae1cc5fa04bbde599ac39f9dae2ccee5b7306ceaaa1
   languageName: node
   linkType: hard
 
@@ -3918,12 +3918,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-askar-shared@npm:0.1.1":
-  version: 0.1.1
-  resolution: "@hyperledger/aries-askar-shared@npm:0.1.1"
+"@hyperledger/aries-askar-shared@npm:0.2.0-dev.1":
+  version: 0.2.0-dev.1
+  resolution: "@hyperledger/aries-askar-shared@npm:0.2.0-dev.1"
   dependencies:
-    fast-text-encoding: ^1.0.3
-  checksum: ffe150d5baedb4a9cf1b79e4482641bdd974e2ba17dd0fb0dee9e2b5950a4ba8a62f482cdb54335c67a77eaac2af15cb5dbf03eecdd2b05798101e920ce15e00
+    buffer: ^6.0.3
+  checksum: cca77b5554986d561c1ec4512a6b598b0fd161d38238fe5ffee44f75054953a097604ca7f8af74b30a287981d3052f014193f082d0a51595037a0e4f168d6e00
   languageName: node
   linkType: hard
 
@@ -3962,10 +3962,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/indy-vdr-shared@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@hyperledger/indy-vdr-shared@npm:0.1.0"
-  checksum: d19135e8d4115739b43806326a940ff51ec597e1320f2e597be2555c541caa8f9a3c36f892e7679d4130e702b1cc67dc71202d522ff9c46531ef882b27525c26
+"@hyperledger/indy-vdr-shared@npm:0.2.0-dev.3":
+  version: 0.2.0-dev.3
+  resolution: "@hyperledger/indy-vdr-shared@npm:0.2.0-dev.3"
+  checksum: f7e3775109021b14984916b9e36954314fce83683a3c0dd2594903c92937dd930526811fa2e7220118966e33658a643ee890d16a713416cbfd9bdffa3f2444a9
   languageName: node
   linkType: hard
 
