@@ -172,6 +172,10 @@ const translation = {
   "AddCredentialSlider": {
     "Choose": "Choose (FR)",
     "ScanQRCode": "Scan a QR code (FR)",
+  },
+  "Scan": {
+    "BadQRCode": "QR Code Not Recognized (FR)",
+    "BadQRCodeDescription": "Ths QR code scanned doesn\'t work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can\'t add digital credentials by taking photos of physical ones. (FR)",
   }
 }
 
