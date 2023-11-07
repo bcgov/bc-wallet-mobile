@@ -19,6 +19,7 @@ Before you can proceed with building and testing the BC Wallet app, you must ins
   > **Tip**: use [nvm](https://github.com/nvm-sh/nvm) to install node & npm. It helps to easily switch node & npm
   > version for each project.
 - [Yarn](https://yarnpkg.com/)
+- A [JDK](https://openjdk.org/) and [Gradle](https://gradle.org) - Make sure you install compatible versions, see [here](https://docs.gradle.org/current/userguide/compatibility.html) for more information.
 
 ## Prerequisite services
 
@@ -50,7 +51,7 @@ git submodule update --init
 
 React Native environment setup instructions are documented [here](https://reactnative.dev/docs/environment-setup). Be sure to select the correct React Native version (currently 0.66.x) from the dropdown. This will guide you through setting up your development environment for your operating system and choice of iOS (only if you are using a Mac) or Android.
 
-Following along, you should end up using Android SDK Platform 30 with Android 11 (API Level 30) for Android development and/or iOS 11 for iOS development.
+Following along, you should end up using Android SDK Platform 33 with Android 13 (API Level 33) for Android development and/or iOS 11 for iOS development.
 
 **Notes:** you may need to install `cocoapods` using `brew` rather than Ruby's package manager on MacOS 14.x if you encounter installation errors.
 
