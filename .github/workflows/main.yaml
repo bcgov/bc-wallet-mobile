@@ -95,7 +95,7 @@ jobs:
             app/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock ') }}
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods-
 
@@ -105,6 +105,11 @@ jobs:
         with:
           path: app/ios/xbuild/Build
           key: ${{ runner.os }}-dd-xcode
+
+      - name: Setup Python 3.11.5
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.11.5
 
       - name: Install dependencies
         working-directory: ./
