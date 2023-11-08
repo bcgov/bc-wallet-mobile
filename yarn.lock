@@ -3939,13 +3939,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-react-native-attestation@npm:^1.0.0-alpha.96":
-  version: 1.0.0-alpha.99
-  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.99"
+"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.130":
+  version: 1.0.0-alpha.130
+  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.130"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: afa44068ce67781c132499b975fa35a921f87530524c85ccba8be72161d650cb8b8705bd98f8aebecd92e9c3775aec523ae02e67c3d87f4ab40a15450b9d59bb
+  checksum: 1feef575fc61237d67e5f813fb487ce1c502a48101002e0da30ee9391a3c88ecfcf3315e2f75d9543ecc235e82d053a94886d1e5376be61bf4d24894dfee7cd3
   languageName: node
   linkType: hard
 
@@ -8694,7 +8694,7 @@ __metadata:
     "@hyperledger/anoncreds-react-native": ^0.1.0
     "@hyperledger/aries-askar-react-native": ^0.1.1
     "@hyperledger/aries-oca": 1.0.0-alpha.72
-    "@hyperledger/aries-react-native-attestation": ^1.0.0-alpha.96
+    "@hyperledger/aries-react-native-attestation": 1.0.0-alpha.130
     "@hyperledger/indy-vdr-react-native": ^0.1.0
     "@react-native-async-storage/async-storage": 1.15.11
     "@react-native-community/masked-view": 0.1.11
