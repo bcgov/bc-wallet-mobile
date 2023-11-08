@@ -1,12 +1,5 @@
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
-import {
-  translationResources,
-  ConfigurationContext,
-  Record,
-  indyLedgers,
-  defaultConfiguration,
-  useRemoteProofBundleResolver,
-} from 'aries-bifold'
+import { translationResources, ConfigurationContext, Record, indyLedgers, defaultConfiguration } from 'aries-bifold'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 import { Config } from 'react-native-config'
@@ -49,7 +42,7 @@ const configuration: ConfigurationContext = {
   OCABundleResolver: new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
     brandingOverlayType: BrandingOverlayType.Branding10,
   }),
-  ProofBundleResolver: useRemoteProofBundleResolver(Config.PROOF_TEMPLATE_URL),
+  proofTemplateBaseUrl: Config.PROOF_TEMPLATE_URL,
   record: Record,
   indyLedgers: selectedLedgers,
   settings: [],
