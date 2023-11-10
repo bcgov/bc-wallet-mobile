@@ -108,6 +108,8 @@ jobs:
       - name: Install dependencies
         working-directory: ./
         run: |
+          rm bifold/package.json && \
+          rm bifold/yarn.lock && \
           yarn install --immutable && \
           git status
 
