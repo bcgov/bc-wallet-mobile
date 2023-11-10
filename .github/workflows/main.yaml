@@ -65,6 +65,10 @@ jobs:
         run: |
           git submodule update --init --recursive
 
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' 
+
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
@@ -254,6 +258,10 @@ jobs:
       - name: Pull & update submodules recursively
         run: |
           git submodule update --init --recursive
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' 
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
