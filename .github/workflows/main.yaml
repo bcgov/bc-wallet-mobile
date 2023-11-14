@@ -59,7 +59,7 @@ jobs:
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Pull & update submodules recursively
         run: |
@@ -251,7 +251,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Pull & update submodules recursively
         run: |
@@ -387,7 +387,7 @@ jobs:
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Ship iOS Artifact to SauceLabs
         uses: ./.github/workflows/actions/ship-to-saucelabs
@@ -426,7 +426,7 @@ jobs:
             report-project: "ios-one-device-smoke"
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: run-aath-agents
         if: ${{ matrix.mobile-platform=='-p iOS' }}
@@ -449,7 +449,7 @@ jobs:
           directDomains: aries-mediator-agent-test.apps.silver.devops.gov.bc.ca
 
       - name: Fetch mobile test harness repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: hyperledger/aries-mobile-test-harness
           path: aries-mobile-test-harness
