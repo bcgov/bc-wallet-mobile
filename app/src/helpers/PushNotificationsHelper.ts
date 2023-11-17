@@ -1,4 +1,4 @@
-import { Agent, ConnectionRecord } from '@aries-framework/core'
+import { Agent, ConnectionRecord, ConnectionType } from '@aries-framework/core'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import messaging from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
@@ -62,14 +62,31 @@ const _requestPermission = async (agent: Agent): Promise<void> => {
  */
 
 const _getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | undefined> => {
-  const connections = await agent.connections.getAll()
-  for (const connection of connections) {
-    if (connection.theirLabel === Config.MEDIATOR_LABEL) {
-      return connection
-    }
+  const connections: ConnectionRecord[] = await agent.connections.getAll()
+  const mediators = connections.filter((r) => r.connectionTypes.includes(ConnectionType.Mediator))
+  if (mediators.length < 1) {
+    agent.config.logger.warn(`Mediator connection not found`)
+    return undefined
   }
-  agent.config.logger.warn(`Mediator connection with label [${Config.MEDIATOR_LABEL}] not found`)
-  return undefined
+
+  // get most recent mediator connection
+  const latestMediator = mediators.reduce((acc, cur) => {
+    if (!acc.updatedAt) {
+      if (!cur.updatedAt) {
+        return acc.createdAt > cur.createdAt ? acc : cur
+      } else {
+        return acc.createdAt > cur.updatedAt ? acc : cur
+      }
+    } else {
+      if (!cur.updatedAt) {
+        return acc.updatedAt > cur.createdAt ? acc : cur
+      } else {
+        return acc.updatedAt > cur.updatedAt ? acc : cur
+      }
+    }
+  })
+
+  return latestMediator
 }
 
 /**
@@ -86,7 +103,7 @@ const isUserDenied = async (): Promise<boolean> => {
  * @returns {Promise<boolean>}
  */
 const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => {
-  if (!Config.MEDIATOR_LABEL || Config.MEDIATOR_USE_PUSH_NOTIFICATIONS === 'false') {
+  if (Config.MEDIATOR_USE_PUSH_NOTIFICATIONS !== 'true') {
     return false
   }
 
