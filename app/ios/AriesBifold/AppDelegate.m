@@ -35,4 +35,8 @@
   return [RCTLinkingManager application:application openURL:url options:options];
 }
 
+- (void)applicationDidBecomeActive:(UIApplication *)application {
+  [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+}
+
 @end
