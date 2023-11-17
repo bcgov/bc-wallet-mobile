@@ -77,12 +77,12 @@ const _getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | 
       } else {
         return acc.createdAt > cur.updatedAt ? acc : cur
       }
+    }
+
+    if (!cur.updatedAt) {
+      return acc.updatedAt > cur.createdAt ? acc : cur
     } else {
-      if (!cur.updatedAt) {
-        return acc.updatedAt > cur.createdAt ? acc : cur
-      } else {
-        return acc.updatedAt > cur.updatedAt ? acc : cur
-      }
+      return acc.updatedAt > cur.updatedAt ? acc : cur
     }
   })
 
