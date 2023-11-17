@@ -4,8 +4,21 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactActivityDelegate;
+import androidx.core.app.NotificationManagerCompat;
 
 public class MainActivity extends ReactActivity {
+
+  @Override
+  protected void onStart() {
+    super.onStart();
+    removeNotifications();
+  }
+
+  @Override
+  protected void onRestart() {
+    super.onRestart();
+    removeNotifications();
+  }
 
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
@@ -28,5 +41,13 @@ public class MainActivity extends ReactActivity {
         getMainComponentName(),
         // If you opted-in for the New Architecture, we enable the Fabric Renderer.
         DefaultNewArchitectureEntryPoint.getFabricEnabled());
+  }
+
+  /**
+   * Clears notification badges etc. on app open
+   */
+  protected void removeNotifications() {
+    NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(this);
+    notificationManagerCompat.cancelAll();
   }
 }
