@@ -1,0 +1,13 @@
+diff --git a/build/ReactNativeIndyVdr.js b/build/ReactNativeIndyVdr.js
+index 11f1bf74b1e776401ca593acaf9dbce2b53871e5..c0cd20d3bd402b501b4ccf2e3a986c931455b98e 100644
+--- a/build/ReactNativeIndyVdr.js
++++ b/build/ReactNativeIndyVdr.js
+@@ -164,7 +164,7 @@ class ReactNativeIndyVdr {
+     async poolGetTransactions(options) {
+         const { poolHandle } = (0, serialize_1.serializeArguments)(options);
+         const result = (0, indy_vdr_shared_1.handleInvalidNullResponse)(await this.promisifyWithResponse((cb) => this.indyVdr.poolGetTransactions({ cb, poolHandle }), true));
+-        return JSON.parse(result);
++        return result;
+     }
+     async poolGetVerifiers(options) {
+         const { poolHandle } = (0, serialize_1.serializeArguments)(options);
