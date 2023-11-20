@@ -20,6 +20,8 @@ Before you can proceed with building and testing the BC Wallet app, you must ins
   > version for each project.
 - [Yarn](https://yarnpkg.com/)
 - A [JDK](https://openjdk.org/) and [Gradle](https://gradle.org) - Make sure you install compatible versions, see [here](https://docs.gradle.org/current/userguide/compatibility.html) for more information.
+- [Ruby](https://www.ruby-lang.org/en/documentation/installation/) version 2.x.x. You may want/need to use [rbenv](https://github.com/rbenv/rbenv) on MacOS.
+- [Bundler](https://bundler.io) version 2 or newer: `sudo gem install bundler:2.1.4`.
 
 ## Prerequisite services
 
@@ -49,19 +51,24 @@ git submodule update --init
 
 ## React Native setup
 
-React Native environment setup instructions are documented [here](https://reactnative.dev/docs/environment-setup). Be sure to select the correct React Native version (currently 0.66.x) from the dropdown. This will guide you through setting up your development environment for your operating system and choice of iOS (only if you are using a Mac) or Android.
+React Native environment setup instructions are documented [here](https://reactnative.dev/docs/environment-setup). Be sure to select the correct React Native version (currently 0.66.x) from the dropdown and to follow the instructions for the React Native CLI. This will guide you through setting up your development environment for your operating system and choice of iOS (only if you are using a Mac) or Android.
 
 Following along, you should end up using Android SDK Platform 33 with Android 13 (API Level 33) for Android development and/or iOS 11 for iOS development.
 
-**Notes:** you may need to install `cocoapods` using `brew` rather than Ruby's package manager on MacOS 14.x if you encounter installation errors.
-
-## Installing npm modules
+## Installing npm modules and pods
 
 Next, install the npm modules needed to build and test BC Wallet from the root of the repository:
 
 ```sh
 # Install BC Wallet project dependencies (package.json) from the root of the cloned repository
 yarn install
+```
+
+To install pod dependencies:
+
+```sh
+   cd app
+   bundle install --frozen && pod install
 ```
 
 ## Configuration
