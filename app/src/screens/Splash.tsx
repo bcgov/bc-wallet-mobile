@@ -6,7 +6,7 @@ import {
   MediatorPickupStrategy,
   WsOutboundTransport,
 } from '@aries-framework/core'
-import { IndyVdrPool, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -223,11 +223,11 @@ const Splash: React.FC = () => {
     }
   }
 
-  const loadCachedLedgers = async (): Promise<{ expired: boolean; transactions: IndyVdrPool[] } | undefined> => {
+  const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
     const cachedTransactions = await loadObjectFromStorage(BCLocalStorageKeys.GenesisTransactions)
     if (cachedTransactions) {
       const { timestamp, transactions } = cachedTransactions
-      return { expired: moment().diff(moment(timestamp), 'days') >= 1, transactions }
+      return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
     }
   }
 
@@ -393,9 +393,7 @@ const Splash: React.FC = () => {
         }
 
         setStep(5)
-        const cachedRes = await loadCachedLedgers()
-        const cachedLedgers = cachedRes?.transactions
-        const cacheExpired = cachedRes?.expired === undefined ? true : cachedRes?.expired
+        const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
 
         const options = {
@@ -440,15 +438,19 @@ const Splash: React.FC = () => {
         setStep(6)
         await newAgent.initialize()
         const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
-        if (cacheExpired) {
+        if (!cachedLedgers) {
           await poolService.refreshPoolConnections()
           const transactions = (await poolService.getPoolTransactions())
-            .filter((t: PromiseSettledResult<IndyVdrPool>) => t.status === 'fulfilled')
-            .map((t: PromiseSettledResult<IndyVdrPool>) => t.value)
-          await AsyncStorage.setItem(
-            BCLocalStorageKeys.GenesisTransactions,
-            JSON.stringify({ timestamp: moment().toISOString(), transactions })
-          )
+            .filter((t: PromiseSettledResult<IndyVdrPoolConfig[]>) => t.status === 'fulfilled')
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            .map((t: PromiseFulfilledResult<IndyVdrPoolConfig[]>) => t.value)
+          if (transactions) {
+            await AsyncStorage.setItem(
+              BCLocalStorageKeys.GenesisTransactions,
+              JSON.stringify({ timestamp: moment().toISOString(), transactions })
+            )
+          }
         }
 
         setStep(7)

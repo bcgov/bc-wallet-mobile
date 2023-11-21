@@ -3961,7 +3961,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/indy-vdr-react-native@npm:^0.1.0":
+"@hyperledger/indy-vdr-react-native@npm:0.1.0":
   version: 0.1.0
   resolution: "@hyperledger/indy-vdr-react-native@npm:0.1.0"
   dependencies:
@@ -3971,6 +3971,19 @@ __metadata:
     react: ">= 16"
     react-native: ">= 0.66.0"
   checksum: ae5ec1261de877a11d717df193302a044d7f1b48c31fdea2433108331f529fd6c335d371f05b94669daaa0abefb362ac85eacd01348e2beb711d80f7d6480876
+  languageName: node
+  linkType: hard
+
+"@hyperledger/indy-vdr-react-native@patch:@hyperledger/indy-vdr-react-native@npm:0.1.0#./.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.1.0-10c696b320.patch::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.1.0
+  resolution: "@hyperledger/indy-vdr-react-native@patch:@hyperledger/indy-vdr-react-native@npm%3A0.1.0#./.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.1.0-10c696b320.patch::version=0.1.0&hash=693db7&locator=bc-wallet-mobile%40workspace%3A."
+  dependencies:
+    "@hyperledger/indy-vdr-shared": 0.1.0
+    "@mapbox/node-pre-gyp": ^1.0.10
+  peerDependencies:
+    react: ">= 16"
+    react-native: ">= 0.66.0"
+  checksum: 1fa3315150bc489c643bbe35869e4719218a38897a41bdc73ec73882d8a8218d7435167aac16b8c8159647c80feec0b568f7d5b055d933f0b6241d761ddfe945
   languageName: node
   linkType: hard
 
