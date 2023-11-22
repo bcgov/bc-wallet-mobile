@@ -322,8 +322,6 @@ jobs:
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
-          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
-          ./gradlew bundleRelease && \
           ./gradlew assembleRelease && \
           find . -type f -name '*.apk'
 
