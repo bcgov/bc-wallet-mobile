@@ -174,8 +174,10 @@ const translation = {
     "ScanQRCode": "Scan a QR code (PT-BR)",
   },
   "Scan": {
-    "BadQRCode": "QR Code Not Recognized (PT-BR)",
-    "BadQRCodeDescription": "Ths QR code scanned doesn\'t work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can\'t add digital credentials by taking photos of physical ones. (PT-BR)",
+    "ScanOnySpecial": "Only special QR codes can be scanned by BC Wallet. (PT-BR)",
+    "ScanOnlySpecial3": "BC Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones. (PT-BR)",
+    "WhereToUseLink": "See where you can use BC Wallet (PT-BR)",
+    "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones. (PT-BR)"
   }
 }
 
