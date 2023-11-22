@@ -442,8 +442,6 @@ const Splash: React.FC = () => {
           await poolService.refreshPoolConnections()
           const transactions = (await poolService.getPoolTransactions())
             .filter((t: PromiseSettledResult<IndyVdrPoolConfig[]>) => t.status === 'fulfilled')
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
             .map((t: PromiseFulfilledResult<IndyVdrPoolConfig[]>) => t.value)
           if (transactions) {
             await AsyncStorage.setItem(
