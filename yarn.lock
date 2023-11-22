@@ -155,13 +155,13 @@ __metadata:
 
 "@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@patch%3A@aries-framework/indy-vdr@npm%253A0.4.0%23./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch%3A%3Aversion=0.4.0&hash=0e7997&locator=bc-wallet-mobile%2540workspace%253A.#./.yarn/patches/@aries-framework-indy-vdr-patch-28d47565c5.patch::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.4.0
-  resolution: "@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@patch%3A@aries-framework/indy-vdr@npm%253A0.4.0%23./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch%3A%3Aversion=0.4.0&hash=0e7997&locator=bc-wallet-mobile%2540workspace%253A.#./.yarn/patches/@aries-framework-indy-vdr-patch-28d47565c5.patch::version=0.4.0&hash=fd9e4d&locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@patch%3A@aries-framework/indy-vdr@npm%253A0.4.0%23./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch%3A%3Aversion=0.4.0&hash=0e7997&locator=bc-wallet-mobile%2540workspace%253A.#./.yarn/patches/@aries-framework-indy-vdr-patch-28d47565c5.patch::version=0.4.0&hash=b57b79&locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@aries-framework/anoncreds": 0.4.0
     "@aries-framework/core": 0.4.0
   peerDependencies:
     "@hyperledger/indy-vdr-shared": ^0.1.0
-  checksum: 04c329506396bb6cc189d73e8d7442787a34a21dba0188895408e0dadc59b01fb4c70301d755d62a2e6a7a3e00d84e7041b13c7eb602b5499be39e733f72b618
+  checksum: f4956715e6fc76dfa898ca052d1c4a9b9bf1f772a83d75648bb6660b87eb5dcedf8631b1df84f54094b4084f96dc3a2fac841d78abd681516230480a0c8727ee
   languageName: node
   linkType: hard
 

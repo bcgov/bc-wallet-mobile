@@ -440,7 +440,13 @@ const Splash: React.FC = () => {
         const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
         if (!cachedLedgers) {
           await poolService.refreshPoolConnections()
-          const transactions = await poolService.getPoolTransactions()
+          const raw_transactions = await poolService.getPoolTransactions()
+          const transactions = raw_transactions.map(({ config, transactions }) => ({
+            ...config,
+            genesisTransactions: transactions.reduce((prev, curr) => {
+              return prev + JSON.stringify(curr)
+            }, ''),
+          }))
           if (transactions) {
             await AsyncStorage.setItem(
               BCLocalStorageKeys.GenesisTransactions,

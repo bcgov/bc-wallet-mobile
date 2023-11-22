@@ -1,37 +1,35 @@
 diff --git a/build/pool/IndyVdrPool.js b/build/pool/IndyVdrPool.js
-index 56dc4c3702a0a540fda7cf1f97c2233fc5f7546c..457d634f691446684ec69379a87054580ed5100a 100644
+index 56dc4c3702a0a540fda7cf1f97c2233fc5f7546c..ff874884b2d740fc5b5a2c89a619942baf121e2b 100644
 --- a/build/pool/IndyVdrPool.js
 +++ b/build/pool/IndyVdrPool.js
-@@ -27,7 +27,14 @@ class IndyVdrPool {
+@@ -26,9 +26,10 @@ class IndyVdrPool {
+         });
      }
      async refreshConnection() {
-         if (this._pool) {
+-        if (this._pool) {
 -            await this.pool.refresh()
-+            await this._pool.refresh()
-+        }
+-        }
++        await this.pool.refresh()
 +    }
 +    async getPoolTransactions(){
-+        if (this._pool) {
-+            return (await this._pool.transactions).reduce((prev, curr) => {
-+                return prev + JSON.stringify(curr)
-+            }, "")
-         }
++        return this.pool.transactions
      }
      get pool() {
+         if (!this._pool)
 diff --git a/build/pool/IndyVdrPoolService.js b/build/pool/IndyVdrPoolService.js
-index 3c581926d0bd31b595e498815b730263cdd5e6ef..31ee645fe401f8ef60f5d3ce061761273f5ad670 100644
+index 3c581926d0bd31b595e498815b730263cdd5e6ef..366631ac8d8b6b093d8a8d849b587d3c55aaf10e 100644
 --- a/build/pool/IndyVdrPoolService.js
 +++ b/build/pool/IndyVdrPoolService.js
-@@ -118,6 +118,12 @@ let IndyVdrPoolService = class IndyVdrPoolService {
-      */
+@@ -119,6 +119,12 @@ let IndyVdrPoolService = class IndyVdrPoolService {
      refreshPoolConnections() {
          return Promise.allSettled(this.pools.map((pool) => pool.refreshConnection()))
-+    }
-+     /**
+     }
++    /**
 +     * get the pool transactions asynchronously
 +     */
-+     getPoolTransactions() {
-+        return Promise.all(this.pools.map(async (pool) => {return {...pool.poolConfig, genesisTransactions: await pool.getPoolTransactions()}}))
-     }
++    getPoolTransactions() {
++        return Promise.all(this.pools.map(async (pool) => {return {config: pool.config, transactions: await pool.getPoolTransactions()}}))
++    }
      /**
       * Get the most appropriate pool for the given indyNamespace
+      */
