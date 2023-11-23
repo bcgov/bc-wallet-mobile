@@ -6,7 +6,7 @@ import {
   MediatorPickupStrategy,
   WsOutboundTransport,
 } from '@aries-framework/core'
-import { IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -33,6 +33,7 @@ import {
   getAgentModules,
   createLinkSecretIfRequired,
 } from 'aries-bifold'
+import moment from 'moment'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
@@ -222,6 +223,14 @@ const Splash: React.FC = () => {
     }
   }
 
+  const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
+    const cachedTransactions = await loadObjectFromStorage(BCLocalStorageKeys.GenesisTransactions)
+    if (cachedTransactions) {
+      const { timestamp, transactions } = cachedTransactions
+      return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
+    }
+  }
+
   const loadIASEnvironment = async (): Promise<void> => {
     const environment = await loadObjectFromStorage(BCLocalStorageKeys.Environment)
     if (environment) {
@@ -384,6 +393,9 @@ const Splash: React.FC = () => {
         }
 
         setStep(5)
+        const cachedLedgers = await loadCachedLedgers()
+        const ledgers = cachedLedgers ?? indyLedgers
+
         const options = {
           config: {
             label: store.preferences.walletName || 'BC Wallet',
@@ -398,7 +410,7 @@ const Splash: React.FC = () => {
           },
           dependencies: agentDependencies,
           modules: getAgentModules({
-            indyNetworks: indyLedgers,
+            indyNetworks: ledgers,
             mediatorInvitationUrl: Config.MEDIATOR_URL,
           }),
         }
@@ -426,7 +438,22 @@ const Splash: React.FC = () => {
         setStep(6)
         await newAgent.initialize()
         const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
-        await poolService.refreshPoolConnections()
+        if (!cachedLedgers) {
+          await poolService.refreshPoolConnections()
+          const raw_transactions = await poolService.getPoolTransactions()
+          const transactions = raw_transactions.map(({ config, transactions }) => ({
+            ...config,
+            genesisTransactions: transactions.reduce((prev, curr) => {
+              return prev + JSON.stringify(curr)
+            }, ''),
+          }))
+          if (transactions) {
+            await AsyncStorage.setItem(
+              BCLocalStorageKeys.GenesisTransactions,
+              JSON.stringify({ timestamp: moment().toISOString(), transactions })
+            )
+          }
+        }
 
         setStep(7)
         await createLinkSecretIfRequired(newAgent)
