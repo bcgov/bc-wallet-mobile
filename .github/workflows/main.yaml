@@ -59,11 +59,15 @@ jobs:
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Pull & update submodules recursively
         run: |
           git submodule update --init --recursive
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' 
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -142,19 +146,13 @@ jobs:
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
           OCA_URL: ${{ vars.OCA_URL }}
+          MEDIATOR_USE_PUSH_NOTIFICATIONS: false
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
-
-      - name: Set Push Notification Capability
-        working-directory: app/ios/AriesBifold
-        env:
-          MEDIATOR_USE_PUSH_NOTIFICATIONS: false
-          MEDIATOR_LABEL: Mediator
-        run: |
-          mv DEVELOPMENT.AriesBifold.entitlements AriesBifold.entitlements
+          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
 
       - name: Archive build
         working-directory: app/ios
@@ -247,11 +245,15 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Pull & update submodules recursively
         run: |
           git submodule update --init --recursive
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11' 
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -271,8 +273,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./
         run: |
-          rm bifold/package.json && \
-          rm bifold/yarn.lock && \
           yarn install --immutable && \
           git status
 
@@ -381,7 +381,7 @@ jobs:
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Ship iOS Artifact to SauceLabs
         uses: ./.github/workflows/actions/ship-to-saucelabs
@@ -420,7 +420,7 @@ jobs:
             report-project: "ios-one-device-smoke"
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: run-aath-agents
         if: ${{ matrix.mobile-platform=='-p iOS' }}
@@ -443,7 +443,7 @@ jobs:
           directDomains: aries-mediator-agent-test.apps.silver.devops.gov.bc.ca
 
       - name: Fetch mobile test harness repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: hyperledger/aries-mobile-test-harness
           path: aries-mobile-test-harness

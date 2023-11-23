@@ -73,6 +73,7 @@ const configuration: ConfigurationContext = {
   proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
   showPreface: true,
+  disableOnboardingSkip: true,
 }
 
 export default { theme, localization, configuration }

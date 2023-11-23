@@ -1,8 +1,14 @@
 import { Agent, BaseEvent, BasicMessageEventTypes, BasicMessageRecord, BasicMessageRole } from '@aries-framework/core'
 import { useAgent } from '@aries-framework/react-hooks'
-import { generateKey, appleAttestation } from '@hyperledger/aries-react-native-attestation'
+import {
+  generateKey,
+  appleAttestation,
+  googleAttestation,
+  isPlayIntegrityAvailable,
+} from '@hyperledger/aries-react-native-attestation'
 import { Buffer } from 'buffer'
 import React, { createContext, useContext, useState } from 'react'
+import { Platform } from 'react-native'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
 
@@ -13,7 +19,7 @@ enum Action {
 
 type InfrastructureMessage = {
   type: 'attestation'
-  platform: 'apple'
+  platform?: 'apple' | 'google'
   version: 1
   action: Action
 }
@@ -23,7 +29,7 @@ type RequestIssuanceInfrastructureMessage = InfrastructureMessage & {
 }
 
 type ChallengeResponseInfrastructureMessage = InfrastructureMessage & {
-  key_id: string
+  key_id?: string
   attestation_object: string
 }
 
@@ -63,27 +69,45 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
     message: InfrastructureMessage
   ): Promise<ChallengeResponseInfrastructureMessage | null> => {
     switch (message.action) {
-      case Action.RequestAttestation: {
+      case Action.RequestAttestation:
         try {
-          const keyId = await generateKey()
-          const attestationAsBuffer = await appleAttestation(
-            keyId,
-            (message as RequestIssuanceInfrastructureMessage).nonce
-          )
-          const attestationResponse: ChallengeResponseInfrastructureMessage = {
-            type: 'attestation',
-            platform: 'apple',
-            version: 1,
-            action: Action.ChallengeResponse,
-            key_id: keyId,
-            attestation_object: attestationAsBuffer.toString('base64'),
-          }
+          if (Platform.OS === 'ios') {
+            const keyId = await generateKey()
+            const attestationAsBuffer = await appleAttestation(
+              keyId,
+              (message as RequestIssuanceInfrastructureMessage).nonce
+            )
+            const attestationResponse: ChallengeResponseInfrastructureMessage = {
+              type: 'attestation',
+              platform: 'apple',
+              version: 1,
+              action: Action.ChallengeResponse,
+              key_id: keyId,
+              attestation_object: attestationAsBuffer.toString('base64'),
+            }
 
-          return attestationResponse
+            return attestationResponse
+          } else if (Platform.OS === 'android') {
+            const available = await isPlayIntegrityAvailable()
+            if (!available) {
+              return null
+            }
+            const tokenString = await googleAttestation((message as RequestIssuanceInfrastructureMessage).nonce)
+            const attestationResponse: ChallengeResponseInfrastructureMessage = {
+              type: 'attestation',
+              platform: 'google',
+              version: 1,
+              action: Action.ChallengeResponse,
+              attestation_object: tokenString,
+            }
+
+            return attestationResponse
+          } else {
+            return null
+          }
         } catch (error: unknown) {
           return null
         }
-      }
 
       default:
         return null

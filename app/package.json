@@ -6,7 +6,7 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=16.15.0 <18.0.0",
+    "node": ">=18.18.2 <20.0.0",
     "yarn": "^3.3.1"
   },
   "installConfig": {
@@ -61,7 +61,7 @@
     "@hyperledger/anoncreds-react-native": "^0.1.0",
     "@hyperledger/aries-askar-react-native": "^0.1.1",
     "@hyperledger/aries-oca": "1.0.0-alpha.72",
-    "@hyperledger/aries-react-native-attestation": "^1.0.0-alpha.96",
+    "@hyperledger/aries-react-native-attestation": "1.0.0-alpha.130",
     "@hyperledger/indy-vdr-react-native": "^0.1.0",
     "@react-native-async-storage/async-storage": "1.15.11",
     "@react-native-community/masked-view": "0.1.11",
