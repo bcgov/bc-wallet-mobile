@@ -1,12 +1,5 @@
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
-import {
-  translationResources,
-  ConfigurationContext,
-  Record,
-  indyLedgers,
-  defaultConfiguration,
-  useProofRequestTemplates,
-} from 'aries-bifold'
+import { translationResources, ConfigurationContext, Record, indyLedgers, defaultConfiguration } from 'aries-bifold'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 import { Config } from 'react-native-config'
@@ -70,7 +63,6 @@ const configuration: ConfigurationContext = {
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
   useCustomNotifications: useNotifications,
-  proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
   showPreface: true,
   disableOnboardingSkip: true,
