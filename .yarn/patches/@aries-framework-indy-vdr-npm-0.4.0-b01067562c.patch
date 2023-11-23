@@ -1,59 +1,25 @@
-diff --git a/build/index.d.ts b/build/index.d.ts
-index 880dd84215c90d7556ebca5c53f7a73050136c39..3e43fa5f05d16405e1ad6e73a66bbbe89c703b11 100644
---- a/build/index.d.ts
-+++ b/build/index.d.ts
-@@ -1,5 +1,5 @@
- export { IndyVdrIndyDidRegistrar, IndyVdrIndyDidResolver, IndyVdrSovDidResolver, IndyVdrDidCreateResult, IndyVdrDidCreateOptions, } from './dids';
--export { IndyVdrPoolConfig } from './pool';
-+export { IndyVdrPoolConfig, IndyVdrPoolService } from './pool';
- export * from './IndyVdrModule';
- export * from './IndyVdrModuleConfig';
- export * from './anoncreds';
-diff --git a/build/pool/IndyVdrPool.d.ts b/build/pool/IndyVdrPool.d.ts
-index cff86a7a020c7c6152a7c08f4ce0cb4e83b3838d..ff439c23140b5a8e9d27595ecf5f813cbca7a7a1 100644
---- a/build/pool/IndyVdrPool.d.ts
-+++ b/build/pool/IndyVdrPool.d.ts
-@@ -31,6 +31,7 @@ export declare class IndyVdrPool {
-     get indyNamespace(): string;
-     get config(): IndyVdrPoolConfig;
-     connect(): void;
-+    public refreshConnection(): Promise<void>;
-     private get pool();
-     close(): void;
-     prepareWriteRequest<Request extends IndyVdrRequest>(agentContext: AgentContext, request: Request, signingKey: Key, endorserDid?: string): Promise<Request>;
 diff --git a/build/pool/IndyVdrPool.js b/build/pool/IndyVdrPool.js
-index 0ec57415429a0b97844b2d65a8ee83f68ad10466..56dc4c3702a0a540fda7cf1f97c2233fc5f7546c 100644
+index 0ec57415429a0b97844b2d65a8ee83f68ad10466..ff874884b2d740fc5b5a2c89a619942baf121e2b 100644
 --- a/build/pool/IndyVdrPool.js
 +++ b/build/pool/IndyVdrPool.js
-@@ -25,6 +25,11 @@ class IndyVdrPool {
+@@ -25,6 +25,12 @@ class IndyVdrPool {
              },
          });
      }
 +    async refreshConnection() {
-+        if (this._pool) {
-+            await this.pool.refresh()
-+        }
++        await this.pool.refresh()
++    }
++    async getPoolTransactions(){
++        return this.pool.transactions
 +    }
      get pool() {
          if (!this._pool)
              this.connect();
-diff --git a/build/pool/IndyVdrPoolService.d.ts b/build/pool/IndyVdrPoolService.d.ts
-index a21dca227076c7097bea4409233bf547eb229f11..432a2dd842076776b90b0cce08e658054fd677fe 100644
---- a/build/pool/IndyVdrPoolService.d.ts
-+++ b/build/pool/IndyVdrPoolService.d.ts
-@@ -31,6 +31,7 @@ export declare class IndyVdrPoolService {
-     }>;
-     private getPoolForLegacyDid;
-     private getSettledDidResponsesFromPools;
-+    public refreshPoolConnections(): Promise<PromiseSettledResult<void>[]>;
-     /**
-      * Get the most appropriate pool for the given indyNamespace
-      */
 diff --git a/build/pool/IndyVdrPoolService.js b/build/pool/IndyVdrPoolService.js
-index e5abc0d40cae5a4d5777220fd0c36d85496df313..3c581926d0bd31b595e498815b730263cdd5e6ef 100644
+index e5abc0d40cae5a4d5777220fd0c36d85496df313..366631ac8d8b6b093d8a8d849b587d3c55aaf10e 100644
 --- a/build/pool/IndyVdrPoolService.js
 +++ b/build/pool/IndyVdrPoolService.js
-@@ -113,6 +113,12 @@ let IndyVdrPoolService = class IndyVdrPoolService {
+@@ -113,6 +113,18 @@ let IndyVdrPoolService = class IndyVdrPoolService {
              successful,
          };
      }
@@ -62,6 +28,12 @@ index e5abc0d40cae5a4d5777220fd0c36d85496df313..3c581926d0bd31b595e498815b730263
 +     */
 +    refreshPoolConnections() {
 +        return Promise.allSettled(this.pools.map((pool) => pool.refreshConnection()))
++    }
++    /**
++     * get the pool transactions asynchronously
++     */
++    getPoolTransactions() {
++        return Promise.all(this.pools.map(async (pool) => {return {config: pool.config, transactions: await pool.getPoolTransactions()}}))
 +    }
      /**
       * Get the most appropriate pool for the given indyNamespace
