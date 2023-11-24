@@ -12,7 +12,6 @@ import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import fr from './localization/fr'
 import ptBr from './localization/pt-br'
-import { useProofRequestTemplates } from './request-templates'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import PersonCredential from './screens/PersonCredential'
@@ -43,6 +42,7 @@ const configuration: ConfigurationContext = {
   OCABundleResolver: new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
     brandingOverlayType: BrandingOverlayType.Branding10,
   }),
+  proofTemplateBaseUrl: Config.PROOF_TEMPLATE_URL,
   record: Record,
   indyLedgers: selectedLedgers,
   settings: [],
@@ -63,7 +63,6 @@ const configuration: ConfigurationContext = {
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
   useCustomNotifications: useNotifications,
-  proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
   showPreface: true,
   disableOnboardingSkip: true,
