@@ -533,8 +533,8 @@ const translation = {
     PopupExit: "J'ai compris",
   },
   ProofRequest: {
-    PredicateGeDate: 'est après',
-    PredicateLeDate: 'est avant',
+    PredicateGeDate: 'est après le',
+    PredicateLeDate: 'est avant le',
     PredicateGe: 'est supérieur ou égal à',
     PredicateGr: 'est supérieur à',
     PredicateLe: 'est inférieur ou égal à',
