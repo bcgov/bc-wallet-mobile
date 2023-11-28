@@ -199,7 +199,6 @@ jobs:
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
       - name: Export development archive
-        #if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
@@ -209,7 +208,6 @@ jobs:
           ouput_artifact_ref: ios-artifact-dev
 
       - name: Export distribution archive
-        #if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
@@ -231,12 +229,12 @@ jobs:
 
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        if: github.ref_name == 'main'
         run: |
           pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
-        if: github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        if: github.ref_name == 'main'
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
@@ -253,7 +251,7 @@ jobs:
           --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
       - name: Send notification for iOS failure
-        if: failure() && github.ref_name == 'main' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+        if: failure() && github.ref_name == 'main'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
           job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
@@ -317,7 +315,6 @@ jobs:
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
 
       - name: Create release keystore
-        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android/app
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
@@ -338,7 +335,6 @@ jobs:
       #          ./gradlew --no-daemon bundleRelease
 
       - name: Android release build
-        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         working-directory: app/android
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
@@ -355,10 +351,11 @@ jobs:
       #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=android -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
       #        env:
       #          GITHUB_TOKEN: ${{ github.token }}
+
       - name: List Artifacts
-        #if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
         run: |
           find . -type f -name '*.apk'
+
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
@@ -366,8 +363,9 @@ jobs:
           path: |
             app/android/app/build/outputs/bundle/release/app-release.aab
             app/android/app/build/outputs/apk/release/app-release.apk
+
       - name: Upload Android artifact
-        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        if: github.ref_name == 'main'
         uses: actions/upload-artifact@v3
         with:
           name: android-artifact
@@ -376,7 +374,7 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        if: github.ref_name == 'main'
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -392,7 +390,7 @@ jobs:
           GOOGLE_API_CREDENTIALS="./android/api_keys.json" npx @bcgov/gpublish
 
       - name: Send notification for Android failure
-        if: failure() && github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true'
+        if: failure() && github.ref_name == 'main'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
           job_title: "BC Wallet Android Build - Run number ${{ github.run_number }}"
