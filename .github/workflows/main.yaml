@@ -401,7 +401,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   ship-to-saucelabs:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    if: github.ref_name == 'main'
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     steps:
@@ -428,7 +428,7 @@ jobs:
           artifact_name: app-release.aab
 
   run-on-device-tests:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    if: github.ref_name == 'main'
     needs: [ship-to-saucelabs]
     runs-on: ubuntu-22.04
     strategy:
