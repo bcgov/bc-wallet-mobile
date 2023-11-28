@@ -70,8 +70,8 @@ jobs:
             fi
           done
         env:
-          OCA_URL: ${{ var.OCA_URL }}
-          PROOF_TEMPLATE_URL: ${{ var.PROOF_TEMPLATE_URL }}
+          OCA_URL: ${{ vars.OCA_URL }}
+          PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
 
   build-ios:
     needs: [check-ios-secrets, check-env-vars]
