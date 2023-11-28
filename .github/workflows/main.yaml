@@ -27,33 +27,35 @@ on:
       - .yarn/**
 
 jobs:
-  check-android-secrets:
+  check-secrets:
     runs-on: ubuntu-22.04
-    outputs:
-      isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
     steps:
-      - id: isReleaseBuild
-        if: env.PLAY_STORE_JKS_BASE64 != null && env.PLAY_STORE_JKS_ALIAS != null && env.PLAY_STORE_JKS_PASSWD != null
-        run: echo "::set-output name=defined::true"
-        env:
-          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
-          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-
-  check-ios-secrets:
-    runs-on: ubuntu-22.04
-    outputs:
-      isReleaseBuild: ${{ steps.isReleaseBuild.outputs.defined }}
-    steps:
-      - id: isReleaseBuild
-        if: env.CERTIFICATE != null && env.KEYCHIAN_PASSWD != null && env.PROVISIONING_PROFILE != null
-        run: echo "::set-output name=defined::true"
+      - name: Check secrets
+        shell: bash
+        run: |
+          required_env_vars=(
+            "CERTIFICATE"
+            "KEYCHIAN_PASSWD"
+            "PROVISIONING_PROFILE"
+            "PLAY_STORE_JKS_BASE64"
+            "PLAY_STORE_JKS_ALIAS"
+            "PLAY_STORE_JKS_PASSWD"
+          )
+          for var in "${required_env_vars[@]}"; do
+            if [ -z "${!var}" ]; then
+              echo "error: $var is not set."
+              exit 1
+            fi
+          done
         env:
           CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           KEYCHIAN_PASSWD: ${{ secrets.KEYCHIAN_PASSWD }}
           PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
 
-  check-env-vars:
+  check-vars:
     runs-on: ubuntu-22.04
     steps:
       - name: Check variables
@@ -74,7 +76,7 @@ jobs:
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
 
   build-ios:
-    needs: [check-ios-secrets, check-env-vars]
+    needs: [check-secrets, check-vars]
     runs-on: macos-latest
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
@@ -159,13 +161,14 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null && env.OCA_URL != null && env.PROOF_TEMPLATE_URL != null
         working-directory: app
         env:
           MEDIATOR_USE_PUSH_NOTIFICATIONS: false
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          OCA_URL: ${{ vars.OCA_URL }}
+          PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
@@ -259,7 +262,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
-    needs: [check-android-secrets, check-env-vars]
+    needs: [check-secrets, check-vars]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -299,12 +302,13 @@ jobs:
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
-        if: env.MEDIATOR_URL != null && env.IAS_PORTAL_URL != null && env.IAS_AGENT_INVITE_URL != null && env.OCA_URL != null && env.PROOF_TEMPLATE_URL != null
         working-directory: app
         env:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
+          OCA_URL: ${{ vars.OCA_URL }}
+          PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
         run: |
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
