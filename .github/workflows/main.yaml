@@ -3,8 +3,6 @@ name: Native Build & Test
 env:
   appBuildNumber: ${{ github.run_number }}
   appBuildVersion: "1.0.12"
-  OCA_URL: https://raw.githubusercontent.com/bcgov/aries-oca-bundles/main/
-  PROOF_TEMPLATE_URL: https://raw.githubusercontent.com/bcgov/bc-wallet-mobile/proof-template-bundle
 
 on:
   workflow_dispatch:
@@ -71,6 +69,9 @@ jobs:
               exit 1
             fi
           done
+        env:
+          OCA_URL: ${{ var.OCA_URL }}
+          PROOF_TEMPLATE_URL: ${{ var.PROOF_TEMPLATE_URL }}
 
   build-ios:
     needs: [check-ios-secrets, check-env-vars]
