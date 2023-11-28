@@ -65,7 +65,7 @@ jobs:
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
-              echo "Error: $var is not set."
+              echo "error: $var is not set."
               exit 1
             fi
           done
