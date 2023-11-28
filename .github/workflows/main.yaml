@@ -56,7 +56,7 @@ jobs:
   check-env-vars:
     runs-on: ubuntu-22.04
     steps:
-      - name: Check environment variables
+      - name: Check variables
         shell: bash
         run: |
           required_env_vars=(
