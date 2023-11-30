@@ -62,10 +62,11 @@ const configuration: ConfigurationContext = {
     description: 'PersonCredentialNotification.Description',
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
-  useCustomNotifications: useNotifications,
   enableTours: true,
   showPreface: true,
   disableOnboardingSkip: true,
+  useCustomNotifications: useNotifications,
+  whereToUseWalletUrl: 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet#where',
 }
 
 export default { theme, localization, configuration }
