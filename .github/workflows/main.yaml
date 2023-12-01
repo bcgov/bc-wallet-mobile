@@ -462,7 +462,7 @@ jobs:
         with:
           username: ${{ secrets.SAUCE_USERNAME }}
           accessKey: ${{ secrets.SAUCE_ACCESS_KEY }}
-          directDomains: aries-mediator-agent-test.apps.silver.devops.gov.bc.ca
+          directDomains: aries-mediator-agent.vonx.io,apple.com
 
       - name: Fetch mobile test harness repo
         uses: actions/checkout@v4
