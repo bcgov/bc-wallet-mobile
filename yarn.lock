@@ -7378,7 +7378,6 @@ __metadata:
     commitlint: ^17.7.1
     husky: ^7.0.0
     npm-run-all: ^4.1.5
-    reflect-metadata: ^0.1.13
   languageName: unknown
   linkType: soft
 
