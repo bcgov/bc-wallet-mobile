@@ -2872,9 +2872,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.149":
-  version: 1.0.0-alpha.149
-  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.149"
+"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.150":
+  version: 1.0.0-alpha.150
+  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.150"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/anoncreds-rs": ^0.4.0
@@ -2944,41 +2944,41 @@ __metadata:
     uuid: ^9.0.0
   bin:
     bifold: bin/bifold
-  checksum: 4921943731f44f6f5fc89eb22f75ba570e71288a8aa8a1f2e5b9d1f51a3971dee289496a5a9db96098faf5ad76fbd69b7ce9f78baad7c6daeaeabddfdb4806f1
+  checksum: f6886bf1abf91180508d03ad5f9fd88cac96fa6f18d4bb65b2f6c6045c7f59d635a58ba467d52ecd41ca2586a626f50883fab8269af2303147e651dc14d36d23
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.149":
-  version: 1.0.0-alpha.149
-  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.149"
+"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.150":
+  version: 1.0.0-alpha.150
+  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.150"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/core": ^0.4.0
     "@aries-framework/react-hooks": ^0.4.2
     react: ^18.2.0
-  checksum: 4b83c6f8ef3ca6e468ce3e3dc2949342823078f8d9837ada115a229faca828eafea885d3946356fca854295dc3558015ab108111c1eb91e581a7c56b17a1541c
+  checksum: 4cccb11946d6fe065e94f02e2847de83dc3ac1e15ee0fd53b904e7ff07dcb8255496a84bea1088fa2794d11ceb33a07e2393762295cce834e8c5057a07d8d31f
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-oca@npm:1.0.0-alpha.149":
-  version: 1.0.0-alpha.149
-  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.149"
+"@hyperledger/aries-oca@npm:1.0.0-alpha.150":
+  version: 1.0.0-alpha.150
+  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.150"
   dependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/core": ^0.4.0
     axios: ^1.4.0
     lodash.startcase: ^4.4.0
-  checksum: a3a268e94cc7e6055e38477df8a3c61db35208fef7d3d2b6909e6b149c3a16d90f39722e1b7704a00941f8a1b2416825fd2e0a3fb435529a08c2b772e04068d1
+  checksum: 95cf6acc8d840355c34ccbdf4908dfbf52196f7a19b94a524d9dee2cea3f52cdb4a0bb58f226ff68582c7f2c4e08e5d6b7f7ed45450b2c9c08b98c067ddb9cf3
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.149":
-  version: 1.0.0-alpha.149
-  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.149"
+"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.150":
+  version: 1.0.0-alpha.150
+  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.150"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 3c90b167ee3c039cf7fda89a7e5a2095190f00b34ca81c3d4365e606e8d6b22f6a16303bae97498e90c545c311bc6a589f95e42329c9989ed664ad34b9538aba
+  checksum: 434dd96c3ccaf7a93c7e5908b91919274a4cc3b7a673a0c7131b139fa27bd5c0d66c9e4d6e09d00e189f2657ce1cf05d4742d90bb9b76cf11df9688796f5335d
   languageName: node
   linkType: hard
 
@@ -7271,10 +7271,10 @@ __metadata:
     "@formatjs/intl-relativetimeformat": 9.3.1
     "@hyperledger/anoncreds-react-native": ^0.1.0
     "@hyperledger/aries-askar-react-native": ^0.1.1
-    "@hyperledger/aries-bifold-core": 1.0.0-alpha.149
-    "@hyperledger/aries-bifold-verifier": 1.0.0-alpha.149
-    "@hyperledger/aries-oca": 1.0.0-alpha.149
-    "@hyperledger/aries-react-native-attestation": 1.0.0-alpha.149
+    "@hyperledger/aries-bifold-core": 1.0.0-alpha.150
+    "@hyperledger/aries-bifold-verifier": 1.0.0-alpha.150
+    "@hyperledger/aries-oca": 1.0.0-alpha.150
+    "@hyperledger/aries-react-native-attestation": 1.0.0-alpha.150
     "@hyperledger/indy-vdr-react-native": ^0.1.0
     "@react-native-async-storage/async-storage": 1.15.11
     "@react-native-community/masked-view": 0.1.11
@@ -7364,6 +7364,7 @@ __metadata:
     react-native-vector-icons: ^10.0.0
     react-native-webview: ^11.22.3
     react-test-renderer: ^18.2.0
+    reflect-metadata: ^0.1.13
     typescript: ^5.0.4
     uuid: ^9.0.0
   languageName: unknown
@@ -7377,6 +7378,7 @@ __metadata:
     commitlint: ^17.7.1
     husky: ^7.0.0
     npm-run-all: ^4.1.5
+    reflect-metadata: ^0.1.13
   languageName: unknown
   linkType: soft
 
