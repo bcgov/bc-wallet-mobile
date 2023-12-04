@@ -22,19 +22,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/anoncreds-rs@npm:^0.4.0":
-  version: 0.4.2
-  resolution: "@aries-framework/anoncreds-rs@npm:0.4.2"
+"@aries-framework/anoncreds-rs@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@aries-framework/anoncreds-rs@npm:0.4.0"
   dependencies:
-    "@aries-framework/anoncreds": 0.4.2
-    "@aries-framework/core": 0.4.2
+    "@aries-framework/anoncreds": 0.4.0
+    "@aries-framework/core": 0.4.0
     class-transformer: ^0.5.1
     class-validator: 0.14.0
     rxjs: ^7.2.0
-    tsyringe: ^4.8.0
+    tsyringe: ^4.7.0
   peerDependencies:
     "@hyperledger/anoncreds-shared": ^0.1.0
-  checksum: f1058ac4beba1dd22b66d6c8eea3482910a83ce41e161226bce8dae60e738f49da12ebd4e699bbf2b3eddf3f875de2b65ee50e7ed751cabf337491a1ea6d3c24
+  checksum: b50a07e0964294a4111824456be6885a2dc17b67a3dc6320b749ea90f2a10f04c4690924d1a3a8594ac5465a67c6a17fd4f57ecc446bf35f47a7b97cc0a86923
   languageName: node
   linkType: hard
 
@@ -51,32 +51,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/anoncreds@npm:0.4.2":
-  version: 0.4.2
-  resolution: "@aries-framework/anoncreds@npm:0.4.2"
-  dependencies:
-    "@aries-framework/core": 0.4.2
-    bn.js: ^5.2.1
-    class-transformer: 0.5.1
-    class-validator: 0.14.0
-    reflect-metadata: ^0.1.13
-  checksum: 3ed378701d2cc01839c8500b3c9c7fecea0d9afd67749d61e55010293fbf6b30ff12919b1e44e7753a1ac9c96438f0ad179e62c1d8a0f78a048c66b889aea308
-  languageName: node
-  linkType: hard
-
-"@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.4.0
-  resolution: "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::version=0.4.0&hash=695f0a&locator=bc-wallet-mobile%40workspace%3A."
-  dependencies:
-    "@aries-framework/core": 0.4.0
-    bn.js: ^5.2.1
-    class-transformer: 0.5.1
-    class-validator: 0.14.0
-    reflect-metadata: ^0.1.13
-  checksum: 7de0cc1a924de60a0e05256831be35907b1d53a18de8d8d716242537099d100f6b1253692295f02b958002b6f1f5fd3388126d779ccd4960d78a4995c7e54943
-  languageName: node
-  linkType: hard
-
 "@aries-framework/askar@npm:0.4.0":
   version: 0.4.0
   resolution: "@aries-framework/askar@npm:0.4.0"
@@ -90,22 +64,6 @@ __metadata:
   peerDependencies:
     "@hyperledger/aries-askar-shared": ^0.1.0
   checksum: ffe23842b85acb263fd8f8f76e29047de0002ea1858840f6097845269c922992c7b5b84c3e517acfada0d2b81c8e05fe8d7a8c49be54340e47a487c23ae232a2
-  languageName: node
-  linkType: hard
-
-"@aries-framework/askar@npm:^0.4.0":
-  version: 0.4.2
-  resolution: "@aries-framework/askar@npm:0.4.2"
-  dependencies:
-    "@aries-framework/core": 0.4.2
-    bn.js: ^5.2.1
-    class-transformer: 0.5.1
-    class-validator: 0.14.0
-    rxjs: ^7.2.0
-    tsyringe: ^4.8.0
-  peerDependencies:
-    "@hyperledger/aries-askar-shared": ^0.1.0
-  checksum: ce954a31a0e4748342c066aaf9ddc356a31a5b9fd4324dc6c99ccfdb32db30b229fa47384cfdbc2477d5c0ac561e66492916a712215a76f81c998f60bf984d57
   languageName: node
   linkType: hard
 
@@ -144,41 +102,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/core@npm:0.4.2, @aries-framework/core@npm:^0.4.0":
-  version: 0.4.2
-  resolution: "@aries-framework/core@npm:0.4.2"
-  dependencies:
-    "@digitalcredentials/jsonld": ^5.2.1
-    "@digitalcredentials/jsonld-signatures": ^9.3.1
-    "@digitalcredentials/vc": ^1.1.2
-    "@multiformats/base-x": ^4.0.1
-    "@stablelib/ed25519": ^1.0.2
-    "@stablelib/random": ^1.0.1
-    "@stablelib/sha256": ^1.0.1
-    "@types/node-fetch": 2.6.2
-    "@types/ws": ^8.5.4
-    abort-controller: ^3.0.0
-    big-integer: ^1.6.51
-    borc: ^3.0.0
-    buffer: ^6.0.3
-    class-transformer: 0.5.1
-    class-validator: 0.14.0
-    did-resolver: ^4.1.0
-    lru_map: ^0.4.1
-    luxon: ^3.3.0
-    make-error: ^1.3.6
-    object-inspect: ^1.10.3
-    query-string: ^7.0.1
-    reflect-metadata: ^0.1.13
-    rxjs: ^7.2.0
-    tsyringe: ^4.8.0
-    uuid: ^9.0.0
-    varint: ^6.0.0
-    web-did-resolver: ^2.0.21
-  checksum: d50f24cdab9c233d8d564a90af72240ee3c4c70bac10fd55292313faf8f1e00fbedac84acec9b83b52929f4168f457f29994e57c856b1d30eac2f3bda11ea3d5
-  languageName: node
-  linkType: hard
-
 "@aries-framework/indy-sdk-to-askar-migration@npm:0.4.0":
   version: 0.4.0
   resolution: "@aries-framework/indy-sdk-to-askar-migration@npm:0.4.0"
@@ -193,15 +116,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/indy-vdr@npm:^0.4.0":
-  version: 0.4.2
-  resolution: "@aries-framework/indy-vdr@npm:0.4.2"
+"@aries-framework/indy-vdr@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@aries-framework/indy-vdr@npm:0.4.0"
   dependencies:
-    "@aries-framework/anoncreds": 0.4.2
-    "@aries-framework/core": 0.4.2
+    "@aries-framework/anoncreds": 0.4.0
+    "@aries-framework/core": 0.4.0
   peerDependencies:
     "@hyperledger/indy-vdr-shared": ^0.1.0
-  checksum: 544764b4d1354f39c16e4f1c4bbf3bae71a582f9fa08e2604633e6e463d99c71ac378e8203f099e09f0ad3cbd1b819a8e1f84fedcd6109e061f2bbf1703e0c92
+  checksum: 9ba82aa3994a1774f186fafbe793384ce42af9dfd5604189ac7786f0e31dc9ca1eba70e8b2e4aab474889775264d39a1e4c3bce997dd446f81f49b16ca2191a5
   languageName: node
   linkType: hard
 
@@ -258,18 +181,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/react-native@npm:^0.4.0":
-  version: 0.4.2
-  resolution: "@aries-framework/react-native@npm:0.4.2"
+"@aries-framework/react-native@npm:0.4.0":
+  version: 0.4.0
+  resolution: "@aries-framework/react-native@npm:0.4.0"
   dependencies:
-    "@aries-framework/core": 0.4.2
+    "@aries-framework/core": 0.4.0
     "@azure/core-asynciterator-polyfill": ^1.0.2
     events: ^3.3.0
   peerDependencies:
     react-native: ^0.71.4
     react-native-fs: ^2.20.0
     react-native-get-random-values: ^1.8.0
-  checksum: 9854ca17f27e57bf889522d2b7c77f5d984dbfc8692dc08f9dbcea33ae0641bdc9e75c44d935647e4c9390cb881121123fdcb18e943d8e6f4bead2e9e4b0d327
+  checksum: 1e215acb07075f6b7e898e3bbd3d5b6e7bee030ce5b62f23d6c7ffaa6b5e8a8b1525b4bd3c03f18244e5fa16c8f407139aead06dd72ade312cca3175c237fdcf
   languageName: node
   linkType: hard
 
@@ -5078,16 +5001,6 @@ __metadata:
   version: 1.2.5
   resolution: "@types/minimist@npm:1.2.5"
   checksum: 477047b606005058ab0263c4f58097136268007f320003c348794f74adedc3166ffc47c80ec3e94687787f2ab7f4e72c468223946e79892cf0fd9e25e9970a90
-  languageName: node
-  linkType: hard
-
-"@types/node-fetch@npm:2.6.2":
-  version: 2.6.2
-  resolution: "@types/node-fetch@npm:2.6.2"
-  dependencies:
-    "@types/node": "*"
-    form-data: ^3.0.0
-  checksum: 6f73b1470000d303d25a6fb92875ea837a216656cb7474f66cdd67bb014aa81a5a11e7ac9c21fe19bee9ecb2ef87c1962bceeaec31386119d1ac86e4c30ad7a6
   languageName: node
   linkType: hard
 
@@ -11305,17 +11218,6 @@ __metadata:
     tapable: ^1.0.0
     worker-rpc: ^0.1.0
   checksum: 07eb59f386fe33312ceeab9c98cc2d14dda9580c7c8d883178d210841ada022a832e8f2e7f97097746b0758cfe777e2d2d5e2e163336d9e4aa29d76814269c82
-  languageName: node
-  linkType: hard
-
-"form-data@npm:^3.0.0":
-  version: 3.0.1
-  resolution: "form-data@npm:3.0.1"
-  dependencies:
-    asynckit: ^0.4.0
-    combined-stream: ^1.0.8
-    mime-types: ^2.1.12
-  checksum: b019e8d35c8afc14a2bd8a7a92fa4f525a4726b6d5a9740e8d2623c30e308fbb58dc8469f90415a856698933c8479b01646a9dff33c87cc4e76d72aedbbf860d
   languageName: node
   linkType: hard
 
@@ -20593,7 +20495,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsyringe@npm:^4.6.0, tsyringe@npm:^4.7.0, tsyringe@npm:^4.8.0":
+"tsyringe@npm:^4.6.0, tsyringe@npm:^4.7.0":
   version: 4.8.0
   resolution: "tsyringe@npm:4.8.0"
   dependencies:
