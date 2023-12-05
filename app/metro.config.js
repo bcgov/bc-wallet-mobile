@@ -8,6 +8,8 @@ const packageDirs = [
   fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-oca')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-bifold-core')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-bifold-verifier')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-react-native-attestation')),
+
 ]
 
 const watchFolders = [...packageDirs]
