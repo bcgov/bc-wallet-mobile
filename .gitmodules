@@ -1,4 +1,0 @@
-[submodule "bifold"]
-	path = bifold
-	branch = publish_core
-	url = https://github.com/cvarjao/aries-mobile-agent-react-native.git

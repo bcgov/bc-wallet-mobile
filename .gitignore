@@ -63,3 +63,6 @@ xcuserdata/
 
 # gem
 app/vendor/bundle/**
+
+# child packages
+bifold/
