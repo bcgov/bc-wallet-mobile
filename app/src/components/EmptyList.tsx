@@ -38,6 +38,7 @@ const EmptyList = ({ message }: EmptyListProps) => {
         <Button
           title={t('Credentials.AddFirstCredential')}
           accessibilityLabel={t('Credentials.AddFirstCredential')}
+          testID={testIdWithKey('AddFirstCredential')}
           buttonType={ButtonType.Primary}
           onPress={addCredentialPress}
           disabled={addCredentialPressed}
