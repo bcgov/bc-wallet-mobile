@@ -1,6 +1,6 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/native'
-import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard, TabStacks, testIdWithKey } from 'aries-bifold'
+import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard, TabStacks, testIdWithKey } from '@hyperledger/aries-bifold-core'
 import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, FlatList } from 'react-native'
@@ -12,7 +12,7 @@ import { startFlow } from '../helpers/BCIDHelper'
 import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
 import { BCDispatchAction, BCState } from '../store'
 
-const PersonCredential: React.FC = () => {
+export default function PersonCredential() {
   const { agent } = useAgent()
   const navigation = useNavigation()
 
@@ -135,5 +135,3 @@ const PersonCredential: React.FC = () => {
     </SafeAreaView>
   )
 }
-
-export default PersonCredential

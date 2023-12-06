@@ -9,7 +9,7 @@ import {
   IColorPallet,
   ITheme,
   IAssets,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
 import React from 'react'
 import { StyleSheet } from 'react-native'
 

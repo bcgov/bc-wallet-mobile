@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Button, ButtonType, useTheme } from 'aries-bifold'
+import { Button, ButtonType, useTheme } from '@hyperledger/aries-bifold-core'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, Modal, StyleSheet, Text, View } from 'react-native'
@@ -21,7 +21,7 @@ interface PushNotificationsModalProps {
   visible?: boolean
 }
 
-const PushNotificationsModal: React.FC<PushNotificationsModalProps> = ({ title, onDone, visible }) => {
+export default function PushNotificationsModal({ title, onDone, visible }: PushNotificationsModalProps) {
   const { t } = useTranslation()
   const [modalVisible, setModalVisible] = useState<boolean>(true)
   const { ColorPallet, TextTheme } = useTheme()
@@ -101,5 +101,3 @@ const PushNotificationsModal: React.FC<PushNotificationsModalProps> = ({ title, 
     </Modal>
   )
 }
-
-export default PushNotificationsModal

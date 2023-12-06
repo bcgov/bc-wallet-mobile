@@ -11,7 +11,7 @@ import {
   Button,
   ButtonType,
   Link,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'

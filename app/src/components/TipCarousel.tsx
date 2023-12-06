@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react'
+import React, { FunctionComponent, PropsWithChildren, ReactNode, memo, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem, AccessibilityInfo } from 'react-native'
 
@@ -23,14 +23,15 @@ interface TipItem {
   text: string
 }
 
-export interface TipProps {
+export interface TipProps extends PropsWithChildren {
+  type?: string
   item: TipItem
   width: number
   header: string
 }
 
 // memo used here to optimize for FlatList rendering
-const Tip: React.FC<TipProps> = memo(({ item, width, header }) => {
+const Comp: FunctionComponent<TipProps> = ({ item, width, header }) => {
   // not making use of useTheme here to optimize FlatList rendering
   const tipStyles = StyleSheet.create({
     tipContainer: {
@@ -74,10 +75,11 @@ const Tip: React.FC<TipProps> = memo(({ item, width, header }) => {
         {item.text}
       </Text>
     </View>
-  )
-})
+  ) as ReactNode
+}
 
-const TipCarousel: React.FC = () => {
+const Tip = memo<TipProps>(Comp)
+const TipCarousel = () => {
   const flatListRef = useRef<FlatList>(null)
   const { width } = useWindowDimensions()
   const [currentPosition, setCurrentPosition] = useState(0)

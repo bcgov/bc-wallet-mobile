@@ -10,14 +10,12 @@ on:
     branches: [main]
     paths:
       - app/**
-      - bifold
       - .yarn/**
       - .github/workflows/**
   pull_request:
     branches: [main]
     paths:
       - app/**
-      - bifold
       - .yarn/**
       - .github/workflows/**
       - .gitmodules
@@ -48,8 +46,8 @@ jobs:
             fi
           done
         env:
-          CERTIFICATE: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          KEYCHIAN_PASSWD: ${{ secrets.KEYCHIAN_PASSWD }}
+          CERTIFICATE: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
+          KEYCHIAN_PASSWD: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
           PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
@@ -82,10 +80,6 @@ jobs:
       BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
     steps:
       - uses: actions/checkout@v4
-
-      - name: Pull & update submodules recursively
-        run: |
-          git submodule update --init --recursive
 
       - uses: actions/setup-python@v4
         with:
@@ -136,9 +130,6 @@ jobs:
         run: |
           yarn install --immutable && \
           git status
-
-      - name: Update ledgers
-        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
@@ -268,10 +259,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pull & update submodules recursively
-        run: |
-          git submodule update --init --recursive
-
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
@@ -287,9 +274,6 @@ jobs:
           cache: "gradle"
           server-id: github
           settings-path: ${{ github.workspace }}
-
-      - name: Update ledgers
-        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install dependencies
         working-directory: ./
