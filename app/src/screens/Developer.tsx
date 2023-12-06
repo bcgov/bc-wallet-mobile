@@ -1,5 +1,5 @@
 import { useAgent } from '@aries-framework/react-hooks'
-import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
+import { useTheme, useStore, testIdWithKey, DispatchAction } from '@hyperledger/aries-bifold-core'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
@@ -90,20 +90,23 @@ const Settings: React.FC = () => {
     setEnvironmentModalVisible(false)
   }
 
-  const SectionHeader: React.FC<{ icon: string; title: string }> = ({ icon, title }) => (
-    <View style={[styles.section, styles.sectionHeader]}>
-      <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
-      <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
-    </View>
+  const SectionHeader = ({ icon, title }: { icon: string; title: string }): JSX.Element => (
+    <>
+      <View style={[styles.section, styles.sectionHeader]}>
+        <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
+        <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
+      </View>
+    </>
   )
 
-  const SectionRow: React.FC<{
+  interface SectionRowProps {
     title: string
     accessibilityLabel?: string
     testID?: string
-    children?: React.ReactNode
+    children: JSX.Element
     onPress?: () => void
-  }> = ({ title, accessibilityLabel, testID, onPress, children }) => (
+  }
+  const SectionRow = ({ title, accessibilityLabel, testID, onPress, children }: SectionRowProps) => (
     <View style={[styles.section, { flexDirection: 'row' }]}>
       <Text style={[TextTheme.headingFour, { flex: 1, fontWeight: 'normal', flexWrap: 'wrap' }]}>{title}</Text>
       <Pressable

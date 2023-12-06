@@ -1,4 +1,4 @@
-import { useTheme } from 'aries-bifold'
+import { useTheme } from '@hyperledger/aries-bifold-core'
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, Animated, useWindowDimensions } from 'react-native'
 
@@ -6,7 +6,7 @@ export interface ProgressBarProps {
   progressPercent: number
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ progressPercent }) => {
+const ProgressBar = ({ progressPercent }: ProgressBarProps) => {
   const { ColorPallet } = useTheme()
   const { width: windowWidth } = useWindowDimensions()
   const [progressBarScale] = useState(new Animated.Value(0))

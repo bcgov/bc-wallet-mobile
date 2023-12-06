@@ -9,7 +9,7 @@ interface WebDisplayProps {
   exitUrl: string
 }
 
-const WebDisplay: React.FC<WebDisplayProps> = ({ destinationUrl, exitUrl, visible, onClose }) => {
+const WebDisplay = ({ destinationUrl, exitUrl, visible, onClose }: WebDisplayProps) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,

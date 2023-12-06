@@ -1,6 +1,6 @@
 import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
 import { DidRepository, CredentialExchangeRecord } from '@aries-framework/core'
-import { BifoldError, Agent, EventTypes as BifoldEventTypes } from 'aries-bifold'
+import { BifoldError, Agent, EventTypes as BifoldEventTypes } from '@hyperledger/aries-bifold-core'
 import React from 'react'
 import { TFunction } from 'react-i18next'
 import { Linking, Platform, DeviceEventEmitter } from 'react-native'

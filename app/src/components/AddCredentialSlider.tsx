@@ -2,7 +2,7 @@ import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build
 import { CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
 import { useNavigation } from '@react-navigation/native'
-import { useTheme, Screens, Stacks, testIdWithKey, testIdForAccessabilityLabel } from 'aries-bifold'
+import { useTheme, Screens, Stacks, testIdWithKey, testIdForAccessabilityLabel } from '@hyperledger/aries-bifold-core'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
@@ -12,7 +12,7 @@ import { hitSlop } from '../constants'
 import { BCWalletEventTypes } from '../events/eventTypes'
 import { showBCIDSelector } from '../helpers/BCIDHelper'
 
-const AddCredentialSlider: React.FC = () => {
+export default function AddCredentialSlider() {
   const { ColorPallet, TextTheme } = useTheme()
   const navigation = useNavigation()
   const { t } = useTranslation()
@@ -146,5 +146,3 @@ const AddCredentialSlider: React.FC = () => {
     </Modal>
   )
 }
-
-export default AddCredentialSlider

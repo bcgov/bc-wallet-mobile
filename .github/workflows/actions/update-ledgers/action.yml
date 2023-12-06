@@ -12,7 +12,7 @@ runs:
         ls -lah ledgers.json
         # note md5
         shasum ledgers.json
-        shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
+        shasum bifold/packages/legacy/core/App/configs/ledgers/indy/ledgers.json
 
-        mv ledgers.json bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
-        shasum bifold/packages/legacy/core/configs/ledgers/indy/ledgers.json
+        mv ledgers.json bifold/packages/legacy/core/App/configs/ledgers/indy/ledgers.json
+        shasum bifold/packages/legacy/core/App/configs/ledgers/indy/ledgers.json

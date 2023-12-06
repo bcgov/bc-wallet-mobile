@@ -1,4 +1,4 @@
-import { useTheme, testIdWithKey, Button, ButtonType } from 'aries-bifold'
+import { useTheme, testIdWithKey, Button, ButtonType } from '@hyperledger/aries-bifold-core'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Text, View, DeviceEventEmitter } from 'react-native'
@@ -9,7 +9,7 @@ export interface EmptyListProps {
   message?: string
 }
 
-const EmptyList: React.FC<EmptyListProps> = ({ message }) => {
+const EmptyList = ({ message }: EmptyListProps) => {
   const { t } = useTranslation()
   const { ListItems } = useTheme()
   const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)

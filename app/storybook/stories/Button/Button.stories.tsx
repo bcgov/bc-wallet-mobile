@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { storiesOf } from '@storybook/react-native'
-import { components, ThemeProvider } from 'aries-bifold'
+import { components, ThemeProvider } from '@hyperledger/aries-bifold-core'
 import React from 'react'
 import { SafeAreaView, ScrollView, Text, View } from 'react-native'
 
