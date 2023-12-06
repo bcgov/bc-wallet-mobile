@@ -81,12 +81,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
-        with:
-          repository: hyperledger/aries-mobile-agent-react-native
-          path: bifold
-          fetch-depth: 1
-
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
@@ -136,9 +130,6 @@ jobs:
         run: |
           yarn install --immutable && \
           git status
-
-      - name: Update ledgers
-        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
@@ -268,12 +259,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/checkout@v4
-        with:
-          repository: hyperledger/aries-mobile-agent-react-native
-          path: bifold
-          fetch-depth: 1
-
       - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
@@ -289,9 +274,6 @@ jobs:
           cache: "gradle"
           server-id: github
           settings-path: ${{ github.workspace }}
-
-      - name: Update ledgers
-        uses: ./.github/workflows/actions/update-ledgers
 
       - name: Install dependencies
         working-directory: ./
