@@ -37,6 +37,7 @@ const EmptyList = ({ message }: EmptyListProps) => {
       <View style={{ margin: 25 }}>
         <Button
           title={t('Credentials.AddFirstCredential')}
+          accessibilityLabel={t('Credentials.AddFirstCredential')}
           buttonType={ButtonType.Primary}
           onPress={addCredentialPress}
           disabled={addCredentialPressed}
