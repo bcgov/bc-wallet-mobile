@@ -268,9 +268,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Pull & update submodules recursively
-        run: |
-          git submodule update --init --recursive
+      - uses: actions/checkout@v4
+        with:
+          repository: hyperledger/aries-mobile-agent-react-native
+          path: bifold
+          fetch-depth: 1
 
       - uses: actions/setup-python@v4
         with:
