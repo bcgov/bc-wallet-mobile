@@ -9,8 +9,6 @@ import {
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { CommonActions, useNavigation } from '@react-navigation/native'
 import {
   LocalStorageKeys,
   DispatchAction,
@@ -33,6 +31,8 @@ import {
   getAgentModules,
   createLinkSecretIfRequired,
 } from '@hyperledger/aries-bifold-core'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -439,10 +439,19 @@ const Splash = () => {
         await newAgent.initialize()
         const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
         if (!cachedLedgers) {
+          // these escapes can be removed once Indy VDR has been upgraded and the patch is no longer needed
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore:next-line
           await poolService.refreshPoolConnections()
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore:next-line
           const raw_transactions = await poolService.getPoolTransactions()
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore:next-line
           const transactions = raw_transactions.map(({ config, transactions }) => ({
             ...config,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore:next-line
             genesisTransactions: transactions.reduce((prev, curr) => {
               return prev + JSON.stringify(curr)
             }, ''),
