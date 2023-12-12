@@ -4093,9 +4093,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.155":
-  version: 1.0.0-alpha.155
-  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.155"
+"@hyperledger/aries-bifold-core@portal:bifold/packages/legacy/core::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@hyperledger/aries-bifold-core@portal:bifold/packages/legacy/core::locator=bc-wallet-mobile%40workspace%3A."
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/anoncreds-rs": ^0.4.0
@@ -4162,46 +4162,43 @@ __metadata:
     react-native-toast-message: ^2.1.6
     react-native-uuid: ^2.0.1
     react-native-vector-icons: ^10.0.0
+    react-native-vision-camera: "*"
     uuid: ^9.0.0
   bin:
     bifold: bin/bifold
-  checksum: 726cb925597d934e84fb4d096c6ef231c6725169d44a435d6eca192d7477a3c71f8c9bef172ae9dc7cde6353692de5291cf070809d7b8d000246768fe6f65fdb
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.155":
-  version: 1.0.0-alpha.155
-  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.155"
+"@hyperledger/aries-bifold-verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@hyperledger/aries-bifold-verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A."
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/core": ^0.4.0
     "@aries-framework/react-hooks": ^0.4.2
     react: ^18.2.0
-  checksum: d56ba845942832d73709e934797f5a0b86a7fa0b7efe86cd183f702a426fe257faf2d567219617712bbf91efd2c8e893d9075686e3befaceccaa8e4819535865
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@hyperledger/aries-oca@npm:1.0.0-alpha.155":
-  version: 1.0.0-alpha.155
-  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.155"
+"@hyperledger/aries-oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@hyperledger/aries-oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@aries-framework/anoncreds": "npm:^0.4.0"
     "@aries-framework/core": "npm:^0.4.0"
     axios: "npm:^1.4.0"
     lodash.startcase: "npm:^4.4.0"
-  checksum: 57d6643cbea58b7ef12f0e3a5c8cb667945571342b2fe2c7d6ccc73d430ec307e70f701a2a472d59feade738c249b7abf68fb07e313dd20d75e5e0ab70f08d25
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.155":
-  version: 1.0.0-alpha.155
-  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.155"
+"@hyperledger/aries-react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@hyperledger/aries-react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A."
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 6a9ba204a914db82e2065d4b4c4d38d45259abe37da6b3cdc39f0e4f7beb943e6dde890730a4ff5bc1b0605f0d5ae2f14f7c3bb47f799f09e84e25d27a100af9
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@hyperledger/indy-vdr-react-native@npm:0.1.0":
   version: 0.1.0
@@ -8661,6 +8658,7 @@ __metadata:
     react-native-toast-message: "npm:2.1.6"
     react-native-uuid: "npm:2.0.1"
     react-native-vector-icons: "npm:10.0.2"
+    react-native-vision-camera: "npm:^3.6.16"
     react-native-webview: "npm:11.26.1"
     react-test-renderer: "npm:18.2.0"
     reflect-metadata: "npm:0.1.13"
@@ -19608,6 +19606,20 @@ __metadata:
     fa6-upgrade: bin/fa6-upgrade.sh
     generate-icon: bin/generate-icon.js
   checksum: f0d0beb78403c5452d6ed0ec6f3eab259e253906bc0afd70c8c8a0da07068f517a2d774c6fe883af062465a64ffb5ee74f40bb2b916098f7dd83e6c1236d114a
+  languageName: node
+  linkType: hard
+
+"react-native-vision-camera@npm:^3.6.16":
+  version: 3.6.16
+  resolution: "react-native-vision-camera@npm:3.6.16"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-worklets-core: "*"
+  peerDependenciesMeta:
+    react-native-worklets-core:
+      optional: true
+  checksum: 6ebae021fd13169b55aa5e7c3a2fc92f908a92160ed55ba4dcc05d98e384b6c2b4efe0217983b8e68a2208784de2d7c107408a97a9e6c61daf6de9f62ffe179b
   languageName: node
   linkType: hard
 
