@@ -4139,7 +4139,6 @@ __metadata:
     react-native-animated-pagination-dots: ^0.1.72
     react-native-argon2: ^2.0.1
     react-native-bouncy-checkbox: ^3.0.5
-    react-native-camera: ^3.31.1
     react-native-collapsible: ^1.6.1
     react-native-config: ^1.4.2
     react-native-confirmation-code-field: ^7.3.0
@@ -8632,7 +8631,6 @@ __metadata:
     react-native-animated-pagination-dots: "npm:0.1.72"
     react-native-argon2: "npm:2.0.1"
     react-native-bouncy-checkbox: "npm:3.0.5"
-    react-native-camera: "npm:3.44.3"
     react-native-collapsible: "npm:1.6.1"
     react-native-config: "npm:1.5.0"
     react-native-confirmation-code-field: "npm:7.3.0"
@@ -19181,15 +19179,6 @@ __metadata:
     react: ">= 16.x.x"
     react-native: ">= 0.55.x"
   checksum: 25cd4b87cf7c23dfb3def25f17c3aa76893dfa5e26e4fd6ae9f2a71e2f3c9fac28e44488481a5f39d4661d0609741d3928fe5add72b507f8c1431122778ad969
-  languageName: node
-  linkType: hard
-
-"react-native-camera@npm:3.44.3":
-  version: 3.44.3
-  resolution: "react-native-camera@npm:3.44.3"
-  dependencies:
-    prop-types: "npm:^15.6.2"
-  checksum: 7445c33a129da4893887eb75cc553cddac4957fb5eead53558bc8b672a2c8f6a019fd3ae513601628291e60ad25fb113eb56c75301723ebfbdb67f1664af263e
   languageName: node
   linkType: hard
 
