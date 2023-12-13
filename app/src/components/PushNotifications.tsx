@@ -2,7 +2,7 @@ import { useAgent } from '@aries-framework/react-hooks'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { isMediatorCapable, isRegistered, setup, isUserDenied } from '../helpers/PushNotificationsHelper'
+import { isMediatorCapable, isRegistered, setup, isUserDenied, isEnabled } from '../helpers/PushNotificationsHelper'
 import PushNotificationsModal from '../modals/PushNotificationsModal'
 
 const PushNotifications = () => {
@@ -19,7 +19,7 @@ const PushNotifications = () => {
   }
 
   const initializeCapabilityRequest = async () => {
-    if (!agent || !(await isMediatorCapable(agent)) || (await isRegistered())) {
+    if (!agent || !(await isEnabled()) || !(await isMediatorCapable(agent)) || (await isRegistered())) {
       return
     }
     setInfoModalVisible(true)

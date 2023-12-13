@@ -445,7 +445,7 @@ PODS:
   - React-jsinspector (0.72.5)
   - React-logger (0.72.5):
     - glog
-  - "react-native-attestation (1.0.0-alpha.155+add2c1a1)":
+  - "react-native-attestation (1.0.0-alpha.158+e4c23aa2)":
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
   - react-native-camera (3.44.3):
@@ -904,7 +904,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: ff70a72027dea5cc7d71cfcc6fad7f599f63987a
   React-jsinspector: aef73cbd43b70675f572214d10fa438c89bf11ba
   React-logger: 2e4aee3e11b3ec4fa6cfd8004610bbb3b8d6cca4
-  react-native-attestation: 2b931ba250705cde23a5b5bc890e0b6a0ac1d12c
+  react-native-attestation: 6507251b4323e402f32b1c673b4aeee72526a1ae
   react-native-camera: b8cc03e2feec0c04403d0998e37cf519d8fd4c6f
   react-native-config: 5330c8258265c1e5fdb8c009d2cabd6badd96727
   react-native-encrypted-storage: db300a3f2f0aba1e818417c1c0a6be549038deb7

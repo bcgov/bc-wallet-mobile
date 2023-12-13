@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Animated } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -37,5 +37,5 @@ export default function LoadingIcon({ size, color, active }: LoadingIconProps) {
         <Icon style={{ color }} size={size} name="refresh" />
       </Animated.View>
     </>
-  ) as ReactNode
+  )
 }
