@@ -46,9 +46,9 @@ const translation = {
     Remove: 'Supprimer',
   },
   Language: {
-    English: 'Anglais',
-    French: 'Français',
-    Portuguese: 'Portugais',
+    code_en: 'Anglais',
+    code_fr: 'Français',
+    'code_pt-BR': 'Portugais',
   },
   Date: {
     ShortFormat: 'D MMM',
@@ -124,6 +124,7 @@ const translation = {
     NoBiometricsErrorDetails: 'Pour résoudre ce problème, activez la biométrie dans les paramètres de votre appareil.',
   },
   Error: {
+    ReportThisProblem: 'Signaler ce problème',
     Title2020: "Impossible de traiter l'invitation",
     Message2020: "Un problème est survenu lors du traitement de l'invitation à se connecter.",
     Title2021: "Impossible de recevoir l'invitation",
@@ -338,6 +339,7 @@ const translation = {
       PINTooShortValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
       PINTooLongValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
       AncienPINIncorrect: 'Votre ancien NIP est incorrect. Veuillez réessayer.',
+      OldPINIncorrect: "L'ancien NIP est incorrect. Veuillez réessayer.",
     },
     Helper: {
       CrossPatternValidation: 'Ne doit pas contenir une séquence en forme de croix.',
@@ -458,10 +460,22 @@ const translation = {
     ConnectionRecordIdNotFound: "Identifiant de l'enregistrement de connexion introuvable",
     ConnectionAccepted: 'Connexion acceptée',
     ConnectionNotFound: 'Connexion non détectée',
-    InvalidQrCode: 'Code QR erroné. Veuillez réessayer.',
+    InvalidQrCode: 'Code QR invalide. Veuillez réessayer.',
     UnableToHandleRedirection: 'Impossible de traiter la redirection',
     Close: 'Fermer',
     Torch: 'Flash',
+    ScanHelp: 'Aide à la numérisation',
+    ScanNow: 'Numériser maintenant',
+    WhatToScan: 'Quels codes QR peuvent être scannés ?',
+    ScanOnySpecial: 'Seuls certains codes QR spéciaux peuvent être scannés par le portefeuille.',
+    ScanOnlySpecial2:
+      "Ces codes QR sont présentés par des services ou des personnes qui souhaitent recevoir une offre d'attestation, une demande d'informations ou pour se connecter.",
+    ScanOnlySpecial3:
+      "Le portefeuille ne prend actuellement pas en charge l'ajout d'attestations numériques en scannant ou en prenant des photos de cartes physiques.",
+    WhereToUseLink: 'Découvrez où vous pouvez utiliser le portefeuille',
+    BadQRCode: 'QR Code non reconnu',
+    BadQRCodeDescription:
+      "Le QR code scanné ne fonctionne pas avec le portefeuille. Le portefeuille ne fonctionne qu'avec les services participants.\n\nIl ne peut actuellement pas ajouter des attestations numériques en prenant des photos de cartes physiques.",
     WillScanAutomatically: 'Un code QR valide sera scanné automatiquement.',
     ScanQRCode: 'Scanner le code QR',
     MyQRCode: 'Mon code QR',
@@ -533,6 +547,8 @@ const translation = {
     PopupExit: "J'ai compris",
   },
   ProofRequest: {
+    FromYourWallet: 'à partir de votre portefeuille',
+    MissingCredentials: 'Attestations manquantes',
     PredicateGeDate: 'est après le',
     PredicateLeDate: 'est avant le',
     PredicateGe: 'est supérieur ou égal à',
@@ -574,6 +590,7 @@ const translation = {
     AbortDecline: 'Non, revenir en arrière',
     DeclineTitle: 'Refuser la demande de preuve?',
     Declined: 'Refusé',
+    ShareFollowingInformation: "Partage les informations suivantes à partir de l'attestation {{count}}.",
     ShareFollowingInformation_one: "partage les informations suivantes à partir de l'attestation {{count}}.",
     ShareFollowingInformation_other: "partage les informations suivantes à partir de l'attestation {{count}}.",
     DeclineBulletPoint1:
@@ -635,6 +652,7 @@ const translation = {
   Screens: {
     Splash: 'Page de garde',
     Onboarding: 'Portefeuille numérique du Québec',
+    Preface: 'Portefeuille QC',
     Terms: "Conditions d'utilisation",
     CreatePin: 'Créer un NIP à 6 chiffres',
     EnterPin: 'Saisir le NIP',
@@ -645,6 +663,7 @@ const translation = {
     Notifications: 'Notifications',
     CredentialOffer: "Proposition d'attestation",
     ProofRequest: 'Demande de preuve',
+    ProofChangeCredential: "Changer l'attestation",
     ProofRequestAttributeDetails: 'Détails des attributs de la demande de preuve',
     Settings: 'Paramètres',
     Language: 'Langue',
@@ -675,6 +694,7 @@ const translation = {
     CreatePIN: 'Créer un NIP',
     EnterPIN: 'Entrer le NIP',
     DataRetention: 'Conservation des données',
+    RenameContact: 'Renommer le contact',
   },
   OnboardingPages: {
     FirstPageTitle: 'Bienvenue dans le portefeuille numérique du Québec',
@@ -693,6 +713,16 @@ const translation = {
     FourthPageBody:
       'Vous avez le contrôle sur les informations qui sont partagées et utilisées depuis votre portefeuille Québec. Vous ne partagez que les informations requises selon la situation. \n\nLe gouvernement du Québec n’est jamais mis au courant des interactions réalisées lorsque vous utilisez une attestation numérique.',
     ButtonGetStarted: 'Configurer le portefeuille',
+  },
+  RenameContact: {
+    ThisContactName: "Ce nom de contact n'est affiché que dans votre liste de contacts.",
+    ContactName: 'Nom du contact',
+    CharCountTitle: 'Dépassement de la limite de caractères',
+    CharCountDescription:
+      'Vous avez dépassé la limite maximale de 50 caractères. Veuillez réduire le nombre de caractères.',
+    EmptyNameTitle: 'Le nom du contact ne peut pas être vide',
+    EmptyNameDescription:
+      "C'est le nom que vous verrez pour ce contact dans votre liste de contacts.\n\nVeuillez entrer un nom de contact.",
   },
   NetInfo: {
     NoInternetConnectionTitle: 'Pas de connexion Internet',
@@ -776,6 +806,12 @@ const translation = {
     Tip14:
       "Même les attestations d'identité révoquées ou expirées peuvent être utilisées si l'organisation n'en fait pas la demande.",
   },
+  Preface: {
+    PrimaryHeading: 'Cette application est-elle pour vous ?',
+    Paragraph1:
+      "La plupart des gens n'auront pas besoin le portefeuille numérique car très peu d'attestations numériques sont actuellement disponibles.",
+    Confirmed: "J'ai confirmé que cette application est pour moi.",
+  },
   Chat: {
     OpenItem: 'Ouvrir',
     UserYou: 'Vous avez',
@@ -844,6 +880,7 @@ const translation = {
     ZeroKnowledgeProof: 'Preuve à divulgation nulle',
     Parameterizable: 'Paramétrable',
     GenerateNewQR: 'Générer un nouveau code QR',
+    BackToList: 'Retour à la liste',
     ShareLink: 'Partager le lien',
     ScanQR: 'Veuillez lire ce code QR',
     ScanQRComment: 'avec votre portefeuille numérique pour recevoir une demande de preuve.',

@@ -46,9 +46,9 @@ const translation = {
     Remove: 'Remove',
   },
   Language: {
-    English: 'English',
-    French: 'French',
-    Portuguese: 'Portuguese',
+    code_en: 'English',
+    code_fr: 'French',
+    'code_pt-BR': 'Portuguese',
   },
   Date: {
     ShortFormat: 'MMM D',
@@ -145,6 +145,7 @@ const translation = {
   Screens: {
     Splash: 'Splash',
     Onboarding: 'Quebec Wallet',
+    Preface: 'QC Wallet',
     Terms: 'Terms & Conditions',
     CreatePin: 'Create 6-Digit Pin',
     EnterPin: 'Enter Pin',
@@ -154,6 +155,7 @@ const translation = {
     CredentialDetails: 'Credential Details',
     Notifications: 'Notifications',
     CredentialOffer: 'Credential Offer',
+    ProofChangeCredential: 'Choose a credential',
     ProofRequest: 'Proof Request',
     ProofRequestAttributeDetails: 'Proof Request Attribute Details',
     Settings: 'Settings',
@@ -185,8 +187,10 @@ const translation = {
     CreatePIN: 'Create a PIN',
     EnterPIN: 'Enter PIN',
     DataRetention: 'Data retention',
+    RenameContact: 'Edit Contact Name',
   },
   Error: {
+    ReportThisProblem: 'Report this problem',
     Title2020: 'Unable to parse invitation',
     Message2020: 'There was a problem parsing the connection invitation.',
     Title2021: 'Unable to receive invitation',
@@ -509,6 +513,18 @@ const translation = {
     UnableToHandleRedirection: 'Unable to handle redirection',
     Close: 'Close',
     Torch: 'Flash',
+    ScanHelp: 'Scan Help',
+    ScanNow: 'Scan Now',
+    WhatToScan: 'What QR Codes can be scanned?',
+    ScanOnySpecial: 'Only special QR codes can be scanned by the Wallet.',
+    ScanOnlySpecial2:
+      'These are presented by participating services or people to receive a credential offer, request for information or to connect.',
+    ScanOnlySpecial3:
+      "The Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones.",
+    WhereToUseLink: 'See where you can use the Wallet',
+    BadQRCode: 'QR Code Not Recognized',
+    BadQRCodeDescription:
+      "Ths QR code scanned doesn't work with the Wallet. The Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones.",
     WillScanAutomatically: 'A valid QR code will scan automatically.',
     ScanQRCode: 'Scan QR code',
     MyQRCode: 'My QR code',
@@ -575,6 +591,8 @@ const translation = {
     PopupExit: 'Got it',
   },
   ProofRequest: {
+    FromYourWallet: 'From your wallet',
+    MissingCredentials: 'Missing credentials',
     PredicateGeDate: 'is after',
     PredicateLeDate: 'is before',
     PredicateGe: 'is greater than or equal to',
@@ -614,6 +632,7 @@ const translation = {
     DeclineTitle: 'Decline proof request?',
     Declined: 'Declined',
     ReviewSentInformation: 'You shared the following information from {{count}} credentials with',
+    ShareFollowingInformation: 'is sharing the following information from {{count}} credentials.',
     ShareFollowingInformation_one: 'is sharing the following information from {{count}} credential.',
     ShareFollowingInformation_other: 'is sharing the following information from {{count}} credentials.',
     DeclineBulletPoint1:
@@ -668,6 +687,16 @@ const translation = {
       "You've exceeded the maximum character count of 50 characters. Please reduce your character count.",
     EmptyNameTitle: "Wallet name can't be empty",
     EmptyNameDescription: 'This is the name people see when connecting with you.\n\nPlease enter a wallet name.',
+  },
+  RenameContact: {
+    ThisContactName: 'This contact name is only displayed in your Contacts List.',
+    ContactName: 'Contact name',
+    CharCountTitle: 'Character count exceeded',
+    CharCountDescription:
+      "You've exceeded the maximum character count of 50 characters. Please reduce your character count.",
+    EmptyNameTitle: "Contact name can't be empty",
+    EmptyNameDescription:
+      'This is the name you will see for this Contact in your Contacts list.\n\nPlease enter a contact name.',
   },
   NetInfo: {
     NoInternetConnectionTitle: 'No internet connection',
@@ -764,6 +793,12 @@ const translation = {
     Tip13: 'Information sent via your wallet is trusted by you and your Contacts you interact with',
     Tip14: "Even revoked or expired credentials can be usable if the organisation doesn't request for it",
   },
+  Preface: {
+    PrimaryHeading: 'Is this app for you?',
+    Paragraph1:
+      'Most people will not have a need for the wallet because very few digital credentials are currently available.',
+    Confirmed: 'I have confirmed that this app is for me.',
+  },
   Chat: {
     OpenItem: 'Open',
     UserYou: 'You',
@@ -811,6 +846,7 @@ const translation = {
     ZeroKnowledgeProof: 'Zero-knowledge proof',
     Parameterizable: 'Parameterizable',
     GenerateNewQR: 'Generate new QR Code',
+    BackToList: 'Back to list',
     ShareLink: 'Share link',
     ScanQR: 'Scan this QR Code',
     ScanQRComment: 'with your digital wallet to receive a proof request.',
