@@ -8,7 +8,7 @@ interface LoadingIconProps {
   active: boolean
 }
 
-export default function LoadingIcon({ size, color, active }: LoadingIconProps) {
+export default function LoadingIcon({ size, color, active }: Readonly<LoadingIconProps>) {
   const rotationAnim = useRef(new Animated.Value(0)).current
   const timing: Animated.TimingAnimationConfig = {
     toValue: 1,

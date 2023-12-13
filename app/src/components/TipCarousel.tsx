@@ -24,7 +24,6 @@ interface TipItem {
 }
 
 export interface TipProps extends PropsWithChildren {
-  type?: string
   item: TipItem
   width: number
   header: string
