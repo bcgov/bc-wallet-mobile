@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Animated } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -8,7 +8,7 @@ interface LoadingIconProps {
   active: boolean
 }
 
-export default function LoadingIcon({ size, color, active }: LoadingIconProps) {
+export default function LoadingIcon({ size, color, active }: Readonly<LoadingIconProps>) {
   const rotationAnim = useRef(new Animated.Value(0)).current
   const timing: Animated.TimingAnimationConfig = {
     toValue: 1,
@@ -37,5 +37,5 @@ export default function LoadingIcon({ size, color, active }: LoadingIconProps) {
         <Icon style={{ color }} size={size} name="refresh" />
       </Animated.View>
     </>
-  ) as ReactNode
+  )
 }

@@ -1,5 +1,11 @@
+import {
+  translationResources,
+  ConfigurationContext,
+  Record,
+  indyLedgers,
+  defaultConfiguration,
+} from '@hyperledger/aries-bifold-core'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
-import { translationResources, ConfigurationContext, Record, indyLedgers, defaultConfiguration } from '@hyperledger/aries-bifold-core'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 import { Config } from 'react-native-config'
