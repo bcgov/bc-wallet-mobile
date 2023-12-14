@@ -651,7 +651,7 @@ const translation = {
   },
   Screens: {
     Splash: 'Page de garde',
-    Onboarding: 'Portefeuille numérique du Québec',
+    Onboarding: 'Introduction',
     Preface: 'Portefeuille QC',
     Terms: "Conditions d'utilisation",
     CreatePin: 'Créer un NIP à 6 chiffres',

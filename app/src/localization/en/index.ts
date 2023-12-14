@@ -144,7 +144,7 @@ const translation = {
   },
   Screens: {
     Splash: 'Splash',
-    Onboarding: 'Quebec Wallet',
+    Onboarding: 'Introduction',
     Preface: 'QC Wallet',
     Terms: 'Terms & Conditions',
     CreatePin: 'Create 6-Digit Pin',
