@@ -4093,9 +4093,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.155":
-  version: 1.0.0-alpha.155
-  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.155"
+"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.158":
+  version: 1.0.0-alpha.158
+  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.158"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/anoncreds-rs": ^0.4.0
@@ -4165,41 +4165,41 @@ __metadata:
     uuid: ^9.0.0
   bin:
     bifold: bin/bifold
-  checksum: 726cb925597d934e84fb4d096c6ef231c6725169d44a435d6eca192d7477a3c71f8c9bef172ae9dc7cde6353692de5291cf070809d7b8d000246768fe6f65fdb
+  checksum: 349dfe556f3e4a1fb19858aecd0acce58ed95f63485ca44cfda454245dcd92d25584f3cbec948fc4e0f0d29455de3d81456aa17dac354814fba83e27ed61f1ce
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.155":
-  version: 1.0.0-alpha.155
-  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.155"
+"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.158":
+  version: 1.0.0-alpha.158
+  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.158"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/core": ^0.4.0
     "@aries-framework/react-hooks": ^0.4.2
     react: ^18.2.0
-  checksum: d56ba845942832d73709e934797f5a0b86a7fa0b7efe86cd183f702a426fe257faf2d567219617712bbf91efd2c8e893d9075686e3befaceccaa8e4819535865
+  checksum: 04d012337aa19ecd787bc193cba83c5776cdb0222df4977196232c782cd32b87d2eb24fc846f2f53411378f133ebfb8c31a60b17e85d0b18e8f3d76c928545c3
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-oca@npm:1.0.0-alpha.155":
-  version: 1.0.0-alpha.155
-  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.155"
+"@hyperledger/aries-oca@npm:1.0.0-alpha.158":
+  version: 1.0.0-alpha.158
+  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.158"
   dependencies:
     "@aries-framework/anoncreds": "npm:^0.4.0"
     "@aries-framework/core": "npm:^0.4.0"
     axios: "npm:^1.4.0"
     lodash.startcase: "npm:^4.4.0"
-  checksum: 57d6643cbea58b7ef12f0e3a5c8cb667945571342b2fe2c7d6ccc73d430ec307e70f701a2a472d59feade738c249b7abf68fb07e313dd20d75e5e0ab70f08d25
+  checksum: 8e7866f8e638ab22e99aa695c634abdcd3ac2900155a6ee7526ac7ee87b1691d426615dbd13d914aba21f87e0d1bb26d79483fe39204ec13803b362cbca058fa
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.155":
-  version: 1.0.0-alpha.155
-  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.155"
+"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.158":
+  version: 1.0.0-alpha.158
+  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.158"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 6a9ba204a914db82e2065d4b4c4d38d45259abe37da6b3cdc39f0e4f7beb943e6dde890730a4ff5bc1b0605f0d5ae2f14f7c3bb47f799f09e84e25d27a100af9
+  checksum: 4f2236471175c32c0623efc8c1b51dcc41098bee7481efe6cda35abcf0f8c3de7cb79a737526a285ac0cabc3995fc20463283488dc401c2058780d89a76d2c82
   languageName: node
   linkType: hard
 
@@ -8570,10 +8570,10 @@ __metadata:
     "@formatjs/intl-relativetimeformat": "npm:9.3.1"
     "@hyperledger/anoncreds-react-native": "npm:0.1.0"
     "@hyperledger/aries-askar-react-native": "npm:0.1.1"
-    "@hyperledger/aries-bifold-core": "npm:1.0.0-alpha.155"
-    "@hyperledger/aries-bifold-verifier": "npm:1.0.0-alpha.155"
-    "@hyperledger/aries-oca": "npm:1.0.0-alpha.155"
-    "@hyperledger/aries-react-native-attestation": "npm:1.0.0-alpha.155"
+    "@hyperledger/aries-bifold-core": "npm:1.0.0-alpha.158"
+    "@hyperledger/aries-bifold-verifier": "npm:1.0.0-alpha.158"
+    "@hyperledger/aries-oca": "npm:1.0.0-alpha.158"
+    "@hyperledger/aries-react-native-attestation": "npm:1.0.0-alpha.158"
     "@hyperledger/indy-vdr-react-native": "npm:0.1.0"
     "@react-native-async-storage/async-storage": "npm:1.15.11"
     "@react-native-community/masked-view": "npm:0.1.11"

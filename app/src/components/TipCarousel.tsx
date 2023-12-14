@@ -1,4 +1,4 @@
-import React, { FunctionComponent, PropsWithChildren, ReactNode, memo, useEffect, useRef, useState } from 'react'
+import React, { FunctionComponent, PropsWithChildren, memo, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem, AccessibilityInfo } from 'react-native'
 
@@ -24,7 +24,6 @@ interface TipItem {
 }
 
 export interface TipProps extends PropsWithChildren {
-  type?: string
   item: TipItem
   width: number
   header: string
@@ -75,7 +74,7 @@ const Comp: FunctionComponent<TipProps> = ({ item, width, header }) => {
         {item.text}
       </Text>
     </View>
-  ) as ReactNode
+  )
 }
 
 const Tip = memo<TipProps>(Comp)

@@ -42,13 +42,6 @@ git clone https://github.com/bcgov/bc-wallet-mobile.git
 cd bc-wallet-mobile
 ```
 
-Then initialize the bifold submodule:
-
-```sh
-# Initialize the aries bifold submodule:
-git submodule update --init
-```
-
 ## React Native setup
 
 React Native environment setup instructions are documented [here](https://reactnative.dev/docs/environment-setup). Be sure to select the correct React Native version (currently 0.66.x) from the dropdown and to follow the instructions for the React Native CLI. This will guide you through setting up your development environment for your operating system and choice of iOS (only if you are using a Mac) or Android.
@@ -70,6 +63,34 @@ To install pod dependencies:
    cd app
    bundle install --frozen && pod install
 ```
+
+To work on changes to BC Wallet in Bifold (the underlying Aries project) you will also need to do the following:
+
+```sh
+# from bc-wallet-mobile
+git clone git@github.com:hyperledger/aries-mobile-agent-react-native.git bifold 
+```
+
+```sh
+cd bifold
+
+yarn install
+
+yarn build
+
+cd ..
+
+yarn link bifold --all --relative
+```
+
+Once you are happy with your changes to Bifold and have made the relevant PR there, do the following:
+
+```sh
+# in bc-wallet-mobile
+yarn unlink --all
+```
+
+Then once your PR is merged and the packages have been published, make a PR in bc-wallet-mobile with the relevant updated packages installed. The current packages published from Bifold are `@hyperledger/aries-bifold-core`, `@hyperledger/aries-bifold-verifier`, `@hyperledger/aries-oca`, and `@hyperledger/aries-react-native-attestation`. They are all consumed by bc-wallet-mobile and other projects like it.
 
 ## Configuration
 

@@ -1,5 +1,5 @@
 import { useTheme, useStore, Button, ButtonType, testIdWithKey } from '@hyperledger/aries-bifold-core'
-import React, { ReactNode } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, View } from 'react-native'
 import BouncyCheckbox from 'react-native-bouncy-checkbox'
@@ -93,7 +93,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
         />
       </View>
     </SafeAreaView>
-  ) as ReactNode
+  )
 }
 
 export default IASEnvironmentScreen

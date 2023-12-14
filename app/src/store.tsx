@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   State as BifoldState,
   mergeReducers,
@@ -6,6 +5,7 @@ import {
   defaultState,
   ReducerAction,
 } from '@hyperledger/aries-bifold-core'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export interface IASEnvironment {
   name: string
