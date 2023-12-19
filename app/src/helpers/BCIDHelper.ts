@@ -9,13 +9,14 @@ import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 import { BCState } from '../store'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
+const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 const trustedInvitationIssuerRe =
   /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d+:default$/im
 const trustedFoundationCredentialIssuerRe =
   /^(KCxVC8GkKywjhWJnUfCmkW|7xjfawcnyTUcduWVysLww5|RGjWbW1eycP7FrMf4QJvX8):\d:CL:\d+:Person(\s(\(SIT\)|\(QA\)))?$/im
 const trustedLSBCCredentialIssuerRe =
   /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d+:default$/im
-const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
+const trustedBusinessCardCredentialIssuerRe = /^(AcZpBDz3oxmKrpcuPcdKai):\d:CL:\d+:default$/im
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -41,16 +42,23 @@ export interface WellKnownAgentDetails {
 }
 
 export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCredential: boolean): boolean => {
+  // If we already have a trusted foundation credential do nothing.
   if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
     return false
   }
 
-  if (
+  // Check if we have a trusted credential to unlock the functionality.
+  const unlockedByTrustedIssuer =
     credentialDefinitionIDs.some((i) => trustedInvitationIssuerRe.test(i)) ||
-    (credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) && canUseLSBCredential)
-  ) {
+    credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) ||
+    credentialDefinitionIDs.some((i) => trustedBusinessCardCredentialIssuerRe.test(i))
+
+  // We have a trusted credential and can use the LSB credential
+  if (unlockedByTrustedIssuer && canUseLSBCredential) {
     return true
   }
+
+  // no matching
   return false
 }
 
