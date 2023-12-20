@@ -17,7 +17,7 @@ import {
 //aries-bifold/App/types/metadata
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
 
-import { getInvitationCredentialDate, showPersonCredentialSelector } from '../helpers/BCIDHelper'
+import { getUnlockCredentialDate, showPersonCredentialSelector } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 interface CustomNotification {
   type: 'CustomNotification'
@@ -72,10 +72,10 @@ export const useNotifications = (): Notifications => {
   const credentialDefinitionIDs = credentials.map(
     (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
   )
-  const invitationDate = getInvitationCredentialDate(credentials)
+  const invitationDate = getUnlockCredentialDate(credentials)
   console.log('invitationDate', invitationDate)
   const custom: CustomNotification[] =
-  showPersonCredentialSelector(credentialDefinitionIDs) &&
+    showPersonCredentialSelector(credentialDefinitionIDs) &&
     invitationDate &&
     !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
       ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
