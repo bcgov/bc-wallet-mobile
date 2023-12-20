@@ -41,20 +41,21 @@ export interface WellKnownAgentDetails {
   invitationId?: string
 }
 
-export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCredential: boolean): boolean => {
+export const showPersonCredentialSelector = (credentialDefinitionIDs: string[], canUseLSBCredential: boolean = true): boolean => {
   // If we already have a trusted foundation credential do nothing.
   if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
     return false
   }
 
-  // Check if we have a trusted credential to unlock the functionality.
+  // Check if we have a credential to unlock the functionality.
   const unlockedByTrustedIssuer =
     credentialDefinitionIDs.some((i) => trustedInvitationIssuerRe.test(i)) ||
-    credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) ||
-    credentialDefinitionIDs.some((i) => trustedBusinessCardCredentialIssuerRe.test(i))
+    credentialDefinitionIDs.some((i) => trustedBusinessCardCredentialIssuerRe.test(i)) ||
+    (credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) && canUseLSBCredential) 
+
 
   // We have a trusted credential and can use the LSB credential
-  if (unlockedByTrustedIssuer && canUseLSBCredential) {
+  if (unlockedByTrustedIssuer) {
     return true
   }
 
@@ -62,20 +63,22 @@ export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCre
   return false
 }
 
-export const getInvitationCredentialDate = (
+export const getUnlockCredentialDate = (
   credentials: CredentialExchangeRecord[],
-  canUseLSBCCredential: boolean
+  canUseLSBCCredential: boolean = true
 ): Date | undefined => {
-  const invitationCredential = credentials.find((c) => {
+  const unlockCredential = credentials.find((c) => {
     const credDef = c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     if (
+      trustedBusinessCardCredentialIssuerRe.test(credDef) ||
       trustedInvitationIssuerRe.test(credDef) ||
       (trustedLSBCCredentialIssuerRe.test(credDef) && canUseLSBCCredential)
     ) {
       return true
     }
   })
-  return invitationCredential?.createdAt
+
+  return unlockCredential?.createdAt
 }
 
 export const removeExistingInvitationIfRequired = async (
