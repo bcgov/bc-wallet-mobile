@@ -16,6 +16,7 @@ import {
 } from '@hyperledger/aries-bifold-core/App/types/metadata'
 //aries-bifold/App/types/metadata
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
+
 import { getUnlockCredentialDate, showPersonCredentialSelector } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 interface CustomNotification {
