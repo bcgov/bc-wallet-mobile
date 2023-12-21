@@ -73,7 +73,6 @@ export const useNotifications = (): Notifications => {
     (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
   )
   const invitationDate = getUnlockCredentialDate(credentials)
-  console.log('invitationDate', invitationDate)
   const custom: CustomNotification[] =
     showPersonCredentialSelector(credentialDefinitionIDs) &&
     invitationDate &&
