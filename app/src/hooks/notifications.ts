@@ -75,7 +75,6 @@ export const useNotifications = (): Notifications => {
   const invitationDate = getUnlockCredentialDate(credentials)
   const custom: CustomNotification[] =
     showPersonCredentialSelector(credentialDefinitionIDs) &&
-    showPersonCredentialSelector(credentialDefinitionIDs) &&
     invitationDate &&
     !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
       ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
