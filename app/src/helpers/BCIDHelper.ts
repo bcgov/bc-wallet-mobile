@@ -41,7 +41,10 @@ export interface WellKnownAgentDetails {
   invitationId?: string
 }
 
-export const showPersonCredentialSelector = (credentialDefinitionIDs: string[], canUseLSBCredential: boolean = true): boolean => {
+export const showPersonCredentialSelector = (
+  credentialDefinitionIDs: string[],
+  canUseLSBCredential: boolean = true
+): boolean => {
   // If we already have a trusted foundation credential do nothing.
   if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
     return false
@@ -51,8 +54,7 @@ export const showPersonCredentialSelector = (credentialDefinitionIDs: string[], 
   const unlockedByTrustedIssuer =
     credentialDefinitionIDs.some((i) => trustedInvitationIssuerRe.test(i)) ||
     credentialDefinitionIDs.some((i) => trustedBusinessCardCredentialIssuerRe.test(i)) ||
-    (credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) && canUseLSBCredential) 
-
+    (credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) && canUseLSBCredential)
 
   // We have a trusted credential and can use the LSB credential
   if (unlockedByTrustedIssuer) {

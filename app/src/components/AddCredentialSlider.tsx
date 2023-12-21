@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { hitSlop } from '../constants'
 import { BCWalletEventTypes } from '../events/eventTypes'
-import { showBCIDSelector } from '../helpers/BCIDHelper'
+import { showPersonCredentialSelector } from '../helpers/BCIDHelper'
 
 export default function AddCredentialSlider() {
   const { ColorPallet, TextTheme } = useTheme()
@@ -91,7 +91,7 @@ export default function AddCredentialSlider() {
       (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     )
 
-    setShowGetFoundationCredential(showBCIDSelector(credentialDefinitionIDs, true))
+    setShowGetFoundationCredential(showPersonCredentialSelector(credentialDefinitionIDs))
   }, [credentials])
 
   useEffect(() => {
