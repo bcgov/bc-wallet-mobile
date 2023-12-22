@@ -72,7 +72,8 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       case Action.RequestAttestation:
         try {
           if (Platform.OS === 'ios') {
-            const keyId = await generateKey()
+            const shouldCacheKey = false
+            const keyId = await generateKey(shouldCacheKey)
             const attestationAsBuffer = await appleAttestation(
               keyId,
               (message as RequestIssuanceInfrastructureMessage).nonce

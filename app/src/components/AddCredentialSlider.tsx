@@ -1,8 +1,8 @@
 import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
 import { CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
-import { useNavigation } from '@react-navigation/native'
 import { useTheme, Screens, Stacks, testIdWithKey, testIdForAccessabilityLabel } from '@hyperledger/aries-bifold-core'
+import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { hitSlop } from '../constants'
 import { BCWalletEventTypes } from '../events/eventTypes'
-import { showBCIDSelector } from '../helpers/BCIDHelper'
+import { showPersonCredentialSelector } from '../helpers/BCIDHelper'
 
 export default function AddCredentialSlider() {
   const { ColorPallet, TextTheme } = useTheme()
@@ -91,7 +91,7 @@ export default function AddCredentialSlider() {
       (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     )
 
-    setShowGetFoundationCredential(showBCIDSelector(credentialDefinitionIDs, true))
+    setShowGetFoundationCredential(showPersonCredentialSelector(credentialDefinitionIDs))
   }, [credentials])
 
   useEffect(() => {

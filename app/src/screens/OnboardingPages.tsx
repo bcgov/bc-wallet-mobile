@@ -1,5 +1,3 @@
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import {
   useStore,
   Button,
@@ -13,6 +11,8 @@ import {
   OnboardingStackParams,
   ContentGradient,
 } from '@hyperledger/aries-bifold-core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native'
