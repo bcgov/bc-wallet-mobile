@@ -690,5 +690,263 @@
             }
          ]
       }
+   },
+   {
+      "id": "BC:5:PersonSellingItRight:0.0.1:indy",
+      "name": "Person + Selling it Right",
+      "description": "Verify an individual has the qualifications to sell or serve certain products",
+      "devOnly": true,
+      "version": "0.0.1",
+      "payload": {
+         "type": "anoncreds",
+         "data": [
+            {
+               "schema": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+               "requestedAttributes": [
+                  {
+                     "names": [
+                        "given_names",
+                        "family_name",
+                        "picture"
+                     ],
+                     "restrictions": [
+                        {
+                           "schema_id": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                        },
+                        {
+                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:116290:Person"
+                        }
+                     ],
+                     "devRestrictions": [
+                        {
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                        },
+                        {
+                           "schema_id": "XpgeQa93eZvGSZBZef3PHn:2:Person:1.0",
+                           "issuer_did": "7xjfawcnyTUcduWVysLww5"
+                        },
+                        {
+                           "schema_id": "KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0",
+                           "issuer_did": "KCxVC8GkKywjhWJnUfCmkW"
+                        },
+                        {
+                           "schema_id": "QEquAHkM35w4XVT3Ku5yat:2:Person:1.2",
+                           "issuer_did": "QEquAHkM35w4XVT3Ku5yat"
+                        },
+                        {
+                           "schema_id": "M6dhuFj5UwbhWkSLmvYSPc:2:Person:1.2",
+                           "issuer_did": "M6dhuFj5UwbhWkSLmvYSPc"
+                        },
+                        {
+                           "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2",
+                           "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
+                        }
+                     ],
+                     "nonRevoked": {
+                        "to": "@{now}"
+                     }
+                  }
+               ]
+            },
+            {
+               "schema": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+               "requestedAttributes": [
+                  {
+                     "names": [
+                        "given_names",
+                        "family_name",
+                        "certification_number"
+                     ],
+                     "restrictions": [
+                        {
+                           "schema_id": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                        },
+                        {
+                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Selling It Right"
+                        }
+                     ],
+                     "nonRevoked": {
+                        "to": "@{now}"
+                     }
+                  }
+               ]
+            }
+         ]
+      }
+   },
+   {
+      "id": "BC:5:PersonServingItRight:0.0.1:indy",
+      "name": "Person + Serving it Right",
+      "description": "Verify an individual has the qualifications to sell or serve certain products",
+      "devOnly": true,
+      "version": "0.0.1",
+      "payload": {
+         "type": "anoncreds",
+         "data": [
+            {
+               "schema": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+               "requestedAttributes": [
+                  {
+                     "names": [
+                        "given_names",
+                        "family_name",
+                        "picture"
+                     ],
+                     "restrictions": [
+                        {
+                           "schema_id": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                        },
+                        {
+                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:116290:Person"
+                        }
+                     ],
+                     "devRestrictions": [
+                        {
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                        },
+                        {
+                           "schema_id": "XpgeQa93eZvGSZBZef3PHn:2:Person:1.0",
+                           "issuer_did": "7xjfawcnyTUcduWVysLww5"
+                        },
+                        {
+                           "schema_id": "KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0",
+                           "issuer_did": "KCxVC8GkKywjhWJnUfCmkW"
+                        },
+                        {
+                           "schema_id": "QEquAHkM35w4XVT3Ku5yat:2:Person:1.2",
+                           "issuer_did": "QEquAHkM35w4XVT3Ku5yat"
+                        },
+                        {
+                           "schema_id": "M6dhuFj5UwbhWkSLmvYSPc:2:Person:1.2",
+                           "issuer_did": "M6dhuFj5UwbhWkSLmvYSPc"
+                        },
+                        {
+                           "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2",
+                           "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
+                        }
+                     ],
+                     "nonRevoked": {
+                        "to": "@{now}"
+                     }
+                  }
+               ]
+            },
+            {
+               "schema": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+               "requestedAttributes": [
+                  {
+                     "names": [
+                        "given_names",
+                        "family_name",
+                        "certification_number"
+                     ],
+                     "restrictions": [
+                        {
+                           "schema_id": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                        },
+                        {
+                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Serving It Right"
+                        }
+                     ],
+                     "nonRevoked": {
+                        "to": "@{now}"
+                     }
+                  }
+               ]
+            }
+         ]
+      }
+   },
+   {
+      "id": "BC:5:PersonSpecialEventServer:0.0.1:indy",
+      "name": "Person + Special Event Server",
+      "description": "Verify an individual has the qualifications to sell or serve certain products",
+      "devOnly": true,
+      "version": "0.0.1",
+      "payload": {
+         "type": "anoncreds",
+         "data": [
+            {
+               "schema": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+               "requestedAttributes": [
+                  {
+                     "names": [
+                        "given_names",
+                        "family_name",
+                        "picture"
+                     ],
+                     "restrictions": [
+                        {
+                           "schema_id": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                        },
+                        {
+                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:116290:Person"
+                        }
+                     ],
+                     "devRestrictions": [
+                        {
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                        },
+                        {
+                           "schema_id": "XpgeQa93eZvGSZBZef3PHn:2:Person:1.0",
+                           "issuer_did": "7xjfawcnyTUcduWVysLww5"
+                        },
+                        {
+                           "schema_id": "KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0",
+                           "issuer_did": "KCxVC8GkKywjhWJnUfCmkW"
+                        },
+                        {
+                           "schema_id": "QEquAHkM35w4XVT3Ku5yat:2:Person:1.2",
+                           "issuer_did": "QEquAHkM35w4XVT3Ku5yat"
+                        },
+                        {
+                           "schema_id": "M6dhuFj5UwbhWkSLmvYSPc:2:Person:1.2",
+                           "issuer_did": "M6dhuFj5UwbhWkSLmvYSPc"
+                        },
+                        {
+                           "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2",
+                           "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
+                        }
+                     ],
+                     "nonRevoked": {
+                        "to": "@{now}"
+                     }
+                  }
+               ]
+            },
+            {
+               "schema": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+               "requestedAttributes": [
+                  {
+                     "names": [
+                        "given_names",
+                        "family_name",
+                        "certification_number"
+                     ],
+                     "restrictions": [
+                        {
+                           "schema_id": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                        },
+                        {
+                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Special Event"
+                        }
+                     ],
+                     "nonRevoked": {
+                        "to": "@{now}"
+                     }
+                  }
+               ]
+            }
+         ]
+      }
    }
 ]
