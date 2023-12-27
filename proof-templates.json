@@ -742,18 +742,6 @@
                         {
                            "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2",
                            "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
-                        },
-                        {
-                           "schema_id": "4eCXHS79ykiMv2PoBxPK23:2:unverified_person:0.1.0",
-                           "issuer_did": "4eCXHS79ykiMv2PoBxPK23"
-                        },
-                        {
-                           "schema_id": "HTkhhCW1bAXWnxC1u3YVoa:2:unverified_person:0.1.0",
-                           "issuer_did": "HTkhhCW1bAXWnxC1u3YVoa"
-                        },
-                        {
-                           "schema_id": "Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0",
-                           "issuer_did": "Ui6HA36FvN83cEtmYYHxrn"
                         }
                      ],
                      "nonRevoked": {
@@ -840,18 +828,6 @@
                         {
                            "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2",
                            "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
-                        },
-                        {
-                           "schema_id": "4eCXHS79ykiMv2PoBxPK23:2:unverified_person:0.1.0",
-                           "issuer_did": "4eCXHS79ykiMv2PoBxPK23"
-                        },
-                        {
-                           "schema_id": "HTkhhCW1bAXWnxC1u3YVoa:2:unverified_person:0.1.0",
-                           "issuer_did": "HTkhhCW1bAXWnxC1u3YVoa"
-                        },
-                        {
-                           "schema_id": "Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0",
-                           "issuer_did": "Ui6HA36FvN83cEtmYYHxrn"
                         }
                      ],
                      "nonRevoked": {
@@ -938,18 +914,6 @@
                         {
                            "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2",
                            "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
-                        },
-                        {
-                           "schema_id": "4eCXHS79ykiMv2PoBxPK23:2:unverified_person:0.1.0",
-                           "issuer_did": "4eCXHS79ykiMv2PoBxPK23"
-                        },
-                        {
-                           "schema_id": "HTkhhCW1bAXWnxC1u3YVoa:2:unverified_person:0.1.0",
-                           "issuer_did": "HTkhhCW1bAXWnxC1u3YVoa"
-                        },
-                        {
-                           "schema_id": "Ui6HA36FvN83cEtmYYHxrn:2:unverified_person:0.1.0",
-                           "issuer_did": "Ui6HA36FvN83cEtmYYHxrn"
                         }
                      ],
                      "nonRevoked": {
