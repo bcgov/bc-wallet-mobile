@@ -720,6 +720,10 @@
                      ],
                      "devRestrictions": [
                         {
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                        },
+                        {
                            "schema_id": "XpgeQa93eZvGSZBZef3PHn:2:Person:1.0",
                            "issuer_did": "7xjfawcnyTUcduWVysLww5"
                         },
@@ -814,6 +818,10 @@
                      ],
                      "devRestrictions": [
                         {
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                        },
+                        {
                            "schema_id": "XpgeQa93eZvGSZBZef3PHn:2:Person:1.0",
                            "issuer_did": "7xjfawcnyTUcduWVysLww5"
                         },
@@ -907,6 +915,10 @@
                         }
                      ],
                      "devRestrictions": [
+                        {
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                        },
                         {
                            "schema_id": "XpgeQa93eZvGSZBZef3PHn:2:Person:1.0",
                            "issuer_did": "7xjfawcnyTUcduWVysLww5"
