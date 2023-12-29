@@ -151,7 +151,11 @@ const isRegistered = async (): Promise<boolean> => {
  * @returns {Promise<boolean>}
  */
 const isEnabled = async (): Promise<boolean> => {
-  return (await messaging().getToken()) === (await AsyncStorage.getItem(TOKEN_STORAGE_KEY))
+  try {
+    return (await messaging().getToken()) === (await AsyncStorage.getItem(TOKEN_STORAGE_KEY))
+  } catch (error) {
+    return false
+  }
 }
 
 /**
