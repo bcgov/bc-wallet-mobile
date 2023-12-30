@@ -1,0 +1,109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmptyList Component renders correctly 1`] = `
+<View
+  style={
+    {
+      "height": "100%",
+      "marginTop": 100,
+    }
+  }
+>
+  <
+    height={200}
+  />
+  <Text
+    style={
+      [
+        {
+          "color": "#FFFFFF",
+          "fontSize": 18,
+          "fontWeight": "normal",
+        },
+        {
+          "textAlign": "center",
+        },
+      ]
+    }
+    testID="com.ariesbifold:id/NoneYet"
+  >
+    Global.NoneYet!
+  </Text>
+  <View
+    style={
+      {
+        "margin": 25,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Credentials.AddFirstCredential"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "backgroundColor": "#42803E",
+          "borderRadius": 4,
+          "opacity": 1,
+          "padding": 16,
+        }
+      }
+      testID="com.ariesbifold:id/AddFirstCredential"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
+          }
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "color": "#FFFFFF",
+                "fontSize": 18,
+                "fontWeight": "bold",
+                "textAlign": "center",
+              },
+              false,
+              false,
+              false,
+            ]
+          }
+        >
+          Credentials.AddFirstCredential
+        </Text>
+      </View>
+    </View>
+  </View>
+</View>
+`;
