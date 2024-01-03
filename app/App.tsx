@@ -133,7 +133,7 @@ const App = () => {
                     credentialsTourSteps={credentialsTourSteps}
                     credentialOfferTourSteps={credentialOfferTourSteps}
                     proofRequestTourSteps={proofRequestTourSteps}
-                    overlayColor={'gray'}
+                    overlayColor={'black'}
                     overlayOpacity={0.7}
                   >
                     <RootStack />
