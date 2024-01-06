@@ -174,6 +174,7 @@ jobs:
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
+          -allowProvisioningUpdates \
           -configuration Release \
           -derivedDataPath xbuild \
           -xcconfig ../../release.xcconfig \
