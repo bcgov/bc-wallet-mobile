@@ -96,7 +96,7 @@ const Terms = () => {
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']}>
       <ScrollView style={[style.container]}>
-        <InfoTextBox>Please agree to the terms and conditions below before using this application.</InfoTextBox>
+        <InfoTextBox>Please agree to the terms of use below before using this application.</InfoTextBox>
         <Text style={[style.bodyText, { marginTop: 20 }]}>
           The BC Wallet App (the “Licensed Application”) allows you (“You” or “you”) to store your verifiable
           credentials, which are digital credentials issued by third party issuers that you can use to prove something
