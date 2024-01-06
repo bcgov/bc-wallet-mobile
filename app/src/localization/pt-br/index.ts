@@ -104,6 +104,7 @@ const translation = {
   "Settings": {
     "Help": "Help (PT-BR)",
     "MoreInformation": "More Information (PT-BR)",
+    "PlayWithBCWallet": "Play with BC Wallet (PT-BR)",
     "HelpUsingBCWallet": "Help using BC Wallet (PT-BR)",
     "GiveFeedback": "Give feedback (PT-BR)",
     "ReportAProblem": "Report a problem (PT-BR)",

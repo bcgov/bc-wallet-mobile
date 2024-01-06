@@ -94,6 +94,12 @@ const App = () => {
           testID: testIdWithKey('IntroductionToTheApp'),
           onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Onboarding } as never),
         },
+        {
+          title: t('Settings.PlayWithBCWallet'),
+          accessibilityLabel: t('Settings.PlayWithBCWallet'),
+          testID: testIdWithKey('PlayWithBCWallet'),
+          onPress: () => Linking.openURL('https://digital.gov.bc.ca/digital-trust/showcase/'),
+        },
       ],
     },
   ]
