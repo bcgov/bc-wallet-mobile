@@ -439,6 +439,7 @@ jobs:
         if: ${{ matrix.mobile-platform=='-p Android' }}
         uses: ./.github/workflows/actions/run-aath-agents
         with:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
           USE_NGROK: "-n"
 
       - name: run-sauce-connect-tunnel
