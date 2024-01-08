@@ -22,6 +22,10 @@ inputs:
     description: "Customized agent args to use"
     required: true
     default: "/aries-backchannels/acapy/auto_issuer_config.yaml"
+  NGROK_AUTHTOKEN:
+    description: "AUTH Token for NGROK when -n is used"
+    required: false
+    default: ""
   USE_NGROK:
     description: "Use NGROK Tunnel"
     required: false
@@ -37,7 +41,7 @@ runs:
       shell: bash
       working-directory: aries-agent-test-harness
     - name: run-aath-agents
-      run: LEDGER_URL_CONFIG=${{inputs.LEDGER_URL_CONFIG}} TAILS_SERVER_URL_CONFIG=${{inputs.TAILS_SERVER_URL_CONFIG}} AGENT_CONFIG_FILE=${{inputs.AGENT_CONFIG_FILE}} ./manage start ${{inputs.TEST_AGENTS}} ${{inputs.USE_NGROK}}
+      run: LEDGER_URL_CONFIG=${{inputs.LEDGER_URL_CONFIG}} TAILS_SERVER_URL_CONFIG=${{inputs.TAILS_SERVER_URL_CONFIG}} NGROK_AUTHTOKEN=${{ inputs.NGROK_AUTHTOKEN }} AGENT_CONFIG_FILE=${{inputs.AGENT_CONFIG_FILE}} ./manage start ${{inputs.TEST_AGENTS}} ${{inputs.USE_NGROK}}
       shell: bash
       working-directory: aries-agent-test-harness
     - name: shut-down-uniresolver
