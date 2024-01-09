@@ -195,11 +195,9 @@ const Settings: React.FC = () => {
   }
 
   const toggleRemoteLoggingWarningSwitch = () => {
-    console.log('toggleRemoteLoggingWarningSwitch', remoteLoggingEnabled)
     setRemoteLoggingEnabled((previousState) => !previousState)
 
     if (remoteLoggingEnabled) {
-      console.log('emitF', !remoteLoggingEnabled)
       DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, !remoteLoggingEnabled)
 
       return

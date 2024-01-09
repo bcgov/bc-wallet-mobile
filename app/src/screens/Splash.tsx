@@ -46,6 +46,7 @@ import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
 import { RemoteLogger, RemoteLoggerOptions } from '../logger'
+import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 
 enum InitErrorTypes {
   Onboarding,
@@ -404,7 +405,7 @@ const Splash = () => {
             application: 'bcwallet',
             job: 'react-native-logs',
           },
-          autoDisableRemoteLoggingIntervalInMinutes: 90,
+          autoDisableRemoteLoggingIntervalInMinutes,
         }
         const logger = new RemoteLogger(logOptions)
         logger.startEventListeners()
