@@ -4,47 +4,6 @@ import axios from 'axios'
 import { DeviceEventEmitter, EmitterSubscription } from 'react-native'
 import { Record } from '@hyperledger/aries-bifold-core'
 
-// Next Tasks
-// - Add developer setting;
-// - Convert to NPM package;
-// - Add warning screen when on;
-// - Add timer to disable remote logging after 24h;
-// - Add event listener mechanics to enable/disable remote logging;
-
-// export declare enum LogLevel {
-//   test = 0,
-//   trace = 1,
-//   debug = 2,
-//   info = 3,
-//   warn = 4,
-//   error = 5,
-//   fatal = 6,
-//   off = 7
-// }
-
-// const defaultConfig = {
-//   levels: {
-//     debug: 0,
-//     info: 1,
-//     warn: 2,
-//     error: 3,
-//   },
-//   severity: "debug",
-//   transport: consoleTransport,
-//   transportOptions: {
-//     colors: {
-//       info: "blueBright",
-//       warn: "yellowBright",
-//       error: "redBright",
-//     },
-//   },
-//   async: true,
-//   dateFormat: "time",
-//   printLevel: true,
-//   printDate: true,
-//   enabled: true,
-// };
-
 export interface RemoteLoggerOptions {
   lokiUrl?: string
   lokiLabels?: Record<string, string>

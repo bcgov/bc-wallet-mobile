@@ -2,9 +2,7 @@ import {
   useTheme,
   useStore,
   testIdWithKey,
-  DispatchAction,
   AuthenticateStackParams,
-  Screens,
   CheckBoxRow,
   Button,
   ButtonType,
@@ -16,7 +14,6 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { BCDispatchAction, BCState } from '../store'
 
 type RemoteLogWarningProps = {
   onEnablePressed: () => void
@@ -24,11 +21,9 @@ type RemoteLogWarningProps = {
 }
 
 const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, sessionId }) => {
-  const [, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
-  const { Assets, OnboardingTheme, TextTheme } = useTheme()
+  const { TextTheme } = useTheme()
 
   const onSubmitPressed = () => {
     onEnablePressed()
