@@ -15,6 +15,7 @@ export interface IASEnvironment {
 interface Developer {
   environment: IASEnvironment
   attestationSupportEnabled: boolean
+  remoteLoggingEnabled: boolean
 }
 
 interface DismissPersonCredentialOffer {
@@ -35,11 +36,19 @@ enum DismissPersonCredentialOfferDispatchAction {
   PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
 }
 
-export type BCDispatchAction = DeveloperDispatchAction | DismissPersonCredentialOfferDispatchAction
+enum ToggleRemoteLoggingDispatchAction {
+  TOGGLE_REMOTE_LOGGING = 'toggleRemoteLogging/remoteLogging',
+}
+
+export type BCDispatchAction =
+  | DeveloperDispatchAction
+  | DismissPersonCredentialOfferDispatchAction
+  | ToggleRemoteLoggingDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...DismissPersonCredentialOfferDispatchAction,
+  ...ToggleRemoteLoggingDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -66,6 +75,7 @@ export const iasEnvironments: Array<IASEnvironment> = [
 const developerState: Developer = {
   environment: iasEnvironments[0],
   attestationSupportEnabled: false,
+  remoteLoggingEnabled: false,
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
@@ -77,6 +87,7 @@ export enum BCLocalStorageKeys {
   Environment = 'Environment',
   Attestation = 'Attestation',
   GenesisTransactions = 'GenesisTransactions',
+  RemoteLogging = 'RemoteLogging',
 }
 
 export const initialState: BCState = {
@@ -87,6 +98,13 @@ export const initialState: BCState = {
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
+    case BCDispatchAction.TOGGLE_REMOTE_LOGGING: {
+      const choice = (action?.payload ?? []).pop() ?? false
+      const developer = { ...state.developer, remoteLoggingEnabled: choice }
+      AsyncStorage.setItem(BCLocalStorageKeys.RemoteLogging, JSON.stringify(developer.remoteLoggingEnabled))
+
+      return { ...state, developer }
+    }
     case BCDispatchAction.ATTESTATION_SUPPORT: {
       const choice = (action?.payload ?? []).pop() ?? false
       const developer = { ...state.developer, attestationSupportEnabled: choice }

@@ -12,6 +12,10 @@ import { BCDispatchAction, BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 
+import RemoteLogging from './RemoteLogging'
+import { DeviceEventEmitter } from 'react-native'
+import { RemoteLoggerEventTypes } from '../logger'
+
 const Settings: React.FC = () => {
   const { agent } = useAgent()
   const { t } = useTranslation()
@@ -24,6 +28,7 @@ const Settings: React.FC = () => {
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
     !!store.preferences.useConnectionInviterCapability
   )
+  const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
@@ -186,6 +191,34 @@ const Settings: React.FC = () => {
     setEnableWalletNaming((previousState) => !previousState)
   }
 
+  const toggleRemoteLoggingWarningSwitch = () => {
+    if (store.developer.remoteLoggingEnabled) {
+      const enableRemoteLogging = !store.developer.remoteLoggingEnabled
+      dispatch({
+        type: BCDispatchAction.TOGGLE_REMOTE_LOGGING,
+        payload: [enableRemoteLogging],
+      })
+
+      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, enableRemoteLogging)
+
+      return
+    }
+
+    setRemoteLoggingWarningModalVisible((previousState) => !previousState)
+  }
+
+  const onEnableRemoteLoggingPressed = () => {
+    const enableRemoteLogging = true
+    dispatch({
+      type: BCDispatchAction.TOGGLE_REMOTE_LOGGING,
+      payload: [enableRemoteLogging],
+    })
+
+    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, enableRemoteLogging)
+
+    toggleRemoteLoggingWarningSwitch()
+  }
+
   const togglePreventAutoLockSwitch = () => {
     dispatch({
       type: DispatchAction.PREVENT_AUTO_LOCK,
@@ -237,6 +270,16 @@ const Settings: React.FC = () => {
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
+      <Modal
+        visible={remoteLoggingWarningModalVisible}
+        transparent={false}
+        animationType={'slide'}
+        onRequestClose={() => {
+          return
+        }}
+      >
+        <RemoteLogging onEnablePressed={onEnableRemoteLoggingPressed} />
+      </Modal>
       <Modal
         visible={environmentModalVisible}
         transparent={false}
@@ -386,6 +429,21 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleAttestationSupport}
             value={attestationSupportEnabled}
+          />
+        </SectionRow>
+        <SectionRow
+          title={'Remote Logging'}
+          accessibilityLabel={'Remote Logging'}
+          testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={
+              store.developer.remoteLoggingEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey
+            }
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleRemoteLoggingWarningSwitch}
+            value={store.developer.remoteLoggingEnabled}
           />
         </SectionRow>
       </ScrollView>

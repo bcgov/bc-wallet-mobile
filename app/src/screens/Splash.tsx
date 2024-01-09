@@ -45,6 +45,8 @@ import TipCarousel from '../components/TipCarousel'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
+import { RemoteLogger, RemoteLoggerOptions } from '../logger'
+
 enum InitErrorTypes {
   Onboarding,
   Agent,
@@ -396,6 +398,20 @@ const Splash = () => {
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
 
+        const roptions: RemoteLoggerOptions = {
+          lokiUrl: 'http://10.0.3.210:3100/loki/api/v1/push',
+          lokiLabels: {
+            application: 'bcwallet',
+            job: 'react-native-logs',
+          },
+        }
+        const logger = new RemoteLogger(roptions)
+        logger.startEventListeners()
+
+        if (store.preferences.developerModeEnabled && store.developer.remoteLoggingEnabled) {
+          logger.remoteLoggingEnabled = true
+        }
+
         const options = {
           config: {
             label: store.preferences.walletName || 'BC Wallet',
@@ -403,7 +419,7 @@ const Splash = () => {
               id: credentials.id,
               key: credentials.key,
             },
-            logger: new ConsoleLogger(LogLevel.trace),
+            logger,
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             autoUpdateStorageOnStartup: true,
             autoAcceptConnections: true,
