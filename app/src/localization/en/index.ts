@@ -56,7 +56,7 @@ const translation = {
   },
   "Screens": {
     "Onboarding": "BC Wallet",
-    "Terms": "End User License Agreement",
+    "Terms": "Terms of Use",
     "Settings": "Menu",
     "Preface": "BC Wallet",
   },
@@ -105,6 +105,7 @@ const translation = {
   "Settings": {
     "Help": "Help",
     "MoreInformation": "More Information",
+    "PlayWithBCWallet": "Play with BC Wallet",
     "HelpUsingBCWallet": "Help using BC Wallet",
     "GiveFeedback": "Give feedback",
     "ReportAProblem": "Report a problem",

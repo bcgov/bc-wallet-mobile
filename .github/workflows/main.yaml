@@ -2,7 +2,7 @@ name: Native Build & Test
 
 env:
   appBuildNumber: ${{ github.run_number }}
-  appBuildVersion: "1.0.14"
+  appBuildVersion: "1.0.15"
 
 on:
   workflow_dispatch:
@@ -174,6 +174,7 @@ jobs:
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
+          -allowProvisioningUpdates \
           -configuration Release \
           -derivedDataPath xbuild \
           -xcconfig ../../release.xcconfig \
@@ -438,6 +439,7 @@ jobs:
         if: ${{ matrix.mobile-platform=='-p Android' }}
         uses: ./.github/workflows/actions/run-aath-agents
         with:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
           USE_NGROK: "-n"
 
       - name: run-sauce-connect-tunnel
