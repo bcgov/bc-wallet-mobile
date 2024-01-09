@@ -12,7 +12,7 @@ import { BCDispatchAction, BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 
-import RemoteLogging from './RemoteLogging'
+import RemoteLogWarning from './RemoteLogWarning'
 import { DeviceEventEmitter } from 'react-native'
 import { RemoteLogger, RemoteLoggerEventTypes } from '../logger'
 
@@ -195,10 +195,12 @@ const Settings: React.FC = () => {
   }
 
   const toggleRemoteLoggingWarningSwitch = () => {
+    console.log('toggleRemoteLoggingWarningSwitch', remoteLoggingEnabled)
     setRemoteLoggingEnabled((previousState) => !previousState)
 
     if (remoteLoggingEnabled) {
-      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
+      console.log('emitF', !remoteLoggingEnabled)
+      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, !remoteLoggingEnabled)
 
       return
     }
@@ -207,11 +209,9 @@ const Settings: React.FC = () => {
   }
 
   const onEnableRemoteLoggingPressed = () => {
-    const enableRemoteLogging = true
+    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
 
-    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, enableRemoteLogging)
-
-    toggleRemoteLoggingWarningSwitch()
+    setRemoteLoggingWarningModalVisible((previousState) => !previousState)
   }
 
   const togglePreventAutoLockSwitch = () => {
@@ -273,7 +273,7 @@ const Settings: React.FC = () => {
           return
         }}
       >
-        <RemoteLogging onEnablePressed={onEnableRemoteLoggingPressed} sessionId={logger.sessionId} />
+        <RemoteLogWarning onEnablePressed={onEnableRemoteLoggingPressed} sessionId={logger.sessionId} />
       </Modal>
       <Modal
         visible={environmentModalVisible}

@@ -18,12 +18,12 @@ import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BCDispatchAction, BCState } from '../store'
 
-type RemoteLoggingProps = {
+type RemoteLogWarningProps = {
   onEnablePressed: () => void
   sessionId: string
 }
 
-const RemoteLogging: React.FC<RemoteLoggingProps> = ({ onEnablePressed, sessionId }) => {
+const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, sessionId }) => {
   const [, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
@@ -98,4 +98,4 @@ const RemoteLogging: React.FC<RemoteLoggingProps> = ({ onEnablePressed, sessionI
   )
 }
 
-export default RemoteLogging
+export default RemoteLogWarning
