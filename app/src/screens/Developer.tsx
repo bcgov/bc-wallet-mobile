@@ -14,10 +14,11 @@ import IASEnvironment from './IASEnvironment'
 
 import RemoteLogging from './RemoteLogging'
 import { DeviceEventEmitter } from 'react-native'
-import { RemoteLoggerEventTypes } from '../logger'
+import { RemoteLogger, RemoteLoggerEventTypes } from '../logger'
 
 const Settings: React.FC = () => {
   const { agent } = useAgent()
+  const logger = agent?.config.logger as RemoteLogger
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
@@ -37,6 +38,7 @@ const Settings: React.FC = () => {
   const [attestationSupportEnabled, setAttestationSupportEnabled] = useState(
     !!store.developer.attestationSupportEnabled
   )
+  const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger.remoteLoggingEnabled)
   const { start, stop } = useAttestation()
 
   const styles = StyleSheet.create({
@@ -188,18 +190,15 @@ const Settings: React.FC = () => {
       type: DispatchAction.ENABLE_WALLET_NAMING,
       payload: [!enableWalletNaming],
     })
+
     setEnableWalletNaming((previousState) => !previousState)
   }
 
   const toggleRemoteLoggingWarningSwitch = () => {
-    if (store.developer.remoteLoggingEnabled) {
-      const enableRemoteLogging = !store.developer.remoteLoggingEnabled
-      dispatch({
-        type: BCDispatchAction.TOGGLE_REMOTE_LOGGING,
-        payload: [enableRemoteLogging],
-      })
+    setRemoteLoggingEnabled((previousState) => !previousState)
 
-      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, enableRemoteLogging)
+    if (remoteLoggingEnabled) {
+      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
 
       return
     }
@@ -209,10 +208,6 @@ const Settings: React.FC = () => {
 
   const onEnableRemoteLoggingPressed = () => {
     const enableRemoteLogging = true
-    dispatch({
-      type: BCDispatchAction.TOGGLE_REMOTE_LOGGING,
-      payload: [enableRemoteLogging],
-    })
 
     DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, enableRemoteLogging)
 
@@ -278,7 +273,7 @@ const Settings: React.FC = () => {
           return
         }}
       >
-        <RemoteLogging onEnablePressed={onEnableRemoteLoggingPressed} />
+        <RemoteLogging onEnablePressed={onEnableRemoteLoggingPressed} sessionId={logger.sessionId} />
       </Modal>
       <Modal
         visible={environmentModalVisible}
@@ -438,12 +433,10 @@ const Settings: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={
-              store.developer.remoteLoggingEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey
-            }
+            thumbColor={remoteLoggingEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleRemoteLoggingWarningSwitch}
-            value={store.developer.remoteLoggingEnabled}
+            value={remoteLoggingEnabled}
           />
         </SectionRow>
       </ScrollView>

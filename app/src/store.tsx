@@ -36,19 +36,11 @@ enum DismissPersonCredentialOfferDispatchAction {
   PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
 }
 
-enum ToggleRemoteLoggingDispatchAction {
-  TOGGLE_REMOTE_LOGGING = 'toggleRemoteLogging/remoteLogging',
-}
-
-export type BCDispatchAction =
-  | DeveloperDispatchAction
-  | DismissPersonCredentialOfferDispatchAction
-  | ToggleRemoteLoggingDispatchAction
+export type BCDispatchAction = DeveloperDispatchAction | DismissPersonCredentialOfferDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...DismissPersonCredentialOfferDispatchAction,
-  ...ToggleRemoteLoggingDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -87,7 +79,6 @@ export enum BCLocalStorageKeys {
   Environment = 'Environment',
   Attestation = 'Attestation',
   GenesisTransactions = 'GenesisTransactions',
-  RemoteLogging = 'RemoteLogging',
 }
 
 export const initialState: BCState = {
@@ -98,13 +89,6 @@ export const initialState: BCState = {
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
-    case BCDispatchAction.TOGGLE_REMOTE_LOGGING: {
-      const choice = (action?.payload ?? []).pop() ?? false
-      const developer = { ...state.developer, remoteLoggingEnabled: choice }
-      AsyncStorage.setItem(BCLocalStorageKeys.RemoteLogging, JSON.stringify(developer.remoteLoggingEnabled))
-
-      return { ...state, developer }
-    }
     case BCDispatchAction.ATTESTATION_SUPPORT: {
       const choice = (action?.payload ?? []).pop() ?? false
       const developer = { ...state.developer, attestationSupportEnabled: choice }

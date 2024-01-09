@@ -20,9 +20,10 @@ import { BCDispatchAction, BCState } from '../store'
 
 type RemoteLoggingProps = {
   onEnablePressed: () => void
+  sessionId: string
 }
 
-const RemoteLogging: React.FC<RemoteLoggingProps> = ({ onEnablePressed }) => {
+const RemoteLogging: React.FC<RemoteLoggingProps> = ({ onEnablePressed, sessionId }) => {
   const [, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
@@ -64,9 +65,11 @@ const RemoteLogging: React.FC<RemoteLoggingProps> = ({ onEnablePressed }) => {
               {
                 'Logs are automatically deleted after three days. They are kept and used only for debugging, as outlined in our '
               }
-
               <Link onPress={onPressShowcaseLink} linkText={`${'Privacy Policy'}.`} />
             </Text>
+            <Text
+              style={[TextTheme.normal, { marginTop: 10 }]}
+            >{`Provide the debug session id ${sessionId} to technical support.`}</Text>
           </View>
           <View style={style.controlsContainer}>
             <CheckBoxRow

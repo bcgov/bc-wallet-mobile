@@ -2,6 +2,7 @@ import { BaseLogger } from '@aries-framework/core'
 import { logger, transportFunctionType, consoleTransport } from 'react-native-logs'
 import axios from 'axios'
 import { DeviceEventEmitter, EmitterSubscription } from 'react-native'
+import { Record } from '@hyperledger/aries-bifold-core'
 
 // Next Tasks
 // - Add developer setting;
@@ -47,6 +48,7 @@ import { DeviceEventEmitter, EmitterSubscription } from 'react-native'
 export interface RemoteLoggerOptions {
   lokiUrl?: string
   lokiLabels?: Record<string, string>
+  autoDisableRemoteLoggingIntervalInMinutes?: number
 }
 
 type LokiTransportProps = {
@@ -112,13 +114,14 @@ const lokiTransport: transportFunctionType = (props: LokiTransportProps) => {
 }
 
 export class RemoteLogger extends BaseLogger {
-  private readonly autoDisableRemoteLoggingIntervalInMs: number = 3 * 60 * 60 * 1000 // 3 hours in milliseconds
   private _remoteLoggingEnabled = false
-  private _sessionId: number
+  private _sessionId: number | undefined
+  private _autoDisableRemoteLoggingIntervalInMinutes = 0
+  private lokiUrl: string | undefined
+  private lokiLabels = Record<string, string>
   private remoteLoggingAutoDisableTimer: ReturnType<typeof setTimeout> | undefined
   private eventListener: EmitterSubscription | undefined
   private log: any
-  private options: RemoteLoggerOptions
   private config = {
     levels: {
       test: 0,
@@ -138,13 +141,23 @@ export class RemoteLogger extends BaseLogger {
   constructor(options: RemoteLoggerOptions) {
     super()
 
-    this._sessionId = Math.floor(100000 + Math.random() * 900000)
-    this.options = options
+    this.lokiUrl = options.lokiUrl ?? undefined
+    this.lokiLabels = options.lokiLabels ?? {}
+    this._autoDisableRemoteLoggingIntervalInMinutes = options.autoDisableRemoteLoggingIntervalInMinutes ?? 0
+
     this.configureLogger()
   }
 
   get sessionId(): number {
+    if (!this._sessionId) {
+      this._sessionId = Math.floor(100000 + Math.random() * 900000)
+    }
+
     return this._sessionId
+  }
+
+  get autoDisableRemoteLoggingIntervalInMinutes(): number {
+    return this._autoDisableRemoteLoggingIntervalInMinutes
   }
 
   get remoteLoggingEnabled(): boolean {
@@ -153,6 +166,11 @@ export class RemoteLogger extends BaseLogger {
 
   set remoteLoggingEnabled(value: boolean) {
     this._remoteLoggingEnabled = value
+
+    if (value === false) {
+      this._sessionId = undefined
+    }
+
     this.configureLogger()
   }
 
@@ -165,18 +183,21 @@ export class RemoteLogger extends BaseLogger {
       transportOptions,
     }
 
-    if (this.remoteLoggingEnabled && this.options.lokiUrl) {
+    if (this.remoteLoggingEnabled && this.lokiUrl) {
       transport.push(lokiTransport)
       config['transportOptions'] = {
-        lokiUrl: this.options.lokiUrl,
+        lokiUrl: this.lokiUrl,
         lokiLabels: {
-          ...this.options.lokiLabels,
+          ...this.lokiLabels,
           sessionId: this.sessionId,
         },
       }
-      this.remoteLoggingAutoDisableTimer = setTimeout(() => {
-        this.remoteLoggingEnabled = false
-      }, this.autoDisableRemoteLoggingIntervalInMs)
+
+      if (this.autoDisableRemoteLoggingIntervalInMinutes && this.autoDisableRemoteLoggingIntervalInMinutes > 0) {
+        this.remoteLoggingAutoDisableTimer = setTimeout(() => {
+          this.remoteLoggingEnabled = false
+        }, this.autoDisableRemoteLoggingIntervalInMinutes * 60000)
+      }
     }
 
     this.log = logger.createLogger<'test' | 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'>(config)

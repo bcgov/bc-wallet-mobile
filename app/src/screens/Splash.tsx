@@ -398,14 +398,15 @@ const Splash = () => {
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
 
-        const roptions: RemoteLoggerOptions = {
-          lokiUrl: 'http://10.0.3.210:3100/loki/api/v1/push',
+        const logOptions: RemoteLoggerOptions = {
+          lokiUrl: Config.REMOTE_LOGGING_URL,
           lokiLabels: {
             application: 'bcwallet',
             job: 'react-native-logs',
           },
+          autoDisableRemoteLoggingIntervalInMinutes: 90,
         }
-        const logger = new RemoteLogger(roptions)
+        const logger = new RemoteLogger(logOptions)
         logger.startEventListeners()
 
         if (store.preferences.developerModeEnabled && store.developer.remoteLoggingEnabled) {
