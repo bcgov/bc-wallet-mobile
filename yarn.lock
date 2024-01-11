@@ -4150,6 +4150,7 @@ __metadata:
     react-native-gifted-chat: "*"
     react-native-keychain: ^8.1.1
     react-native-localize: ^2.2.4
+    react-native-orientation-locker: "*"
     react-native-permissions: ^3.8.4
     react-native-qrcode-svg: ^6.2.0
     react-native-reanimated: ^3.4.2
@@ -8644,6 +8645,7 @@ __metadata:
     react-native-inappbrowser-reborn: "npm:3.7.0"
     react-native-keychain: "npm:8.1.2"
     react-native-localize: "npm:2.2.6"
+    react-native-orientation-locker: "npm:^1.6.0"
     react-native-permissions: "npm:3.9.0"
     react-native-qrcode-svg: "npm:6.2.0"
     react-native-reanimated: "npm:3.6.1"
@@ -19392,6 +19394,20 @@ __metadata:
     react: "*"
     react-native: "*"
   checksum: a9cde303329863a35cae6b040b7d6aa05917709a7b1ab6961ae35ba1017450bb76e507778484356390e652cd2c96a22a56f222f32e05c9f242edab97d25fc0ed
+  languageName: node
+  linkType: hard
+
+"react-native-orientation-locker@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "react-native-orientation-locker@npm:1.6.0"
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.2"
+    react-native-windows: ">=0.63.3"
+  peerDependenciesMeta:
+    react-native-windows:
+      optional: true
+  checksum: 78ae120f82ff5840d62010d9ac9ca0ed437dcf2827a869bcba959b6be694199c46a4e7300b923f7a4cb8160ae67e4db77f311add09dde9b3b17c5a3c3694cc51
   languageName: node
   linkType: hard
 

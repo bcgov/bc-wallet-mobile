@@ -8,6 +8,18 @@ import androidx.core.app.NotificationManagerCompat;
 
 public class MainActivity extends ReactActivity {
 
+  /**
+   * Detects changes in device orientation and sends them to JavaScript by broadcasting an event.
+   * This is used to support the camera on different tablet orientations.
+   */
+  @Override
+  public void onConfigurationChanged(Configuration newConfig) {
+      super.onConfigurationChanged(newConfig);
+      Intent intent = new Intent("onConfigurationChanged");
+      intent.putExtra("newConfig", newConfig);
+      this.sendBroadcast(intent);
+  }
+
   @Override
   protected void onStart() {
     super.onStart();

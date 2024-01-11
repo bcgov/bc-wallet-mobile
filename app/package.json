@@ -99,6 +99,7 @@
     "react-native-inappbrowser-reborn": "3.7.0",
     "react-native-keychain": "8.1.2",
     "react-native-localize": "2.2.6",
+    "react-native-orientation-locker": "^1.6.0",
     "react-native-permissions": "3.9.0",
     "react-native-qrcode-svg": "6.2.0",
     "react-native-reanimated": "3.6.1",
