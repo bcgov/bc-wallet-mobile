@@ -33,6 +33,8 @@ import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
 import WebDisplay from './src/screens/WebDisplay'
 import { AttestationProvider } from './src/services/attestation'
 import { initialState, reducer } from './src/store'
+import {isTablet} from 'react-native-device-info'
+import Orientation from "react-native-orientation-locker";
 
 const { theme, localization, configuration } = bcwallet
 
@@ -48,6 +50,10 @@ const App = () => {
   const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
 
   const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
+
+  if (!isTablet()){
+    Orientation.lockToPortrait();
+  }
 
   const settings = [
     {
