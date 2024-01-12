@@ -1,11 +1,4 @@
-import {
-  Agent,
-  ConsoleLogger,
-  HttpOutboundTransport,
-  LogLevel,
-  MediatorPickupStrategy,
-  WsOutboundTransport,
-} from '@aries-framework/core'
+import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@aries-framework/core'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
@@ -45,7 +38,7 @@ import TipCarousel from '../components/TipCarousel'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
-import { RemoteLogger, RemoteLoggerOptions } from '../logger'
+import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 
 enum InitErrorTypes {
@@ -409,10 +402,6 @@ const Splash = () => {
         }
         const logger = new RemoteLogger(logOptions)
         logger.startEventListeners()
-
-        if (store.preferences.developerModeEnabled && store.developer.remoteLoggingEnabled) {
-          logger.remoteLoggingEnabled = true
-        }
 
         const options = {
           config: {

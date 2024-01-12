@@ -1,15 +1,4 @@
-import {
-  useTheme,
-  useStore,
-  testIdWithKey,
-  AuthenticateStackParams,
-  CheckBoxRow,
-  Button,
-  ButtonType,
-  Link,
-} from '@hyperledger/aries-bifold-core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { useTheme, testIdWithKey, CheckBoxRow, Button, ButtonType, Link } from '@hyperledger/aries-bifold-core'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -53,7 +42,7 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, se
             <Text style={[TextTheme.headingTwo]}>{'Remote Logging'}</Text>
             <Text style={[TextTheme.normal, { marginTop: 10, marginBottom: 10 }]}>
               {
-                'Only turn on remote logging if you are in a debugging session or if you are asked and agree to do so. This action will send logs to Technical Support at the Government of British Columbia.'
+                'Only turn on remote logging if you are in a debugging session or if you are asked and agree to do so. This action will send logs to Technical Support at the Some Organization.'
               }
             </Text>
             <Text style={[TextTheme.normal, { marginTop: 10 }]}>

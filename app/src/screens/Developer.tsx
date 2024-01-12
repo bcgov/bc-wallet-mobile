@@ -1,6 +1,8 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useTheme, useStore, testIdWithKey, DispatchAction } from '@hyperledger/aries-bifold-core'
+import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
 import React, { useEffect, useState } from 'react'
+import { DeviceEventEmitter } from 'react-native'
 import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -9,12 +11,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import * as PushNotificationHelper from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
 import { BCDispatchAction, BCState } from '../store'
+import RemoteLogWarning from './RemoteLogWarning'
 
 import IASEnvironment from './IASEnvironment'
-
-import RemoteLogWarning from './RemoteLogWarning'
-import { DeviceEventEmitter } from 'react-native'
-import { RemoteLogger, RemoteLoggerEventTypes } from '../logger'
 
 const Settings: React.FC = () => {
   const { agent } = useAgent()
