@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "loki.fullname" . }}
+  labels: {{- include "loki.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}  
+  selector:
+    matchLabels:
+      {{- include "loki.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "loki.labels" . | nindent 8 }}
+	      {{- with .Values.podLabels }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      volumes:
+        - name: loki-config
+          configMap:
+            name: {{ include "loki.fullname" . }}-config
+        - name: loki-log-data
+          persistentVolumeClaim:
+            claimName: {{ include "loki.fullname" . }}-data
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          ports:
+            - containerPort: {{ .Values.service.httpPort }}
+              name: http
+            - containerPort: {{ .Values.service.grpcPort }}
+              name: grpc
+          args:
+            - -config.file=/etc/loki/config.yaml 
+            - -config.expand-env=true
+          volumeMounts:
+            - name: loki-config
+              mountPath: {{.Values.env.LOKI_CONFIG_PATH }} 
+              subPath: {{.Values.env.LOKI_CONFIG_PATH | base}}
+            - name: loki-log-data
+              mountPath: {{ .Values.persistentVolumeClaim.mountPath }}
+          # livenessProbe:
+          #   httpGet:
+          #     path: /api/v1/ehlo
+          #     port: http
+          #   initialDelaySeconds: 60
+          #   periodSeconds: 3
+          # readinessProbe:
+          #   httpGet:
+          #     path: /api/v1/ehlo
+          #     port: http
+          #   initialDelaySeconds: 60
+          #   timeoutSeconds: 3
+          # envFrom:
+          #   - secretRef:
+          #       name: traction-creds
+          # env:
+          #   - name: PORT
+          #     value: {{.Values.service.targetPort | quote}}
