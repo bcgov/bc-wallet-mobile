@@ -39,26 +39,18 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, se
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View style={style.screenContainer}>
           <View style={style.contentContainer}>
-            <Text style={[TextTheme.headingTwo]}>{'Remote Logging'}</Text>
-            <Text style={[TextTheme.normal, { marginTop: 10, marginBottom: 10 }]}>
-              {
-                'Only turn on remote logging if you are in a debugging session or if you are asked and agree to do so. This action will send logs to Technical Support at the Some Organization.'
-              }
-            </Text>
+            <Text style={[TextTheme.headingTwo]}>{t('RemoteLogging.ScreenTitle')}</Text>
+            <Text style={[TextTheme.normal, { marginTop: 10, marginBottom: 10 }]}>{t('RemoteLogging.Paragraph1')}</Text>
             <Text style={[TextTheme.normal, { marginTop: 10 }]}>
-              {
-                'Logs are automatically deleted after three days. They are kept and used only for debugging, as outlined in our '
-              }
+              {t('RemoteLogging.Paragraph2')}
               <Link onPress={onPressShowcaseLink} linkText={`${'Privacy Policy'}.`} />
             </Text>
-            <Text
-              style={[TextTheme.normal, { marginTop: 10 }]}
-            >{`Provide the debug session id ${sessionId} to technical support.`}</Text>
+            <Text style={[TextTheme.normal, { marginTop: 10 }]}>{t('RemoteLogging.Paragraph3')}</Text>
           </View>
           <View style={style.controlsContainer}>
             <CheckBoxRow
-              title={'I understand and wish to enable remote logging'}
-              accessibilityLabel={'Yerp'}
+              title={t('RemoteLogging.CheckBoxTitle')}
+              accessibilityLabel={t('RemoteLogging.IAgree')}
               testID={testIdWithKey('IAgree')}
               checked={checked}
               onPress={() => setChecked(!checked)}
@@ -67,7 +59,7 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, se
             />
             <View style={[{ paddingTop: 10 }]}>
               <Button
-                title={'Turn on remote logging'}
+                title={t('RemoteLogging.ButtonTitle')}
                 accessibilityLabel={t('Global.Continue')}
                 testID={testIdWithKey('Continue')}
                 disabled={!checked}
