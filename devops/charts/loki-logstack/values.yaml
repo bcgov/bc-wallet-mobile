@@ -1,34 +1,44 @@
-# Default values for attestation-controller.
-# This is a YAML-formatted file.
+# Default values for logstack.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 podAnnotations: {}
-podLabels: {}
 
-image:
+images:
   pullPolicy: IfNotPresent
-  # registry: artifacts.developer.gov.bc.ca/github-docker-remote
-  # repository: bcgov/mobile-attestation-vc-controller/controller
   registry: artifacts.developer.gov.bc.ca/docker-remote
-  repository: grafana/loki
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  loki:
+    repository: grafana/loki
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+  proxy:
+    repository: caddy/caddy
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
 
 imagePullSecrets:
   - name: artifactory-creds
 
 env:
   LOKI_CONFIG_PATH: "/etc/loki/config.yaml"
+  CADDY_CONFIG_PATH: "/etc/caddy/Caddyfile"
 
 resources:
-  requests:
-    memory: 64Mi
-    cpu: 10m
-  limits:
-    memory: 92Mi
-    cpu: 100m
+  loki:
+    requests:
+      memory: 48Mi
+      cpu: 10m
+    limits:
+      memory: 64Mi
+      cpu: 100m
+  proxy:
+    requests:
+      memory: 16Mi
+      cpu: 10m
+    limits:
+      memory: 32Mi
+      cpu: 60m
 
 persistentVolumeClaim:
   mountPath: /data
@@ -37,9 +47,15 @@ persistentVolumeClaim:
   annotations:
     helm.sh/resource-policy: keep
 
-service:
-  httpPort: 3100
-  grpcPort: 9096
+services:
+  loki:
+    - name: http
+      port: 3100
+    - name: grpc
+      port: 9096
+  proxy:
+    - name: http
+      port: 2015
 
 route:
   host: ""
@@ -76,3 +92,13 @@ volumeMounts: []
 #   mountPath: "/etc/foo"
 #   readOnly: true
 
+#
+# Loki configuration
+#
+
+# Loki configuration that is likely to change between
+# deployments
+loki:
+  retention:
+    retention_deletes_enabled: true
+    retention_period: 3d

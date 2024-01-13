@@ -2,8 +2,8 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "loki.fullname" . }}-data
-  labels: {{- include "loki.labels" . | nindent 4 }}
+  name: {{ include "logstack.fullname" . }}-loki-data
+  labels: {{- include "logstack.labels" . | nindent 4 }}
   annotations: {{- toYaml .Values.persistentVolumeClaim.annotations | nindent 4 }}
 spec:
   accessModes:

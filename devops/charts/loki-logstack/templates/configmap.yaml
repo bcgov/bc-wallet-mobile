@@ -2,16 +2,22 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "loki.fullname" . }}-config
-  labels: {{- include "loki.labels" . | nindent 4 }}
+  name: {{ include "logstack.fullname" . }}-loki-config
+  labels: {{- include "logstack.labels" . | nindent 4 }}
   annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
 data:
   config.yaml: |-
     auth_enabled: false
 
     server:
-      http_listen_port: {{ .Values.service.httpPort }}
-      grpc_listen_port: {{ .Values.service.grpcPort }}
+      {{- range $name, $port := .Values.services.loki }}
+      {{- if eq .name "http" }}
+      http_listen_port: {{ .port }}
+      {{- end }}
+      {{- if eq .name "grpc" }}
+      grpc_listen_port: {{ .port }}
+      {{- end }}
+      {{- end }}
 
     common:
       instance_addr: 127.0.0.1
@@ -30,7 +36,7 @@ data:
         cache:
           embedded_cache:
             enabled: true
-            max_size_mb: 100
+            max_size_mb: 8
 
     schema_config:
       configs:
@@ -53,8 +59,7 @@ data:
       max_look_back_period: 0s
 
     table_manager:
-      retention_deletes_enabled: true
-      retention_period: 3d
+      {{- toYaml .Values.loki.retention | nindent 6 }}
     # By default, Loki will send anonymous, but uniquely-identifiable usage and configuration
     # analytics to Grafana Labs. These statistics are sent to https://stats.grafana.org/
     #
@@ -67,3 +72,39 @@ data:
     # If you would like to disable reporting, uncomment the following lines:
     #analytics:
     #  reporting_enabled: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "logstack.fullname" . }}-proxy-config
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
+data:
+  Caddyfile: |-
+    (revpx) { 
+      {{- range $name, $port := .Values.services.loki }}
+      {{- if eq .name "http" }}
+      reverse_proxy * http://{{ include "logstack.fullname" $ }}-loki.e79518-dev.svc.cluster.local:{{ .port }} {
+      {{- end }}
+      {{- end }}
+        header_up Host {http.reverse_proxy.upstream.hostport}
+        header_up X-Forwarded-Port {server_port}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+      }
+    }
+
+    {{- range $name, $port := .Values.services.proxy }}
+    {{- if eq .name "http" }}
+    :{{ .port }} {
+    {{- end }}
+    {{- end }}
+      respond /ehlo 202
+
+      basicauth /loki/* {
+        {{ .Values.proxyUserName }} {{ .Values.proxyPassword }}
+      }
+
+      import revpx
+    }

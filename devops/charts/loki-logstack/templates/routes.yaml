@@ -1,8 +1,8 @@
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
-  name: {{include "loki.fullname" .}}
-  labels: {{- include "loki.labels" . | nindent 4}}
+  name: {{include "logstack.fullname" .}}-proxy
+  labels: {{- include "logstack.labels" . | nindent 4}}
   annotations: {{- toYaml .Values.route.annotations | nindent 4}}
 spec:
   {{- if .Values.route.host }}
@@ -10,10 +10,14 @@ spec:
   {{- end }}
   to:
     kind: Service
-    name: {{include "loki.fullname" .}}
+    name: {{include "logstack.fullname" .}}-proxy
     weight: 100
   port:
-    targetPort: {{.Values.service.httpPort}}
+    {{- range $name, $port := .Values.services.proxy }}
+    {{- if eq .name "http" }}
+    targetPort: {{ .port }}
+    {{- end }}
+    {{- end }}
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect
