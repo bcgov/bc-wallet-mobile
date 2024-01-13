@@ -40,7 +40,6 @@ spec:
               {{- include "logstack.selectorLabels" . | nindent 14 }}
           namespaceSelector:
             matchLabels:
-              environment: dev
-              name: e79518
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
   policyTypes:
     - Ingress
