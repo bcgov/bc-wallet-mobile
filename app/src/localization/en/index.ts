@@ -180,7 +180,16 @@ const translation = {
     "ScanOnlySpecial3": "BC Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones.",
     "WhereToUseLink": "See where you can use BC Wallet",
     "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones."
-  }
+  },
+  "RemoteLogging": {
+    "ScreenTitle": "Remote Logging",
+    "Paragraph1": "Only turn on remote logging if you are in a debugging session or if you are asked and agree to do so. This action will send logs to Technical Support at the the Government of British Columbia.",
+    "Paragraph2": "Logs are automatically deleted after three days. They are kept and used only for debugging, as outlined in our",
+    "Paragraph3": "Provide the debug session id ${sessionId} to technical support.",
+    "CheckBoxTitle": "I understand and wish to enable remote logging",
+    "IAgree": "I Agree",
+    "ButtonTitle": "Turn on remote logging",
+  },
 }
 
 export default translation

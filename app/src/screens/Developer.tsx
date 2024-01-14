@@ -1,19 +1,22 @@
 import { useAgent } from '@aries-framework/react-hooks'
 import { useTheme, useStore, testIdWithKey, DispatchAction } from '@hyperledger/aries-bifold-core'
+import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
+import { DeviceEventEmitter, Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import * as PushNotificationHelper from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
 import { BCDispatchAction, BCState } from '../store'
+import RemoteLogWarning from './RemoteLogWarning'
 
 import IASEnvironment from './IASEnvironment'
 
 const Settings: React.FC = () => {
   const { agent } = useAgent()
+  const logger = agent?.config.logger as RemoteLogger
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
@@ -24,6 +27,7 @@ const Settings: React.FC = () => {
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
     !!store.preferences.useConnectionInviterCapability
   )
+  const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
@@ -32,6 +36,7 @@ const Settings: React.FC = () => {
   const [attestationSupportEnabled, setAttestationSupportEnabled] = useState(
     !!store.developer.attestationSupportEnabled
   )
+  const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger.remoteLoggingEnabled)
   const { start, stop } = useAttestation()
 
   const styles = StyleSheet.create({
@@ -183,7 +188,26 @@ const Settings: React.FC = () => {
       type: DispatchAction.ENABLE_WALLET_NAMING,
       payload: [!enableWalletNaming],
     })
+
     setEnableWalletNaming((previousState) => !previousState)
+  }
+
+  const toggleRemoteLoggingWarningSwitch = () => {
+    setRemoteLoggingEnabled((previousState) => !previousState)
+
+    if (remoteLoggingEnabled) {
+      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, !remoteLoggingEnabled)
+
+      return
+    }
+
+    setRemoteLoggingWarningModalVisible((previousState) => !previousState)
+  }
+
+  const onEnableRemoteLoggingPressed = () => {
+    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
+
+    setRemoteLoggingWarningModalVisible((previousState) => !previousState)
   }
 
   const togglePreventAutoLockSwitch = () => {
@@ -237,6 +261,16 @@ const Settings: React.FC = () => {
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
+      <Modal
+        visible={remoteLoggingWarningModalVisible}
+        transparent={false}
+        animationType={'slide'}
+        onRequestClose={() => {
+          return
+        }}
+      >
+        <RemoteLogWarning onEnablePressed={onEnableRemoteLoggingPressed} sessionId={logger.sessionId} />
+      </Modal>
       <Modal
         visible={environmentModalVisible}
         transparent={false}
@@ -386,6 +420,19 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleAttestationSupport}
             value={attestationSupportEnabled}
+          />
+        </SectionRow>
+        <SectionRow
+          title={'Remote Logging'}
+          accessibilityLabel={'Remote Logging'}
+          testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={remoteLoggingEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleRemoteLoggingWarningSwitch}
+            value={remoteLoggingEnabled}
           />
         </SectionRow>
       </ScrollView>
