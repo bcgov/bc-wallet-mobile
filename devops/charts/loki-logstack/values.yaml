@@ -27,10 +27,10 @@ env:
 resources:
   loki:
     requests:
-      memory: 48Mi
+      memory: 92Mi
       cpu: 10m
     limits:
-      memory: 64Mi
+      memory: 128Mi
       cpu: 100m
   proxy:
     requests:
@@ -102,3 +102,10 @@ loki:
   retention:
     retention_deletes_enabled: true
     retention_period: 3d
+
+#
+# Caddy configuration
+#
+
+caddy:
+  logLevel: DEBUG

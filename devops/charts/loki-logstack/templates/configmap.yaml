@@ -95,6 +95,13 @@ data:
       }
     }
 
+    (logging) {
+      log {
+        level {{ .Values.caddy.logLevel }}
+        output stdout
+      }
+    }
+
     {{- range $name, $port := .Values.services.proxy }}
     {{- if eq .name "http" }}
     :{{ .port }} {
@@ -107,4 +114,5 @@ data:
       }
 
       import revpx
+      import logging
     }
