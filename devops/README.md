@@ -71,3 +71,18 @@ For example:
 ```console
 REMOTE_LOGGING_URL=https://<USERNAME>:<PASSWORD>@bcwallet-logstack-proxy-ab123-dev.apps.silver.devops.gov.bc.ca/loki/api/v1/push
 ```
+
+You can use the following cURL command to the entire log stack. Loki does not accept outdated logs, so you will need to change the timestamp `1705256799868099100` to the current time.
+
+Get and updated timestamp:
+
+```console
+➜  vc-wallet-mobile git:(fix/build-and-probe) ✗ node -e "console.log(Date.now() + '099100')"
+1705256928213099100
+```
+
+Send a sample log with the updated timestamp:
+
+```bash
+curl -v -H "Content-Type: application/json" -X POST "https://<USERNAME>:<PASSWORD>@bcwallet-logstack-proxy-abc123-dev.apps.silver.devops.gov.bc.ca/loki/api/v1/push" --data-raw '{"streams": [{ "stream": { "bcwallet": "00123", "level": "debug" }, "values": [ [ "1705256928213099100", "fizbuzz" ] ] }]}'
+```
