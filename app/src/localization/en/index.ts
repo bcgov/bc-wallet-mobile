@@ -185,7 +185,7 @@ const translation = {
     "ScreenTitle": "Remote Logging",
     "Paragraph1": "Only turn on remote logging if you are in a debugging session or if you are asked and agree to do so. This action will send logs to Technical Support at the the Government of British Columbia.",
     "Paragraph2": "Logs are automatically deleted after three days. They are kept and used only for debugging, as outlined in our",
-    "Paragraph3": "Provide the debug session id ${sessionId} to technical support.",
+    "Paragraph3": "Provide the debug session id {sessionId} to technical support.",
     "CheckBoxTitle": "I understand and wish to enable remote logging",
     "IAgree": "I Agree",
     "ButtonTitle": "Turn on remote logging",
