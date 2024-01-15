@@ -63,7 +63,8 @@ bcwallet-logstack-proxy   bcwallet-logstack-proxy-abc123-dev.apps.silver.devops.
 
 To use the Loki Logstack, the BC Wallet needs to be configured to send its logs to the Loki Proxy. This is done by setting the following environment variables (in the .env):
 
-| Variable Name | Description |
+| Variable Name      | Description                                                |
+| ------------------ | ---------------------------------------------------------- |
 | REMOTE_LOGGING_URL | The route from above with basic authentication credentials |
 
 For example:
