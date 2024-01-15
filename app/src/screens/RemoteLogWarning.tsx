@@ -13,6 +13,7 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, se
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const { TextTheme } = useTheme()
+  const paragraphText = t('RemoteLogging.Paragraph3').replace('{sessionId}', sessionId)
 
   const onSubmitPressed = () => {
     onEnablePressed()
@@ -45,7 +46,7 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, se
               {t('RemoteLogging.Paragraph2')}
               <Link onPress={onPressShowcaseLink} linkText={`${'Privacy Policy'}.`} />
             </Text>
-            <Text style={[TextTheme.normal, { marginTop: 10 }]}>{t('RemoteLogging.Paragraph3')}</Text>
+            <Text style={[TextTheme.normal, { marginTop: 10 }]}>{paragraphText}</Text>
           </View>
           <View style={style.controlsContainer}>
             <CheckBoxRow
