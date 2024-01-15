@@ -50,18 +50,20 @@ spec:
               subPath: {{ .Values.env.LOKI_CONFIG_PATH | base}}
             - name: loki-log-data
               mountPath: {{ .Values.persistentVolumeClaim.mountPath }}
-          # livenessProbe:
-          #   httpGet:
-          #     path: /api/v1/ehlo
-          #     port: http
-          #   initialDelaySeconds: 60
-          #   periodSeconds: 3
-          # readinessProbe:
-          #   httpGet:
-          #     path: /api/v1/ehlo
-          #     port: http
-          #   initialDelaySeconds: 60
-          #   timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 90
+            timeoutSeconds: 3
+            failureThreshold: 3
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -106,16 +108,16 @@ spec:
             - name: loki-proxy-config
               mountPath: {{.Values.env.CADDY_CONFIG_PATH }} 
               subPath: {{.Values.env.CADDY_CONFIG_PATH | base}}
-          # livenessProbe:
-          #   httpGet:
-          #     path: /api/v1/ehlo
-          #     port: http
-          #   initialDelaySeconds: 60
-          #   periodSeconds: 3
-          # readinessProbe:
-          #   httpGet:
-          #     path: /api/v1/ehlo
-          #     port: http
-          #   initialDelaySeconds: 60
-          #   timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /ehlo
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ehlo
+              port: http
+            initialDelaySeconds: 60
+            timeoutSeconds: 3
 

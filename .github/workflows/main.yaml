@@ -160,7 +160,7 @@ jobs:
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
           OCA_URL: ${{ vars.OCA_URL }}
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
-          REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}}
+          REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
