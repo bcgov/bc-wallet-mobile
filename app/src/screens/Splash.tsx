@@ -24,6 +24,7 @@ import {
   getAgentModules,
   createLinkSecretIfRequired,
 } from '@hyperledger/aries-bifold-core'
+import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
@@ -35,11 +36,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
+import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
-
-import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
-import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 
 enum InitErrorTypes {
   Onboarding,
