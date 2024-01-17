@@ -15,6 +15,12 @@ const translation = {
     "Message2025": "There was a problem reported by BCSC. (PT-BR)",
     "Title2026": "Oops! Something went wrong (PT-BR)",
     "Message2026": "The app has encountered a problem. Try restarting the app. (PT-BR)",
+    "Title2027": "Unable to parse invitation (PT-BR)",
+    "Message2027": "There was a problem parsing the attestation connection invitation. (PT-BR)",
+    "Title2028": "Unable to receive invitation (PT-BR)",
+    "Message2028": "There was a problem receiving the attestation invitation to connect. (PT-BR)",
+    "Title2029": "Unable to handle attestation proof (PT-BR)",
+    "Message2029": "There was a problem while handling an attestation proof request. (PT-BR)",
     "NoMessage": "No Message (PT-BR)",
   },
   "CameraDisclosure": {

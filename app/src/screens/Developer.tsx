@@ -10,9 +10,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import * as PushNotificationHelper from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
 import { BCDispatchAction, BCState } from '../store'
-import RemoteLogWarning from './RemoteLogWarning'
 
 import IASEnvironment from './IASEnvironment'
+import RemoteLogWarning from './RemoteLogWarning'
 
 const Settings: React.FC = () => {
   const { agent } = useAgent()
@@ -416,7 +416,7 @@ const Settings: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={preventAutoLock ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            thumbColor={attestationSupportEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleAttestationSupport}
             value={attestationSupportEnabled}
