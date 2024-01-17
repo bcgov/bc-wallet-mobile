@@ -6,14 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 type RemoteLogWarningProps = {
   onEnablePressed: () => void
-  sessionId: string
+  sessionId: number
 }
 
 const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, sessionId }) => {
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const { TextTheme } = useTheme()
-  const paragraphText = t('RemoteLogging.Paragraph3').replace('{sessionId}', sessionId)
+  const paragraphText = t('RemoteLogging.Paragraph3').replace('{sessionId}', sessionId.toString())
 
   const onSubmitPressed = () => {
     onEnablePressed()

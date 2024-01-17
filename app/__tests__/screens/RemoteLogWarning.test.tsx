@@ -23,7 +23,7 @@ describe('RemoteLogWarning Screen', () => {
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
         <AttestationProvider>
-          <RemoteLogWarning onEnablePressed={() => {}} sessionId={'123456'} />
+          <RemoteLogWarning onEnablePressed={() => {}} sessionId={123456} />
         </AttestationProvider>
       </StoreProvider>
     )
