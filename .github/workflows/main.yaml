@@ -62,6 +62,7 @@ jobs:
           required_env_vars=(
             "OCA_URL"
             "PROOF_TEMPLATE_URL"
+            "ATTESTATION_INVITE_URL"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -72,6 +73,7 @@ jobs:
         env:
           OCA_URL: ${{ vars.OCA_URL }}
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
+          ATTESTATION_INVITE_URL: ${{ vars.ATTESTATION_INVITE_URL }}
 
   build-ios:
     needs: [check-secrets, check-vars]
@@ -161,6 +163,7 @@ jobs:
           OCA_URL: ${{ vars.OCA_URL }}
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
+          ATTESTATION_INVITE_URL: ${{ vars.ATTESTATION_INVITE_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
@@ -169,6 +172,7 @@ jobs:
           echo "OCA_URL=${OCA_URL}" >>.env
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
+          echo "ATTESTATION_INVITE_URL=${ATTESTATION_INVITE_URL}" >>.env
 
       - name: Archive build
         working-directory: app/ios
@@ -289,17 +293,23 @@ jobs:
       - name: Create environment settings
         working-directory: app
         env:
+          MEDIATOR_USE_PUSH_NOTIFICATIONS: false
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
           OCA_URL: ${{ vars.OCA_URL }}
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
+          REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
+          ATTESTATION_INVITE_URL: ${{ vars.ATTESTATION_INVITE_URL }}
         run: |
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >.env
+          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
+          echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
+          echo "ATTESTATION_INVITE_URL=${ATTESTATION_INVITE_URL}" >>.env
 
       - name: Create release keystore
         working-directory: app/android/app

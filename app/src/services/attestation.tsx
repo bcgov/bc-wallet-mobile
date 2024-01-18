@@ -25,6 +25,7 @@ import { Buffer } from 'buffer'
 import React, { createContext, useContext, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Platform } from 'react-native'
+import Config from 'react-native-config'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
 
@@ -68,10 +69,6 @@ const attestationCredDefIds = [
   'J6LCm5Edi9Mi3ASZCqNC1A:3:CL:109799:dev-attestation',
   'NxWbeuw8Y2ZBiTrGpcK7Tn:3:CL:48312:default',
 ]
-
-// change this URL to a multi use connection from your traction instance for testing
-const attestationInviteUrl =
-  'https://traction-acapy-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJodHRwczovL2RpZGNvbW0ub3JnL2Nvbm5lY3Rpb25zLzEuMC9pbnZpdGF0aW9uIiwgIkBpZCI6ICI3YjNhMGE5Yi05YzBiLTRjYmUtODRlZC05Y2MwNmEyNmE0ZjYiLCAibGFiZWwiOiAiYnJ5Y2VtY21hdGgiLCAicmVjaXBpZW50S2V5cyI6IFsiMnlKMW9WMVlXcDJGTGIyVGR0ZmU2M1lKVTVEb0dHcHZuc3FkeXVTU3NUQnEiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL3RyYWN0aW9uLWFjYXB5LWRldi5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIn0='
 
 // proof requests can vary wildly but we'll know attestation requests must contain the cred def id as a restriction
 interface IndyRequest {
@@ -271,7 +268,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       }
 
       // 4. If no, start attestation flow by requesting a nonce from controller
-      const invite = await agent.oob.parseInvitation(attestationInviteUrl)
+      const invite = await agent.oob.parseInvitation(Config.ATTESTATION_INVITE_URL!)
 
       if (!invite) {
         const err = new BifoldError(
