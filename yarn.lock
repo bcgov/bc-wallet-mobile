@@ -4093,9 +4093,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-core@portal:bifold/packages/legacy/core::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-bifold-core@portal:bifold/packages/legacy/core::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.171":
+  version: 1.0.0-alpha.171
+  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.171"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/anoncreds-rs": ^0.4.0
@@ -4139,6 +4139,7 @@ __metadata:
     react-native-animated-pagination-dots: ^0.1.72
     react-native-argon2: ^2.0.1
     react-native-bouncy-checkbox: ^3.0.5
+    react-native-camera: ^3.31.1
     react-native-collapsible: ^1.6.1
     react-native-config: ^1.4.2
     react-native-confirmation-code-field: ^7.3.0
@@ -4150,7 +4151,6 @@ __metadata:
     react-native-gifted-chat: "*"
     react-native-keychain: ^8.1.1
     react-native-localize: ^2.2.4
-    react-native-orientation-locker: "*"
     react-native-permissions: ^3.8.4
     react-native-qrcode-svg: ^6.2.0
     react-native-reanimated: ^3.4.2
@@ -4162,12 +4162,12 @@ __metadata:
     react-native-toast-message: ^2.1.6
     react-native-uuid: ^2.0.1
     react-native-vector-icons: ^10.0.0
-    react-native-vision-camera: "*"
     uuid: ^9.0.0
   bin:
     bifold: bin/bifold
+  checksum: 9b4ec23f2802c2dbb67b52290e320c192d2120b630a6c8d7b50200abedc3eea069fa85cfa1907056989720218c23a920e8fa396917cac4e74150ddbae9503b9b
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@hyperledger/aries-bifold-remote-logs@npm:1.0.0-alpha.171":
   version: 1.0.0-alpha.171
@@ -4182,36 +4182,39 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-bifold-verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.171":
+  version: 1.0.0-alpha.171
+  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.171"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/core": ^0.4.0
     "@aries-framework/react-hooks": ^0.4.2
     react: ^18.2.0
+  checksum: 4ad09f5e907a68ee43f8e7e60f9d7d2a04e00008447b8e91689b43c61c1f2b39d74bfa353c8640f1205acafe6b159d5a18d9a267e3fa0d23bf6658dfe75de687
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@hyperledger/aries-oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-oca@npm:1.0.0-alpha.171":
+  version: 1.0.0-alpha.171
+  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.171"
   dependencies:
     "@aries-framework/anoncreds": "npm:^0.4.0"
     "@aries-framework/core": "npm:^0.4.0"
     axios: "npm:^1.4.0"
     lodash.startcase: "npm:^4.4.0"
+  checksum: 458db84b26a6eba09f5a7f2a21a0ceb580837a1d31459f02357368ee3a86863b39d9a316469a902ff8de661b805fd8a4af11e6b622ec67ddbb60684650fda20c
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@hyperledger/aries-react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.171":
+  version: 1.0.0-alpha.171
+  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.171"
   peerDependencies:
     react: "*"
     react-native: "*"
+  checksum: aded47c0679b3bd6457df60bb1cac83a7a32692c4cc5ef27e461ca3bcbb5cbc8cd5b6384a0296241c092e7da6cc94b65e0014681461acce5480059c5cdcbbb5d
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@hyperledger/indy-vdr-react-native@npm:0.1.0":
   version: 0.1.0
