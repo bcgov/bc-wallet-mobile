@@ -1,6 +1,8 @@
 {
   "search.exclude": {
     "**/node_modules": true,
-    "**/bifold-core": true,
+  },
+  "[helm]": {
+    "editor.formatOnSave": false
   }
 }

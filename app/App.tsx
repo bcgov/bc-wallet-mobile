@@ -20,6 +20,8 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StatusBar } from 'react-native'
+import { isTablet } from 'react-native-device-info'
+import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
@@ -33,8 +35,6 @@ import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
 import WebDisplay from './src/screens/WebDisplay'
 import { AttestationProvider } from './src/services/attestation'
 import { initialState, reducer } from './src/store'
-import {isTablet} from 'react-native-device-info'
-import Orientation from "react-native-orientation-locker";
 
 const { theme, localization, configuration } = bcwallet
 
@@ -51,8 +51,8 @@ const App = () => {
 
   const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
 
-  if (!isTablet()){
-    Orientation.lockToPortrait();
+  if (!isTablet()) {
+    Orientation.lockToPortrait()
   }
 
   const settings = [

@@ -15,6 +15,12 @@ const translation = {
     "Message2025": "There was a problem reported by BCSC.",
     "Title2026": "Oops! Something went wrong",
     "Message2026": "The app has encountered a problem. Try restarting the app.",
+    "Title2027": "Unable to parse invitation",
+    "Message2027": "There was a problem parsing the attestation connection invitation.",
+    "Title2028": "Unable to receive invitation",
+    "Message2028": "There was a problem receiving the attestation invitation to connect.",
+    "Title2029": "Unable to handle attestation proof",
+    "Message2029": "There was a problem while handling an attestation proof request.",
     "NoMessage": "No Message",
   },
   "CameraDisclosure": {
@@ -180,7 +186,16 @@ const translation = {
     "ScanOnlySpecial3": "BC Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones.",
     "WhereToUseLink": "See where you can use BC Wallet",
     "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones."
-  }
+  },
+  "RemoteLogging": {
+    "ScreenTitle": "Remote Logging",
+    "Paragraph1": "Only turn on remote logging if you are in a debugging session or if you are asked and agree to do so. This action will send logs to Technical Support at the the Government of British Columbia.",
+    "Paragraph2": "Logs are automatically deleted after three days. They are kept and used only for debugging, as outlined in our",
+    "Paragraph3": "Provide the debug session id {sessionId} to technical support.",
+    "CheckBoxTitle": "I understand and wish to enable remote logging",
+    "IAgree": "I Agree",
+    "ButtonTitle": "Turn on remote logging",
+  },
 }
 
 export default translation

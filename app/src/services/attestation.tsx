@@ -1,5 +1,20 @@
-import { Agent, BaseEvent, BasicMessageEventTypes, BasicMessageRecord, BasicMessageRole } from '@aries-framework/core'
+import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
+import {
+  Agent,
+  BaseEvent,
+  BasicMessageEventTypes,
+  BasicMessageRecord,
+  BasicMessageRole,
+  CredentialState,
+  CredentialEventTypes,
+  CredentialExchangeRecord,
+  ProofState,
+  ProofEventTypes,
+  ProofExchangeRecord,
+  ConnectionRecord,
+} from '@aries-framework/core'
 import { useAgent } from '@aries-framework/react-hooks'
+import { BifoldAgent, BifoldError, EventTypes } from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
   appleAttestation,
@@ -8,13 +23,23 @@ import {
 } from '@hyperledger/aries-react-native-attestation'
 import { Buffer } from 'buffer'
 import React, { createContext, useContext, useState } from 'react'
-import { Platform } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { DeviceEventEmitter, Platform } from 'react-native'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
 
+import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
+
 enum Action {
+  RequestNonce = 'request_nonce',
   RequestAttestation = 'request_attestation',
   ChallengeResponse = 'challenge_response',
+}
+
+enum ErrorCodes {
+  AttestationBadInvitation = 2027,
+  AttestationReceiveInvitationError = 2028,
+  AttestationGeneralProofError = 2029,
 }
 
 type InfrastructureMessage = {
@@ -39,6 +64,70 @@ type AttestationProviderParams = {
 
 export type EventListenerFn = (event: BaseEvent) => void
 
+const attestationCredDefIds = [
+  'J6LCm5Edi9Mi3ASZCqNC1A:3:CL:109799:dev-attestation',
+  'NxWbeuw8Y2ZBiTrGpcK7Tn:3:CL:48312:default',
+]
+
+// change this URL to a multi use connection from your traction instance for testing
+const attestationInviteUrl =
+  'https://traction-acapy-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJodHRwczovL2RpZGNvbW0ub3JnL2Nvbm5lY3Rpb25zLzEuMC9pbnZpdGF0aW9uIiwgIkBpZCI6ICI3YjNhMGE5Yi05YzBiLTRjYmUtODRlZC05Y2MwNmEyNmE0ZjYiLCAibGFiZWwiOiAiYnJ5Y2VtY21hdGgiLCAicmVjaXBpZW50S2V5cyI6IFsiMnlKMW9WMVlXcDJGTGIyVGR0ZmU2M1lKVTVEb0dHcHZuc3FkeXVTU3NUQnEiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL3RyYWN0aW9uLWFjYXB5LWRldi5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIn0='
+
+// proof requests can vary wildly but we'll know attestation requests must contain the cred def id as a restriction
+interface IndyRequest {
+  indy: {
+    requested_attributes?: {
+      attestationInfo?: {
+        names: string[]
+        restrictions: { cred_def_id: string }[]
+      }
+    }
+  }
+}
+
+// same as above
+interface AnonCredsRequest {
+  anoncreds: {
+    requested_attributes?: {
+      attestationInfo?: {
+        names: string[]
+        restrictions: { cred_def_id: string }[]
+      }
+    }
+  }
+}
+
+interface AttestationProofRequestFormat {
+  request: IndyRequest & AnonCredsRequest
+}
+
+const isProofRequestingAttestation = async (proof: ProofExchangeRecord, agent: BifoldAgent) => {
+  const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
+  const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
+  return format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions?.some((rstr) =>
+    attestationCredDefIds.includes(rstr.cred_def_id)
+  )
+}
+
+const getAvailableAttestationCredentials = async (agent: BifoldAgent) => {
+  const credentials = await agent.credentials.getAll()
+  return credentials.filter((record) => {
+    const credDefId = record.metadata.get(AnonCredsCredentialMetadataKey)?.credentialDefinitionId
+    return credDefId && attestationCredDefIds.includes(credDefId)
+  })
+}
+
+const requestNonce = async (agent: BifoldAgent, connectionRecord: ConnectionRecord) => {
+  const nonceRequestMessage: InfrastructureMessage = {
+    type: 'attestation',
+    version: 1,
+    action: Action.RequestNonce,
+  }
+
+  const responseMessageContent = Buffer.from(JSON.stringify(nonceRequestMessage)).toString('base64')
+  await agent.basicMessages.sendMessage(connectionRecord.id, responseMessageContent)
+}
+
 export interface AttestationX {
   start: () => Promise<void>
   stop: () => Promise<void>
@@ -48,7 +137,10 @@ export const AttestationContext = createContext<AttestationX>(null as unknown as
 
 export const AttestationProvider: React.FC<AttestationProviderParams> = ({ children }) => {
   const { agent } = useAgent()
-  const [subscription, setSubscription] = useState<Subscription>()
+  const { t } = useTranslation()
+  const [messageSubscription, setMessageSubscription] = useState<Subscription>()
+  const [proofSubscription, setProofSubscription] = useState<Subscription>()
+  const [offerSubscription, setOfferSubscription] = useState<Subscription>()
 
   const isInfrastructureMessage = (record: BasicMessageRecord): boolean => {
     if (record.content) {
@@ -158,6 +250,87 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
     }
   }
 
+  const handleProofs = async (proof: ProofExchangeRecord, agent: BifoldAgent): Promise<void> => {
+    try {
+      // 0. if the proof is just now being requested, handle. Otherwise do nothing
+      if (proof.state !== ProofState.RequestReceived) {
+        return
+      }
+
+      // 1. Is the proof requesting an attestation credential
+      if (!(await isProofRequestingAttestation(proof, agent))) {
+        return
+      }
+
+      // 2. Does the wallet owner have a valid attestation credential
+      const availableAttestationCredentials = await getAvailableAttestationCredentials(agent)
+
+      // 3. If yes, do nothing
+      if (availableAttestationCredentials.length > 0) {
+        return
+      }
+
+      // 4. If no, start attestation flow by requesting a nonce from controller
+      const invite = await agent.oob.parseInvitation(attestationInviteUrl)
+
+      if (!invite) {
+        const err = new BifoldError(
+          t('Error.Title2027'),
+          t('Error.Message2027'),
+          '',
+          ErrorCodes.AttestationBadInvitation
+        )
+        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
+        return
+      }
+
+      await removeExistingInvitationIfRequired(agent, invite.id)
+
+      const { connectionRecord } = await agent.oob.receiveInvitation(invite)
+
+      if (!connectionRecord) {
+        const err = new BifoldError(
+          t('Error.Title2028'),
+          t('Error.Message2028'),
+          '',
+          ErrorCodes.AttestationReceiveInvitationError
+        )
+        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
+        return
+      }
+
+      const connectedRecord = await agent.connections.returnWhenIsConnected(connectionRecord.id)
+
+      // this step will fail if there is more than one active connection record between a given wallet and
+      // the traction instance which is why we need to removeExistingInvitationIfRequired above
+      await requestNonce(agent, connectedRecord)
+    } catch (error: unknown) {
+      const err = new BifoldError(
+        t('Error.Title2029'),
+        t('Error.Message2029'),
+        (error as Error)?.message ?? error,
+        ErrorCodes.AttestationGeneralProofError
+      )
+      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
+    }
+  }
+
+  const handleOffers = async (record: CredentialExchangeRecord, agent: BifoldAgent): Promise<void> => {
+    try {
+      const { offer } = await agent.credentials.getFormatData(record.id)
+      const offerData = offer?.anoncreds ?? offer?.indy
+
+      if (
+        record.state === CredentialState.OfferReceived &&
+        attestationCredDefIds.includes(offerData?.cred_def_id ?? '')
+      ) {
+        agent.credentials.acceptOffer({ credentialRecordId: record.id })
+      }
+    } catch (error: unknown) {
+      /* noop */
+    }
+  }
+
   const handleMessageWithParam = (event: BaseEvent) => {
     if (!agent) {
       return
@@ -167,29 +340,62 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
     handleMessages(basicMessageRecord as BasicMessageRecord, agent)
   }
 
+  const handleProofWithParam = (event: BaseEvent) => {
+    if (!agent) {
+      return
+    }
+
+    const { proofRecord } = event.payload
+    handleProofs(proofRecord as ProofExchangeRecord, agent)
+  }
+
+  const handleOfferWithParam = (event: BaseEvent) => {
+    if (!agent) {
+      return
+    }
+
+    const { credentialRecord } = event.payload
+    handleOffers(credentialRecord as CredentialExchangeRecord, agent)
+  }
+
   const start = async () => {
     if (!agent) {
       return
     }
 
-    if (subscription) {
-      return
+    if (!messageSubscription) {
+      const messageSub = agent.events
+        .observable(BasicMessageEventTypes.BasicMessageStateChanged)
+        .subscribe(handleMessageWithParam)
+      setMessageSubscription(messageSub)
     }
 
-    const sub = agent.events
-      .observable(BasicMessageEventTypes.BasicMessageStateChanged)
-      .subscribe(handleMessageWithParam)
+    if (!proofSubscription) {
+      const proofSub = agent.events.observable(ProofEventTypes.ProofStateChanged).subscribe(handleProofWithParam)
+      setProofSubscription(proofSub)
+    }
 
-    setSubscription(sub)
+    if (!offerSubscription) {
+      const offerSub = agent.events
+        .observable(CredentialEventTypes.CredentialStateChanged)
+        .subscribe(handleOfferWithParam)
+      setOfferSubscription(offerSub)
+    }
   }
 
   const stop = async () => {
-    if (!subscription) {
-      return
+    if (messageSubscription) {
+      messageSubscription.unsubscribe()
+      setMessageSubscription(undefined)
     }
-
-    subscription.unsubscribe()
-    setSubscription(undefined)
+    if (proofSubscription) {
+      proofSubscription.unsubscribe()
+      setProofSubscription(undefined)
+    }
+    if (offerSubscription) {
+      offerSubscription.unsubscribe()
+      setOfferSubscription(undefined)
+    }
   }
 
   const value = {

@@ -15,6 +15,12 @@ const translation = {
     "Message2025": "There was a problem reported by BCSC. (PT-BR)",
     "Title2026": "Oops! Something went wrong (PT-BR)",
     "Message2026": "The app has encountered a problem. Try restarting the app. (PT-BR)",
+    "Title2027": "Unable to parse invitation (PT-BR)",
+    "Message2027": "There was a problem parsing the attestation connection invitation. (PT-BR)",
+    "Title2028": "Unable to receive invitation (PT-BR)",
+    "Message2028": "There was a problem receiving the attestation invitation to connect. (PT-BR)",
+    "Title2029": "Unable to handle attestation proof (PT-BR)",
+    "Message2029": "There was a problem while handling an attestation proof request. (PT-BR)",
     "NoMessage": "No Message (PT-BR)",
   },
   "CameraDisclosure": {
@@ -179,7 +185,16 @@ const translation = {
     "ScanOnlySpecial3": "BC Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones. (PT-BR)",
     "WhereToUseLink": "See where you can use BC Wallet (PT-BR)",
     "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones. (PT-BR)"
-  }
+  },
+  "RemoteLogging": {
+    "ScreenTitle": "Remote Logging (PT-BR)",
+    "Paragraph1": "Only turn on remote logging if you are in a debugging session or if you are asked and agree to do so. This action will send logs to Technical Support at the the Government of British Columbia. (PT-BR)",
+    "Paragraph2": "Logs are automatically deleted after three days. They are kept and used only for debugging, as outlined in our (PT-BR)",
+    "Paragraph3": "Provide the debug session id {sessionId} to technical support. (PT-BR)",
+    "CheckBoxTitle": "I understand and wish to enable remote logging (PT-BR)",
+    "IAgree": "I Agree (PT-BR)",
+    "ButtonTitle": "Turn on remote logging (PT-BR)",
+  },
 }
 
 export default translation

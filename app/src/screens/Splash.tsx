@@ -1,11 +1,4 @@
-import {
-  Agent,
-  ConsoleLogger,
-  HttpOutboundTransport,
-  LogLevel,
-  MediatorPickupStrategy,
-  WsOutboundTransport,
-} from '@aries-framework/core'
+import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@aries-framework/core'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
@@ -31,6 +24,7 @@ import {
   getAgentModules,
   createLinkSecretIfRequired,
 } from '@hyperledger/aries-bifold-core'
+import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
@@ -42,6 +36,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
+import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
@@ -396,6 +391,17 @@ const Splash = () => {
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
 
+        const logOptions: RemoteLoggerOptions = {
+          lokiUrl: Config.REMOTE_LOGGING_URL,
+          lokiLabels: {
+            application: 'bcwallet',
+            job: 'react-native-logs',
+          },
+          autoDisableRemoteLoggingIntervalInMinutes,
+        }
+        const logger = new RemoteLogger(logOptions)
+        logger.startEventListeners()
+
         const options = {
           config: {
             label: store.preferences.walletName || 'BC Wallet',
@@ -403,7 +409,7 @@ const Splash = () => {
               id: credentials.id,
               key: credentials.key,
             },
-            logger: new ConsoleLogger(LogLevel.trace),
+            logger,
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             autoUpdateStorageOnStartup: true,
             autoAcceptConnections: true,
