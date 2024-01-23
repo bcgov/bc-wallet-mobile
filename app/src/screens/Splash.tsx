@@ -39,6 +39,13 @@ import TipCarousel from '../components/TipCarousel'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
+import {
+  getVersion,
+  getBuildNumber,
+  getApplicationName,
+  getSystemName,
+  getSystemVersion,
+} from 'react-native-device-info'
 
 enum InitErrorTypes {
   Onboarding,
@@ -394,8 +401,10 @@ const Splash = () => {
         const logOptions: RemoteLoggerOptions = {
           lokiUrl: Config.REMOTE_LOGGING_URL,
           lokiLabels: {
-            application: 'bcwallet',
+            application: getApplicationName().toLowerCase(),
             job: 'react-native-logs',
+            version: `${getVersion()}-${getBuildNumber()}`,
+            system: `${getSystemName()} v${getSystemVersion()}`,
           },
           autoDisableRemoteLoggingIntervalInMinutes,
         }
