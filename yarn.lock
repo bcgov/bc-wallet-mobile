@@ -4093,9 +4093,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.171":
-  version: 1.0.0-alpha.171
-  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.171"
+"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.173":
+  version: 1.0.0-alpha.173
+  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.173"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/anoncreds-rs": ^0.4.0
@@ -4139,7 +4139,6 @@ __metadata:
     react-native-animated-pagination-dots: ^0.1.72
     react-native-argon2: ^2.0.1
     react-native-bouncy-checkbox: ^3.0.5
-    react-native-camera: ^3.31.1
     react-native-collapsible: ^1.6.1
     react-native-config: ^1.4.2
     react-native-confirmation-code-field: ^7.3.0
@@ -4151,6 +4150,7 @@ __metadata:
     react-native-gifted-chat: "*"
     react-native-keychain: ^8.1.1
     react-native-localize: ^2.2.4
+    react-native-orientation-locker: "*"
     react-native-permissions: ^3.8.4
     react-native-qrcode-svg: ^6.2.0
     react-native-reanimated: ^3.4.2
@@ -4162,57 +4162,58 @@ __metadata:
     react-native-toast-message: ^2.1.6
     react-native-uuid: ^2.0.1
     react-native-vector-icons: ^10.0.0
+    react-native-vision-camera: "*"
     uuid: ^9.0.0
   bin:
     bifold: bin/bifold
-  checksum: 9b4ec23f2802c2dbb67b52290e320c192d2120b630a6c8d7b50200abedc3eea069fa85cfa1907056989720218c23a920e8fa396917cac4e74150ddbae9503b9b
+  checksum: 2db1e8a5d8317bc1f3bf8c879b0fd77043ace25a19cdcab59a8141b10e8ffc7514495d5dfe3e0530fbe5e08858a91bef37247ec61e567ea371cf95758bff804d
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-remote-logs@npm:1.0.0-alpha.171":
-  version: 1.0.0-alpha.171
-  resolution: "@hyperledger/aries-bifold-remote-logs@npm:1.0.0-alpha.171"
+"@hyperledger/aries-bifold-remote-logs@npm:1.0.0-alpha.173":
+  version: 1.0.0-alpha.173
+  resolution: "@hyperledger/aries-bifold-remote-logs@npm:1.0.0-alpha.173"
   dependencies:
     "@aries-framework/core": "npm:0.4.0"
     axios: "npm:^1.4.0"
   peerDependencies:
     react-native: 0.72.5
     react-native-logs: ^5.0.1
-  checksum: f53e777fcfdbbed1ecfa0c0bd5d3b09020d4949dcbd2c6269f85e15dc73c899a7e6cd8d2d2ffb1c7f4271cd595f852a19dad488737d840f44a5191a4233538da
+  checksum: ffb6c2bf6a05c10f7e0c762651505fae2106442cac55e7acb9153c58c0fddff19916b79c3ef6a9850acfe8e43a4e584b5fb78629add6de72a6fb5619703b7c7c
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.171":
-  version: 1.0.0-alpha.171
-  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.171"
+"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.173":
+  version: 1.0.0-alpha.173
+  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.173"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/core": ^0.4.0
     "@aries-framework/react-hooks": ^0.4.2
     react: ^18.2.0
-  checksum: 4ad09f5e907a68ee43f8e7e60f9d7d2a04e00008447b8e91689b43c61c1f2b39d74bfa353c8640f1205acafe6b159d5a18d9a267e3fa0d23bf6658dfe75de687
+  checksum: 5e674f396618cfd0f5c60fea5ec4abed7556ef5a040ebd3cb1e1b8a914eef4e7bf82df09fd66fa5e0b543765017d53c7fb15833cb0e360d305cb8568bb80c7c6
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-oca@npm:1.0.0-alpha.171":
-  version: 1.0.0-alpha.171
-  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.171"
+"@hyperledger/aries-oca@npm:1.0.0-alpha.173":
+  version: 1.0.0-alpha.173
+  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.173"
   dependencies:
     "@aries-framework/anoncreds": "npm:^0.4.0"
     "@aries-framework/core": "npm:^0.4.0"
     axios: "npm:^1.4.0"
     lodash.startcase: "npm:^4.4.0"
-  checksum: 458db84b26a6eba09f5a7f2a21a0ceb580837a1d31459f02357368ee3a86863b39d9a316469a902ff8de661b805fd8a4af11e6b622ec67ddbb60684650fda20c
+  checksum: af889295ea6234e8d08a66550e058354b89504c961f00fa655c63aba87d7547e04b61855b622ab08acc4247f1e7eb0170f91b130d474988280c4894f6411d645
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.171":
-  version: 1.0.0-alpha.171
-  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.171"
+"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.173":
+  version: 1.0.0-alpha.173
+  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.173"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: aded47c0679b3bd6457df60bb1cac83a7a32692c4cc5ef27e461ca3bcbb5cbc8cd5b6384a0296241c092e7da6cc94b65e0014681461acce5480059c5cdcbbb5d
+  checksum: b1a0ac4ebf06fd2e610843a978ba1a18235714eff66a6011c8e05720e93ad59766e280d25352e33e15cd91f460e8e5a4591d14ccf5a482dc91117163885faab0
   languageName: node
   linkType: hard
 
@@ -8583,11 +8584,11 @@ __metadata:
     "@formatjs/intl-relativetimeformat": "npm:9.3.1"
     "@hyperledger/anoncreds-react-native": "npm:0.1.0"
     "@hyperledger/aries-askar-react-native": "npm:0.1.1"
-    "@hyperledger/aries-bifold-core": "npm:1.0.0-alpha.171"
-    "@hyperledger/aries-bifold-remote-logs": "npm:1.0.0-alpha.171"
-    "@hyperledger/aries-bifold-verifier": "npm:1.0.0-alpha.171"
-    "@hyperledger/aries-oca": "npm:1.0.0-alpha.171"
-    "@hyperledger/aries-react-native-attestation": "npm:1.0.0-alpha.171"
+    "@hyperledger/aries-bifold-core": "npm:1.0.0-alpha.173"
+    "@hyperledger/aries-bifold-remote-logs": "npm:1.0.0-alpha.173"
+    "@hyperledger/aries-bifold-verifier": "npm:1.0.0-alpha.173"
+    "@hyperledger/aries-oca": "npm:1.0.0-alpha.173"
+    "@hyperledger/aries-react-native-attestation": "npm:1.0.0-alpha.173"
     "@hyperledger/indy-vdr-react-native": "npm:0.1.0"
     "@react-native-async-storage/async-storage": "npm:1.15.11"
     "@react-native-community/masked-view": "npm:0.1.11"
@@ -8649,7 +8650,6 @@ __metadata:
     react-native-animated-pagination-dots: "npm:0.1.72"
     react-native-argon2: "npm:2.0.1"
     react-native-bouncy-checkbox: "npm:3.0.5"
-    react-native-camera: "npm:3.44.3"
     react-native-collapsible: "npm:1.6.1"
     react-native-config: "npm:1.5.0"
     react-native-confirmation-code-field: "npm:7.3.0"
@@ -8663,6 +8663,7 @@ __metadata:
     react-native-keychain: "npm:8.1.2"
     react-native-localize: "npm:2.2.6"
     react-native-logs: "npm:^5.0.1"
+    react-native-orientation-locker: "npm:^1.6.0"
     react-native-permissions: "npm:3.9.0"
     react-native-qrcode-svg: "npm:6.2.0"
     react-native-reanimated: "npm:3.6.1"
@@ -8676,6 +8677,7 @@ __metadata:
     react-native-toast-message: "npm:2.1.6"
     react-native-uuid: "npm:2.0.1"
     react-native-vector-icons: "npm:10.0.2"
+    react-native-vision-camera: "npm:^3.6.16"
     react-native-webview: "npm:11.26.1"
     react-test-renderer: "npm:18.2.0"
     reflect-metadata: "npm:0.1.13"
@@ -19201,15 +19203,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-camera@npm:3.44.3":
-  version: 3.44.3
-  resolution: "react-native-camera@npm:3.44.3"
-  dependencies:
-    prop-types: "npm:^15.6.2"
-  checksum: 7445c33a129da4893887eb75cc553cddac4957fb5eead53558bc8b672a2c8f6a019fd3ae513601628291e60ad25fb113eb56c75301723ebfbdb67f1664af263e
-  languageName: node
-  linkType: hard
-
 "react-native-collapsible@npm:1.6.1":
   version: 1.6.1
   resolution: "react-native-collapsible@npm:1.6.1"
@@ -19428,6 +19421,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-orientation-locker@npm:^1.6.0":
+  version: 1.6.0
+  resolution: "react-native-orientation-locker@npm:1.6.0"
+  peerDependencies:
+    react: ">=16.13.1"
+    react-native: ">=0.63.2"
+    react-native-windows: ">=0.63.3"
+  peerDependenciesMeta:
+    react-native-windows:
+      optional: true
+  checksum: 78ae120f82ff5840d62010d9ac9ca0ed437dcf2827a869bcba959b6be694199c46a4e7300b923f7a4cb8160ae67e4db77f311add09dde9b3b17c5a3c3694cc51
+  languageName: node
+  linkType: hard
+
 "react-native-parsed-text@npm:0.0.22":
   version: 0.0.22
   resolution: "react-native-parsed-text@npm:0.0.22"
@@ -19630,6 +19637,20 @@ __metadata:
     fa6-upgrade: bin/fa6-upgrade.sh
     generate-icon: bin/generate-icon.js
   checksum: f0d0beb78403c5452d6ed0ec6f3eab259e253906bc0afd70c8c8a0da07068f517a2d774c6fe883af062465a64ffb5ee74f40bb2b916098f7dd83e6c1236d114a
+  languageName: node
+  linkType: hard
+
+"react-native-vision-camera@npm:^3.6.16":
+  version: 3.6.16
+  resolution: "react-native-vision-camera@npm:3.6.16"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-worklets-core: "*"
+  peerDependenciesMeta:
+    react-native-worklets-core:
+      optional: true
+  checksum: 6ebae021fd13169b55aa5e7c3a2fc92f908a92160ed55ba4dcc05d98e384b6c2b4efe0217983b8e68a2208784de2d7c107408a97a9e6c61daf6de9f62ffe179b
   languageName: node
   linkType: hard
 
