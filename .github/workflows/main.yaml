@@ -170,6 +170,10 @@ jobs:
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
 
+      - name: Update APS environment
+        run: |
+          sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
+
       - name: Archive build
         working-directory: app/ios
         run: |
