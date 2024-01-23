@@ -5,6 +5,7 @@
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
 #import <React/RCTLinkingManager.h>
+#import "Orientation.h"
 
 @implementation AppDelegate
 
@@ -37,6 +38,10 @@
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
   [UIApplication sharedApplication].applicationIconBadgeNumber = 0;
+}
+
+- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+  return [Orientation getOrientation];
 }
 
 @end
