@@ -173,6 +173,7 @@ jobs:
       - name: Update APS environment
         run: |
           sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
+          cat app/ios/AriesBifold/AriesBifold.entitlements
 
       - name: Archive build
         working-directory: app/ios
