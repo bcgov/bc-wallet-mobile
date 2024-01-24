@@ -445,7 +445,7 @@ PODS:
   - React-jsinspector (0.72.5)
   - React-logger (0.72.5):
     - glog
-  - "react-native-attestation (1.0.0-alpha.171+d716e96e)":
+  - "react-native-attestation (1.0.0-alpha.173+94e231e7)":
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
   - react-native-config (1.5.0):
@@ -614,8 +614,6 @@ PODS:
   - RNScreens (3.25.0):
     - React-Core
     - React-RCTImage
-  - RNStaticSafeAreaInsets (2.2.0):
-    - React-Core
   - RNSVG (12.5.1):
     - React-Core
   - RNVectorIcons (10.0.2):
@@ -700,7 +698,6 @@ DEPENDENCIES:
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
-  - RNStaticSafeAreaInsets (from `../node_modules/react-native-static-safe-area-insets`)
   - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - VisionCamera (from `../node_modules/react-native-vision-camera`)
@@ -858,8 +855,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
-  RNStaticSafeAreaInsets:
-    :path: "../node_modules/react-native-static-safe-area-insets"
   RNSVG:
     :path: "../node_modules/react-native-svg"
   RNVectorIcons:
@@ -910,8 +905,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: ff70a72027dea5cc7d71cfcc6fad7f599f63987a
   React-jsinspector: aef73cbd43b70675f572214d10fa438c89bf11ba
   React-logger: 2e4aee3e11b3ec4fa6cfd8004610bbb3b8d6cca4
-  react-native-attestation: ba0b9c6903912c934b7576f7c4b3a0104a552dcc
-  react-native-camera: b8cc03e2feec0c04403d0998e37cf519d8fd4c6f
+  react-native-attestation: 843579b924c6c14f612ac716f92c3aded9417ab2
   react-native-config: 5330c8258265c1e5fdb8c009d2cabd6badd96727
   react-native-encrypted-storage: db300a3f2f0aba1e818417c1c0a6be549038deb7
   react-native-get-random-values: a6ea6a8a65dc93e96e24a11105b1a9c8cfe1d72a
@@ -952,7 +946,6 @@ SPEC CHECKSUMS:
   RNPermissions: f5763a7aa5b1aae3b0c0546791b002e3048042bd
   RNReanimated: fdbaa9c964bbab7fac50c90862b6cc5f041679b9
   RNScreens: 85d3880b52d34db7b8eeebe2f1a0e807c05e69fa
-  RNStaticSafeAreaInsets: 055ddbf5e476321720457cdaeec0ff2ba40ec1b8
   RNSVG: d7d7bc8229af3842c9cfc3a723c815a52cdd1105
   RNVectorIcons: 23b6e11af4aaf104d169b1b0afa7e5cf96c676ce
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
