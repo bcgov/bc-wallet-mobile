@@ -12,7 +12,7 @@ on:
       - app/**
       - .yarn/**
       - .github/workflows/**
-  pull_request:
+  pull_request_target:
     branches: [main]
     paths:
       - app/**
@@ -175,12 +175,12 @@ jobs:
           sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
           cat app/ios/AriesBifold/AriesBifold.entitlements
 
-      - name: Create signing credentials
+      - name: Create prod signing credentials
         uses: ./.github/workflows/actions/create-ios-sig-creds
         with:
-          certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
-          certificate_password: ${{ secrets.KEYCHIAN_PASSWD_DEV }}
-          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
+          certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
+          certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
+          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
 
       - name: Archive build
         working-directory: app/ios
@@ -204,52 +204,63 @@ jobs:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
-      - name: Export development archive
-        uses: ./.github/workflows/actions/export-ios-archive
-        with:
-          export_options: options-dev.plist
-          ouput_artifact_ref: ios-artifact-dev
+      # - name: Create signing credentials
+      #   uses: ./.github/workflows/actions/create-ios-sig-creds
+      #   with:
+      #     certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
+      #     certificate_password: ${{ secrets.KEYCHIAN_PASSWD_DEV }}
+      #     provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
 
-      - name: Export distribution archive
+      # - name: Export development archive
+      #   uses: ./.github/workflows/actions/export-ios-archive
+      #   with:
+      #     export_options: options-dev.plist
+      #     ouput_artifact_ref: ios-artifact-dev
+
+      - name: Export produciton archive
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
 
-      #      - name: Publish to GitHub Packages Registry
-      #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=ios -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=export/BCWallet.ipa
-      #        env:
-      #          GITHUB_TOKEN: ${{ github.token }}
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: ios
+      #     path: export/BCWallet.ipa
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ios
-          path: export/BCWallet.ipa
-
-      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
-      - name: Install Codemagic CLI Tools
-        if: github.ref_name == 'main'
-        run: |
-          pip3 install codemagic-cli-tools
+      # # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
+      # - name: Install Codemagic CLI Tools
+      #   if: github.ref_name == 'main'
+      #   run: |
+      #     pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
         if: github.ref_name == 'main'
-        env:
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          VERSION_CODE: ${{ env.appBuildNumber }}
-          VERSION_NAME: ${{ env.appBuildVersion }}
-        run: |
-          export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
-          app-store-connect publish \
-          --enable-package-validation \
-          --max-build-processing-wait 10 \
-          --testflight \
-          --beta-group "The Team" "IDIM Team" \
-          --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
+        uses: ./.github/workflows/actions/ship-to-itunes
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          version_code: ${{ env.appBuildNumber }}
+          version_name: ${{ env.appBuildVersion }}
+
+      # - name: Ship to iTunes
+      #   if: github.ref_name == 'main'
+      #   env:
+      #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      #     APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+      #     APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+      #     VERSION_CODE: ${{ env.appBuildNumber }}
+      #     VERSION_NAME: ${{ env.appBuildVersion }}
+      #   run: |
+      #     export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
+      #     app-store-connect publish \
+      #     --enable-package-validation \
+      #     --max-build-processing-wait 10 \
+      #     --testflight \
+      #     --beta-group "The Team" "IDIM Team" \
+      #     --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
       - name: Send notification for iOS failure
         if: failure() && github.ref_name == 'main'
@@ -406,7 +417,7 @@ jobs:
           sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
           sauce_labs_name: BCWallet-${{ github.run_number }}.ipa
           sauce_labs_description: iOS BC Wallet App
-          artifact_ref: ios-artifact-dev
+          artifact_ref: ios-artifact
           artifact_name: BCWallet.ipa
 
       - name: Ship Android Artifact to SauceLabs
