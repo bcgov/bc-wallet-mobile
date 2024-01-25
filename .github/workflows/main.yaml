@@ -190,7 +190,7 @@ jobs:
           -scheme AriesBifold \
           -allowProvisioningUpdates \
           -configuration Release \
-          -xcconfig ../../release.xcconfig
+          -xcconfig ../../release.xcconfig \
           -derivedDataPath xbuild \
           -archivePath ../../AriesBifold.xcarchive \
           -sdk iphoneos \
