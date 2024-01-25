@@ -178,8 +178,8 @@ jobs:
       - name: Create prod signing credentials
         uses: ./.github/workflows/actions/create-ios-sig-creds
         with:
-          certificate: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          certificate_password: ${{ secrets.KEYCHIAN_PASSWD }}
+          certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
+          certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
 
       - name: Archive build
