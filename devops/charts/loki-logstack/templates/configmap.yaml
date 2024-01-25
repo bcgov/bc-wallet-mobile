@@ -84,7 +84,7 @@ data:
     (revpx) { 
       {{- range $name, $port := .Values.services.loki }}
       {{- if eq .name "http" }}
-      reverse_proxy * http://{{ include "logstack.fullname" $ }}-loki.ca7f8f-dev.svc.cluster.local:{{ .port }} {
+      reverse_proxy * http://{{ include "logstack.fullname" $ }}-loki.{{ $.Values.namespaceX }}.svc.cluster.local:{{ .port }} {
       {{- end }}
       {{- end }}
         header_up Host {http.reverse_proxy.upstream.hostport}
