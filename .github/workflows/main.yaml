@@ -175,6 +175,13 @@ jobs:
           sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
           cat app/ios/AriesBifold/AriesBifold.entitlements
 
+      - name: Export development archive
+        uses: ./.github/workflows/actions/create-ios-sig-creds
+        with:
+          certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
+          certificate_password: ${{ secrets.KEYCHIAN_PASSWD_DEV }}
+          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
+
       - name: Archive build
         working-directory: app/ios
         run: |
@@ -199,17 +206,12 @@ jobs:
       - name: Export development archive
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
-          certificate_password: ${{ secrets.KEYCHIAN_PASSWD_DEV }}
-          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
           export_options: options-dev.plist
           ouput_artifact_ref: ios-artifact-dev
 
       - name: Export distribution archive
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
-          certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
