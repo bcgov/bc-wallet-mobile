@@ -24,6 +24,7 @@ import PersonCredential from './screens/PersonCredential'
 import Preface from './screens/Preface'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
+import { useAttestation } from './services/attestation'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
 
@@ -72,6 +73,7 @@ const configuration: ConfigurationContext = {
   showPreface: true,
   disableOnboardingSkip: true,
   useCustomNotifications: useNotifications,
+  useAttestation: useAttestation,
   whereToUseWalletUrl: 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet#where',
 }
 
