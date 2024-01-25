@@ -32,13 +32,6 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
-import { SafeAreaView } from 'react-native-safe-area-context'
-
-import ProgressBar from '../components/ProgressBar'
-import TipCarousel from '../components/TipCarousel'
-import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
-import { useAttestation } from '../services/attestation'
-import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 import {
   getVersion,
   getBuildNumber,
@@ -46,6 +39,13 @@ import {
   getSystemName,
   getSystemVersion,
 } from 'react-native-device-info'
+import { SafeAreaView } from 'react-native-safe-area-context'
+
+import ProgressBar from '../components/ProgressBar'
+import TipCarousel from '../components/TipCarousel'
+import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
+import { useAttestation } from '../services/attestation'
+import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
 enum InitErrorTypes {
   Onboarding,
