@@ -217,10 +217,9 @@ jobs:
       #     export_options: options-dev.plist
       #     ouput_artifact_ref: ios-artifact-dev
 
-      - name: Export distribution archive
+      - name: Export produciton archive
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
 
@@ -229,11 +228,11 @@ jobs:
       #        env:
       #          GITHUB_TOKEN: ${{ github.token }}
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ios
-          path: export/BCWallet.ipa
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: ios
+      #     path: export/BCWallet.ipa
 
       # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
       - name: Install Codemagic CLI Tools
@@ -413,7 +412,7 @@ jobs:
           sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
           sauce_labs_name: BCWallet-${{ github.run_number }}.ipa
           sauce_labs_description: iOS BC Wallet App
-          artifact_ref: ios-artifact-dev
+          artifact_ref: ios-artifact
           artifact_name: BCWallet.ipa
 
       - name: Ship Android Artifact to SauceLabs
