@@ -223,39 +223,44 @@ jobs:
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
 
-      #      - name: Publish to GitHub Packages Registry
-      #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=ios -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBuildVersion }}.${{ env.appBuildNumber }} -DgeneratePom=false -Dpackaging=aab -Dfile=export/BCWallet.ipa
-      #        env:
-      #          GITHUB_TOKEN: ${{ github.token }}
-
       # - name: Upload artifact
       #   uses: actions/upload-artifact@v2
       #   with:
       #     name: ios
       #     path: export/BCWallet.ipa
 
-      # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
-      - name: Install Codemagic CLI Tools
-        if: github.ref_name == 'main'
-        run: |
-          pip3 install codemagic-cli-tools
+      # # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
+      # - name: Install Codemagic CLI Tools
+      #   if: github.ref_name == 'main'
+      #   run: |
+      #     pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
         if: github.ref_name == 'main'
-        env:
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          VERSION_CODE: ${{ env.appBuildNumber }}
-          VERSION_NAME: ${{ env.appBuildVersion }}
-        run: |
-          export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
-          app-store-connect publish \
-          --enable-package-validation \
-          --max-build-processing-wait 10 \
-          --testflight \
-          --beta-group "The Team" "IDIM Team" \
-          --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
+        uses: ./.github/workflows/actions/ship-to-itunes
+        with:
+          app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+          version_code: ${{ env.appBuildNumber }}
+          version_name: ${{ env.appBuildVersion }}
+
+      # - name: Ship to iTunes
+      #   if: github.ref_name == 'main'
+      #   env:
+      #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      #     APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+      #     APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
+      #     VERSION_CODE: ${{ env.appBuildNumber }}
+      #     VERSION_NAME: ${{ env.appBuildVersion }}
+      #   run: |
+      #     export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
+      #     app-store-connect publish \
+      #     --enable-package-validation \
+      #     --max-build-processing-wait 10 \
+      #     --testflight \
+      #     --beta-group "The Team" "IDIM Team" \
+      #     --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
       - name: Send notification for iOS failure
         if: failure() && github.ref_name == 'main'
