@@ -175,7 +175,7 @@ jobs:
           sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
           cat app/ios/AriesBifold/AriesBifold.entitlements
 
-      - name: Export development archive
+      - name: Create signing credentials
         uses: ./.github/workflows/actions/create-ios-sig-creds
         with:
           certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
@@ -190,6 +190,7 @@ jobs:
           -scheme AriesBifold \
           -allowProvisioningUpdates \
           -configuration Release \
+          -xcconfig ../../release.xcconfig
           -derivedDataPath xbuild \
           -archivePath ../../AriesBifold.xcarchive \
           -sdk iphoneos \
