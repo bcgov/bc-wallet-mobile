@@ -12,7 +12,7 @@ on:
       - app/**
       - .yarn/**
       - .github/workflows/**
-  pull_request_target:
+  pull_request:
     branches: [main]
     paths:
       - app/**
@@ -204,36 +204,11 @@ jobs:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
-      # - name: Create signing credentials
-      #   uses: ./.github/workflows/actions/create-ios-sig-creds
-      #   with:
-      #     certificate: ${{ secrets.BUILD_CERTIFICATE_DEV_BASE64 }}
-      #     certificate_password: ${{ secrets.KEYCHIAN_PASSWD_DEV }}
-      #     provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_DEV_BASE64 }}
-
-      # - name: Export development archive
-      #   uses: ./.github/workflows/actions/export-ios-archive
-      #   with:
-      #     export_options: options-dev.plist
-      #     ouput_artifact_ref: ios-artifact-dev
-
       - name: Export produciton archive
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
-
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: ios
-      #     path: export/BCWallet.ipa
-
-      # # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
-      # - name: Install Codemagic CLI Tools
-      #   if: github.ref_name == 'main'
-      #   run: |
-      #     pip3 install codemagic-cli-tools
 
       - name: Ship to iTunes
         if: github.ref_name == 'main'
@@ -244,23 +219,6 @@ jobs:
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
           version_code: ${{ env.appBuildNumber }}
           version_name: ${{ env.appBuildVersion }}
-
-      # - name: Ship to iTunes
-      #   if: github.ref_name == 'main'
-      #   env:
-      #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-      #     APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-      #     APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-      #     VERSION_CODE: ${{ env.appBuildNumber }}
-      #     VERSION_NAME: ${{ env.appBuildVersion }}
-      #   run: |
-      #     export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
-      #     app-store-connect publish \
-      #     --enable-package-validation \
-      #     --max-build-processing-wait 10 \
-      #     --testflight \
-      #     --beta-group "The Team" "IDIM Team" \
-      #     --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"
 
       - name: Send notification for iOS failure
         if: failure() && github.ref_name == 'main'
