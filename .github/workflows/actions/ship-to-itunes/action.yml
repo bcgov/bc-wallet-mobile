@@ -26,10 +26,12 @@ runs:
   steps:
     # https://blog.codemagic.io/app-store-connect-api-codemagic-cli-tools/
     - name: Install Codemagic CLI Tools
+      shell: bash
       run: |
         pip3 install codemagic-cli-tools
 
     - name: Ship to iTunes
+      shell: bash
       env:
         APP_STORE_CONNECT_ISSUER_ID: ${{ inputs.app_store_connect_issuer_id }}
         APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ inputs.app_store_connect_key_identifier }}
