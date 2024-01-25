@@ -90,7 +90,7 @@ Once you are happy with your changes to Bifold and have made the relevant PR the
 yarn unlink --all
 ```
 
-Then once your PR is merged and the packages have been published, make a PR in bc-wallet-mobile with the relevant updated packages installed. The current packages published from Bifold are `@hyperledger/aries-bifold-core`, `@hyperledger/aries-bifold-verifier`, `@hyperledger/aries-oca`, and `@hyperledger/aries-react-native-attestation`. They are all consumed by bc-wallet-mobile and other projects like it.
+Then once your PR is merged and the packages have been published, make a PR in bc-wallet-mobile with the relevant updated packages installed. The current packages published from Bifold are `@hyperledger/aries-bifold-core`, `@hyperledger/aries-bifold-verifier`, `@hyperledger/aries-oca`, `@hyperledger/aries-bifold-remote-logs`, and `@hyperledger/aries-react-native-attestation`. They are all consumed by bc-wallet-mobile and other projects like it.
 
 ## Configuration
 
