@@ -27,17 +27,17 @@ env:
 resources:
   loki:
     requests:
-      memory: 92Mi
+      memory: 192Mi
       cpu: 10m
     limits:
-      memory: 128Mi
+      memory: 256Mi
       cpu: 100m
   proxy:
     requests:
-      memory: 16Mi
+      memory: 32Mi
       cpu: 10m
     limits:
-      memory: 32Mi
+      memory: 64Mi
       cpu: 60m
 
 persistentVolumeClaim:
