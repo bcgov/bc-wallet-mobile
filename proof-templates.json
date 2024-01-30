@@ -761,10 +761,6 @@
                      ],
                      "restrictions": [
                         {
-                           "schema_id": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
-                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
-                        },
-                        {
                            "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Selling It Right"
                         }
                      ],
@@ -847,10 +843,6 @@
                      ],
                      "restrictions": [
                         {
-                           "schema_id": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
-                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
-                        },
-                        {
                            "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Serving It Right"
                         }
                      ],
@@ -932,10 +924,6 @@
                         "certification_number"
                      ],
                      "restrictions": [
-                        {
-                           "schema_id": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
-                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
-                        },
                         {
                            "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Special Event"
                         }
