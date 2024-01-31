@@ -120,6 +120,12 @@ export const TextTheme: ITextTheme = {
     fontWeight: 'normal',
     color: ColorPallet.grayscale.darkGrey,
   },
+  bold: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
   label: {
     fontFamily: 'BCSans-Regular',
     fontSize: 14,
@@ -184,6 +190,12 @@ export const TextTheme: ITextTheme = {
   },
   popupModalText: {
     fontSize: 18,
+    fontWeight: 'normal',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  settingsText: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 21,
     fontWeight: 'normal',
     color: ColorPallet.grayscale.darkGrey,
   },
@@ -352,7 +364,7 @@ export const ListItems = StyleSheet.create({
     color: ColorPallet.brand.text,
   },
   recordAttributeLabel: {
-    ...TextTheme.normal,
+    ...TextTheme.bold,
   },
   recordContainer: {
     backgroundColor: ColorPallet.brand.secondaryBackground,
@@ -618,6 +630,8 @@ export const OnboardingTheme = {
   },
   pagerNavigationButton: {
     color: ColorPallet.brand.primary,
+    fontWeight: 'bold',
+    fontSize: 18,
   },
   headerTintColor: ColorPallet.grayscale.white,
   headerText: {
@@ -654,7 +668,12 @@ export const DialogTheme = {
 const LoadingTheme = {
   backgroundColor: ColorPallet.brand.primary,
 }
-
+const PINEnterTheme = {
+  image: {
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+}
 const PINInputTheme = {
   cell: {
     backgroundColor: ColorPallet.grayscale.lightGrey,
@@ -707,6 +726,7 @@ export const defaultTheme: ITheme = {
   OnboardingTheme,
   DialogTheme,
   LoadingTheme,
+  PINEnterTheme,
   PINInputTheme,
   Assets,
 }
