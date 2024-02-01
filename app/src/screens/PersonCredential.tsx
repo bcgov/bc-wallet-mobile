@@ -31,7 +31,6 @@ export default function PersonCredential() {
       flex: 1,
     },
     pageContent: {
-      marginHorizontal: 20,
       flex: 1,
       flexGrow: 1,
     },
@@ -173,7 +172,9 @@ export default function PersonCredential() {
               title={t('PersonCredential.StartProcess')}
               onPress={acceptPersonCredentialOffer}
             >
-              {workflowInProgress && <LoadingIcon active={true} size={35} color={ColorPallet.brand.buttonText} />}
+              <View style={{ opacity: workflowInProgress ? 1 : 0, marginLeft: -18 }}>
+                <LoadingIcon active={workflowInProgress} size={35} color={ColorPallet.brand.buttonText} />
+              </View>
             </Button>
           ) : null}
         </View>
