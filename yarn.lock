@@ -4093,9 +4093,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-core@portal:bifold/packages/legacy/core::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-bifold-core@portal:bifold/packages/legacy/core::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.180":
+  version: 1.0.0-alpha.180
+  resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.180"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/anoncreds-rs": ^0.4.0
@@ -4166,53 +4166,56 @@ __metadata:
     uuid: ^9.0.0
   bin:
     bifold: bin/bifold
+  checksum: e639f0f69967fc8a087463a890d708718368d8a92fe1c08f00710bda7e01179101b8414a00ea9e4531e7268f38e2196fc014c4f3e8c1ac205f6cfe4b7a3ab7c8
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@hyperledger/aries-bifold-remote-logs@portal:bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-bifold-remote-logs@portal:bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-bifold-remote-logs@npm:1.0.0-alpha.180":
+  version: 1.0.0-alpha.180
+  resolution: "@hyperledger/aries-bifold-remote-logs@npm:1.0.0-alpha.180"
   dependencies:
+    "@aries-framework/core": "npm:0.4.0"
     axios: "npm:^1.4.0"
-    buffer: "npm:^6.0.3"
   peerDependencies:
-    "@aries-framework/core": ^0.4.0
-    react: "*"
-    react-native: "*"
+    react-native: 0.72.5
     react-native-logs: ^5.0.1
+  checksum: b6c3fe93b6de1257ab30fda74f54857b1d89abf0754884cfbce762f28524b05715d1d209a1a2cf0623c830caaaa09c245044a64196a0a26652ae305b9ac1429e
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@hyperledger/aries-bifold-verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-bifold-verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.180":
+  version: 1.0.0-alpha.180
+  resolution: "@hyperledger/aries-bifold-verifier@npm:1.0.0-alpha.180"
   peerDependencies:
     "@aries-framework/anoncreds": ^0.4.0
     "@aries-framework/core": ^0.4.0
     "@aries-framework/react-hooks": ^0.4.2
     react: ^18.2.0
+  checksum: 0fe906ed2796a24d4e629d33bc75ec845c979a52b6fbd840b2a4fce06b752f710ced0ad41d653895cc4509c0b85e97a4b1ca0c52f433696bf14caea299a1d936
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@hyperledger/aries-oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-oca@npm:1.0.0-alpha.180":
+  version: 1.0.0-alpha.180
+  resolution: "@hyperledger/aries-oca@npm:1.0.0-alpha.180"
   dependencies:
     "@aries-framework/anoncreds": "npm:^0.4.0"
     "@aries-framework/core": "npm:^0.4.0"
     axios: "npm:^1.4.0"
     lodash.startcase: "npm:^4.4.0"
+  checksum: cd8162917591ddb863fb337bb35d965763d7af4a18e99a000f28a651dd58dd80f99cd8c9183a60c785d128c088835455d82f221ffc4a8201e03be9313f870a2e
   languageName: node
-  linkType: soft
+  linkType: hard
 
-"@hyperledger/aries-react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@hyperledger/aries-react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A."
+"@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.180":
+  version: 1.0.0-alpha.180
+  resolution: "@hyperledger/aries-react-native-attestation@npm:1.0.0-alpha.180"
   peerDependencies:
     react: "*"
     react-native: "*"
+  checksum: 7af27da7180c4c73237a68b9051e06aea92c893ee49593ca6f04f87eb08afbac9b556e515b0df0b3ac53e5e5685d0e8fc39aa4f294d930f2d68048c1b46eac3b
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@hyperledger/indy-vdr-react-native@npm:0.1.0":
   version: 0.1.0
