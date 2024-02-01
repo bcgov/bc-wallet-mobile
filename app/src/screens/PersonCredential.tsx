@@ -37,6 +37,8 @@ export default function PersonCredential() {
     },
     credentialCardContainer: {
       marginVertical: 20,
+      display: 'flex',
+      alignItems: 'center',
     },
     button: {
       marginBottom: 15,
@@ -54,6 +56,11 @@ export default function PersonCredential() {
       paddingBottom: 10,
       display: 'flex',
     },
+    sectionSecondaryAction: {
+      display: 'flex',
+      alignItems: 'center',
+      marginTop: 10,
+    },
     sectionSeparator: {
       marginBottom: 10,
     },
@@ -68,7 +75,6 @@ export default function PersonCredential() {
       borderBottomColor: ColorPallet.brand.primaryBackground,
       marginHorizontal: 25,
     },
-    test: {},
   })
 
   const isBCServicesCardInstalled = async () => {
@@ -98,9 +104,7 @@ export default function PersonCredential() {
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView style={styles.pageContent}>
-        <View style={{ ...styles.credentialCardContainer, display: 'flex', alignItems: 'center' }}>
-          {appInstalled ? <PersonIssuance2 /> : <PersonIssuance1 />}
-        </View>
+        <View style={styles.credentialCardContainer}>{appInstalled ? <PersonIssuance2 /> : <PersonIssuance1 />}</View>
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text
@@ -137,7 +141,7 @@ export default function PersonCredential() {
                 onPress={() => setAppInstalled(true)}
                 accessibilityLabel={t('PersonCredential.AppOnOtherDevice')}
                 testID={testIdWithKey('AppOnOtherDevice')}
-                style={{ display: 'flex', alignItems: 'center', marginTop: 10 }}
+                style={styles.sectionSecondaryAction}
               >
                 <Text style={{ ...TextTheme.bold, color: ColorPallet.brand.primary }}>
                   {t('PersonCredential.AppOnOtherDevice')}
