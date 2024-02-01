@@ -21,7 +21,6 @@ describe('Person Credential Screen', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {
       return null
     })
-    jest.mock
   })
 
   afterEach(() => {
