@@ -72,14 +72,12 @@ const translation = {
     "ButtonTitle": "Start",
   },
   "PersonCredential": {
-    "Issuer": "Service BC",
-    "Name": "Person",
-    "GivenName": "Sample Given Name",
-    "FamilyName": "Sample Family Name",
-    "Description": "Add your Person credential to your wallet to prove your personal information online and get access to services online.\n\nYou'll need the BC Service Card app set up on this mobile device.",
-    "LinkDescription": "Get the BC Services Card app",
-    "GetCredential": "Get your Person credential",
-    "Decline": "Get this later",
+    "ServicesCardInstalled": "Step 1: BC Services Card app installed",
+    "InstallServicesCard": "Step 1: Install the BC Services Card app",
+    "InstallApp": "Install the app",
+    "AppOnOtherDevice": "I have it on another device",
+    "CreatePersonCred": "Step 2: Create your Person credential",
+    "StartProcess": "Start the process",
     "PageTitle": "Person Credential"
   },
   "NetInfo": {
