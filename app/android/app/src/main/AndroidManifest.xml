@@ -9,6 +9,7 @@
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
   <queries>
+    <package android:name="ca.bc.gov.id.servicescard" />
     <intent>
       <action android:name="android.intent.action.VIEW" />
       <data android:scheme="https" />
