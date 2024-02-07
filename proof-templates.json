@@ -107,6 +107,7 @@
       "id": "BC:5:FullName:0.0.1:indy",
       "name": "Full name",
       "description": "Verify the full name of a person",
+      "devOnly": true,
       "version": "0.0.1",
       "payload": {
          "type": "anoncreds",
@@ -171,6 +172,7 @@
       "id": "BC:5:19+AndFullName:0.0.1:indy",
       "name": "19+ and Full name",
       "description": "Verify if a person is 19 years and up and full name.",
+      "devOnly": true,
       "version": "0.0.1",
       "payload": {
          "type": "anoncreds",
@@ -272,6 +274,7 @@
       "id": "BC:5:Over19YearsOfAge:0.0.1:indy",
       "name": "Over 19 years of age",
       "description": "Verify if a person is 19 years and up.",
+      "devOnly": true,
       "version": "0.0.1",
       "payload": {
          "type": "anoncreds",
@@ -327,6 +330,7 @@
       "id": "BC:5:PractisingLawyer:0.0.1:indy",
       "name": "Practising lawyer",
       "description": "Verify if a person is a practicing lawyer.",
+      "devOnly": true,
       "version": "0.0.1",
       "payload": {
          "type": "anoncreds",
@@ -381,6 +385,7 @@
       "id": "BC:5:PractisingLawyerAndFullName:0.0.1:indy",
       "name": "Practising lawyer and full name",
       "description": "Verify if a person is a practicing lawyer using two different credentials for extra assurance",
+      "devOnly": true,
       "version": "0.0.1",
       "payload": {
          "type": "anoncreds",
@@ -492,6 +497,7 @@
       "id": "BC:5:OverSomeYearsOfAge:0.0.1:indy",
       "name": "Over some years of age",
       "description": "Verify if a person is over some years and up.",
+      "devOnly": true,
       "version": "0.0.1",
       "payload": {
          "type": "anoncreds",
