@@ -30,6 +30,7 @@ import Config from 'react-native-config'
 import { Subscription } from 'rxjs'
 
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
+import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 
 enum Action {
   RequestNonce = 'request_nonce',
@@ -49,6 +50,8 @@ type InfrastructureMessage = {
   platform?: 'apple' | 'google'
   version: 1
   action: Action
+  os_version?: string
+  app_version?: string
 }
 
 type RequestIssuanceInfrastructureMessage = InfrastructureMessage & {
@@ -69,6 +72,7 @@ export type EventListenerFn = (event: BaseEvent) => void
 const attestationCredDefIds = [
   'J6LCm5Edi9Mi3ASZCqNC1A:3:CL:109799:dev-attestation',
   'NxWbeuw8Y2ZBiTrGpcK7Tn:3:CL:48312:default',
+  'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet',
 ]
 
 // proof requests can vary wildly but we'll know attestation requests must contain the cred def id as a restriction
@@ -177,6 +181,8 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
               action: Action.ChallengeResponse,
               key_id: keyId,
               attestation_object: attestationAsBuffer.toString('base64'),
+              app_version: `${getVersion()}-${getBuildNumber()}`,
+              os_version: `${getSystemName()} ${getSystemVersion()}`,
             }
 
             return attestationResponse
@@ -192,6 +198,8 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
               version: 1,
               action: Action.ChallengeResponse,
               attestation_object: tokenString,
+              app_version: `${getVersion()}-${getBuildNumber()}`,
+              os_version: `${getSystemName()} v${getSystemVersion()}`,
             }
 
             return attestationResponse
