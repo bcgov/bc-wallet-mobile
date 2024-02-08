@@ -26,6 +26,7 @@ import React, { createContext, useContext, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Platform } from 'react-native'
 import Config from 'react-native-config'
+import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
 
@@ -45,10 +46,12 @@ enum ErrorCodes {
 }
 
 type InfrastructureMessage = {
-  type: 'attestation'
-  platform?: 'apple' | 'google'
   version: 1
+  type: 'attestation'
   action: Action
+  platform?: 'apple' | 'google'
+  os_version?: string
+  app_version?: string
 }
 
 type RequestIssuanceInfrastructureMessage = InfrastructureMessage & {
@@ -69,6 +72,8 @@ export type EventListenerFn = (event: BaseEvent) => void
 const attestationCredDefIds = [
   'J6LCm5Edi9Mi3ASZCqNC1A:3:CL:109799:dev-attestation',
   'NxWbeuw8Y2ZBiTrGpcK7Tn:3:CL:48312:default',
+  'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet',
+  'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet',
 ]
 
 // proof requests can vary wildly but we'll know attestation requests must contain the cred def id as a restriction
@@ -117,8 +122,8 @@ const getAvailableAttestationCredentials = async (agent: BifoldAgent) => {
 
 const requestNonce = async (agent: BifoldAgent, connectionRecord: ConnectionRecord) => {
   const nonceRequestMessage: InfrastructureMessage = {
-    type: 'attestation',
     version: 1,
+    type: 'attestation',
     action: Action.RequestNonce,
   }
 
@@ -163,6 +168,14 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
     switch (message.action) {
       case Action.RequestAttestation:
         try {
+          const common: Partial<ChallengeResponseInfrastructureMessage> = {
+            type: 'attestation',
+            version: 1,
+            action: Action.ChallengeResponse,
+            app_version: `${getVersion()}-${getBuildNumber()}`,
+            os_version: `${getSystemName()} ${getSystemVersion()}`,
+          }
+
           if (Platform.OS === 'ios') {
             const shouldCacheKey = false
             const keyId = await generateKey(shouldCacheKey)
@@ -170,14 +183,12 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
               keyId,
               (message as RequestIssuanceInfrastructureMessage).nonce
             )
-            const attestationResponse: ChallengeResponseInfrastructureMessage = {
-              type: 'attestation',
+            const attestationResponse = {
+              ...common,
               platform: 'apple',
-              version: 1,
-              action: Action.ChallengeResponse,
               key_id: keyId,
               attestation_object: attestationAsBuffer.toString('base64'),
-            }
+            } as ChallengeResponseInfrastructureMessage
 
             return attestationResponse
           } else if (Platform.OS === 'android') {
@@ -186,13 +197,11 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
               return null
             }
             const tokenString = await googleAttestation((message as RequestIssuanceInfrastructureMessage).nonce)
-            const attestationResponse: ChallengeResponseInfrastructureMessage = {
-              type: 'attestation',
+            const attestationResponse = {
+              ...common,
               platform: 'google',
-              version: 1,
-              action: Action.ChallengeResponse,
               attestation_object: tokenString,
-            }
+            } as ChallengeResponseInfrastructureMessage
 
             return attestationResponse
           } else {
