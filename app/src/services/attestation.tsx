@@ -26,11 +26,11 @@ import React, { createContext, useContext, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Platform } from 'react-native'
 import Config from 'react-native-config'
+import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
 
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
-import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 
 enum Action {
   RequestNonce = 'request_nonce',
