@@ -46,10 +46,10 @@ enum ErrorCodes {
 }
 
 type InfrastructureMessage = {
-  type: 'attestation'
-  platform?: 'apple' | 'google'
   version: 1
+  type: 'attestation'
   action: Action
+  platform?: 'apple' | 'google'
   os_version?: string
   app_version?: string
 }
@@ -122,8 +122,8 @@ const getAvailableAttestationCredentials = async (agent: BifoldAgent) => {
 
 const requestNonce = async (agent: BifoldAgent, connectionRecord: ConnectionRecord) => {
   const nonceRequestMessage: InfrastructureMessage = {
-    type: 'attestation',
     version: 1,
+    type: 'attestation',
     action: Action.RequestNonce,
   }
 
@@ -168,6 +168,14 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
     switch (message.action) {
       case Action.RequestAttestation:
         try {
+          const common: Partial<ChallengeResponseInfrastructureMessage> = {
+            type: 'attestation',
+            version: 1,
+            action: Action.ChallengeResponse,
+            app_version: `${getVersion()}-${getBuildNumber()}`,
+            os_version: `${getSystemName()} ${getSystemVersion()}`,
+          }
+
           if (Platform.OS === 'ios') {
             const shouldCacheKey = false
             const keyId = await generateKey(shouldCacheKey)
@@ -175,16 +183,12 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
               keyId,
               (message as RequestIssuanceInfrastructureMessage).nonce
             )
-            const attestationResponse: ChallengeResponseInfrastructureMessage = {
-              type: 'attestation',
+            const attestationResponse = {
+              ...common,
               platform: 'apple',
-              version: 1,
-              action: Action.ChallengeResponse,
               key_id: keyId,
               attestation_object: attestationAsBuffer.toString('base64'),
-              app_version: `${getVersion()}-${getBuildNumber()}`,
-              os_version: `${getSystemName()} ${getSystemVersion()}`,
-            }
+            } as ChallengeResponseInfrastructureMessage
 
             return attestationResponse
           } else if (Platform.OS === 'android') {
@@ -193,15 +197,11 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
               return null
             }
             const tokenString = await googleAttestation((message as RequestIssuanceInfrastructureMessage).nonce)
-            const attestationResponse: ChallengeResponseInfrastructureMessage = {
-              type: 'attestation',
+            const attestationResponse = {
+              ...common,
               platform: 'google',
-              version: 1,
-              action: Action.ChallengeResponse,
               attestation_object: tokenString,
-              app_version: `${getVersion()}-${getBuildNumber()}`,
-              os_version: `${getSystemName()} ${getSystemVersion()}`,
-            }
+            } as ChallengeResponseInfrastructureMessage
 
             return attestationResponse
           } else {
