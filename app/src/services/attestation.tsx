@@ -199,7 +199,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
               action: Action.ChallengeResponse,
               attestation_object: tokenString,
               app_version: `${getVersion()}-${getBuildNumber()}`,
-              os_version: `${getSystemName()} v${getSystemVersion()}`,
+              os_version: `${getSystemName()} ${getSystemVersion()}`,
             }
 
             return attestationResponse
