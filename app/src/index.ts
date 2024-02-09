@@ -82,10 +82,16 @@ const configuration: ConfigurationContext = {
     {
       // Person Credential
       credDefIds: [
+        'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
         'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
         '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
         'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
-        'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
+      ],
+      schemaIds: [
+        'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0',
+        'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0',
+        '7xjfawcnyTUcduWVysLww5:2:Person:1.0',
+        'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0',
       ],
       action: (navigation) => {
         navigation.getParent()?.navigate(Stacks.NotificationStack, {
@@ -95,13 +101,8 @@ const configuration: ConfigurationContext = {
     },
     {
       // Member Card
-      credDefIds: [
-        '4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default',
-        'L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.53',
-        'M6dhuFj5UwbhWkSLmvYSPc:2:member_card:1.53',
-        'QEquAHkM35w4XVT3Ku5yat:2:member_card:1.53',
-        'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
-      ],
+      credDefIds: ['4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default'],
+      schemaIds: ['4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1'],
       action: () => {
         Linking.openURL('https://www.lawsociety.bc.ca/lsbc/apps/members/login.cfm')
       },
