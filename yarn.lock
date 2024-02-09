@@ -206,18 +206,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/react-native@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@aries-framework/react-native@npm:0.4.0"
+"@aries-framework/react-native@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@aries-framework/react-native@npm:0.4.2"
   dependencies:
-    "@aries-framework/core": "npm:0.4.0"
+    "@aries-framework/core": "npm:0.4.2"
     "@azure/core-asynciterator-polyfill": "npm:^1.0.2"
     events: "npm:^3.3.0"
   peerDependencies:
     react-native: ^0.71.4
     react-native-fs: ^2.20.0
     react-native-get-random-values: ^1.8.0
-  checksum: d02bbf4ab58df824c88be9594a2f5f017607d867b66e7cccbd9c8b3bc135e6e6773bb891f88edef0283983b4aa71d28b0393ee0bf99bcd9722b8f3c786a8c1db
+  checksum: 96aa3294c185f98a059010a3af76882344b9103ce873305138bc7580f6756f63ca02fca2fa57141050b5f0619f7bf343757ac16538684ae5dfc0a7894db6b9ee
   languageName: node
   linkType: hard
 
