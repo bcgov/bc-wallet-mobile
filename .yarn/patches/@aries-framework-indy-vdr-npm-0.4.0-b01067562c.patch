@@ -1,0 +1,40 @@
+diff --git a/build/pool/IndyVdrPool.js b/build/pool/IndyVdrPool.js
+index 0ec57415429a0b97844b2d65a8ee83f68ad10466..ff874884b2d740fc5b5a2c89a619942baf121e2b 100644
+--- a/build/pool/IndyVdrPool.js
++++ b/build/pool/IndyVdrPool.js
+@@ -25,6 +25,12 @@ class IndyVdrPool {
+             },
+         });
+     }
++    async refreshConnection() {
++        await this.pool.refresh()
++    }
++    async getPoolTransactions(){
++        return this.pool.transactions
++    }
+     get pool() {
+         if (!this._pool)
+             this.connect();
+diff --git a/build/pool/IndyVdrPoolService.js b/build/pool/IndyVdrPoolService.js
+index e5abc0d40cae5a4d5777220fd0c36d85496df313..366631ac8d8b6b093d8a8d849b587d3c55aaf10e 100644
+--- a/build/pool/IndyVdrPoolService.js
++++ b/build/pool/IndyVdrPoolService.js
+@@ -113,6 +113,18 @@ let IndyVdrPoolService = class IndyVdrPoolService {
+             successful,
+         };
+     }
++    /**
++     * Refresh the pool connections asynchronously
++     */
++    refreshPoolConnections() {
++        return Promise.allSettled(this.pools.map((pool) => pool.refreshConnection()))
++    }
++    /**
++     * get the pool transactions asynchronously
++     */
++    getPoolTransactions() {
++        return Promise.all(this.pools.map(async (pool) => {return {config: pool.config, transactions: await pool.getPoolTransactions()}}))
++    }
+     /**
+      * Get the most appropriate pool for the given indyNamespace
+      */

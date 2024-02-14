@@ -9,7 +9,7 @@ import {
   IColorPallet,
   ITheme,
   IAssets,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
 import React from 'react'
 import { StyleSheet } from 'react-native'
 
@@ -120,6 +120,12 @@ export const TextTheme: ITextTheme = {
     fontWeight: 'normal',
     color: ColorPallet.grayscale.darkGrey,
   },
+  bold: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: ColorPallet.grayscale.darkGrey,
+  },
   label: {
     fontFamily: 'BCSans-Regular',
     fontSize: 14,
@@ -184,6 +190,12 @@ export const TextTheme: ITextTheme = {
   },
   popupModalText: {
     fontSize: 18,
+    fontWeight: 'normal',
+    color: ColorPallet.grayscale.darkGrey,
+  },
+  settingsText: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 21,
     fontWeight: 'normal',
     color: ColorPallet.grayscale.darkGrey,
   },
@@ -655,6 +667,13 @@ const LoadingTheme = {
   backgroundColor: ColorPallet.brand.primary,
 }
 
+const PINEnterTheme = {
+  image: {
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+}
+
 const PINInputTheme = {
   cell: {
     backgroundColor: ColorPallet.grayscale.lightGrey,
@@ -707,6 +726,7 @@ export const defaultTheme: ITheme = {
   OnboardingTheme,
   DialogTheme,
   LoadingTheme,
+  PINEnterTheme,
   PINInputTheme,
   Assets,
 }

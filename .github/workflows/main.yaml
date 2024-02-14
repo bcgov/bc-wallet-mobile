@@ -60,11 +60,11 @@ jobs:
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Pull & update submodules recursively
-        run: |
-          git submodule update --init --recursive
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -105,11 +105,6 @@ jobs:
         with:
           path: app/ios/xbuild/Build
           key: ${{ runner.os }}-dd-xcode
-
-      - name: Setup Python 3.11.5
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.11.5
 
       - name: Install dependencies
         working-directory: ./
@@ -264,14 +259,9 @@ jobs:
           server-id: github
           settings-path: ${{ github.workspace }}
 
-      - name: Update ledgers
-        uses: ./.github/workflows/actions/update-ledgers
-
       - name: Install dependencies
         working-directory: ./
         run: |
-          rm bifold/package.json && \
-          rm bifold/yarn.lock && \
           yarn install --immutable && \
           git status
 

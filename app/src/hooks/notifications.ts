@@ -7,16 +7,17 @@ import {
   ProofState,
 } from '@aries-framework/core'
 import { useCredentialByState, useProofByState, useBasicMessages } from '@aries-framework/react-hooks'
-import { useStore } from 'aries-bifold'
+import { useStore } from '@hyperledger/aries-bifold-core'
 import {
   BasicMessageMetadata,
   CredentialMetadata,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
-} from 'aries-bifold/App/types/metadata'
-import { ProofCustomMetadata, ProofMetadata } from 'aries-bifold/verifier'
+} from '@hyperledger/aries-bifold-core/App/types/metadata'
+//aries-bifold/App/types/metadata
+import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
 
-import { getInvitationCredentialDate, showBCIDSelector } from '../helpers/BCIDHelper'
+import { getUnlockCredentialDate, showPersonCredentialSelector } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 interface CustomNotification {
   type: 'CustomNotification'
@@ -71,9 +72,9 @@ export const useNotifications = (): Notifications => {
   const credentialDefinitionIDs = credentials.map(
     (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
   )
-  const invitationDate = getInvitationCredentialDate(credentials, true)
+  const invitationDate = getUnlockCredentialDate(credentials)
   const custom: CustomNotification[] =
-    showBCIDSelector(credentialDefinitionIDs, true) &&
+    showPersonCredentialSelector(credentialDefinitionIDs) &&
     invitationDate &&
     !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
       ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]

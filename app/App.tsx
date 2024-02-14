@@ -1,4 +1,3 @@
-import { useNavigation } from '@react-navigation/native'
 import {
   Stacks,
   Screens,
@@ -16,7 +15,8 @@ import {
   ConfigurationProvider,
   initLanguages,
   testIdWithKey,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
+import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StatusBar } from 'react-native'

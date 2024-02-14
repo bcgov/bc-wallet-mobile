@@ -1,4 +1,3 @@
-import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import {
   translationResources,
   ConfigurationContext,
@@ -6,7 +5,8 @@ import {
   indyLedgers,
   defaultConfiguration,
   Locales,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 import { Config } from 'react-native-config'
@@ -21,7 +21,6 @@ import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import fr from './localization/fr'
 import TermsStack from './navigators/TermsStack'
-import { useProofRequestTemplates } from './request-templates'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import PersonCredential from './screens/PersonCredential'
@@ -73,7 +72,6 @@ const configuration: ConfigurationContext = {
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
   useCustomNotifications: useNotifications,
-  proofRequestTemplates: useProofRequestTemplates,
   enableTours: true,
   supportedLanguages: Object.keys(localization) as Locales[],
 }

@@ -1,4 +1,4 @@
-import { testIdWithKey } from 'aries-bifold'
+import { testIdWithKey } from '@hyperledger/aries-bifold-core'
 import React, { useEffect, useRef } from 'react'
 import { View, StyleSheet, Animated } from 'react-native'
 

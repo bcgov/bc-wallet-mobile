@@ -1,4 +1,12 @@
-import { Button, ButtonType, ITheme, createStyles, GenericFn, testIdWithKey, useStore } from 'aries-bifold'
+import {
+  Button,
+  ButtonType,
+  ITheme,
+  createStyles,
+  GenericFn,
+  testIdWithKey,
+  useStore,
+} from '@hyperledger/aries-bifold-core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Text, View } from 'react-native'

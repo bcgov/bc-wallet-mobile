@@ -1,6 +1,6 @@
 import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
 import { DidRepository, CredentialExchangeRecord } from '@aries-framework/core'
-import { BifoldError, Agent, EventTypes as BifoldEventTypes } from 'aries-bifold'
+import { BifoldError, Agent, EventTypes as BifoldEventTypes } from '@hyperledger/aries-bifold-core'
 import React from 'react'
 import { TFunction } from 'react-i18next'
 import { Linking, Platform, DeviceEventEmitter } from 'react-native'
@@ -9,13 +9,14 @@ import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 import { BCState } from '../store'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
+const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 const trustedInvitationIssuerRe =
   /^(Mp2pDQqS2eSjNVA7kXc8ut|4zBepKVWZcGTzug4X49vAN|E2h4RUJxyh48PLJ1CtGJrq):\d:CL:\d+:default$/im
 const trustedFoundationCredentialIssuerRe =
   /^(KCxVC8GkKywjhWJnUfCmkW|7xjfawcnyTUcduWVysLww5|RGjWbW1eycP7FrMf4QJvX8):\d:CL:\d+:Person(\s(\(SIT\)|\(QA\)))?$/im
 const trustedLSBCCredentialIssuerRe =
   /^(4xE68b6S5VRFrKMMG1U95M|AuJrigKQGRLJajKAebTgWu|UUHA3oknprvKrpa7a6sncK):\d:CL:\d+:default$/im
-const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
+const trustedBusinessCardCredentialIssuerRe = /^(AcZpBDz3oxmKrpcuPcdKai):\d:CL:\d+:default$/im
 
 enum AuthenticationResultType {
   Success = 'success',
@@ -40,34 +41,46 @@ export interface WellKnownAgentDetails {
   invitationId?: string
 }
 
-export const showBCIDSelector = (credentialDefinitionIDs: string[], canUseLSBCredential: boolean): boolean => {
+export const showPersonCredentialSelector = (
+  credentialDefinitionIDs: string[],
+  canUseLSBCredential: boolean = true
+): boolean => {
+  // If we already have a trusted foundation credential do nothing.
   if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
     return false
   }
 
-  if (
+  // Check if we have a credential to unlock the functionality.
+  const unlockedByTrustedIssuer =
     credentialDefinitionIDs.some((i) => trustedInvitationIssuerRe.test(i)) ||
+    credentialDefinitionIDs.some((i) => trustedBusinessCardCredentialIssuerRe.test(i)) ||
     (credentialDefinitionIDs.some((i) => trustedLSBCCredentialIssuerRe.test(i)) && canUseLSBCredential)
-  ) {
+
+  // We have a trusted credential and can use the LSB credential
+  if (unlockedByTrustedIssuer) {
     return true
   }
+
+  // no matching
   return false
 }
 
-export const getInvitationCredentialDate = (
+export const getUnlockCredentialDate = (
   credentials: CredentialExchangeRecord[],
-  canUseLSBCCredential: boolean
+  canUseLSBCCredential: boolean = true
 ): Date | undefined => {
-  const invitationCredential = credentials.find((c) => {
+  const unlockCredential = credentials.find((c) => {
     const credDef = c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     if (
+      trustedBusinessCardCredentialIssuerRe.test(credDef) ||
       trustedInvitationIssuerRe.test(credDef) ||
       (trustedLSBCCredentialIssuerRe.test(credDef) && canUseLSBCCredential)
     ) {
       return true
     }
   })
-  return invitationCredential?.createdAt
+
+  return unlockCredential?.createdAt
 }
 
 export const removeExistingInvitationIfRequired = async (

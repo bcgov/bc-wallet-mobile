@@ -1,6 +1,6 @@
+import { useTheme } from '@hyperledger/aries-bifold-core'
+import { createDefaultStackOptions } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
 import { createStackNavigator } from '@react-navigation/stack'
-import { useTheme } from 'aries-bifold/App/contexts/theme'
-import { createDefaultStackOptions } from 'aries-bifold/App/navigators/defaultStackOptions'
 import React from 'react'
 
 import Terms from '../screens/Terms'

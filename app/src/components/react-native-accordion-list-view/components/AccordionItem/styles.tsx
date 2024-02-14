@@ -1,4 +1,4 @@
-import { useTheme } from 'aries-bifold'
+import { useTheme } from '@hyperledger/aries-bifold-core'
 import { StyleSheet } from 'react-native'
 
 const { ColorPallet } = useTheme()

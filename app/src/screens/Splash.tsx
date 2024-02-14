@@ -1,15 +1,6 @@
-import {
-  Agent,
-  ConsoleLogger,
-  HttpOutboundTransport,
-  LogLevel,
-  MediatorPickupStrategy,
-  WsOutboundTransport,
-} from '@aries-framework/core'
+import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@aries-framework/core'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { CommonActions, useNavigation } from '@react-navigation/native'
 import {
   LocalStorageKeys,
   DispatchAction,
@@ -31,7 +22,9 @@ import {
   migrateToAskar,
   getAgentModules,
   createLinkSecretIfRequired,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { CommonActions, useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image } from 'react-native'
@@ -351,6 +344,7 @@ const Splash: React.FC = () => {
         }
 
         setStep(5)
+
         const options = {
           config: {
             label: store.preferences.walletName || 'Portefeuille QC',
@@ -358,7 +352,6 @@ const Splash: React.FC = () => {
               id: credentials.id,
               key: credentials.key,
             },
-            logger: new ConsoleLogger(LogLevel.trace),
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             autoUpdateStorageOnStartup: true,
             autoAcceptConnections: true,

@@ -1,6 +1,15 @@
 import { useAgent } from '@aries-framework/react-hooks'
+import {
+  Button,
+  ButtonType,
+  Screens,
+  useStore,
+  useTheme,
+  CredentialCard,
+  TabStacks,
+  testIdWithKey,
+} from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
-import { Button, ButtonType, Screens, useStore, useTheme, CredentialCard, TabStacks, testIdWithKey } from 'aries-bifold'
 import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, FlatList } from 'react-native'

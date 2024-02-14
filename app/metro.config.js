@@ -4,7 +4,13 @@ const escape = require('escape-string-regexp')
 const exclusionList = require('metro-config/src/defaults/exclusionList')
 require('dotenv').config()
 
-const packageDirs = [fs.realpathSync(path.join(__dirname, 'node_modules', 'aries-bifold'))]
+const packageDirs = [
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-oca')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-bifold-remote-logs')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-bifold-core')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-bifold-verifier')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-react-native-attestation')),
+]
 
 const watchFolders = [...packageDirs]
 
@@ -12,6 +18,7 @@ const extraExclusionlist = []
 const extraNodeModules = {}
 
 for (const packageDir of packageDirs) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const pak = require(path.join(packageDir, 'package.json'))
   const modules = Object.keys({
     ...pak.peerDependencies,

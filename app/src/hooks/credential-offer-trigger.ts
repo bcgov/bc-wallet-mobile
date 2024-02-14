@@ -1,7 +1,7 @@
 import { CredentialState } from '@aries-framework/core'
 import { useCredentialByState } from '@aries-framework/react-hooks'
+import { Screens, Stacks } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
-import { Screens, Stacks } from 'aries-bifold'
 import { useEffect } from 'react'
 
 export const useCredentialOfferTrigger = (workflowConnectionId?: string): void => {

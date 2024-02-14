@@ -7,9 +7,6 @@ import {
   CredentialState,
   RevocationNotification,
 } from '@aries-framework/core'
-import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
-import { select } from '@storybook/addon-knobs'
-import { storiesOf } from '@storybook/react-native'
 import {
   components,
   ConfigurationContext,
@@ -17,7 +14,10 @@ import {
   StoreContext,
   contexts,
   ThemeProvider,
-} from 'aries-bifold'
+} from '@hyperledger/aries-bifold-core'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+import { select } from '@storybook/addon-knobs'
+import { storiesOf } from '@storybook/react-native'
 import React, { FC, Dispatch, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, ListRenderItem, View } from 'react-native'

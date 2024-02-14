@@ -1,5 +1,5 @@
 import { useAgent } from '@aries-framework/react-hooks'
-import { useTheme, useStore, testIdWithKey, DispatchAction } from 'aries-bifold'
+import { useTheme, useStore, testIdWithKey, DispatchAction } from '@hyperledger/aries-bifold-core'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
