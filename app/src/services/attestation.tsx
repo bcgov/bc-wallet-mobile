@@ -70,10 +70,9 @@ type AttestationProviderParams = {
 export type EventListenerFn = (event: BaseEvent) => void
 
 const attestationCredDefIds = [
-  'J6LCm5Edi9Mi3ASZCqNC1A:3:CL:109799:dev-attestation',
-  'NxWbeuw8Y2ZBiTrGpcK7Tn:3:CL:48312:default',
   'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet',
   'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet',
+  'XqaRXJt4sXE6TRpfGpVbGw:3:CL:655:bcwallet',
 ]
 
 // proof requests can vary wildly but we'll know attestation requests must contain the cred def id as a restriction
