@@ -3,7 +3,7 @@ name: Native Build & Test
 env:
   cacheId: "3" # increment to expire the cache
   appBuildNumber: ${{ github.run_number }}
-  appBuildVersion: "0.0.2"
+  appBuildVersion: "0.0.3"
 
 on:
   workflow_dispatch:
