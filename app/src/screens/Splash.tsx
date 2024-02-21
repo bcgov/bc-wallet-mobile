@@ -23,6 +23,7 @@ import {
   migrateToAskar,
   getAgentModules,
   createLinkSecretIfRequired,
+  loadLoginAttempt,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -204,9 +205,8 @@ const Splash = () => {
   }
 
   const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
-    const attemptsData = await AsyncStorage.getItem(LocalStorageKeys.LoginAttempts)
-    if (attemptsData) {
-      const attempts = JSON.parse(attemptsData) as LoginAttemptState
+    const attempts = await loadLoginAttempt()
+    if (attempts) {
       dispatch({
         type: DispatchAction.ATTEMPT_UPDATED,
         payload: [attempts],
