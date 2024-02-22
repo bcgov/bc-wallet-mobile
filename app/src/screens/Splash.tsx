@@ -1,4 +1,5 @@
 import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@aries-framework/core'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
 import {
@@ -25,6 +26,7 @@ import {
 } from '@hyperledger/aries-bifold-core'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
+import moment from 'moment'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image } from 'react-native'
@@ -218,6 +220,14 @@ const Splash: React.FC = () => {
     return environment?.iasAgentInviteUrl ?? Config.MCN_MEDIATOR_URL
   }
 
+  const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
+    const cachedTransactions = await loadObjectFromStorage(BCLocalStorageKeys.GenesisTransactions)
+    if (cachedTransactions) {
+      const { timestamp, transactions } = cachedTransactions
+      return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
+    }
+  }
+
   useEffect(() => {
     const initOnboarding = async (): Promise<void> => {
       try {
@@ -344,6 +354,8 @@ const Splash: React.FC = () => {
         }
 
         setStep(5)
+        const cachedLedgers = await loadCachedLedgers()
+        const ledgers = cachedLedgers ?? indyLedgers
 
         const options = {
           config: {
@@ -358,7 +370,7 @@ const Splash: React.FC = () => {
           },
           dependencies: agentDependencies,
           modules: getAgentModules({
-            indyNetworks: indyLedgers,
+            indyNetworks: ledgers,
             mediatorInvitationUrl: environment,
           }),
         }
@@ -385,6 +397,32 @@ const Splash: React.FC = () => {
 
         setStep(6)
         await newAgent.initialize()
+        const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
+        if (!cachedLedgers) {
+          // these escapes can be removed once Indy VDR has been upgraded and the patch is no longer needed
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore:next-line
+          await poolService.refreshPoolConnections()
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore:next-line
+          const raw_transactions = await poolService.getPoolTransactions()
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore:next-line
+          const transactions = raw_transactions.map(({ config, transactions }) => ({
+            ...config,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore:next-line
+            genesisTransactions: transactions.reduce((prev, curr) => {
+              return prev + JSON.stringify(curr)
+            }, ''),
+          }))
+          if (transactions) {
+            await AsyncStorage.setItem(
+              BCLocalStorageKeys.GenesisTransactions,
+              JSON.stringify({ timestamp: moment().toISOString(), transactions })
+            )
+          }
+        }
 
         setStep(7)
         await createLinkSecretIfRequired(newAgent)

@@ -69,6 +69,7 @@ export enum BCLocalStorageKeys {
   PersonCredentialOfferDismissed = 'PersonCredentialOfferDismissed',
   Environment = 'Environment',
   Attestation = 'Attestation',
+  GenesisTransactions = 'GenesisTransactions',
 }
 
 export const initialState: BCState = {
