@@ -63,6 +63,7 @@ jobs:
             "OCA_URL"
             "PROOF_TEMPLATE_URL"
             "ATTESTATION_INVITE_URL"
+            "MEDIATOR_USE_PUSH_NOTIFICATIONS"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -74,6 +75,7 @@ jobs:
           OCA_URL: ${{ vars.OCA_URL }}
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           ATTESTATION_INVITE_URL: ${{ vars.ATTESTATION_INVITE_URL }}
+          MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
 
   build-ios:
     needs: [check-secrets, check-vars]
@@ -156,7 +158,7 @@ jobs:
       - name: Create environment settings
         working-directory: app
         env:
-          MEDIATOR_USE_PUSH_NOTIFICATIONS: false
+          MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
@@ -269,7 +271,7 @@ jobs:
       - name: Create environment settings
         working-directory: app
         env:
-          MEDIATOR_USE_PUSH_NOTIFICATIONS: false
+          MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
           IAS_AGENT_INVITE_URL: ${{ secrets.IAS_AGENT_INVITE_URL }}
