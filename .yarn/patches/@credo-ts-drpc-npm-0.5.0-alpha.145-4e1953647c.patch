@@ -1,0 +1,239 @@
+diff --git a/build/DrpcApi.d.ts b/build/DrpcApi.d.ts
+index be4d0674ae73a1f28416ee42e5e955ded5376293..5155c2bba74d246be06e51eea324297681a11851 100644
+--- a/build/DrpcApi.d.ts
++++ b/build/DrpcApi.d.ts
+@@ -1,5 +1,5 @@
+ import type { DrpcRequest, DrpcResponse } from './messages';
+-import { AgentContext, MessageHandlerRegistry, MessageSender, ConnectionService } from '@credo-ts/core';
++import { AgentContext, MessageHandlerRegistry, MessageSender, ConnectionService } from '@aries-framework/core';
+ import { DrpcService } from './services';
+ export declare class DrpcApi {
+     private drpcMessageService;
+diff --git a/build/DrpcApi.js b/build/DrpcApi.js
+index 675a41c9371888f7bc21e99e7717091addb46ba7..bc8619ca6c4262e6601ad0f997d226996107c5b7 100644
+--- a/build/DrpcApi.js
++++ b/build/DrpcApi.js
+@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DrpcApi = void 0;
+-const core_1 = require("@credo-ts/core");
++const core_1 = require("@aries-framework/core");
+ const handlers_1 = require("./handlers");
+ const services_1 = require("./services");
+ let DrpcApi = class DrpcApi {
+diff --git a/build/DrpcModule.d.ts b/build/DrpcModule.d.ts
+index e5cfec0d78466da4dc7bfbbe4e9a29a60a19a5f9..08afb046445fa9f1d634097dc16ecad52c070397 100644
+--- a/build/DrpcModule.d.ts
++++ b/build/DrpcModule.d.ts
+@@ -1,4 +1,4 @@
+-import type { FeatureRegistry, DependencyManager, Module } from '@credo-ts/core';
++import type { FeatureRegistry, DependencyManager, Module } from '@aries-framework/core';
+ import { DrpcApi } from './DrpcApi';
+ export declare class DrpcModule implements Module {
+     readonly api: typeof DrpcApi;
+diff --git a/build/DrpcModule.js b/build/DrpcModule.js
+index aee33d22513bd54caeb6702d14c02a463c2b5bc9..56664f8f756da18058e1a2db7c327c14a38ffd36 100644
+--- a/build/DrpcModule.js
++++ b/build/DrpcModule.js
+@@ -1,7 +1,7 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DrpcModule = void 0;
+-const core_1 = require("@credo-ts/core");
++const core_1 = require("@aries-framework/core");
+ const DrpcApi_1 = require("./DrpcApi");
+ const DrpcRole_1 = require("./models/DrpcRole");
+ const repository_1 = require("./repository");
+@@ -17,7 +17,7 @@ class DrpcModule {
+         // Warn about experimental module
+         dependencyManager
+             .resolve(core_1.AgentConfig)
+-            .logger.warn("The '@credo-ts/drpc' module is experimental and could have unexpected breaking changes. When using this module, make sure to use strict versions for all @credo-ts packages.");
++            .logger.warn("The '@aries-framework/drpc' module is experimental and could have unexpected breaking changes. When using this module, make sure to use strict versions for all @aries-framework packages.");
+         // Services
+         dependencyManager.registerSingleton(services_1.DrpcService);
+         // Repositories
+diff --git a/build/DrpcRequestEvents.d.ts b/build/DrpcRequestEvents.d.ts
+index 45a9dae904be6fef911f1f3eed50d73b4b339548..a6513bd70e8fc826d2bbd81acbd551ea31575411 100644
+--- a/build/DrpcRequestEvents.d.ts
++++ b/build/DrpcRequestEvents.d.ts
+@@ -1,5 +1,5 @@
+ import type { DrpcRecord } from './repository';
+-import type { BaseEvent } from '@credo-ts/core';
++import type { BaseEvent } from '@aries-framework/core';
+ export declare enum DrpcRequestEventTypes {
+     DrpcRequestStateChanged = "DrpcRequestStateChanged"
+ }
+diff --git a/build/DrpcResponseEvents.d.ts b/build/DrpcResponseEvents.d.ts
+index 4058696dd7403c802c941f22abc65e7ef00158b2..1329a191733c57882d0ce44813c611758b77daad 100644
+--- a/build/DrpcResponseEvents.d.ts
++++ b/build/DrpcResponseEvents.d.ts
+@@ -1,5 +1,5 @@
+ import type { DrpcRecord } from './repository';
+-import type { BaseEvent } from '@credo-ts/core';
++import type { BaseEvent } from '@aries-framework/core';
+ export declare enum DrpcResponseEventTypes {
+     DrpcResponseStateChanged = "DrpcResponseStateChanged"
+ }
+diff --git a/build/handlers/DrpcRequestHandler.d.ts b/build/handlers/DrpcRequestHandler.d.ts
+index 63df0f347edbc2f9ff6a2a07a9e80d921952df74..46238f133e2e9495fb6c71457059ef47a87c74fa 100644
+--- a/build/handlers/DrpcRequestHandler.d.ts
++++ b/build/handlers/DrpcRequestHandler.d.ts
+@@ -1,5 +1,5 @@
+ import type { DrpcService } from '../services/DrpcService';
+-import type { MessageHandler, MessageHandlerInboundMessage } from '@credo-ts/core';
++import type { MessageHandler, MessageHandlerInboundMessage } from '@aries-framework/core';
+ import { DrpcRequestMessage } from '../messages';
+ export declare class DrpcRequestHandler implements MessageHandler {
+     private drpcMessageService;
+diff --git a/build/handlers/DrpcResponseHandler.d.ts b/build/handlers/DrpcResponseHandler.d.ts
+index 57b26d20d379a759e82441b39b51572c64bfd8e8..df55efdda23fe9b325c0cf56ee15a0d03303d15e 100644
+--- a/build/handlers/DrpcResponseHandler.d.ts
++++ b/build/handlers/DrpcResponseHandler.d.ts
+@@ -1,5 +1,5 @@
+ import type { DrpcService } from '../services/DrpcService';
+-import type { MessageHandler, MessageHandlerInboundMessage } from '@credo-ts/core';
++import type { MessageHandler, MessageHandlerInboundMessage } from '@aries-framework/core';
+ import { DrpcResponseMessage } from '../messages';
+ export declare class DrpcResponseHandler implements MessageHandler {
+     private drpcMessageService;
+diff --git a/build/messages/DrpcRequestMessage.d.ts b/build/messages/DrpcRequestMessage.d.ts
+index 87101339c7c0f4b2a72c7c072cd4aec2ff5f64a7..897dae2b731d54da9a1c067b383fc85820b4728f 100644
+--- a/build/messages/DrpcRequestMessage.d.ts
++++ b/build/messages/DrpcRequestMessage.d.ts
+@@ -1,4 +1,4 @@
+-import { AgentMessage } from '@credo-ts/core';
++import { AgentMessage } from '@aries-framework/core';
+ export interface DrpcRequestObject {
+     jsonrpc: string;
+     method: string;
+@@ -11,6 +11,6 @@ export declare class DrpcRequestMessage extends AgentMessage {
+         request: DrpcRequest;
+     });
+     readonly type: string;
+-    static readonly type: import("@credo-ts/core/build/utils/messageType").ParsedMessageType;
++    static readonly type: import("@aries-framework/core/build/utils/messageType").ParsedMessageType;
+     request: DrpcRequest;
+ }
+diff --git a/build/messages/DrpcRequestMessage.js b/build/messages/DrpcRequestMessage.js
+index f77ca462a062cd7b4ad3346ffb81a4c2abad4900..c4a2cb4f7981f68b85b4aa8605fb66b53d054f2c 100644
+--- a/build/messages/DrpcRequestMessage.js
++++ b/build/messages/DrpcRequestMessage.js
+@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DrpcRequestMessage = void 0;
+-const core_1 = require("@credo-ts/core");
++const core_1 = require("@aries-framework/core");
+ const class_transformer_1 = require("class-transformer");
+ const models_1 = require("../models");
+ class DrpcRequestMessage extends core_1.AgentMessage {
+diff --git a/build/messages/DrpcResponseMessage.d.ts b/build/messages/DrpcResponseMessage.d.ts
+index 7ccd762a9e1276c79c9321927c73632e1731e335..7583f9ee50f31e3e6d172adb59a6982709f71850 100644
+--- a/build/messages/DrpcResponseMessage.d.ts
++++ b/build/messages/DrpcResponseMessage.d.ts
+@@ -1,5 +1,5 @@
+ import type { DrpcErrorCode } from '../models';
+-import { AgentMessage } from '@credo-ts/core';
++import { AgentMessage } from '@aries-framework/core';
+ export type DrpcResponse = DrpcResponseObject | (DrpcResponseObject | Record<string, never>)[] | Record<string, never>;
+ export interface DrpcResponseError {
+     code: DrpcErrorCode;
+@@ -18,6 +18,6 @@ export declare class DrpcResponseMessage extends AgentMessage {
+         threadId: string;
+     });
+     readonly type: string;
+-    static readonly type: import("@credo-ts/core/build/utils/messageType").ParsedMessageType;
++    static readonly type: import("@aries-framework/core/build/utils/messageType").ParsedMessageType;
+     response: DrpcResponse;
+ }
+diff --git a/build/messages/DrpcResponseMessage.js b/build/messages/DrpcResponseMessage.js
+index d400ba76bf143a14158e85d173dfe1236263188a..c684a692123da0e34762d00e6a46771be149925a 100644
+--- a/build/messages/DrpcResponseMessage.js
++++ b/build/messages/DrpcResponseMessage.js
+@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DrpcResponseMessage = void 0;
+-const core_1 = require("@credo-ts/core");
++const core_1 = require("@aries-framework/core");
+ const class_transformer_1 = require("class-transformer");
+ const models_1 = require("../models");
+ class DrpcResponseMessage extends core_1.AgentMessage {
+diff --git a/build/repository/DrpcRecord.d.ts b/build/repository/DrpcRecord.d.ts
+index 4f07380fc9b7cb921499385cfee4009a85cae2c8..0f797a7486e856d61a6f57a6604c7b60bc50c6ff 100644
+--- a/build/repository/DrpcRecord.d.ts
++++ b/build/repository/DrpcRecord.d.ts
+@@ -1,7 +1,7 @@
+ import type { DrpcRequest, DrpcResponse } from '../messages';
+ import type { DrpcRole, DrpcState } from '../models';
+-import type { RecordTags, TagsBase } from '@credo-ts/core';
+-import { BaseRecord } from '@credo-ts/core';
++import type { RecordTags, TagsBase } from '@aries-framework/core';
++import { BaseRecord } from '@aries-framework/core';
+ export type CustomDrpcMessageTags = TagsBase;
+ export type DefaultDrpcMessageTags = {
+     connectionId: string;
+diff --git a/build/repository/DrpcRecord.js b/build/repository/DrpcRecord.js
+index 98b5a4bb73ac26b7fc1ec82e790b68f00da2006b..4a9e510d50bee94118068bf77fa18092983bdc31 100644
+--- a/build/repository/DrpcRecord.js
++++ b/build/repository/DrpcRecord.js
+@@ -1,7 +1,7 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DrpcRecord = void 0;
+-const core_1 = require("@credo-ts/core");
++const core_1 = require("@aries-framework/core");
+ class DrpcRecord extends core_1.BaseRecord {
+     constructor(props) {
+         var _a, _b;
+diff --git a/build/repository/DrpcRepository.d.ts b/build/repository/DrpcRepository.d.ts
+index bb8d35ba3e4047dea2bc6a5f05726a1ffc8c0c3e..e9eb3605fc2dd9802e71a338bf40696fec25fd27 100644
+--- a/build/repository/DrpcRepository.d.ts
++++ b/build/repository/DrpcRepository.d.ts
+@@ -1,4 +1,4 @@
+-import { EventEmitter, Repository, StorageService } from '@credo-ts/core';
++import { EventEmitter, Repository, StorageService } from '@aries-framework/core';
+ import { DrpcRecord } from './DrpcRecord';
+ export declare class DrpcRepository extends Repository<DrpcRecord> {
+     constructor(storageService: StorageService<DrpcRecord>, eventEmitter: EventEmitter);
+diff --git a/build/repository/DrpcRepository.js b/build/repository/DrpcRepository.js
+index 23e85e871219727ffc8436afd0528a8525a28d07..5f2066fcfcbc64ec8e70c16e42cc672da5a87528 100644
+--- a/build/repository/DrpcRepository.js
++++ b/build/repository/DrpcRepository.js
+@@ -13,7 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DrpcRepository = void 0;
+-const core_1 = require("@credo-ts/core");
++const core_1 = require("@aries-framework/core");
+ const DrpcRecord_1 = require("./DrpcRecord");
+ let DrpcRepository = class DrpcRepository extends core_1.Repository {
+     constructor(storageService, eventEmitter) {
+diff --git a/build/services/DrpcService.d.ts b/build/services/DrpcService.d.ts
+index af7f6ff806004bc9518478029cc4b8999b6d29cd..158f6400ab6f0d7c0a6246f1dc4c0da7704d0cb3 100644
+--- a/build/services/DrpcService.d.ts
++++ b/build/services/DrpcService.d.ts
+@@ -1,6 +1,6 @@
+ import type { DrpcRequest, DrpcResponse } from '../messages';
+-import type { AgentContext, InboundMessageContext, Query } from '@credo-ts/core';
+-import { EventEmitter } from '@credo-ts/core';
++import type { AgentContext, InboundMessageContext, Query } from '@aries-framework/core';
++import { EventEmitter } from '@aries-framework/core';
+ import { DrpcRequestMessage, DrpcResponseMessage } from '../messages';
+ import { DrpcRecord, DrpcRepository } from '../repository';
+ export declare class DrpcService {
+diff --git a/build/services/DrpcService.js b/build/services/DrpcService.js
+index 200fed2ddf104288e0db82d05534a75a1cdf3ad0..201054af5943a0502d9c52c8ac0d63b530a20d8f 100644
+--- a/build/services/DrpcService.js
++++ b/build/services/DrpcService.js
+@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.DrpcService = void 0;
+-const core_1 = require("@credo-ts/core");
++const core_1 = require("@aries-framework/core");
+ const DrpcRequestEvents_1 = require("../DrpcRequestEvents");
+ const DrpcResponseEvents_1 = require("../DrpcResponseEvents");
+ const messages_1 = require("../messages");
