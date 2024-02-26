@@ -2,6 +2,7 @@ import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTranspo
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
+import { DrpcModule } from '@credo-ts/drpc'
 import {
   LocalStorageKeys,
   DispatchAction,
@@ -424,10 +425,13 @@ const Splash = () => {
             autoAcceptConnections: true,
           },
           dependencies: agentDependencies,
-          modules: getAgentModules({
-            indyNetworks: ledgers,
-            mediatorInvitationUrl: Config.MEDIATOR_URL,
-          }),
+          modules: {
+            ...getAgentModules({
+              indyNetworks: ledgers,
+              mediatorInvitationUrl: Config.MEDIATOR_URL,
+            }),
+            drpc: new DrpcModule(),
+          },
         }
 
         const newAgent = new Agent(options)
