@@ -37,7 +37,6 @@ const Settings: React.FC = () => {
     !!store.developer.attestationSupportEnabled
   )
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
-
   const { start, stop } = useAttestation()
 
   const styles = StyleSheet.create({
