@@ -36,7 +36,8 @@ const Settings: React.FC = () => {
   const [attestationSupportEnabled, setAttestationSupportEnabled] = useState(
     !!store.developer.attestationSupportEnabled
   )
-  const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger.remoteLoggingEnabled)
+  const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
+
   const { start, stop } = useAttestation()
 
   const styles = StyleSheet.create({
@@ -269,7 +270,7 @@ const Settings: React.FC = () => {
           return
         }}
       >
-        <RemoteLogWarning onEnablePressed={onEnableRemoteLoggingPressed} sessionId={logger.sessionId} />
+        <RemoteLogWarning onEnablePressed={onEnableRemoteLoggingPressed} sessionId={logger?.sessionId} />
       </Modal>
       <Modal
         visible={environmentModalVisible}
@@ -433,6 +434,7 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleRemoteLoggingWarningSwitch}
             value={remoteLoggingEnabled}
+            disabled={!store.authentication.didAuthenticate}
           />
         </SectionRow>
       </ScrollView>
