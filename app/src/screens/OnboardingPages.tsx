@@ -6,16 +6,11 @@ import {
   createStyles,
   GenericFn,
   testIdWithKey,
-  DispatchAction,
-  Screens,
-  OnboardingStackParams,
   ContentGradient,
 } from '@hyperledger/aries-bifold-core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useRef } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native'
+import { StyleSheet, Text, View } from 'react-native'
 import { ScrollView } from 'react-native-gesture-handler'
 import { SvgProps } from 'react-native-svg'
 
@@ -84,30 +79,12 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
 const StartPage = (theme: ITheme['OnboardingTheme']) => {
   const { t } = useTranslation()
   const defaultStyle = createStyles(theme)
-  const [store, dispatch] = useStore()
-  const developerOptionCount = useRef(0)
-  const touchCountToEnableBiometrics = 9
-  const navigation = useNavigation<StackNavigationProp<OnboardingStackParams>>()
   const styles = StyleSheet.create({
     imageContainer: {
       alignItems: 'center',
       marginBottom: 10,
     },
   })
-
-  const incrementDeveloperMenuCounter = () => {
-    if (developerOptionCount.current >= touchCountToEnableBiometrics) {
-      developerOptionCount.current = 0
-      dispatch({
-        type: DispatchAction.ENABLE_DEVELOPER_MODE,
-        payload: [true],
-      })
-      navigation.navigate(Screens.Developer)
-      return
-    }
-
-    developerOptionCount.current = developerOptionCount.current + 1
-  }
 
   const imageDisplayOptions = {
     fill: theme.imageDisplayOptions.fill,
@@ -121,12 +98,7 @@ const StartPage = (theme: ITheme['OnboardingTheme']) => {
         <ScanShare {...imageDisplayOptions} />
       </View>
       <View style={{ marginBottom: 20 }}>
-        <TouchableWithoutFeedback
-          onPress={incrementDeveloperMenuCounter}
-          disabled={store.preferences.developerModeEnabled}
-        >
-          <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.DifferentWalletHeading')}</Text>
-        </TouchableWithoutFeedback>
+        <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.DifferentWalletHeading')}</Text>
         <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('Onboarding.DifferentWalletParagraph')}</Text>
       </View>
     </ScrollView>
