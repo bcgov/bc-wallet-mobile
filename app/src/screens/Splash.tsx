@@ -420,7 +420,7 @@ const Splash = () => {
               key: credentials.key,
             },
             logger,
-            mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
+            mediatorPickupStrategy: MediatorPickupStrategy.PickUpV2,
             autoUpdateStorageOnStartup: true,
             autoAcceptConnections: true,
           },
@@ -456,6 +456,9 @@ const Splash = () => {
 
         setStep(6)
         await newAgent.initialize()
+        await newAgent.mediationRecipient.initialize()
+        await newAgent.mediationRecipient.initiateMessagePickup()
+
         const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
         if (!cachedLedgers) {
           // these escapes can be removed once Indy VDR has been upgraded and the patch is no longer needed
@@ -475,6 +478,7 @@ const Splash = () => {
               return prev + JSON.stringify(curr)
             }, ''),
           }))
+
           if (transactions) {
             await AsyncStorage.setItem(
               BCLocalStorageKeys.GenesisTransactions,

@@ -22,67 +22,67 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aries-framework/anoncreds-rs@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@aries-framework/anoncreds-rs@npm:0.4.0"
+"@aries-framework/anoncreds-rs@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@aries-framework/anoncreds-rs@npm:0.4.2"
   dependencies:
-    "@aries-framework/anoncreds": "npm:0.4.0"
-    "@aries-framework/core": "npm:0.4.0"
+    "@aries-framework/anoncreds": "npm:0.4.2"
+    "@aries-framework/core": "npm:0.4.2"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:0.14.0"
     rxjs: "npm:^7.2.0"
-    tsyringe: "npm:^4.7.0"
+    tsyringe: "npm:^4.8.0"
   peerDependencies:
     "@hyperledger/anoncreds-shared": ^0.1.0
-  checksum: a4ed22d1431d9e5450bdd373e1b1e16e8e60b3642bf095bfd9c78193de032e27c5fe5ccc7527250a2d3f8f6ce3e2a981ef6596038be008dcccc6585a83e39a37
+  checksum: cc345c044db5e82fbbcc4110297d8806e77708063cd2c12711c0423f5f1be80b7719a5543dbbcc4374c2e761a09c7f5d6ab5561ca852c72d73c254d31160bdb4
   languageName: node
   linkType: hard
 
-"@aries-framework/anoncreds@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@aries-framework/anoncreds@npm:0.4.0"
+"@aries-framework/anoncreds@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@aries-framework/anoncreds@npm:0.4.2"
   dependencies:
-    "@aries-framework/core": "npm:0.4.0"
+    "@aries-framework/core": "npm:0.4.2"
     bn.js: "npm:^5.2.1"
     class-transformer: "npm:0.5.1"
     class-validator: "npm:0.14.0"
     reflect-metadata: "npm:^0.1.13"
-  checksum: bd1245b2e97b32ae43350c9ea615f445d2299070e821d0d49f58b21946e4bfa5990cf28296acb8ad86472e2bf90604f7995c125f4a6c0680d2b8c730ee842b3d
+  checksum: 18c565ff8293c682054d13d9a27cc14fcf11d37f9323cabcfab62229cb03658fbf74d8710dd89d54afa8f57c2e4d52bdf7b68b264b0859e58ba89ecbf588cef2
   languageName: node
   linkType: hard
 
-"@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.4.0
-  resolution: "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.0#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::version=0.4.0&hash=695f0a&locator=bc-wallet-mobile%40workspace%3A."
+"@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.2#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.4.2
+  resolution: "@aries-framework/anoncreds@patch:@aries-framework/anoncreds@npm%3A0.4.2#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch::version=0.4.2&hash=695f0a&locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
-    "@aries-framework/core": "npm:0.4.0"
+    "@aries-framework/core": "npm:0.4.2"
     bn.js: "npm:^5.2.1"
     class-transformer: "npm:0.5.1"
     class-validator: "npm:0.14.0"
     reflect-metadata: "npm:^0.1.13"
-  checksum: 8b6bc08bf973de03487853b0096f2792a17d9913dc163847e0b7e60c34ed737a73b991f91bae4e3da526cc28015cebaf195398ce7e9db735dd2f55939922a062
+  checksum: cc35568642685741b79926c00cf389b8aed95f685d116a13b9c0e4b95d31be186374b4baa96912499f7e8996ecca454f75b0044839d364eb623b5643ebfc4097
   languageName: node
   linkType: hard
 
-"@aries-framework/askar@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@aries-framework/askar@npm:0.4.0"
+"@aries-framework/askar@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@aries-framework/askar@npm:0.4.2"
   dependencies:
-    "@aries-framework/core": "npm:0.4.0"
+    "@aries-framework/core": "npm:0.4.2"
     bn.js: "npm:^5.2.1"
     class-transformer: "npm:0.5.1"
     class-validator: "npm:0.14.0"
     rxjs: "npm:^7.2.0"
-    tsyringe: "npm:^4.7.0"
+    tsyringe: "npm:^4.8.0"
   peerDependencies:
     "@hyperledger/aries-askar-shared": ^0.1.0
-  checksum: e0ba8b908954d398c762154e718eb40f110cd60dd0398a2351598443dadd51b96366067ec56bdd712b233cc5b980792ffb6ff2288456ab79d79e0aeb742dae79
+  checksum: f1bb6102d31a4be93ff3accebfc762b29efb10d5911473e7141da7372aa701ad11058f180cde68afc2989008970cae5a555071b1382a0ec9ab526eea9fd03439
   languageName: node
   linkType: hard
 
-"@aries-framework/core@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@aries-framework/core@npm:0.4.0"
+"@aries-framework/core@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@aries-framework/core@npm:0.4.2"
   dependencies:
     "@digitalcredentials/jsonld": "npm:^5.2.1"
     "@digitalcredentials/jsonld-signatures": "npm:^9.3.1"
@@ -91,6 +91,7 @@ __metadata:
     "@stablelib/ed25519": "npm:^1.0.2"
     "@stablelib/random": "npm:^1.0.1"
     "@stablelib/sha256": "npm:^1.0.1"
+    "@types/node-fetch": "npm:2.6.2"
     "@types/ws": "npm:^8.5.4"
     abort-controller: "npm:^3.0.0"
     big-integer: "npm:^1.6.51"
@@ -102,69 +103,68 @@ __metadata:
     lru_map: "npm:^0.4.1"
     luxon: "npm:^3.3.0"
     make-error: "npm:^1.3.6"
-    node-fetch: "npm:^2.6.1"
     object-inspect: "npm:^1.10.3"
     query-string: "npm:^7.0.1"
     reflect-metadata: "npm:^0.1.13"
     rxjs: "npm:^7.2.0"
-    tsyringe: "npm:^4.7.0"
+    tsyringe: "npm:^4.8.0"
     uuid: "npm:^9.0.0"
     varint: "npm:^6.0.0"
     web-did-resolver: "npm:^2.0.21"
-  checksum: c8f76ac5ac687ae47f29182e20474bb331f7612499a6befa5af7f9659dc1b9a2209ce1a8065df97a04604e8ef77018c18dcdce472991ae8f6b37418742ac12f4
+  checksum: 85ca8b0494d46b996d909243816c28cd600674daa81390d8f50c6c4231cd6d598ce6e834a03c3c38cc9883a10b2d86a391638d2dd09d8ddeaba7685158136964
   languageName: node
   linkType: hard
 
-"@aries-framework/indy-sdk-to-askar-migration@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@aries-framework/indy-sdk-to-askar-migration@npm:0.4.0"
+"@aries-framework/indy-sdk-to-askar-migration@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@aries-framework/indy-sdk-to-askar-migration@npm:0.4.2"
   dependencies:
-    "@aries-framework/anoncreds": "npm:0.4.0"
-    "@aries-framework/askar": "npm:0.4.0"
-    "@aries-framework/core": "npm:0.4.0"
-    "@aries-framework/node": "npm:0.4.0"
+    "@aries-framework/anoncreds": "npm:0.4.2"
+    "@aries-framework/askar": "npm:0.4.2"
+    "@aries-framework/core": "npm:0.4.2"
+    "@aries-framework/node": "npm:0.4.2"
   peerDependencies:
     "@hyperledger/aries-askar-shared": ^0.1.0
-  checksum: 1104e597cb5920bffb2c56bee2701a768aecc248b730506b51650dd837d3e0643833b2a2940de7bb40ea379ec91d6913b1d5f8ca2b28506afeb438f164c3aec1
+  checksum: 815e5f9ef45c62fa07f46166d7466b1a1bf6eecf7e3ec680c78cf6b323bf38df3f564176819602fd05ea6c8fb415e1549707a2eb8958f47af0afe18ab6a1b4f0
   languageName: node
   linkType: hard
 
-"@aries-framework/indy-vdr@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@aries-framework/indy-vdr@npm:0.4.0"
+"@aries-framework/indy-vdr@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@aries-framework/indy-vdr@npm:0.4.2"
   dependencies:
-    "@aries-framework/anoncreds": "npm:0.4.0"
-    "@aries-framework/core": "npm:0.4.0"
+    "@aries-framework/anoncreds": "npm:0.4.2"
+    "@aries-framework/core": "npm:0.4.2"
   peerDependencies:
     "@hyperledger/indy-vdr-shared": ^0.1.0
-  checksum: 65cee38745a4cd524b2b3af0384c08910a89f88fa48df0cd8be5899d624402a346486830fd77a88f23770daf2c83b3dfee7622105ffe79cd51167454d6801db8
+  checksum: 912e8a7cde2d2ac4947a2ad4b49126fc5874142642b4edf13d6ba85f6604f147aaedb1a2fa0a8f40c64c393aec535bc1d502ab00afd155f37e0fc6784964d979
   languageName: node
   linkType: hard
 
-"@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@npm%3A0.4.0#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.4.0
-  resolution: "@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@npm%3A0.4.0#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch::version=0.4.0&hash=677f18&locator=bc-wallet-mobile%40workspace%3A."
+"@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@npm%3A0.4.2#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.4.2
+  resolution: "@aries-framework/indy-vdr@patch:@aries-framework/indy-vdr@npm%3A0.4.2#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch::version=0.4.2&hash=677f18&locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
-    "@aries-framework/anoncreds": "npm:0.4.0"
-    "@aries-framework/core": "npm:0.4.0"
+    "@aries-framework/anoncreds": "npm:0.4.2"
+    "@aries-framework/core": "npm:0.4.2"
   peerDependencies:
     "@hyperledger/indy-vdr-shared": ^0.1.0
-  checksum: c9e824217ecf82d0bc96134354268ff3a1a12ff23747157839e13f0a3cfb09e8dd3911cd2643abcdff63b2223d9810c865e32f0776a0c6588e99761509860783
+  checksum: 99c10504332f02db10da95f949069054ae84866fee83218ff604e3155e877745e0b31de4ae3077d4ea33e9e0b24eab04c2e84267b895acc2c5f224dfd24de714
   languageName: node
   linkType: hard
 
-"@aries-framework/node@npm:0.4.0":
-  version: 0.4.0
-  resolution: "@aries-framework/node@npm:0.4.0"
+"@aries-framework/node@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@aries-framework/node@npm:0.4.2"
   dependencies:
-    "@aries-framework/core": "npm:0.4.0"
+    "@aries-framework/core": "npm:0.4.2"
     "@types/express": "npm:^4.17.15"
     express: "npm:^4.17.1"
     ffi-napi: "npm:^4.0.3"
     node-fetch: "npm:^2.6.1"
     ref-napi: "npm:^3.0.3"
     ws: "npm:^8.13.0"
-  checksum: 9a859d854f981b71bbb06735c8ad75f6bdd8ebedf72347deefa02860bbe3448d79bb0715ee7041ee9219bb0a1d5c5570415556fcfab276246e19ff6d6080cc01
+  checksum: 5e759330e0d38c833d6a0bfb84506dbf754b50c84ca84287920e3d0fc0f6e7714e58de5a7620947c547d5e38ec6b1ce9186e9489acb00b9fe5ae1016d3a2cce2
   languageName: node
   linkType: hard
 
@@ -375,25 +375,25 @@ __metadata:
   linkType: hard
 
 "@babel/core@npm:^7.14.6":
-  version: 7.23.9
-  resolution: "@babel/core@npm:7.23.9"
+  version: 7.24.0
+  resolution: "@babel/core@npm:7.24.0"
   dependencies:
     "@ampproject/remapping": "npm:^2.2.0"
     "@babel/code-frame": "npm:^7.23.5"
     "@babel/generator": "npm:^7.23.6"
     "@babel/helper-compilation-targets": "npm:^7.23.6"
     "@babel/helper-module-transforms": "npm:^7.23.3"
-    "@babel/helpers": "npm:^7.23.9"
-    "@babel/parser": "npm:^7.23.9"
-    "@babel/template": "npm:^7.23.9"
-    "@babel/traverse": "npm:^7.23.9"
-    "@babel/types": "npm:^7.23.9"
+    "@babel/helpers": "npm:^7.24.0"
+    "@babel/parser": "npm:^7.24.0"
+    "@babel/template": "npm:^7.24.0"
+    "@babel/traverse": "npm:^7.24.0"
+    "@babel/types": "npm:^7.24.0"
     convert-source-map: "npm:^2.0.0"
     debug: "npm:^4.1.0"
     gensync: "npm:^1.0.0-beta.2"
     json5: "npm:^2.2.3"
     semver: "npm:^6.3.1"
-  checksum: 268cdbb86bef1b8ea5b1300f2f325e56a1740a5051360cb228ffeaa0f80282b6674f3a2b4d6466adb0691183759b88d4c37b4a4f77232c84a49ed771c84cdc27
+  checksum: 1e22215cc89e061e0cbfed72f265ad24d363f3e9b24b51e9c4cf3ccb9222260a29a1c1e62edb439cb7e2229a3fce924edd43300500416613236c13fc8d62a947
   languageName: node
   linkType: hard
 
@@ -978,14 +978,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/helpers@npm:^7.23.9":
-  version: 7.23.9
-  resolution: "@babel/helpers@npm:7.23.9"
+"@babel/helpers@npm:^7.24.0":
+  version: 7.24.0
+  resolution: "@babel/helpers@npm:7.24.0"
   dependencies:
-    "@babel/template": "npm:^7.23.9"
-    "@babel/traverse": "npm:^7.23.9"
-    "@babel/types": "npm:^7.23.9"
-  checksum: dd56daac8bbd7ed174bb00fd185926fd449e591d9a00edaceb7ac6edbdd7a8db57e2cb365b4fafda382201752789ced2f7ae010f667eab0f198a4571cda4d2c5
+    "@babel/template": "npm:^7.24.0"
+    "@babel/traverse": "npm:^7.24.0"
+    "@babel/types": "npm:^7.24.0"
+  checksum: cc82012161b30185c2698da359c7311cf019f0932f8fcb805e985fec9e0053c354f0534dc9961f3170eee579df6724eecd34b0f5ffaa155cdd456af59fbff86e
   languageName: node
   linkType: hard
 
@@ -1049,12 +1049,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/parser@npm:^7.23.9":
-  version: 7.23.9
-  resolution: "@babel/parser@npm:7.23.9"
+"@babel/parser@npm:^7.24.0":
+  version: 7.24.0
+  resolution: "@babel/parser@npm:7.24.0"
   bin:
     parser: ./bin/babel-parser.js
-  checksum: 727a7a807100f6a26df859e2f009c4ddbd0d3363287b45daa50bd082ccd0d431d0c4d0e610a91f806e04a1918726cd0f5a0592c9b902a815337feed12e1cafd9
+  checksum: 3e5ebb903a6f71629a9d0226743e37fe3d961e79911d2698b243637f66c4df7e3e0a42c07838bc0e7cc9fcd585d9be8f4134a145b9459ee4a459420fb0d1360b
   languageName: node
   linkType: hard
 
@@ -2995,14 +2995,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/template@npm:^7.23.9":
-  version: 7.23.9
-  resolution: "@babel/template@npm:7.23.9"
+"@babel/template@npm:^7.24.0":
+  version: 7.24.0
+  resolution: "@babel/template@npm:7.24.0"
   dependencies:
     "@babel/code-frame": "npm:^7.23.5"
-    "@babel/parser": "npm:^7.23.9"
-    "@babel/types": "npm:^7.23.9"
-  checksum: 1b011ba9354dc2e646561d54b6862e0df51760e6179faadd79be05825b0b6da04911e4e192df943f1766748da3037fd8493615b38707f7cadb0cf0c96601c170
+    "@babel/parser": "npm:^7.24.0"
+    "@babel/types": "npm:^7.24.0"
+  checksum: 8c538338c7de8fac8ada691a5a812bdcbd60bd4a4eb5adae2cc9ee19773e8fb1a724312a00af9e1ce49056ffd3c3475e7287b5668cf6360bfb3f8ac827a06ffe
   languageName: node
   linkType: hard
 
@@ -3060,9 +3060,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/traverse@npm:^7.23.9":
-  version: 7.23.9
-  resolution: "@babel/traverse@npm:7.23.9"
+"@babel/traverse@npm:^7.24.0":
+  version: 7.24.0
+  resolution: "@babel/traverse@npm:7.24.0"
   dependencies:
     "@babel/code-frame": "npm:^7.23.5"
     "@babel/generator": "npm:^7.23.6"
@@ -3070,11 +3070,11 @@ __metadata:
     "@babel/helper-function-name": "npm:^7.23.0"
     "@babel/helper-hoist-variables": "npm:^7.22.5"
     "@babel/helper-split-export-declaration": "npm:^7.22.6"
-    "@babel/parser": "npm:^7.23.9"
-    "@babel/types": "npm:^7.23.9"
+    "@babel/parser": "npm:^7.24.0"
+    "@babel/types": "npm:^7.24.0"
     debug: "npm:^4.3.1"
     globals: "npm:^11.1.0"
-  checksum: e2bb845f7f229feb7c338f7e150f5f1abc5395dcd3a6a47f63a25242ec3ec6b165f04a6df7d4849468547faee34eb3cf52487eb0bd867a7d3c42fec2a648266f
+  checksum: 5cc482248ebb79adcbcf021aab4e0e95bafe2a1736ee4b46abe6f88b59848ad73e15e219db8f06c9a33a14c64257e5b47e53876601e998a8c596accb1b7f4996
   languageName: node
   linkType: hard
 
@@ -3111,14 +3111,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:^7.23.6, @babel/types@npm:^7.23.9":
-  version: 7.23.9
-  resolution: "@babel/types@npm:7.23.9"
+"@babel/types@npm:^7.23.6, @babel/types@npm:^7.24.0":
+  version: 7.24.0
+  resolution: "@babel/types@npm:7.24.0"
   dependencies:
     "@babel/helper-string-parser": "npm:^7.23.4"
     "@babel/helper-validator-identifier": "npm:^7.22.20"
     to-fast-properties: "npm:^2.0.0"
-  checksum: bed9634e5fd0f9dc63c84cfa83316c4cb617192db9fedfea464fca743affe93736d7bf2ebf418ee8358751a9d388e303af87a0c050cb5d87d5870c1b0154f6cb
+  checksum: a0b4875ce2e132f9daff0d5b27c7f4c4fcc97f2b084bdc5834e92c9d32592778489029e65d99d00c406da612d87b72d7a236c0afccaa1435c028d0c94c9b6da4
   languageName: node
   linkType: hard
 
@@ -4256,9 +4256,9 @@ __metadata:
   linkType: hard
 
 "@fastify/busboy@npm:^2.0.0":
-  version: 2.1.0
-  resolution: "@fastify/busboy@npm:2.1.0"
-  checksum: f22c1e5c52dc350ddf9ba8be9f87b48d3ea5af00a37fd0a0d1e3e4b37f94d96763e514c68a350c7f570260fdd2f08b55ee090cdd879f92a03249eb0e3fd19113
+  version: 2.1.1
+  resolution: "@fastify/busboy@npm:2.1.1"
+  checksum: 2bb8a7eca8289ed14c9eb15239bc1019797454624e769b39a0b90ed204d032403adc0f8ed0d2aef8a18c772205fa7808cf5a1b91f21c7bfc7b6032150b1062c5
   languageName: node
   linkType: hard
 
@@ -5665,13 +5665,33 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/present@npm:0.2.1, @sd-jwt/present@npm:^0.2.0":
+"@sd-jwt/decode@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@sd-jwt/decode@npm:0.3.0"
+  dependencies:
+    "@sd-jwt/types": "npm:0.3.0"
+    "@sd-jwt/utils": "npm:0.3.0"
+  checksum: 768233952ae6a2853dc5a0ec5d9fa3d30d49221cf003c1df9c83e263b064fcf5e13fa7f7009fe1f62d6e464ab22733f4ee2f2574464dc538b4c56e31a3b32ec4
+  languageName: node
+  linkType: hard
+
+"@sd-jwt/present@npm:0.2.1":
   version: 0.2.1
   resolution: "@sd-jwt/present@npm:0.2.1"
   dependencies:
     "@sd-jwt/types": "npm:0.2.1"
     "@sd-jwt/utils": "npm:0.2.1"
   checksum: 17979fa527d22b0748929c74a7cb9de4e85fed7668df4d8a29342b29d9474c46308f5a54d88331fabaf86cd1017cd4b01743cb0bd8e95d7cc8dbee4209769769
+  languageName: node
+  linkType: hard
+
+"@sd-jwt/present@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@sd-jwt/present@npm:0.3.0"
+  dependencies:
+    "@sd-jwt/types": "npm:0.3.0"
+    "@sd-jwt/utils": "npm:0.3.0"
+  checksum: 7076e9e1e106038051c395c2676c44f33be42d67433c4bc6af1c9220640f7214723f3e9ce5e2f4a4d3abbc6b23dc60a0466335622ba53c921f52ec148e9fcf7b
   languageName: node
   linkType: hard
 
@@ -5682,13 +5702,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/utils@npm:0.2.1, @sd-jwt/utils@npm:^0.2.0":
+"@sd-jwt/types@npm:0.3.0":
+  version: 0.3.0
+  resolution: "@sd-jwt/types@npm:0.3.0"
+  checksum: 2cb8fa3e24d310b247f7cd7b67fd92c11a6ff8bc5e16406a2bffff1ee8ca459dcada003748f29133b4a40b9af4b9e7f87296bb308888ac12107ec8b83a89b049
+  languageName: node
+  linkType: hard
+
+"@sd-jwt/utils@npm:0.2.1":
   version: 0.2.1
   resolution: "@sd-jwt/utils@npm:0.2.1"
   dependencies:
     "@sd-jwt/types": "npm:0.2.1"
     buffer: "npm:*"
   checksum: 777ecc3587071f187a2e93b27b337e13b24c29c4d532119763fd5beeeee3bc47ae3d519765662424666006bf6e72a0da842d7d60ade060bcac2c5770f045f7a3
+  languageName: node
+  linkType: hard
+
+"@sd-jwt/utils@npm:0.3.0, @sd-jwt/utils@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "@sd-jwt/utils@npm:0.3.0"
+  dependencies:
+    "@sd-jwt/types": "npm:0.3.0"
+    buffer: "npm:*"
+  checksum: c9411a2d202553584ab2d343cdc8af94ea4cd44f0110e7bfcb95ae31a0736739fb9074d962ca08032fa40ca7d1a164927029a26731b072a6cdc82a6fcd8c8e78
   languageName: node
   linkType: hard
 
@@ -5754,29 +5791,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sphereon/pex-models@npm:^2.2.0":
-  version: 2.2.0
-  resolution: "@sphereon/pex-models@npm:2.2.0"
-  checksum: a5e33fba940fe668a81a640ae71f86f9b5621c12ac0b020791f7502880483a295906544f5f5c6839418886407c49118fcdfe623d0667d94b857ff33674d50f66
+"@sphereon/pex-models@npm:^2.2.0, @sphereon/pex-models@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "@sphereon/pex-models@npm:2.2.2"
+  checksum: 9245c61c1968c133ac721f087623576225f7ab4760eccde7a56a5c741b1919db380f03a471a4200886a5b1367c61879a157e0bf52159561a574ee08375398bc8
   languageName: node
   linkType: hard
 
 "@sphereon/pex@npm:^3.2.0":
-  version: 3.2.0
-  resolution: "@sphereon/pex@npm:3.2.0"
+  version: 3.3.0
+  resolution: "@sphereon/pex@npm:3.3.0"
   dependencies:
     "@astronautlabs/jsonpath": "npm:^1.1.2"
-    "@sd-jwt/decode": "npm:^0.2.0"
-    "@sd-jwt/present": "npm:^0.2.0"
-    "@sd-jwt/utils": "npm:^0.2.0"
-    "@sphereon/pex-models": "npm:^2.2.0"
+    "@sd-jwt/decode": "npm:^0.3.0"
+    "@sd-jwt/present": "npm:^0.3.0"
+    "@sd-jwt/utils": "npm:^0.3.0"
+    "@sphereon/pex-models": "npm:^2.2.2"
     "@sphereon/ssi-types": "npm:0.18.1"
     ajv: "npm:^8.12.0"
     ajv-formats: "npm:^2.1.1"
     jwt-decode: "npm:^3.1.2"
     nanoid: "npm:^3.3.7"
     string.prototype.matchall: "npm:^4.0.10"
-  checksum: b53fbc918e08530a641c1e73379bf54213c528c141220b45d481ae09c1d3ffce0b0a54f9f1a1332c54f934b0e46c197f14faf283fbc6a897fb9160d08c6af483
+  checksum: 313500e4d3c6f0aaedbb62b5e91facfd76bcdd8e6820119d5d8e90fb76de727716e9d80ec4343355df71674aa93932b69e5fcfb2b03ef014fe0bd5d4f240add9
   languageName: node
   linkType: hard
 
@@ -6800,6 +6837,16 @@ __metadata:
   version: 1.2.2
   resolution: "@types/minimist@npm:1.2.2"
   checksum: b8da83c66eb4aac0440e64674b19564d9d86c80ae273144db9681e5eeff66f238ade9515f5006ffbfa955ceff8b89ad2bd8ec577d7caee74ba101431fb07045d
+  languageName: node
+  linkType: hard
+
+"@types/node-fetch@npm:2.6.2":
+  version: 2.6.2
+  resolution: "@types/node-fetch@npm:2.6.2"
+  dependencies:
+    "@types/node": "npm:*"
+    form-data: "npm:^3.0.0"
+  checksum: 8f964e8372f6221e99c9421985bc22b7786db665b886e3db0d17a985faf617c069f49b71c02d93a6585809bd692063f483068abc86a1291cb9762fada4823c21
   languageName: node
   linkType: hard
 
@@ -9051,15 +9098,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "bc-wallet-mobile-app@workspace:app"
   dependencies:
-    "@aries-framework/anoncreds": "npm:0.4.0"
-    "@aries-framework/anoncreds-rs": "npm:0.4.0"
-    "@aries-framework/askar": "npm:0.4.0"
-    "@aries-framework/core": "npm:0.4.0"
-    "@aries-framework/indy-sdk-to-askar-migration": "npm:0.4.0"
-    "@aries-framework/indy-vdr": "npm:0.4.0"
+    "@aries-framework/anoncreds": "npm:0.4.2"
+    "@aries-framework/anoncreds-rs": "npm:0.4.2"
+    "@aries-framework/askar": "npm:0.4.2"
+    "@aries-framework/core": "npm:0.4.2"
+    "@aries-framework/indy-sdk-to-askar-migration": "npm:0.4.2"
+    "@aries-framework/indy-vdr": "npm:0.4.2"
     "@aries-framework/push-notifications": "npm:0.5.0"
     "@aries-framework/react-hooks": "npm:0.4.2"
-    "@aries-framework/react-native": "npm:0.4.0"
+    "@aries-framework/react-native": "npm:0.4.2"
     "@babel/core": "npm:7.22.1"
     "@babel/preset-env": "npm:7.20.2"
     "@babel/runtime": "npm:7.22.15"
@@ -13340,6 +13387,17 @@ __metadata:
     tapable: "npm:^1.0.0"
     worker-rpc: "npm:^0.1.0"
   checksum: 0740bfcb70a1e3cc7a4f46394a3758cde58380f4894e3dfa6123b9afaf7c009f77975f4840063b67b169765ab8e665a6aec92c0e9db03dce444a537d45a63116
+  languageName: node
+  linkType: hard
+
+"form-data@npm:^3.0.0":
+  version: 3.0.1
+  resolution: "form-data@npm:3.0.1"
+  dependencies:
+    asynckit: "npm:^0.4.0"
+    combined-stream: "npm:^1.0.8"
+    mime-types: "npm:^2.1.12"
+  checksum: 944b40ff63b9cb1ca7a97e70f72104c548e0b0263e3e817e49919015a0d687453086259b93005389896dbffd3777cccea2e67c51f4e827590e5979b14ff91bf7
   languageName: node
   linkType: hard
 
@@ -23031,7 +23089,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsyringe@npm:^4.6.0, tsyringe@npm:^4.7.0, tsyringe@npm:^4.8.0":
+"tsyringe@npm:^4.6.0, tsyringe@npm:^4.8.0":
   version: 4.8.0
   resolution: "tsyringe@npm:4.8.0"
   dependencies:
