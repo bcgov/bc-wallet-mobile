@@ -135,7 +135,7 @@ export default function PersonCredential() {
                 accessibilityLabel={t('PersonCredential.InstallApp')}
                 testID={testIdWithKey('InstallApp')}
                 title={t('PersonCredential.InstallApp')}
-              ></Button>
+              />
               <TouchableOpacity
                 onPress={() => setAppInstalled(true)}
                 accessibilityLabel={t('PersonCredential.AppOnOtherDevice')}
@@ -167,6 +167,7 @@ export default function PersonCredential() {
           {appInstalled ? (
             <Button
               buttonType={ButtonType.Primary}
+              disabled={workflowInProgress}
               testID={testIdWithKey('StartProcess')}
               accessibilityLabel={t('PersonCredential.StartProcess')}
               title={t('PersonCredential.StartProcess')}
