@@ -2,9 +2,6 @@ import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build
 import {
   Agent,
   BaseEvent,
-  BasicMessageEventTypes,
-  BasicMessageRecord,
-  BasicMessageRole,
   CredentialState,
   CredentialEventTypes,
   CredentialExchangeRecord,
@@ -21,7 +18,6 @@ import {
   googleAttestation,
   isPlayIntegrityAvailable,
 } from '@hyperledger/aries-react-native-attestation'
-import { Buffer } from 'buffer'
 import React, { createContext, useContext, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Platform } from 'react-native'
@@ -31,13 +27,7 @@ import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'rea
 import { Subscription } from 'rxjs'
 
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
-
-enum Action {
-  RequestNonce = 'request_nonce',
-  RequestAttestation = 'request_attestation',
-  ReportFailure = 'report_failure',
-  ChallengeResponse = 'challenge_response',
-}
+import { DrpcRequest } from '@credo-ts/drpc'
 
 enum ErrorCodes {
   AttestationBadInvitation = 2027,
@@ -46,9 +36,6 @@ enum ErrorCodes {
 }
 
 type InfrastructureMessage = {
-  version: 1
-  type: 'attestation'
-  action: Action
   platform?: 'apple' | 'google'
   os_version?: string
   app_version?: string
@@ -119,15 +106,13 @@ const getAvailableAttestationCredentials = async (agent: BifoldAgent) => {
   })
 }
 
-const requestNonce = async (agent: BifoldAgent, connectionRecord: ConnectionRecord) => {
-  const nonceRequestMessage: InfrastructureMessage = {
-    version: 1,
-    type: 'attestation',
-    action: Action.RequestNonce,
+const requestNonceDrpc = async (agent: Agent, connectionRecord: ConnectionRecord) => {
+  const nonceRequestMessage: DrpcRequest = {
+    jsonrpc: '2.0',
+    method: 'request_nonce',
+    id: Math.floor(Math.random() * 10000),
   }
-
-  const responseMessageContent = Buffer.from(JSON.stringify(nonceRequestMessage)).toString('base64')
-  await agent.basicMessages.sendMessage(connectionRecord.id, responseMessageContent)
+  await agent.modules.drpc.sendRequest(connectionRecord.id, nonceRequestMessage)
 }
 
 export interface AttestationX {
@@ -146,121 +131,49 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
   const [offerSubscription, setOfferSubscription] = useState<Subscription>()
   const [loading, setLoading] = useState(false)
 
-  const isInfrastructureMessage = (record: BasicMessageRecord): boolean => {
-    if (record.content) {
-      try {
-        const decoded = Buffer.from(record.content, 'base64').toString('utf-8')
-        const encoded = Buffer.from(decoded).toString('base64')
-
-        return encoded === record.content
-      } catch (error) {
-        return false
+  const handleInfrastructureMessageDrpc = async (message: { params: { nonce: string } }): Promise<ChallengeResponseInfrastructureMessage | null> => {
+    try {
+      const common: Partial<ChallengeResponseInfrastructureMessage> = {
+        app_version: `${getVersion()}-${getBuildNumber()}`,
+        os_version: `${getSystemName()} ${getSystemVersion()}`,
       }
-    }
+      const infraMessage = { nonce: message.params.nonce, }
 
-    return false
-  }
+      if (Platform.OS === 'ios') {
+        const shouldCacheKey = false
+        const keyId = await generateKey(shouldCacheKey)
+        const attestationAsBuffer = await appleAttestation(
+          keyId,
+          (infraMessage as RequestIssuanceInfrastructureMessage).nonce
+        )
+        const attestationResponse = {
+          ...common,
+          platform: 'apple',
+          key_id: keyId,
+          attestation_object: attestationAsBuffer.toString('base64'),
+        } as ChallengeResponseInfrastructureMessage
 
-  const handleInfrastructureMessage = async (
-    message: InfrastructureMessage
-  ): Promise<ChallengeResponseInfrastructureMessage | null> => {
-    switch (message.action) {
-      case Action.RequestAttestation:
-        try {
-          const common: Partial<ChallengeResponseInfrastructureMessage> = {
-            type: 'attestation',
-            version: 1,
-            action: Action.ChallengeResponse,
-            app_version: `${getVersion()}-${getBuildNumber()}`,
-            os_version: `${getSystemName()} ${getSystemVersion()}`,
-          }
-
-          if (Platform.OS === 'ios') {
-            const shouldCacheKey = false
-            const keyId = await generateKey(shouldCacheKey)
-            const attestationAsBuffer = await appleAttestation(
-              keyId,
-              (message as RequestIssuanceInfrastructureMessage).nonce
-            )
-            const attestationResponse = {
-              ...common,
-              platform: 'apple',
-              key_id: keyId,
-              attestation_object: attestationAsBuffer.toString('base64'),
-            } as ChallengeResponseInfrastructureMessage
-
-            return attestationResponse
-          } else if (Platform.OS === 'android') {
-            const available = await isPlayIntegrityAvailable()
-            if (!available) {
-              return null
-            }
-            const tokenString = await googleAttestation((message as RequestIssuanceInfrastructureMessage).nonce)
-            const attestationResponse = {
-              ...common,
-              platform: 'google',
-              attestation_object: tokenString,
-            } as ChallengeResponseInfrastructureMessage
-
-            return attestationResponse
-          } else {
-            setLoading(false)
-            return null
-          }
-        } catch (error: unknown) {
-          setLoading(false)
+        return attestationResponse
+      } else if (Platform.OS === 'android') {
+        const available = await isPlayIntegrityAvailable()
+        if (!available) {
           return null
         }
+        const tokenString = await googleAttestation((infraMessage as RequestIssuanceInfrastructureMessage).nonce)
+        const attestationResponse = {
+          ...common,
+          platform: 'google',
+          attestation_object: tokenString,
+        } as ChallengeResponseInfrastructureMessage
 
-      case Action.ReportFailure:
+        return attestationResponse
+      } else {
         setLoading(false)
         return null
-
-      default:
-        return null
-    }
-  }
-
-  const decodeInfrastructureMessage = (record: BasicMessageRecord): InfrastructureMessage | null => {
-    try {
-      const decoded = Buffer.from(record.content, 'base64').toString('utf-8')
-      const message = JSON.parse(decoded)
-
-      return message
-    } catch (error) {
-      return null
-    }
-  }
-
-  const handleMessages = async (message: BasicMessageRecord, agent: Agent): Promise<void> => {
-    try {
-      if (message.role === BasicMessageRole.Sender) {
-        // We don't want to process or keep messages from
-        // ourselves
-        await agent?.basicMessages.deleteById(message.id)
-        return
       }
-
-      if (!isInfrastructureMessage(message)) {
-        // We don't care about non-infrastructure messages
-        return
-      }
-
-      const imessage = decodeInfrastructureMessage(message)
-      if (!imessage) {
-        return
-      }
-
-      const result = await handleInfrastructureMessage(imessage)
-
-      if (result) {
-        const responseMessageContent = Buffer.from(JSON.stringify(result)).toString('base64')
-        await agent?.basicMessages.sendMessage(message.connectionId, responseMessageContent)
-      }
-
-      await agent?.basicMessages.deleteById(message.id)
     } catch (error: unknown) {
-      /* noop */
+      setLoading(false)
+      return null
     }
   }
 
@@ -273,7 +186,6 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
 
       // officially start attestation process here
       setLoading(true)
-
       // 1. Is the proof requesting an attestation credential
       if (!(await isProofRequestingAttestation(proof, agent))) {
         setLoading(false)
@@ -307,7 +219,6 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       await removeExistingInvitationIfRequired(agent, invite.id)
 
       const { connectionRecord } = await agent.oob.receiveInvitation(invite)
-
       if (!connectionRecord) {
         setLoading(false)
         const err = new BifoldError(
@@ -324,7 +235,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
 
       // this step will fail if there is more than one active connection record between a given wallet and
       // the traction instance which is why we need to removeExistingInvitationIfRequired above
-      await requestNonce(agent, connectedRecord)
+      await requestNonceDrpc(agent, connectedRecord)
     } catch (error: unknown) {
       setLoading(false)
       const err = new BifoldError(
@@ -363,15 +274,6 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
     }
   }
 
-  const handleMessageWithParam = (event: BaseEvent) => {
-    if (!agent) {
-      return
-    }
-
-    const { basicMessageRecord } = event.payload
-    handleMessages(basicMessageRecord as BasicMessageRecord, agent)
-  }
-
   const handleProofWithParam = (event: BaseEvent) => {
     if (!agent) {
       return
@@ -395,13 +297,6 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       return
     }
 
-    if (!messageSubscription) {
-      const messageSub = agent.events
-        .observable(BasicMessageEventTypes.BasicMessageStateChanged)
-        .subscribe(handleMessageWithParam)
-      setMessageSubscription(messageSub)
-    }
-
     if (!proofSubscription) {
       const proofSub = agent.events.observable(ProofEventTypes.ProofStateChanged).subscribe(handleProofWithParam)
       setProofSubscription(proofSub)
@@ -412,6 +307,14 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
         .observable(CredentialEventTypes.CredentialStateChanged)
         .subscribe(handleOfferWithParam)
       setOfferSubscription(offerSub)
+    }
+
+    while (true) {
+      const { request, sendResponse } = await agent.modules.drpc.recvRequest()
+      if (request.method === "request_attestation") {
+        const infraMsg = await handleInfrastructureMessageDrpc(request)
+        sendResponse({jsonrpc: '2.0', result: infraMsg, id: request.id})
+      }
     }
   }
 
