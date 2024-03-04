@@ -5665,33 +5665,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/decode@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@sd-jwt/decode@npm:0.3.0"
-  dependencies:
-    "@sd-jwt/types": "npm:0.3.0"
-    "@sd-jwt/utils": "npm:0.3.0"
-  checksum: 768233952ae6a2853dc5a0ec5d9fa3d30d49221cf003c1df9c83e263b064fcf5e13fa7f7009fe1f62d6e464ab22733f4ee2f2574464dc538b4c56e31a3b32ec4
-  languageName: node
-  linkType: hard
-
-"@sd-jwt/present@npm:0.2.1":
+"@sd-jwt/present@npm:0.2.1, @sd-jwt/present@npm:^0.2.0":
   version: 0.2.1
   resolution: "@sd-jwt/present@npm:0.2.1"
   dependencies:
     "@sd-jwt/types": "npm:0.2.1"
     "@sd-jwt/utils": "npm:0.2.1"
   checksum: 17979fa527d22b0748929c74a7cb9de4e85fed7668df4d8a29342b29d9474c46308f5a54d88331fabaf86cd1017cd4b01743cb0bd8e95d7cc8dbee4209769769
-  languageName: node
-  linkType: hard
-
-"@sd-jwt/present@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@sd-jwt/present@npm:0.3.0"
-  dependencies:
-    "@sd-jwt/types": "npm:0.3.0"
-    "@sd-jwt/utils": "npm:0.3.0"
-  checksum: 7076e9e1e106038051c395c2676c44f33be42d67433c4bc6af1c9220640f7214723f3e9ce5e2f4a4d3abbc6b23dc60a0466335622ba53c921f52ec148e9fcf7b
   languageName: node
   linkType: hard
 
@@ -5702,30 +5682,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/types@npm:0.3.0":
-  version: 0.3.0
-  resolution: "@sd-jwt/types@npm:0.3.0"
-  checksum: 2cb8fa3e24d310b247f7cd7b67fd92c11a6ff8bc5e16406a2bffff1ee8ca459dcada003748f29133b4a40b9af4b9e7f87296bb308888ac12107ec8b83a89b049
-  languageName: node
-  linkType: hard
-
-"@sd-jwt/utils@npm:0.2.1":
+"@sd-jwt/utils@npm:0.2.1, @sd-jwt/utils@npm:^0.2.0":
   version: 0.2.1
   resolution: "@sd-jwt/utils@npm:0.2.1"
   dependencies:
     "@sd-jwt/types": "npm:0.2.1"
     buffer: "npm:*"
   checksum: 777ecc3587071f187a2e93b27b337e13b24c29c4d532119763fd5beeeee3bc47ae3d519765662424666006bf6e72a0da842d7d60ade060bcac2c5770f045f7a3
-  languageName: node
-  linkType: hard
-
-"@sd-jwt/utils@npm:0.3.0, @sd-jwt/utils@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@sd-jwt/utils@npm:0.3.0"
-  dependencies:
-    "@sd-jwt/types": "npm:0.3.0"
-    buffer: "npm:*"
-  checksum: c9411a2d202553584ab2d343cdc8af94ea4cd44f0110e7bfcb95ae31a0736739fb9074d962ca08032fa40ca7d1a164927029a26731b072a6cdc82a6fcd8c8e78
   languageName: node
   linkType: hard
 
@@ -5791,29 +5754,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sphereon/pex-models@npm:^2.2.0, @sphereon/pex-models@npm:^2.2.2":
+"@sphereon/pex-models@npm:^2.2.0":
   version: 2.2.2
   resolution: "@sphereon/pex-models@npm:2.2.2"
   checksum: 9245c61c1968c133ac721f087623576225f7ab4760eccde7a56a5c741b1919db380f03a471a4200886a5b1367c61879a157e0bf52159561a574ee08375398bc8
   languageName: node
   linkType: hard
 
-"@sphereon/pex@npm:^3.2.0":
-  version: 3.3.0
-  resolution: "@sphereon/pex@npm:3.3.0"
+"@sphereon/pex@npm:3.2.1-unstable.7":
+  version: 3.2.1-unstable.7
+  resolution: "@sphereon/pex@npm:3.2.1-unstable.7"
   dependencies:
     "@astronautlabs/jsonpath": "npm:^1.1.2"
-    "@sd-jwt/decode": "npm:^0.3.0"
-    "@sd-jwt/present": "npm:^0.3.0"
-    "@sd-jwt/utils": "npm:^0.3.0"
-    "@sphereon/pex-models": "npm:^2.2.2"
+    "@sd-jwt/decode": "npm:^0.2.0"
+    "@sd-jwt/present": "npm:^0.2.0"
+    "@sd-jwt/utils": "npm:^0.2.0"
+    "@sphereon/pex-models": "npm:^2.2.0"
     "@sphereon/ssi-types": "npm:0.18.1"
     ajv: "npm:^8.12.0"
     ajv-formats: "npm:^2.1.1"
     jwt-decode: "npm:^3.1.2"
     nanoid: "npm:^3.3.7"
     string.prototype.matchall: "npm:^4.0.10"
-  checksum: 313500e4d3c6f0aaedbb62b5e91facfd76bcdd8e6820119d5d8e90fb76de727716e9d80ec4343355df71674aa93932b69e5fcfb2b03ef014fe0bd5d4f240add9
+  checksum: 56aa61ab821c23b59e509db2199f7a940368a2592b1b54eae669a048f29b9afdfc24d7022e5fb332d114a6e8c991f433e31d9ecb2cfbef01bda5722064f6d09a
   languageName: node
   linkType: hard
 
