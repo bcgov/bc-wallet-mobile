@@ -110,7 +110,7 @@ const requestNonceDrpc = async (agent: Agent, connectionRecord: ConnectionRecord
   const nonceRequestMessage: DrpcRequest = {
     jsonrpc: '2.0',
     method: 'request_nonce',
-    id: Math.floor(Math.random() * 10000),
+    id: null,
   }
   await agent.modules.drpc.sendRequest(connectionRecord.id, nonceRequestMessage)
 }
