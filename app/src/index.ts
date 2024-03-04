@@ -77,6 +77,7 @@ const configuration: ConfigurationContext = {
   disableOnboardingSkip: true,
   useCustomNotifications: useNotifications,
   useAttestation: useAttestation,
+  enableUseMultUseInvitation: true,
   whereToUseWalletUrl: 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet#where',
   getCredentialHelpDictionary: [
     {
