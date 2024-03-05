@@ -30,7 +30,7 @@ runs:
         job_name: ${{ inputs.job_title }}
         mention: "jason.leach @cvarjao @wade.king @bryce.mcmath"
         mention_if: always
-        channel: "#bc-digital-wallet-core-team"
+        channel: "#ditp-digital-wallet-core-team"
         commit: true
         url: ${{ inputs.webhook_url }}
         token: ${{ inputs.github_token }}

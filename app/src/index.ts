@@ -25,6 +25,7 @@ import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
 import PersonCredential from './screens/PersonCredential'
 import Splash from './screens/Splash'
+import { useAttestation } from './services/attestation'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
 
@@ -51,6 +52,7 @@ const configuration: ConfigurationContext = {
   OCABundleResolver: new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
     brandingOverlayType: BrandingOverlayType.Branding10,
   }),
+  proofTemplateBaseUrl: Config.PROOF_TEMPLATE_URL,
   record: Record,
   PINSecurity: { rules: PINValidationRules, displayHelper: true },
   indyLedgers: selectedLedgers,
@@ -71,9 +73,10 @@ const configuration: ConfigurationContext = {
     description: 'PersonCredentialNotification.Description',
     buttonTitle: 'PersonCredentialNotification.ButtonTitle',
   },
-  useCustomNotifications: useNotifications,
   enableTours: true,
   supportedLanguages: Object.keys(localization) as Locales[],
+  useAttestation: useAttestation,
+  useCustomNotifications: useNotifications,
 }
 
 export default { theme, localization, configuration }

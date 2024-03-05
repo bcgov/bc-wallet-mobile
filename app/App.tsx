@@ -20,6 +20,8 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StatusBar } from 'react-native'
+import { isTablet } from 'react-native-device-info'
+import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
@@ -41,6 +43,10 @@ const App = () => {
   }, [])
   const { t } = useTranslation()
   const { navigate } = useNavigation()
+
+  if (!isTablet()) {
+    Orientation.lockToPortrait()
+  }
 
   const settings = [
     {
@@ -94,7 +100,7 @@ const App = () => {
                     credentialsTourSteps={credentialsTourSteps}
                     credentialOfferTourSteps={credentialOfferTourSteps}
                     proofRequestTourSteps={proofRequestTourSteps}
-                    overlayColor={'gray'}
+                    overlayColor={'black'}
                     overlayOpacity={0.7}
                   >
                     <RootStack />

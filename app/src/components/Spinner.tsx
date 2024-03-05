@@ -4,7 +4,7 @@ import { View, StyleSheet, Animated } from 'react-native'
 
 import ActivityIndicator from '../assets/img/activity-indicator-circle.svg'
 
-const Spinner: React.FC = () => {
+const Spinner = () => {
   const rotationAnim = useRef(new Animated.Value(0)).current
   const timing: Animated.TimingAnimationConfig = {
     toValue: 1,

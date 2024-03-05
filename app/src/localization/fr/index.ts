@@ -212,6 +212,12 @@ const translation = {
     GetCredential: "Obtenez votre attestation d'identité",
     Decline: "L'obtenir plus tard",
     PageTitle: "Attestation d'ìdentité",
+    ServicesCardInstalled: "Étape 1: L'application Portefeuille Québec est installée",
+    InstallServicesCard: "Étape 2: Installez l'application Portefeuille Québec",
+    InstallApp: "Installez l'application",
+    AppOnOtherDevice: "Je l'ai dans un autre appareil",
+    CreatePersonCred: "Étape 2: Créez votre attestation d'identité numérique gouvernemantale",
+    StartProcess: 'Start the process (FR)',
   },
   StatusMessages: {
     InitAgent: "Initialisation de l'agent ...",
@@ -758,6 +764,7 @@ const translation = {
     PreventAutoLock: 'Empêcher le verrouillage automatique',
     TogglePreventAutoLock: 'Basculer le verrouillage automatique',
     ScanMyQR: 'Scanner mon code QR',
+    PlayWithBCWallet: 'Jouer avec le Portefeuille Québec',
   },
   Tour: {
     GuideTitle: 'Bienvenue à Aries Bifold',
@@ -929,6 +936,10 @@ const translation = {
     ProofRequestForFullNameDescription: "Demander le nom complet de l'utilisateur",
     ProofRequestForFullNameAndAgeName: "Demande du nom complet et preuve d'âge (18+)",
     ProofRequestForFullNameAndAgeDescription: "Demander le nom complet et la preuve que l'utilisateur a 18 ans ou plus",
+  },
+  AddCredentialSlider: {
+    Choose: 'Choisir',
+    ScanQRCode: 'Lire un code QR',
   },
 }
 

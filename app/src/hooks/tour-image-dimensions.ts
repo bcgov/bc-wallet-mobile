@@ -1,9 +1,12 @@
 import { useWindowDimensions } from 'react-native'
 
 const useTourImageDimensions = () => {
-  const { width: windowWidth } = useWindowDimensions() // NOSONAR
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions() // NOSONAR
   const totalHorizontalImagePadding = 90
-  const imageWidth = Math.floor(windowWidth - totalHorizontalImagePadding)
+  const portraitMode = windowHeight > windowWidth
+  const imageWidth = Math.floor(
+    portraitMode ? windowWidth - totalHorizontalImagePadding : windowHeight - totalHorizontalImagePadding
+  )
   const imageHeight = Math.floor(imageWidth * 0.66)
 
   return { imageWidth, imageHeight }

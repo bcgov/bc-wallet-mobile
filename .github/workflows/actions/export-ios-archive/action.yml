@@ -2,20 +2,6 @@ name: Export Signed iOS Archive
 description: Export a signed iOS Archive
 
 inputs:
-  certificate:
-    description: |
-      The Base64 encoded certificate to use for 
-      signing the archive. This should be in p12 format.
-    required: true
-  certificate_password:
-    description: |
-      The password for importing the certificate.
-    requred: true
-  provisioning_profile:
-    description: |
-      The Base64 encoded provisioning profile to use for 
-      signing the archive. This should be in mobileprovision format.
-    requred: true
   export_options:
     description: |
       The file containing the export options to use 
@@ -30,23 +16,6 @@ inputs:
 runs:
   using: composite
   steps:
-    # - uses: actions/checkout@v2
-
-    - name: Build Keychain
-      shell: bash
-      env:
-        CERTIFICATE: ${{ inputs.certificate }}
-      run: |
-        scripts/makekc.sh ${{ inputs.certificate_password }}
-
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-    - name: Create Provisioning Profile
-      shell: bash
-      env:
-        PROVISIONING_PROFILE: ${{ inputs.provisioning_profile }}
-      run: |
-        scripts/makepp.sh
-
     - name: Sign & Export
       shell: bash
       run: |

@@ -1,5 +1,5 @@
 import { useTheme } from '@hyperledger/aries-bifold-core'
-import React, { memo, useEffect, useRef, useState } from 'react'
+import React, { FunctionComponent, PropsWithChildren, memo, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem, AccessibilityInfo } from 'react-native'
 
@@ -24,16 +24,15 @@ interface TipItem {
   text: string
 }
 
-export interface TipProps {
+export interface TipProps extends PropsWithChildren {
   item: TipItem
   width: number
   header: string
 }
 
 // memo used here to optimize for FlatList rendering
-const Tip: React.FC<TipProps> = memo(({ item, width, header }) => {
+const Comp: FunctionComponent<TipProps> = ({ item, width, header }) => {
   const { TextTheme, ColorPallet } = useTheme()
-
   // not making use of useTheme here to optimize FlatList rendering
   const tipStyles = StyleSheet.create({
     tipContainer: {
@@ -78,9 +77,10 @@ const Tip: React.FC<TipProps> = memo(({ item, width, header }) => {
       </Text>
     </View>
   )
-})
+}
 
-const TipCarousel: React.FC = () => {
+const Tip = memo<TipProps>(Comp)
+const TipCarousel = () => {
   const flatListRef = useRef<FlatList>(null)
   const { width } = useWindowDimensions()
   const [currentPosition, setCurrentPosition] = useState(0)

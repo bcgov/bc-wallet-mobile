@@ -9,7 +9,7 @@ export interface EmptyListProps {
   message?: string
 }
 
-const EmptyList: React.FC<EmptyListProps> = ({ message }) => {
+const EmptyList = ({ message }: EmptyListProps) => {
   const { t } = useTranslation()
   const { ListItems } = useTheme()
   const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
@@ -37,6 +37,8 @@ const EmptyList: React.FC<EmptyListProps> = ({ message }) => {
       <View style={{ margin: 25 }}>
         <Button
           title={t('Credentials.AddFirstCredential')}
+          accessibilityLabel={t('Credentials.AddFirstCredential')}
+          testID={testIdWithKey('AddFirstCredential')}
           buttonType={ButtonType.Primary}
           onPress={addCredentialPress}
           disabled={addCredentialPressed}

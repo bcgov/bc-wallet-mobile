@@ -18,7 +18,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { AccordionItem } from '../components/react-native-accordion-list-view'
 
-const Terms: React.FC = () => {
+const Terms = () => {
   const [store, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()

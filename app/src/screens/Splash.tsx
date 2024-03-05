@@ -2,6 +2,7 @@ import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTranspo
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
 import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
+import { DrpcModule } from '@credo-ts/drpc'
 import {
   LocalStorageKeys,
   DispatchAction,
@@ -23,6 +24,7 @@ import {
   migrateToAskar,
   getAgentModules,
   createLinkSecretIfRequired,
+  loadLoginAttempt,
 } from '@hyperledger/aries-bifold-core'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
@@ -47,8 +49,13 @@ const onboardingComplete = (state: OnboardingState): boolean => {
   return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
 }
 
-const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean | undefined): Screens => {
+const resumeOnboardingAt = (
+  state: OnboardingState,
+  enableWalletNaming: boolean | undefined,
+  showPreface: boolean | undefined
+): Screens => {
   if (
+    (state.didSeePreface || !showPreface) &&
     state.didCompleteTutorial &&
     state.didAgreeToTerms &&
     state.didCreatePIN &&
@@ -59,6 +66,7 @@ const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean 
   }
 
   if (
+    (state.didSeePreface || !showPreface) &&
     state.didCompleteTutorial &&
     state.didAgreeToTerms &&
     state.didCreatePIN &&
@@ -68,15 +76,24 @@ const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean 
     return Screens.NameWallet
   }
 
-  if (state.didCompleteTutorial && state.didAgreeToTerms && !state.didCreatePIN) {
+  if (
+    (state.didSeePreface || !showPreface) &&
+    state.didCompleteTutorial &&
+    state.didAgreeToTerms &&
+    !state.didCreatePIN
+  ) {
     return Screens.CreatePIN
   }
 
-  if (state.didCompleteTutorial && !state.didAgreeToTerms) {
+  if ((state.didSeePreface || !showPreface) && state.didCompleteTutorial && !state.didAgreeToTerms) {
     return Screens.Terms
   }
 
-  return Screens.Onboarding
+  if (state.didSeePreface || !showPreface) {
+    return Screens.Onboarding
+  }
+
+  return Screens.Preface
 }
 
 /*
@@ -84,14 +101,14 @@ const resumeOnboardingAt = (state: OnboardingState, enableWalletNaming: boolean 
   iOS and Android launch screen to match the background color of
   of this view.
 */
-const Splash: React.FC = () => {
+const Splash = () => {
   const { agent, setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet } = useTheme()
-  const { indyLedgers } = useConfiguration()
+  const { indyLedgers, showPreface } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -188,9 +205,8 @@ const Splash: React.FC = () => {
   }
 
   const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
-    const attemptsData = await AsyncStorage.getItem(LocalStorageKeys.LoginAttempts)
-    if (attemptsData) {
-      const attempts = JSON.parse(attemptsData) as LoginAttemptState
+    const attempts = await loadLoginAttempt()
+    if (attempts) {
       dispatch({
         type: DispatchAction.ATTEMPT_UPDATED,
         payload: [attempts],
@@ -290,6 +306,11 @@ const Splash: React.FC = () => {
               dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
             }
 
+            // if they previously completed onboarding before preface was enabled, mark seen
+            if (!store.onboarding.didSeePreface) {
+              dispatch({ type: DispatchAction.DID_SEE_PREFACE })
+            }
+
             if (!attemptData?.lockoutDate) {
               navigation.dispatch(
                 CommonActions.reset({
@@ -314,7 +335,7 @@ const Splash: React.FC = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming) }],
+              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming, showPreface) }],
             })
           )
 
@@ -322,12 +343,21 @@ const Splash: React.FC = () => {
         }
 
         // We have no onboarding state, starting from step zero.
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: Screens.Onboarding }],
-          })
-        )
+        if (showPreface) {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: Screens.Preface }],
+            })
+          )
+        } else {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: Screens.Onboarding }],
+            })
+          )
+        }
       } catch (e: unknown) {
         setInitErrorType(InitErrorTypes.Onboarding)
         setInitError(e as Error)
@@ -373,6 +403,7 @@ const Splash: React.FC = () => {
             indyNetworks: ledgers,
             mediatorInvitationUrl: environment,
           }),
+          drpc: new DrpcModule(),
         }
 
         const newAgent = new Agent(options)
@@ -397,6 +428,9 @@ const Splash: React.FC = () => {
 
         setStep(6)
         await newAgent.initialize()
+        await newAgent.mediationRecipient.initialize()
+        await newAgent.mediationRecipient.initiateMessagePickup()
+
         const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
         if (!cachedLedgers) {
           // these escapes can be removed once Indy VDR has been upgraded and the patch is no longer needed
@@ -416,6 +450,7 @@ const Splash: React.FC = () => {
               return prev + JSON.stringify(curr)
             }, ''),
           }))
+
           if (transactions) {
             await AsyncStorage.setItem(
               BCLocalStorageKeys.GenesisTransactions,
