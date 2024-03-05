@@ -11,6 +11,7 @@ import {
   ConnectionRecord,
 } from '@aries-framework/core'
 import { useAgent } from '@aries-framework/react-hooks'
+import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
 import { BifoldAgent, BifoldError, EventTypes } from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
@@ -18,7 +19,7 @@ import {
   googleAttestation,
   isPlayIntegrityAvailable,
 } from '@hyperledger/aries-react-native-attestation'
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Platform } from 'react-native'
 import Config from 'react-native-config'
@@ -27,7 +28,6 @@ import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'rea
 import { Subscription } from 'rxjs'
 
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
-import { DrpcRequest } from '@credo-ts/drpc'
 
 enum ErrorCodes {
   AttestationBadInvitation = 2027,
@@ -106,7 +106,7 @@ const getAvailableAttestationCredentials = async (agent: BifoldAgent) => {
   })
 }
 
-const requestNonceDrpc = async (agent: Agent, connectionRecord: ConnectionRecord, timeout?: number) => {
+const requestNonceDrpc = async (agent: Agent, connectionRecord: ConnectionRecord) => {
   const nonceRequestMessage: DrpcRequest = {
     jsonrpc: '2.0',
     method: 'request_nonce',
@@ -129,15 +129,19 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
   const [messageSubscription, setMessageSubscription] = useState<Subscription>()
   const [proofSubscription, setProofSubscription] = useState<Subscription>()
   const [offerSubscription, setOfferSubscription] = useState<Subscription>()
+  const [drpcRequest, setDrpcRequest] = useState<DrpcRequest | undefined>(undefined)
+  const [drpcListenerActive, setDrpcListenerActive] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const handleInfrastructureMessageDrpc = async (message: { params: { nonce: string } }): Promise<ChallengeResponseInfrastructureMessage | null> => {
+  const handleInfrastructureMessageDrpc = async (message: {
+    params: { nonce: string }
+  }): Promise<ChallengeResponseInfrastructureMessage | null> => {
     try {
       const common: Partial<ChallengeResponseInfrastructureMessage> = {
         app_version: `${getVersion()}-${getBuildNumber()}`,
         os_version: `${getSystemName()} ${getSystemVersion()}`,
       }
-      const infraMessage = { nonce: message.params.nonce, }
+      const infraMessage = { nonce: message.params.nonce }
 
       if (Platform.OS === 'ios') {
         const shouldCacheKey = false
@@ -292,6 +296,29 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
     handleOffers(credentialRecord as CredentialExchangeRecord, agent)
   }
 
+  useEffect(() => {
+    if (drpcListenerActive && agent) {
+      agent.modules.drpc
+        .recvRequest()
+        .then(
+          async ({
+            request,
+            sendResponse,
+          }: {
+            request: DrpcRequest
+            sendResponse: (resp: DrpcResponse) => Promise<void>
+          }) => {
+            // bit of a hack to restart the listener once we've received a request
+            setDrpcRequest(request)
+            if (!Array.isArray(request) && request.params) {
+              const infraMsg = await handleInfrastructureMessageDrpc({ params: request.params as { nonce: string } })
+              sendResponse({ jsonrpc: '2.0', result: infraMsg, id: request.id })
+            }
+          }
+        )
+    }
+  }, [drpcRequest, drpcListenerActive])
+
   const start = async () => {
     if (!agent) {
       return
@@ -309,13 +336,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       setOfferSubscription(offerSub)
     }
 
-    while (true) {
-      const { request, sendResponse } = await agent.modules.drpc.recvRequest()
-      if (request.method === "request_attestation") {
-        const infraMsg = await handleInfrastructureMessageDrpc(request)
-        sendResponse({jsonrpc: '2.0', result: infraMsg, id: request.id})
-      }
-    }
+    setDrpcListenerActive(true)
   }
 
   const stop = async () => {
@@ -333,6 +354,8 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       offerSubscription.unsubscribe()
       setOfferSubscription(undefined)
     }
+
+    setDrpcListenerActive(false)
   }
 
   const value = {
