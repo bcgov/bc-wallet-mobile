@@ -56,10 +56,14 @@ jobs:
 
   build-ios:
     needs: [check-ios-secrets]
-    runs-on: macos-latest-stable
+    runs-on: macos-latest
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
     steps:
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v4
