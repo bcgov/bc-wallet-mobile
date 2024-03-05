@@ -56,7 +56,7 @@ jobs:
 
   build-ios:
     needs: [check-ios-secrets]
-    runs-on: macos-latest
+    runs-on: macos-latest-stable
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
     steps:
