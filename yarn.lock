@@ -3716,9 +3716,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/drpc@patch:@credo-ts/drpc@npm%3A0.5.0-alpha.151#~/.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.151-5bad8b38bd.patch":
+"@credo-ts/drpc@patch:@credo-ts/drpc@npm%3A0.5.0-alpha.151#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.151-5bad8b38bd.patch::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.5.0-alpha.151
-  resolution: "@credo-ts/drpc@patch:@credo-ts/drpc@npm%3A0.5.0-alpha.151#~/.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.151-5bad8b38bd.patch::version=0.5.0-alpha.151&hash=c58ea8"
+  resolution: "@credo-ts/drpc@patch:@credo-ts/drpc@npm%3A0.5.0-alpha.151#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.151-5bad8b38bd.patch::version=0.5.0-alpha.151&hash=c58ea8&locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@credo-ts/core": "npm:0.5.0-alpha.151+d2b5cd9c"
     class-transformer: "npm:^0.5.1"
