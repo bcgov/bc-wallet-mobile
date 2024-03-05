@@ -57,7 +57,7 @@
     "@aries-framework/askar": "0.4.2",
     "@aries-framework/react-native": "0.4.2",
     "@aries-framework/indy-sdk-to-askar-migration": "0.4.2",
-    "@credo-ts/drpc": "patch:@credo-ts/drpc@npm%3A0.5.0-alpha.145#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.145-4e1953647c.patch",
+    "@credo-ts/drpc": "patch:@credo-ts/drpc@npm%3A0.5.0-alpha.151#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.151-5bad8b38bd.patch",
     "@aries-framework/react-hooks": "patch:@aries-framework/react-hooks@npm:0.4.2#./.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch",
     "@aries-framework/anoncreds": "patch:@aries-framework/anoncreds@npm%3A0.4.2#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch",
     "@aries-framework/indy-vdr": "patch:@aries-framework/indy-vdr@npm%3A0.4.2#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch"

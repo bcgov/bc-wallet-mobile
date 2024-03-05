@@ -3666,9 +3666,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/core@npm:0.5.0-alpha.145+4f58925d":
-  version: 0.5.0-alpha.145
-  resolution: "@credo-ts/core@npm:0.5.0-alpha.145"
+"@credo-ts/core@npm:0.5.0-alpha.151+d2b5cd9c":
+  version: 0.5.0-alpha.151
+  resolution: "@credo-ts/core@npm:0.5.0-alpha.151"
   dependencies:
     "@digitalcredentials/jsonld": "npm:^6.0.0"
     "@digitalcredentials/jsonld-signatures": "npm:^9.4.0"
@@ -3676,7 +3676,7 @@ __metadata:
     "@multiformats/base-x": "npm:^4.0.1"
     "@sd-jwt/core": "npm:^0.2.1"
     "@sd-jwt/decode": "npm:^0.2.1"
-    "@sphereon/pex": "npm:^3.2.0"
+    "@sphereon/pex": "npm:3.2.1-unstable.7"
     "@sphereon/pex-models": "npm:^2.2.0"
     "@sphereon/ssi-types": "npm:^0.18.1"
     "@stablelib/ed25519": "npm:^1.0.2"
@@ -3701,29 +3701,29 @@ __metadata:
     uuid: "npm:^9.0.0"
     varint: "npm:^6.0.0"
     web-did-resolver: "npm:^2.0.21"
-  checksum: 779efbfa6709ce3f2908e6e339c8144d5228ec24010eaecd6e7a5b1fd07709af84e1b71c0b263052577e30167f83231396d70638f51f3f4fe889416f9af97fe6
+  checksum: b18a72ac12f0b2bea215b6ae903d05418729f5e73735261df022bcf6fe017f55e5a40d2e7c36c85129ced7c6583088009fafff45f84067358aa5006b5015d87a
   languageName: node
   linkType: hard
 
-"@credo-ts/drpc@npm:0.5.0-alpha.145":
-  version: 0.5.0-alpha.145
-  resolution: "@credo-ts/drpc@npm:0.5.0-alpha.145"
+"@credo-ts/drpc@npm:0.5.0-alpha.151":
+  version: 0.5.0-alpha.151
+  resolution: "@credo-ts/drpc@npm:0.5.0-alpha.151"
   dependencies:
-    "@credo-ts/core": "npm:0.5.0-alpha.145+4f58925d"
+    "@credo-ts/core": "npm:0.5.0-alpha.151+d2b5cd9c"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:0.14.1"
-  checksum: 718a75f0af6ffb82dceb668f79482eafab9b19a252a076c6be2d475cdbf80a9956f96487cb29ea222cf092a82353e8f49493e0c95617348af7dfb5dbc9f5a598
+  checksum: 4568edf63a4b88c4a13156eddae0610936c6e7a201e465ac62ad4a19c7473c0021c14606a8212d4275ebba7f2f883141d15aabe3da8991d66a0e84e2a2ecff00
   languageName: node
   linkType: hard
 
-"@credo-ts/drpc@patch:@credo-ts/drpc@npm%3A0.5.0-alpha.145#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.145-4e1953647c.patch::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.5.0-alpha.145
-  resolution: "@credo-ts/drpc@patch:@credo-ts/drpc@npm%3A0.5.0-alpha.145#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.145-4e1953647c.patch::version=0.5.0-alpha.145&hash=aa0fe0&locator=bc-wallet-mobile%40workspace%3A."
+"@credo-ts/drpc@patch:@credo-ts/drpc@npm%3A0.5.0-alpha.151#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.151-5bad8b38bd.patch::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.5.0-alpha.151
+  resolution: "@credo-ts/drpc@patch:@credo-ts/drpc@npm%3A0.5.0-alpha.151#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.151-5bad8b38bd.patch::version=0.5.0-alpha.151&hash=c58ea8&locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
-    "@credo-ts/core": "npm:0.5.0-alpha.145+4f58925d"
+    "@credo-ts/core": "npm:0.5.0-alpha.151+d2b5cd9c"
     class-transformer: "npm:^0.5.1"
     class-validator: "npm:0.14.1"
-  checksum: 28b3d9833ae5f6d92f942df652059a799eb9af3517eb7514c28c62c4b2bb8fa6ab356cd5a24e3e7cc718cc8553dad1582c3c1e2650f24885c887be859fdec59d
+  checksum: 93c443db8b3dc62b3868e320916f41311f837ca5203ab0dbba9f61f8e0d9612cf8ab5029af873a059e6a7fff872efa5fab3c59b8f399ca989ba666c4fb136a3a
   languageName: node
   linkType: hard
 
@@ -5665,33 +5665,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/decode@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@sd-jwt/decode@npm:0.3.0"
-  dependencies:
-    "@sd-jwt/types": "npm:0.3.0"
-    "@sd-jwt/utils": "npm:0.3.0"
-  checksum: 768233952ae6a2853dc5a0ec5d9fa3d30d49221cf003c1df9c83e263b064fcf5e13fa7f7009fe1f62d6e464ab22733f4ee2f2574464dc538b4c56e31a3b32ec4
-  languageName: node
-  linkType: hard
-
-"@sd-jwt/present@npm:0.2.1":
+"@sd-jwt/present@npm:0.2.1, @sd-jwt/present@npm:^0.2.0":
   version: 0.2.1
   resolution: "@sd-jwt/present@npm:0.2.1"
   dependencies:
     "@sd-jwt/types": "npm:0.2.1"
     "@sd-jwt/utils": "npm:0.2.1"
   checksum: 17979fa527d22b0748929c74a7cb9de4e85fed7668df4d8a29342b29d9474c46308f5a54d88331fabaf86cd1017cd4b01743cb0bd8e95d7cc8dbee4209769769
-  languageName: node
-  linkType: hard
-
-"@sd-jwt/present@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@sd-jwt/present@npm:0.3.0"
-  dependencies:
-    "@sd-jwt/types": "npm:0.3.0"
-    "@sd-jwt/utils": "npm:0.3.0"
-  checksum: 7076e9e1e106038051c395c2676c44f33be42d67433c4bc6af1c9220640f7214723f3e9ce5e2f4a4d3abbc6b23dc60a0466335622ba53c921f52ec148e9fcf7b
   languageName: node
   linkType: hard
 
@@ -5702,30 +5682,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/types@npm:0.3.0":
-  version: 0.3.0
-  resolution: "@sd-jwt/types@npm:0.3.0"
-  checksum: 2cb8fa3e24d310b247f7cd7b67fd92c11a6ff8bc5e16406a2bffff1ee8ca459dcada003748f29133b4a40b9af4b9e7f87296bb308888ac12107ec8b83a89b049
-  languageName: node
-  linkType: hard
-
-"@sd-jwt/utils@npm:0.2.1":
+"@sd-jwt/utils@npm:0.2.1, @sd-jwt/utils@npm:^0.2.0":
   version: 0.2.1
   resolution: "@sd-jwt/utils@npm:0.2.1"
   dependencies:
     "@sd-jwt/types": "npm:0.2.1"
     buffer: "npm:*"
   checksum: 777ecc3587071f187a2e93b27b337e13b24c29c4d532119763fd5beeeee3bc47ae3d519765662424666006bf6e72a0da842d7d60ade060bcac2c5770f045f7a3
-  languageName: node
-  linkType: hard
-
-"@sd-jwt/utils@npm:0.3.0, @sd-jwt/utils@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@sd-jwt/utils@npm:0.3.0"
-  dependencies:
-    "@sd-jwt/types": "npm:0.3.0"
-    buffer: "npm:*"
-  checksum: c9411a2d202553584ab2d343cdc8af94ea4cd44f0110e7bfcb95ae31a0736739fb9074d962ca08032fa40ca7d1a164927029a26731b072a6cdc82a6fcd8c8e78
   languageName: node
   linkType: hard
 
@@ -5791,29 +5754,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sphereon/pex-models@npm:^2.2.0, @sphereon/pex-models@npm:^2.2.2":
+"@sphereon/pex-models@npm:^2.2.0":
   version: 2.2.2
   resolution: "@sphereon/pex-models@npm:2.2.2"
   checksum: 9245c61c1968c133ac721f087623576225f7ab4760eccde7a56a5c741b1919db380f03a471a4200886a5b1367c61879a157e0bf52159561a574ee08375398bc8
   languageName: node
   linkType: hard
 
-"@sphereon/pex@npm:^3.2.0":
-  version: 3.3.0
-  resolution: "@sphereon/pex@npm:3.3.0"
+"@sphereon/pex@npm:3.2.1-unstable.7":
+  version: 3.2.1-unstable.7
+  resolution: "@sphereon/pex@npm:3.2.1-unstable.7"
   dependencies:
     "@astronautlabs/jsonpath": "npm:^1.1.2"
-    "@sd-jwt/decode": "npm:^0.3.0"
-    "@sd-jwt/present": "npm:^0.3.0"
-    "@sd-jwt/utils": "npm:^0.3.0"
-    "@sphereon/pex-models": "npm:^2.2.2"
+    "@sd-jwt/decode": "npm:^0.2.0"
+    "@sd-jwt/present": "npm:^0.2.0"
+    "@sd-jwt/utils": "npm:^0.2.0"
+    "@sphereon/pex-models": "npm:^2.2.0"
     "@sphereon/ssi-types": "npm:0.18.1"
     ajv: "npm:^8.12.0"
     ajv-formats: "npm:^2.1.1"
     jwt-decode: "npm:^3.1.2"
     nanoid: "npm:^3.3.7"
     string.prototype.matchall: "npm:^4.0.10"
-  checksum: 313500e4d3c6f0aaedbb62b5e91facfd76bcdd8e6820119d5d8e90fb76de727716e9d80ec4343355df71674aa93932b69e5fcfb2b03ef014fe0bd5d4f240add9
+  checksum: 56aa61ab821c23b59e509db2199f7a940368a2592b1b54eae669a048f29b9afdfc24d7022e5fb332d114a6e8c991f433e31d9ecb2cfbef01bda5722064f6d09a
   languageName: node
   linkType: hard
 
@@ -9111,7 +9074,7 @@ __metadata:
     "@babel/preset-env": "npm:7.20.2"
     "@babel/runtime": "npm:7.22.15"
     "@commitlint/cli": "npm:11.0.0"
-    "@credo-ts/drpc": "npm:0.5.0-alpha.145"
+    "@credo-ts/drpc": "npm:0.5.0-alpha.151"
     "@formatjs/intl-datetimeformat": "npm:4.2.4"
     "@formatjs/intl-displaynames": "npm:5.2.4"
     "@formatjs/intl-getcanonicallocales": "npm:1.7.3"
