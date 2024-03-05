@@ -141,6 +141,12 @@ const translation = {
     GetCredential: 'Get your Person credential',
     Decline: 'Get this later',
     PageTitle: 'Person Credential',
+    ServicesCardInstalled: 'Step 1: QC Wallet app installed',
+    InstallServicesCard: 'Step 1: Install the QC Wallet app',
+    InstallApp: 'Install the app',
+    AppOnOtherDevice: 'I have it on another device',
+    CreatePersonCred: 'Step 2: Create your Person credential',
+    StartProcess: 'Start the process',
   },
   Screens: {
     Splash: 'Splash',
@@ -748,6 +754,7 @@ const translation = {
     PreventAutoLock: 'Prevent auto-lock',
     TogglePreventAutoLock: 'Toggle prevent auto-lock',
     ScanMyQR: 'Scan my QR code',
+    PlayWithBCWallet: 'Play with QC Wallet',
   },
   Tour: {
     GuideTitle: 'Welcome to QC Wallet',
@@ -896,6 +903,10 @@ const translation = {
     ProofRequestForFullNameAndAgeName: 'Request for full name and age validation (18+)',
     ProofRequestForFullNameAndAgeDescription:
       "Request the user's full name and validation that they are 18 years old or older",
+  },
+  AddCredentialSlider: {
+    Choose: 'Choose',
+    ScanQRCode: 'Scan a QR code',
   },
 }
 

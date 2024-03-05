@@ -18,7 +18,7 @@ import {
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { select } from '@storybook/addon-knobs'
 import { storiesOf } from '@storybook/react-native'
-import React, { FC, Dispatch, useEffect, useState } from 'react'
+import React, { Dispatch, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, ListRenderItem, View } from 'react-native'
 import { Config } from 'react-native-config'
@@ -66,12 +66,12 @@ type CredentialProps = {
   connectionId?: string
 }
 
-const CredentialWrapper: FC<CredentialProps> = ({
+const CredentialWrapper = ({
   revoked = false,
   credentialRecordId,
   credentialDefinitionId,
   connectionId,
-}) => {
+}: CredentialProps) => {
   const indyCredential = { credentialRecordType: 'indy', credentialRecordId }
   const props: CredentialExchangeRecordProps = {
     connectionId: connectionId,
@@ -119,7 +119,7 @@ const ItemDivider = () => {
   )
 }
 
-const Credentials: FC<CredentialsProps> = ({ items }) => {
+const Credentials = ({ items }: CredentialsProps) => {
   const lang = select('Language', ['en', 'fr', 'pt'], 'en')
   const { i18n } = useTranslation()
   const [isLoaded, setLoaded] = useState(false)
@@ -244,7 +244,7 @@ storiesOf('Brandings', module)
       </ConfigurationProvider>
     )
   })
-  .add('Person: Default', () => {
+  .add('Person: Default', (): React.ReactNode => {
     const configuration: ConfigurationContext = {
       OCABundleResolver: OCABundleResolver,
     } as unknown as ConfigurationContext
@@ -262,16 +262,18 @@ storiesOf('Brandings', module)
       },
     ]
     return (
-      <ConfigurationProvider value={configuration}>
-        <StoreContext.Provider value={[state, dispatch]}>
-          <ThemeProvider value={theme}>
-            <Credentials items={list} />
-          </ThemeProvider>
-        </StoreContext.Provider>
-      </ConfigurationProvider>
+      <>
+        <ConfigurationProvider value={configuration}>
+          <StoreContext.Provider value={[state, dispatch]}>
+            <ThemeProvider value={theme}>
+              <Credentials items={list} />
+            </ThemeProvider>
+          </StoreContext.Provider>
+        </ConfigurationProvider>
+      </>
     )
   })
-  .add('Person: Revoked', () => {
+  .add('Person: Revoked', (): React.ReactNode => {
     const configuration: ConfigurationContext = {
       OCABundleResolver: OCABundleResolver,
     } as unknown as ConfigurationContext

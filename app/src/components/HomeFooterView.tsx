@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 interface HomeFooterViewProps extends PropsWithChildren {}
 
-const HomeFooterView: React.FC<HomeFooterViewProps> = ({ children }) => {
+const HomeFooterView = ({ children }: HomeFooterViewProps) => {
   const { ColorPallet } = useTheme()
   const { t } = useTranslation()
   const [surveyVisible, setSurveyVisible] = useState(false)

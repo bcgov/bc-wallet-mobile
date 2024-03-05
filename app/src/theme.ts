@@ -364,7 +364,7 @@ export const ListItems = StyleSheet.create({
     color: ColorPallet.brand.text,
   },
   recordAttributeLabel: {
-    ...TextTheme.normal,
+    ...TextTheme.bold,
   },
   recordContainer: {
     backgroundColor: ColorPallet.brand.secondaryBackground,
@@ -630,6 +630,8 @@ export const OnboardingTheme = {
   },
   pagerNavigationButton: {
     color: ColorPallet.brand.primary,
+    fontWeight: 'bold',
+    fontSize: 18,
   },
   headerTintColor: ColorPallet.grayscale.white,
   headerText: {
@@ -666,14 +668,12 @@ export const DialogTheme = {
 const LoadingTheme = {
   backgroundColor: ColorPallet.brand.primary,
 }
-
 const PINEnterTheme = {
   image: {
     alignSelf: 'center',
     marginBottom: 20,
   },
 }
-
 const PINInputTheme = {
   cell: {
     backgroundColor: ColorPallet.grayscale.lightGrey,

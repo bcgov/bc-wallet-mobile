@@ -5,7 +5,7 @@ import { DeviceEventEmitter } from 'react-native'
 
 import { BCWalletEventTypes } from '../events/eventTypes'
 
-const AddCredentialButton: React.FC = () => {
+const AddCredentialButton = () => {
   const { t } = useTranslation()
 
   const activateSlider = useCallback(() => {

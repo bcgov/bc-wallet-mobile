@@ -100,6 +100,9 @@ android {
         versionName System.getenv("VERSION_NAME") ? System.getenv("VERSION_NAME").toString() : "0.0.1"
 
         missingDimensionStrategy 'react-native-camera', 'general'
+        ndk {
+            abiFilters 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a'
+        }
     }
     signingConfigs {
         debug {
@@ -141,6 +144,8 @@ dependencies {
     implementation 'net.java.dev.jna:jna:5.2.0'
     
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
+    
+    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
     
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

@@ -87,20 +87,23 @@ const Settings: React.FC = () => {
     setEnvironmentModalVisible(false)
   }
 
-  const SectionHeader: React.FC<{ icon: string; title: string }> = ({ icon, title }) => (
-    <View style={[styles.section, styles.sectionHeader]}>
-      <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
-      <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
-    </View>
+  const SectionHeader = ({ icon, title }: { icon: string; title: string }): JSX.Element => (
+    <>
+      <View style={[styles.section, styles.sectionHeader]}>
+        <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
+        <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
+      </View>
+    </>
   )
 
-  const SectionRow: React.FC<{
+  interface SectionRowProps {
     title: string
     accessibilityLabel?: string
     testID?: string
-    children?: React.ReactNode
+    children: JSX.Element
     onPress?: () => void
-  }> = ({ title, accessibilityLabel, testID, onPress, children }) => (
+  }
+  const SectionRow = ({ title, accessibilityLabel, testID, onPress, children }: SectionRowProps) => (
     <View style={[styles.section, { flexDirection: 'row' }]}>
       <Text style={[TextTheme.headingFour, { flex: 1, fontWeight: 'normal', flexWrap: 'wrap' }]}>{title}</Text>
       <Pressable
@@ -177,6 +180,7 @@ const Settings: React.FC = () => {
       type: DispatchAction.ENABLE_WALLET_NAMING,
       payload: [!enableWalletNaming],
     })
+
     setEnableWalletNaming((previousState) => !previousState)
   }
 
@@ -326,7 +330,7 @@ const Settings: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={preventAutoLock ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            thumbColor={attestationSupportEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleAttestationSupport}
             value={attestationSupportEnabled}

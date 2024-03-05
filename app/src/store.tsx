@@ -16,6 +16,7 @@ export interface IASEnvironment {
 interface Developer {
   environment: IASEnvironment
   attestationSupportEnabled: boolean
+  remoteLoggingEnabled: boolean
 }
 
 interface DismissPersonCredentialOffer {
@@ -59,6 +60,7 @@ export const iasEnvironments: Array<IASEnvironment> = [
 const developerState: Developer = {
   environment: iasEnvironments[0],
   attestationSupportEnabled: false,
+  remoteLoggingEnabled: false,
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {

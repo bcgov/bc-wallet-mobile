@@ -6,7 +6,7 @@ export interface ProgressBarProps {
   progressPercent: number
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ progressPercent }) => {
+const ProgressBar = ({ progressPercent }: ProgressBarProps) => {
   const { ColorPallet } = useTheme()
   const { width: windowWidth } = useWindowDimensions()
   const [progressBarScale] = useState(new Animated.Value(0))
