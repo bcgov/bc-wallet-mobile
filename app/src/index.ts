@@ -77,6 +77,7 @@ const configuration: ConfigurationContext = {
   supportedLanguages: Object.keys(localization) as Locales[],
   useAttestation: useAttestation,
   useCustomNotifications: useNotifications,
+  enableUseMultUseInvitation: false,
 }
 
 export default { theme, localization, configuration }
