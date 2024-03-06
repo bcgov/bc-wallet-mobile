@@ -43,3 +43,29 @@ spec:
               kubernetes.io/metadata.name: {{ .Values.namespace }}
   policyTypes:
     - Ingress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "logstack.fullname" . }}-loki-to-memcached
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: memcached
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  ingress:
+    - ports:
+      - protocol: TCP
+        port: 11211
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: loki
+              {{- include "logstack.selectorLabels" . | nindent 14 }}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+  policyTypes:
+    - Ingress
