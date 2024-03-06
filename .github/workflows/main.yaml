@@ -79,7 +79,7 @@ jobs:
 
   build-ios:
     needs: [check-secrets, check-vars]
-    runs-on: macos-latest
+    runs-on: macos-13
     env:
       BUNDLE_GEMFILE: ${{ github.workspace }}/app/Gemfile
     steps:
@@ -99,7 +99,9 @@ jobs:
 
       - name: What XCode are we using?
         run: |
-          xcode-select -p
+          find /Applications -type d -maxdepth 1 -iname 'xcode*.app'
+          sudo xcode-select --switch /Applications/Xcode_15.2.app
+          sudo xcode-select -p
 
       - name: Cached pip dependencies
         uses: actions/cache@v3
