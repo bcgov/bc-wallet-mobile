@@ -10,7 +10,7 @@ index be4d0674ae73a1f28416ee42e5e955ded5376293..5155c2bba74d246be06e51eea3242976
  export declare class DrpcApi {
      private drpcMessageService;
 diff --git a/build/DrpcApi.js b/build/DrpcApi.js
-index 675a41c9371888f7bc21e99e7717091addb46ba7..bc8619ca6c4262e6601ad0f997d226996107c5b7 100644
+index e4722aac20ea68aa3f2d72781e95489cd88cf114..c09b2d00946ace4225ec7da1ce2dfa3e8d2dfd15 100644
 --- a/build/DrpcApi.js
 +++ b/build/DrpcApi.js
 @@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
@@ -20,8 +20,8 @@ index 675a41c9371888f7bc21e99e7717091addb46ba7..bc8619ca6c4262e6601ad0f997d22699
 -const core_1 = require("@credo-ts/core");
 +const core_1 = require("@aries-framework/core");
  const handlers_1 = require("./handlers");
+ const models_1 = require("./models");
  const services_1 = require("./services");
- let DrpcApi = class DrpcApi {
 diff --git a/build/DrpcModule.d.ts b/build/DrpcModule.d.ts
 index e5cfec0d78466da4dc7bfbbe4e9a29a60a19a5f9..08afb046445fa9f1d634097dc16ecad52c070397 100644
 --- a/build/DrpcModule.d.ts
@@ -33,7 +33,7 @@ index e5cfec0d78466da4dc7bfbbe4e9a29a60a19a5f9..08afb046445fa9f1d634097dc16ecad5
  export declare class DrpcModule implements Module {
      readonly api: typeof DrpcApi;
 diff --git a/build/DrpcModule.js b/build/DrpcModule.js
-index aee33d22513bd54caeb6702d14c02a463c2b5bc9..56664f8f756da18058e1a2db7c327c14a38ffd36 100644
+index aee33d22513bd54caeb6702d14c02a463c2b5bc9..2c503f08f515db57b6a5279811866ce07667104a 100644
 --- a/build/DrpcModule.js
 +++ b/build/DrpcModule.js
 @@ -1,7 +1,7 @@
@@ -45,15 +45,6 @@ index aee33d22513bd54caeb6702d14c02a463c2b5bc9..56664f8f756da18058e1a2db7c327c14
  const DrpcApi_1 = require("./DrpcApi");
  const DrpcRole_1 = require("./models/DrpcRole");
  const repository_1 = require("./repository");
-@@ -17,7 +17,7 @@ class DrpcModule {
-         // Warn about experimental module
-         dependencyManager
-             .resolve(core_1.AgentConfig)
--            .logger.warn("The '@credo-ts/drpc' module is experimental and could have unexpected breaking changes. When using this module, make sure to use strict versions for all @credo-ts packages.");
-+            .logger.warn("The '@aries-framework/drpc' module is experimental and could have unexpected breaking changes. When using this module, make sure to use strict versions for all @aries-framework packages.");
-         // Services
-         dependencyManager.registerSingleton(services_1.DrpcService);
-         // Repositories
 diff --git a/build/DrpcRequestEvents.d.ts b/build/DrpcRequestEvents.d.ts
 index 45a9dae904be6fef911f1f3eed50d73b4b339548..a6513bd70e8fc826d2bbd81acbd551ea31575411 100644
 --- a/build/DrpcRequestEvents.d.ts
@@ -237,3 +228,16 @@ index 200fed2ddf104288e0db82d05534a75a1cdf3ad0..201054af5943a0502d9c52c8ac0d63b5
  const DrpcRequestEvents_1 = require("../DrpcRequestEvents");
  const DrpcResponseEvents_1 = require("../DrpcResponseEvents");
  const messages_1 = require("../messages");
+diff --git a/package.json b/package.json
+index d2ac6f55956b271720efb5d79d5c88f887b4f727..46305fdf03f1618d89a40a4aa65bc46a7de06cf2 100644
+--- a/package.json
++++ b/package.json
+@@ -24,7 +24,7 @@
+     "test": "jest"
+   },
+   "dependencies": {
+-    "@credo-ts/core": "0.5.0-alpha.151+d2b5cd9c",
++    "@aries-framework/core": "0.5.0-alpha.151+d2b5cd9c",
+     "class-transformer": "^0.5.1",
+     "class-validator": "0.14.1"
+   },
