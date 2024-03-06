@@ -16,6 +16,10 @@ images:
     repository: caddy/caddy
     # Overrides the image tag whose default is the chart appVersion.
     tag: "latest"
+  memcached:
+    repository: memcached
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.6.17-alpine"
 
 imagePullSecrets:
   - name: artifactory-creds
@@ -31,7 +35,7 @@ resources:
       cpu: 10m
     limits:
       memory: 256Mi
-      cpu: 100m
+      cpu: 400m
   proxy:
     requests:
       memory: 32Mi
@@ -39,6 +43,13 @@ resources:
     limits:
       memory: 64Mi
       cpu: 60m
+  memcached:
+    limits:
+      cpu: 50m
+      memory: 32Mi
+    requests:
+      cpu: 10m
+      memory: 32Mi
 
 persistentVolumeClaim:
   mountPath: /data
@@ -56,6 +67,9 @@ services:
   proxy:
     - name: http
       port: 2015
+  memcached:
+    - name: client
+      port: 11211
 
 route:
   host: ""
@@ -100,7 +114,6 @@ volumeMounts: []
 # deployments
 loki:
   retention:
-    retention_deletes_enabled: true
     retention_period: 3d
 
 #

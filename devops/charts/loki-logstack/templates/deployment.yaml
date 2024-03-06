@@ -120,4 +120,40 @@ spec:
               port: http
             initialDelaySeconds: 60
             timeoutSeconds: 3
-
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "logstack.fullname" . }}-memcached
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}  
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: memcached
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: memcached
+        {{- include "logstack.labels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.images.registry }}/{{ .Values.images.memcached.repository }}:{{ .Values.images.memcached.tag | default .Chart.AppVersion }}"
+          resources:
+            {{- toYaml .Values.resources.memcached | nindent 12 }}
+          ports:
+            {{- range $name, $port := .Values.services.memcached }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+            {{- end }}
