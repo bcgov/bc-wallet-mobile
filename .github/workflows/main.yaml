@@ -99,6 +99,7 @@ jobs:
 
       - name: What XCode are we using?
         run: |
+          ls -l /Applications
           xcode-select --switch /Applications/Xcode_15.1.app
           xcode-select -p
 
