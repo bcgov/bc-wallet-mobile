@@ -99,6 +99,7 @@ jobs:
 
       - name: What XCode are we using?
         run: |
+          xcode-select --switch /Applications/Xcode_15.1.app
           xcode-select -p
 
       - name: Cached pip dependencies
