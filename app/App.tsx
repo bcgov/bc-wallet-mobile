@@ -15,6 +15,8 @@ import {
   ConfigurationProvider,
   initLanguages,
   testIdWithKey,
+  ContainerProvider,
+  MainContainer,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useMemo } from 'react'
@@ -24,7 +26,9 @@ import { isTablet } from 'react-native-device-info'
 import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
+import { container } from 'tsyringe'
 
+import { AppContainer } from './container-imp'
 import bcwallet from './src'
 import PushNotifications from './src/components/PushNotifications'
 import { credentialOfferTourSteps } from './src/components/tours/CredentialOfferTourSteps'
@@ -39,6 +43,9 @@ import { initialState, reducer } from './src/store'
 const { theme, localization, configuration } = bcwallet
 
 initLanguages(localization)
+
+const bifoldContainer = new MainContainer(container.createChildContainer()).init()
+const bcwContainer = new AppContainer(bifoldContainer).init()
 
 const App = () => {
   useMemo(() => {
@@ -119,46 +126,48 @@ const App = () => {
   }, [])
 
   return (
-    <StoreProvider initialState={initialState} reducer={reducer}>
-      <AgentProvider>
-        <ThemeProvider value={theme}>
-          <ConfigurationProvider value={configuration}>
-            <AuthProvider>
-              <NetworkProvider>
-                <AttestationProvider>
-                  <StatusBar
-                    barStyle="light-content"
-                    hidden={false}
-                    backgroundColor={theme.ColorPallet.brand.primary}
-                    translucent={false}
-                  />
-                  <NetInfo />
-                  <ErrorModal />
-                  <WebDisplay
-                    destinationUrl={surveyMonkeyUrl}
-                    exitUrl={surveyMonkeyExitUrl}
-                    visible={surveyVisible}
-                    onClose={toggleSurveyVisibility}
-                  />
-                  <TourProvider
-                    homeTourSteps={homeTourSteps}
-                    credentialsTourSteps={credentialsTourSteps}
-                    credentialOfferTourSteps={credentialOfferTourSteps}
-                    proofRequestTourSteps={proofRequestTourSteps}
-                    overlayColor={'black'}
-                    overlayOpacity={0.7}
-                  >
-                    <RootStack />
-                  </TourProvider>
-                  <Toast topOffset={15} config={toastConfig} />
-                  <PushNotifications />
-                </AttestationProvider>
-              </NetworkProvider>
-            </AuthProvider>
-          </ConfigurationProvider>
-        </ThemeProvider>
-      </AgentProvider>
-    </StoreProvider>
+    <ContainerProvider value={bcwContainer}>
+      <StoreProvider initialState={initialState} reducer={reducer}>
+        <AgentProvider>
+          <ThemeProvider value={theme}>
+            <ConfigurationProvider value={configuration}>
+              <AuthProvider>
+                <NetworkProvider>
+                  <AttestationProvider>
+                    <StatusBar
+                      barStyle="light-content"
+                      hidden={false}
+                      backgroundColor={theme.ColorPallet.brand.primary}
+                      translucent={false}
+                    />
+                    <NetInfo />
+                    <ErrorModal />
+                    <WebDisplay
+                      destinationUrl={surveyMonkeyUrl}
+                      exitUrl={surveyMonkeyExitUrl}
+                      visible={surveyVisible}
+                      onClose={toggleSurveyVisibility}
+                    />
+                    <TourProvider
+                      homeTourSteps={homeTourSteps}
+                      credentialsTourSteps={credentialsTourSteps}
+                      credentialOfferTourSteps={credentialOfferTourSteps}
+                      proofRequestTourSteps={proofRequestTourSteps}
+                      overlayColor={'black'}
+                      overlayOpacity={0.7}
+                    >
+                      <RootStack />
+                    </TourProvider>
+                    <Toast topOffset={15} config={toastConfig} />
+                    <PushNotifications />
+                  </AttestationProvider>
+                </NetworkProvider>
+              </AuthProvider>
+            </ConfigurationProvider>
+          </ThemeProvider>
+        </AgentProvider>
+      </StoreProvider>
+    </ContainerProvider>
   )
 }
 
