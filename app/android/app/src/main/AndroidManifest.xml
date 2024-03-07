@@ -25,7 +25,7 @@
     <!-- Push notifications styles -->
     <meta-data
       android:name="com.google.firebase.messaging.default_notification_icon"
-      android:resource="@drawable/logo" />
+      android:resource="@drawable/ic_notification" />
     <meta-data
       tools:replace="android:resource"
       android:name="com.google.firebase.messaging.default_notification_color"
