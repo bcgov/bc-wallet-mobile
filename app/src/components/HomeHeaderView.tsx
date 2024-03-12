@@ -37,9 +37,7 @@ const HomeHeaderView = () => {
         <Text style={styles.bannerText}>{t('RemoteLogging.Banner', { sessionId: logger.sessionId.toString() })}</Text>
       </View>
     </Pressable>
-  ) : (
-    <View></View>
-  )
+  ) : null
 }
 
 export default HomeHeaderView
