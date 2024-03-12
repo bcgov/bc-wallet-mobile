@@ -1,5 +1,7 @@
-import { Container, TokenMapping } from '@hyperledger/aries-bifold-core'
+import { Container, TOKENS, TokenMapping } from '@hyperledger/aries-bifold-core'
 import { DependencyContainer } from 'tsyringe'
+
+import Terms from './src/screens/Terms'
 
 export class AppContainer implements Container {
   private container: DependencyContainer
@@ -11,7 +13,7 @@ export class AppContainer implements Container {
     console.log(`Initializing BC Wallet App container`)
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
-    // this.container.registerInstance(TOKENS.COMP_BUTTON, Button)
+    this.container.registerInstance(TOKENS.SCREEN_TERMS, Terms)
     return this
   }
 
