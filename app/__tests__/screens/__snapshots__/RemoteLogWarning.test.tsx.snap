@@ -4,85 +4,257 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
     [
-      "left",
+      "top",
       "right",
-      "bottom",
+      "left",
     ]
   }
   style={
     {
+      "backgroundColor": "#42803E",
       "flex": 1,
     }
   }
 >
-  <RCTScrollView
-    contentContainerStyle={
+  <RNCSafeAreaView
+    edges={
+      [
+        "bottom",
+      ]
+    }
+    style={
       {
-        "flexGrow": 1,
+        "backgroundColor": "#000000",
+        "flex": 1,
       }
     }
   >
-    <View>
+    <View
+      style={
+        {
+          "alignItems": "stretch",
+          "backgroundColor": "#42803E",
+          "borderBottomWidth": 0,
+          "elevation": 0,
+          "flex": 1,
+          "flexDirection": "row",
+          "minHeight": 44,
+          "shadowColor": "#000000",
+          "shadowOffset": {
+            "height": 6,
+            "width": 0,
+          },
+          "shadowOpacity": 0.15,
+          "shadowRadius": 6,
+        }
+      }
+    >
       <View
         style={
           {
-            "flex": 1,
-            "justifyContent": "space-between",
-            "marginTop": 35,
-            "padding": 20,
+            "alignItems": "flex-start",
+            "justifyContent": "center",
           }
         }
       >
         <View
-          style={{}}
+          accessibilityLabel="Global.Back"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          hitSlop={
+            {
+              "bottom": 44,
+              "left": 44,
+              "right": 44,
+              "top": 44,
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          testID="com.ariesbifold:id/BackButton"
         >
-          <Text
+          <View
             style={
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontSize": 32,
-                  "fontWeight": "bold",
-                },
-              ]
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "marginLeft": 15,
+                "marginRight": 0,
+                "minHeight": 26,
+                "minWidth": 26,
+              }
             }
           >
-            RemoteLogging.ScreenTitle
-          </Text>
-          <Text
-            style={
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "marginBottom": 10,
-                  "marginTop": 10,
-                },
-              ]
-            }
-          >
-            RemoteLogging.Paragraph1
-          </Text>
-          <Text
-            style={
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "marginTop": 10,
-                },
-              ]
-            }
-          >
-            RemoteLogging.Paragraph2
             <Text
-              accessibilityLabel="Privacy Policy."
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 26,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰅁
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexShrink": 1,
+            "justifyContent": "center",
+            "marginHorizontal": 16,
+            "maxWidth": "68%",
+            "width": "100%",
+          }
+        }
+      >
+        <Text
+          ellipsizeMode="tail"
+          numberOfLines={1}
+          style={
+            {
+              "color": "#FFFFFF",
+              "fontSize": 28,
+              "fontWeight": "bold",
+              "textAlign": "center",
+            }
+          }
+        >
+          RemoteLogging.ScreenTitle
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignItems": "flex-end",
+            "justifyContent": "center",
+          }
+        }
+      />
+    </View>
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "backgroundColor": "#000000",
+          "flexGrow": 1,
+        }
+      }
+    >
+      <View>
+        <View
+          style={
+            {
+              "flex": 1,
+              "justifyContent": "space-between",
+              "marginTop": 10,
+              "padding": 20,
+            }
+          }
+        >
+          <View
+            style={{}}
+          >
+            <Text
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 32,
+                    "fontWeight": "bold",
+                  },
+                  {
+                    "marginBottom": 10,
+                  },
+                ]
+              }
+            >
+              RemoteLogging.Heading
+            </Text>
+            <Text
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "marginBottom": 0,
+                    "marginTop": 10,
+                  },
+                ]
+              }
+            >
+              RemoteLogging.CollectionNoticePart1
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "fontWeight": "bold",
+                    },
+                  ]
+                }
+              >
+                RemoteLogging.CollectionNoticeBold
+              </Text>
+              <Text
+                style={
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  }
+                }
+              >
+                RemoteLogging.CollectionNoticePart2
+              </Text>
+            </Text>
+            <Text
+              accessibilityLabel="RemoteLogging.CollectionNoticeLink"
               accessibilityRole="link"
               accessible={true}
               onPress={[Function]}
@@ -95,216 +267,265 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
                     "fontWeight": "normal",
                     "textDecorationLine": "underline",
                   },
-                  {},
-                ]
-              }
-              testID="com.ariesbifold:id/PrivacyPolicy."
-            >
-              Privacy Policy.
-            </Text>
-          </Text>
-          <Text
-            style={
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontSize": 18,
-                  "fontWeight": "normal",
-                },
-                {
-                  "marginTop": 10,
-                },
-              ]
-            }
-          >
-            RemoteLogging.Paragraph3
-          </Text>
-        </View>
-        <View
-          style={{}}
-        >
-          <View
-            style={
-              {
-                "alignItems": "center",
-                "flex": 1,
-                "flexDirection": "row-reverse",
-                "margin": 10,
-              }
-            }
-          >
-            <View
-              accessibilityLabel="RemoteLogging.IAgree"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": undefined,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              hitSlop={
-                {
-                  "bottom": 44,
-                  "left": 44,
-                  "right": 44,
-                  "top": 44,
-                }
-              }
-              onClick={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
-              style={
-                {
-                  "opacity": 1,
-                }
-              }
-              testID="com.ariesbifold:id/IAgree"
-            >
-              <Text
-                allowFontScaling={false}
-                selectable={false}
-                style={
-                  [
-                    {
-                      "color": "#42803E",
-                      "fontSize": 36,
-                    },
-                    undefined,
-                    {
-                      "fontFamily": "Material Icons",
-                      "fontStyle": "normal",
-                      "fontWeight": "normal",
-                    },
-                    {},
-                  ]
-                }
-              >
-                
-              </Text>
-            </View>
-            <Text
-              style={
-                [
                   {
-                    "color": "#FFFFFF",
-                    "flexShrink": 1,
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                    "marginLeft": 0,
-                    "marginRight": 10,
-                  },
-                  {
-                    "fontWeight": "bold",
+                    "marginBottom": 20,
                   },
                 ]
               }
+              testID="com.ariesbifold:id/RemoteLogging.CollectionNoticeLink"
             >
-              RemoteLogging.CheckBoxTitle
+              RemoteLogging.CollectionNoticeLink
             </Text>
-          </View>
-          <View
-            style={
-              [
-                {
-                  "paddingTop": 10,
-                },
-              ]
-            }
-          >
             <View
-              accessibilityLabel="Global.Continue"
-              accessibilityRole="button"
-              accessibilityState={
-                {
-                  "busy": undefined,
-                  "checked": undefined,
-                  "disabled": true,
-                  "expanded": undefined,
-                  "selected": undefined,
-                }
-              }
-              accessibilityValue={
-                {
-                  "max": undefined,
-                  "min": undefined,
-                  "now": undefined,
-                  "text": undefined,
-                }
-              }
-              accessible={true}
-              collapsable={false}
-              focusable={true}
-              onClick={[Function]}
-              onResponderGrant={[Function]}
-              onResponderMove={[Function]}
-              onResponderRelease={[Function]}
-              onResponderTerminate={[Function]}
-              onResponderTerminationRequest={[Function]}
-              onStartShouldSetResponder={[Function]}
               style={
                 {
-                  "backgroundColor": "rgba(53, 130, 63, 0.35)",
-                  "borderRadius": 4,
-                  "opacity": 1,
-                  "padding": 16,
+                  "backgroundColor": "#313132",
+                  "borderColor": "#D8292F",
+                  "borderRadius": 5,
+                  "borderWidth": 1,
+                  "paddingHorizontal": 10,
+                  "paddingVertical": 20,
                 }
               }
-              testID="com.ariesbifold:id/Continue"
             >
               <View
                 style={
                   {
                     "alignItems": "center",
                     "flexDirection": "row",
-                    "justifyContent": "center",
                   }
                 }
               >
+                <View
+                  style={
+                    {
+                      "alignSelf": "flex-start",
+                      "marginRight": 10,
+                    }
+                  }
+                >
+                  <Text
+                    allowFontScaling={false}
+                    selectable={false}
+                    style={
+                      [
+                        {
+                          "color": "#D8292F",
+                          "fontSize": 30,
+                        },
+                        undefined,
+                        {
+                          "fontFamily": "Material Icons",
+                          "fontStyle": "normal",
+                          "fontWeight": "normal",
+                        },
+                        {},
+                      ]
+                    }
+                  >
+                    
+                  </Text>
+                </View>
                 <Text
+                  style={
+                    {
+                      "alignSelf": "center",
+                      "color": "#FFFFFF",
+                      "flexShrink": 1,
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    }
+                  }
+                >
+                  RemoteLogging.CollectionNoticeWarning
+                </Text>
+              </View>
+            </View>
+          </View>
+          <View
+            style={{}}
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flex": 1,
+                  "flexDirection": "row-reverse",
+                  "margin": 10,
+                }
+              }
+            >
+              <View
+                accessibilityLabel="RemoteLogging.IAgree"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": undefined,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                hitSlop={
+                  {
+                    "bottom": 44,
+                    "left": 44,
+                    "right": 44,
+                    "top": 44,
+                  }
+                }
+                onClick={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "opacity": 1,
+                  }
+                }
+                testID="com.ariesbifold:id/IAgree"
+              >
+                <Text
+                  allowFontScaling={false}
+                  selectable={false}
                   style={
                     [
                       {
-                        "color": "#FFFFFF",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                        "textAlign": "center",
+                        "color": "#42803E",
+                        "fontSize": 36,
                       },
+                      undefined,
                       {
-                        "color": "#FFFFFF",
-                        "fontSize": 18,
-                        "fontWeight": "bold",
-                        "textAlign": "center",
+                        "fontFamily": "Material Icons",
+                        "fontStyle": "normal",
+                        "fontWeight": "normal",
                       },
-                      false,
-                      false,
+                      {},
                     ]
                   }
                 >
-                  RemoteLogging.ButtonTitle
+                  
                 </Text>
+              </View>
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "flexShrink": 1,
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                      "marginLeft": 0,
+                      "marginRight": 10,
+                    },
+                    {
+                      "textAlign": "right",
+                    },
+                  ]
+                }
+              >
+                RemoteLogging.CheckBoxTitle
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "paddingTop": 10,
+                }
+              }
+            >
+              <View
+                accessibilityLabel="RemoteLogging.ButtonTitle"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": true,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onClick={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "backgroundColor": "rgba(53, 130, 63, 0.35)",
+                    "borderRadius": 4,
+                    "opacity": 1,
+                    "padding": 16,
+                  }
+                }
+                testID="com.ariesbifold:id/TurnOn"
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#FFFFFF",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                          "textAlign": "center",
+                        },
+                        {
+                          "color": "#FFFFFF",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                          "textAlign": "center",
+                        },
+                        false,
+                        false,
+                      ]
+                    }
+                  >
+                    RemoteLogging.ButtonTitle
+                  </Text>
+                </View>
               </View>
             </View>
           </View>
         </View>
       </View>
-    </View>
-  </RCTScrollView>
+    </RCTScrollView>
+  </RNCSafeAreaView>
 </RNCSafeAreaView>
 `;
