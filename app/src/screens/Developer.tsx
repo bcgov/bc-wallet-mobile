@@ -1,6 +1,7 @@
 import { useAgent } from '@aries-framework/react-hooks'
-import { useTheme, useStore, testIdWithKey, DispatchAction } from '@hyperledger/aries-bifold-core'
+import { useTheme, useStore, testIdWithKey, DispatchAction, Screens } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
+import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
@@ -35,6 +36,7 @@ const Settings: React.FC = () => {
   )
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
   const { start, stop } = useAttestation()
+  const navigation = useNavigation()
 
   const styles = StyleSheet.create({
     container: {
@@ -43,8 +45,7 @@ const Settings: React.FC = () => {
     },
     section: {
       backgroundColor: SettingsTheme.groupBackground,
-      paddingHorizontal: 25,
-      paddingVertical: 24,
+      padding: 24,
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -59,10 +60,16 @@ const Settings: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    itemSeparator: {
+    rowTitle: {
+      ...TextTheme.headingFour,
+      flex: 1,
+      fontWeight: 'normal',
+      flexWrap: 'wrap',
+    },
+    rowSeparator: {
       borderBottomWidth: 1,
       borderBottomColor: ColorPallet.brand.primaryBackground,
-      marginHorizontal: 25,
+      marginHorizontal: 24,
     },
     logo: {
       height: 64,
@@ -106,21 +113,41 @@ const Settings: React.FC = () => {
     accessibilityLabel?: string
     testID?: string
     children: JSX.Element
+    showRowSeparator?: boolean
+    subContent?: JSX.Element
     onPress?: () => void
   }
-  const SectionRow = ({ title, accessibilityLabel, testID, onPress, children }: SectionRowProps) => (
-    <View style={[styles.section, { flexDirection: 'row' }]}>
-      <Text style={[TextTheme.headingFour, { flex: 1, fontWeight: 'normal', flexWrap: 'wrap' }]}>{title}</Text>
-      <Pressable
-        onPress={onPress}
-        accessible={true}
-        accessibilityLabel={accessibilityLabel}
-        testID={testID}
-        style={styles.sectionRow}
-      >
-        {children}
-      </Pressable>
-    </View>
+  const SectionRow = ({
+    title,
+    accessibilityLabel,
+    testID,
+    onPress,
+    children,
+    showRowSeparator,
+    subContent,
+  }: SectionRowProps) => (
+    <>
+      <View style={[styles.section]}>
+        <View style={{ flexDirection: 'row' }}>
+          <Text style={styles.rowTitle}>{title}</Text>
+          <Pressable
+            onPress={onPress}
+            accessible={true}
+            accessibilityLabel={accessibilityLabel}
+            testID={testID}
+            style={styles.sectionRow}
+          >
+            {children}
+          </Pressable>
+        </View>
+        {subContent}
+      </View>
+      {showRowSeparator && (
+        <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
+          <View style={[styles.rowSeparator]}></View>
+        </View>
+      )}
+    </>
   )
 
   const toggleSwitch = () => {
@@ -190,21 +217,24 @@ const Settings: React.FC = () => {
   }
 
   const toggleRemoteLoggingWarningSwitch = () => {
-    setRemoteLoggingEnabled((previousState) => !previousState)
-
     if (remoteLoggingEnabled) {
-      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, !remoteLoggingEnabled)
-
+      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, false)
+      setRemoteLoggingEnabled(false)
       return
     }
 
-    setRemoteLoggingWarningModalVisible((previousState) => !previousState)
+    setRemoteLoggingWarningModalVisible(true)
   }
 
   const onEnableRemoteLoggingPressed = () => {
-    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
+    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, true)
 
-    setRemoteLoggingWarningModalVisible((previousState) => !previousState)
+    setRemoteLoggingWarningModalVisible(false)
+    navigation.navigate(Screens.Home as never)
+  }
+
+  const onRemoteLoggingBackPressed = () => {
+    setRemoteLoggingWarningModalVisible(false)
   }
 
   const togglePreventAutoLockSwitch = () => {
@@ -230,12 +260,12 @@ const Settings: React.FC = () => {
       <Modal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
-        animationType={'slide'}
+        animationType={'fade'}
         onRequestClose={() => {
           return
         }}
       >
-        <RemoteLogWarning onEnablePressed={onEnableRemoteLoggingPressed} sessionId={logger?.sessionId} />
+        <RemoteLogWarning onBackPressed={onRemoteLoggingBackPressed} onEnablePressed={onEnableRemoteLoggingPressed} />
       </Modal>
       <Modal
         visible={environmentModalVisible}
@@ -280,6 +310,7 @@ const Settings: React.FC = () => {
           title={t('Verifier.UseVerifierCapability')}
           accessibilityLabel={t('Verifier.Toggle')}
           testID={testIdWithKey('ToggleVerifierCapability')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -293,6 +324,7 @@ const Settings: React.FC = () => {
           title={t('Verifier.AcceptDevCredentials')}
           accessibilityLabel={t('Verifier.Toggle')}
           testID={testIdWithKey('ToggleAcceptDevCredentials')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -306,6 +338,7 @@ const Settings: React.FC = () => {
           title={t('Connection.UseConnectionInviterCapability')}
           accessibilityLabel={t('Connection.Toggle')}
           testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -319,6 +352,7 @@ const Settings: React.FC = () => {
           title={t('Verifier.UseDevVerifierTemplates')}
           accessibilityLabel={t('Verifier.ToggleDevTemplates')}
           testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -333,6 +367,7 @@ const Settings: React.FC = () => {
             title={t('NameWallet.EnableWalletNaming')}
             accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
             testID={testIdWithKey('ToggleWalletNamingSwitch')}
+            showRowSeparator
           >
             <Switch
               trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -347,6 +382,7 @@ const Settings: React.FC = () => {
           title={t('Settings.PreventAutoLock')}
           accessibilityLabel={t('Settings.TogglePreventAutoLock')}
           testID={testIdWithKey('TogglePreventAutoLockSwitch')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -360,6 +396,7 @@ const Settings: React.FC = () => {
           title={t('Developer.AttestationSupport')}
           accessibilityLabel={t('Developer.AttestationSupport')}
           testID={testIdWithKey('AttestationSupportSwitch')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -373,6 +410,16 @@ const Settings: React.FC = () => {
           title={'Remote Logging'}
           accessibilityLabel={'Remote Logging'}
           testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
+          subContent={
+            remoteLoggingEnabled ? (
+              <Text style={[styles.rowTitle, { marginTop: 10 }]}>
+                {`${t('RemoteLogging.SessionID')}: `}
+                <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>{logger.sessionId.toString()}</Text>
+              </Text>
+            ) : (
+              <></>
+            )
+          }
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}

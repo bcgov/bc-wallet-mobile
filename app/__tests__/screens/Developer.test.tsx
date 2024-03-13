@@ -6,6 +6,14 @@ import Developer from '../../src/screens/Developer'
 import { AttestationProvider } from '../../src/services/attestation'
 import { initialState, reducer } from '../../src/store'
 
+const mockNavigation = jest.fn()
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useNavigation: () => {
+    return mockNavigation
+  },
+}))
+
 describe('Developer Screen', () => {
   beforeEach(() => {
     // Silence console.error because it will print a warning about Switch

@@ -176,13 +176,18 @@ const translation = {
     "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones."
   },
   "RemoteLogging": {
-    "ScreenTitle": "Remote Logging",
-    "Paragraph1": "Only turn on remote logging if you are in a debugging session or if you are asked and agree to do so. This action will send logs to Technical Support at the the Government of British Columbia.",
-    "Paragraph2": "Logs are automatically deleted after three days. They are kept and used only for debugging, as outlined in our",
-    "Paragraph3": "Provide the debug session id {sessionId} to technical support.",
-    "CheckBoxTitle": "I understand and wish to enable remote logging",
+    "ScreenTitle": "Remote troubleshooting",
+    "Heading": "Collection notice",
+    "CollectionNoticePart1": "Turning on remote troubleshooting will",
+    "CollectionNoticeBold": " record Wallet and Credential usage and any associated personal information",
+    "CollectionNoticePart2": " while it is turned on.\n\nRemote troubleshooting turns off after 1 hour. The information collected is deleted after 3 days.\n\nThis information is collected by Ministry of Citizens' Services - Cybersecurity and Digital Trust Branch under sections 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act, and will only be used for the purpose of customer support and troubleshooting.\n\nFor more information, including who to contact, read the",
+    "CollectionNoticeLink": "Privacy Policy.",
+    "CollectionNoticeWarning": "Only turn on remote troubleshooting if you contacted the support line first and a service agent from the Government of British Columbia asked you to turn it on. They will never contact first. You are never required to turn it on.",
+    "CheckBoxTitle": "I understand and want to turn on remote troubleshooting.",
     "IAgree": "I Agree",
-    "ButtonTitle": "Turn on remote logging",
+    "ButtonTitle": "Turn on",
+    "SessionID": "Session ID",
+    "Banner": "Remote Troubleshoot on. ID: {{ sessionId }}"
   },
 }
 
