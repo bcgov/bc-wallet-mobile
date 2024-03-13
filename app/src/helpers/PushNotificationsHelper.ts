@@ -17,13 +17,13 @@ const enum NotificationPermissionStatus {
  * Handler Section
  */
 
-const _backgroundHandler = (): void => {
+const backgroundHandler = (): void => {
   return messaging().setBackgroundMessageHandler(async () => {
     // Do nothing with background messages. Defaults to login and home screen flow
   })
 }
 
-const _foregroundHandler = (): (() => void) => {
+const foregroundHandler = (): (() => void) => {
   return messaging().onMessage(async () => {
     // Ignore foreground messages
   })
@@ -33,7 +33,7 @@ const _foregroundHandler = (): (() => void) => {
  * Permissions Section
  */
 
-const _requestNotificationPermission = async (): Promise<PermissionStatus> => {
+const requestNotificationPermission = async (): Promise<PermissionStatus> => {
   const result = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
   return result
 }
@@ -64,7 +64,7 @@ const formatPermissionAndroid = (permission: PermissionStatus): NotificationPerm
   }
 }
 
-const _requestPermission = async (): Promise<NotificationPermissionStatus> => {
+const requestPermission = async (): Promise<NotificationPermissionStatus> => {
   // IOS doesn't need the extra permission logic like android
   if (Platform.OS === 'ios') {
     const permission = await messaging().requestPermission()
@@ -73,7 +73,7 @@ const _requestPermission = async (): Promise<NotificationPermissionStatus> => {
 
   const checkPermission = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
   if (checkPermission !== RESULTS.GRANTED) {
-    const result = await _requestNotificationPermission()
+    const result = await requestNotificationPermission()
 
     return formatPermissionAndroid(result)
   }
@@ -84,7 +84,7 @@ const _requestPermission = async (): Promise<NotificationPermissionStatus> => {
  * Helper Functions Section
  */
 
-const _getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | undefined> => {
+const getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | undefined> => {
   const connections: ConnectionRecord[] = await agent.connections.getAll()
   const mediators = connections.filter((r) => r.connectionTypes.includes(ConnectionType.Mediator))
   if (mediators.length < 1) {
@@ -130,7 +130,7 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
     return false
   }
 
-  const mediator = await _getMediatorConnection(agent)
+  const mediator = await getMediatorConnection(agent)
   if (!mediator) return
 
   const response = await agent.discovery.queryFeatures({
@@ -195,7 +195,7 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
     token = await messaging().getToken()
   }
 
-  const mediator = await _getMediatorConnection(agent)
+  const mediator = await getMediatorConnection(agent)
   if (!mediator) {
     return
   }
@@ -233,9 +233,9 @@ const status = async (): Promise<NotificationPermissionStatus> => {
  * @returns {Promise<void>}
  */
 const setup = async (): Promise<NotificationPermissionStatus> => {
-  _backgroundHandler()
-  _foregroundHandler()
-  return await _requestPermission()
+  backgroundHandler()
+  foregroundHandler()
+  return await requestPermission()
 }
 
 const activate = async (agent: Agent): Promise<void> => {

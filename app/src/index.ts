@@ -93,7 +93,6 @@ const configuration: ConfigurationContext = {
         await deactivate(agent)
       }
     },
-    check: async () => 'granted',
   },
   whereToUseWalletUrl: 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet#where',
   getCredentialHelpDictionary: [
