@@ -43,6 +43,8 @@ import {
 } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { activate } from '../helpers/PushNotificationsHelper'
+
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
@@ -54,13 +56,14 @@ enum InitErrorTypes {
   Agent,
 }
 
-const onboardingComplete = (state: OnboardingState): boolean => {
-  return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry
+const onboardingComplete = (state: OnboardingState, enablePushNotifications?: boolean): boolean => {
+  return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry && (state.didConsiderPushNotifications || !enablePushNotifications)
 }
 
 const resumeOnboardingAt = (
   state: OnboardingState,
   enableWalletNaming: boolean | undefined,
+  enablePushNotifications: boolean | undefined,
   showPreface: boolean | undefined
 ): Screens => {
   if (
@@ -68,6 +71,7 @@ const resumeOnboardingAt = (
     state.didCompleteTutorial &&
     state.didAgreeToTerms &&
     state.didCreatePIN &&
+    (state.didConsiderPushNotifications || !enablePushNotifications) &&
     (state.didNameWallet || !enableWalletNaming) &&
     !state.didConsiderBiometry
   ) {
@@ -79,10 +83,19 @@ const resumeOnboardingAt = (
     state.didCompleteTutorial &&
     state.didAgreeToTerms &&
     state.didCreatePIN &&
+    (state.didConsiderPushNotifications || !enablePushNotifications) &&
     enableWalletNaming &&
     !state.didNameWallet
   ) {
     return Screens.NameWallet
+  }
+
+  if ((state.didSeePreface || !showPreface) &&
+    state.didCompleteTutorial &&
+    state.didAgreeToTerms &&
+    state.didCreatePIN &&
+    (enablePushNotifications && !state.didConsiderPushNotifications)) {
+    return Screens.UsePushNotifications
   }
 
   if (
@@ -118,7 +131,7 @@ const Splash = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
-  const { indyLedgers, showPreface } = useConfiguration()
+  const { indyLedgers, showPreface, pushNotification } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -314,7 +327,7 @@ const Splash = () => {
             payload: [dataAsJSON],
           })
 
-          if (onboardingComplete(dataAsJSON)) {
+          if (onboardingComplete(dataAsJSON, pushNotification)) {
             // if they previously completed onboarding before wallet naming was enabled, mark complete
             if (!store.onboarding.didNameWallet) {
               dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
@@ -349,7 +362,7 @@ const Splash = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming, showPreface) }],
+              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming, pushNotification, showPreface) }],
             })
           )
 
@@ -420,7 +433,7 @@ const Splash = () => {
               key: credentials.key,
             },
             logger,
-            mediatorPickupStrategy: MediatorPickupStrategy.PickUpV2,
+            mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             autoUpdateStorageOnStartup: true,
             autoAcceptConnections: true,
           },
@@ -456,9 +469,6 @@ const Splash = () => {
 
         setStep(6)
         await newAgent.initialize()
-        await newAgent.mediationRecipient.initialize()
-        await newAgent.mediationRecipient.initiateMessagePickup()
-
         const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
         if (!cachedLedgers) {
           // these escapes can be removed once Indy VDR has been upgraded and the patch is no longer needed
@@ -478,7 +488,6 @@ const Splash = () => {
               return prev + JSON.stringify(curr)
             }, ''),
           }))
-
           if (transactions) {
             await AsyncStorage.setItem(
               BCLocalStorageKeys.GenesisTransactions,
@@ -492,6 +501,9 @@ const Splash = () => {
 
         setStep(8)
         setAgent(newAgent)
+        if (store.preferences.usePushNotifications) {
+          activate(newAgent)
+        }
 
         setStep(9)
         navigation.dispatch(

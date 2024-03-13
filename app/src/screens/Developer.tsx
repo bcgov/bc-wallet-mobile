@@ -235,9 +235,10 @@ const Settings: React.FC = () => {
     }
 
     if (enablePushNotifications) {
-      PushNotificationHelper.setDeviceInfo(agent, true)
+      PushNotificationHelper.deactivate(agent)
     } else {
-      PushNotificationHelper.setup(agent)
+      PushNotificationHelper.setup()
+      PushNotificationHelper.activate(agent)
     }
 
     setEnablePushNotifications(!enablePushNotifications)
