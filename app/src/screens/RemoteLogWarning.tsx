@@ -4,29 +4,31 @@ import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import ErrorTextBox from '../components/ErrorTextBox'
+import FauxHeader from '../components/FauxHeader'
+
 type RemoteLogWarningProps = {
+  onBackPressed: () => void
   onEnablePressed: () => void
-  sessionId: number
 }
 
-const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, sessionId }) => {
+const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onBackPressed, onEnablePressed }) => {
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
-  const { TextTheme } = useTheme()
-  const paragraphText = t('RemoteLogging.Paragraph3').replace('{sessionId}', sessionId.toString())
+  const { TextTheme, ColorPallet } = useTheme()
 
   const onSubmitPressed = () => {
     onEnablePressed()
   }
 
-  const onPressShowcaseLink = () => {
-    Linking.openURL('https://digital.gov.bc.ca/digital-trust/showcase/')
+  const onPressPrivacyPolicyLink = () => {
+    Linking.openURL('https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy')
   }
 
   const style = StyleSheet.create({
     screenContainer: {
       flex: 1,
-      marginTop: 35,
+      marginTop: 10,
       padding: 20,
       justifyContent: 'space-between',
     },
@@ -36,41 +38,51 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onEnablePressed, se
   })
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['left', 'right', 'bottom']}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={style.screenContainer}>
-          <View style={style.contentContainer}>
-            <Text style={[TextTheme.headingTwo]}>{t('RemoteLogging.ScreenTitle')}</Text>
-            <Text style={[TextTheme.normal, { marginTop: 10, marginBottom: 10 }]}>{t('RemoteLogging.Paragraph1')}</Text>
-            <Text style={[TextTheme.normal, { marginTop: 10 }]}>
-              {t('RemoteLogging.Paragraph2')}
-              <Link onPress={onPressShowcaseLink} linkText={`${'Privacy Policy'}.`} />
-            </Text>
-            <Text style={[TextTheme.normal, { marginTop: 10 }]}>{paragraphText}</Text>
-          </View>
-          <View style={style.controlsContainer}>
-            <CheckBoxRow
-              title={t('RemoteLogging.CheckBoxTitle')}
-              accessibilityLabel={t('RemoteLogging.IAgree')}
-              testID={testIdWithKey('IAgree')}
-              checked={checked}
-              onPress={() => setChecked(!checked)}
-              reverse
-              titleStyle={{ fontWeight: 'bold' }}
-            />
-            <View style={[{ paddingTop: 10 }]}>
-              <Button
-                title={t('RemoteLogging.ButtonTitle')}
-                accessibilityLabel={t('Global.Continue')}
-                testID={testIdWithKey('Continue')}
-                disabled={!checked}
-                onPress={onSubmitPressed}
-                buttonType={ButtonType.Primary}
+    <SafeAreaView style={{ flex: 1, backgroundColor: ColorPallet.brand.primary }} edges={['top', 'right', 'left']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: ColorPallet.brand.primaryBackground }} edges={['bottom']}>
+        <FauxHeader title={t('RemoteLogging.ScreenTitle')} onBackPressed={onBackPressed} />
+        <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: ColorPallet.brand.primaryBackground }}>
+          <View style={style.screenContainer}>
+            <View style={style.contentContainer}>
+              <Text style={[TextTheme.headingTwo, { marginBottom: 10 }]}>{t('RemoteLogging.Heading')}</Text>
+              <Text style={[TextTheme.normal, { marginTop: 10, marginBottom: 0 }]}>
+                {t('RemoteLogging.CollectionNoticePart1')}
+                <Text style={[TextTheme.normal, { fontWeight: 'bold' }]}>
+                  {t('RemoteLogging.CollectionNoticeBold')}
+                </Text>
+                <Text style={TextTheme.normal}>{t('RemoteLogging.CollectionNoticePart2')}</Text>
+              </Text>
+              <Link
+                style={{ marginBottom: 20 }}
+                onPress={onPressPrivacyPolicyLink}
+                linkText={t('RemoteLogging.CollectionNoticeLink')}
               />
+              <ErrorTextBox>{t('RemoteLogging.CollectionNoticeWarning')}</ErrorTextBox>
+            </View>
+            <View style={style.controlsContainer}>
+              <CheckBoxRow
+                title={t('RemoteLogging.CheckBoxTitle')}
+                accessibilityLabel={t('RemoteLogging.IAgree')}
+                testID={testIdWithKey('IAgree')}
+                checked={checked}
+                onPress={() => setChecked(!checked)}
+                reverse
+                titleStyle={{ textAlign: 'right' }}
+              />
+              <View style={{ paddingTop: 10 }}>
+                <Button
+                  title={t('RemoteLogging.ButtonTitle')}
+                  accessibilityLabel={t('RemoteLogging.ButtonTitle')}
+                  testID={testIdWithKey('TurnOn')}
+                  disabled={!checked}
+                  onPress={onSubmitPressed}
+                  buttonType={ButtonType.Primary}
+                />
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </SafeAreaView>
   )
 }
