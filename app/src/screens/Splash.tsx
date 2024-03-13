@@ -131,7 +131,7 @@ const Splash = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
-  const { indyLedgers, showPreface, pushNotification } = useConfiguration()
+  const { indyLedgers, showPreface, enablePushNotifications } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -327,7 +327,7 @@ const Splash = () => {
             payload: [dataAsJSON],
           })
 
-          if (onboardingComplete(dataAsJSON, pushNotification)) {
+          if (onboardingComplete(dataAsJSON, enablePushNotifications)) {
             // if they previously completed onboarding before wallet naming was enabled, mark complete
             if (!store.onboarding.didNameWallet) {
               dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
@@ -362,7 +362,7 @@ const Splash = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming, pushNotification, showPreface) }],
+              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming, enablePushNotifications, showPreface) }],
             })
           )
 

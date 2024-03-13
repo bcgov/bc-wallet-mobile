@@ -60,11 +60,6 @@
     "@credo-ts/drpc": "patch:@credo-ts/drpc@npm%3A0.5.0-alpha.151#./.yarn/patches/@credo-ts-drpc-npm-0.5.0-alpha.151-5bad8b38bd.patch",
     "@aries-framework/react-hooks": "patch:@aries-framework/react-hooks@npm:0.4.2#./.yarn/patches/@aries-framework-react-hooks-npm-0.4.2-84b7eb8764.patch",
     "@aries-framework/anoncreds": "patch:@aries-framework/anoncreds@npm%3A0.4.2#./.yarn/patches/@aries-framework-anoncreds-npm-0.4.0-4d3b4e769d.patch",
-    "@aries-framework/indy-vdr": "patch:@aries-framework/indy-vdr@npm%3A0.4.2#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch",
-    "@hyperledger/aries-bifold-core": "portal:bifold/packages/legacy/core",
-    "@hyperledger/aries-oca": "portal:bifold/packages/oca",
-    "@hyperledger/aries-react-native-attestation": "portal:bifold/packages/react-native-attestation",
-    "@hyperledger/aries-bifold-remote-logs": "portal:bifold/packages/remote-logs",
-    "@hyperledger/aries-bifold-verifier": "portal:bifold/packages/verifier"
+    "@aries-framework/indy-vdr": "patch:@aries-framework/indy-vdr@npm%3A0.4.2#./.yarn/patches/@aries-framework-indy-vdr-npm-0.4.0-b01067562c.patch"
   }
 }

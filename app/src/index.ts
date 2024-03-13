@@ -83,7 +83,7 @@ const configuration: ConfigurationContext = {
   useCustomNotifications: useNotifications,
   useAttestation: useAttestation,
   enableUseMultUseInvitation: false,
-  pushNotification: {
+  enablePushNotifications: {
     status: status,
     setup: setup,
     toggle: async (state: boolean, agent: Agent<any>) => {
