@@ -1,23 +1,29 @@
 import { Agent, ConnectionRecord, ConnectionType } from '@aries-framework/core'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import messaging from '@react-native-firebase/messaging'
+import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { request, check, PERMISSIONS, RESULTS, PermissionStatus } from 'react-native-permissions'
 
 const TOKEN_STORAGE_KEY = 'deviceToken'
 
+const enum NotificationPermissionStatus {
+  DENIED = 'denied',
+  GRANTED = 'granted',
+  UNKNOWN = 'unknown',
+}
+
 /**
  * Handler Section
  */
 
-const _backgroundHandler = (): void => {
+const backgroundHandler = (): void => {
   return messaging().setBackgroundMessageHandler(async () => {
     // Do nothing with background messages. Defaults to login and home screen flow
   })
 }
 
-const _foregroundHandler = (): (() => void) => {
+const foregroundHandler = (): (() => void) => {
   return messaging().onMessage(async () => {
     // Ignore foreground messages
   })
@@ -27,41 +33,58 @@ const _foregroundHandler = (): (() => void) => {
  * Permissions Section
  */
 
-const _requestNotificationPermission = async (agent: Agent): Promise<PermissionStatus> => {
-  agent.config.logger.info('Requesting push notification permission...')
+const requestNotificationPermission = async (): Promise<PermissionStatus> => {
   const result = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
-  agent.config.logger.info(`push notification permission is now [${result}]`)
   return result
 }
 
-const _checkNotificationPermission = async (agent: Agent): Promise<PermissionStatus> => {
-  agent.config.logger.info('Checking push notification permission...')
-  const result = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
-  agent.config.logger.info(`push notification permission is [${result}]`)
-  return result
+const formatPermissionIos = (permission: FirebaseMessagingTypes.AuthorizationStatus): NotificationPermissionStatus => {
+  switch (permission) {
+    case messaging.AuthorizationStatus.AUTHORIZED:
+      return NotificationPermissionStatus.GRANTED
+    case messaging.AuthorizationStatus.DENIED:
+      return NotificationPermissionStatus.DENIED
+    case messaging.AuthorizationStatus.PROVISIONAL:
+      return NotificationPermissionStatus.GRANTED
+    default:
+      return NotificationPermissionStatus.UNKNOWN
+  }
 }
 
-const _requestPermission = async (agent: Agent): Promise<void> => {
+const formatPermissionAndroid = (permission: PermissionStatus): NotificationPermissionStatus => {
+  switch (permission) {
+    case RESULTS.GRANTED:
+      return NotificationPermissionStatus.GRANTED
+    case RESULTS.DENIED:
+      return NotificationPermissionStatus.DENIED
+    case RESULTS.BLOCKED:
+      return NotificationPermissionStatus.DENIED
+    default:
+      return NotificationPermissionStatus.UNKNOWN
+  }
+}
+
+const requestPermission = async (): Promise<NotificationPermissionStatus> => {
   // IOS doesn't need the extra permission logic like android
   if (Platform.OS === 'ios') {
-    await messaging().requestPermission()
-    return
+    const permission = await messaging().requestPermission()
+    return formatPermissionIos(permission)
   }
 
-  const checkPermission = await _checkNotificationPermission(agent)
+  const checkPermission = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
   if (checkPermission !== RESULTS.GRANTED) {
-    const request = await _requestNotificationPermission(agent)
-    if (request !== RESULTS.GRANTED) {
-      agent.config.logger.warn(`push notification permission was not granted by user`)
-    }
+    const result = await requestNotificationPermission()
+
+    return formatPermissionAndroid(result)
   }
+  return formatPermissionAndroid(checkPermission)
 }
 
 /**
  * Helper Functions Section
  */
 
-const _getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | undefined> => {
+const getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | undefined> => {
   const connections: ConnectionRecord[] = await agent.connections.getAll()
   const mediators = connections.filter((r) => r.connectionTypes.includes(ConnectionType.Mediator))
   if (mediators.length < 1) {
@@ -107,7 +130,7 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
     return false
   }
 
-  const mediator = await _getMediatorConnection(agent)
+  const mediator = await getMediatorConnection(agent)
   if (!mediator) return
 
   const response = await agent.discovery.queryFeatures({
@@ -172,7 +195,7 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
     token = await messaging().getToken()
   }
 
-  const mediator = await _getMediatorConnection(agent)
+  const mediator = await getMediatorConnection(agent)
   if (!mediator) {
     return
   }
@@ -192,18 +215,34 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
   }
 }
 
+const status = async (): Promise<NotificationPermissionStatus> => {
+  if (Platform.OS === 'ios') {
+    const permission = await messaging().hasPermission()
+    return formatPermissionIos(permission)
+  } else if (Platform.OS === 'android') {
+    const result = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
+    return formatPermissionAndroid(result)
+  }
+  return NotificationPermissionStatus.UNKNOWN
+}
+
 /**
  * Attempts to send the device token to the mediator agent, register handlers and requests permissions
  * @param agent - The active aries agent
  * @prarm blankDeviceToken - If true, will setup the device token as blank (disabled)
  * @returns {Promise<void>}
  */
-const setup = async (agent: Agent, blankDeviceToken = false): Promise<void> => {
-  // FIXME: Currently set the token to blank (disabled) on initialization.
-  setDeviceInfo(agent, blankDeviceToken)
-  _backgroundHandler()
-  _foregroundHandler()
-  _requestPermission(agent)
+const setup = async (): Promise<NotificationPermissionStatus> => {
+  backgroundHandler()
+  foregroundHandler()
+  return await requestPermission()
 }
 
-export { isEnabled, isRegistered, isMediatorCapable, isUserDenied, setDeviceInfo, setup }
+const activate = async (agent: Agent): Promise<void> => {
+  await setDeviceInfo(agent)
+}
+const deactivate = async (agent: Agent): Promise<void> => {
+  await setDeviceInfo(agent, true)
+}
+
+export { isEnabled, isRegistered, isMediatorCapable, isUserDenied, setDeviceInfo, setup, activate, deactivate, status }
