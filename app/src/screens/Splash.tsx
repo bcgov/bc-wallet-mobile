@@ -43,11 +43,10 @@ import {
 } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { activate } from '../helpers/PushNotificationsHelper'
-
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
+import { activate } from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
@@ -57,7 +56,13 @@ enum InitErrorTypes {
 }
 
 const onboardingComplete = (state: OnboardingState, enablePushNotifications?: boolean): boolean => {
-  return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry && (state.didConsiderPushNotifications || !enablePushNotifications)
+  return (
+    state.didCompleteTutorial &&
+    state.didAgreeToTerms &&
+    state.didCreatePIN &&
+    state.didConsiderBiometry &&
+    (state.didConsiderPushNotifications || !enablePushNotifications)
+  )
 }
 
 const resumeOnboardingAt = (
@@ -90,11 +95,14 @@ const resumeOnboardingAt = (
     return Screens.NameWallet
   }
 
-  if ((state.didSeePreface || !showPreface) &&
+  if (
+    (state.didSeePreface || !showPreface) &&
     state.didCompleteTutorial &&
     state.didAgreeToTerms &&
     state.didCreatePIN &&
-    (enablePushNotifications && !state.didConsiderPushNotifications)) {
+    enablePushNotifications &&
+    !state.didConsiderPushNotifications
+  ) {
     return Screens.UsePushNotifications
   }
 
@@ -327,7 +335,7 @@ const Splash = () => {
             payload: [dataAsJSON],
           })
 
-          if (onboardingComplete(dataAsJSON, enablePushNotifications)) {
+          if (onboardingComplete(dataAsJSON, !!enablePushNotifications)) {
             // if they previously completed onboarding before wallet naming was enabled, mark complete
             if (!store.onboarding.didNameWallet) {
               dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
@@ -362,7 +370,16 @@ const Splash = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming, enablePushNotifications, showPreface) }],
+              routes: [
+                {
+                  name: resumeOnboardingAt(
+                    dataAsJSON,
+                    store.preferences.enableWalletNaming,
+                    !!enablePushNotifications,
+                    showPreface
+                  ),
+                },
+              ],
             })
           )
 
