@@ -6,6 +6,9 @@ import {
   defaultConfiguration,
   Stacks,
   Screens,
+  loadLoginAttempt,
+  useStore,
+  Agent,
 } from '@hyperledger/aries-bifold-core'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import merge from 'lodash.merge'
@@ -28,9 +31,11 @@ import PersonCredential from './screens/PersonCredential'
 import Preface from './screens/Preface'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
+import { setup, activate, deactivate, status } from './helpers/PushNotificationsHelper'
 import { useAttestation } from './services/attestation'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
+import { useAgent } from '@aries-framework/react-hooks'
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
@@ -80,6 +85,17 @@ const configuration: ConfigurationContext = {
   useCustomNotifications: useNotifications,
   useAttestation: useAttestation,
   enableUseMultUseInvitation: false,
+  enablePushNotifications: {
+    status: status,
+    setup: setup,
+    toggle: async (state: boolean, agent: Agent<any>) => {
+      if (state) {
+        await activate(agent)
+      } else {
+        await deactivate(agent)
+      }
+    },
+  },
   whereToUseWalletUrl: 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet#where',
   getCredentialHelpDictionary: [
     {
