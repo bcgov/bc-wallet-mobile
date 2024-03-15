@@ -6,8 +6,6 @@ import {
   defaultConfiguration,
   Stacks,
   Screens,
-  loadLoginAttempt,
-  useStore,
   Agent,
 } from '@hyperledger/aries-bifold-core'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
@@ -21,6 +19,7 @@ import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
 import HomeFooterView from './components/HomeFooterView'
 import HomeHeaderView from './components/HomeHeaderView'
+import { setup, activate, deactivate, status } from './helpers/PushNotificationsHelper'
 import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import fr from './localization/fr'
@@ -31,11 +30,9 @@ import PersonCredential from './screens/PersonCredential'
 import Preface from './screens/Preface'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
-import { setup, activate, deactivate, status } from './helpers/PushNotificationsHelper'
 import { useAttestation } from './services/attestation'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
-import { useAgent } from '@aries-framework/react-hooks'
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
@@ -88,7 +85,7 @@ const configuration: ConfigurationContext = {
   enablePushNotifications: {
     status: status,
     setup: setup,
-    toggle: async (state: boolean, agent: Agent<any>) => {
+    toggle: async (state: boolean, agent: Agent) => {
       if (state) {
         await activate(agent)
       } else {

@@ -43,13 +43,13 @@ import {
 } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { activate } from '../helpers/PushNotificationsHelper'
-
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
+import { activate } from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
+
 import { TermsVersion } from './Terms'
 
 enum InitErrorTypes {
@@ -57,17 +57,26 @@ enum InitErrorTypes {
   Agent,
 }
 
-const onboardingComplete = (state: OnboardingState, params: { termsVersion?: boolean | string, enablePushNotifications?: boolean }): boolean => {
+const onboardingComplete = (
+  state: OnboardingState,
+  params: { termsVersion?: boolean | string; enablePushNotifications?: boolean }
+): boolean => {
   const termsVer = params.termsVersion ?? true
-  return state.didCompleteTutorial && state.didAgreeToTerms === termsVer && state.didCreatePIN && state.didConsiderBiometry && (state.didConsiderPushNotifications || !params.enablePushNotifications)
+  return (
+    state.didCompleteTutorial &&
+    state.didAgreeToTerms === termsVer &&
+    state.didCreatePIN &&
+    state.didConsiderBiometry &&
+    (state.didConsiderPushNotifications || !params.enablePushNotifications)
+  )
 }
 
 const resumeOnboardingAt = (
   state: OnboardingState,
   params: {
-    termsVersion?: boolean | string,
-    enableWalletNaming?: boolean,
-    enablePushNotifications?: boolean,
+    termsVersion?: boolean | string
+    enableWalletNaming?: boolean
+    enablePushNotifications?: boolean
     showPreface?: boolean
   }
 ): Screens => {
@@ -96,11 +105,14 @@ const resumeOnboardingAt = (
     return Screens.NameWallet
   }
 
-  if ((state.didSeePreface || !params.showPreface) &&
+  if (
+    (state.didSeePreface || !params.showPreface) &&
     state.didCompleteTutorial &&
     state.didAgreeToTerms === termsVer &&
     state.didCreatePIN &&
-    (params.enablePushNotifications && !state.didConsiderPushNotifications)) {
+    params.enablePushNotifications &&
+    !state.didConsiderPushNotifications
+  ) {
     return Screens.UsePushNotifications
   }
 
@@ -333,7 +345,12 @@ const Splash = () => {
             payload: [dataAsJSON],
           })
 
-          if (onboardingComplete(dataAsJSON, { enablePushNotifications, termsVersion: TermsVersion })) {
+          if (
+            onboardingComplete(dataAsJSON, {
+              enablePushNotifications: !!enablePushNotifications,
+              termsVersion: TermsVersion,
+            })
+          ) {
             // if they previously completed onboarding before wallet naming was enabled, mark complete
             if (!store.onboarding.didNameWallet) {
               dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
@@ -368,7 +385,16 @@ const Splash = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON, { enableWalletNaming: store.preferences.enableWalletNaming, enablePushNotifications, showPreface, termsVersion: TermsVersion }) }],
+              routes: [
+                {
+                  name: resumeOnboardingAt(dataAsJSON, {
+                    enableWalletNaming: store.preferences.enableWalletNaming,
+                    enablePushNotifications: !!enablePushNotifications,
+                    showPreface,
+                    termsVersion: TermsVersion,
+                  }),
+                },
+              ],
             })
           )
 

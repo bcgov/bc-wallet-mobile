@@ -2,8 +2,8 @@ import { Container, TOKENS, TokenMapping } from '@hyperledger/aries-bifold-core'
 import { DependencyContainer } from 'tsyringe'
 
 import Developer from './src/screens/Developer'
-import Terms, { TermsVersion } from './src/screens/Terms'
 import Preface from './src/screens/Preface'
+import Terms, { TermsVersion } from './src/screens/Terms'
 
 export class AppContainer implements Container {
   private container: DependencyContainer

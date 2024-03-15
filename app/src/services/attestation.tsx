@@ -1,4 +1,3 @@
-import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
 import {
   Agent,
   BaseEvent,
@@ -27,6 +26,11 @@ import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'rea
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
 
+import {
+  attestationCredDefIds,
+  getAvailableAttestationCredentials,
+  isProofRequestingAttestation,
+} from '../helpers/Attestation'
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 
 enum ErrorCodes {
@@ -55,56 +59,6 @@ type AttestationProviderParams = {
 }
 
 export type EventListenerFn = (event: BaseEvent) => void
-
-const attestationCredDefIds = [
-  'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet',
-  'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet',
-  'XqaRXJt4sXE6TRpfGpVbGw:3:CL:655:bcwallet',
-]
-
-// proof requests can vary wildly but we'll know attestation requests must contain the cred def id as a restriction
-interface IndyRequest {
-  indy: {
-    requested_attributes?: {
-      attestationInfo?: {
-        names: string[]
-        restrictions: { cred_def_id: string }[]
-      }
-    }
-  }
-}
-
-// same as above
-interface AnonCredsRequest {
-  anoncreds: {
-    requested_attributes?: {
-      attestationInfo?: {
-        names: string[]
-        restrictions: { cred_def_id: string }[]
-      }
-    }
-  }
-}
-
-interface AttestationProofRequestFormat {
-  request: IndyRequest & AnonCredsRequest
-}
-
-const isProofRequestingAttestation = async (proof: ProofExchangeRecord, agent: BifoldAgent) => {
-  const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
-  const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
-  return format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions?.some((rstr) =>
-    attestationCredDefIds.includes(rstr.cred_def_id)
-  )
-}
-
-const getAvailableAttestationCredentials = async (agent: BifoldAgent) => {
-  const credentials = await agent.credentials.getAll()
-  return credentials.filter((record) => {
-    const credDefId = record.metadata.get(AnonCredsCredentialMetadataKey)?.credentialDefinitionId
-    return credDefId && attestationCredDefIds.includes(credDefId)
-  })
-}
 
 const requestNonceDrpc = async (agent: Agent, connectionRecord: ConnectionRecord) => {
   const nonceRequestMessage: DrpcRequest = {
@@ -191,13 +145,13 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       // officially start attestation process here
       setLoading(true)
       // 1. Is the proof requesting an attestation credential
-      if (!(await isProofRequestingAttestation(proof, agent))) {
+      if (!(await isProofRequestingAttestation(proof, agent, attestationCredDefIds))) {
         setLoading(false)
         return
       }
 
       // 2. Does the wallet owner have a valid attestation credential
-      const availableAttestationCredentials = await getAvailableAttestationCredentials(agent)
+      const availableAttestationCredentials = await getAvailableAttestationCredentials(agent, attestationCredDefIds)
 
       // 3. If yes, do nothing
       if (availableAttestationCredentials.length > 0) {
