@@ -2,7 +2,7 @@ import { Container, TOKENS, TokenMapping } from '@hyperledger/aries-bifold-core'
 import { DependencyContainer } from 'tsyringe'
 
 import Developer from './src/screens/Developer'
-import Terms from './src/screens/Terms'
+import Terms, { TermsVersion } from './src/screens/Terms'
 import Preface from './src/screens/Preface'
 
 export class AppContainer implements Container {
@@ -16,7 +16,7 @@ export class AppContainer implements Container {
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this.container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
-    this.container.registerInstance(TOKENS.SCREEN_TERMS, Terms)
+    this.container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
     this.container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
     return this
   }

@@ -50,68 +50,74 @@ import TipCarousel from '../components/TipCarousel'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
+import { TermsVersion } from './Terms'
 
 enum InitErrorTypes {
   Onboarding,
   Agent,
 }
 
-const onboardingComplete = (state: OnboardingState, enablePushNotifications?: boolean): boolean => {
-  return state.didCompleteTutorial && state.didAgreeToTerms && state.didCreatePIN && state.didConsiderBiometry && (state.didConsiderPushNotifications || !enablePushNotifications)
+const onboardingComplete = (state: OnboardingState, params: { termsVersion?: boolean | string, enablePushNotifications?: boolean }): boolean => {
+  const termsVer = params.termsVersion ?? true
+  return state.didCompleteTutorial && state.didAgreeToTerms === termsVer && state.didCreatePIN && state.didConsiderBiometry && (state.didConsiderPushNotifications || !params.enablePushNotifications)
 }
 
 const resumeOnboardingAt = (
   state: OnboardingState,
-  enableWalletNaming: boolean | undefined,
-  enablePushNotifications: boolean | undefined,
-  showPreface: boolean | undefined
+  params: {
+    termsVersion?: boolean | string,
+    enableWalletNaming?: boolean,
+    enablePushNotifications?: boolean,
+    showPreface?: boolean
+  }
 ): Screens => {
+  const termsVer = params.termsVersion ?? true
   if (
-    (state.didSeePreface || !showPreface) &&
+    (state.didSeePreface || !params.showPreface) &&
     state.didCompleteTutorial &&
-    state.didAgreeToTerms &&
+    state.didAgreeToTerms === termsVer &&
     state.didCreatePIN &&
-    (state.didConsiderPushNotifications || !enablePushNotifications) &&
-    (state.didNameWallet || !enableWalletNaming) &&
+    (state.didConsiderPushNotifications || !params.enablePushNotifications) &&
+    (state.didNameWallet || !params.enableWalletNaming) &&
     !state.didConsiderBiometry
   ) {
     return Screens.UseBiometry
   }
 
   if (
-    (state.didSeePreface || !showPreface) &&
+    (state.didSeePreface || !params.showPreface) &&
     state.didCompleteTutorial &&
-    state.didAgreeToTerms &&
+    state.didAgreeToTerms === termsVer &&
     state.didCreatePIN &&
-    (state.didConsiderPushNotifications || !enablePushNotifications) &&
-    enableWalletNaming &&
+    (state.didConsiderPushNotifications || !params.enablePushNotifications) &&
+    params.enableWalletNaming &&
     !state.didNameWallet
   ) {
     return Screens.NameWallet
   }
 
-  if ((state.didSeePreface || !showPreface) &&
+  if ((state.didSeePreface || !params.showPreface) &&
     state.didCompleteTutorial &&
-    state.didAgreeToTerms &&
+    state.didAgreeToTerms === termsVer &&
     state.didCreatePIN &&
-    (enablePushNotifications && !state.didConsiderPushNotifications)) {
+    (params.enablePushNotifications && !state.didConsiderPushNotifications)) {
     return Screens.UsePushNotifications
   }
 
   if (
-    (state.didSeePreface || !showPreface) &&
+    (state.didSeePreface || !params.showPreface) &&
     state.didCompleteTutorial &&
-    state.didAgreeToTerms &&
+    state.didAgreeToTerms === termsVer &&
     !state.didCreatePIN
   ) {
     return Screens.CreatePIN
   }
 
-  if ((state.didSeePreface || !showPreface) && state.didCompleteTutorial && !state.didAgreeToTerms) {
+  if ((state.didSeePreface || !params.showPreface) && state.didCompleteTutorial && state.didAgreeToTerms !== termsVer) {
     return Screens.Terms
   }
 
-  if (state.didSeePreface || !showPreface) {
+  if (state.didSeePreface || !params.showPreface) {
     return Screens.Onboarding
   }
 
@@ -327,7 +333,7 @@ const Splash = () => {
             payload: [dataAsJSON],
           })
 
-          if (onboardingComplete(dataAsJSON, enablePushNotifications)) {
+          if (onboardingComplete(dataAsJSON, { enablePushNotifications, termsVersion: TermsVersion })) {
             // if they previously completed onboarding before wallet naming was enabled, mark complete
             if (!store.onboarding.didNameWallet) {
               dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
@@ -362,7 +368,7 @@ const Splash = () => {
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: resumeOnboardingAt(dataAsJSON, store.preferences.enableWalletNaming, enablePushNotifications, showPreface) }],
+              routes: [{ name: resumeOnboardingAt(dataAsJSON, { enableWalletNaming: store.preferences.enableWalletNaming, enablePushNotifications, showPreface, termsVersion: TermsVersion }) }],
             })
           )
 
