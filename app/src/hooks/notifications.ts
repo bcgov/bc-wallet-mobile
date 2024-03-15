@@ -6,8 +6,8 @@ import {
   ProofExchangeRecord,
   ProofState,
 } from '@aries-framework/core'
-import { useCredentialByState, useProofByState, useBasicMessages } from '@aries-framework/react-hooks'
-import { useStore } from '@hyperledger/aries-bifold-core'
+import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@aries-framework/react-hooks'
+import { BifoldAgent, useStore } from '@hyperledger/aries-bifold-core'
 import {
   BasicMessageMetadata,
   CredentialMetadata,
@@ -16,9 +16,12 @@ import {
 } from '@hyperledger/aries-bifold-core/App/types/metadata'
 //aries-bifold/App/types/metadata
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
+import { useEffect, useState } from 'react'
 
+import { attestationCredDefIds, isProofRequestingAttestation } from '../helpers/Attestation'
 import { getUnlockCredentialDate, showPersonCredentialSelector } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
+
 interface CustomNotification {
   type: 'CustomNotification'
   createdAt: Date
@@ -31,9 +34,11 @@ interface Notifications {
 }
 
 export const useNotifications = (): Notifications => {
+  const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const proofsRequested = useProofByState(ProofState.RequestReceived)
+  const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
   const { records: basicMessages } = useBasicMessages()
   // get all unseen messages
   const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg) => {
@@ -57,6 +62,28 @@ export const useNotifications = (): Notifications => {
       return !metadata?.details_seen
     }
   )
+
+  useEffect(() => {
+    const getNonAttestationProofs = async () => {
+      const nonAttestationProofs = (
+        await Promise.all(
+          [...proofsRequested, ...proofsDone].map(async (proof: ProofExchangeRecord) => {
+            const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent, attestationCredDefIds)
+            return {
+              value: proof,
+              include: !isAttestation,
+            }
+          })
+        )
+      )
+        .filter((v) => v.include)
+        .map((data) => data.value)
+
+      setNonAttestationProofs(nonAttestationProofs)
+    }
+    getNonAttestationProofs()
+  }, [proofsRequested.length, proofsDone.length])
+
   const revoked = useCredentialByState(CredentialState.Done).filter((cred: CredentialRecord) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const metadata = cred!.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata
@@ -83,8 +110,7 @@ export const useNotifications = (): Notifications => {
   let notifications: (BasicMessageRecord | CredentialRecord | ProofExchangeRecord | CustomNotification)[] = [
     ...messagesToShow,
     ...offers,
-    ...proofsRequested,
-    ...proofsDone,
+    ...nonAttestationProofs,
     ...revoked,
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
