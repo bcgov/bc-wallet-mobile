@@ -6,7 +6,6 @@ import { useEffect } from 'react'
 
 export const useCredentialOfferTrigger = (workflowConnectionId?: string): void => {
   const navigation = useNavigation()
-
   const offers = useCredentialByState(CredentialState.OfferReceived)
 
   const goToCredentialOffer = (credentialId?: string) => {

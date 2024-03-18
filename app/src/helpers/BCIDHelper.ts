@@ -101,7 +101,7 @@ export const removeExistingInvitationIfRequired = async (
   }
 }
 
-export const recieveBCIDInvite = async (
+export const receiveBCIDInvite = async (
   agent: Agent,
   store: BCState,
   t: TFunction<'translation', undefined>
@@ -261,14 +261,25 @@ export const startFlow = async (
   store: BCState,
   setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
   t: TFunction<'translation', undefined>,
-  callback?: (connectionId?: string) => void
+  workflowCompletedCallback?: (connectionId?: string) => void,
+  connectionEstablishedCallback?: (connectionId?: string) => void
 ) => {
   try {
-    const agentDetails = await recieveBCIDInvite(agent, store, t)
+    const remoteAgentDetails = await receiveBCIDInvite(agent, store, t)
 
-    if (agentDetails.legacyConnectionDid !== undefined) {
+    if (connectionEstablishedCallback) {
+      connectionEstablishedCallback(remoteAgentDetails.connectionId)
+    }
+
+    if (remoteAgentDetails.legacyConnectionDid !== undefined) {
       setTimeout(async () => {
-        await authenticateWithServiceCard(store, setWorkflowInProgress, agentDetails, t, callback)
+        await authenticateWithServiceCard(
+          store,
+          setWorkflowInProgress,
+          remoteAgentDetails,
+          t,
+          workflowCompletedCallback
+        )
       }, connectionDelayInMs)
     }
   } catch (error: unknown) {
