@@ -24,7 +24,7 @@ const digitalTrustHomeUrl = 'https://digital.gov.bc.ca/digital-trust/'
 const bcWebPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/home/privacy'
 const digitalWalletPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/privacy'
 
-export const TermsVersion = '1.0.1'
+export const TermsVersion = '2'
 
 const Terms = () => {
   const [store, dispatch] = useStore()
@@ -103,8 +103,9 @@ const Terms = () => {
         <InfoBox
           notificationType={InfoBoxType.Info}
           description={
-            agreedToPreviousTerms &&
-            'BC Wallet has updated the end user licencse agreement. To continue using BC Wallet, please reveiw and accept the updated terms.'
+            agreedToPreviousTerms
+              ? 'BC Wallet has updated the end user licencse agreement. To continue using BC Wallet, please reveiw and accept the updated terms.'
+              : undefined
           }
           title={
             agreedToPreviousTerms
