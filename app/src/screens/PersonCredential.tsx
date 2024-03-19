@@ -13,7 +13,7 @@ import LoadingIcon from '../components/LoadingIcon'
 import { startFlow } from '../helpers/BCIDHelper'
 // import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
 import { BCState } from '../store'
-import { getAvailableAttestationCredentials, attestationCredDefIds } from '../helpers/Attestation'
+import { credentialsMatchForProof } from '../helpers/Attestation'
 
 export default function PersonCredential() {
   const { agent } = useAgent()
@@ -91,35 +91,32 @@ export default function PersonCredential() {
   }, [])
 
   useEffect(() => {
-    console.log('*******************************')
-    console.log('receivedProofRequests', JSON.stringify(receivedProofRequests))
-    console.log('*******************************')
-
-    agent?.proofs.getById('523bb280-7aaf-45b6-91b9-9cae8509d024').then((proof) => {
-      console.log('*******************************')
-      console.log('proof', JSON.stringify(proof))
-      console.log('*******************************')
-
-      retrieveCredentialsForProof(agent!, proof, credentials.records, t)
-    })
-  }, [receivedProofRequests, credentials])
-
-  useEffect(() => {
-    // other
-    if (attestationLoading) {
-      agent!.config.logger.info('Attestation workflow started for Person credential.')
+    if (!attestationLoading && !didStartAttestationWorkflow) {
       setDidStartAttestationWorkflow(true)
+
+      return
     }
 
-    if (!attestationLoading && didStartAttestationWorkflow && remoteAgentConnectionId) {
-      const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentConnectionId)
-
-      if (proofRequest) {
-        agent?.proofs.acceptRequest({ proofRecordId: proofRequest.id }).then((result) => {
-          agent!.config.logger.info(`Accepting IDIM attestation proof request with ID ${result.id}`)
-        })
+    const acceptAttestationProofRequest = async () => {
+      if (!attestationLoading && didStartAttestationWorkflow && remoteAgentConnectionId) {
+        const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentConnectionId)
+        if (proofRequest) {
+          const credentials = await credentialsMatchForProof(agent!, proofRequest)
+          await agent?.proofs.acceptRequest({
+            proofRecordId: proofRequest.id,
+            proofFormats: credentials,
+          })
+        }
       }
     }
+
+    acceptAttestationProofRequest()
+      .then(() => {
+        agent!.config.logger.info(`Accepted IDIM attestation proof request.`)
+      })
+      .catch((error) => {
+        agent!.config.logger.error(`Unable to accept IDIM attestation proof request, error: ${error.message}`)
+      })
   }, [attestationLoading, receivedProofRequests])
 
   const acceptPersonCredentialOffer = useCallback(() => {

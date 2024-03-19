@@ -25,6 +25,7 @@ import Config from 'react-native-config'
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
+import { attestationCredentialRequired } from '../helpers/Attestation'
 
 import {
   attestationCredDefIds,
@@ -151,11 +152,12 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       }
 
       // 2. Does the wallet owner have a valid attestation credential
-      const availableAttestationCredentials = await getAvailableAttestationCredentials(agent, attestationCredDefIds)
+      const required = await attestationCredentialRequired(agent, proof.id)
 
       // 3. If yes, do nothing
-      if (availableAttestationCredentials.length > 0) {
+      if (!required) {
         setLoading(false)
+
         return
       }
 
@@ -185,7 +187,9 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
           '',
           ErrorCodes.AttestationReceiveInvitationError
         )
+
         DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
+
         return
       }
 

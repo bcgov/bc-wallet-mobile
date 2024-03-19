@@ -1,5 +1,9 @@
 import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
-import { CredentialExchangeRecord, ProofExchangeRecord } from '@aries-framework/core'
+import {
+  CredentialExchangeRecord,
+  ProofExchangeRecord,
+  GetCredentialsForProofRequestReturn,
+} from '@aries-framework/core'
 import { BifoldAgent } from '@hyperledger/aries-bifold-core'
 
 export const attestationCredDefIds = [
@@ -37,6 +41,59 @@ export interface AttestationProofRequestFormat {
   request: IndyRequest & AnonCredsRequest
 }
 
+/**
+ * Determine the format of the proof request
+ *
+ * Setting `filterByNonRevocationRequirements` to `false` returns all credentials
+ * even if they are revokable and revoked.
+ *
+ * @param agent
+ * @param proofId
+ * @param filterByNonRevocationRequirements
+ * @returns The Anoncreds or Indy proof format object
+ */
+const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterByNonRevocationRequirements = false) => {
+  const format = await agent.proofs.getFormatData(proofId)
+  const proofIsAnoncredsFormat = format.request?.anoncreds !== undefined
+  const proofIsIndycredsFormat = format.request?.indy !== undefined
+  const proofFormats = {
+    // FIXME: AFJ will try to use the format, even if the value is undefined (but the key is present)
+    // We should ignore the key, if the value is undefined. For now this is a workaround.
+    ...(proofIsIndycredsFormat
+      ? {
+          indy: {
+            filterByNonRevocationRequirements,
+          },
+        }
+      : {}),
+
+    ...(proofIsAnoncredsFormat
+      ? {
+          anoncreds: {
+            filterByNonRevocationRequirements,
+          },
+        }
+      : {}),
+  }
+
+  if (!proofFormats) {
+    throw new Error('Unable to lookup proof request format')
+  }
+
+  return proofFormats
+}
+
+/**
+ * This function checks if the proof request is asking for an attestation
+ *
+ * This is a basic check to see if a proof request is asking for an attestation
+ * based on the credential definition ID in the proof request.
+ *
+ * @param proof The proof request
+ * @param agent The AFJ agent
+ * @param attestationCredDefIds Cred def IDs for used attestation
+ * @returns True if the proof request is asking for an attestation
+ */
 export const isProofRequestingAttestation = async (
   proof: ProofExchangeRecord,
   agent: BifoldAgent,
@@ -50,6 +107,13 @@ export const isProofRequestingAttestation = async (
   )
 }
 
+/**
+ * This function retrieves all available attestation credentials
+ *
+ * @param agent The AFJ agent
+ * @param attestationCredDefIds Cred def IDs for used attestation
+ * @returns All available attestation credentials
+ */
 export const getAvailableAttestationCredentials = async (
   agent: BifoldAgent,
   attestationCredDefIds: string[]
@@ -62,15 +126,19 @@ export const getAvailableAttestationCredentials = async (
   })
 }
 
-// When we get an attestation proof request:
-// 1. Do we have any attestation credentials?
-// NO: We need to start the attestation workflow
-// YES: Do the credentials satisfy the proof request?
-// NO: We need to start the attestation workflow
-// YES: Accept the proof request
-
-// '523bb280-7aaf-45b6-91b9-9cae8509d024'
-export const doWeNeedToGetAnAttestationCredential = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
+/**
+ * This function checks if we need to get an attestation credential
+ *
+ * In-depth check to see if we need to get an attestation credential done by
+ * checking if the proof request is asking for an attestation and if we have
+ * the necessary credentials to fulfill the request.
+ *
+ * @param agent The AFJ agent
+ * @param proofId The proof request ID
+ * @returns True if we need to get an attestation credential
+ * @throws {Error} Will throw an error if a problem looking up data occurs
+ */
+export const attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
   const proof = await agent?.proofs.getById(proofId)
   const isAttestation = await isProofRequestingAttestation(proof, agent, attestationCredDefIds)
 
@@ -78,59 +146,52 @@ export const doWeNeedToGetAnAttestationCredential = async (agent: BifoldAgent, p
     return false
   }
 
-  const credentials = await getAvailableAttestationCredentials(agent, attestationCredDefIds)
+  const credentials = await credentialsMatchForProof(agent, proof)
 
-  if (credentials.length === 0) {
+  if (!credentials) {
     return true
   }
 
-  // Does the credential satisfy the proof request?
-  // YES? return false
-  // NO? return true
+  // TODO:(jl) Should we be checking the length of the attributes matches some
+  // expected length in the proof request?
 
-  return true
+  if (credentials.proofFormats.indy) {
+    return credentials.proofFormats.indy.attributes.attestationInfo.length == 0
+  }
+
+  if (credentials.proofFormats.anoncreds) {
+    return credentials.proofFormats.anoncreds.attributes.attestationInfo.length == 0
+  }
+
+  return false
 }
 
-//   const fullCredentials = useCredentials().records
+/**
+ * Check if existing credentials satisfy the proof request
+ *
+ * Detailed check if we have the necessary credentials to fulfill the
+ * proof request in the required format.
+ *
+ * @param agent The AFJ agent
+ * @param proof The proof request
+ * @param filterByNonRevocationRequirements Whether to filter by non-revocation requirements
+ * @returns Credentials that match the given proof request
+ * @throws {Error} Will throw an error if a problem looking up data occurs
+ */
+export const credentialsMatchForProof = async (
+  agent: BifoldAgent,
+  proof: ProofExchangeRecord,
+  filterByNonRevocationRequirements = true
+): Promise<GetCredentialsForProofRequestReturn> => {
+  const proofFormats = await formatForProofWithId(agent, proof.id, filterByNonRevocationRequirements)
+  const credentials = await agent.proofs.getCredentialsForRequest({
+    proofRecordId: proof.id,
+    proofFormats,
+  })
 
-export const hasCredentialsForProof = async (agent: BifoldAgent, proof: ProofExchangeRecord) => {
-  try {
-    const format = await agent.proofs.getFormatData(proof.id)
-    const hasAnonCreds = format.request?.anoncreds !== undefined
-    const hasIndy = format.request?.indy !== undefined
-    const credentials = await agent.proofs.getCredentialsForRequest({
-      proofRecordId: proof.id,
-      proofFormats: {
-        // FIXME: AFJ will try to use the format, even if the value is undefined (but the key is present)
-        // We should ignore the key, if the value is undefined. For now this is a workaround.
-        ...(hasIndy
-          ? {
-              indy: {
-                // Setting `filterByNonRevocationRequirements` to `false` returns all
-                // credentials even if they are revokable (and revoked).
-                filterByNonRevocationRequirements: true,
-              },
-            }
-          : {}),
-
-        ...(hasAnonCreds
-          ? {
-              anoncreds: {
-                // Setting `filterByNonRevocationRequirements` to `false` returns all
-                // credentials even if they are revokable (and revoked).
-                filterByNonRevocationRequirements: true,
-              },
-            }
-          : {}),
-      },
-    })
-
-    if (!credentials || !format) {
-      throw new Error('Requested credentials could not be found ')
-    }
-
-    return true
-  } catch (err: unknown) {
-    console.error('Error retrieving credentials for proof', err)
+  if (!credentials) {
+    throw new Error('Unable to lookup credentials for proof request')
   }
+
+  return credentials
 }
