@@ -1,7 +1,6 @@
 import {
   Button,
   ButtonType,
-  CheckBoxRow,
   InfoBox,
   InfoBoxType,
   DispatchAction,
@@ -13,7 +12,7 @@ import {
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -28,7 +27,6 @@ export const TermsVersion = '2'
 
 const Terms = () => {
   const [store, dispatch] = useStore()
-  const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
   const { ColorPallet, TextTheme } = useTheme()
@@ -37,6 +35,7 @@ const Terms = () => {
     container: {
       backgroundColor: ColorPallet.brand.primaryBackground,
       padding: 20,
+      height: agreedToPreviousTerms ? '90%' : '80%',
     },
     bodyText: {
       ...TextTheme.normal,
@@ -100,19 +99,15 @@ const Terms = () => {
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']}>
       <ScrollView style={[style.container]}>
-        <InfoBox
-          notificationType={InfoBoxType.Info}
-          description={
-            agreedToPreviousTerms
-              ? 'BC Wallet has updated the end user licencse agreement. To continue using BC Wallet, please reveiw and accept the updated terms.'
-              : undefined
-          }
-          title={
-            agreedToPreviousTerms
-              ? 'Terms of use update'
-              : 'Please agree to the terms of use below before using this application.'
-          }
-        ></InfoBox>
+        {agreedToPreviousTerms && (
+          <InfoBox
+            notificationType={InfoBoxType.Info}
+            description={
+              'BC Wallet has updated the end user licencse agreement. To continue using BC Wallet, please reveiw and accept the updated terms.'
+            }
+            title={'Terms of use update'}
+          ></InfoBox>
+        )}
         <Text style={[style.bodyText, { marginTop: 20 }]}>
           This End User License Agreement (“EULA”) is a legal agreement between you, as the end user of the BC Wallet
           Application (“You” or “you”), and His Majesty the King in Right of the Province of British Columbia (the
@@ -441,7 +436,7 @@ const Terms = () => {
             use BC Wallet, you will be conclusively deemed to have accepted any such changes.
           </Text>
         </View>
-        <View style={style.paragraph}>
+        <View style={[style.paragraph, { marginBottom: 30 }]}>
           <Text style={[style.enumeration]}>21</Text>
           <Text style={[style.bodyText]}>
             <Text style={[style.titleText]}>General.</Text>
@@ -456,43 +451,27 @@ const Terms = () => {
             this EULA and its subject matter.
           </Text>
         </View>
-        <View style={[style.controlsContainer]}>
-          {!(store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate) && (
-            <>
-              {!agreedToPreviousTerms && (
-                <CheckBoxRow
-                  title={t('Terms.Attestation')}
-                  accessibilityLabel={t('Terms.IAgree')}
-                  testID={testIdWithKey('IAgree')}
-                  checked={checked}
-                  onPress={() => setChecked(!checked)}
-                />
-              )}
-              <View style={[{ paddingTop: 10 }]}>
-                <Button
-                  title={agreedToPreviousTerms ? t('Global.Accept') : t('Global.Continue')}
-                  accessibilityLabel={agreedToPreviousTerms ? t('Global.Accept') : t('Global.Continue')}
-                  testID={testIdWithKey(agreedToPreviousTerms ? 'Accept' : 'Continue')}
-                  disabled={!checked && !agreedToPreviousTerms}
-                  onPress={onSubmitPressed}
-                  buttonType={ButtonType.Primary}
-                />
-              </View>
-              {!agreedToPreviousTerms && (
-                <View style={[{ paddingTop: 10, marginBottom: 20 }]}>
-                  <Button
-                    title={t('Global.Back')}
-                    accessibilityLabel={t('Global.Back')}
-                    testID={testIdWithKey('Back')}
-                    onPress={onBackPressed}
-                    buttonType={ButtonType.Secondary}
-                  />
-                </View>
-              )}
-            </>
-          )}
-        </View>
       </ScrollView>
+      <View style={[{ paddingTop: 10, top: '100%', position: 'absolute', width: '90%', left: '5%' }]}>
+        <Button
+          title={t('Global.Accept')}
+          accessibilityLabel={t('Global.Accept')}
+          testID={testIdWithKey('Accept')}
+          onPress={onSubmitPressed}
+          buttonType={ButtonType.Primary}
+        />
+        {!agreedToPreviousTerms && (
+          <View style={{ marginVertical: 10 }}>
+            <Button
+              title={t('Global.Back')}
+              accessibilityLabel={t('Global.Back')}
+              testID={testIdWithKey('Back')}
+              onPress={onBackPressed}
+              buttonType={ButtonType.Secondary}
+            />
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   )
 }
