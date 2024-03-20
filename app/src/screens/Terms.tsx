@@ -109,7 +109,7 @@ const Terms = () => {
           <InfoBox
             notificationType={InfoBoxType.Info}
             description={
-              'BC Wallet has updated the end user licencse agreement. To continue using BC Wallet, please reveiw and accept the updated terms.'
+              'BC Wallet has updated the end user license agreement. To continue using BC Wallet, please review and accept the updated terms.'
             }
             title={'Terms of use update'}
           ></InfoBox>
