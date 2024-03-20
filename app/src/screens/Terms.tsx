@@ -10,6 +10,7 @@ import {
   testIdWithKey,
   useTheme,
   useStore,
+  useConfiguration,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -28,6 +29,7 @@ export const TermsVersion = '2'
 
 const Terms = () => {
   const [store, dispatch] = useStore()
+  const { enablePushNotifications } = useConfiguration()
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
@@ -72,7 +74,13 @@ const Terms = () => {
       payload: [{ DidAgreeToTerms: TermsVersion }],
     })
 
-    navigation.navigate(Screens.CreatePIN)
+    if (!agreedToPreviousTerms) {
+      navigation.navigate(Screens.CreatePIN)
+    } else if (enablePushNotifications && !store.onboarding.didConsiderPushNotifications) {
+      navigation.navigate(Screens.UsePushNotifications)
+    } else {
+      navigation.navigate(Screens.EnterPIN)
+    }
   }, [])
 
   const onBackPressed = useCallback(() => {
