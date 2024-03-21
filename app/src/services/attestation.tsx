@@ -11,7 +11,7 @@ import {
 } from '@aries-framework/core'
 import { useAgent } from '@aries-framework/react-hooks'
 import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
-import { BifoldAgent, BifoldError, EventTypes } from '@hyperledger/aries-bifold-core'
+import { BifoldAgent, BifoldError, EventTypes, useStore } from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
   appleAttestation,
@@ -26,6 +26,7 @@ import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'rea
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
 import { attestationCredentialRequired } from '../helpers/Attestation'
+import { BCState } from '../store'
 
 import {
   attestationCredDefIds,
@@ -87,6 +88,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
   const [drpcRequest, setDrpcRequest] = useState<DrpcRequest | undefined>(undefined)
   const [drpcListenerActive, setDrpcListenerActive] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [store] = useStore<BCState>()
 
   const handleInfrastructureMessageDrpc = async (message: {
     params: { nonce: string }
@@ -162,7 +164,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       }
 
       // 4. If no, start attestation flow by requesting a nonce from controller
-      const invite = await agent.oob.parseInvitation(Config.ATTESTATION_INVITE_URL!)
+      const invite = await agent.oob.parseInvitation(store.developer.environment.attestationInviteUrl)
 
       if (!invite) {
         setLoading(false)
