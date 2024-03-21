@@ -88,6 +88,10 @@ export default function PersonCredential() {
   }, [])
 
   useEffect(() => {
+    if (!agent) {
+      return
+    }
+
     if (!attestationLoading && !didStartAttestationWorkflow) {
       setDidStartAttestationWorkflow(true)
 
@@ -98,8 +102,8 @@ export default function PersonCredential() {
       if (!attestationLoading && didStartAttestationWorkflow && remoteAgentConnectionId) {
         const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentConnectionId)
         if (proofRequest) {
-          const credentials = await credentialsMatchForProof(agent!, proofRequest)
-          await agent?.proofs.acceptRequest({
+          const credentials = await credentialsMatchForProof(agent, proofRequest)
+          await agent.proofs.acceptRequest({
             proofRecordId: proofRequest.id,
             proofFormats: credentials,
           })
@@ -109,16 +113,20 @@ export default function PersonCredential() {
 
     acceptAttestationProofRequest()
       .then(() => {
-        agent!.config.logger.info(`Accepted IDIM attestation proof request.`)
+        agent.config.logger.info(`Accepted IDIM attestation proof request.`)
       })
       .catch((error) => {
-        agent!.config.logger.error(`Unable to accept IDIM attestation proof request, error: ${error.message}`)
+        agent.config.logger.error(`Unable to accept IDIM attestation proof request, error: ${error.message}`)
       })
   }, [attestationLoading, receivedProofRequests])
 
   const acceptPersonCredentialOffer = useCallback(() => {
+    if (!agent) {
+      return
+    }
+
     setWorkflowInProgress(true)
-    startFlow(agent!, store, setWorkflowInProgress, t, setRemoteAgentConnectionId)
+    startFlow(agent, store, setWorkflowInProgress, t, setRemoteAgentConnectionId)
   }, [])
 
   const getBCServicesCardApp = useCallback(() => {

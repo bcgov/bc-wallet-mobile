@@ -101,8 +101,7 @@ export const evaluatePredicates =
       let satisfied = false
 
       if (field) {
-        const attribute = (credentialAttributes.find((attr) => attr[field] != undefined) ?? {})[field]
-
+        const attribute = credentialAttributes.find((attr) => attr[field] != undefined)?.[field]
         if (attribute && pValue) {
           satisfied = evaluateOperation(Number(attribute), Number(pValue), pType as AnonCredsPredicateType)
         }
