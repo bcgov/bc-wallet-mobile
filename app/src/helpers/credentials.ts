@@ -97,7 +97,7 @@ export const evaluatePredicates =
     const credentialAttributes = getCredentialInfo(proofCredentialItems.credId, fields).map((ci) => ci.attributes)
 
     return predicates.map((predicate: Predicate) => {
-      const { pType: pType, pValue: pValue, name: field } = predicate
+      const { pType, pValue, name: field } = predicate
       let satisfied = false
 
       if (field) {
