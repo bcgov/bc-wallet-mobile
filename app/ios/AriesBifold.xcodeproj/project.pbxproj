@@ -12,6 +12,7 @@
 		13B07FBC1A68108700A75B9A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.m */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
+		1A157F462BACCDEA00E30CDB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1A157F452BACCDEA00E30CDB /* PrivacyInfo.xcprivacy */; };
 		2F9994AE2A8D83CB004E773E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 2F9994AD2A8D83CB004E773E /* GoogleService-Info.plist */; };
 		566FB1F2273B158E003E9BEE /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 566FB1F1273B158E003E9BEE /* Media.xcassets */; };
 		56A83D5E27D95E24002FE8FE /* BCSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 56A83D5A27D95E24002FE8FE /* BCSans-Bold.ttf */; };
@@ -43,6 +44,7 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = AriesBifold/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = AriesBifold/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AriesBifold/main.m; sourceTree = "<group>"; };
+		1A157F452BACCDEA00E30CDB /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		1A72D9212B217145008DE489 /* AriesBifold.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = AriesBifold.entitlements; path = AriesBifold/AriesBifold.entitlements; sourceTree = "<group>"; };
 		2F9994AD2A8D83CB004E773E /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		433E773D26557E1B00F569EE /* Indy.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Indy.framework; path = Pods/Frameworks/Indy.framework; sourceTree = "<group>"; };
@@ -143,6 +145,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				1A157F452BACCDEA00E30CDB /* PrivacyInfo.xcprivacy */,
 				2F9994AD2A8D83CB004E773E /* GoogleService-Info.plist */,
 				566FB1F1273B158E003E9BEE /* Media.xcassets */,
 				13B07FAE1A68108700A75B9A /* AriesBifold */,
@@ -276,6 +279,7 @@
 				56A83D6127D95E24002FE8FE /* BCSans-Italic.ttf in Resources */,
 				2F9994AE2A8D83CB004E773E /* GoogleService-Info.plist in Resources */,
 				56A83D6027D95E24002FE8FE /* BCSans-BoldItalic.ttf in Resources */,
+				1A157F462BACCDEA00E30CDB /* PrivacyInfo.xcprivacy in Resources */,
 				56A83D5E27D95E24002FE8FE /* BCSans-Bold.ttf in Resources */,
 				56A83D5F27D95E24002FE8FE /* BCSans-Regular.ttf in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
