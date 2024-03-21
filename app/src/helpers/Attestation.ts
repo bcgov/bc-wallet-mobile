@@ -127,6 +127,36 @@ export const getAvailableAttestationCredentials = async (
 }
 
 /**
+ * Check if existing credentials satisfy the proof request
+ *
+ * Detailed check if we have the necessary credentials to fulfill the
+ * proof request in the required format.
+ *
+ * @param agent The AFJ agent
+ * @param proof The proof request
+ * @param filterByNonRevocationRequirements Whether to filter by non-revocation requirements
+ * @returns Credentials that match the given proof request
+ * @throws {Error} Will throw an error if a problem looking up data occurs
+ */
+export const credentialsMatchForProof = async (
+  agent: BifoldAgent,
+  proof: ProofExchangeRecord,
+  filterByNonRevocationRequirements = true
+): Promise<GetCredentialsForProofRequestReturn> => {
+  const proofFormats = await formatForProofWithId(agent, proof.id, filterByNonRevocationRequirements)
+  const credentials = await agent.proofs.getCredentialsForRequest({
+    proofRecordId: proof.id,
+    proofFormats,
+  })
+
+  if (!credentials) {
+    throw new Error('Unable to lookup credentials for proof request')
+  }
+
+  return credentials
+}
+
+/**
  * This function checks if we need to get an attestation credential
  *
  * In-depth check to see if we need to get an attestation credential done by
@@ -164,34 +194,4 @@ export const attestationCredentialRequired = async (agent: BifoldAgent, proofId:
   }
 
   return false
-}
-
-/**
- * Check if existing credentials satisfy the proof request
- *
- * Detailed check if we have the necessary credentials to fulfill the
- * proof request in the required format.
- *
- * @param agent The AFJ agent
- * @param proof The proof request
- * @param filterByNonRevocationRequirements Whether to filter by non-revocation requirements
- * @returns Credentials that match the given proof request
- * @throws {Error} Will throw an error if a problem looking up data occurs
- */
-export const credentialsMatchForProof = async (
-  agent: BifoldAgent,
-  proof: ProofExchangeRecord,
-  filterByNonRevocationRequirements = true
-): Promise<GetCredentialsForProofRequestReturn> => {
-  const proofFormats = await formatForProofWithId(agent, proof.id, filterByNonRevocationRequirements)
-  const credentials = await agent.proofs.getCredentialsForRequest({
-    proofRecordId: proof.id,
-    proofFormats,
-  })
-
-  if (!credentials) {
-    throw new Error('Unable to lookup credentials for proof request')
-  }
-
-  return credentials
 }

@@ -1,6 +1,5 @@
 import {
   AnonCredsCredentialInfo,
-  AnonCredsCredentialsForProofRequest,
   AnonCredsPredicateType,
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
@@ -112,33 +111,3 @@ export const evaluatePredicates =
       return { ...predicate, satisfied }
     })
   }
-
-/**
- * Determine if the given credentials selected for a proof request satisfy
- * all predicates present in the proof request.
- * @param credentials
- * @param fields
- * @param credId
- * @returns
- */
-const credentialsWillSatisfyPredicates = (credentials: ProofCredentialItems[], fields: Fields, credId?: string) =>
-  credentials.flatMap((item) => evaluatePredicates(fields, credId)(item)).every((p) => p.satisfied)
-
-/**
- * Determine if the given credentials selected for a proof request
- * will satisfy that proof request
- * @param credentials
- * @returns
- */
-const credentialsWillSatisfyProofRequest = (credentials: AnonCredsCredentialsForProofRequest): boolean => {
-  if (!credentials) {
-    return false
-  }
-
-  const fields: Fields = {
-    ...credentials.attributes,
-    ...credentials.predicates,
-  }
-
-  return Object.values(fields).every((c) => c.length > 0)
-}

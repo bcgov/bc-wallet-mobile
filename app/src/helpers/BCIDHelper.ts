@@ -261,7 +261,6 @@ export const startFlow = async (
   store: BCState,
   setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
   t: TFunction<'translation', undefined>,
-  workflowCompletedCallback?: (connectionId?: string) => void,
   connectionEstablishedCallback?: (connectionId?: string) => void
 ) => {
   try {
@@ -273,13 +272,7 @@ export const startFlow = async (
 
     if (remoteAgentDetails.legacyConnectionDid !== undefined) {
       setTimeout(async () => {
-        await authenticateWithServiceCard(
-          store,
-          setWorkflowInProgress,
-          remoteAgentDetails,
-          t,
-          workflowCompletedCallback
-        )
+        await authenticateWithServiceCard(store, setWorkflowInProgress, remoteAgentDetails, t)
       }, connectionDelayInMs)
     }
   } catch (error: unknown) {

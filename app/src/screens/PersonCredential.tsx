@@ -1,5 +1,5 @@
 import { ProofState } from '@aries-framework/core'
-import { useAgent, useProofByState, useCredentials } from '@aries-framework/react-hooks'
+import { useAgent, useProofByState } from '@aries-framework/react-hooks'
 import { useConfiguration, useStore, useTheme, Button, ButtonType, testIdWithKey } from '@hyperledger/aries-bifold-core'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,17 +10,15 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
-import { startFlow } from '../helpers/BCIDHelper'
-// import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
-import { BCState } from '../store'
 import { credentialsMatchForProof } from '../helpers/Attestation'
+import { startFlow } from '../helpers/BCIDHelper'
+import { BCState } from '../store'
 
 export default function PersonCredential() {
   const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const [appInstalled, setAppInstalled] = useState<boolean>(false)
   const [workflowInProgress, setWorkflowInProgress] = useState<boolean>(false)
-  const [workflowConnectionId, setWorkflowConnectionId] = useState<string | undefined>()
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
   const [remoteAgentConnectionId, setRemoteAgentConnectionId] = useState<string | undefined>()
@@ -28,7 +26,6 @@ export default function PersonCredential() {
   const { useAttestation } = useConfiguration()
   const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
   const receivedProofRequests = useProofByState(ProofState.RequestReceived)
-  const credentials = useCredentials()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -121,7 +118,7 @@ export default function PersonCredential() {
 
   const acceptPersonCredentialOffer = useCallback(() => {
     setWorkflowInProgress(true)
-    startFlow(agent!, store, setWorkflowInProgress, t, setWorkflowConnectionId, setRemoteAgentConnectionId)
+    startFlow(agent!, store, setWorkflowInProgress, t, setRemoteAgentConnectionId)
   }, [])
 
   const getBCServicesCardApp = useCallback(() => {

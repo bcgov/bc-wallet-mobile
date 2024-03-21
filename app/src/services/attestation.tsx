@@ -21,19 +21,17 @@ import {
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Platform } from 'react-native'
-import Config from 'react-native-config'
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
-import { attestationCredentialRequired } from '../helpers/Attestation'
-import { BCState } from '../store'
 
 import {
   attestationCredDefIds,
-  getAvailableAttestationCredentials,
   isProofRequestingAttestation,
+  attestationCredentialRequired,
 } from '../helpers/Attestation'
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
+import { BCState } from '../store'
 
 enum ErrorCodes {
   AttestationBadInvitation = 2027,
