@@ -13,9 +13,9 @@ import {
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
+import { ScrollView, StyleSheet, Text, View, Linking, LayoutChangeEvent } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const appleTermsUrl = 'https://www.apple.com/legal/internet-services/itunes/us/terms.html'
@@ -32,12 +32,18 @@ const Terms = () => {
   const { enablePushNotifications } = useConfiguration()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
   const { ColorPallet, TextTheme } = useTheme()
-  const agreedToPreviousTerms = store.onboarding.didAgreeToTerms
+  // this padding is so that the content of the scrollview is not hidden under the footer
+  const [scrollPadding, setScrollPadding] = useState(0)
+  const agreedToPreviousTerms = store.onboarding.didAgreeToTerms && store.onboarding.didAgreeToTerms !== TermsVersion
   const style = StyleSheet.create({
-    container: {
+    footer: {
+      position: 'absolute',
       backgroundColor: ColorPallet.brand.primaryBackground,
       padding: 20,
-      height: agreedToPreviousTerms ? '90%' : '80%',
+      paddingTop: 10,
+      bottom: 0,
+      left: 0,
+      right: 0,
     },
     bodyText: {
       ...TextTheme.normal,
@@ -46,10 +52,6 @@ const Terms = () => {
     titleText: {
       ...TextTheme.normal,
       textDecorationLine: 'underline',
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      marginBottom: 20,
     },
     paragraph: {
       flexDirection: 'row',
@@ -103,8 +105,8 @@ const Terms = () => {
   }
 
   return (
-    <SafeAreaView edges={['left', 'right', 'bottom']}>
-      <ScrollView style={[style.container]}>
+    <SafeAreaView edges={['left', 'right', 'bottom']} style={{ flexGrow: 1 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: scrollPadding }}>
         {agreedToPreviousTerms && (
           <InfoBox
             notificationType={InfoBoxType.Info}
@@ -458,26 +460,33 @@ const Terms = () => {
           </Text>
         </View>
       </ScrollView>
-      <View style={[{ paddingTop: 10, top: '100%', position: 'absolute', width: '90%', left: '5%' }]}>
-        <Button
-          title={t('Global.Accept')}
-          accessibilityLabel={t('Global.Accept')}
-          testID={testIdWithKey('Accept')}
-          onPress={onSubmitPressed}
-          buttonType={ButtonType.Primary}
-        />
-        {!agreedToPreviousTerms && (
-          <View style={{ marginVertical: 10 }}>
-            <Button
-              title={t('Global.Back')}
-              accessibilityLabel={t('Global.Back')}
-              testID={testIdWithKey('Back')}
-              onPress={onBackPressed}
-              buttonType={ButtonType.Secondary}
-            />
-          </View>
-        )}
-      </View>
+      {!(store.onboarding.didAgreeToTerms === TermsVersion && store.authentication.didAuthenticate) && (
+        <View
+          style={style.footer}
+          onLayout={(e: LayoutChangeEvent) => {
+            setScrollPadding(e.nativeEvent.layout.height)
+          }}
+        >
+          <Button
+            title={t('Global.Accept')}
+            accessibilityLabel={t('Global.Accept')}
+            testID={testIdWithKey('Accept')}
+            onPress={onSubmitPressed}
+            buttonType={ButtonType.Primary}
+          />
+          {!agreedToPreviousTerms && (
+            <View style={{ marginVertical: 10 }}>
+              <Button
+                title={t('Global.Back')}
+                accessibilityLabel={t('Global.Back')}
+                testID={testIdWithKey('Back')}
+                onPress={onBackPressed}
+                buttonType={ButtonType.Secondary}
+              />
+            </View>
+          )}
+        </View>
+      )}
     </SafeAreaView>
   )
 }
