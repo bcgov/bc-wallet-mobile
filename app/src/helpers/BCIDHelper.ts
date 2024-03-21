@@ -45,7 +45,6 @@ export const showPersonCredentialSelector = (
   credentialDefinitionIDs: string[],
   canUseLSBCredential: boolean = true
 ): boolean => {
-  return true
   // If we already have a trusted foundation credential do nothing.
   if (credentialDefinitionIDs.some((i) => trustedFoundationCredentialIssuerRe.test(i))) {
     return false
