@@ -62,7 +62,6 @@ jobs:
           required_env_vars=(
             "OCA_URL"
             "PROOF_TEMPLATE_URL"
-            "ATTESTATION_INVITE_URL"
             "MEDIATOR_USE_PUSH_NOTIFICATIONS"
           )
           for var in "${required_env_vars[@]}"; do
@@ -74,7 +73,6 @@ jobs:
         env:
           OCA_URL: ${{ vars.OCA_URL }}
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
-          ATTESTATION_INVITE_URL: ${{ vars.ATTESTATION_INVITE_URL }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
 
   build-ios:
@@ -167,7 +165,6 @@ jobs:
           OCA_URL: ${{ vars.OCA_URL }}
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
-          ATTESTATION_INVITE_URL: ${{ vars.ATTESTATION_INVITE_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
@@ -176,7 +173,6 @@ jobs:
           echo "OCA_URL=${OCA_URL}" >>.env
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
-          echo "ATTESTATION_INVITE_URL=${ATTESTATION_INVITE_URL}" >>.env
 
       - name: Update APS environment
         run: |
@@ -280,7 +276,6 @@ jobs:
           OCA_URL: ${{ vars.OCA_URL }}
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
-          ATTESTATION_INVITE_URL: ${{ vars.ATTESTATION_INVITE_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
@@ -289,7 +284,6 @@ jobs:
           echo "OCA_URL=${OCA_URL}" >>.env
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
-          echo "ATTESTATION_INVITE_URL=${ATTESTATION_INVITE_URL}" >>.env
 
       - name: Create release keystore
         working-directory: app/android/app
