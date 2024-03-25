@@ -11,7 +11,7 @@ import {
 } from '@aries-framework/core'
 import { useAgent } from '@aries-framework/react-hooks'
 import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
-import { BifoldAgent, BifoldError, EventTypes } from '@hyperledger/aries-bifold-core'
+import { BifoldAgent, BifoldError, EventTypes, useStore } from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
   appleAttestation,
@@ -21,17 +21,17 @@ import {
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Platform } from 'react-native'
-import Config from 'react-native-config'
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { Subscription } from 'rxjs'
 
 import {
   attestationCredDefIds,
-  getAvailableAttestationCredentials,
   isProofRequestingAttestation,
+  attestationCredentialRequired,
 } from '../helpers/Attestation'
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
+import { BCState } from '../store'
 
 enum ErrorCodes {
   AttestationBadInvitation = 2027,
@@ -86,6 +86,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
   const [drpcRequest, setDrpcRequest] = useState<DrpcRequest | undefined>(undefined)
   const [drpcListenerActive, setDrpcListenerActive] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [store] = useStore<BCState>()
 
   const handleInfrastructureMessageDrpc = async (message: {
     params: { nonce: string }
@@ -151,16 +152,17 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       }
 
       // 2. Does the wallet owner have a valid attestation credential
-      const availableAttestationCredentials = await getAvailableAttestationCredentials(agent, attestationCredDefIds)
+      const required = await attestationCredentialRequired(agent, proof.id)
 
       // 3. If yes, do nothing
-      if (availableAttestationCredentials.length > 0) {
+      if (!required) {
         setLoading(false)
+
         return
       }
 
       // 4. If no, start attestation flow by requesting a nonce from controller
-      const invite = await agent.oob.parseInvitation(Config.ATTESTATION_INVITE_URL!)
+      const invite = await agent.oob.parseInvitation(store.developer.environment.attestationInviteUrl)
 
       if (!invite) {
         setLoading(false)
@@ -185,7 +187,9 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
           '',
           ErrorCodes.AttestationReceiveInvitationError
         )
+
         DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
+
         return
       }
 

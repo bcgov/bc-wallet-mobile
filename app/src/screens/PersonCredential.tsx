@@ -1,5 +1,6 @@
-import { useAgent } from '@aries-framework/react-hooks'
-import { useStore, useTheme, Button, ButtonType, testIdWithKey } from '@hyperledger/aries-bifold-core'
+import { ProofState } from '@aries-framework/core'
+import { useAgent, useProofByState } from '@aries-framework/react-hooks'
+import { useConfiguration, useStore, useTheme, Button, ButtonType, testIdWithKey } from '@hyperledger/aries-bifold-core'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native'
@@ -9,22 +10,22 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
+import { credentialsMatchForProof } from '../helpers/Attestation'
 import { startFlow } from '../helpers/BCIDHelper'
-import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
 import { BCState } from '../store'
 
 export default function PersonCredential() {
   const { agent } = useAgent()
-
   const [store] = useStore<BCState>()
   const [appInstalled, setAppInstalled] = useState<boolean>(false)
   const [workflowInProgress, setWorkflowInProgress] = useState<boolean>(false)
-  const [workflowConnectionId, setWorkflowConnectionId] = useState<string | undefined>()
-
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
-
-  useCredentialOfferTrigger(workflowConnectionId)
+  const [remoteAgentConnectionId, setRemoteAgentConnectionId] = useState<string | undefined>()
+  const [didStartAttestationWorkflow, setDidStartAttestationWorkflow] = useState(false)
+  const { useAttestation } = useConfiguration()
+  const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
+  const receivedProofRequests = useProofByState(ProofState.RequestReceived)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -86,9 +87,46 @@ export default function PersonCredential() {
     })
   }, [])
 
+  useEffect(() => {
+    if (!agent) {
+      return
+    }
+
+    if (!attestationLoading && !didStartAttestationWorkflow) {
+      setDidStartAttestationWorkflow(true)
+
+      return
+    }
+
+    const acceptAttestationProofRequest = async () => {
+      if (!attestationLoading && didStartAttestationWorkflow && remoteAgentConnectionId) {
+        const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentConnectionId)
+        if (proofRequest) {
+          const credentials = await credentialsMatchForProof(agent, proofRequest)
+          await agent.proofs.acceptRequest({
+            proofRecordId: proofRequest.id,
+            proofFormats: credentials,
+          })
+        }
+      }
+    }
+
+    acceptAttestationProofRequest()
+      .then(() => {
+        agent.config.logger.info(`Accepted IDIM attestation proof request.`)
+      })
+      .catch((error) => {
+        agent.config.logger.error(`Unable to accept IDIM attestation proof request, error: ${error.message}`)
+      })
+  }, [attestationLoading, receivedProofRequests])
+
   const acceptPersonCredentialOffer = useCallback(() => {
+    if (!agent) {
+      return
+    }
+
     setWorkflowInProgress(true)
-    startFlow(agent!, store, setWorkflowInProgress, t, (connectionId) => setWorkflowConnectionId(connectionId))
+    startFlow(agent, store, setWorkflowInProgress, t, setRemoteAgentConnectionId)
   }, [])
 
   const getBCServicesCardApp = useCallback(() => {
