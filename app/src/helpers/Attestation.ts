@@ -186,11 +186,11 @@ export const attestationCredentialRequired = async (agent: BifoldAgent, proofId:
   // expected length in the proof request?
 
   if (credentials.proofFormats.indy) {
-    return credentials.proofFormats.indy.attributes.attestationInfo.length == 0
+    return credentials.proofFormats.indy.attributes.attestationInfo.length === 0
   }
 
   if (credentials.proofFormats.anoncreds) {
-    return credentials.proofFormats.anoncreds.attributes.attestationInfo.length == 0
+    return credentials.proofFormats.anoncreds.attributes.attestationInfo.length === 0
   }
 
   return false
