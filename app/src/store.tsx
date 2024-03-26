@@ -13,13 +13,13 @@ export interface IASEnvironment {
   iasPortalUrl: string
   attestationInviteUrl: string
 }
-interface Developer {
+export interface Developer {
   environment: IASEnvironment
   attestationSupportEnabled: boolean
   remoteLoggingEnabled: boolean
 }
 
-interface DismissPersonCredentialOffer {
+export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
