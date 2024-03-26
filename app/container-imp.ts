@@ -1,11 +1,22 @@
-import { Container, TOKENS, TokenMapping, ReducerAction, loadLoginAttempt, LocalStorageKeys, PreferencesState, MigrationState, ToursState, OnboardingState, defaultState, DispatchAction } from '@hyperledger/aries-bifold-core'
+import {
+  Container,
+  TOKENS,
+  TokenMapping,
+  ReducerAction,
+  loadLoginAttempt,
+  LocalStorageKeys,
+  PreferencesState,
+  MigrationState,
+  ToursState,
+  OnboardingState,
+  DispatchAction,
+} from '@hyperledger/aries-bifold-core'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { DependencyContainer } from 'tsyringe'
 
 import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
-import { useRef } from 'react'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
 
 export class AppContainer implements Container {
@@ -22,56 +33,55 @@ export class AppContainer implements Container {
     this.container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
     this.container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
     this.container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
-        console.log('Loading state function called')
-        const loadState = async<Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val:Type)=>void) => {
-          const data = await AsyncStorage.getItem(key)
+      const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
+        const data = await AsyncStorage.getItem(key)
+        if (data) {
+          const dataAsJSON = JSON.parse(data) as Type
+          updateVal(dataAsJSON)
+        }
+      }
+
+      let loginAttempt = initialState.loginAttempt
+      let preferences = initialState.preferences
+      let migration = initialState.migration
+      let tours = initialState.tours
+      let onboarding = initialState.onboarding
+      let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
+      let environment = initialState.developer.environment
+      let attestationSupportEnabled = initialState.developer.attestationSupportEnabled
+
+      await Promise.all([
+        loadLoginAttempt().then((data) => {
           if (data) {
-            const dataAsJSON = JSON.parse(data) as Type
-            updateVal(dataAsJSON)
+            loginAttempt = data
           }
-        }
-
-        let loginAttempt = initialState.loginAttempt
-        let preferences = initialState.preferences
-        let migration = initialState.migration
-        let tours = initialState.tours
-        let onboarding = initialState.onboarding
-        let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-        let environment = initialState.developer.environment
-        let attestationSupportEnabled = initialState.developer.attestationSupportEnabled
-
-
-        await Promise.all([
-          loadLoginAttempt().then((data) => {
-            if (data) {
-              loginAttempt = data
-            }
-          }),
-          loadState<PreferencesState>(LocalStorageKeys.Preferences, (val)=>preferences=val),
-          loadState<MigrationState>(LocalStorageKeys.Migration, (val)=>migration=val),
-          loadState<ToursState>(LocalStorageKeys.Tours, (val)=>tours=val),
-          loadState<OnboardingState>(LocalStorageKeys.Onboarding, (val)=>onboarding=val),
-          loadState<DismissPersonCredentialOffer>(BCLocalStorageKeys.PersonCredentialOfferDismissed, (val)=>personCredOfferDissmissed=val),
-          loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val)=>environment=val),
-          loadState<boolean>(BCLocalStorageKeys.Attestation, (val)=>attestationSupportEnabled=val)
-        ])
-        const state: BCState = {
-          ...initialState,
-          loginAttempt,
-          preferences,
-          migration,
-          tours,
-          onboarding,
-          dismissPersonCredentialOffer: personCredOfferDissmissed,
-          developer: {
-            ...initialState.developer,
-            environment,
-            attestationSupportEnabled
-          }
-        }
-        console.log('Loaded state', state)
-        dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
-      
+        }),
+        loadState<PreferencesState>(LocalStorageKeys.Preferences, (val) => (preferences = val)),
+        loadState<MigrationState>(LocalStorageKeys.Migration, (val) => (migration = val)),
+        loadState<ToursState>(LocalStorageKeys.Tours, (val) => (tours = val)),
+        loadState<OnboardingState>(LocalStorageKeys.Onboarding, (val) => (onboarding = val)),
+        loadState<DismissPersonCredentialOffer>(
+          BCLocalStorageKeys.PersonCredentialOfferDismissed,
+          (val) => (personCredOfferDissmissed = val)
+        ),
+        loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
+        loadState<boolean>(BCLocalStorageKeys.Attestation, (val) => (attestationSupportEnabled = val)),
+      ])
+      const state: BCState = {
+        ...initialState,
+        loginAttempt,
+        preferences,
+        migration,
+        tours,
+        onboarding,
+        dismissPersonCredentialOffer: personCredOfferDissmissed,
+        developer: {
+          ...initialState.developer,
+          environment,
+          attestationSupportEnabled,
+        },
+      }
+      dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
     })
     return this
   }

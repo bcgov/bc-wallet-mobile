@@ -24,7 +24,7 @@ import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-rem
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
@@ -42,7 +42,7 @@ import TipCarousel from '../components/TipCarousel'
 import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { activate } from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
-import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
+import { BCState, BCLocalStorageKeys } from '../store'
 
 import { TermsVersion } from './Terms'
 
@@ -237,17 +237,15 @@ const Splash = () => {
     }
   }
 
-
   useEffect(() => {
     try {
       setStep(0)
       if (store.authentication.didAuthenticate || !store.stateLoaded) {
-        if(!store.stateLoaded){
+        if (!store.stateLoaded) {
           setStep(1)
         }
         return
       }
-
 
       setStep(2)
 
@@ -268,7 +266,6 @@ const Splash = () => {
         }
 
         if (!store.loginAttempt.lockoutDate) {
-          console.log("No lockout date found, navigating to 'EnterPIN' screen")
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
@@ -306,7 +303,6 @@ const Splash = () => {
       )
 
       return
-
     } catch (e: unknown) {
       setInitErrorType(InitErrorTypes.Onboarding)
       setInitError(e as Error)
