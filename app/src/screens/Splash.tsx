@@ -4,15 +4,10 @@ import { useAgent } from '@aries-framework/react-hooks'
 import { agentDependencies } from '@aries-framework/react-native'
 import { DrpcModule } from '@credo-ts/drpc'
 import {
-  LocalStorageKeys,
   DispatchAction,
   Screens,
   Stacks,
   OnboardingState,
-  LoginAttemptState,
-  PreferencesState,
-  MigrationState,
-  ToursState,
   useAuth,
   useTheme,
   useStore,
@@ -24,13 +19,12 @@ import {
   migrateToAskar,
   getAgentModules,
   createLinkSecretIfRequired,
-  loadLoginAttempt,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
@@ -158,7 +152,6 @@ const Splash = () => {
   const [initError, setInitError] = useState<Error | null>(null)
   const steps: string[] = [
     t('Init.Starting'),
-    t('Init.CheckingAuth'),
     t('Init.FetchingPreferences'),
     t('Init.VerifyingOnboarding'),
     t('Init.GettingCredentials'),
@@ -236,27 +229,6 @@ const Splash = () => {
     }
   }
 
-  const loadAuthAttempts = async (): Promise<LoginAttemptState | undefined> => {
-    const attempts = await loadLoginAttempt()
-    if (attempts) {
-      dispatch({
-        type: DispatchAction.ATTEMPT_UPDATED,
-        payload: [attempts],
-      })
-      return attempts
-    }
-  }
-
-  const loadPersonNotificationDismissed = async (): Promise<void> => {
-    const dismissed = await loadObjectFromStorage(BCLocalStorageKeys.PersonCredentialOfferDismissed)
-    if (dismissed) {
-      dispatch({
-        type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
-        payload: [{ personCredentialOfferDismissed: dismissed.personCredentialOfferDismissed }],
-      })
-    }
-  }
-
   const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
     const cachedTransactions = await loadObjectFromStorage(BCLocalStorageKeys.GenesisTransactions)
     if (cachedTransactions) {
@@ -265,165 +237,81 @@ const Splash = () => {
     }
   }
 
-  const loadIASEnvironment = async (): Promise<void> => {
-    const environment = await loadObjectFromStorage(BCLocalStorageKeys.Environment)
-    if (environment) {
-      dispatch({
-        type: BCDispatchAction.UPDATE_ENVIRONMENT,
-        payload: [environment],
-      })
-    }
-  }
-
-  const loadAttestationSupportOption = async (): Promise<void> => {
-    const value = await loadObjectFromStorage(BCLocalStorageKeys.Attestation)
-    if (value) {
-      dispatch({
-        type: BCDispatchAction.ATTESTATION_SUPPORT,
-        payload: [value],
-      })
-    }
-  }
 
   useEffect(() => {
-    const initOnboarding = async (): Promise<void> => {
-      try {
-        setStep(0)
-        if (store.authentication.didAuthenticate) {
-          return
+    try {
+      setStep(0)
+      if (store.authentication.didAuthenticate || !store.stateLoaded) {
+        if(!store.stateLoaded){
+          setStep(1)
+        }
+        return
+      }
+
+
+      setStep(2)
+
+      if (
+        onboardingComplete(store.onboarding, {
+          enablePushNotifications: !!enablePushNotifications,
+          termsVersion: TermsVersion,
+        })
+      ) {
+        // if they previously completed onboarding before wallet naming was enabled, mark complete
+        if (!store.onboarding.didNameWallet) {
+          dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
         }
 
-        setStep(1)
-        // load authentication attempts from storage
-        const attemptData = await loadAuthAttempts()
-
-        // load BCID person credential notification dismissed state from storage
-        await loadPersonNotificationDismissed()
-
-        await loadIASEnvironment()
-
-        await loadAttestationSupportOption()
-
-        setStep(2)
-        const preferencesData = await AsyncStorage.getItem(LocalStorageKeys.Preferences)
-
-        if (preferencesData) {
-          const dataAsJSON = JSON.parse(preferencesData) as PreferencesState
-
-          dispatch({
-            type: DispatchAction.PREFERENCES_UPDATED,
-            payload: [dataAsJSON],
-          })
+        // if they previously completed onboarding before preface was enabled, mark seen
+        if (!store.onboarding.didSeePreface) {
+          dispatch({ type: DispatchAction.DID_SEE_PREFACE })
         }
 
-        const migrationData = await AsyncStorage.getItem(LocalStorageKeys.Migration)
-        if (migrationData) {
-          const dataAsJSON = JSON.parse(migrationData) as MigrationState
-
-          dispatch({
-            type: DispatchAction.MIGRATION_UPDATED,
-            payload: [dataAsJSON],
-          })
-        }
-
-        const toursData = await AsyncStorage.getItem(LocalStorageKeys.Tours)
-        if (toursData) {
-          const dataAsJSON = JSON.parse(toursData) as ToursState
-
-          dispatch({
-            type: DispatchAction.TOUR_DATA_UPDATED,
-            payload: [dataAsJSON],
-          })
-        }
-
-        setStep(3)
-        const data = await AsyncStorage.getItem(LocalStorageKeys.Onboarding)
-        if (data) {
-          const dataAsJSON = JSON.parse(data) as OnboardingState
-          dispatch({
-            type: DispatchAction.ONBOARDING_UPDATED,
-            payload: [dataAsJSON],
-          })
-
-          if (
-            onboardingComplete(dataAsJSON, {
-              enablePushNotifications: !!enablePushNotifications,
-              termsVersion: TermsVersion,
-            })
-          ) {
-            // if they previously completed onboarding before wallet naming was enabled, mark complete
-            if (!store.onboarding.didNameWallet) {
-              dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
-            }
-
-            // if they previously completed onboarding before preface was enabled, mark seen
-            if (!store.onboarding.didSeePreface) {
-              dispatch({ type: DispatchAction.DID_SEE_PREFACE })
-            }
-
-            if (!attemptData?.lockoutDate) {
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: Screens.EnterPIN }],
-                })
-              )
-            } else {
-              // return to lockout screen if lockout date is set
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [{ name: Screens.AttemptLockout }],
-                })
-              )
-            }
-
-            return
-          }
-
-          // If onboarding was interrupted we need to pickup from where we left off.
+        if (!store.loginAttempt.lockoutDate) {
+          console.log("No lockout date found, navigating to 'EnterPIN' screen")
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [
-                {
-                  name: resumeOnboardingAt(dataAsJSON, {
-                    enableWalletNaming: store.preferences.enableWalletNaming,
-                    enablePushNotifications: !!enablePushNotifications,
-                    showPreface,
-                    termsVersion: TermsVersion,
-                  }),
-                },
-              ],
-            })
-          )
-
-          return
-        }
-
-        // We have no onboarding state, starting from step zero.
-        if (showPreface) {
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: Screens.Preface }],
+              routes: [{ name: Screens.EnterPIN }],
             })
           )
         } else {
+          // return to lockout screen if lockout date is set
           navigation.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: Screens.Onboarding }],
+              routes: [{ name: Screens.AttemptLockout }],
             })
           )
         }
-      } catch (e: unknown) {
-        setInitErrorType(InitErrorTypes.Onboarding)
-        setInitError(e as Error)
+
+        return
       }
+
+      // If onboarding was interrupted we need to pickup from where we left off.
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: resumeOnboardingAt(store.onboarding, {
+                enableWalletNaming: store.preferences.enableWalletNaming,
+                enablePushNotifications: !!enablePushNotifications,
+                showPreface,
+                termsVersion: TermsVersion,
+              }),
+            },
+          ],
+        })
+      )
+
+      return
+
+    } catch (e: unknown) {
+      setInitErrorType(InitErrorTypes.Onboarding)
+      setInitError(e as Error)
     }
-    initOnboarding()
-  }, [store.authentication.didAuthenticate, initOnboardingCount])
+  }, [store.authentication.didAuthenticate, initOnboardingCount, store.stateLoaded])
 
   useEffect(() => {
     const initAgent = async (): Promise<void> => {
@@ -432,7 +320,7 @@ const Splash = () => {
           return
         }
 
-        setStep(4)
+        setStep(3)
         const credentials = await getWalletCredentials()
 
         if (!credentials?.id || !credentials.key) {
@@ -440,7 +328,7 @@ const Splash = () => {
           return
         }
 
-        setStep(5)
+        setStep(4)
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
 
@@ -499,7 +387,7 @@ const Splash = () => {
           })
         }
 
-        setStep(6)
+        setStep(5)
         await newAgent.initialize()
         const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
         if (!cachedLedgers) {
@@ -528,16 +416,16 @@ const Splash = () => {
           }
         }
 
-        setStep(7)
+        setStep(6)
         await createLinkSecretIfRequired(newAgent)
 
-        setStep(8)
+        setStep(7)
         setAgent(newAgent)
         if (store.preferences.usePushNotifications) {
           activate(newAgent)
         }
 
-        setStep(9)
+        setStep(8)
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
