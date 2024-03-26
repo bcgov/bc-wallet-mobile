@@ -100,12 +100,18 @@ export default function PersonCredential() {
 
     const acceptAttestationProofRequest = async () => {
       if (!attestationLoading && didStartAttestationWorkflow && remoteAgentConnectionId) {
+        // TODO:(jl) These proofs are hidden. If we find any stale ones we should remove
+        // them by declining them or deleting them.
         const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentConnectionId)
         if (proofRequest) {
-          const credentials = await credentialsMatchForProof(agent, proofRequest)
+          // This will throw if we don't have the necessary credentials
+          const credentials = await agent.proofs.selectCredentialsForRequest({
+            proofRecordId: proofRequest.id,
+          })
+
           await agent.proofs.acceptRequest({
             proofRecordId: proofRequest.id,
-            proofFormats: credentials,
+            proofFormats: credentials.proofFormats,
           })
         }
       }
@@ -113,10 +119,10 @@ export default function PersonCredential() {
 
     acceptAttestationProofRequest()
       .then(() => {
-        agent.config.logger.info(`Accepted IDIM attestation proof request.`)
+        agent.config.logger.info(`Accepted IAS attestation proof request.`)
       })
       .catch((error) => {
-        agent.config.logger.error(`Unable to accept IDIM attestation proof request, error: ${error.message}`)
+        agent.config.logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
       })
   }, [attestationLoading, receivedProofRequests])
 
@@ -126,6 +132,9 @@ export default function PersonCredential() {
     }
 
     setWorkflowInProgress(true)
+    // TODO(jl): This should be renamed to something more specific like
+    // `startBCServicesCardAuthenticationWorkflow` so its obvious what "flow"
+    // is starting.
     startFlow(agent, store, setWorkflowInProgress, t, setRemoteAgentConnectionId)
   }, [])
 
