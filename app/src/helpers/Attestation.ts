@@ -41,6 +41,12 @@ export interface AttestationProofRequestFormat {
   request: IndyRequest & AnonCredsRequest
 }
 
+export interface AttestationCredentialFormat {
+  attributes: {
+    attestationInfo: []
+  }
+}
+
 /**
  * Determine the format of the proof request
  *
@@ -184,13 +190,9 @@ export const attestationCredentialRequired = async (agent: BifoldAgent, proofId:
 
   // TODO:(jl) Should we be checking the length of the attributes matches some
   // expected length in the proof request?
-
-  if (credentials.proofFormats.indy) {
-    return credentials.proofFormats.indy.attributes.attestationInfo.length === 0
-  }
-
-  if (credentials.proofFormats.anoncreds) {
-    return credentials.proofFormats.anoncreds.attributes.attestationInfo.length === 0
+  const format = (credentials.proofFormats.anoncreds ?? credentials.proofFormats.indy) as AttestationCredentialFormat
+  if (format) {
+    return format.attributes.attestationInfo.length === 0
   }
 
   return false

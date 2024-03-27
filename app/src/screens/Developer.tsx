@@ -2,14 +2,13 @@ import { useAgent } from '@aries-framework/react-hooks'
 import { useTheme, useStore, testIdWithKey, DispatchAction, Screens } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
 import { useNavigation } from '@react-navigation/native'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import { useAttestation } from '../services/attestation'
-import { BCDispatchAction, BCState } from '../store'
+import { BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
@@ -31,11 +30,7 @@ const Settings: React.FC = () => {
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
-  const [attestationSupportEnabled, setAttestationSupportEnabled] = useState(
-    !!store.developer.attestationSupportEnabled
-  )
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
-  const { start, stop } = useAttestation()
   const navigation = useNavigation()
 
   const styles = StyleSheet.create({
@@ -81,19 +76,6 @@ const Settings: React.FC = () => {
       alignItems: 'center',
     },
   })
-
-  useEffect(() => {
-    if (!agent) {
-      return
-    }
-
-    if (!attestationSupportEnabled) {
-      stop()
-      return
-    }
-
-    start()
-  }, [attestationSupportEnabled])
 
   const shouldDismissModal = () => {
     setEnvironmentModalVisible(false)
@@ -246,15 +228,6 @@ const Settings: React.FC = () => {
     setPreventAutoLock((previousState) => !previousState)
   }
 
-  const toggleAttestationSupport = () => {
-    dispatch({
-      type: BCDispatchAction.ATTESTATION_SUPPORT,
-      payload: [!attestationSupportEnabled],
-    })
-
-    setAttestationSupportEnabled((previousState) => !previousState)
-  }
-
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -390,20 +363,6 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={togglePreventAutoLockSwitch}
             value={preventAutoLock}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Developer.AttestationSupport')}
-          accessibilityLabel={t('Developer.AttestationSupport')}
-          testID={testIdWithKey('AttestationSupportSwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={attestationSupportEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
-            onValueChange={toggleAttestationSupport}
-            value={attestationSupportEnabled}
           />
         </SectionRow>
         <SectionRow
