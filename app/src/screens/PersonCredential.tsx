@@ -12,6 +12,7 @@ import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
 import { credentialsMatchForProof } from '../helpers/Attestation'
 import { startFlow } from '../helpers/BCIDHelper'
+import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
 import { BCState } from '../store'
 
 export default function PersonCredential() {
@@ -26,6 +27,9 @@ export default function PersonCredential() {
   const { useAttestation } = useConfiguration()
   const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
   const receivedProofRequests = useProofByState(ProofState.RequestReceived)
+  // This fn contains the logic to automatically process the Person Credential
+  // offer and navigate to the offer accept screen.
+  useCredentialOfferTrigger(remoteAgentConnectionId)
 
   const styles = StyleSheet.create({
     pageContainer: {
