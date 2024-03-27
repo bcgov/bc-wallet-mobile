@@ -10,7 +10,6 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
-import { credentialsMatchForProof } from '../helpers/Attestation'
 import { startFlow } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 
