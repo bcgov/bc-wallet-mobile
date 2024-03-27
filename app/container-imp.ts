@@ -48,7 +48,6 @@ export class AppContainer implements Container {
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
       let environment = initialState.developer.environment
-      let attestationSupportEnabled = initialState.developer.attestationSupportEnabled
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -65,7 +64,6 @@ export class AppContainer implements Container {
           (val) => (personCredOfferDissmissed = val)
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
-        loadState<boolean>(BCLocalStorageKeys.Attestation, (val) => (attestationSupportEnabled = val)),
       ])
       const state: BCState = {
         ...initialState,
@@ -78,7 +76,6 @@ export class AppContainer implements Container {
         developer: {
           ...initialState.developer,
           environment,
-          attestationSupportEnabled,
         },
       }
       dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
