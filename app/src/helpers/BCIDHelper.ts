@@ -228,7 +228,13 @@ export const startFlow = async (
 
     if (remoteAgentDetails.legacyConnectionDid !== undefined) {
       setTimeout(async () => {
-        await authenticateWithServiceCard(store, setWorkflowInProgress, remoteAgentDetails, t)
+        await authenticateWithServiceCard(
+          store,
+          setWorkflowInProgress,
+          remoteAgentDetails,
+          t,
+          connectionEstablishedCallback
+        )
       }, connectionDelayInMs)
     }
   } catch (error: unknown) {
