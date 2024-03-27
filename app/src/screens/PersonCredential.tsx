@@ -12,8 +12,8 @@ import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
 import { credentialsMatchForProof } from '../helpers/Attestation'
 import { startFlow } from '../helpers/BCIDHelper'
-import { BCState } from '../store'
 import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
+import { BCState } from '../store'
 
 export default function PersonCredential() {
   const { agent } = useAgent()
