@@ -57,7 +57,7 @@ export const removeExistingInvitationIfRequired = async (
   }
 }
 
-export const receiveBCIDInvite = async (
+export const connectToIASAgent = async (
   agent: Agent,
   store: BCState,
   t: TFunction<'translation', undefined>
@@ -212,7 +212,7 @@ export const authenticateWithServiceCard = async (
   }
 }
 
-export const startFlow = async (
+export const startBCServicesCardAuthenticationWorkflow = async (
   agent: Agent,
   store: BCState,
   setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
@@ -220,7 +220,7 @@ export const startFlow = async (
   connectionEstablishedCallback?: (connectionId?: string) => void
 ) => {
   try {
-    const remoteAgentDetails = await receiveBCIDInvite(agent, store, t)
+    const remoteAgentDetails = await connectToIASAgent(agent, store, t)
 
     if (connectionEstablishedCallback) {
       connectionEstablishedCallback(remoteAgentDetails.connectionId)

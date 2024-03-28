@@ -102,8 +102,7 @@ const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterB
  */
 export const isProofRequestingAttestation = async (
   proof: ProofExchangeRecord,
-  agent: BifoldAgent,
-  attestationCredDefIds: string[]
+  agent: BifoldAgent
 ): Promise<boolean> => {
   const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
   const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
@@ -120,10 +119,7 @@ export const isProofRequestingAttestation = async (
  * @param attestationCredDefIds Cred def IDs for used attestation
  * @returns All available attestation credentials
  */
-export const getAvailableAttestationCredentials = async (
-  agent: BifoldAgent,
-  attestationCredDefIds: string[]
-): Promise<CredentialExchangeRecord[]> => {
+export const getAvailableAttestationCredentials = async (agent: BifoldAgent): Promise<CredentialExchangeRecord[]> => {
   const credentials = await agent.credentials.getAll()
 
   return credentials.filter((record) => {
@@ -176,7 +172,7 @@ export const credentialsMatchForProof = async (
  */
 export const attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
   const proof = await agent?.proofs.getById(proofId)
-  const isAttestation = await isProofRequestingAttestation(proof, agent, attestationCredDefIds)
+  const isAttestation = await isProofRequestingAttestation(proof, agent)
 
   if (!isAttestation) {
     return false
