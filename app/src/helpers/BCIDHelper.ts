@@ -57,7 +57,7 @@ export const removeExistingInvitationIfRequired = async (
   }
 }
 
-export const receiveBCIDInvite = async (
+export const connectToIASAgent = async (
   agent: Agent,
   store: BCState,
   t: TFunction<'translation', undefined>
@@ -138,18 +138,15 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
 }
 
 export const authenticateWithServiceCard = async (
-  store: BCState,
-  setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
-  agentDetails: WellKnownAgentDetails,
-  t: TFunction<'translation', undefined>,
-  callback?: (connectionId?: string) => void
+  legacyConnectionDid: string,
+  iasPortalUrl: string,
+  callback?: (status: boolean) => void
 ): Promise<void> => {
   try {
-    const did = agentDetails.legacyConnectionDid as string
-    const url = `${store.developer.environment.iasPortalUrl}/${did}`
+    const url = `${iasPortalUrl}/${legacyConnectionDid}`
 
     if (await InAppBrowser.isAvailable()) {
-      const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', did), {
+      const result = await InAppBrowser.openAuth(url, redirectUrlTemplate.replace('<did>', legacyConnectionDid), {
         // iOS
         dismissButtonStyle: 'cancel',
         // Android
@@ -166,7 +163,9 @@ export const authenticateWithServiceCard = async (
         result.type === AuthenticationResultType.Cancel &&
         typeof (result as unknown as RedirectResult).url === 'undefined'
       ) {
-        setWorkflowInProgress(false)
+        // setWorkflowInProgress(false)
+        callback && callback(false)
+
         return
       }
 
@@ -174,17 +173,17 @@ export const authenticateWithServiceCard = async (
         result.type === AuthenticationResultType.Dismiss &&
         typeof (result as unknown as RedirectResult).url === 'undefined'
       ) {
-        callback && callback(agentDetails.connectionId)
+        callback && callback(true)
       }
 
       // When `result.type` is "Success" and `result.url` contains the
       // word "success" the credential offer workflow has been completed.
       if (
         result.type === AuthenticationResultType.Success &&
-        (result as unknown as RedirectResult).url.includes(did) &&
+        (result as unknown as RedirectResult).url.includes(legacyConnectionDid) &&
         (result as unknown as RedirectResult).url.includes('success')
       ) {
-        callback && callback(agentDetails.connectionId)
+        callback && callback(true)
       }
 
       // When `result.type` is "Success" and `result.url` contains the
@@ -192,10 +191,11 @@ export const authenticateWithServiceCard = async (
       // the user.
       if (
         result.type === AuthenticationResultType.Success &&
-        (result as unknown as RedirectResult).url.includes(did) &&
+        (result as unknown as RedirectResult).url.includes(legacyConnectionDid) &&
         (result as unknown as RedirectResult).url.includes('cancel')
       ) {
-        setWorkflowInProgress(false)
+        callback && callback(false)
+        // setWorkflowInProgress(false)
         return
       }
     } else {
@@ -208,11 +208,12 @@ export const authenticateWithServiceCard = async (
     cleanupAfterServiceCardAuthentication(
       code === ErrorCodes.CanceledByUser ? AuthenticationResultType.Cancel : AuthenticationResultType.Fail
     )
+
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }
 
-export const startFlow = async (
+export const startBCServicesCardAuthenticationWorkflow = async (
   agent: Agent,
   store: BCState,
   setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
@@ -220,7 +221,7 @@ export const startFlow = async (
   connectionEstablishedCallback?: (connectionId?: string) => void
 ) => {
   try {
-    const remoteAgentDetails = await receiveBCIDInvite(agent, store, t)
+    const remoteAgentDetails = await connectToIASAgent(agent, store, t)
 
     if (connectionEstablishedCallback) {
       connectionEstablishedCallback(remoteAgentDetails.connectionId)
