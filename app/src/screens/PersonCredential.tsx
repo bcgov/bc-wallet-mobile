@@ -10,9 +10,10 @@ import {
   BifoldAgent,
   Screens,
   Stacks,
+  InfoTextBox,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -24,6 +25,8 @@ import LoadingIcon from '../components/LoadingIcon'
 import { getAvailableAttestationCredentials } from '../helpers/Attestation'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
+
+const attestationProofRequestWaitTimeout = 10000
 
 export default function PersonCredential() {
   const { agent } = useAgent()
@@ -39,6 +42,7 @@ export default function PersonCredential() {
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
   const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
   const [didCompleteAttestationProofRequest, sedDidCompleteAttestationProofRequest] = useState<boolean>(false)
+  const timer = useRef<NodeJS.Timeout>()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -143,6 +147,24 @@ export default function PersonCredential() {
       .then((remoteAgentDetails: WellKnownAgentDetails) => {
         setRemoteAgentDetails(remoteAgentDetails)
 
+        timer.current = setTimeout(() => {
+          if (!remoteAgentDetails || !remoteAgentDetails.connectionId) {
+            return
+          }
+
+          const proofRequest = receivedProofRequests.find(
+            (proof) => proof.connectionId === remoteAgentDetails.connectionId
+          )
+          if (!proofRequest) {
+            // No proof from our IAS Agent to respond to, do nothing.
+            agent.config.logger.info(
+              `Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`
+            )
+
+            sedDidCompleteAttestationProofRequest(true)
+          }
+        }, attestationProofRequestWaitTimeout)
+
         agent.config.logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
       })
       .catch((error) => {
@@ -158,8 +180,6 @@ export default function PersonCredential() {
       return
     }
 
-    // TODO:(jl) We need to set a 10 second timeout.
-
     // We have an attestation credential and can respond to an
     // attestation proof request.
     const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentDetails.connectionId)
@@ -167,6 +187,8 @@ export default function PersonCredential() {
       // No proof from our IAS Agent to respond to, do nothing.
       return
     }
+
+    timer.current && clearTimeout(timer.current)
 
     acceptAttestationProofRequest(agent, proofRequest)
       .then((status: boolean) => {
@@ -294,6 +316,11 @@ export default function PersonCredential() {
               {t('PersonCredential.CreatePersonCred')}
             </Text>
           </View>
+          {workflowInProgress ? (
+            <View style={{ marginBottom: 10 }}>
+              <InfoTextBox>{t('PersonCredential.PleaseWait')}</InfoTextBox>
+            </View>
+          ) : null}
           {appInstalled ? (
             <Button
               buttonType={ButtonType.Primary}
