@@ -115,17 +115,13 @@ export default function PersonCredential() {
     return true
   }
 
+  // when a person credential offer is received, show the
+  // offer screen to the user.
   const goToCredentialOffer = (credentialId?: string) => {
     navigation.getParent()?.navigate(Stacks.NotificationStack, {
       screen: Screens.CredentialOffer,
       params: { credentialId },
     })
-  }
-
-  // Use this function to connect to the IAS agent and start the
-  const connectToAgent = async () => {
-    const remoteAgentDetails = await connectToIASAgent(agent, store, t)
-    setRemoteAgentDetails(remoteAgentDetails)
   }
 
   useEffect(() => {
@@ -135,7 +131,7 @@ export default function PersonCredential() {
   }, [])
 
   const acceptPersonCredentialOffer = useCallback(() => {
-    if (!agent) {
+    if (!agent || !store || !t) {
       return
     }
 
@@ -143,8 +139,10 @@ export default function PersonCredential() {
     // and the user needs to wait.
     setWorkflowInProgress(true)
 
-    connectToAgent()
-      .then(() => {
+    connectToIASAgent(agent, store, t)
+      .then((remoteAgentDetails: WellKnownAgentDetails) => {
+        setRemoteAgentDetails(remoteAgentDetails)
+
         agent.config.logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
       })
       .catch((error) => {
