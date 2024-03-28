@@ -143,19 +143,27 @@ export default function PersonCredential() {
     // and the user needs to wait.
     setWorkflowInProgress(true)
 
-    timer.current = setTimeout(() => {
-      if (!didCompleteAttestationProofRequest) {
-        agent.config.logger.info(
-          `Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`
-        )
-
-        sedDidCompleteAttestationProofRequest(true)
-      }
-    }, attestationProofRequestWaitTimeout)
-
     connectToIASAgent(agent, store, t)
       .then((remoteAgentDetails: WellKnownAgentDetails) => {
         setRemoteAgentDetails(remoteAgentDetails)
+
+        timer.current = setTimeout(() => {
+          if (!remoteAgentDetails || !remoteAgentDetails.connectionId) {
+            return
+          }
+
+          const proofRequest = receivedProofRequests.find(
+            (proof) => proof.connectionId === remoteAgentDetails.connectionId
+          )
+          if (!proofRequest) {
+            // No proof from our IAS Agent to respond to, do nothing.
+            agent.config.logger.info(
+              `Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`
+            )
+
+            sedDidCompleteAttestationProofRequest(true)
+          }
+        }, attestationProofRequestWaitTimeout)
 
         agent.config.logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
       })
