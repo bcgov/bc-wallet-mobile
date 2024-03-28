@@ -145,7 +145,9 @@ export default function PersonCredential() {
 
     timer.current = setTimeout(() => {
       if (!didCompleteAttestationProofRequest) {
-        agent.config.logger.info('Waiting on attestation proof request timed out')
+        agent.config.logger.info(
+          `Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`
+        )
 
         sedDidCompleteAttestationProofRequest(true)
       }
