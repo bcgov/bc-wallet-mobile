@@ -1,5 +1,5 @@
-import { ProofState, ProofExchangeRecord } from '@aries-framework/core'
-import { useAgent, useProofByState } from '@aries-framework/react-hooks'
+import { ProofState, ProofExchangeRecord, CredentialState } from '@aries-framework/core'
+import { useAgent, useProofByState, useCredentialByState } from '@aries-framework/react-hooks'
 import {
   useConfiguration,
   useStore,
@@ -8,7 +8,10 @@ import {
   ButtonType,
   testIdWithKey,
   BifoldAgent,
+  Screens,
+  Stacks,
 } from '@hyperledger/aries-bifold-core'
+import { useNavigation } from '@react-navigation/native'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native'
@@ -18,10 +21,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
-import { connectToIASAgent, startBCServicesCardAuthenticationWorkflow } from '../helpers/BCIDHelper'
-import { useCredentialOfferTrigger } from '../hooks/credential-offer-trigger'
+import { getAvailableAttestationCredentials } from '../helpers/Attestation'
+import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
-import { isProofRequestingAttestation, getAvailableAttestationCredentials } from '../helpers/Attestation'
 
 export default function PersonCredential() {
   const { agent } = useAgent()
@@ -30,14 +32,13 @@ export default function PersonCredential() {
   const [workflowInProgress, setWorkflowInProgress] = useState<boolean>(false)
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
-  const [remoteAgentConnectionId, setRemoteAgentConnectionId] = useState<string | undefined>()
-  const [didStartAttestationWorkflow, setDidStartAttestationWorkflow] = useState(false)
   const { useAttestation } = useConfiguration()
-  const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
+  const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
   const receivedProofRequests = useProofByState(ProofState.RequestReceived)
-  // This fn contains the logic to automatically process the Person Credential
-  // offer and navigate to the offer accept screen.
-  useCredentialOfferTrigger(remoteAgentConnectionId)
+  const navigation = useNavigation()
+  const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
+  const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
+  const [didCompleteAttestationProofRequest, sedDidCompleteAttestationProofRequest] = useState<boolean>(false)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -95,6 +96,12 @@ export default function PersonCredential() {
 
   // Use this function to accept the attestation proof request.
   const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
+    // Sanity check to make sure we have the necessary credentials
+    const credential = await getAvailableAttestationCredentials(agent)
+    if (credential.length === 0) {
+      return false
+    }
+
     // This will throw if we don't have the necessary credentials
     const credentials = await agent.proofs.selectCredentialsForRequest({
       proofRecordId: proofRequest.id,
@@ -104,15 +111,23 @@ export default function PersonCredential() {
       proofRecordId: proofRequest.id,
       proofFormats: credentials.proofFormats,
     })
+
+    return true
+  }
+
+  const goToCredentialOffer = (credentialId?: string) => {
+    navigation.getParent()?.navigate(Stacks.NotificationStack, {
+      screen: Screens.CredentialOffer,
+      params: { credentialId },
+    })
   }
 
   // Use this function to connect to the IAS agent and start the
   const connectToAgent = async () => {
     const remoteAgentDetails = await connectToIASAgent(agent, store, t)
-    setRemoteAgentConnectionId(remoteAgentDetails.connectionId)
+    setRemoteAgentDetails(remoteAgentDetails)
   }
 
-  //
   useEffect(() => {
     isBCServicesCardInstalled().then((result) => {
       setAppInstalled(result)
@@ -120,68 +135,93 @@ export default function PersonCredential() {
   }, [])
 
   const acceptPersonCredentialOffer = useCallback(() => {
-    console.log('useEffect connect to IAS agent')
-
     if (!agent) {
       return
     }
-    console.log('A')
 
     // Start the Spinner and any text that indicates the workflow is in progress
     // and the user needs to wait.
     setWorkflowInProgress(true)
-    console.log('B')
 
     connectToAgent()
       .then(() => {
-        console.log('C')
-
-        agent.config.logger.error(`Connected to IAS agent, connectionId: ${remoteAgentConnectionId}`)
+        agent.config.logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
       })
       .catch((error) => {
-        console.log('D')
-
         agent.config.logger.error(`Connected to connect to IAS agent, error: ${error.message}`)
       })
   }, [])
 
   useEffect(() => {
-    console.log('useEffect accept attestation proof request')
     // If we are fetching an attestation credential, do no yet have
     // a remote connection ID to the IAS agent, or the agent is not
     // initialized, do nothing.
-    console.log('1')
-
-    if (attestationLoading || !remoteAgentConnectionId || !agent) {
-      console.log('2')
-
+    if (attestationLoading || !remoteAgentDetails || !agent) {
       return
     }
-    console.log('3')
 
     // TODO:(jl) We need to set a 10 second timeout.
 
     // We have an attestation credential and can respond to an
     // attestation proof request.
-    const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentConnectionId)
+    const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentDetails.connectionId)
     if (!proofRequest) {
-      console.log('4')
-
       // No proof from our IAS Agent to respond to, do nothing.
       return
     }
-    console.log('5')
 
     acceptAttestationProofRequest(agent, proofRequest)
-      .then(() => {
-        // TODO:(jl) We can unblock the workflow and proceed with
+      .then((status: boolean) => {
+        // We can unblock the workflow and proceed with
         // authentication.
+        sedDidCompleteAttestationProofRequest(status)
+
         agent.config.logger.info(`Accepted IAS attestation proof request.`)
       })
       .catch((error) => {
+        sedDidCompleteAttestationProofRequest(false)
+
         agent.config.logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
       })
-  }, [attestationLoading, receivedProofRequests, remoteAgentConnectionId, agent])
+  }, [attestationLoading, receivedProofRequests, remoteAgentDetails, agent])
+
+  useEffect(() => {
+    if (!remoteAgentDetails || !remoteAgentDetails.legacyConnectionDid || !didCompleteAttestationProofRequest) {
+      return
+    }
+
+    const cb = (status: boolean) => {
+      agent!.config.logger.error(`Service card authentication reported ${status}`)
+
+      setWorkflowInProgress(false)
+    }
+
+    const { iasPortalUrl } = store.developer.environment
+    const { legacyConnectionDid } = remoteAgentDetails
+
+    authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
+      .then(() => {
+        agent!.config.logger.error('Completed service card authentication successfully')
+      })
+      .catch((error) => {
+        agent!.config.logger.error('Completed service card authentication with errir, error: ', error.message)
+      })
+  }, [remoteAgentDetails, didCompleteAttestationProofRequest])
+
+  useEffect(() => {
+    if (!remoteAgentDetails || !remoteAgentDetails.connectionId) {
+      return
+    }
+
+    for (const credential of receivedCredentialOffers) {
+      if (
+        credential.state == CredentialState.OfferReceived &&
+        credential.connectionId === remoteAgentDetails.connectionId
+      ) {
+        goToCredentialOffer(credential.id)
+      }
+    }
+  }, [receivedCredentialOffers, remoteAgentDetails])
 
   const getBCServicesCardApp = useCallback(() => {
     setAppInstalled(true)
