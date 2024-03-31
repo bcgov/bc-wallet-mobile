@@ -98,8 +98,8 @@ const StartPage = (theme: ITheme['OnboardingTheme']) => {
         <ScanShare {...imageDisplayOptions} />
       </View>
       <View style={{ marginBottom: 20 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.DifferentWalletHeading')}</Text>
-        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('Onboarding.DifferentWalletParagraph')}</Text>
+        <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.InstntHeading')}</Text>
+        <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('Onboarding.InstntFirstParagraph')}</Text>
       </View>
     </ScrollView>
   )
@@ -112,8 +112,8 @@ const guides: Array<{
 }> = [
   {
     image: CredentialList,
-    title: 'Onboarding.DigitalCredentialsHeading',
-    body: 'Onboarding.DigitalCredentialsParagraph',
+    title: 'Onboarding.InstntAccessHeading',
+    body: 'Onboarding.InstntAccessParagraph',
   },
 ]
 

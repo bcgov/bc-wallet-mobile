@@ -26,16 +26,16 @@ const translation = {
   "CameraDisclosure": {
     "AllowCameraUse": "Allow camera use",
     "CameraDisclosure": "The camera is used to scan QR codes that initiate a credential offer or credential request. No information about the images is stored, used for analytics, or shared.",
-    "ToContinueUsing": "To continue using the BC Wallet scan feature, please allow camera permissions.",
+    "ToContinueUsing": "To continue using the Instnt Wallet scan feature, please allow camera permissions.",
     "Allow": "Allow",
     "OpenSettings": "Open settings",
   },
   "Biometry": {
     "Toggle": "Toggle Biometrics",
     "EnabledText1": "Log in with your phone's biometrics instead of your wallet PIN.",
-    "EnabledText1Bold": "you will need to use biometrics to open your BC Wallet.",
-    "EnabledText2": "This means all fingerprint and facial data added on this phone can be used to access your BC Wallet.",
-    "EnabledText3": "Anyone who can access your phone with biometrics can access your BC Wallet.",
+    "EnabledText1Bold": "you will need to use biometrics to open your Instnt Wallet.",
+    "EnabledText2": "This means all fingerprint and facial data added on this phone can be used to access your Instnt Wallet.",
+    "EnabledText3": "Anyone who can access your phone with biometrics can access your Instnt Wallet.",
     "EnabledText3Bold": "Ensure only you have access to your wallet.",
     "Warning": "Ensure only you have access to your wallet.",
     "UseToUnlock": "Use biometrics to unlock wallet?"
@@ -46,25 +46,25 @@ const translation = {
     "AddFirstCredential": "Add your first credential"
   },
   "Onboarding": {
-    "DifferentWalletHeading": "A different smart wallet",
-    "DifferentWalletParagraph": "Unlike other digital wallets, BC Wallet helps you prove who you are in-person or online by storing and using digital credentials issued by participating services.\n\nInteract with confidence with individuals and organisations you trust.",
-    "DigitalCredentialsHeading": "Digital credentials",
-    "DigitalCredentialsParagraph": "Digital credentials are the electronic equivalent of physical credentials such as certifications and permits offered by participating services.\n\nServices are simplified and expedited as organisations and individuals can confirm who you are with trusted information from digital credentials.",
-    "PrivateConfidentialHeading": "Private and confidential",
-    "PrivateConfidentialParagraph": "Your privacy is important.\n\nThe B.C. government doesn't know when you use digital credentials, unless you're interacting with them. No analytics are recorded.\n\nYou approve every use of your digital credentials, and only provide the information that's needed.",
+    "InstntHeading": "Instnt",
+    "InstntFirstParagraph": "Instnt (www.instnt.org) is a managed customer acceptance platform for businesses that want to make it easy for customers to signup and be accepted and onboarded.",
+    "InstntAccessHeading": "Instnt Access",
+    "InstntAccessParagraph": "Instnt Access (tm) allows you to signup and be accepted by businesses with one click or a scan of a QR-code. Signup once for a product or service of a business with Instnt, get verified, and potentially never signup again as you access other products or services from the same business or other businesses. Instnt uses advanced block-chain based decentralized identity technology and verifiable credential standards to make single signup possible.",
+    "PrivateConfidentialHeading": "What is decentralized identity and verifiable credential?",
+    "PrivateConfidentialParagraph": "Instnt makes it possible for businesses to trust that you were verified in a reliable way for KYC compliance and fraud prevention and to share that trust using secure, managed blockchain-based technology, in a decentralized manner. \n\nWith verifiable credential and embedded toolkit technology you end up owning your own identity data and the proof that that data was verified (and who verified it) in a the form of digital  credentials, much like your driver license in a physical wallet. Your data is securely encrypted and stored in your wallet so it can never be stolen by data breaches at businesses.",
     "GetStarted": "Get Started",
   },
   "Preface": {
-    "Paragraph1": "Most people will not have a need for BC Wallet because very few digital credentials are currently available.",
-    "Link1": "See where you can use BC Wallet",
-    "Paragraph2": "If BC Wallet isn't what you're looking for but you're curious, check out our",
-    "Link2": "BC Wallet showcase",
+    "Paragraph1": "Most people will not have a need for Instnt Wallet because very few digital credentials are currently available.",
+    "Link1": "See where you can use Instnt Wallet",
+    "Paragraph2": "If Instnt Wallet isn't what you're looking for but you're curious, check out our",
+    "Link2": "Instnt Wallet showcase",
   },
   "Screens": {
-    "Onboarding": "BC Wallet",
+    "Onboarding": "Instnt Wallet",
     "Terms": "Terms of Use",
     "Settings": "Menu",
-    "Preface": "BC Wallet",
+    "Preface": "Instnt Wallet",
   },
   "PersonCredentialNotification": {
     "Title": "Get your Person credential",
@@ -83,11 +83,11 @@ const translation = {
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection",
-    "NoInternetConnectionMessage": "You're unable to access services using BC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection."
+    "NoInternetConnectionMessage": "You're unable to access services using Instnt Wallet or receive credentials until you're back online.\n\nPlease check your internet connection."
   },
   "Tour": {
-    "GuideTitle": "Welcome to BC Wallet",
-    "WouldYouLike": "Would you like some guidance on how to use BC Wallet?",
+    "GuideTitle": "Welcome to Instnt Wallet",
+    "WouldYouLike": "Would you like some guidance on how to use Instnt Wallet?",
     "UseAppGuides": "Use app guides",
     "DoNotUseAppGuides": "Don't use app guides",
     "AddAndShare": "Add and share credentials",
@@ -110,8 +110,8 @@ const translation = {
   "Settings": {
     "Help": "Help",
     "MoreInformation": "More Information",
-    "PlayWithBCWallet": "Play with BC Wallet",
-    "HelpUsingBCWallet": "Help using BC Wallet",
+    "PlayWithBCWallet": "Play with Instnt Wallet",
+    "HelpUsingBCWallet": "Help using Instnt Wallet",
     "GiveFeedback": "Give feedback",
     "ReportAProblem": "Report a problem",
     "TermsOfUse": "Terms of use",
@@ -132,7 +132,7 @@ const translation = {
   "Tips": {
     "Header": "Tips",
     "GettingReady": "Getting your wallet ready...",
-    "Tip1": "For extra security, BC Wallet locks the app after 5 minutes of inactivity",
+    "Tip1": "For extra security, Instnt Wallet locks the app after 5 minutes of inactivity",
     "Tip2": "Unlike showing physical cards, you share only what is necessary from your credentials",
     "Tip3": "Your credentials are stored only on this phone, nowhere else",
     "Tip4": "Information is sent and received over an untraceable encrypted connection",
@@ -164,17 +164,17 @@ const translation = {
     "GiveFeedback": "Give Feedback",
   },
   "PushNotifications": {
-    "NotificationsOffTitle": "Notifications for BC Wallet are turned off",
+    "NotificationsOffTitle": "Notifications for Instnt Wallet are turned off",
   },
   "AddCredentialSlider": {
     "Choose": "Choose",
     "ScanQRCode": "Scan a QR code",
   },
   "Scan": {
-    "ScanOnySpecial": "Only special QR codes can be scanned by BC Wallet.",
-    "ScanOnlySpecial3": "BC Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones.",
-    "WhereToUseLink": "See where you can use BC Wallet",
-    "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones."
+    "ScanOnySpecial": "Only special QR codes can be scanned by Instnt Wallet.",
+    "ScanOnlySpecial3": "Instnt Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones.",
+    "WhereToUseLink": "See where you can use Instnt Wallet",
+    "BadQRCodeDescription": "Ths QR code scanned doesn't work with Instnt Wallet. Instnt Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones."
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting",

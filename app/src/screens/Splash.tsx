@@ -338,7 +338,7 @@ const Splash = () => {
 
         const options = {
           config: {
-            label: store.preferences.walletName || 'BC Wallet',
+            label: store.preferences.walletName || 'Instnt Wallet',
             walletConfig: {
               id: credentials.id,
               key: credentials.key,

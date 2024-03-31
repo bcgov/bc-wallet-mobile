@@ -26,7 +26,7 @@ export class AppContainer implements Container {
   }
   public init(): Container {
     // eslint-disable-next-line no-console
-    console.log(`Initializing BC Wallet App container`)
+    console.log(`Initializing Instnt Wallet App container`)
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this.container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
