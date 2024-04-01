@@ -83,7 +83,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -102,7 +102,7 @@ jobs:
           sudo xcode-select -p
 
       - name: Cached pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: pip-cache
         with:
           path: ~/.cache/pip
@@ -112,7 +112,7 @@ jobs:
 
       - name: Cache pod dependencies
         id: pod-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             app/ios/Pods
@@ -124,7 +124,7 @@ jobs:
 
       - name: Restore cached derived data
         id: cache-dd-restore
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: app/ios/xbuild/Build
           key: ${{ runner.os }}-dd-xcode
@@ -203,7 +203,7 @@ jobs:
 
       - name: Save cache for derived data
         id: cache-dd-save
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
@@ -242,7 +242,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -250,7 +250,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: "zulu"
           java-version: 11
@@ -328,7 +328,7 @@ jobs:
           find . -type f -name '*.apk'
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android
           path: |
@@ -337,7 +337,7 @@ jobs:
 
       - name: Upload Android artifact
         if: github.ref_name == 'main'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: android-artifact
           path: app/android/app/build/outputs/bundle/release/app-release.aab
