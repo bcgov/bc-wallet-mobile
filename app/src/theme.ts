@@ -695,14 +695,14 @@ export const Assets: IAssets = {
     logoSecondary: {
       src: require('./assets/img/InstntLogoOnly-old2-1.png'),
       aspectRatio: 1,
-      height: 120,
-      width: 120,
+      height: '33%',
+      width: '33%',
       resizeMode: 'contain',
     },
     logoPrimary: {
       src: require('./assets/img/InstntLogoOnly-old2-1.png'),
-      height: 170,
-      width: 170,
+      height: 80,
+      width: 80,
     },
   },
 }

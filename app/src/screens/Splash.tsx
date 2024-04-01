@@ -19,6 +19,7 @@ import {
   migrateToAskar,
   getAgentModules,
   createLinkSecretIfRequired,
+  useAnimatedComponents,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -143,6 +144,7 @@ const Splash = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
+  const { LoadingIndicator } = useAnimatedComponents()
   const { indyLedgers, showPreface, enablePushNotifications } = useConfiguration()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
@@ -170,37 +172,11 @@ const Splash = () => {
   }
 
   const styles = StyleSheet.create({
-    screenContainer: {
-      backgroundColor: ColorPallet.brand.primary,
+    container: {
       flex: 1,
-    },
-    scrollContentContainer: {
-      flexGrow: 1,
-      justifyContent: 'space-between',
-    },
-    progressContainer: {
+      justifyContent: 'center',
       alignItems: 'center',
-      width: '100%',
-    },
-    stepTextContainer: {
-      marginTop: 10,
-    },
-    stepText: {
-      fontFamily: 'BCSans-Regular',
-      fontSize: 16,
-      color: '#a8abae',
-    },
-    carouselContainer: {
-      width,
-      marginVertical: 30,
-      flex: 1,
-    },
-    errorBoxContainer: {
-      paddingHorizontal: 20,
-    },
-    logoContainer: {
-      alignSelf: 'center',
-      marginBottom: 30,
+      backgroundColor: ColorPallet.brand.primaryBackground,
     },
   })
 
@@ -432,48 +408,9 @@ const Splash = () => {
     initAgent()
   }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry, initAgentCount])
 
-  const handleErrorCallToActionPressed = () => {
-    setInitError(null)
-    if (initErrorType === InitErrorTypes.Agent) {
-      setInitAgentCount(initAgentCount + 1)
-    } else {
-      setInitOnboardingCount(initOnboardingCount + 1)
-    }
-  }
-
   return (
-    <SafeAreaView style={styles.screenContainer}>
-      <ScrollView contentContainerStyle={styles.scrollContentContainer}>
-        <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
-          <ProgressBar progressPercent={progressPercent} />
-          <View style={styles.stepTextContainer}>
-            <Text style={styles.stepText}>{stepText}</Text>
-          </View>
-        </View>
-        <View style={styles.carouselContainer}>
-          {initError ? (
-            <View style={styles.errorBoxContainer}>
-              <InfoBox
-                notificationType={InfoBoxType.Error}
-                title={t('Error.Title2026')}
-                description={t('Error.Message2026')}
-                message={initError?.message || t('Error.Unknown')}
-                onCallToActionLabel={t('Init.Retry')}
-                onCallToActionPressed={handleErrorCallToActionPressed}
-              />
-            </View>
-          ) : (
-            <TipCarousel />
-          )}
-        </View>
-        <View style={styles.logoContainer}>
-          <Image
-            source={Assets.img.logoPrimary.src}
-            style={{ width: Assets.img.logoPrimary.width, height: Assets.img.logoPrimary.height }}
-            testID={testIdWithKey('LoadingActivityIndicatorImage')}
-          />
-        </View>
-      </ScrollView>
+    <SafeAreaView style={styles.container}>
+      <LoadingIndicator />
     </SafeAreaView>
   )
 }
