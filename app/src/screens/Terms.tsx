@@ -29,7 +29,6 @@ export const TermsVersion = '2'
 const Terms = () => {
   const [store, dispatch] = useStore()
   const { t } = useTranslation()
-  const { enablePushNotifications } = useConfiguration()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
   const { ColorPallet, TextTheme } = useTheme()
   const agreedToPreviousTerms = store.onboarding.didAgreeToTerms && store.onboarding.didAgreeToTerms !== TermsVersion
@@ -77,8 +76,15 @@ const Terms = () => {
 
     if (!agreedToPreviousTerms) {
       navigation.navigate(Screens.CreatePIN)
-    } else if (enablePushNotifications && !store.onboarding.didConsiderPushNotifications) {
-      navigation.navigate(Screens.UsePushNotifications)
+    } else if (store.onboarding.postAuthScreens.length) {
+      const screens: string[] = store.onboarding.postAuthScreens
+      screens.shift()
+      dispatch({type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [screens]})
+      if(screens.length) {
+        navigation.navigate(screens[0])
+      }else{
+        dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING, payload: [true] })
+      }
     }
   }, [])
 

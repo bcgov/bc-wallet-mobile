@@ -46,6 +46,8 @@ import { BCState, BCLocalStorageKeys } from '../store'
 
 import { TermsVersion } from './Terms'
 
+const OnboardingVersion = 2
+
 enum InitErrorTypes {
   Onboarding,
   Agent,
@@ -53,15 +55,11 @@ enum InitErrorTypes {
 
 const onboardingComplete = (
   state: OnboardingState,
-  params: { termsVersion?: boolean | string; enablePushNotifications?: boolean }
 ): boolean => {
-  const termsVer = params.termsVersion ?? true
   return (
-    state.didCompleteTutorial &&
-    state.didAgreeToTerms === termsVer &&
-    state.didCreatePIN &&
-    state.didConsiderBiometry &&
-    (state.didConsiderPushNotifications || !params.enablePushNotifications)
+    (state.onboardingVersion !== 0 && state.didCompleteOnboarding) ||
+    (state.onboardingVersion === 0 &&
+      state.didConsiderBiometry)
   )
 }
 
@@ -103,23 +101,12 @@ const resumeOnboardingAt = (
     (state.didSeePreface || !params.showPreface) &&
     state.didCompleteTutorial &&
     state.didAgreeToTerms === termsVer &&
-    state.didCreatePIN &&
-    params.enablePushNotifications &&
-    !state.didConsiderPushNotifications
-  ) {
-    return Screens.UsePushNotifications
-  }
-
-  if (
-    (state.didSeePreface || !params.showPreface) &&
-    state.didCompleteTutorial &&
-    state.didAgreeToTerms === termsVer &&
     !state.didCreatePIN
   ) {
     return Screens.CreatePIN
   }
 
-  if ((state.didSeePreface || !params.showPreface) && state.didCompleteTutorial && state.didAgreeToTerms !== termsVer) {
+  if ((state.didSeePreface || !params.showPreface) && state.didCompleteTutorial && !state.didAgreeToTerms) {
     return Screens.Terms
   }
 
@@ -244,12 +231,15 @@ const Splash = () => {
 
       setStep(2)
 
+      if (store.onboarding.onboardingVersion !== OnboardingVersion) {
+        dispatch({ type: DispatchAction.ONBOARDING_VERSION, payload: [OnboardingVersion] })
+      }
       if (
-        onboardingComplete(store.onboarding, {
-          enablePushNotifications: !!enablePushNotifications,
-          termsVersion: TermsVersion,
-        })
+        onboardingComplete(store.onboarding)
       ) {
+        if (!store.onboarding.didCompleteOnboarding) {
+          dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING })
+        }
         // if they previously completed onboarding before wallet naming was enabled, mark complete
         if (!store.onboarding.didNameWallet) {
           dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
@@ -259,6 +249,16 @@ const Splash = () => {
         if (!store.onboarding.didSeePreface) {
           dispatch({ type: DispatchAction.DID_SEE_PREFACE })
         }
+
+        // add post authentication screens
+        const postAuthScreens = []
+        if (store.onboarding.didAgreeToTerms !== TermsVersion) {
+          postAuthScreens.push(Screens.Terms)
+        }
+        if (!store.onboarding.didConsiderPushNotifications && enablePushNotifications) {
+          postAuthScreens.push(Screens.UsePushNotifications)
+        }
+        dispatch({ type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [postAuthScreens] })
 
         if (!store.loginAttempt.lockoutDate) {
           navigation.dispatch(
@@ -307,10 +307,9 @@ const Splash = () => {
   useEffect(() => {
     const initAgent = async (): Promise<void> => {
       try {
-        if (!store.authentication.didAuthenticate || !store.onboarding.didConsiderBiometry) {
+        if (!store.authentication.didAuthenticate || !store.onboarding.didConsiderBiometry || store.onboarding.postAuthScreens.length > 0) {
           return
         }
-
         setStep(3)
         const credentials = await getWalletCredentials()
 
@@ -430,7 +429,7 @@ const Splash = () => {
     }
 
     initAgent()
-  }, [store.authentication.didAuthenticate, store.onboarding.didConsiderBiometry, initAgentCount])
+  }, [store.authentication.didAuthenticate, store.onboarding.postAuthScreens.length, store.onboarding.didConsiderBiometry, initAgentCount])
 
   const handleErrorCallToActionPressed = () => {
     setInitError(null)
