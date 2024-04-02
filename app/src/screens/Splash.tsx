@@ -161,7 +161,7 @@ const Splash = () => {
     t('Init.SettingAgent'),
     t('Init.Finishing'),
   ]
-  const { start, stop } = useAttestation()
+  const { start: startAttestationListeners } = useAttestation()
 
   const setStep = (stepIdx: number) => {
     setStepText(steps[stepIdx])
@@ -209,13 +209,8 @@ const Splash = () => {
       return
     }
 
-    if (!store.developer.attestationSupportEnabled) {
-      stop()
-      return
-    }
-
-    start()
-  }, [agent, store.developer.attestationSupportEnabled])
+    startAttestationListeners()
+  }, [agent])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {

@@ -18,7 +18,7 @@ export default function AddCredentialSlider() {
   const { t } = useTranslation()
 
   const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
-  const [showGetFoundationCredential, setShowGetFoundationCredential] = useState<boolean>(false)
+  const [showGetPersonCredential, setShowGetPersonCredential] = useState<boolean>(false)
 
   const credentials = [
     ...useCredentialByState(CredentialState.CredentialReceived),
@@ -91,7 +91,7 @@ export default function AddCredentialSlider() {
       (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     )
 
-    setShowGetFoundationCredential(showPersonCredentialSelector(credentialDefinitionIDs))
+    setShowGetPersonCredential(showPersonCredentialSelector(credentialDefinitionIDs))
   }, [credentials])
 
   useEffect(() => {
@@ -121,7 +121,7 @@ export default function AddCredentialSlider() {
             <Icon name="window-close" size={35} style={styles.drawerRowItem}></Icon>
           </TouchableOpacity>
           <Text style={styles.drawerTitleText}>{t('AddCredentialSlider.Choose')}</Text>
-          {showGetFoundationCredential && (
+          {showGetPersonCredential && (
             <TouchableOpacity
               style={styles.drawerRow}
               onPress={goToPersonCredentialScreen}

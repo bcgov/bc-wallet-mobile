@@ -77,7 +77,8 @@ const translation = {
     "AppOnOtherDevice": "I have it on another device (FR)",
     "CreatePersonCred": "Step 2: Create your Person credential (FR)",
     "StartProcess": "Start the process (FR)",
-    "PageTitle": "Person Credential (FR)"
+    "PageTitle": "Person Credential (FR)",
+    "PleaseWait": "Please wait as we get things ready for you (FR)",
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection (FR)",

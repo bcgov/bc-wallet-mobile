@@ -18,7 +18,7 @@ import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-ve
 import { useEffect, useState } from 'react'
 
 import { attestationCredDefIds, isProofRequestingAttestation } from '../helpers/Attestation'
-import { getUnlockCredentialDate, showPersonCredentialSelector } from '../helpers/BCIDHelper'
+import { showPersonCredentialSelector } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 
 interface CustomNotification {
@@ -98,10 +98,9 @@ export const useNotifications = (): Notifications => {
   const credentialDefinitionIDs = credentials.map(
     (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
   )
-  const invitationDate = getUnlockCredentialDate(credentials)
+  const invitationDate = new Date()
   const custom: CustomNotification[] =
     showPersonCredentialSelector(credentialDefinitionIDs) &&
-    invitationDate &&
     !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
       ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
       : []
