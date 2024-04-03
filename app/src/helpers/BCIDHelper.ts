@@ -211,35 +211,3 @@ export const authenticateWithServiceCard = async (
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }
-
-// Keeping old flow for now, for reference
-// export const startBCServicesCardAuthenticationWorkflow = async (
-//   agent: Agent,
-//   store: BCState,
-//   setWorkflowInProgress: React.Dispatch<React.SetStateAction<boolean>>,
-//   t: TFunction<'translation', undefined>,
-//   connectionEstablishedCallback?: (connectionId?: string) => void
-// ) => {
-//   try {
-//     const remoteAgentDetails = await connectToIASAgent(agent, store, t)
-
-//     if (connectionEstablishedCallback) {
-//       connectionEstablishedCallback(remoteAgentDetails.connectionId)
-//     }
-
-//     if (remoteAgentDetails.legacyConnectionDid !== undefined) {
-//       setTimeout(async () => {
-//         await authenticateWithServiceCard(
-//           store,
-//           setWorkflowInProgress,
-//           remoteAgentDetails,
-//           t,
-//           connectionEstablishedCallback
-//         )
-//       }, connectionDelayInMs)
-//     }
-//   } catch (error: unknown) {
-//     setWorkflowInProgress(false)
-//     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
-//   }
-// }
