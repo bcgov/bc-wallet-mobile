@@ -21,7 +21,7 @@ import {
   createLinkSecretIfRequired,
   useAnimatedComponents,
 } from '@hyperledger/aries-bifold-core'
-import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
+// import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
@@ -29,20 +29,21 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
-import {
-  getVersion,
-  getBuildNumber,
-  getApplicationName,
-  getSystemName,
-  getSystemVersion,
-} from 'react-native-device-info'
+// import {
+//   getVersion,
+//   getBuildNumber,
+//   getApplicationName,
+//   getSystemName,
+//   getSystemVersion,
+// } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import ProgressBar from '../components/ProgressBar'
-import TipCarousel from '../components/TipCarousel'
-import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
+// import ProgressBar from '../components/ProgressBar'
+// import TipCarousel from '../components/TipCarousel'
+// import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { activate } from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
+import { AppConsoleLogger, LogLevel, RemoteLogLevel } from '../services/logger'
 import { BCState, BCLocalStorageKeys } from '../store'
 
 import { TermsVersion } from './Terms'
@@ -299,18 +300,18 @@ const Splash = () => {
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
 
-        const logOptions: RemoteLoggerOptions = {
-          lokiUrl: Config.REMOTE_LOGGING_URL,
-          lokiLabels: {
-            application: getApplicationName().toLowerCase(),
-            job: 'react-native-logs',
-            version: `${getVersion()}-${getBuildNumber()}`,
-            system: `${getSystemName()} v${getSystemVersion()}`,
-          },
-          autoDisableRemoteLoggingIntervalInMinutes,
-        }
-        const logger = new RemoteLogger(logOptions)
-        logger.startEventListeners()
+        // const logOptions: RemoteLoggerOptions = {
+        //   lokiUrl: Config.REMOTE_LOGGING_URL,
+        //   lokiLabels: {
+        //     application: getApplicationName().toLowerCase(),
+        //     job: 'react-native-logs',
+        //     version: `${getVersion()}-${getBuildNumber()}`,
+        //     system: `${getSystemName()} v${getSystemVersion()}`,
+        //   },
+        //   autoDisableRemoteLoggingIntervalInMinutes,
+        // }
+        // const logger = new RemoteLogger(logOptions)
+        // logger.startEventListeners()
 
         const options = {
           config: {
@@ -319,7 +320,7 @@ const Splash = () => {
               id: credentials.id,
               key: credentials.key,
             },
-            logger,
+            logger: new AppConsoleLogger(LogLevel.debug, RemoteLogLevel.enable, credentials),
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             autoUpdateStorageOnStartup: true,
             autoAcceptConnections: true,
