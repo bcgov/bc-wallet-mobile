@@ -97,7 +97,6 @@ const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterB
  *
  * @param proof The proof request
  * @param agent The AFJ agent
- * @param attestationCredDefIds Cred def IDs for used attestation
  * @returns True if the proof request is asking for an attestation
  */
 export const isProofRequestingAttestation = async (
