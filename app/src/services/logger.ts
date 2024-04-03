@@ -141,7 +141,7 @@ export class AppConsoleLogger implements Logger {
     this.remoteLogLevel = enableRemoteLog
     this.credentials = credentials
     /** Buffer Logs Implementation*/
-    this.maxSize = 30
+    this.maxSize = 15
     this.flushInterval = 5000
     this.logs = []
     this.flushTimer = null
@@ -161,7 +161,7 @@ export class AppConsoleLogger implements Logger {
   public flushLogs() {
     if (this.logs.length > 0) {
       // Call the callback function to send logs to the server
-      this.logRequestToServer(this.logs)
+      this.logRequestToServer(this.logs.join(''))
 
       // Clear the logs array
       this.logs = []
@@ -176,55 +176,82 @@ export class AppConsoleLogger implements Logger {
 
   public test(message: string, data?: Record<string, any>): void {
     if (this.remoteLogLevel === RemoteLogLevel.enable) {
-      this.addLog(message)
-      this.addLog(JSON.stringify(data))
-      //this.logRequestToServer(message, data)
+      const testPayload = {
+        logLevel: this.consoleLogMap[LogLevel.test],
+        message: message,
+        data: JSON.stringify(data),
+      }
+      this.addLog(JSON.stringify(testPayload))
     }
     console.log(message, data)
   }
 
   public trace(message: string, data?: Record<string, any>): void {
     if (this.remoteLogLevel === RemoteLogLevel.enable) {
-      this.addLog(message)
-      this.addLog(JSON.stringify(data))
+      const tracePayload = {
+        logLevel: this.consoleLogMap[LogLevel.trace],
+        message: message,
+        data: JSON.stringify(data),
+      }
+      this.addLog(JSON.stringify(tracePayload))
     }
     console.log(message, data)
   }
 
   public debug(message: string, data?: Record<string, any>): void {
     if (this.remoteLogLevel === RemoteLogLevel.enable) {
-      this.addLog(message)
-      this.addLog(JSON.stringify(data))
+      const debugPayload = {
+        logLevel: this.consoleLogMap[LogLevel.debug],
+        message: message,
+        data: JSON.stringify(data),
+      }
+      this.addLog(JSON.stringify(debugPayload))
     }
     console.debug(message, data)
   }
 
   public info(message: string, data?: Record<string, any>): void {
     if (this.remoteLogLevel === RemoteLogLevel.enable) {
-      this.addLog(message)
-      this.addLog(JSON.stringify(data))
+      const infoPayload = {
+        logLevel: this.consoleLogMap[LogLevel.info],
+        message: message,
+        data: JSON.stringify(data),
+      }
+      this.addLog(JSON.stringify(infoPayload))
     }
     console.info(message, data)
   }
   public warn(message: string, data?: Record<string, any>): void {
     if (this.remoteLogLevel === RemoteLogLevel.enable) {
-      this.addLog(message)
-      this.addLog(JSON.stringify(data))
+      const warnPayload = {
+        logLevel: this.consoleLogMap[LogLevel.warn],
+        message: message,
+        data: JSON.stringify(data),
+      }
+      this.addLog(JSON.stringify(warnPayload))
     }
     console.warn(message, data)
   }
   public error(message: string, data?: Record<string, any>): void {
     if (this.remoteLogLevel === RemoteLogLevel.enable) {
-      this.addLog(message)
-      this.addLog(JSON.stringify(data))
+      const errorPayload = {
+        logLevel: this.consoleLogMap[LogLevel.error],
+        message: message,
+        data: JSON.stringify(data),
+      }
+      this.addLog(JSON.stringify(errorPayload))
     }
     console.error(message, data)
   }
 
   public fatal(message: string, data?: Record<string, any>): void {
     if (this.remoteLogLevel === RemoteLogLevel.enable) {
-      this.addLog(message)
-      this.addLog(JSON.stringify(data))
+      const fatalPayload = {
+        logLevel: this.consoleLogMap[LogLevel.fatal],
+        message: message,
+        data: JSON.stringify(data),
+      }
+      this.addLog(JSON.stringify(fatalPayload))
     }
     console.log(message, data)
   }
@@ -258,12 +285,6 @@ export class AppConsoleLogger implements Logger {
   }
 
   private logRequestToServer(logs: any) {
-    console.log('Buffer Calling')
-    const messagePayload = {
-      timestamp: new Date(),
-      label: this.consoleLogMap[LogLevel.debug], // is not required need to discuss
-      message: logs.join(''),
-    }
     const serviceURL = 'https://dev2-api.instnt.org'
     const url = serviceURL + '/public/walletlogs/'
     fetch(url, {
@@ -272,7 +293,7 @@ export class AppConsoleLogger implements Logger {
         'Content-Type': 'application/json;charset=utf-8',
       },
       mode: 'cors',
-      body: JSON.stringify(messagePayload),
+      body: JSON.stringify(logs),
     })
   }
 }
