@@ -56,7 +56,7 @@ const EndPage = (onTutorialCompleted: GenericFn, theme: ITheme['OnboardingTheme'
           <SecureImage {...imageDisplayOptions} />
         </View>
         <View style={{ marginBottom: 20 }}>
-          <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.PrivateConfidentialHeading')}</Text>
+          <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('Onboarding.PrivateConfidentialHeading')}</Text>
           <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('Onboarding.PrivateConfidentialParagraph')}</Text>
         </View>
       </ScrollView>
@@ -98,7 +98,7 @@ const StartPage = (theme: ITheme['OnboardingTheme']) => {
         <ScanShare {...imageDisplayOptions} />
       </View>
       <View style={{ marginBottom: 20 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t('Onboarding.InstntHeading')}</Text>
+        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t('Onboarding.InstntHeading')}</Text>
         <Text style={[defaultStyle.bodyText, { marginTop: 20 }]}>{t('Onboarding.InstntFirstParagraph')}</Text>
       </View>
     </ScrollView>
@@ -135,7 +135,7 @@ const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, 
     <ScrollView style={{ padding: 20 }}>
       <View style={styles.imageContainer}>{image(imageDisplayOptions)}</View>
       <View style={{ marginBottom: 20 }}>
-        <Text style={[defaultStyle.headerText, { fontSize: 26 }]}>{t(title)}</Text>
+        <Text style={[defaultStyle.headerText, { fontSize: 18 }]}>{t(title)}</Text>
         <Text style={[defaultStyle.bodyText, { marginTop: 25 }]}>{t(body)}</Text>
       </View>
     </ScrollView>
