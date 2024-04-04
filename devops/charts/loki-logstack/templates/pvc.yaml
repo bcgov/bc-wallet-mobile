@@ -4,25 +4,25 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ include "logstack.fullname" . }}-loki-data
   labels: {{- include "logstack.labels" . | nindent 4 }}
-  annotations: {{- toYaml .Values.persistentVolumeClaim.annotations | nindent 4 }}
+  annotations: {{- toYaml .Values.pvc.loki.annotations | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: {{ .Values.persistentVolumeClaim.storageClass }}
+  storageClassName: {{ .Values.pvc.loki.storageClass }}
   resources:
     requests:
-      storage: {{ .Values.persistentVolumeClaim.storageSize }}
+      storage: {{ .Values.pvc.loki.storageSize }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {{ include "logstack.fullname" . }}-minio-data
   labels: {{- include "logstack.labels" . | nindent 4 }}
-  annotations: {{- toYaml .Values.persistentVolumeClaim.annotations | nindent 4 }}
+  annotations: {{- toYaml .Values.pvc.minio.annotations | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteMany
-  storageClassName: {{ .Values.persistentVolumeClaim.storageClass }}
+  storageClassName: {{ .Values.pvc.minio.storageClass }}
   resources:
     requests:
-      storage: {{ .Values.persistentVolumeClaim.storageSize }}
+      storage: {{ .Values.pvc.minio.storageSize }}

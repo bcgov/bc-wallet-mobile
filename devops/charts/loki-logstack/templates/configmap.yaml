@@ -21,20 +21,30 @@ data:
 
     common:
       instance_addr: 127.0.0.1
-      path_prefix: {{ .Values.persistentVolumeClaim.mountPath }}/loki
+      path_prefix: {{ .Values.pvc.loki.mountPath }}/loki
+      replication_factor: 3
       storage:
-        filesystem:
-          chunks_directory: {{ .Values.persistentVolumeClaim.mountPath }}/loki/chunks
-          rules_directory: {{ .Values.persistentVolumeClaim.mountPath }}/loki/rules
-      replication_factor: 1
+        s3:
+          access_key_id: ${MINIO_ACCESS_KEY}
+          bucketnames: loki-data
+          endpoint: {{ include "logstack.fullname" $ }}-minio.{{ $.Values.namespace }}.svc.cluster.local:9000
+          insecure: true
+          region: ca-west-1
+          s3forcepathstyle: true
+          secret_access_key: ${MINIO_SECRET_KEY}
+      # storage:
+      #   filesystem:
+      #     chunks_directory: {{ .Values.pvc.loki.mountPath }}/loki/chunks
+      #     rules_directory: {{ .Values.pvc.loki.mountPath }}/loki/rules
       ring:
         kvstore:
           store: inmemory
 
     storage_config:
       aws:
-        s3: s3://{{ .Values.minio_access_key }}:{{ .Values.minio_secret_key }}@{{ include "logstack.fullname" $ }}-minio.{{ $.Values.namespace }}.svc.cluster.local/loki-data
+        s3: s3://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@{{ include "logstack.fullname" $ }}-minio.{{ $.Values.namespace }}.svc.cluster.local:9000
         s3forcepathstyle: true
+        bucketnames: loki-data
       index_queries_cache_config:
         memcached:
           batch_size: 100
@@ -47,6 +57,19 @@ data:
           service: {{ .name }} 
           {{- end }}
           {{- end }}
+      boltdb_shipper:
+        active_index_directory: {{ .Values.pvc.loki.mountPath }}/boltdb-index
+        cache_location: {{ .Values.pvc.loki.mountPath }}/boltdb-cache
+        build_per_tenant_index: true
+        shared_store: aws
+      hedging:
+        at: 250ms
+        max_per_second: 20
+        up_to: 3
+      tsdb_shipper:
+        active_index_directory: {{ .Values.pvc.loki.mountPath }}/tsdb-index
+        cache_location: {{ .Values.pvc.loki.mountPath }}/tsdb-cache
+        shared_store: aws
 
     query_range:
       cache_results: true
@@ -67,7 +90,7 @@ data:
     schema_config:
       configs:
         - from: 2020-10-24
-          store: aws
+          store: tsdb
           object_store: s3
           schema: v11
           index:

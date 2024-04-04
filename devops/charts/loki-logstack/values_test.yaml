@@ -63,18 +63,25 @@ resources:
       memory: 32Mi
   minio:
     requests:
-      memory: 34Mi
+      memory: 132Mi
       cpu: 20m
     limits:
-      memory: 64Mi
+      memory: 132Mi
       cpu: 40m
 
-persistentVolumeClaim:
-  mountPath: /data
-  storageSize: 1Gi
-  storageClass: netapp-file-standard
-  annotations:
-    helm.sh/resource-policy: keep
+pvc:
+  loki:
+    mountPath: /data
+    storageSize: 1Gi
+    storageClass: netapp-file-standard
+    annotations:
+      helm.sh/resource-policy: keep
+  minio:
+    mountPath: /data
+    storageSize: 1Gi
+    storageClass: netapp-file-standard
+    annotations:
+      helm.sh/resource-policy: keep
 
 services:
   loki:
