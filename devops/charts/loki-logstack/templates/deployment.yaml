@@ -26,9 +26,9 @@ spec:
         - name: loki-config
           configMap:
             name: {{ include "logstack.fullname" . }}-loki-config
-        - name: loki-log-data
-          persistentVolumeClaim:
-            claimName: {{ include "logstack.fullname" . }}-loki-data
+        # - name: loki-log-data
+        #   persistentVolumeClaim:
+        #     claimName: {{ include "logstack.fullname" . }}-loki-data
       imagePullSecrets:
         {{- toYaml .Values.imagePullSecrets | nindent 8 }}
       containers:
@@ -48,8 +48,8 @@ spec:
             - name: loki-config
               mountPath: {{ .Values.env.LOKI_CONFIG_PATH }} 
               subPath: {{ .Values.env.LOKI_CONFIG_PATH | base}}
-            - name: loki-log-data
-              mountPath: {{ .Values.persistentVolumeClaim.mountPath }}
+            # - name: loki-log-data
+            #   mountPath: {{ .Values.persistentVolumeClaim.mountPath }}
           livenessProbe:
             httpGet:
               path: /ready
@@ -157,3 +157,104 @@ spec:
             - name: {{ .name }}
               containerPort: {{ .port }}
             {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "logstack.fullname" . }}-minio
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}  
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: minio
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: minio
+        {{- include "logstack.labels" . | nindent 8 }}
+    spec:
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "logstack.fullname" . }}-minio-data
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-minio
+          image: "{{ .Values.images.registry }}/{{ .Values.images.minio.repository }}:{{ .Values.images.minio.tag | default .Chart.AppVersion }}"
+          resources:
+            {{- toYaml .Values.resources.minio | nindent 12 }}
+          ports:
+            {{- range $name, $port := .Values.services.minio }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+            {{- end }}
+          volumeMounts:
+            - mountPath: /data
+              name: data
+          readinessProbe:
+            httpGet:
+              path: /minio/health/ready
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 3
+          # Liveness probe detects situations where MinIO server instance
+          # is not working properly and needs restart. Kubernetes automatically
+          # restarts the pods if liveness checks fail.
+          livenessProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            initialDelaySeconds: 10
+            periodSeconds: 3
+          env:
+            - name: MINIO_DATA_DIR
+              value: /data
+          envFrom:
+            - secretRef:
+                name: {{ include "logstack.fullname" . }}-minio-creds
+      # initContainers:
+      #   - name: minio-data-permission-fix
+      #     image: busybox
+      #     command: ["/bin/chmod", "-R", "777", "/data"]
+      #     volumeMounts:
+      #       - name: data
+      #         mountPath: /data
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: minio
+# spec:
+#   selector:
+#     app: minio
+#   ports:
+#     - name: http
+#       port: 80
+#       targetPort: 9000
+#       protocol: TCP
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: minio
+#   annotations:
+#     kubernetes.io/ingress.class: traefik
+# spec:
+#   rules:
+#     - host: delivery.probateapp.ca
+#       http:
+#         paths:
+#           - path: /
+#             backend:
+#               serviceName: minio
+#               servicePort: http

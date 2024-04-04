@@ -32,6 +32,9 @@ data:
           store: inmemory
 
     storage_config:
+      aws:
+        s3: s3://{{ .Values.minio_access_key }}:{{ .Values.minio_secret_key }}@{{ include "logstack.fullname" $ }}-minio.{{ $.Values.namespace }}.svc.cluster.local/loki-data
+        s3forcepathstyle: true
       index_queries_cache_config:
         memcached:
           batch_size: 100
@@ -61,12 +64,11 @@ data:
             {{- end }}
             {{- end }}
 
-
     schema_config:
       configs:
         - from: 2020-10-24
-          store: boltdb-shipper
-          object_store: filesystem
+          store: aws
+          object_store: s3
           schema: v11
           index:
             prefix: index_

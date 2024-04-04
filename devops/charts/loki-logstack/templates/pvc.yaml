@@ -12,3 +12,17 @@ spec:
   resources:
     requests:
       storage: {{ .Values.persistentVolumeClaim.storageSize }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "logstack.fullname" . }}-minio-data
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.persistentVolumeClaim.annotations | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: {{ .Values.persistentVolumeClaim.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.persistentVolumeClaim.storageSize }}

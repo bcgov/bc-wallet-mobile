@@ -3,23 +3,34 @@
 
 replicaCount: 1
 
+autoscaling:
+  enabled: false
+#   minReplicas: 1
+#   maxReplicas: 5
+#   targetCPUUtilizationPercentage: 80
+
 podAnnotations: {}
+podLabels: {}
 
 images:
   pullPolicy: IfNotPresent
   registry: artifacts.developer.gov.bc.ca/docker-remote
-  loki:
-    repository: grafana/loki
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
   proxy:
     repository: caddy/caddy
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "latest"
+  loki:
+    repository: grafana/loki
     # Overrides the image tag whose default is the chart appVersion.
     tag: "latest"
   memcached:
     repository: memcached
     # Overrides the image tag whose default is the chart appVersion.
     tag: "1.6.17-alpine"
+  minio:
+    repository: minio/minio
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "RELEASE.2024-03-30T09-41-56Z"
 
 imagePullSecrets:
   - name: artifactory-creds
@@ -50,6 +61,13 @@ resources:
     requests:
       cpu: 10m
       memory: 32Mi
+  minio:
+    requests:
+      memory: 34Mi
+      cpu: 20m
+    limits:
+      memory: 64Mi
+      cpu: 40m
 
 persistentVolumeClaim:
   mountPath: /data
@@ -70,17 +88,14 @@ services:
   memcached:
     - name: client
       port: 11211
+  minio:
+    - name: server
+      port: 9000
 
 route:
   host: ""
   annotations:
     haproxy.router.openshift.io/timeout: 60s
-
-autoscaling:
-  enabled: false
-#   minReplicas: 1
-#   maxReplicas: 5
-#   targetCPUUtilizationPercentage: 80
 
 # serviceAccount:
 #   # Specifies whether a service account should be created
