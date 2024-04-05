@@ -29,6 +29,18 @@ spec:
             claimName: {{ include "logstack.fullname" . }}-loki-data
       imagePullSecrets:
         {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      initContainers:
+        - name: create-bucket
+          image: "{{ .Values.images.registry }}/{{ .Values.images.minio.repository }}:{{ .Values.images.minio.tag | default .Chart.AppVersion }}"
+          command:
+          - /bin/sh
+          - -c
+          - >
+            mc alias set minio http://{{ include "logstack.fullname" $ }}-minio.{{ $.Values.namespace }}.svc.cluster.local:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY &&
+            mc mb --ignore-existing minio/loki-data
+          envFrom:
+            - secretRef:
+                name: {{ include "logstack.fullname" . }}-minio-creds
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.images.registry }}/{{ .Values.images.loki.repository }}:{{ .Values.images.loki.tag | default .Chart.AppVersion }}"
