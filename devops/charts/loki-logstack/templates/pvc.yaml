@@ -12,17 +12,17 @@ spec:
   resources:
     requests:
       storage: {{ .Values.pvc.loki.storageSize }}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ include "logstack.fullname" . }}-minio-data
-  labels: {{- include "logstack.labels" . | nindent 4 }}
-  annotations: {{- toYaml .Values.pvc.minio.annotations | nindent 4 }}
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: {{ .Values.pvc.minio.storageClass }}
-  resources:
-    requests:
-      storage: {{ .Values.pvc.minio.storageSize }}
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: {{ include "logstack.fullname" . }}-minio-data
+#   labels: {{- include "logstack.labels" . | nindent 4 }}
+#   annotations: {{- toYaml .Values.pvc.minio.annotations | nindent 4 }}
+# spec:
+#   accessModes:
+#     - ReadWriteMany
+#   storageClassName: {{ .Values.pvc.minio.storageClass }}
+#   resources:
+#     requests:
+#       storage: {{ .Values.pvc.minio.storageSize }}

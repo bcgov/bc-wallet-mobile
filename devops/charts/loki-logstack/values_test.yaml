@@ -3,12 +3,6 @@
 
 replicaCount: 1
 
-autoscaling:
-  enabled: false
-#   minReplicas: 1
-#   maxReplicas: 5
-#   targetCPUUtilizationPercentage: 80
-
 podAnnotations: {}
 podLabels: {}
 

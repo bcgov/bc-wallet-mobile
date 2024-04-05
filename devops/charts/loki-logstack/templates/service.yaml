@@ -56,6 +56,7 @@ metadata:
   name: {{ include "logstack.fullname" . }}-minio
   labels: {{- include "logstack.labels" . | nindent 4 }}
 spec:
+  clusterIP: None
   ports:
     {{- range $name, $port := .Values.services.minio }}
     - name: {{ .name }}

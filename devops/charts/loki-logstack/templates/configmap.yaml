@@ -22,7 +22,7 @@ data:
     common:
       instance_addr: 127.0.0.1
       path_prefix: {{ .Values.pvc.loki.mountPath }}/loki
-      replication_factor: 3
+      replication_factor: {{ .Values.replicaCount }}
       storage:
         s3:
           access_key_id: ${MINIO_ACCESS_KEY}
