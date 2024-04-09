@@ -146,7 +146,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
       // officially start attestation process here
       setLoading(true)
       // 1. Is the proof requesting an attestation credential
-      if (!(await isProofRequestingAttestation(proof, agent, attestationCredDefIds))) {
+      if (!(await isProofRequestingAttestation(proof, agent))) {
         setLoading(false)
         return
       }
