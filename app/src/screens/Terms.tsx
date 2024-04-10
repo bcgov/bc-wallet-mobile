@@ -9,7 +9,6 @@ import {
   testIdWithKey,
   useTheme,
   useStore,
-  useConfiguration,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -79,10 +78,10 @@ const Terms = () => {
     } else if (store.onboarding.postAuthScreens.length) {
       const screens: string[] = store.onboarding.postAuthScreens
       screens.shift()
-      dispatch({type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [screens]})
-      if(screens.length) {
-        navigation.navigate(screens[0])
-      }else{
+      dispatch({ type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [screens] })
+      if (screens.length) {
+        navigation.navigate(screens[0] as never)
+      } else {
         dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING, payload: [true] })
       }
     }
