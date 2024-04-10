@@ -53,13 +53,10 @@ enum InitErrorTypes {
   Agent,
 }
 
-const onboardingComplete = (
-  state: OnboardingState,
-): boolean => {
+const onboardingComplete = (state: OnboardingState): boolean => {
   return (
     (state.onboardingVersion !== 0 && state.didCompleteOnboarding) ||
-    (state.onboardingVersion === 0 &&
-      state.didConsiderBiometry)
+    (state.onboardingVersion === 0 && state.didConsiderBiometry)
   )
 }
 
@@ -234,9 +231,7 @@ const Splash = () => {
       if (store.onboarding.onboardingVersion !== OnboardingVersion) {
         dispatch({ type: DispatchAction.ONBOARDING_VERSION, payload: [OnboardingVersion] })
       }
-      if (
-        onboardingComplete(store.onboarding)
-      ) {
+      if (onboardingComplete(store.onboarding)) {
         if (!store.onboarding.didCompleteOnboarding) {
           dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING })
         }
@@ -307,7 +302,11 @@ const Splash = () => {
   useEffect(() => {
     const initAgent = async (): Promise<void> => {
       try {
-        if (!store.authentication.didAuthenticate || !store.onboarding.didConsiderBiometry || store.onboarding.postAuthScreens.length > 0) {
+        if (
+          !store.authentication.didAuthenticate ||
+          !store.onboarding.didConsiderBiometry ||
+          store.onboarding.postAuthScreens.length > 0
+        ) {
           return
         }
         setStep(3)
@@ -429,7 +428,12 @@ const Splash = () => {
     }
 
     initAgent()
-  }, [store.authentication.didAuthenticate, store.onboarding.postAuthScreens.length, store.onboarding.didConsiderBiometry, initAgentCount])
+  }, [
+    store.authentication.didAuthenticate,
+    store.onboarding.postAuthScreens.length,
+    store.onboarding.didConsiderBiometry,
+    initAgentCount,
+  ])
 
   const handleErrorCallToActionPressed = () => {
     setInitError(null)
