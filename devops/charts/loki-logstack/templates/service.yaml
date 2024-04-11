@@ -39,6 +39,7 @@ metadata:
   name: {{ include "logstack.fullname" . }}-memcached
   labels: {{- include "logstack.labels" . | nindent 4 }}
 spec:
+  clusterIP: None
   ports:
     {{- range $name, $port := .Values.services.memcached }}
     - name: {{ .name }}

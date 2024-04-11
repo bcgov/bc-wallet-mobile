@@ -6,6 +6,7 @@ metadata:
   labels: {{- include "logstack.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  serviceName: {{ include "logstack.fullname" . }}-memcached
   selector:
     matchLabels:
       app.kubernetes.io/component: memcached
@@ -40,7 +41,7 @@ metadata:
   name: {{ include "logstack.fullname" . }}-minio
   labels: {{- include "logstack.labels" . | nindent 4 }}
 spec:
-  serviceName: bcwallet-logstack-minio
+  serviceName: {{ include "logstack.fullname" . }}-minio
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
