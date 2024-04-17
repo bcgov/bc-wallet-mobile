@@ -1,7 +1,7 @@
-import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@aries-framework/core'
-import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
-import { useAgent } from '@aries-framework/react-hooks'
-import { agentDependencies } from '@aries-framework/react-native'
+import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
+import { useAgent } from '@credo-ts/react-hooks'
+import { agentDependencies } from '@credo-ts/react-native'
 import { DrpcModule } from '@credo-ts/drpc'
 import {
   DispatchAction,
@@ -386,10 +386,10 @@ const Splash = () => {
           await poolService.refreshPoolConnections()
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore:next-line
-          const raw_transactions = await poolService.getPoolTransactions()
+          const raw_transactions = await poolService.getAllPoolTransactions()
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore:next-line
-          const transactions = raw_transactions.map(({ config, transactions }) => ({
+          const transactions = (raw_transactions as any).map((item: any) => item.value).map(({ config, transactions }) => ({
             ...config,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore:next-line

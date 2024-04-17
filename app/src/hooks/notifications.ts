@@ -1,12 +1,12 @@
-import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   BasicMessageRecord,
   CredentialExchangeRecord as CredentialRecord,
   CredentialState,
   ProofExchangeRecord,
   ProofState,
-} from '@aries-framework/core'
-import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@aries-framework/react-hooks'
+} from '@credo-ts/core'
+import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@credo-ts/react-hooks'
 import { BifoldAgent, useStore } from '@hyperledger/aries-bifold-core'
 import {
   BasicMessageMetadata,

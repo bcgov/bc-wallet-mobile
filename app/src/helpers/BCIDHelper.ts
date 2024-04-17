@@ -1,4 +1,4 @@
-import { DidRepository } from '@aries-framework/core'
+import { DidRepository } from '@credo-ts/core'
 import { BifoldError, Agent, EventTypes as BifoldEventTypes } from '@hyperledger/aries-bifold-core'
 import { TFunction } from 'react-i18next'
 import { Linking, Platform, DeviceEventEmitter } from 'react-native'

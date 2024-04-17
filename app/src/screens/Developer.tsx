@@ -1,4 +1,4 @@
-import { useAgent } from '@aries-framework/react-hooks'
+import { useAgent } from '@credo-ts/react-hooks'
 import { useTheme, useStore, testIdWithKey, DispatchAction, Screens } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
 import { useNavigation } from '@react-navigation/native'

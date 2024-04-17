@@ -1,12 +1,12 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   CredentialExchangeRecord,
   CredentialExchangeRecordProps,
   CredentialPreviewAttribute,
   CredentialState,
   RevocationNotification,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import {
   components,
   ConfigurationContext,

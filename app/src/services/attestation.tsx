@@ -8,8 +8,8 @@ import {
   ProofEventTypes,
   ProofExchangeRecord,
   ConnectionRecord,
-} from '@aries-framework/core'
-import { useAgent } from '@aries-framework/react-hooks'
+} from '@credo-ts/core'
+import { useAgent } from '@credo-ts/react-hooks'
 import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
 import { BifoldAgent, BifoldError, EventTypes, useStore } from '@hyperledger/aries-bifold-core'
 import {
