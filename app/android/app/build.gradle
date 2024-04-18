@@ -145,7 +145,7 @@ dependencies {
     
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 
-    implementation platform('com.google.firebase:firebase-bom:26.4.0')
+    implementation platform('com.google.firebase:firebase-bom:26.8.0')
     
     implementation 'com.google.mlkit:barcode-scanning:17.2.0'
     
