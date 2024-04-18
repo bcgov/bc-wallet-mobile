@@ -23,7 +23,7 @@ updates:
       timezone: "Canada/Pacific"
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-major", "version-update:semver-patch"]
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   # Maintain dependencies for TypeScript and JavaScript
   - package-ecosystem: "npm"
@@ -35,7 +35,7 @@ updates:
       timezone: "Canada/Pacific"
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-major", "version-update:semver-patch"]
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   # Maintain dependencies for Gradle
   - package-ecosystem: "gradle"
