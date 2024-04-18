@@ -25,7 +25,7 @@ updates:
       - dependency-name: "*"
         update-types: ["version-update:semver-major", "version-update:semver-patch"]
 
-  Maintain dependencies for TypeScript and JavaScript
+  # Maintain dependencies for TypeScript and JavaScript
   - package-ecosystem: "npm"
     directory: "/scripts/gpublish"
     schedule:
