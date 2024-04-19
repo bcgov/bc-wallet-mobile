@@ -82,6 +82,11 @@ services:
       port: 3100
     - name: grpc
       port: 9096
+    - name: memberlist
+      port: 7946
+  loki-memberlist:
+    - name: memberlist
+      port: 7946
   proxy:
     - name: http
       port: 2015

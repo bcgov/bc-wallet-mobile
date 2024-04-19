@@ -12,11 +12,11 @@ images:
   proxy:
     repository: caddy/caddy
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
+    tag: "2.7-alpine"
   loki:
     repository: grafana/loki
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
+    tag: "2.9.7"
   memcached:
     repository: memcached
     # Overrides the image tag whose default is the chart appVersion.
@@ -43,10 +43,10 @@ resources:
       cpu: 400m
   proxy:
     requests:
-      memory: 32Mi
+      memory: 64Mi
       cpu: 10m
     limits:
-      memory: 64Mi
+      memory: 92Mi
       cpu: 60m
   memcached:
     limits:
@@ -57,10 +57,10 @@ resources:
       memory: 32Mi
   minio:
     requests:
-      memory: 132Mi
+      memory: 192Mi
       cpu: 20m
     limits:
-      memory: 132Mi
+      memory: 192Mi
       cpu: 40m
 
 pvc:
@@ -83,6 +83,11 @@ services:
       port: 3100
     - name: grpc
       port: 9096
+    - name: memberlist
+      port: 7946
+  loki-memberlist:
+    - name: memberlist
+      port: 7946
   proxy:
     - name: http
       port: 2015
