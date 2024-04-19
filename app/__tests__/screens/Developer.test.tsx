@@ -1,4 +1,4 @@
-import { StoreProvider } from '@hyperledger/aries-bifold-core'
+import { AgentProvider, StoreProvider } from '@hyperledger/aries-bifold-core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
@@ -30,9 +30,11 @@ describe('Developer Screen', () => {
   test('screen renders correctly', () => {
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
-        <AttestationProvider>
-          <Developer />
-        </AttestationProvider>
+        <AgentProvider agent={undefined}>
+          <AttestationProvider>
+            <Developer />
+          </AttestationProvider>
+        </AgentProvider>
       </StoreProvider>
     )
 
