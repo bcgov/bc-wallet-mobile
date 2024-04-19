@@ -4,6 +4,7 @@ import {
   CredentialExchangeRecord,
   CredentialExchangeRecordProps,
   CredentialPreviewAttribute,
+  CredentialRole,
   CredentialState,
   RevocationNotification,
 } from '@credo-ts/core'
@@ -74,6 +75,7 @@ const CredentialWrapper = ({
 }: CredentialProps) => {
   const indyCredential = { credentialRecordType: 'indy', credentialRecordId }
   const props: CredentialExchangeRecordProps = {
+    role: CredentialRole.Issuer,
     connectionId: connectionId,
     threadId: '',
     state: CredentialState.CredentialIssued,

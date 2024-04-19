@@ -52,10 +52,6 @@
     "react-native": "0.72.5",
     "@types/react-native": "0.72.3",
     "react-i18next": "11.18.6",
-    "@credo-ts/core": "0.5.1",
-    "@credo-ts/askar": "0.5.1",
-    "@credo-ts/react-native": "0.5.1",
-    "@credo-ts/indy-sdk-to-askar-migration": "0.5.1",
     "@credo-ts/react-hooks": "patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch"
   }
 }

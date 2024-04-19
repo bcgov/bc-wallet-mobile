@@ -9,8 +9,8 @@ import {
   ProofExchangeRecord,
   ConnectionRecord,
 } from '@credo-ts/core'
-import { useAgent } from '@credo-ts/react-hooks'
 import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
+import { useAgent } from '@credo-ts/react-hooks'
 import { BifoldAgent, BifoldError, EventTypes, useStore } from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
