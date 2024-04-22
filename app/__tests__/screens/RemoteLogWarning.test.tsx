@@ -22,11 +22,9 @@ describe('RemoteLogWarning Screen', () => {
   test('screen renders correctly', () => {
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
-        <AgentProvider agent={undefined}>
-          <AttestationProvider>
-            <RemoteLogWarning onEnablePressed={jest.fn()} onBackPressed={jest.fn()} />
-          </AttestationProvider>
-        </AgentProvider>
+        <AttestationProvider>
+          <RemoteLogWarning onEnablePressed={jest.fn()} onBackPressed={jest.fn()} />
+        </AttestationProvider>
       </StoreProvider>
     )
 

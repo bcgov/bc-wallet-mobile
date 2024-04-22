@@ -30,11 +30,9 @@ describe('Developer Screen', () => {
   test('screen renders correctly', () => {
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
-        <AgentProvider agent={undefined}>
-          <AttestationProvider>
-            <Developer />
-          </AttestationProvider>
-        </AgentProvider>
+        <AttestationProvider>
+          <Developer />
+        </AttestationProvider>
       </StoreProvider>
     )
 

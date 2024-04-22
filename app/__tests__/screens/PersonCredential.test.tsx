@@ -14,6 +14,16 @@ jest.mock('@react-navigation/native', () => ({
   },
 }))
 
+const mockAttestation = () => {
+  return { loading: false }
+}
+jest.mock('@hyperledger/aries-bifold-core', () => ({
+  ...jest.requireActual('@hyperledger/aries-bifold-core'),
+  useConfiguration: () => {
+    return { useAttestation: mockAttestation }
+  },
+}))
+
 describe('Person Credential Screen', () => {
   beforeEach(() => {
     // Silence console.error because it will print a warning about Switch
@@ -30,11 +40,9 @@ describe('Person Credential Screen', () => {
   test('screen renders correctly', () => {
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
-        <AgentProvider agent={undefined}>
-          <AttestationProvider>
-            <PersonCredential />
-          </AttestationProvider>
-        </AgentProvider>
+        <AttestationProvider>
+          <PersonCredential />
+        </AttestationProvider>
       </StoreProvider>
     )
 
