@@ -67,12 +67,12 @@ export class AppContainer implements Container {
       ])
       const state: BCState = {
         ...initialState,
-        loginAttempt: {...initialState.loginAttempt, ...loginAttempt},
-        preferences:{...initialState.preferences, ...preferences},
-        migration: {...initialState.migration, ...migration},
-        tours: {...initialState.tours, ...tours},
-        onboarding: {...initialState.onboarding, ...onboarding},
-        dismissPersonCredentialOffer: {...initialState.dismissPersonCredentialOffer, ...personCredOfferDissmissed},
+        loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
+        preferences: { ...initialState.preferences, ...preferences },
+        migration: { ...initialState.migration, ...migration },
+        tours: { ...initialState.tours, ...tours },
+        onboarding: { ...initialState.onboarding, ...onboarding },
+        dismissPersonCredentialOffer: { ...initialState.dismissPersonCredentialOffer, ...personCredOfferDissmissed },
         developer: {
           ...initialState.developer,
           environment,
