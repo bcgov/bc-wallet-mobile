@@ -33,7 +33,7 @@ data:
             store: memberlist
 
     common:
-      path_prefix: {{ .Values.pvc.loki.mountPath }}/loki
+      path_prefix: /var/loki
       replication_factor: 3
       storage:
         s3:
@@ -44,10 +44,6 @@ data:
           region: ca-west-1
           s3forcepathstyle: true
           secret_access_key: ${MINIO_SECRET_KEY}
-      # storage:
-      #   filesystem:
-      #     chunks_directory: {{ .Values.pvc.loki.mountPath }}/loki/chunks
-      #     rules_directory: {{ .Values.pvc.loki.mountPath }}/loki/rules
       ring:
         kvstore:
           store: inmemory
@@ -70,8 +66,8 @@ data:
           {{- end }}
           {{- end }}
       boltdb_shipper:
-        active_index_directory: {{ .Values.pvc.loki.mountPath }}/boltdb-index
-        cache_location: {{ .Values.pvc.loki.mountPath }}/boltdb-cache
+        active_index_directory: /var/loki/boltdb-index
+        cache_location: /var/loki/boltdb-cache
         build_per_tenant_index: true
         shared_store: aws
       hedging:
@@ -79,8 +75,8 @@ data:
         max_per_second: 20
         up_to: 3
       tsdb_shipper:
-        active_index_directory: {{ .Values.pvc.loki.mountPath }}/tsdb-index
-        cache_location: {{ .Values.pvc.loki.mountPath }}/tsdb-cache
+        active_index_directory: /var/loki/tsdb-index
+        cache_location: /var/loki/tsdb-cache
         shared_store: aws
 
     query_range:

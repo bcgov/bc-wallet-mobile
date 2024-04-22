@@ -12,17 +12,19 @@ autoscaling:
 podAnnotations: {}
 podLabels: {}
 
+cacheVolumeSize: "1Gi" # loki emptyDir size limit
+
 images:
   pullPolicy: IfNotPresent
   registry: artifacts.developer.gov.bc.ca/docker-remote
   proxy:
-    repository: caddy/caddy
+    repository: caddy
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
+    tag: "2.2.1-alpine"
   loki:
     repository: grafana/loki
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
+    tag: "2.9.7"
   memcached:
     repository: memcached
     # Overrides the image tag whose default is the chart appVersion.
@@ -69,13 +71,6 @@ resources:
       memory: 64Mi
       cpu: 40m
 
-persistentVolumeClaim:
-  mountPath: /data
-  storageSize: 1Gi
-  storageClass: netapp-file-standard
-  annotations:
-    helm.sh/resource-policy: keep
-
 services:
   loki:
     - name: http
@@ -84,7 +79,7 @@ services:
       port: 9096
     - name: memberlist
       port: 7946
-  loki-memberlist:
+  memberlist:
     - name: memberlist
       port: 7946
   proxy:

@@ -7,7 +7,7 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    {{- range $name, $port := .Values.services.loki-memberlist }}
+    {{- range $name, $port := .Values.services.memberlist }}
     - name: {{ .name }}
       port: {{ .port }}
       targetPort: {{ .port }}

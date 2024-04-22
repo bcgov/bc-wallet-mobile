@@ -24,10 +24,9 @@ spec:
         - name: loki-config
           configMap:
             name: {{ include "logstack.fullname" . }}-loki-config
-        - name: loki-log-data
-          emptyDir: {}
-          # persistentVolumeClaim:
-          #   claimName: {{ include "logstack.fullname" . }}-loki-data
+        - name: cache-volume
+          emptyDir:
+            sizeLimit: {{ .Values.cacheVolumeSize }}
       imagePullSecrets:
         {{- toYaml .Values.imagePullSecrets | nindent 8 }}
       initContainers:
@@ -62,8 +61,8 @@ spec:
             - name: loki-config
               mountPath: {{ .Values.env.LOKI_CONFIG_PATH }} 
               subPath: {{ .Values.env.LOKI_CONFIG_PATH | base}}
-            - name: loki-log-data
-              mountPath: {{ .Values.pvc.loki.mountPath }}
+            - name: cache-volume
+              mountPath: /var/loki
           livenessProbe:
             httpGet:
               path: /ready

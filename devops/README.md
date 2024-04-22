@@ -91,12 +91,12 @@ You can use the following cURL command to the entire log stack. Loki does not ac
 Get and updated timestamp:
 
 ```console
-➜  vc-wallet-mobile git:(fix/build-and-probe) ✗ node -e "console.log(Date.now() + '099100')"
+➜  vc-wallet-mobile ✗ node -e "console.log(Date.now() + '099100')"
 1705256928213099100
 ```
 
 Send a sample log with the updated timestamp:
 
 ```bash
-curl -v -H "Content-Type: application/json" -H "Authorization: Basic Base64-Encoded-User-and-Pwd" -X POST "https://bcwallet-logstack-proxy-ca7123-test.apps.silver.devops.gov.bc.ca/loki/api/v1/push" --data-raw '{"streams":[{"stream":{"job":"react-native-logs","level":"debug","application":"bc wallet","version":"1.0.1-444","system":"iOS v16.7.4","session_id":"463217"},"values":[["1713486470448000000","{\"message\":\"Successfully connected to WebSocket wss://aries-mediator-agent.vonx.io\"}"]]}]}'
+curl -v -H "Content-Type: application/json" -H "Authorization: Basic Base64-Encoded-USERNAME:PASSWORD" -X POST "https://bcwallet-logstack-proxy-ca7123-test.apps.silver.devops.gov.bc.ca/loki/api/v1/push" --data-raw '{"streams":[{"stream":{"job":"react-native-logs","level":"debug","application":"bc wallet","version":"1.0.1-444","system":"iOS v16.7.4","session_id":"463217"},"values":[["1713486470448000000","{\"message\":\"Successfully connected to WebSocket wss://aries-mediator-agent.vonx.io\"}"]]}]}'
 ```
