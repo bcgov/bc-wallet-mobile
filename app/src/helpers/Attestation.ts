@@ -170,13 +170,16 @@ export const credentialsMatchForProof = async (
  * @throws {Error} Will throw an error if a problem looking up data occurs
  */
 export const attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
+  agent.config.logger.info('Attestation: fetching proof by id')
   const proof = await agent?.proofs.getById(proofId)
+  agent.config.logger.info('Attestation: second check if proof is requesting attestation')
   const isAttestation = await isProofRequestingAttestation(proof, agent)
 
   if (!isAttestation) {
     return false
   }
 
+  agent.config.logger.info('Attestation: checking if credentials match for proof request')
   const credentials = await credentialsMatchForProof(agent, proof)
 
   if (!credentials) {
