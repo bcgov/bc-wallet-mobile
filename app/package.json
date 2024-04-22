@@ -37,7 +37,7 @@
     "typecheck": "tsc --noEmit",
     "storybook": "start-storybook -p 7007",
     "build-storybook": "build-storybook",
-    "postinstall": "react-native setup-ios-permissions && pod-install --non-interactive",
+    "postinstall": "pod-install --non-interactive",
     "gradle:write-locks": "cd android && ./gradlew app:dependencies --write-locks"
   },
   "dependencies": {
