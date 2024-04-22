@@ -11,7 +11,7 @@ inputs:
   sauce_labs_name:
     description: |
       The name of the artifact shown in SauceLabs
-    requred: true
+    required: true
   sauce_labs_description:
     description: |
       The description of the artifact show in SauceLabs.
@@ -20,7 +20,7 @@ inputs:
     description: |
       The referene ID / name of the uploaded GitHub artifact
       stored in GitHub by the upload action. i.e my-artifact
-    requred: true
+    required: true
   artifact_name:
     description: |
       The actual name of the artifact that would be
@@ -31,7 +31,7 @@ runs:
   using: composite
   steps:
     - name: Download artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.artifact_ref }}
 
