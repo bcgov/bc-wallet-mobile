@@ -22,7 +22,6 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
-import { getAvailableAttestationCredentials } from '../helpers/Attestation'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 
@@ -100,17 +99,13 @@ export default function PersonCredential() {
 
   // Use this function to accept the attestation proof request.
   const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
-    // Sanity check to make sure we have the necessary credentials
-    const credential = await getAvailableAttestationCredentials(agent)
-    if (credential.length === 0) {
-      return false
-    }
-
+    agent.config.logger.info('Attestation: selecting credentials for Person proof request')
     // This will throw if we don't have the necessary credentials
     const credentials = await agent.proofs.selectCredentialsForRequest({
       proofRecordId: proofRequest.id,
     })
 
+    agent.config.logger.info('Attestation: accepting Person proof request')
     await agent.proofs.acceptRequest({
       proofRecordId: proofRequest.id,
       proofFormats: credentials.proofFormats,
@@ -168,7 +163,7 @@ export default function PersonCredential() {
         agent.config.logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
       })
       .catch((error) => {
-        agent.config.logger.error(`Connected to connect to IAS agent, error: ${error.message}`)
+        agent.config.logger.error(`Failed to connect to IAS agent, error: ${error.message}`)
       })
   }, [])
 
