@@ -1,4 +1,4 @@
-import { Agent, ConnectionRecord, ConnectionType } from '@aries-framework/core'
+import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'

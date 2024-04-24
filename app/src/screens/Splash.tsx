@@ -1,8 +1,8 @@
-import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@aries-framework/core'
-import { IndyVdrPoolConfig, IndyVdrPoolService } from '@aries-framework/indy-vdr/build/pool'
-import { useAgent } from '@aries-framework/react-hooks'
-import { agentDependencies } from '@aries-framework/react-native'
+import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
 import { DrpcModule } from '@credo-ts/drpc'
+import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
+import { useAgent } from '@credo-ts/react-hooks'
+import { agentDependencies } from '@credo-ts/react-native'
 import {
   DispatchAction,
   Screens,
@@ -386,17 +386,19 @@ const Splash = () => {
           await poolService.refreshPoolConnections()
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore:next-line
-          const raw_transactions = await poolService.getPoolTransactions()
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore:next-line
-          const transactions = raw_transactions.map(({ config, transactions }) => ({
-            ...config,
+          const raw_transactions = await poolService.getAllPoolTransactions()
+          const transactions = raw_transactions
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore:next-line
-            genesisTransactions: transactions.reduce((prev, curr) => {
-              return prev + JSON.stringify(curr)
-            }, ''),
-          }))
+            .map((item) => item.value)
+            .map(({ config, transactions }) => ({
+              ...config,
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore:next-line
+              genesisTransactions: transactions.reduce((prev, curr) => {
+                return prev + JSON.stringify(curr)
+              }, ''),
+            }))
           if (transactions) {
             await AsyncStorage.setItem(
               BCLocalStorageKeys.GenesisTransactions,
