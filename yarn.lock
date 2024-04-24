@@ -3376,6 +3376,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.5.1-alpha.19#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.1-alpha.19-e9503ded7c.patch":
+  version: 0.5.1-alpha.19
+  resolution: "@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.5.1-alpha.19#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.1-alpha.19-e9503ded7c.patch::version=0.5.1-alpha.19&hash=5438e6"
+  dependencies:
+    "@astronautlabs/jsonpath": "npm:^1.1.2"
+    "@credo-ts/core": "npm:0.5.1-alpha.19+edc5735c"
+    big-integer: "npm:^1.6.51"
+    bn.js: "npm:^5.2.1"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:0.14.1"
+    reflect-metadata: "npm:^0.1.13"
+  peerDependencies:
+    "@hyperledger/anoncreds-shared": ^0.2.2
+  checksum: d4a78d096d438b8bf129b5cbb1aeab22f73a7f757a34c14bf97d15f0809fc562cd7db59acc731c9270b297f1b1a69368c5b1bcb61477d3fe864ff0079efa5824
+  languageName: node
+  linkType: hard
+
 "@credo-ts/askar@npm:0.5.1-alpha.19, @credo-ts/askar@npm:0.5.1-alpha.19+edc5735c":
   version: 0.5.1-alpha.19
   resolution: "@credo-ts/askar@npm:0.5.1-alpha.19"
