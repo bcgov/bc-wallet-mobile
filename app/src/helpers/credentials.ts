@@ -3,8 +3,8 @@ import {
   AnonCredsPredicateType,
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
-} from '@aries-framework/anoncreds'
-import { CredentialExchangeRecord } from '@aries-framework/core'
+} from '@credo-ts/anoncreds'
+import { CredentialExchangeRecord } from '@credo-ts/core'
 import { Attribute, Predicate } from '@hyperledger/aries-oca/build/legacy'
 
 export type Fields = Record<string, AnonCredsRequestedAttributeMatch[] | AnonCredsRequestedPredicateMatch[]>

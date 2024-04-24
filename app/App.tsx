@@ -127,7 +127,7 @@ const App = () => {
   return (
     <ContainerProvider value={bcwContainer}>
       <StoreProvider initialState={initialState} reducer={reducer}>
-        <AgentProvider>
+        <AgentProvider agent={undefined}>
           <ThemeProvider value={theme}>
             <ConfigurationProvider value={configuration}>
               <AuthProvider>

@@ -1,9 +1,5 @@
-import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
-import {
-  CredentialExchangeRecord,
-  ProofExchangeRecord,
-  GetCredentialsForProofRequestReturn,
-} from '@aries-framework/core'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
+import { CredentialExchangeRecord, ProofExchangeRecord, GetCredentialsForProofRequestReturn } from '@credo-ts/core'
 import { BifoldAgent } from '@hyperledger/aries-bifold-core'
 
 export const attestationCredDefIds = [

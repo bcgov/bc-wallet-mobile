@@ -1,4 +1,4 @@
-import { StoreProvider } from '@hyperledger/aries-bifold-core'
+import { AgentProvider, StoreProvider } from '@hyperledger/aries-bifold-core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
@@ -11,6 +11,16 @@ jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: () => {
     return mockNavigation
+  },
+}))
+
+const mockAttestation = () => {
+  return { loading: false }
+}
+jest.mock('@hyperledger/aries-bifold-core', () => ({
+  ...jest.requireActual('@hyperledger/aries-bifold-core'),
+  useConfiguration: () => {
+    return { useAttestation: mockAttestation }
   },
 }))
 
