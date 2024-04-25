@@ -1,0 +1,56 @@
+diff --git a/build/models/internal.d.ts b/build/models/internal.d.ts
+index 79aa9870e08c55beec8bef88f231395a6026e560..55ca4149da3a7670a80b32a59beaecb232ee342e 100644
+--- a/build/models/internal.d.ts
++++ b/build/models/internal.d.ts
+@@ -8,6 +8,8 @@ export interface AnonCredsCredentialInfo {
+     credentialRevocationId: string | null;
+     methodName: string;
+     linkSecretId: string;
++    createdAt: Date,
++    updatedAt: Date,
+ }
+ export interface AnonCredsRequestedAttributeMatch {
+     credentialId: string;
+diff --git a/build/utils/sortRequestedCredentialsMatches.js b/build/utils/sortRequestedCredentialsMatches.js
+index 26139c3d44546c18797e7f050e89f601b8312010..bcb518435421688091ef455ce62c23ba39078948 100644
+--- a/build/utils/sortRequestedCredentialsMatches.js
++++ b/build/utils/sortRequestedCredentialsMatches.js
+@@ -8,15 +8,12 @@ exports.sortRequestedCredentialsMatches = void 0;
+  *  - then credentials with `revoked` set to true, this means the credentials are revoked
+  */
+ function sortRequestedCredentialsMatches(credentials) {
+-    const staySame = 0;
+     const credentialGoUp = -1;
+     const credentialGoDown = 1;
+     // Clone as sort is in place
+     const credentialsClone = [...credentials];
+     return credentialsClone.sort((credential, compareTo) => {
+-        // Nothing needs to happen if values are the same
+-        if (credential.revoked === compareTo.revoked)
+-            return staySame;
++        if (credential.revoked === compareTo.revoked) return compareTo.credentialInfo.updatedAt.getTime() - credential.credentialInfo.updatedAt.getTime()
+         // Undefined always is at the top
+         if (credential.revoked === undefined)
+             return credentialGoUp;
+diff --git a/build/utils/w3cAnonCredsUtils.js b/build/utils/w3cAnonCredsUtils.js
+index cb16700816f8e8601527ae68aa65f267901d6775..4df3d095496ad2826b21ebbb246468d0e29834a9 100644
+--- a/build/utils/w3cAnonCredsUtils.js
++++ b/build/utils/w3cAnonCredsUtils.js
+@@ -25,6 +25,8 @@ function anonCredsCredentialInfoFromW3cRecord(w3cCredentialRecord) {
+         revocationRegistryId: (_c = anonCredsTags.anonCredsRevocationRegistryId) !== null && _c !== void 0 ? _c : null,
+         methodName: anonCredsCredentialMetadata.methodName,
+         linkSecretId: anonCredsCredentialMetadata.linkSecretId,
++        createdAt: w3cCredentialRecord.createdAt,
++        updatedAt: w3cCredentialRecord.updatedAt ?? w3cCredentialRecord.createdAt,
+     };
+ }
+ function anonCredsCredentialInfoFromAnonCredsRecord(anonCredsCredentialRecord) {
+@@ -42,6 +44,8 @@ function anonCredsCredentialInfoFromAnonCredsRecord(anonCredsCredentialRecord) {
+         revocationRegistryId: (_b = anonCredsCredentialRecord.credential.rev_reg_id) !== null && _b !== void 0 ? _b : null,
+         methodName: anonCredsCredentialRecord.methodName,
+         linkSecretId: anonCredsCredentialRecord.linkSecretId,
++        createdAt: anonCredsCredentialRecord.createdAt,
++        updatedAt: anonCredsCredentialRecord.updatedAt ?? anonCredsCredentialRecord.createdAt,
+     };
+ }
+ function getAnoncredsCredentialInfoFromRecord(credentialRecord) {
