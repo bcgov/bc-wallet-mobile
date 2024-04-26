@@ -757,17 +757,18 @@
                ]
             },
             {
-               "schema": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+               "schema": "Ttmj1pEotg8FbKZZD81S7i:2:LCRBSirSes:1.0.0",
                "requestedAttributes": [
                   {
                      "names": [
                         "given_names",
                         "family_name",
-                        "certification_number"
+                        "certification_number",
+                        "expires_dateint"
                      ],
                      "restrictions": [
                         {
-                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Selling It Right"
+                           "cred_def_id": "Ttmj1pEotg8FbKZZD81S7i:3:CL:184:SellingItRight"
                         }
                      ],
                      "nonRevoked": {
@@ -839,17 +840,18 @@
                ]
             },
             {
-               "schema": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+               "schema": "Ttmj1pEotg8FbKZZD81S7i:2:LCRBSirSes:1.0.0",
                "requestedAttributes": [
                   {
                      "names": [
                         "given_names",
                         "family_name",
-                        "certification_number"
+                        "certification_number",
+                        "expires_dateint"
                      ],
                      "restrictions": [
                         {
-                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Serving It Right"
+                           "cred_def_id": "Ttmj1pEotg8FbKZZD81S7i:3:CL:184:ServingItRight"
                         }
                      ],
                      "nonRevoked": {
@@ -921,17 +923,18 @@
                ]
             },
             {
-               "schema": "TeT8SJGHruVL9up3Erp4o:2:LCRB:1.1.1",
+               "schema": "Ttmj1pEotg8FbKZZD81S7i:2:LCRBSirSes:1.0.0",
                "requestedAttributes": [
                   {
                      "names": [
                         "given_names",
                         "family_name",
-                        "certification_number"
+                        "certification_number",
+                        "expires_dateint"
                      ],
                      "restrictions": [
                         {
-                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:224665:Special Event"
+                           "cred_def_id": "Ttmj1pEotg8FbKZZD81S7i:3:CL:184:SpecialEventServer"
                         }
                      ],
                      "nonRevoked": {
