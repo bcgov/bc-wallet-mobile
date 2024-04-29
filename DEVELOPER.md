@@ -61,7 +61,7 @@ To install pod dependencies:
 
 ```sh
    cd app
-   bundle install --frozen && pod install
+   yarn run ios:setup
 ```
 
 To work on changes to BC Wallet in Bifold (the underlying Aries project) you will also need to do the following:
