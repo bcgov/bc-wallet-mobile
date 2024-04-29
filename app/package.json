@@ -37,7 +37,7 @@
     "typecheck": "tsc --noEmit",
     "storybook": "start-storybook -p 7007",
     "build-storybook": "build-storybook",
-    "postinstall": "pod-install --non-interactive",
+    "ios:setup": "bundle install --frozen && cd ios && bundle exec pod install",
     "gradle:write-locks": "cd android && ./gradlew app:dependencies --write-locks"
   },
   "dependencies": {
