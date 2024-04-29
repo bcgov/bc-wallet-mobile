@@ -3393,6 +3393,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.5.2#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.2-aeab4e2513.patch":
+  version: 0.5.2
+  resolution: "@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.5.2#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.2-aeab4e2513.patch::version=0.5.2&hash=9e6840"
+  dependencies:
+    "@astronautlabs/jsonpath": "npm:^1.1.2"
+    "@credo-ts/core": "npm:0.5.2"
+    big-integer: "npm:^1.6.51"
+    bn.js: "npm:^5.2.1"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:0.14.1"
+    reflect-metadata: "npm:^0.1.13"
+  peerDependencies:
+    "@hyperledger/anoncreds-shared": ^0.2.2
+  checksum: 4926b03693965694f9bd4ad412c6290a4bbaf8aa76750fbd110151b247278f76b3686ac7aec19653f5bcdc8df141db57a3cbe06c62726f206f002a8b33580b37
+  languageName: node
+  linkType: hard
+
 "@credo-ts/askar@npm:0.5.2":
   version: 0.5.2
   resolution: "@credo-ts/askar@npm:0.5.2"
@@ -5698,14 +5715,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sphereon/pex-models@npm:^2.2.2":
-  version: 2.2.2
-  resolution: "@sphereon/pex-models@npm:2.2.2"
-  checksum: 9245c61c1968c133ac721f087623576225f7ab4760eccde7a56a5c741b1919db380f03a471a4200886a5b1367c61879a157e0bf52159561a574ee08375398bc8
-  languageName: node
-  linkType: hard
-
-"@sphereon/pex-models@npm:^2.2.4":
+"@sphereon/pex-models@npm:^2.2.2, @sphereon/pex-models@npm:^2.2.4":
   version: 2.2.4
   resolution: "@sphereon/pex-models@npm:2.2.4"
   checksum: c82e08649aa525c975a4137b30ef9456704ac1e1cda09d0d1941223115f3139f13208906a5d8f17d9b7dc5eef2063a8a594d2ba6692ba09fd139669737190392
