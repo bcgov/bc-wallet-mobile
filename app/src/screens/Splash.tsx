@@ -128,6 +128,7 @@ const Splash = () => {
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
   const { indyLedgers, showPreface, enablePushNotifications } = useConfiguration()
+  const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -188,13 +189,18 @@ const Splash = () => {
     },
   })
 
+  // navigation calls that occur before the screen is fully mounted will fail
   useEffect(() => {
-    if (!agent) {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!agent || !store.authentication.didAuthenticate) {
       return
     }
 
     startAttestationListeners()
-  }, [agent])
+  }, [agent, store.authentication.didAuthenticate])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
@@ -219,7 +225,7 @@ const Splash = () => {
   useEffect(() => {
     try {
       setStep(0)
-      if (store.authentication.didAuthenticate || !store.stateLoaded) {
+      if (!mounted || store.authentication.didAuthenticate || !store.stateLoaded) {
         if (!store.stateLoaded) {
           setStep(1)
         }
@@ -297,12 +303,13 @@ const Splash = () => {
       setInitErrorType(InitErrorTypes.Onboarding)
       setInitError(e as Error)
     }
-  }, [store.authentication.didAuthenticate, initOnboardingCount, store.stateLoaded])
+  }, [mounted, store.authentication.didAuthenticate, initOnboardingCount, store.stateLoaded])
 
   useEffect(() => {
     const initAgent = async (): Promise<void> => {
       try {
         if (
+          !mounted ||
           !store.authentication.didAuthenticate ||
           !store.onboarding.didConsiderBiometry ||
           store.onboarding.postAuthScreens.length > 0
@@ -431,6 +438,7 @@ const Splash = () => {
 
     initAgent()
   }, [
+    mounted,
     store.authentication.didAuthenticate,
     store.onboarding.postAuthScreens.length,
     store.onboarding.didConsiderBiometry,
