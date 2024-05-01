@@ -20195,17 +20195,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-vision-camera@npm:^3.6.16":
-  version: 3.6.16
-  resolution: "react-native-vision-camera@npm:3.6.16"
+"react-native-vision-camera@npm:4.0.1":
+  version: 4.0.1
+  resolution: "react-native-vision-camera@npm:4.0.1"
   peerDependencies:
+    "@shopify/react-native-skia": "*"
     react: "*"
     react-native: "*"
+    react-native-reanimated: "*"
     react-native-worklets-core: "*"
   peerDependenciesMeta:
+    "@shopify/react-native-skia":
+      optional: true
+    react-native-reanimated:
+      optional: true
     react-native-worklets-core:
       optional: true
-  checksum: 6ebae021fd13169b55aa5e7c3a2fc92f908a92160ed55ba4dcc05d98e384b6c2b4efe0217983b8e68a2208784de2d7c107408a97a9e6c61daf6de9f62ffe179b
+  checksum: 7b5fd90a0a192f17a4662b0eb2488ee7595154d6e5bc74e8e281bd40a608b2b8949a4290a046511457097f95262098424086920c297ea35662dbf44d0e4a91f6
   languageName: node
   linkType: hard
 
