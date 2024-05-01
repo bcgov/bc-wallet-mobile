@@ -53,6 +53,6 @@
     "@types/react-native": "0.72.3",
     "react-i18next": "11.18.6",
     "@credo-ts/react-hooks": "patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch",
-    "@credo-ts/anoncreds@npm:0.5.1-alpha.19": "patch:@credo-ts/anoncreds@npm%3A0.5.1-alpha.19#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.1-alpha.19-e9503ded7c.patch"
+    "@credo-ts/anoncreds@npm:0.5.2": "patch:@credo-ts/anoncreds@npm%3A0.5.2#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.2-aeab4e2513.patch"
   }
 }
