@@ -445,7 +445,7 @@ PODS:
   - React-jsinspector (0.72.5)
   - React-logger (0.72.5):
     - glog
-  - "react-native-attestation (1.0.0-alpha.221+f14b18aa)":
+  - "react-native-attestation (1.0.0-alpha.222+818ae7f1)":
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
   - react-native-config (1.5.0):
@@ -931,7 +931,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: ff70a72027dea5cc7d71cfcc6fad7f599f63987a
   React-jsinspector: aef73cbd43b70675f572214d10fa438c89bf11ba
   React-logger: 2e4aee3e11b3ec4fa6cfd8004610bbb3b8d6cca4
-  react-native-attestation: 89fba6ef286fd488eda2e3842bc485c3233001c9
+  react-native-attestation: ce96e2066ec880e1ca00baddfff4b06992fb0f86
   react-native-config: 5330c8258265c1e5fdb8c009d2cabd6badd96727
   react-native-encrypted-storage: db300a3f2f0aba1e818417c1c0a6be549038deb7
   react-native-get-random-values: a6ea6a8a65dc93e96e24a11105b1a9c8cfe1d72a
@@ -969,7 +969,7 @@ SPEC CHECKSUMS:
   RNInAppBrowser: e36d6935517101ccba0e875bac8ad7b0cb655364
   RNKeychain: ff836453cba46938e0e9e4c22e43d43fa2c90333
   RNLocalize: d4b8af4e442d4bcca54e68fc687a2129b4d71a81
-  RNPermissions: d0f576cb779f84d64b96932268462bd50f5d0e1c
+  RNPermissions: accc57f693cab4e57317d2489212e01b7b794b66
   RNReanimated: ab2e96c6d5591c3dfbb38a464f54c8d17fb34a87
   RNScreens: 85d3880b52d34db7b8eeebe2f1a0e807c05e69fa
   RNSVG: d7d7bc8229af3842c9cfc3a723c815a52cdd1105
@@ -978,6 +978,6 @@ SPEC CHECKSUMS:
   VisionCamera: 5787602f86d8521f17af0e606259b6d367754e74
   Yoga: 86fed2e4d425ee4c6eab3813ba1791101ee153c6
 
-PODFILE CHECKSUM: 557ce83fddb4b3974ada332a9ba0251f0ffcc639
+PODFILE CHECKSUM: f043d17a36d946983917d5651311899450c41e12
 
 COCOAPODS: 1.13.0
