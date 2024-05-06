@@ -204,6 +204,7 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
   try {
     await agent.modules.pushNotificationsFcm.setDeviceInfo(mediator.id, {
       deviceToken: token,
+      devicePlatform: Platform.OS,
     })
     if (blankDeviceToken) {
       AsyncStorage.setItem(TOKEN_STORAGE_KEY, 'blank')
