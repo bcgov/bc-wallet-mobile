@@ -11,9 +11,19 @@ import {
   OnboardingState,
   DispatchAction,
 } from '@hyperledger/aries-bifold-core'
+import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Config } from 'react-native-config'
+import {
+  getVersion,
+  getBuildNumber,
+  getApplicationName,
+  getSystemName,
+  getSystemVersion,
+} from 'react-native-device-info'
 import { DependencyContainer } from 'tsyringe'
 
+import { autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
 import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
@@ -80,6 +90,21 @@ export class AppContainer implements Container {
       }
       dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
     })
+
+    const logOptions: RemoteLoggerOptions = {
+      lokiUrl: Config.REMOTE_LOGGING_URL,
+      lokiLabels: {
+        application: getApplicationName().toLowerCase(),
+        job: 'react-native-logs',
+        version: `${getVersion()}-${getBuildNumber()}`,
+        system: `${getSystemName()} v${getSystemVersion()}`,
+      },
+      autoDisableRemoteLoggingIntervalInMinutes,
+    }
+    const logger = new RemoteLogger(logOptions)
+    logger.startEventListeners()
+    this.container.registerInstance(TOKENS.UTIL_LOGGER, logger)
+
     return this
   }
 
