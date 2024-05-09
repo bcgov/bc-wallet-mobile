@@ -22,6 +22,7 @@ import {
   TOKENS,
   useContainer,
 } from '@hyperledger/aries-bifold-core'
+import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
@@ -120,7 +121,7 @@ const Splash = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
-  const { indyLedgers, showPreface, enablePushNotifications } = useConfiguration()
+  const { indyLedgers, showPreface, enablePushNotifications, OCABundleResolver } = useConfiguration()
   const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
@@ -312,7 +313,10 @@ const Splash = () => {
         ) {
           return
         }
+
         setStep(3)
+
+        await (OCABundleResolver as RemoteOCABundleResolver).checkForUpdates()
         const credentials = await getWalletCredentials()
 
         if (!credentials?.id || !credentials.key) {
