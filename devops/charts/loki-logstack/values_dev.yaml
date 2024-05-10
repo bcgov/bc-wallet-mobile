@@ -3,23 +3,36 @@
 
 replicaCount: 1
 
+autoscaling:
+  enabled: false
+#   minReplicas: 1
+#   maxReplicas: 5
+#   targetCPUUtilizationPercentage: 80
+
 podAnnotations: {}
+podLabels: {}
+
+cacheVolumeSize: "1Gi" # loki emptyDir size limit
 
 images:
   pullPolicy: IfNotPresent
   registry: artifacts.developer.gov.bc.ca/docker-remote
+  proxy:
+    repository: caddy
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "2.2.1-alpine"
   loki:
     repository: grafana/loki
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
-  proxy:
-    repository: caddy/caddy
-    # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
+    tag: "2.9.7"
   memcached:
     repository: memcached
     # Overrides the image tag whose default is the chart appVersion.
     tag: "1.6.17-alpine"
+  minio:
+    repository: minio/minio
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "RELEASE.2024-03-30T09-41-56Z"
 
 imagePullSecrets:
   - name: artifactory-creds
@@ -50,13 +63,13 @@ resources:
     requests:
       cpu: 10m
       memory: 32Mi
-
-persistentVolumeClaim:
-  mountPath: /data
-  storageSize: 1Gi
-  storageClass: netapp-file-standard
-  annotations:
-    helm.sh/resource-policy: keep
+  minio:
+    requests:
+      memory: 34Mi
+      cpu: 20m
+    limits:
+      memory: 64Mi
+      cpu: 40m
 
 services:
   loki:
@@ -64,23 +77,25 @@ services:
       port: 3100
     - name: grpc
       port: 9096
+    - name: memberlist
+      port: 7946
+  memberlist:
+    - name: memberlist
+      port: 7946
   proxy:
     - name: http
       port: 2015
   memcached:
     - name: client
       port: 11211
+  minio:
+    - name: server
+      port: 9000
 
 route:
   host: ""
   annotations:
     haproxy.router.openshift.io/timeout: 60s
-
-autoscaling:
-  enabled: false
-#   minReplicas: 1
-#   maxReplicas: 5
-#   targetCPUUtilizationPercentage: 80
 
 # serviceAccount:
 #   # Specifies whether a service account should be created
