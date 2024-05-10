@@ -1,0 +1,117 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "logstack.fullname" . }}-memcached
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  serviceName: {{ include "logstack.fullname" . }}-memcached
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: memcached
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: memcached
+        {{- include "logstack.labels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.images.registry }}/{{ .Values.images.memcached.repository }}:{{ .Values.images.memcached.tag | default .Chart.AppVersion }}"
+          resources:
+            {{- toYaml .Values.resources.memcached | nindent 12 }}
+          ports:
+            {{- range $name, $port := .Values.services.memcached }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+            {{- end }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "logstack.fullname" . }}-minio
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "logstack.fullname" . }}-minio
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: minio
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: minio
+        {{- include "logstack.labels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-minio
+          image: "{{ .Values.images.registry }}/{{ .Values.images.minio.repository }}:{{ .Values.images.minio.tag | default .Chart.AppVersion }}"
+          args:
+            - server
+            {{- if gt (int .Values.replicaCount) 1 }}
+            {{- range $i := until (int .Values.replicaCount) }}
+            - http://{{ include "logstack.fullname" $ }}-minio-{{ $i }}.bcwallet-logstack-minio.{{ $.Values.namespace }}.svc.cluster.local/data
+            {{- end }}
+            {{- else }}
+            - /data
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources.minio | nindent 12 }}
+          ports:
+            {{- range $name, $port := .Values.services.minio }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+            {{- end }}
+          volumeMounts:
+            - mountPath: /data
+              name: data
+          # readinessProbe:
+          #   httpGet:
+          #     path: /minio/health/ready
+          #     port: 9000
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 3
+          # Liveness probe detects situations where MinIO server instance
+          # is not working properly and needs restart. Kubernetes automatically
+          # restarts the pods if liveness checks fail.
+          # livenessProbe:
+          #   httpGet:
+          #     path: /minio/health/live
+          #     port: 9000
+          #   initialDelaySeconds: 10
+          #   periodSeconds: 3
+          env:
+            - name: MINIO_DATA_DIR
+              value: /data
+          envFrom:
+            - secretRef:
+                name: {{ include "logstack.fullname" . }}-minio-creds
+  volumeClaimTemplates:
+    - kind: PersistentVolumeClaim
+      apiVersion: v1
+      metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+        volumeMode: Filesystem
