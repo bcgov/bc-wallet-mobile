@@ -19,8 +19,10 @@ import {
   migrateToAskar,
   getAgentModules,
   createLinkSecretIfRequired,
+  TOKENS,
+  useContainer,
 } from '@hyperledger/aries-bifold-core'
-import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
+import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
@@ -28,18 +30,10 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
-import {
-  getVersion,
-  getBuildNumber,
-  getApplicationName,
-  getSystemName,
-  getSystemVersion,
-} from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
-import { autoDisableRemoteLoggingIntervalInMinutes } from '../constants'
 import { activate } from '../helpers/PushNotificationsHelper'
 import { useAttestation } from '../services/attestation'
 import { BCState, BCLocalStorageKeys } from '../store'
@@ -127,7 +121,7 @@ const Splash = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
-  const { indyLedgers, showPreface, enablePushNotifications } = useConfiguration()
+  const { indyLedgers, showPreface, enablePushNotifications, OCABundleResolver } = useConfiguration()
   const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
@@ -135,6 +129,9 @@ const Splash = () => {
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
+  const container = useContainer()
+  const logger = container.resolve(TOKENS.UTIL_LOGGER)
+
   const steps: string[] = [
     t('Init.Starting'),
     t('Init.FetchingPreferences'),
@@ -316,7 +313,10 @@ const Splash = () => {
         ) {
           return
         }
+
         setStep(3)
+
+        await (OCABundleResolver as RemoteOCABundleResolver).checkForUpdates()
         const credentials = await getWalletCredentials()
 
         if (!credentials?.id || !credentials.key) {
@@ -327,19 +327,6 @@ const Splash = () => {
         setStep(4)
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
-
-        const logOptions: RemoteLoggerOptions = {
-          lokiUrl: Config.REMOTE_LOGGING_URL,
-          lokiLabels: {
-            application: getApplicationName().toLowerCase(),
-            job: 'react-native-logs',
-            version: `${getVersion()}-${getBuildNumber()}`,
-            system: `${getSystemName()} v${getSystemVersion()}`,
-          },
-          autoDisableRemoteLoggingIntervalInMinutes,
-        }
-        const logger = new RemoteLogger(logOptions)
-        logger.startEventListeners()
 
         const options = {
           config: {
