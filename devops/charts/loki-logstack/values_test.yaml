@@ -63,7 +63,7 @@ resources:
       cpu: 20m
     limits:
       memory: 192Mi
-      cpu: 40m
+      cpu: 80m
 
 services:
   loki:
