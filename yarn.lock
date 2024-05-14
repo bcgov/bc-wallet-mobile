@@ -4409,23 +4409,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/indy-vdr-react-native@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@hyperledger/indy-vdr-react-native@npm:0.2.0"
+"@hyperledger/indy-vdr-react-native@npm:0.2.2":
+  version: 0.2.2
+  resolution: "@hyperledger/indy-vdr-react-native@npm:0.2.2"
   dependencies:
-    "@hyperledger/indy-vdr-shared": "npm:0.2.0"
+    "@hyperledger/indy-vdr-shared": "npm:0.2.2"
     "@mapbox/node-pre-gyp": "npm:^1.0.10"
   peerDependencies:
     react: ">= 16"
     react-native: ">= 0.66.0"
-  checksum: 03acda2a2b7c4396c5245d6b4062df3532885503443bf6d69701688a9973366ca333ed8c9317aab461acc23dd180c1dcec198001117168ee101ea831cf5f76e3
+  checksum: 7a924099b7baeb7384ecd96bb1a5751e5bbc07871288f883ca1f9789d23be478c63ebca66082e090a8b1ef90f40dbbe3ccaf0b67246fbfe125a8b9997fecb871
   languageName: node
   linkType: hard
 
-"@hyperledger/indy-vdr-shared@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@hyperledger/indy-vdr-shared@npm:0.2.0"
-  checksum: 729760438fbc6b7b98686fa654384a517645463106e747560564f6cbe4e702b52cd2996983b5d23551d29eac58c21beaf889f6195313ccdd7ea07c115fd19a25
+"@hyperledger/indy-vdr-shared@npm:0.2.2":
+  version: 0.2.2
+  resolution: "@hyperledger/indy-vdr-shared@npm:0.2.2"
+  checksum: 5bfa1b87b1eca1e5775da1451d9260177a66932765f1276bff4ff5746665dd0060771341490f69d694c80b97e45fdddf7b98e9c01849f58c51482271ec46ce6f
   languageName: node
   linkType: hard
 
@@ -8905,7 +8905,7 @@ __metadata:
     "@hyperledger/aries-bifold-verifier": "npm:1.0.0-alpha.230"
     "@hyperledger/aries-oca": "npm:1.0.0-alpha.230"
     "@hyperledger/aries-react-native-attestation": "npm:1.0.0-alpha.230"
-    "@hyperledger/indy-vdr-react-native": "npm:0.2.0"
+    "@hyperledger/indy-vdr-react-native": "npm:0.2.2"
     "@react-native-async-storage/async-storage": "npm:1.15.11"
     "@react-native-community/masked-view": "npm:0.1.11"
     "@react-native-community/netinfo": "npm:9.3.7"
