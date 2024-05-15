@@ -40,7 +40,7 @@ export default function PersonCredential() {
   const navigation = useNavigation()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
   const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
-  const [didCompleteAttestationProofRequest, sedDidCompleteAttestationProofRequest] = useState<boolean>(false)
+  const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
   const timer = useRef<NodeJS.Timeout>()
 
   const styles = StyleSheet.create({
@@ -156,7 +156,7 @@ export default function PersonCredential() {
               `Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`
             )
 
-            sedDidCompleteAttestationProofRequest(true)
+            setDidCompleteAttestationProofRequest(true)
           }
         }, attestationProofRequestWaitTimeout)
 
@@ -185,19 +185,19 @@ export default function PersonCredential() {
 
     timer.current && clearTimeout(timer.current)
 
-    acceptAttestationProofRequest(agent, proofRequest)
-      .then((status: boolean) => {
-        // We can unblock the workflow and proceed with
-        // authentication.
-        sedDidCompleteAttestationProofRequest(status)
-
-        agent.config.logger.info(`Accepted IAS attestation proof request.`)
-      })
-      .catch((error) => {
-        sedDidCompleteAttestationProofRequest(false)
-
-        agent.config.logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
-      })
+    if (!didCompleteAttestationProofRequest) {
+      acceptAttestationProofRequest(agent, proofRequest)
+        .then((status: boolean) => {
+          // We can unblock the workflow and proceed with
+          // authentication.
+          setDidCompleteAttestationProofRequest(status)
+          agent.config.logger.info(`Accepted IAS attestation proof request with status: ${status}`)
+        })
+        .catch((error) => {
+          setDidCompleteAttestationProofRequest(false)
+          agent.config.logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
+        })
+    }
   }, [attestationLoading, receivedProofRequests, remoteAgentDetails, agent])
 
   useEffect(() => {
