@@ -12,6 +12,7 @@ import {
   DispatchAction,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Config } from 'react-native-config'
 import {
@@ -28,7 +29,6 @@ import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
-import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 
 export class AppContainer implements Container {
   private container: DependencyContainer
