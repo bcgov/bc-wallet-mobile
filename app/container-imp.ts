@@ -12,6 +12,7 @@ import {
   DispatchAction,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Config } from 'react-native-config'
 import {
@@ -42,6 +43,12 @@ export class AppContainer implements Container {
     this.container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
     this.container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
     this.container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
+
+    const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
+      brandingOverlayType: BrandingOverlayType.Branding10,
+    })
+
+    this.container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
     this.container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
         const data = await AsyncStorage.getItem(key)

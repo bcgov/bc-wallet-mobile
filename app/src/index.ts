@@ -2,13 +2,11 @@ import {
   translationResources,
   ConfigurationContext,
   Record,
-  indyLedgers,
   defaultConfiguration,
   Stacks,
   Screens,
   Agent,
 } from '@hyperledger/aries-bifold-core'
-import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import merge from 'lodash.merge'
 import { ReducerAction } from 'react'
 import { Linking } from 'react-native'
@@ -39,8 +37,6 @@ const localization = merge({}, translationResources, {
   fr: { translation: fr },
   'pt-BR': { translation: ptBr },
 })
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectedLedgers = indyLedgers.filter((ledger: any) => ledger.indyNamespace !== 'indicio')
 const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,
@@ -53,12 +49,8 @@ const configuration: ConfigurationContext = {
   credentialListOptions: AddCredentialSlider,
   credentialEmptyList: EmptyList,
   developer: Developer,
-  OCABundleResolver: new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
-    brandingOverlayType: BrandingOverlayType.Branding10,
-  }),
   proofTemplateBaseUrl: Config.PROOF_TEMPLATE_URL,
   record: Record,
-  indyLedgers: selectedLedgers,
   settings: [],
   customNotification: {
     component: PersonCredential,

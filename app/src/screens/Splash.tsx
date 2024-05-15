@@ -121,7 +121,7 @@ const Splash = () => {
   const navigation = useNavigation()
   const { getWalletCredentials } = useAuth()
   const { ColorPallet, Assets } = useTheme()
-  const { indyLedgers, showPreface, enablePushNotifications, OCABundleResolver } = useConfiguration()
+  const { showPreface, enablePushNotifications } = useConfiguration()
   const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
@@ -131,6 +131,8 @@ const Splash = () => {
   const [initError, setInitError] = useState<Error | null>(null)
   const container = useContainer()
   const logger = container.resolve(TOKENS.UTIL_LOGGER)
+  const indyLedgers = container.resolve(TOKENS.UTIL_LEDGERS)
+  const ocaBundleResolver = container.resolve(TOKENS.UTIL_OCA_RESOLVER) as RemoteOCABundleResolver
 
   const steps: string[] = [
     t('Init.Starting'),
@@ -316,7 +318,7 @@ const Splash = () => {
 
         setStep(3)
 
-        await (OCABundleResolver as RemoteOCABundleResolver).checkForUpdates()
+        await ocaBundleResolver.checkForUpdates()
         const credentials = await getWalletCredentials()
 
         if (!credentials?.id || !credentials.key) {
