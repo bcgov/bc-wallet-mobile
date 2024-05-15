@@ -28,6 +28,7 @@ import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 
 export class AppContainer implements Container {
   private container: DependencyContainer
@@ -42,6 +43,12 @@ export class AppContainer implements Container {
     this.container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
     this.container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
     this.container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
+
+    const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
+      brandingOverlayType: BrandingOverlayType.Branding10,
+    })
+
+    this.container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
     this.container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
         const data = await AsyncStorage.getItem(key)
