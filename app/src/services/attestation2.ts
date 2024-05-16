@@ -26,7 +26,7 @@ import {
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
 
-const defaultResponseTimeout = 10000
+const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 
 export type AttestationMonitorOptions = {
   attestationInviteUrl: string
@@ -37,6 +37,8 @@ export enum AttestationEventTypes {
   AttestationStarted = ' AttestationEvent.Started',
   AttestationCompleted = ' AttestationEvent.Completed',
 }
+
+// type t = (key: string | Array<string>, options?: object) => string
 
 enum ErrorCodes {
   AttestationBadInvitation = 2027,
@@ -249,7 +251,7 @@ export class AttestationMonitor {
     const requestNonceCb = await requestNonceDrpc(this.agent, connection)
 
     // {"jsonrpc":"2.0","result":{"nonce":"abc123"},"id":337401}
-    const nonceResponse = await requestNonceCb(defaultResponseTimeout)
+    const nonceResponse = await requestNonceCb(defaultResponseTimeoutInMs)
 
     this.log?.info('DRPC nonce response received')
 
@@ -266,7 +268,7 @@ export class AttestationMonitor {
 
     const requestAttestationCb = await requestAttestationDrpc(this.agent, connection, attestationObj)
     // {"jsonrpc":"2.0","result":{"status":"success"},"id":997408}
-    const attestationResponse = await requestAttestationCb(defaultResponseTimeout)
+    const attestationResponse = await requestAttestationCb(defaultResponseTimeoutInMs)
 
     return attestationResponse?.result
   }
@@ -290,12 +292,35 @@ export class AttestationMonitor {
         return this.generateGoogleAttestation(nonce)
 
       default:
-        // TODO(jl): throw error
+        // TODO(jl): throw unsupported platform error
         break
     }
   }
 
-  private async generateAppleAttestation(nonce: string) {}
+  private async generateAppleAttestation(nonce: string) {
+    const infraMessage = { nonce }
+    const common = this.commonInfrastructureMessageComponent()
+    const shouldCacheKey = false
+
+    this.log?.info('Generating key for Apple')
+    const keyId = await generateKey(shouldCacheKey)
+
+    this.log?.info('Using Apple on-device attestation')
+    const attestationAsBuffer = await appleAttestation(
+      keyId,
+      (infraMessage as RequestIssuanceInfrastructureMessage).nonce
+    )
+    const attestationResponse = {
+      ...common,
+      platform: 'apple',
+      key_id: keyId,
+      attestation_object: attestationAsBuffer.toString('base64'),
+    } as ChallengeResponseInfrastructureMessage
+
+    this.log?.info('On-device Apple attestation complete')
+
+    return attestationResponse
+  }
 
   private async generateGoogleAttestation(nonce: string) {
     const infraMessage = { nonce }
