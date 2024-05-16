@@ -113,39 +113,26 @@ export class AttestationMonitor {
       const { offer } = await this.agent.credentials.getFormatData(credential.id)
       const offerData = (offer?.anoncreds ?? offer?.indy) as AnonCredsCredentialOffer
 
-      // const { offer } = await agent.credentials.getFormatData(record.id)
-      // const offerData = offer?.anoncreds ?? offer?.indy
-
-      console.log('***************** 1')
       // do nothing if not an attestation credential
       const { attestationCredDefIds } = this.options
       if (!attestationCredDefIds.includes(offerData?.cred_def_id ?? '')) {
         return
       }
-      console.log('***************** 2')
 
       // if it's a new offer, automatically accept
       if (credential.state === CredentialState.OfferReceived) {
-        console.log('***************** 2', credential.id)
-
         this.log?.info('Accepting credential offer')
         await this.agent.credentials.acceptOffer({
           credentialRecordId: credential.id,
         })
       }
 
-      console.log('***************** 3', credential.state)
-
       // only finish loading state once credential is fully accepted
       if (credential.state === CredentialState.Done) {
-        console.log('***************** 4')
-
         this.log?.info('Credential accepted')
       }
-
-      console.log('***************** 5')
     } catch (error) {
-      console.log('***************** 6', error)
+      console.log('*****************', error)
     }
   }
 
