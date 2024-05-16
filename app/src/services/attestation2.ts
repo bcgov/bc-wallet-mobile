@@ -8,13 +8,12 @@ import {
   ProofState,
   ProofEventTypes,
   ProofExchangeRecord,
-  ConnectionRecord,
   BaseLogger,
+  ConnectionRecord,
 } from '@credo-ts/core'
 import { Subscription } from 'rxjs'
 import { isProofRequestingAttestation, attestationCredentialRequired } from '../helpers/Attestation'
-import { useTheme } from '@react-navigation/native'
-import { BifoldAgent, BifoldError, EventTypes, useStore } from '@hyperledger/aries-bifold-core'
+import { BifoldError, EventTypes } from '@hyperledger/aries-bifold-core'
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 import { requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
 import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
@@ -25,8 +24,19 @@ import {
   isPlayIntegrityAvailable,
 } from '@hyperledger/aries-react-native-attestation'
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
+import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
 
 const defaultResponseTimeout = 10000
+
+export type AttestationMonitorOptions = {
+  attestationInviteUrl: string
+  attestationCredDefIds: string[]
+}
+
+export enum AttestationEventTypes {
+  AttestationStarted = ' AttestationEvent.Started',
+  AttestationCompleted = ' AttestationEvent.Completed',
+}
 
 enum ErrorCodes {
   AttestationBadInvitation = 2027,
@@ -34,12 +44,8 @@ enum ErrorCodes {
   AttestationGeneralProofError = 2029,
 }
 
-export enum RemoteLoggerEventTypes {
-  ENABLE_REMOTE_LOGGING = 'RemoteLogging.Enable',
-}
-
-export type AttestationMonitorOptions = {
-  attestationInviteUrl: string
+type AttestationResult = {
+  status: 'success' | 'failure'
 }
 
 type InfrastructureMessage = {
@@ -69,6 +75,7 @@ type ChallengeResponseInfrastructureMessage = InfrastructureMessage & {
 
 export class AttestationMonitor {
   private proofSubscription?: Subscription
+  private offerSubscription?: Subscription
   private agent: Agent
   private options: AttestationMonitorOptions
   private log?: BaseLogger
@@ -86,22 +93,59 @@ export class AttestationMonitor {
       .observable(ProofEventTypes.ProofStateChanged)
       .subscribe(this.handleProofReceived)
 
-    // this.agent.modules.drpc.responseListener = this.handleDrpcResponse
+    this.offerSubscription = this.agent.events
+      .observable(CredentialEventTypes.CredentialStateChanged)
+      .subscribe(this.handleCredentialOfferReceived)
   }
 
-  // private async handleDrpcResponse(response: DrpcResponse) {
-  //   console.log('*****************************')
-  //   console.log('*****************************')
-  //   console.log('*****************************')
-  //   console.log('*****************************')
-  //   console.log('Received DRPC response', response)
-  //   console.log('*****************************')
-  //   console.log('*****************************')
-  //   console.log('*****************************')
-  //   console.log('*****************************')
-  // }
+  public stop() {
+    this.proofSubscription?.unsubscribe()
+    this.offerSubscription?.unsubscribe()
+  }
 
-  // this.eventListener = this.agent.events.on<ProofEventTypes.ProofReceived>(ProofEventTypes.ProofReceived, this.handleProofReceived)
+  private handleCredentialOfferReceived = async (event: BaseEvent) => {
+    const { credentialRecord } = event.payload
+    const credential = credentialRecord as CredentialExchangeRecord
+
+    try {
+      const { offer } = await this.agent.credentials.getFormatData(credential.id)
+      const offerData = (offer?.anoncreds ?? offer?.indy) as AnonCredsCredentialOffer
+
+      // const { offer } = await agent.credentials.getFormatData(record.id)
+      // const offerData = offer?.anoncreds ?? offer?.indy
+
+      console.log('***************** 1')
+      // do nothing if not an attestation credential
+      const { attestationCredDefIds } = this.options
+      if (!attestationCredDefIds.includes(offerData?.cred_def_id ?? '')) {
+        return
+      }
+      console.log('***************** 2')
+
+      // if it's a new offer, automatically accept
+      if (credential.state === CredentialState.OfferReceived) {
+        console.log('***************** 2', credential.id)
+
+        this.log?.info('Accepting credential offer')
+        await this.agent.credentials.acceptOffer({
+          credentialRecordId: credential.id,
+        })
+      }
+
+      console.log('***************** 3', credential.state)
+
+      // only finish loading state once credential is fully accepted
+      if (credential.state === CredentialState.Done) {
+        console.log('***************** 4')
+
+        this.log?.info('Credential accepted')
+      }
+
+      console.log('***************** 5')
+    } catch (error) {
+      console.log('***************** 6', error)
+    }
+  }
 
   private handleProofReceived = async (event: BaseEvent) => {
     const { proofRecord } = event.payload
@@ -139,54 +183,92 @@ export class AttestationMonitor {
   public fetchAttestationCredential = async () => {
     this.log?.info('Fetching attestation credential')
 
-    const invite = await this.agent.oob.parseInvitation(this.options.attestationInviteUrl)
+    DeviceEventEmitter.emit(AttestationEventTypes.AttestationStarted)
 
-    if (!invite) {
-      const err = new BifoldError('Problem', 'Reason', '', ErrorCodes.AttestationBadInvitation)
+    try {
+      const connection = await this.connectToAttestationAgent()
+      if (!connection) {
+        return
+      }
+
+      const nonce = await this.fetchNonceForAttestation(connection)
+      if (!nonce) {
+        return
+      }
+
+      const attestationObj = await this.generateAttestation(nonce)
+      if (!attestationObj) {
+        return
+      }
+
+      const result = this.requestAttestation(connection, attestationObj)
+
+      DeviceEventEmitter.emit(AttestationEventTypes.AttestationCompleted, result)
+    } catch (error) {
+      console.log('*****************4', error)
+    }
+  }
+
+  private async connectToAttestationAgent(): Promise<ConnectionRecord | undefined> {
+    try {
+      const invite = await this.agent.oob.parseInvitation(this.options.attestationInviteUrl)
+
+      if (!invite) {
+        const err = new BifoldError('Problem', 'Reason', '', ErrorCodes.AttestationBadInvitation)
+        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
+
+        return
+      }
+
+      this.log?.info('Removing existing invitation if required')
+      await removeExistingInvitationIfRequired(this.agent, invite.id)
+
+      this.log?.info('Receiving invitation')
+      const { connectionRecord } = await this.agent.oob.receiveInvitation(invite)
+      if (!connectionRecord) {
+        const err = new BifoldError('Title', 'Problem', '', ErrorCodes.AttestationReceiveInvitationError)
+        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
+
+        return
+      }
+
+      // this step will fail if there is more than one active connection record between a given wallet and
+      // the traction instance which is why we need to `removeExistingInvitationIfRequired` above
+      return await this.agent.connections.returnWhenIsConnected(connectionRecord.id)
+    } catch (error) {
+      const err = new BifoldError('Title', 'Problem', '', ErrorCodes.AttestationGeneralProofError)
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
 
       return
     }
+  }
 
-    this.log?.info('Removing existing invitation if required')
-    await removeExistingInvitationIfRequired(this.agent, invite.id)
-
-    this.log?.info('Receiving invitation')
-    const { connectionRecord } = await this.agent.oob.receiveInvitation(invite)
-    if (!connectionRecord) {
-      const err = new BifoldError('Title', 'Problem', '', ErrorCodes.AttestationReceiveInvitationError)
-      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
-
-      return
-    }
-
-    // this step will fail if there is more than one active connection record between a given wallet and
-    // the traction instance which is why we need to `removeExistingInvitationIfRequired` above
-    const connection = await this.agent.connections.returnWhenIsConnected(connectionRecord.id)
-
+  private async fetchNonceForAttestation(connection: ConnectionRecord): Promise<string> {
     this.log?.info('Requesting nonce from controller')
 
     const requestNonceCb = await requestNonceDrpc(this.agent, connection)
 
-    try {
-      const nonceResponse = await requestNonceCb(defaultResponseTimeout)
+    // {"jsonrpc":"2.0","result":{"nonce":"abc123"},"id":337401}
+    const nonceResponse = await requestNonceCb(defaultResponseTimeout)
 
-      console.log('nonceResponse', JSON.stringify(nonceResponse))
-      const nonce = nonceResponse?.result?.nonce
-      console.log('nonce', nonce)
+    this.log?.info('DRPC nonce response received')
 
-      const attestationObj = await this.generateAttestation(nonce)
+    const nonce = nonceResponse?.result?.nonce
 
-      console.log('*****************4')
-      console.log('*****************4')
-      // console.log('attestationObj', attestationObj)
+    return nonce
+  }
 
-      const requestAttestationCb = await requestAttestationDrpc(this.agent, connection, attestationObj)
-      const attestationResponse = await requestAttestationCb(defaultResponseTimeout)
-      console.log('attestation response = ', JSON.stringify(attestationResponse))
-    } catch (error) {
-      console.log('*****************4', error)
-    }
+  private async requestAttestation(
+    connection: ConnectionRecord,
+    attestationObj: ChallengeResponseInfrastructureMessage
+  ): Promise<AttestationResult> {
+    this.log?.info('Requesting attestation credential from controller')
+
+    const requestAttestationCb = await requestAttestationDrpc(this.agent, connection, attestationObj)
+    // {"jsonrpc":"2.0","result":{"status":"success"},"id":997408}
+    const attestationResponse = await requestAttestationCb(defaultResponseTimeout)
+
+    return attestationResponse?.result
   }
 
   // TODO(jl): The types probably need to be renamed

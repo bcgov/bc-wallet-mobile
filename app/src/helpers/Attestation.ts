@@ -3,8 +3,8 @@ import { CredentialExchangeRecord, ProofExchangeRecord, GetCredentialsForProofRe
 import { BifoldAgent } from '@hyperledger/aries-bifold-core'
 
 export const attestationCredDefIds = [
-  'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet',
-  'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet',
+  'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet_dev',
+  'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet_test',
   'XqaRXJt4sXE6TRpfGpVbGw:3:CL:655:bcwallet',
 ]
 
