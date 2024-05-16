@@ -698,16 +698,15 @@
       }
    },
    {
-      "id": "BC:5:PersonSellingItRight:0.0.1:indy",
-      "name": "Person + Selling it Right",
-      "description": "Verify an individual has the qualifications to sell or serve certain products",
-      "devOnly": true,
-      "version": "0.0.1",
+      "id": "BC:5:PersonSellingItRight:0.0.2:indy",
+      "name": "Selling it Right",
+      "description": "Verify an individual has the identity and qualifications to be involved in the sale of non-medical cannabis in British Columbia.",
+      "version": "0.0.2",
       "payload": {
          "type": "anoncreds",
          "data": [
             {
-               "schema": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+               "schema": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -717,11 +716,11 @@
                      ],
                      "restrictions": [
                         {
-                           "schema_id": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
-                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
                         },
                         {
-                           "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:116290:Person"
+                           "cred_def_id": "RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person"
                         }
                      ],
                      "devRestrictions": [
@@ -757,7 +756,7 @@
                ]
             },
             {
-               "schema": "Ttmj1pEotg8FbKZZD81S7i:2:LCRBSirSes:1.0.0",
+               "schema": "4WW6792ksq62UroZyfd6nQ:2:LCRBSirSes:1.0.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -768,7 +767,7 @@
                      ],
                      "restrictions": [
                         {
-                           "cred_def_id": "Ttmj1pEotg8FbKZZD81S7i:3:CL:184:SellingItRight"
+                           "cred_def_id": "4WW6792ksq62UroZyfd6nQ:3:CL:1098:SellingItRight"
                         }
                      ],
                      "nonRevoked": {
@@ -781,16 +780,15 @@
       }
    },
    {
-      "id": "BC:5:PersonServingItRight:0.0.1:indy",
-      "name": "Person + Serving it Right",
-      "description": "Verify an individual has the qualifications to sell or serve certain products",
-      "devOnly": true,
-      "version": "0.0.1",
+      "id": "BC:5:PersonServingItRight:0.0.2:indy",
+      "name": "Serving it Right",
+      "description": "Verify an individual has the identity and qualifications to be working in liquor sales and services in British Columbia.",
+      "version": "0.0.2",
       "payload": {
          "type": "anoncreds",
          "data": [
             {
-               "schema": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+               "schema": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -800,8 +798,8 @@
                      ],
                      "restrictions": [
                         {
-                           "schema_id": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
-                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
                         },
                         {
                            "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:116290:Person"
@@ -840,7 +838,7 @@
                ]
             },
             {
-               "schema": "Ttmj1pEotg8FbKZZD81S7i:2:LCRBSirSes:1.0.0",
+               "schema": "4WW6792ksq62UroZyfd6nQ:2:LCRBSirSes:1.0.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -851,7 +849,7 @@
                      ],
                      "restrictions": [
                         {
-                           "cred_def_id": "Ttmj1pEotg8FbKZZD81S7i:3:CL:184:ServingItRight"
+                           "cred_def_id": "4WW6792ksq62UroZyfd6nQ:3:CL:1098:ServingItRight"
                         }
                      ],
                      "nonRevoked": {
@@ -864,16 +862,15 @@
       }
    },
    {
-      "id": "BC:5:PersonSpecialEventServer:0.0.1:indy",
-      "name": "Person + Special Event Server",
-      "description": "Verify an individual has the qualifications to sell or serve certain products",
-      "devOnly": true,
-      "version": "0.0.1",
+      "id": "BC:5:PersonSpecialEventServer:0.0.2:indy",
+      "name": "Special Event Server",
+      "description": "Verify an individual has the identity and qualifications to be serving alcohol at special events in British Columbia.",
+      "version": "0.0.2",
       "payload": {
          "type": "anoncreds",
          "data": [
             {
-               "schema": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
+               "schema": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -883,8 +880,8 @@
                      ],
                      "restrictions": [
                         {
-                           "schema_id": "Pxz2FTVZFxrx6jVvun92xW:2:Person:1.2",
-                           "issuer_did": "TeT8SJGHruVL9up3Erp4o"
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
                         },
                         {
                            "cred_def_id": "TeT8SJGHruVL9up3Erp4o:3:CL:116290:Person"
@@ -923,7 +920,7 @@
                ]
             },
             {
-               "schema": "Ttmj1pEotg8FbKZZD81S7i:2:LCRBSirSes:1.0.0",
+               "schema": "4WW6792ksq62UroZyfd6nQ:2:LCRBSirSes:1.0.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -934,7 +931,7 @@
                      ],
                      "restrictions": [
                         {
-                           "cred_def_id": "Ttmj1pEotg8FbKZZD81S7i:3:CL:184:SpecialEventServer"
+                           "cred_def_id": "4WW6792ksq62UroZyfd6nQ:3:CL:1098:SpecialEventServer"
                         }
                      ],
                      "nonRevoked": {
