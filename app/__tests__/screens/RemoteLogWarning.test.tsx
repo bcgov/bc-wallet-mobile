@@ -6,6 +6,17 @@ import RemoteLogWarning from '../../src/screens/RemoteLogWarning'
 import { AttestationProvider } from '../../src/hooks/useAttestation'
 import { initialState, reducer } from '../../src/store'
 
+jest.mock('@hyperledger/aries-bifold-core', () => ({
+  ...jest.requireActual('@hyperledger/aries-bifold-core'),
+  useConfiguration: jest.fn(),
+  useContainer: jest.fn().mockReturnValue({
+    resolve: jest.fn().mockReturnValue({
+      resolve: jest.fn().mockImplementation(() => Promise.resolve({})),
+      resolveAllBundles: jest.fn().mockImplementation(() => Promise.resolve({})),
+    }),
+  }),
+}))
+
 describe('RemoteLogWarning Screen', () => {
   beforeEach(() => {
     // Silence console.error because it will print a warning about Switch

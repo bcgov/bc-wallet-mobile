@@ -28,6 +28,11 @@ const useAgent = () => ({
         info: jest.fn(),
       },
     },
+    events: {
+      observable: jest.fn().mockReturnValue({
+        subscribe: jest.fn(),
+      }),
+    },
   },
 })
 const useCredentialById = jest.fn()
