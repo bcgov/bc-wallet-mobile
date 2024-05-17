@@ -24,7 +24,13 @@ import { Subscription } from 'rxjs'
 
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 import { credentialsMatchForProof } from '../helpers/credentials'
-import { requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
+import {
+  RequestIssuanceInfrastructureMessage,
+  ChallengeResponseInfrastructureMessage,
+  AttestationResult,
+  requestNonceDrpc,
+  requestAttestationDrpc,
+} from '../helpers/drpc'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 
@@ -81,25 +87,6 @@ const AttestationErrorCodes = {
   FailedToFetchNonceForAttestation: 2031,
   FailedToGenerateAttestation: 2032,
 } as const
-
-type AttestationResult = {
-  status: 'success' | 'failure'
-}
-
-type InfrastructureMessage = {
-  platform?: 'apple' | 'google'
-  os_version?: string
-  app_version?: string
-}
-
-type RequestIssuanceInfrastructureMessage = InfrastructureMessage & {
-  nonce: string
-}
-
-type ChallengeResponseInfrastructureMessage = InfrastructureMessage & {
-  key_id?: string
-  attestation_object: string
-}
 
 export const isProofRequestingAttestation = async (
   proof: ProofExchangeRecord,
@@ -217,13 +204,13 @@ export class AttestationMonitor {
   public fetchAttestationCredential = async () => {
     this.log?.info('Fetching attestation credential')
 
-    this.attestationWorkflowInProgress = true
+    this._attestationWorkflowInProgress = true
     DeviceEventEmitter.emit(AttestationEventTypes.Started)
 
     try {
       const connection = await this.connectToAttestationAgent()
       if (!connection) {
-        this.attestationWorkflowInProgress = false
+        this._attestationWorkflowInProgress = false
         const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToConnectToAttestationAgent)
         DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
 
@@ -232,7 +219,7 @@ export class AttestationMonitor {
 
       const nonce = await this.fetchNonceForAttestation(connection)
       if (!nonce) {
-        this.attestationWorkflowInProgress = false
+        this._attestationWorkflowInProgress = false
         const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToFetchNonceForAttestation)
         DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
 
@@ -241,7 +228,7 @@ export class AttestationMonitor {
 
       const attestationObj = await this.generateAttestation(nonce)
       if (!attestationObj) {
-        this.attestationWorkflowInProgress = false
+        this._attestationWorkflowInProgress = false
         const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToGenerateAttestation)
         DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
 
@@ -252,7 +239,7 @@ export class AttestationMonitor {
 
       DeviceEventEmitter.emit(AttestationEventTypes.Completed, result)
     } catch (error) {
-      this.attestationWorkflowInProgress = false
+      this._attestationWorkflowInProgress = false
     }
   }
 

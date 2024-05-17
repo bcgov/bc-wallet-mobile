@@ -1,8 +1,26 @@
 import { Agent, ConnectionRecord } from '@credo-ts/core'
 import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
 
-import { ChallengeResponseInfrastructureMessage } from '../services/attestation'
 export type DrpcResponsePromise = (responseTimeout: number) => Promise<DrpcResponse | undefined>
+
+export type InfrastructureMessage = {
+  platform?: 'apple' | 'google'
+  os_version?: string
+  app_version?: string
+}
+
+export type RequestIssuanceInfrastructureMessage = InfrastructureMessage & {
+  nonce: string
+}
+
+export type ChallengeResponseInfrastructureMessage = InfrastructureMessage & {
+  key_id?: string
+  attestation_object: string
+}
+
+export type AttestationResult = {
+  status: 'success' | 'failure'
+}
 
 export const sendDrpcRequest = async (
   agent: Agent,
