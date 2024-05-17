@@ -3,7 +3,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import PersonCredential from '../../src/screens/PersonCredential'
-import { AttestationProvider } from '../../src/services/attestation'
+import { AttestationProvider } from '../../src/hooks/useAttestation'
 import { initialState, reducer } from '../../src/store'
 
 const mockNavigation = jest.fn()

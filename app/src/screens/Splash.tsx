@@ -36,7 +36,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { activate } from '../helpers/PushNotificationsHelper'
-import { useAttestation } from '../services/attestation'
+import { useAttestation } from '../hooks/useAttestation'
 import { BCState, BCLocalStorageKeys } from '../store'
 
 import { TermsVersion } from './Terms'
@@ -411,6 +411,9 @@ const Splash = () => {
 
         setStep(6)
         await createLinkSecretIfRequired(newAgent)
+
+        // const am = new AttestationMonitor(agent!, logger, { attestationInviteUrl, attestationCredDefIds })
+        // container.registerInstance(TOKENS.UTIL_AGENT, { useValue: newAgent })
 
         setStep(7)
         setAgent(newAgent)

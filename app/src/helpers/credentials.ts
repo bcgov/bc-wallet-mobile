@@ -4,11 +4,9 @@ import {
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
 } from '@credo-ts/anoncreds'
-
-import { Attribute, Predicate } from '@hyperledger/aries-oca/build/legacy'
-import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import { CredentialExchangeRecord, ProofExchangeRecord, GetCredentialsForProofRequestReturn } from '@credo-ts/core'
 import { BifoldAgent } from '@hyperledger/aries-bifold-core'
+import { Attribute, Predicate } from '@hyperledger/aries-oca/build/legacy'
 
 export type Fields = Record<string, AnonCredsRequestedAttributeMatch[] | AnonCredsRequestedPredicateMatch[]>
 

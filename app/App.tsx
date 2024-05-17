@@ -35,8 +35,8 @@ import { credentialsTourSteps } from './src/components/tours/CredentialsTourStep
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
+import { AttestationProvider } from './src/hooks/useAttestation'
 import WebDisplay from './src/screens/WebDisplay'
-import { AttestationProvider } from './src/services/attestation'
 import { initialState, reducer } from './src/store'
 
 const { theme, localization, configuration } = bcwallet

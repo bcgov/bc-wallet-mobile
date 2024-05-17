@@ -1,4 +1,4 @@
-import { DeviceEventEmitter, Platform } from 'react-native'
+import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
 import {
   Agent,
   BaseEvent,
@@ -11,20 +11,20 @@ import {
   BaseLogger,
   ConnectionRecord,
 } from '@credo-ts/core'
-import { Subscription } from 'rxjs'
-import { BifoldError, EventTypes } from '@hyperledger/aries-bifold-core'
-import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
-import { requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
+import { BifoldError, EventTypes, BifoldAgent } from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
   appleAttestation,
   googleAttestation,
   isPlayIntegrityAvailable,
 } from '@hyperledger/aries-react-native-attestation'
+import { DeviceEventEmitter, Platform } from 'react-native'
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
-import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
-import { BifoldAgent } from '@hyperledger/aries-bifold-core'
+import { Subscription } from 'rxjs'
+
+import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 import { credentialsMatchForProof } from '../helpers/credentials'
+import { requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 
@@ -101,11 +101,18 @@ type ChallengeResponseInfrastructureMessage = InfrastructureMessage & {
   attestation_object: string
 }
 
-// Move logic out of specific screens (PersonCredential screen) and into a centralized service
-// Add logic to get a new attestation credential if existing ones are older than some amount of time (14 days?)
-// Add logic to remove old attestation credentials
-// Take the attestation code out of the hook and into a service that can be initialized on startup, allowing for stop and start to be called from anywhere
-// Add status updates to the process
+export const isProofRequestingAttestation = async (
+  proof: ProofExchangeRecord,
+  agent: BifoldAgent,
+  attestationCredDefIds: string[]
+): Promise<boolean> => {
+  const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
+  const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
+
+  return !!format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions?.some((rstr) =>
+    attestationCredDefIds.includes(rstr.cred_def_id)
+  )
+}
 
 export class AttestationMonitor {
   private proofSubscription?: Subscription
@@ -113,17 +120,21 @@ export class AttestationMonitor {
   private agent: Agent
   private options: AttestationMonitorOptions
   private log?: BaseLogger
-  public attestationWorkflowInProgress = false
+  private _attestationWorkflowInProgress = false
 
   // take in options, agent, and logger. Options should include the attestation service URL
   // and the proof to watch for along with the cred_ef_id of the attestation credentials.
-  constructor(agent: Agent, logger: BaseLogger, options: AttestationMonitorOptions) {
+  public constructor(agent: Agent, logger: BaseLogger, options: AttestationMonitorOptions) {
     this.agent = agent
     this.log = logger
     this.options = options
   }
 
-  public async start() {
+  public get attestationWorkflowInProgress() {
+    return this._attestationWorkflowInProgress
+  }
+
+  public async start(): Promise<void> {
     this.proofSubscription = this.agent.events
       .observable(ProofEventTypes.ProofStateChanged)
       .subscribe(this.handleProofReceived)
@@ -133,7 +144,7 @@ export class AttestationMonitor {
       .subscribe(this.handleCredentialOfferReceived)
   }
 
-  public stop() {
+  public stop(): void {
     this.proofSubscription?.unsubscribe()
     this.offerSubscription?.unsubscribe()
   }
@@ -165,7 +176,7 @@ export class AttestationMonitor {
         this.log?.info('Credential accepted')
       }
     } catch (error) {
-      console.log('*****************', error)
+      this.log?.error('Failed to handle credential offer', error as Error)
     }
   }
 
@@ -182,7 +193,7 @@ export class AttestationMonitor {
     // TODO(jl): wrap in try catch
 
     // 1. Is the proof requesting an attestation credential
-    if (!(await this.isProofRequestingAttestation(proof, this.agent))) {
+    if (!(await isProofRequestingAttestation(proof, this.agent, this.options.attestationCredDefIds))) {
       return
     }
 
@@ -381,21 +392,11 @@ export class AttestationMonitor {
     return attestationResponse
   }
 
-  private isProofRequestingAttestation = async (proof: ProofExchangeRecord, agent: BifoldAgent): Promise<boolean> => {
-    const { attestationCredDefIds } = this.options
-    const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
-    const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
-
-    return !!format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions?.some((rstr) =>
-      attestationCredDefIds.includes(rstr.cred_def_id)
-    )
-  }
-
   private attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
     agent.config.logger.info('Attestation: fetching proof by id')
     const proof = await agent?.proofs.getById(proofId)
     agent.config.logger.info('Attestation: second check if proof is requesting attestation')
-    const isAttestation = await this.isProofRequestingAttestation(proof, agent)
+    const isAttestation = await isProofRequestingAttestation(proof, agent, this.options.attestationCredDefIds)
 
     if (!isAttestation) {
       return false

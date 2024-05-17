@@ -3,7 +3,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import RemoteLogWarning from '../../src/screens/RemoteLogWarning'
-import { AttestationProvider } from '../../src/services/attestation'
+import { AttestationProvider } from '../../src/hooks/useAttestation'
 import { initialState, reducer } from '../../src/store'
 
 describe('RemoteLogWarning Screen', () => {

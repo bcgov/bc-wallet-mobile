@@ -1,6 +1,7 @@
 import { Agent, ConnectionRecord } from '@credo-ts/core'
 import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
 
+import { ChallengeResponseInfrastructureMessage } from '../services/attestation'
 export type DrpcResponsePromise = (responseTimeout: number) => Promise<DrpcResponse | undefined>
 
 export const sendDrpcRequest = async (
@@ -26,7 +27,7 @@ export const requestNonceDrpc = async (
 export const requestAttestationDrpc = async (
   agent: Agent,
   connectionRecord: ConnectionRecord,
-  params: any
+  params: ChallengeResponseInfrastructureMessage
 ): Promise<DrpcResponsePromise> => {
   const request: Partial<DrpcRequest> = {
     method: 'request_attestation',
