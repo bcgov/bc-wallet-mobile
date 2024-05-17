@@ -4,8 +4,11 @@ import {
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
 } from '@credo-ts/anoncreds'
-import { CredentialExchangeRecord } from '@credo-ts/core'
+
 import { Attribute, Predicate } from '@hyperledger/aries-oca/build/legacy'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
+import { CredentialExchangeRecord, ProofExchangeRecord, GetCredentialsForProofRequestReturn } from '@credo-ts/core'
+import { BifoldAgent } from '@hyperledger/aries-bifold-core'
 
 export type Fields = Record<string, AnonCredsRequestedAttributeMatch[] | AnonCredsRequestedPredicateMatch[]>
 
@@ -110,3 +113,75 @@ export const evaluatePredicates =
       return { ...predicate, satisfied }
     })
   }
+
+/**
+ * Determine the format of the proof request
+ *
+ * Setting `filterByNonRevocationRequirements` to `false` returns all credentials
+ * even if they are revokable and revoked.
+ *
+ * @param agent
+ * @param proofId
+ * @param filterByNonRevocationRequirements
+ * @returns The Anoncreds or Indy proof format object
+ */
+const formatForProofWithId = async (agent: BifoldAgent, proofId: string, filterByNonRevocationRequirements = false) => {
+  const format = await agent.proofs.getFormatData(proofId)
+  const proofIsAnoncredsFormat = format.request?.anoncreds !== undefined
+  const proofIsIndycredsFormat = format.request?.indy !== undefined
+  const proofFormats = {
+    // FIXME: AFJ will try to use the format, even if the value is undefined (but the key is present)
+    // We should ignore the key, if the value is undefined. For now this is a workaround.
+    ...(proofIsIndycredsFormat
+      ? {
+          indy: {
+            filterByNonRevocationRequirements,
+          },
+        }
+      : {}),
+
+    ...(proofIsAnoncredsFormat
+      ? {
+          anoncreds: {
+            filterByNonRevocationRequirements,
+          },
+        }
+      : {}),
+  }
+
+  if (!proofFormats) {
+    throw new Error('Unable to lookup proof request format')
+  }
+
+  return proofFormats
+}
+
+/**
+ * Check if existing credentials satisfy the proof request
+ *
+ * Detailed check if we have the necessary credentials to fulfill the
+ * proof request in the required format.
+ *
+ * @param agent The AFJ agent
+ * @param proof The proof request
+ * @param filterByNonRevocationRequirements Whether to filter by non-revocation requirements
+ * @returns Credentials that match the given proof request
+ * @throws {Error} Will throw an error if a problem looking up data occurs
+ */
+export const credentialsMatchForProof = async (
+  agent: BifoldAgent,
+  proof: ProofExchangeRecord,
+  filterByNonRevocationRequirements = true
+): Promise<GetCredentialsForProofRequestReturn> => {
+  const proofFormats = await formatForProofWithId(agent, proof.id, filterByNonRevocationRequirements)
+  const credentials = await agent.proofs.getCredentialsForRequest({
+    proofRecordId: proof.id,
+    proofFormats,
+  })
+
+  if (!credentials) {
+    throw new Error('Unable to lookup credentials for proof request')
+  }
+
+  return credentials
+}

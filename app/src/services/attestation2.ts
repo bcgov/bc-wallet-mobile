@@ -12,11 +12,9 @@ import {
   ConnectionRecord,
 } from '@credo-ts/core'
 import { Subscription } from 'rxjs'
-import { isProofRequestingAttestation, attestationCredentialRequired } from '../helpers/Attestation'
 import { BifoldError, EventTypes } from '@hyperledger/aries-bifold-core'
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 import { requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
-import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
 import {
   generateKey,
   appleAttestation,
@@ -25,6 +23,8 @@ import {
 } from '@hyperledger/aries-react-native-attestation'
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
+import { BifoldAgent } from '@hyperledger/aries-bifold-core'
+import { credentialsMatchForProof } from '../helpers/credentials'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 
@@ -33,18 +33,54 @@ export type AttestationMonitorOptions = {
   attestationCredDefIds: string[]
 }
 
-export enum AttestationEventTypes {
-  AttestationStarted = ' AttestationEvent.Started',
-  AttestationCompleted = ' AttestationEvent.Completed',
+export const AttestationEventTypes = {
+  Started: 'AttestationEvent.Started',
+  Completed: 'AttestationEvent.Completed',
+  Failed: 'AttestationEvent.Failed',
+} as const
+
+export interface AttestationCredentialFormat {
+  attributes: {
+    attestationInfo: []
+  }
+}
+
+interface IndyRequest {
+  indy: {
+    requested_attributes?: {
+      attestationInfo?: {
+        names: string[]
+        restrictions: { cred_def_id: string }[]
+      }
+    }
+  }
+}
+
+interface AnonCredsRequest {
+  anoncreds: {
+    requested_attributes?: {
+      attestationInfo?: {
+        names: string[]
+        restrictions: { cred_def_id: string }[]
+      }
+    }
+  }
+}
+
+interface AttestationProofRequestFormat {
+  request: IndyRequest & AnonCredsRequest
 }
 
 // type t = (key: string | Array<string>, options?: object) => string
 
-enum ErrorCodes {
-  AttestationBadInvitation = 2027,
-  AttestationReceiveInvitationError = 2028,
-  AttestationGeneralProofError = 2029,
-}
+const AttestationErrorCodes = {
+  BadInvitation: 2027,
+  ReceiveInvitationError: 2028,
+  GeneralProofError: 2029,
+  FailedToConnectToAttestationAgent: 2030,
+  FailedToFetchNonceForAttestation: 2031,
+  FailedToGenerateAttestation: 2032,
+} as const
 
 type AttestationResult = {
   status: 'success' | 'failure'
@@ -65,10 +101,6 @@ type ChallengeResponseInfrastructureMessage = InfrastructureMessage & {
   attestation_object: string
 }
 
-// The attestation code in BC Wallet was initially written as a PoC and
-// later got to working status under a time crunch. Here a few potential items that
-// could be refactored about the attestation code:
-
 // Move logic out of specific screens (PersonCredential screen) and into a centralized service
 // Add logic to get a new attestation credential if existing ones are older than some amount of time (14 days?)
 // Add logic to remove old attestation credentials
@@ -81,6 +113,7 @@ export class AttestationMonitor {
   private agent: Agent
   private options: AttestationMonitorOptions
   private log?: BaseLogger
+  public attestationWorkflowInProgress = false
 
   // take in options, agent, and logger. Options should include the attestation service URL
   // and the proof to watch for along with the cred_ef_id of the attestation credentials.
@@ -149,14 +182,15 @@ export class AttestationMonitor {
     // TODO(jl): wrap in try catch
 
     // 1. Is the proof requesting an attestation credential
-    if (!(await isProofRequestingAttestation(proof, this.agent))) {
+    if (!(await this.isProofRequestingAttestation(proof, this.agent))) {
       return
     }
 
     this.log?.info('Proof is requesting attestation')
 
-    // 2. Does the wallet have a valid attestation credential
-    const required = await attestationCredentialRequired(this.agent, proof.id)
+    // 2. Does the wallet have a valid attestation credential that will
+    // satisfy the proof request?
+    const required = await this.attestationCredentialRequired(this.agent, proof.id)
 
     // 3. If yes, do nothing
     if (!required) {
@@ -172,29 +206,42 @@ export class AttestationMonitor {
   public fetchAttestationCredential = async () => {
     this.log?.info('Fetching attestation credential')
 
-    DeviceEventEmitter.emit(AttestationEventTypes.AttestationStarted)
+    this.attestationWorkflowInProgress = true
+    DeviceEventEmitter.emit(AttestationEventTypes.Started)
 
     try {
       const connection = await this.connectToAttestationAgent()
       if (!connection) {
+        this.attestationWorkflowInProgress = false
+        const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToConnectToAttestationAgent)
+        DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
+
         return
       }
 
       const nonce = await this.fetchNonceForAttestation(connection)
       if (!nonce) {
+        this.attestationWorkflowInProgress = false
+        const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToFetchNonceForAttestation)
+        DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
+
         return
       }
 
       const attestationObj = await this.generateAttestation(nonce)
       if (!attestationObj) {
+        this.attestationWorkflowInProgress = false
+        const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToGenerateAttestation)
+        DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
+
         return
       }
 
       const result = this.requestAttestation(connection, attestationObj)
 
-      DeviceEventEmitter.emit(AttestationEventTypes.AttestationCompleted, result)
+      DeviceEventEmitter.emit(AttestationEventTypes.Completed, result)
     } catch (error) {
-      console.log('*****************4', error)
+      this.attestationWorkflowInProgress = false
     }
   }
 
@@ -203,7 +250,7 @@ export class AttestationMonitor {
       const invite = await this.agent.oob.parseInvitation(this.options.attestationInviteUrl)
 
       if (!invite) {
-        const err = new BifoldError('Problem', 'Reason', '', ErrorCodes.AttestationBadInvitation)
+        const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.BadInvitation)
         DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
 
         return
@@ -215,7 +262,7 @@ export class AttestationMonitor {
       this.log?.info('Receiving invitation')
       const { connectionRecord } = await this.agent.oob.receiveInvitation(invite)
       if (!connectionRecord) {
-        const err = new BifoldError('Title', 'Problem', '', ErrorCodes.AttestationReceiveInvitationError)
+        const err = new BifoldError('Title', 'Problem', '', AttestationErrorCodes.ReceiveInvitationError)
         DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
 
         return
@@ -225,7 +272,7 @@ export class AttestationMonitor {
       // the traction instance which is why we need to `removeExistingInvitationIfRequired` above
       return await this.agent.connections.returnWhenIsConnected(connectionRecord.id)
     } catch (error) {
-      const err = new BifoldError('Title', 'Problem', '', ErrorCodes.AttestationGeneralProofError)
+      const err = new BifoldError('Title', 'Problem', '', AttestationErrorCodes.GeneralProofError)
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
 
       return
@@ -332,5 +379,42 @@ export class AttestationMonitor {
     this.log?.info('On-device Google attestation complete')
 
     return attestationResponse
+  }
+
+  private isProofRequestingAttestation = async (proof: ProofExchangeRecord, agent: BifoldAgent): Promise<boolean> => {
+    const { attestationCredDefIds } = this.options
+    const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
+    const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
+
+    return !!format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions?.some((rstr) =>
+      attestationCredDefIds.includes(rstr.cred_def_id)
+    )
+  }
+
+  private attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
+    agent.config.logger.info('Attestation: fetching proof by id')
+    const proof = await agent?.proofs.getById(proofId)
+    agent.config.logger.info('Attestation: second check if proof is requesting attestation')
+    const isAttestation = await this.isProofRequestingAttestation(proof, agent)
+
+    if (!isAttestation) {
+      return false
+    }
+
+    agent.config.logger.info('Attestation: checking if credentials match for proof request')
+    const credentials = await credentialsMatchForProof(agent, proof)
+
+    if (!credentials) {
+      return true
+    }
+
+    // TODO:(jl) Should we be checking the length of the attributes matches some
+    // expected length in the proof request?
+    const format = (credentials.proofFormats.anoncreds ?? credentials.proofFormats.indy) as AttestationCredentialFormat
+    if (format) {
+      return format.attributes.attestationInfo.length === 0
+    }
+
+    return false
   }
 }
