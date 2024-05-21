@@ -364,16 +364,16 @@ export class AttestationMonitor {
   }
 
   private attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
-    agent.config.logger.info('Attestation: fetching proof by id')
+    agent.config.logger.info('Fetching proof by id')
     const proof = await agent?.proofs.getById(proofId)
-    agent.config.logger.info('Attestation: second check if proof is requesting attestation')
+    agent.config.logger.info('Second check if proof is requesting attestation')
     const isAttestation = await isProofRequestingAttestation(proof, agent, this.options.attestationCredDefIds)
 
     if (!isAttestation) {
       return false
     }
 
-    agent.config.logger.info('Attestation: checking if credentials match for proof request')
+    agent.config.logger.info('Checking if credentials match for proof request')
     const credentials = await credentialsMatchForProof(agent, proof)
 
     if (!credentials) {
