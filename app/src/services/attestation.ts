@@ -24,13 +24,7 @@ import { Subscription } from 'rxjs'
 
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 import { credentialsMatchForProof } from '../helpers/credentials'
-import {
-  RequestIssuanceInfrastructureMessage,
-  ChallengeResponseInfrastructureMessage,
-  AttestationResult,
-  requestNonceDrpc,
-  requestAttestationDrpc,
-} from '../helpers/drpc'
+import { AttestationRequestParams, AttestationResult, requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 
@@ -281,34 +275,29 @@ export class AttestationMonitor {
     this.log?.info('Requesting nonce from controller')
 
     const requestNonceCb = await requestNonceDrpc(this.agent, connection)
-
-    // {"jsonrpc":"2.0","result":{"nonce":"abc123"},"id":337401}
     const nonceResponse = await requestNonceCb(defaultResponseTimeoutInMs)
 
     this.log?.info('DRPC nonce response received')
 
-    const nonce = nonceResponse?.result?.nonce
+    const nonce = nonceResponse.result.nonce
 
     return nonce
   }
 
   private async requestAttestation(
     connection: ConnectionRecord,
-    attestationObj: ChallengeResponseInfrastructureMessage
+    attestationObj: AttestationRequestParams
   ): Promise<AttestationResult> {
     this.log?.info('Requesting attestation credential from controller')
 
     const requestAttestationCb = await requestAttestationDrpc(this.agent, connection, attestationObj)
-    // {"jsonrpc":"2.0","result":{"status":"success"},"id":997408}
     const attestationResponse = await requestAttestationCb(defaultResponseTimeoutInMs)
 
-    return attestationResponse?.result
+    return attestationResponse.result
   }
 
-  // TODO(jl): The types probably need to be renamed
-  // common `AttestationMessageComponent`?
-  private commonInfrastructureMessageComponent() {
-    const common: Partial<ChallengeResponseInfrastructureMessage> = {
+  private commonAttestationMessageComponent() {
+    const common: Partial<AttestationRequestParams> = {
       app_version: `${getVersion()}-${getBuildNumber()}`,
       os_version: `${getSystemName()} ${getSystemVersion()}`,
     }
@@ -330,33 +319,28 @@ export class AttestationMonitor {
   }
 
   private async generateAppleAttestation(nonce: string) {
-    const infraMessage = { nonce }
-    const common = this.commonInfrastructureMessageComponent()
+    const common = this.commonAttestationMessageComponent()
     const shouldCacheKey = false
 
     this.log?.info('Generating key for Apple')
     const keyId = await generateKey(shouldCacheKey)
 
     this.log?.info('Using Apple on-device attestation')
-    const attestationAsBuffer = await appleAttestation(
-      keyId,
-      (infraMessage as RequestIssuanceInfrastructureMessage).nonce
-    )
-    const attestationResponse = {
+    const attestationAsBuffer = await appleAttestation(keyId, nonce)
+    const attestationRequest = {
       ...common,
       platform: 'apple',
       key_id: keyId,
       attestation_object: attestationAsBuffer.toString('base64'),
-    } as ChallengeResponseInfrastructureMessage
+    } as AttestationRequestParams
 
     this.log?.info('On-device Apple attestation complete')
 
-    return attestationResponse
+    return attestationRequest
   }
 
   private async generateGoogleAttestation(nonce: string) {
-    const infraMessage = { nonce }
-    const common = this.commonInfrastructureMessageComponent()
+    const common = this.commonAttestationMessageComponent()
 
     this.log?.info('Checking if Play Integrity is available')
 
@@ -367,16 +351,16 @@ export class AttestationMonitor {
 
     this.log?.info('Using Google on-device attestation')
 
-    const tokenString = await googleAttestation((infraMessage as RequestIssuanceInfrastructureMessage).nonce)
-    const attestationResponse = {
+    const tokenString = await googleAttestation(nonce)
+    const attestationRequest = {
       ...common,
       platform: 'google',
       attestation_object: tokenString,
-    } as ChallengeResponseInfrastructureMessage
+    } as AttestationRequestParams
 
     this.log?.info('On-device Google attestation complete')
 
-    return attestationResponse
+    return attestationRequest
   }
 
   private attestationCredentialRequired = async (agent: BifoldAgent, proofId: string): Promise<boolean> => {
