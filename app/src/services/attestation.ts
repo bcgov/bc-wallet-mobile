@@ -130,6 +130,56 @@ export class AttestationMonitor {
     this.offerSubscription?.unsubscribe()
   }
 
+  public fetchAttestationCredential = async () => {
+    this.log?.info('Fetching attestation credential')
+
+    this._attestationWorkflowInProgress = true
+    DeviceEventEmitter.emit(AttestationEventTypes.Started)
+
+    try {
+      const connection = await this.connectToAttestationAgent()
+      if (!connection) {
+        throw new BifoldError(
+          'Attestation Service',
+          'Unable to connect to the attestation service.',
+          '',
+          AttestationErrorCodes.FailedToConnectToAttestationAgent
+        )
+      }
+
+      const nonce = await this.fetchNonceForAttestation(connection)
+      if (!nonce) {
+        throw new BifoldError(
+          'Attestation Service',
+          'There was a problem with the attestation service.',
+          '',
+          AttestationErrorCodes.FailedToFetchNonceForAttestation
+        )
+      }
+
+      const attestationObj = await this.generateAttestation(nonce)
+      if (!attestationObj) {
+        throw new BifoldError(
+          'Attestation Service',
+          'There was a problem with the attestation service.',
+          '',
+          AttestationErrorCodes.FailedToGenerateAttestation
+        )
+      }
+
+      const result = this.requestAttestation(connection, attestationObj)
+
+      DeviceEventEmitter.emit(AttestationEventTypes.Completed, result)
+    } catch (error) {
+      this._attestationWorkflowInProgress = false
+      DeviceEventEmitter.emit(AttestationEventTypes.Completed, error)
+
+      this.log?.error('Failed to fetch attestation credential', error as Error)
+
+      throw error
+    }
+  }
+
   private handleCredentialOfferReceived = async (event: BaseEvent) => {
     const { credentialRecord } = event.payload
     const credential = credentialRecord as CredentialExchangeRecord
@@ -158,6 +208,8 @@ export class AttestationMonitor {
       }
     } catch (error) {
       this.log?.error('Failed to handle credential offer', error as Error)
+
+      // throw error
     }
   }
 
@@ -171,104 +223,65 @@ export class AttestationMonitor {
 
     this.log?.info('Checking if proof is requesting attestation')
 
-    // TODO(jl): wrap in try catch
-
-    // 1. Is the proof requesting an attestation credential
-    if (!(await isProofRequestingAttestation(proof, this.agent, this.options.attestationCredDefIds))) {
-      return
-    }
-
-    this.log?.info('Proof is requesting attestation')
-
-    // 2. Does the wallet have a valid attestation credential that will
-    // satisfy the proof request?
-    const required = await this.attestationCredentialRequired(this.agent, proof.id)
-
-    // 3. If yes, do nothing
-    if (!required) {
-      this.log?.info('Valid credentials already exist, nothing to do')
-
-      return
-    }
-
-    // 4. If no, get a new attestation credential
-    await this.fetchAttestationCredential()
-  }
-
-  public fetchAttestationCredential = async () => {
-    this.log?.info('Fetching attestation credential')
-
-    this._attestationWorkflowInProgress = true
-    DeviceEventEmitter.emit(AttestationEventTypes.Started)
-
     try {
-      const connection = await this.connectToAttestationAgent()
-      if (!connection) {
-        this._attestationWorkflowInProgress = false
-        const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToConnectToAttestationAgent)
-        DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
+      // 1. Is the proof requesting an attestation credential
+      if (!(await isProofRequestingAttestation(proof, this.agent, this.options.attestationCredDefIds))) {
+        return
+      }
+
+      this.log?.info('Proof is requesting attestation')
+
+      // 2. Does the wallet have a valid attestation credential that will
+      // satisfy the proof request?
+      const required = await this.attestationCredentialRequired(this.agent, proof.id)
+
+      // 3. If yes, do nothing
+      if (!required) {
+        this.log?.info('Valid credentials already exist, nothing to do')
 
         return
       }
 
-      const nonce = await this.fetchNonceForAttestation(connection)
-      if (!nonce) {
-        this._attestationWorkflowInProgress = false
-        const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToFetchNonceForAttestation)
-        DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
-
-        return
-      }
-
-      const attestationObj = await this.generateAttestation(nonce)
-      if (!attestationObj) {
-        this._attestationWorkflowInProgress = false
-        const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.FailedToGenerateAttestation)
-        DeviceEventEmitter.emit(AttestationEventTypes.Failed, err)
-
-        return
-      }
-
-      const result = this.requestAttestation(connection, attestationObj)
-
-      DeviceEventEmitter.emit(AttestationEventTypes.Completed, result)
+      // 4. If no, get a new attestation credential
+      await this.fetchAttestationCredential()
     } catch (error) {
-      this._attestationWorkflowInProgress = false
+      this.log?.error('Failed to handle proof', error as Error)
+
+      // throw error
     }
   }
 
   private async connectToAttestationAgent(): Promise<ConnectionRecord | undefined> {
-    try {
-      const invite = await this.agent.oob.parseInvitation(this.options.attestationInviteUrl)
+    const invite = await this.agent.oob.parseInvitation(this.options.attestationInviteUrl)
 
-      if (!invite) {
-        const err = new BifoldError('Problem', 'Reason', '', AttestationErrorCodes.BadInvitation)
-        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
+    if (!invite) {
+      this.log?.error('Unable to parse attestation agent invitation')
 
-        return
-      }
-
-      this.log?.info('Removing existing invitation if required')
-      await removeExistingInvitationIfRequired(this.agent, invite.id)
-
-      this.log?.info('Receiving invitation')
-      const { connectionRecord } = await this.agent.oob.receiveInvitation(invite)
-      if (!connectionRecord) {
-        const err = new BifoldError('Title', 'Problem', '', AttestationErrorCodes.ReceiveInvitationError)
-        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
-
-        return
-      }
-
-      // this step will fail if there is more than one active connection record between a given wallet and
-      // the traction instance which is why we need to `removeExistingInvitationIfRequired` above
-      return await this.agent.connections.returnWhenIsConnected(connectionRecord.id)
-    } catch (error) {
-      const err = new BifoldError('Title', 'Problem', '', AttestationErrorCodes.GeneralProofError)
-      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, err)
-
-      return
+      throw new BifoldError(
+        'Attestation Service',
+        'Unable to parse the attestation agent invitation',
+        '',
+        AttestationErrorCodes.BadInvitation
+      )
     }
+
+    this.log?.info('Removing existing invitation if required')
+    await removeExistingInvitationIfRequired(this.agent, invite.id)
+
+    this.log?.info('Receiving invitation')
+    const { connectionRecord } = await this.agent.oob.receiveInvitation(invite)
+    if (!connectionRecord) {
+      throw new BifoldError(
+        'Attestation Service',
+        'Unable to accept attestation agent invitation',
+        '',
+        AttestationErrorCodes.BadInvitation
+      )
+    }
+
+    // this step will fail if there is more than one active connection record between a given wallet and
+    // the traction instance which is why we need to `removeExistingInvitationIfRequired` above
+    return await this.agent.connections.returnWhenIsConnected(connectionRecord.id)
   }
 
   private async fetchNonceForAttestation(connection: ConnectionRecord): Promise<string> {
@@ -278,6 +291,19 @@ export class AttestationMonitor {
     const nonceResponse = await requestNonceCb(defaultResponseTimeoutInMs)
 
     this.log?.info('DRPC nonce response received')
+
+    if (nonceResponse.error) {
+      this.log?.error(
+        `Failed to fetch nonce for attestation, code = ${nonceResponse.error.code}, reason = ${nonceResponse.error.message}`
+      )
+
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        '', // no nerdy details
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
 
     const nonce = nonceResponse.result.nonce
 
@@ -292,6 +318,18 @@ export class AttestationMonitor {
 
     const requestAttestationCb = await requestAttestationDrpc(this.agent, connection, attestationObj)
     const attestationResponse = await requestAttestationCb(defaultResponseTimeoutInMs)
+    if (attestationResponse.error) {
+      this.log?.error(
+        `Failed to request attestation, code = ${attestationResponse.error.code}, reason = ${attestationResponse.error.message}`
+      )
+
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        '', // no nerdy details
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
 
     return attestationResponse.result
   }

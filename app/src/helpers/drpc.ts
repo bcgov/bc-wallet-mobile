@@ -1,5 +1,5 @@
 import { Agent, ConnectionRecord } from '@credo-ts/core'
-import { DrpcRequest, DrpcResponse } from '@credo-ts/drpc'
+import { DrpcRequest, DrpcResponse, DrpcResponseObject } from '@credo-ts/drpc'
 
 export type DrpcResponsePromise<T> = (responseTimeout: number) => Promise<T>
 
@@ -11,7 +11,7 @@ export type AttestationRequestParams = {
   key_id?: string // Apple only
 }
 
-export type NonceDrpcResponse = DrpcResponse & {
+export type NonceDrpcResponse = DrpcResponseObject & {
   result?: {
     nonce: string
   }
@@ -21,7 +21,7 @@ export type AttestationResult = {
   status: 'success' | 'failure'
 }
 
-export type AttestationDrpcResponse = DrpcResponse & {
+export type AttestationDrpcResponse = DrpcResponseObject & {
   result?: AttestationResult
 }
 
