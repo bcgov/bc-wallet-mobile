@@ -36,7 +36,9 @@ export type AttestationMonitorOptions = {
 export const AttestationEventTypes = {
   Started: 'AttestationEvent.Started',
   Completed: 'AttestationEvent.Completed',
-  Failed: 'AttestationEvent.Failed',
+  FailedHandleOffer: 'AttestationEvent.FailedHandleOffer',
+  FailedHandleProof: 'AttestationEvent.FailedHandleProof',
+  FailedRequestCredential: 'AttestationEvent.FailedRequestCredential',
 } as const
 
 export interface AttestationCredentialFormat {
@@ -130,7 +132,7 @@ export class AttestationMonitor {
     this.offerSubscription?.unsubscribe()
   }
 
-  public fetchAttestationCredential = async () => {
+  public requestAttestationCredential = async () => {
     this.log?.info('Fetching attestation credential')
 
     this._attestationWorkflowInProgress = true
@@ -172,11 +174,9 @@ export class AttestationMonitor {
       DeviceEventEmitter.emit(AttestationEventTypes.Completed, result)
     } catch (error) {
       this._attestationWorkflowInProgress = false
-      DeviceEventEmitter.emit(AttestationEventTypes.Completed, error)
-
       this.log?.error('Failed to fetch attestation credential', error as Error)
 
-      throw error
+      DeviceEventEmitter.emit(AttestationEventTypes.FailedRequestCredential, error)
     }
   }
 
@@ -209,7 +209,7 @@ export class AttestationMonitor {
     } catch (error) {
       this.log?.error('Failed to handle credential offer', error as Error)
 
-      // throw error
+      DeviceEventEmitter.emit(AttestationEventTypes.FailedHandleOffer, error)
     }
   }
 
@@ -243,11 +243,11 @@ export class AttestationMonitor {
       }
 
       // 4. If no, get a new attestation credential
-      await this.fetchAttestationCredential()
+      await this.requestAttestationCredential()
     } catch (error) {
       this.log?.error('Failed to handle proof', error as Error)
 
-      // throw error
+      DeviceEventEmitter.emit(AttestationEventTypes.FailedHandleProof, error)
     }
   }
 
