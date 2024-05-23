@@ -49,6 +49,10 @@
                         {
                            "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2",
                            "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
+                        },
+                        {
+                           "schema_id": "did:indy:bcovrin:test:QEquAHkM35w4XVT3Ku5yat/anoncreds/v0/SCHEMA/Person/1.2",
+                           "issuer_did": "did:indy:bcovrin:test:QEquAHkM35w4XVT3Ku5yat"
                         }
                      ],
                      "nonRevoked": {
