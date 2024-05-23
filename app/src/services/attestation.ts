@@ -11,7 +11,7 @@ import {
   BaseLogger,
   ConnectionRecord,
 } from '@credo-ts/core'
-import { BifoldError, EventTypes, BifoldAgent } from '@hyperledger/aries-bifold-core'
+import { BifoldError, BifoldAgent } from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
   appleAttestation,
@@ -144,7 +144,7 @@ export class AttestationMonitor {
         throw new BifoldError(
           'Attestation Service',
           'Unable to connect to the attestation service.',
-          '',
+          'No details provided.',
           AttestationErrorCodes.FailedToConnectToAttestationAgent
         )
       }
@@ -154,7 +154,7 @@ export class AttestationMonitor {
         throw new BifoldError(
           'Attestation Service',
           'There was a problem with the attestation service.',
-          '',
+          'No details provided.',
           AttestationErrorCodes.FailedToFetchNonceForAttestation
         )
       }
@@ -164,7 +164,7 @@ export class AttestationMonitor {
         throw new BifoldError(
           'Attestation Service',
           'There was a problem with the attestation service.',
-          '',
+          'No details provided.',
           AttestationErrorCodes.FailedToGenerateAttestation
         )
       }
@@ -260,7 +260,7 @@ export class AttestationMonitor {
       throw new BifoldError(
         'Attestation Service',
         'Unable to parse the attestation agent invitation',
-        '',
+        'No details provided.',
         AttestationErrorCodes.BadInvitation
       )
     }
@@ -274,7 +274,7 @@ export class AttestationMonitor {
       throw new BifoldError(
         'Attestation Service',
         'Unable to accept attestation agent invitation',
-        '',
+        'No details provided.',
         AttestationErrorCodes.BadInvitation
       )
     }
@@ -300,7 +300,7 @@ export class AttestationMonitor {
       throw new BifoldError(
         'Attestation Service',
         'There was a problem with the remote attestation service.',
-        '', // no nerdy details
+        nonceResponse.error.message ?? 'No details provided.',
         AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }
@@ -326,7 +326,7 @@ export class AttestationMonitor {
       throw new BifoldError(
         'Attestation Service',
         'There was a problem with the remote attestation service.',
-        '', // no nerdy details
+        attestationResponse.error.message ?? 'No details provided.',
         AttestationErrorCodes.FailedToFetchNonceForAttestation
       )
     }

@@ -1,8 +1,8 @@
 import { useAgent } from '@credo-ts/react-hooks'
-import { useStore, useContainer, TOKENS } from '@hyperledger/aries-bifold-core'
+import { useStore, useContainer, TOKENS, BifoldError } from '@hyperledger/aries-bifold-core'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 // import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter } from 'react-native'
+import { DeviceEventEmitter, EmitterSubscription } from 'react-native'
 
 import { attestationCredDefIds } from '../constants'
 import { AttestationMonitor, AttestationEventTypes } from '../services/attestation'
@@ -30,9 +30,20 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
   const [loading, setLoading] = useState(false)
   let am: AttestationMonitor | undefined = undefined
 
-  DeviceEventEmitter.addListener(AttestationEventTypes.Started, () => setLoading(true))
-  DeviceEventEmitter.addListener(AttestationEventTypes.Completed, () => setLoading(false))
-  DeviceEventEmitter.addListener(AttestationEventTypes.Failed, () => setLoading(false))
+  useEffect(() => {
+    const subscriptions = Array<EmitterSubscription>()
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Started, () => setLoading(true)))
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Completed, () => setLoading(false)))
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, () => setLoading(false)))
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, () => setLoading(false)))
+    subscriptions.push(
+      DeviceEventEmitter.addListener(AttestationEventTypes.FailedRequestCredential, () => setLoading(false))
+    )
+
+    return () => {
+      subscriptions.forEach((subscription) => subscription.remove())
+    }
+  }, [])
 
   useEffect(() => {
     if (!agent) {

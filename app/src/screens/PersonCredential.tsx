@@ -12,13 +12,26 @@ import {
   Stacks,
   InfoTextBox,
   Link,
+  BifoldError,
+  EventTypes as BifoldEventTypes,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native'
+import {
+  DeviceEventEmitter,
+  EmitterSubscription,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Linking,
+  Platform,
+  ScrollView,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { AttestationEventTypes } from '../services/attestation'
 
 import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
@@ -146,6 +159,22 @@ export default function PersonCredential() {
     isBCServicesCardInstalled().then((result) => {
       setAppInstalled(result)
     })
+
+    const handleFailedAttestation = (error: BifoldError) => {
+      navigation.goBack()
+      DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+    }
+
+    const subscriptions = Array<EmitterSubscription>()
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, handleFailedAttestation))
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, handleFailedAttestation))
+    subscriptions.push(
+      DeviceEventEmitter.addListener(AttestationEventTypes.FailedRequestCredential, handleFailedAttestation)
+    )
+
+    return () => {
+      subscriptions.forEach((subscription) => subscription.remove())
+    }
   }, [])
 
   const acceptPersonCredentialOffer = useCallback(() => {
@@ -169,6 +198,7 @@ export default function PersonCredential() {
           const proofRequest = receivedProofRequests.find(
             (proof) => proof.connectionId === remoteAgentDetails.connectionId
           )
+
           if (!proofRequest) {
             // No proof from our IAS Agent to respond to, do nothing.
             agent.config.logger.info(
