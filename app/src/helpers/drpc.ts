@@ -1,5 +1,5 @@
 import { Agent, ConnectionRecord } from '@credo-ts/core'
-import { DrpcRequest, DrpcResponse, DrpcResponseObject } from '@credo-ts/drpc'
+import { DrpcRequest, DrpcResponseObject } from '@credo-ts/drpc'
 
 export type DrpcResponsePromise<T> = (responseTimeout: number) => Promise<T>
 

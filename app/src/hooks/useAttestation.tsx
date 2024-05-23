@@ -1,5 +1,5 @@
 import { useAgent } from '@credo-ts/react-hooks'
-import { useStore, useContainer, TOKENS, BifoldError } from '@hyperledger/aries-bifold-core'
+import { useStore, useContainer, TOKENS } from '@hyperledger/aries-bifold-core'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 // import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, EmitterSubscription } from 'react-native'
