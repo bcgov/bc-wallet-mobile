@@ -14,6 +14,8 @@ import {
   Link,
   BifoldError,
   EventTypes as BifoldEventTypes,
+  TOKENS,
+  useContainer,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState, useCallback, useEffect, useRef } from 'react'
@@ -62,6 +64,7 @@ export default function PersonCredential() {
   const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
   const timer = useRef<NodeJS.Timeout>()
+  const logger = useContainer().resolve(TOKENS.UTIL_LOGGER)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -130,13 +133,13 @@ export default function PersonCredential() {
 
   // Use this function to accept the attestation proof request.
   const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
-    agent.config.logger.info('Attestation: selecting credentials for Person proof request')
+    logger.info('Attestation: selecting credentials for Person proof request')
     // This will throw if we don't have the necessary credentials
     const credentials = await agent.proofs.selectCredentialsForRequest({
       proofRecordId: proofRequest.id,
     })
 
-    agent.config.logger.info('Attestation: accepting Person proof request')
+    logger.info('Attestation: accepting Person proof request')
     await agent.proofs.acceptRequest({
       proofRecordId: proofRequest.id,
       proofFormats: credentials.proofFormats,
@@ -200,7 +203,7 @@ export default function PersonCredential() {
 
           if (!proofRequest) {
             // No proof from our IAS Agent to respond to, do nothing.
-            agent.config.logger.info(
+            logger.info(
               `Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`
             )
 
@@ -208,10 +211,10 @@ export default function PersonCredential() {
           }
         }, attestationProofRequestWaitTimeout)
 
-        agent.config.logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
+        logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
       })
       .catch((error) => {
-        agent.config.logger.error(`Failed to connect to IAS agent, error: ${error.message}`)
+        logger.error(`Failed to connect to IAS agent, error: ${error.message}`)
       })
   }, [])
 
@@ -239,11 +242,11 @@ export default function PersonCredential() {
           // We can unblock the workflow and proceed with
           // authentication.
           setDidCompleteAttestationProofRequest(status)
-          agent.config.logger.info(`Accepted IAS attestation proof request with status: ${status}`)
+          logger.info(`Accepted IAS attestation proof request with status: ${status}`)
         })
         .catch((error) => {
           setDidCompleteAttestationProofRequest(false)
-          agent.config.logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
+          logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
         })
     }
   }, [attestationLoading, receivedProofRequests, remoteAgentDetails, agent])
