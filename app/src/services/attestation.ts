@@ -82,6 +82,7 @@ const AttestationErrorCodes = {
   FailedToConnectToAttestationAgent: 2030,
   FailedToFetchNonceForAttestation: 2031,
   FailedToGenerateAttestation: 2032,
+  FailedToRequestAttestation: 2033,
 } as const
 
 export const isProofRequestingAttestation = async (
@@ -290,6 +291,17 @@ export class AttestationMonitor {
     const requestNonceCb = await requestNonceDrpc(this.agent, connection)
     const nonceResponse = await requestNonceCb(defaultResponseTimeoutInMs)
 
+    if (!nonceResponse) {
+      this.log?.error('Failed to fetch nonce for attestation, code = none, reason = timeout occurred.')
+
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        'Timeout occurred.',
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
+
     this.log?.info('DRPC nonce response received')
 
     if (nonceResponse.error) {
@@ -318,6 +330,20 @@ export class AttestationMonitor {
 
     const requestAttestationCb = await requestAttestationDrpc(this.agent, connection, attestationObj)
     const attestationResponse = await requestAttestationCb(defaultResponseTimeoutInMs)
+
+    if (!attestationResponse) {
+      this.log?.error('Failed to request attestation, code = none, reason = timeout occurred.')
+
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        'Timeout occurred.',
+        AttestationErrorCodes.FailedToRequestAttestation
+      )
+    }
+
+    this.log?.info('DRPC attestation response received')
+
     if (attestationResponse.error) {
       this.log?.error(
         `Failed to request attestation, code = ${attestationResponse.error.code}, reason = ${attestationResponse.error.message}`
@@ -327,7 +353,7 @@ export class AttestationMonitor {
         'Attestation Service',
         'There was a problem with the remote attestation service.',
         attestationResponse.error.message ?? 'No details provided.',
-        AttestationErrorCodes.FailedToFetchNonceForAttestation
+        AttestationErrorCodes.FailedToRequestAttestation
       )
     }
 
