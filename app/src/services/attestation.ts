@@ -94,7 +94,7 @@ export const isProofRequestingAttestation = async (
   const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
 
   return !!format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions?.some((rstr) =>
-    attestationCredDefIds.includes(rstr.cred_def_id)
+    attestationCredDefIds ? attestationCredDefIds.includes(rstr.cred_def_id) : false
   )
 }
 
