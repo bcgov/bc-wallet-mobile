@@ -28,8 +28,8 @@ export type AttestationDrpcResponse = DrpcResponseObject & {
 // These are the methods that the DRPC server supports. They
 // should map to a handler on the controller.
 const DrpcMethod = {
-  RequestNonce: 'request_nonce',
-  RequestAttestation: 'request_attestation',
+  RequestNonceV2: 'request_nonce_v2',
+  RequestAttestationV2: 'request_attestation_v2',
 } as const
 
 export const sendDrpcRequest = async (
@@ -48,7 +48,7 @@ export const requestNonceDrpc = async (
   connectionRecord: ConnectionRecord
 ): Promise<DrpcResponsePromise<NonceDrpcResponse>> => {
   const request: Partial<DrpcRequest> = {
-    method: DrpcMethod.RequestNonce,
+    method: DrpcMethod.RequestNonceV2,
   }
 
   return await sendDrpcRequest(agent, connectionRecord.id, request)
@@ -60,7 +60,7 @@ export const requestAttestationDrpc = async (
   params: AttestationRequestParams
 ): Promise<DrpcResponsePromise<AttestationDrpcResponse>> => {
   const request: Partial<DrpcRequest> = {
-    method: DrpcMethod.RequestAttestation,
+    method: DrpcMethod.RequestAttestationV2,
     params,
   }
 
