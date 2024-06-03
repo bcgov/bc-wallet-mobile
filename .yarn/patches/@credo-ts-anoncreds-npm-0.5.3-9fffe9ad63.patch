@@ -1,5 +1,5 @@
 diff --git a/build/formats/AnonCredsCredentialFormatService.js b/build/formats/AnonCredsCredentialFormatService.js
-index 32b00024498dab50a3482df27e6f97671009678e..03ff3ac13977262d77b2fba48cf111ec7a31b30a 100644
+index 32b00024498dab50a3482df27e6f97671009678e..ab0ba692cad260e902b9a5746e0632f362ef6b30 100644
 --- a/build/formats/AnonCredsCredentialFormatService.js
 +++ b/build/formats/AnonCredsCredentialFormatService.js
 @@ -203,7 +203,7 @@ class AnonCredsCredentialFormatService {
@@ -19,12 +19,12 @@ index 32b00024498dab50a3482df27e6f97671009678e..03ff3ac13977262d77b2fba48cf111ec
 +        // If the credential is revocable, store the revocation identifiers in the credential record
 +        if (credential.rev_reg_id) {
 +            credentialRecord.metadata.add<AnonCredsCredentialMetadata>(AnonCredsCredentialMetadataKey, {
-+            revocationRegistryId: revocationRegistryDefinitionId ?? undefined,
-+            credentialRevocationId: credentialRevocationId ?? undefined,
++                revocationRegistryId: revocationRegistryDefinitionId ?? undefined,
++                credentialRevocationId: credentialRevocationId ?? undefined,
 +            })
 +            credentialRecord.setTags({
-+            anonCredsRevocationRegistryId: revocationRegistryDefinitionId,
-+            anonCredsCredentialRevocationId: credentialRevocationId,
++                anonCredsRevocationRegistryId: revocationRegistryDefinitionId,
++                anonCredsCredentialRevocationId: credentialRevocationId,
 +            })
 +        }
 +
@@ -52,24 +52,39 @@ index 05f6bfef79ed716036430de6903348c11675a131..0f09bd59b8db5243e082a3f093d23bea
              });
          }
 diff --git a/build/updates/0.4-0.5/anonCredsCredentialRecord.js b/build/updates/0.4-0.5/anonCredsCredentialRecord.js
-index 915dffae9bd592aa489ef8ce5c31c9d3a8ce2ec3..b34aadfa008c6e5035823efbf139a044a8cabb24 100644
+index 915dffae9bd592aa489ef8ce5c31c9d3a8ce2ec3..559ae3352106e063ec7da045054bed096148fb2f 100644
 --- a/build/updates/0.4-0.5/anonCredsCredentialRecord.js
 +++ b/build/updates/0.4-0.5/anonCredsCredentialRecord.js
-@@ -112,6 +112,14 @@ async function migrateLegacyToW3cCredential(agentContext, legacyRecord) {
+@@ -112,6 +112,16 @@ async function migrateLegacyToW3cCredential(agentContext, legacyRecord) {
                  credentialRecordType: 'w3c',
                  credentialRecordId: w3cCredentialRecord.id,
              };
-+            // If using unqualified dids, store both qualified/unqualified revRegId forms
++            // If using Indy dids, store both qualified/unqualified revRegId forms
 +            // to allow retrieving it from revocation notification service
 +            if (legacyTags.revocationRegistryId && indyNamespace) {
++                const { credentialDefinitionTag, namespaceIdentifier, revocationRegistryTag, schemaSeqNo } =
++                    (0, indyIdentifiers_1.parseIndyRevocationRegistryId)(legacyTags.revocationRegistryId)
 +                relatedCredentialExchangeRecord.setTags({
 +                    anonCredsRevocationRegistryId: (0, indyIdentifiers_1.getQualifiedDidIndyDid)(legacyTags.revocationRegistryId, indyNamespace),
-+                    anonCredsUnqualifiedRevocationRegistryId: (0, indyIdentifiers_1.getUnQualifiedDidIndyDid)(legacyTags.revocationRegistryId),
++                    anonCredsUnqualifiedRevocationRegistryId: (0, indyIdentifiers_1.getUnqualifiedRevocationRegistryDefinitionId)(namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag),
 +                })
 +            }
              await credentialExchangeRepository.update(agentContext, relatedCredentialExchangeRecord);
          }
      }
+@@ -130,11 +140,11 @@ async function storeAnonCredsInW3cFormatV0_5(agent) {
+         try {
+             await migrateLegacyToW3cCredential(agent.context, record);
+             await anoncredsRepository.delete(agent.context, record);
++            agent.config.logger.debug(`Successfully migrated w3c credential record with id ${record.id} to storage version 0.5`);
+         }
+         catch (error) {
+             agent.config.logger.error(`Failed to migrate w3c credential record with id ${record.id} to storage version 0.5`, error);
+         }
+-        agent.config.logger.debug(`Successfully migrated w3c credential record with id ${record.id} to storage version 0.5`);
+     }
+ }
+ exports.storeAnonCredsInW3cFormatV0_5 = storeAnonCredsInW3cFormatV0_5;
 diff --git a/build/utils/indyIdentifiers.js b/build/utils/indyIdentifiers.js
 index ffa72b308239894b65fc796254e5c458299065fe..0702fb0d2a552434f79c0ecdc134357280e4a4a1 100644
 --- a/build/utils/indyIdentifiers.js
@@ -83,7 +98,7 @@ index ffa72b308239894b65fc796254e5c458299065fe..0702fb0d2a552434f79c0ecdc1343572
          const { schemaName, schemaVersion, namespaceIdentifier } = parseIndySchemaId(identifier);
          return getUnqualifiedSchemaId(namespaceIdentifier, schemaName, schemaVersion);
 diff --git a/build/utils/w3cAnonCredsUtils.js b/build/utils/w3cAnonCredsUtils.js
-index ffd736f2261e9187b00e471c2ed1b2f4863960b9..5b365a10ca64926b46bef14e04d47745ba5d8574 100644
+index ffd736f2261e9187b00e471c2ed1b2f4863960b9..fe85a8749794a501f07daf098ad18c940b95edde 100644
 --- a/build/utils/w3cAnonCredsUtils.js
 +++ b/build/utils/w3cAnonCredsUtils.js
 @@ -104,7 +104,7 @@ exports.getStoreCredentialOptions = getStoreCredentialOptions;
