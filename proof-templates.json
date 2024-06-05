@@ -942,5 +942,57 @@
             }
          ]
       }
+   },
+   {
+      "id": "BC:5:Over19YearsAndPhoto:0.0.1:indy",
+      "name": "19+ and Photo",
+      "description": "Verify an individual is the age of majority (19+) in BC and show photo",
+      "version": "0.0.1",
+      "payload": {
+         "type": "anoncreds",
+         "data": [
+            {
+               "schema": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+               "requestedAttributes": [
+                  {
+                     "names": [
+                        "picture"
+                     ],
+                     "restrictions": [
+                        {
+                           "cred_def_id": "RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person"
+                        },
+                        {
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                        }
+                     ],
+                     "nonRevoked": {
+                        "to": "@{now}"
+                     }
+                  }
+               ],
+               "requestedPredicates": [
+                  {
+                     "name": "birthdate_dateint",
+                     "predicateType": "<=",
+                     "predicateValue": "@{currentDate(-19)}",
+                     "restrictions": [
+                        {
+                           "cred_def_id": "RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person"
+                        },
+                        {
+                           "schema_id": "RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0",
+                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                        }
+                     ],
+                     "nonRevoked": {
+                        "to": "@{now}"
+                     }
+                  }
+               ]
+            }
+         ]
+      }
    }
 ]
