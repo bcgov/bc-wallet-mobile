@@ -412,9 +412,6 @@ const Splash = () => {
         setStep(6)
         await createLinkSecretIfRequired(newAgent)
 
-        // const am = new AttestationMonitor(agent!, logger, { attestationInviteUrl, attestationCredDefIds })
-        // container.registerInstance(TOKENS.UTIL_AGENT, { useValue: newAgent })
-
         setStep(7)
         setAgent(newAgent)
         if (store.preferences.usePushNotifications) {

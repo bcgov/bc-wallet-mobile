@@ -73,8 +73,6 @@ interface AttestationProofRequestFormat {
   request: IndyRequest & AnonCredsRequest
 }
 
-// type t = (key: string | Array<string>, options?: object) => string
-
 const AttestationErrorCodes = {
   BadInvitation: 2027,
   ReceiveInvitationError: 2028,

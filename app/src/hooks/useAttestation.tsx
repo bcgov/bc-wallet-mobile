@@ -22,7 +22,6 @@ type AttestationProviderParams = {
 
 export const AttestationProvider: React.FC<AttestationProviderParams> = ({ children }) => {
   const { agent } = useAgent()
-  // const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const container = useContainer()
   const logger = container.resolve(TOKENS.UTIL_LOGGER)
