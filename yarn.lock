@@ -8921,7 +8921,7 @@ __metadata:
     "@babel/preset-env": "npm:7.22.20"
     "@babel/runtime": "npm:7.23.1"
     "@commitlint/cli": "npm:11.0.0"
-    "@credo-ts/anoncreds": "patch:@credo-ts/anoncreds@npm%3A0.5.3#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.3-9fffe9ad63.patch"
+    "@credo-ts/anoncreds": "npm:0.5.3"
     "@credo-ts/askar": "npm:0.5.3"
     "@credo-ts/core": "npm:0.5.3"
     "@credo-ts/drpc": "npm:0.5.3"
