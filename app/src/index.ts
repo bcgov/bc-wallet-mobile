@@ -73,7 +73,6 @@ const configuration: ConfigurationContext = {
   disableOnboardingSkip: true,
   useCustomNotifications: useNotifications,
   useAttestation: useAttestation,
-  enableUseMultUseInvitation: false,
   enablePushNotifications: {
     status: status,
     setup: setup,
