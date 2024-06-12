@@ -1,0 +1,27 @@
+diff --git a/build/modules/credentials/protocol/revocation-notification/services/RevocationNotificationService.js b/build/modules/credentials/protocol/revocation-notification/services/RevocationNotificationService.js
+index 66ed4e58c0f44591b8019818ac5673ffc977e12e..e4dffcf168aa551319397b5e45a5a703e1d7b8be 100644
+--- a/build/modules/credentials/protocol/revocation-notification/services/RevocationNotificationService.js
++++ b/build/modules/credentials/protocol/revocation-notification/services/RevocationNotificationService.js
+@@ -33,7 +33,21 @@ let RevocationNotificationService = class RevocationNotificationService {
+     }
+     async processRevocationNotification(agentContext, anonCredsRevocationRegistryId, anonCredsCredentialRevocationId, connection, comment) {
+         // TODO: can we extract support for this revocation notification handler to the anoncreds module?
+-        const query = { anonCredsRevocationRegistryId, anonCredsCredentialRevocationId, connectionId: connection.id };
++        // Search for the revocation registry in both qualified and unqualified forms
++        const query = {
++            $or: [
++                {
++                  anonCredsRevocationRegistryId,
++                  anonCredsCredentialRevocationId,
++                  connectionId: connection.id,
++                },
++                {
++                  anonCredsUnqualifiedRevocationRegistryId: anonCredsRevocationRegistryId,
++                  anonCredsCredentialRevocationId,
++                  connectionId: connection.id,
++                },
++            ],
++        }
+         this.logger.trace(`Getting record by query for revocation notification:`, query);
+         const credentialRecord = await this.credentialRepository.getSingleByQuery(agentContext, query);
+         credentialRecord.revocationNotification = new RevocationNotification_1.RevocationNotification(comment);

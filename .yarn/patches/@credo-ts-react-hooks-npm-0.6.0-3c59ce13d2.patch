@@ -151,20 +151,16 @@ index aa461a803ee740a756989464640538e735de2c52..29f667890a6a1d767fb687049ed110d3
  const recordUtils_1 = require("./recordUtils");
  const ConnectionContext = (0, react_1.createContext)(undefined);
  /**
-@@ -72,16 +72,25 @@ const ConnectionProvider = ({ agent, children }) => {
+@@ -72,16 +72,20 @@ const ConnectionProvider = ({ agent, children }) => {
          loading: true,
      });
      const setInitialState = async () => {
-+        console.log('inside setInitialState');
 +        if (!agent)
 +            return;
-+        console.log('setting initial state');
          const records = await agent.connections.getAll();
-+        console.log('records', records.length);
          setState({ records, loading: false });
      };
      (0, react_1.useEffect)(() => {
-+        console.log('inside useffect for connection provider');
          setInitialState();
      }, [agent]);
      (0, react_1.useEffect)(() => {
@@ -172,7 +168,6 @@ index aa461a803ee740a756989464640538e735de2c52..29f667890a6a1d767fb687049ed110d3
              return;
 -        const connectionAdded$ = (0, recordUtils_1.recordsAddedByType)(agent, core_1.ConnectionRecord).subscribe((record) => setState((0, recordUtils_1.addRecord)(record, state)));
 +        const connectionAdded$ = (0, recordUtils_1.recordsAddedByType)(agent, core_1.ConnectionRecord).subscribe((record) => {
-+            console.log('adding connection record record');
 +            setState((0, recordUtils_1.addRecord)(record, state));
 +        });
          const connectionUpdated$ = (0, recordUtils_1.recordsUpdatedByType)(agent, core_1.ConnectionRecord).subscribe((record) => setState((0, recordUtils_1.updateRecord)(record, state)));
