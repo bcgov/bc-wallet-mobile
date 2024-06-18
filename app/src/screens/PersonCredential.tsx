@@ -345,21 +345,21 @@ export default function PersonCredential() {
             </Button>
           ) : null}
         </View>
-        <View style={styles.section}>
+        <View style={[styles.section, { marginBottom: 20 }]}>
           <Link
             style={styles.link}
             linkText={t('PersonCredential.WhatIsPersonCredentialLink')}
             onPress={() => openLink(links.WhatIsPersonCredential)}
             testID={testIdWithKey('WhatIsPersonCredentialLink')}
           />
-          <View style={{ height: 1, backgroundColor: 'grey', marginTop: 10 }} />
+          <View style={{ height: 1, backgroundColor: ColorPallet.grayscale.lightGrey, marginTop: 10 }} />
           <Link
             style={styles.link}
             linkText={t('PersonCredential.WhereToUseLink')}
             onPress={() => openLink(links.WhereToUse)}
             testID={testIdWithKey('WhereToUse')}
           />
-          <View style={{ height: 1, backgroundColor: 'grey', marginTop: 10 }} />
+          <View style={{ height: 1, backgroundColor: ColorPallet.grayscale.lightGrey, marginTop: 10 }} />
           <Link
             style={styles.link}
             linkText={t('PersonCredential.HelpLink')}
