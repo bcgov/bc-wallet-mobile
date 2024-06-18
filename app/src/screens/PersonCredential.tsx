@@ -11,6 +11,7 @@ import {
   Screens,
   Stacks,
   InfoTextBox,
+  Link,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState, useCallback, useEffect, useRef } from 'react'
@@ -24,8 +25,15 @@ import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
+import { openLink } from '../helpers/utils'
 
 const attestationProofRequestWaitTimeout = 10000
+
+const links = {
+  WhatIsPersonCredential: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential',
+  WhereToUse: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential/where-person-cred',
+  Help: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential#help',
+} as const
 
 export default function PersonCredential() {
   const { agent } = useAgent()
@@ -90,6 +98,12 @@ export default function PersonCredential() {
       borderBottomWidth: 1,
       borderBottomColor: ColorPallet.brand.primaryBackground,
       marginHorizontal: 25,
+    },
+    link: {
+      ...TextTheme.normal,
+      textAlign: 'left',
+      marginTop: 10,
+      textDecorationLine: 'none',
     },
   })
 
@@ -330,6 +344,28 @@ export default function PersonCredential() {
               </View>
             </Button>
           ) : null}
+        </View>
+        <View style={styles.section}>
+          <Link
+            style={styles.link}
+            linkText={t('PersonCredential.WhatIsPersonCredentialLink')}
+            onPress={() => openLink(links.WhatIsPersonCredential)}
+            testID={testIdWithKey('WhatIsPersonCredentialLink')}
+          />
+          <View style={{ height: 1, backgroundColor: 'grey', marginTop: 10 }} />
+          <Link
+            style={styles.link}
+            linkText={t('PersonCredential.WhereToUseLink')}
+            onPress={() => openLink(links.WhereToUse)}
+            testID={testIdWithKey('WhereToUse')}
+          />
+          <View style={{ height: 1, backgroundColor: 'grey', marginTop: 10 }} />
+          <Link
+            style={styles.link}
+            linkText={t('PersonCredential.HelpLink')}
+            onPress={() => openLink(links.Help)}
+            testID={testIdWithKey('Help')}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

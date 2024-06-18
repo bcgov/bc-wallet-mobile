@@ -79,6 +79,9 @@ const translation = {
     "StartProcess": "Start the process (PT-BR)",
     "PageTitle": "Person Credential (PT-BR)",
     "PleaseWait": "Please wait as we get things ready for you (PT-BR)",
+    "WhatIsPersonCredentialLink": "What is a Person credential (PT-BR)",
+    "WhereToUseLink": "Where to use (PT-BR)",
+    "HelpLink": "Help (PT-BR)",
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection (PT-BR)",
