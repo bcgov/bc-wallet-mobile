@@ -66,7 +66,7 @@
     "@hyperledger/aries-bifold-verifier": "1.0.0-alpha.249",
     "@hyperledger/aries-oca": "1.0.0-alpha.249",
     "@hyperledger/aries-react-native-attestation": "1.0.0-alpha.249",
-    "@hyperledger/indy-vdr-react-native": "patch:@hyperledger/indy-vdr-react-native@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.2.2-627d424b96.patch",
+    "@hyperledger/indy-vdr-react-native": "0.2.2",
     "@react-native-async-storage/async-storage": "1.15.11",
     "@react-native-community/masked-view": "0.1.11",
     "@react-native-community/netinfo": "9.3.7",
