@@ -102,13 +102,12 @@ export default function PersonCredential() {
     link: {
       ...TextTheme.normal,
       textAlign: 'left',
-      marginTop: 10,
       textDecorationLine: 'none',
     },
     line: {
       height: 1,
       backgroundColor: ColorPallet.grayscale.lightGrey,
-      marginTop: 10,
+      marginVertical: 20,
     },
   })
 
