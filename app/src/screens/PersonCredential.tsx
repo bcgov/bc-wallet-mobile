@@ -105,6 +105,11 @@ export default function PersonCredential() {
       marginTop: 10,
       textDecorationLine: 'none',
     },
+    line: {
+      height: 1,
+      backgroundColor: ColorPallet.grayscale.lightGrey,
+      marginTop: 10,
+    },
   })
 
   const isBCServicesCardInstalled = async () => {
@@ -352,14 +357,14 @@ export default function PersonCredential() {
             onPress={() => openLink(links.WhatIsPersonCredential)}
             testID={testIdWithKey('WhatIsPersonCredentialLink')}
           />
-          <View style={{ height: 1, backgroundColor: ColorPallet.grayscale.lightGrey, marginTop: 10 }} />
+          <View style={styles.line} />
           <Link
             style={styles.link}
             linkText={t('PersonCredential.WhereToUseLink')}
             onPress={() => openLink(links.WhereToUse)}
             testID={testIdWithKey('WhereToUse')}
           />
-          <View style={{ height: 1, backgroundColor: ColorPallet.grayscale.lightGrey, marginTop: 10 }} />
+          <View style={styles.line} />
           <Link
             style={styles.link}
             linkText={t('PersonCredential.HelpLink')}
