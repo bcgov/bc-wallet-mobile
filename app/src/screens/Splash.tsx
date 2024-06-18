@@ -30,6 +30,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
+import { CachesDirectoryPath } from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
@@ -347,6 +348,11 @@ const Splash = () => {
             ...getAgentModules({
               indyNetworks: ledgers,
               mediatorInvitationUrl: Config.MEDIATOR_URL,
+              txnCache: {
+                capacity: 1000,
+                expiryOffsetMs: 1000 * 60 * 60 * 24 * 7,
+                path: CachesDirectoryPath + '/txn-cache',
+              },
             }),
             drpc: new DrpcModule(),
           },
