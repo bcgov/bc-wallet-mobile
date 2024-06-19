@@ -31,6 +31,7 @@ const Settings: React.FC = () => {
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
+  const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
   const navigation = useNavigation()
 
   const styles = StyleSheet.create({
@@ -228,6 +229,14 @@ const Settings: React.FC = () => {
     setPreventAutoLock((previousState) => !previousState)
   }
 
+  const toggleShareableLinkSwitch = () => {
+    dispatch({
+      type: DispatchAction.USE_SHAREABLE_LINK,
+      payload: [!enableShareableLink],
+    })
+    setEnableShareableLink((previousState) => !previousState)
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -386,6 +395,21 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleRemoteLoggingWarningSwitch}
             value={remoteLoggingEnabled}
+            disabled={!store.authentication.didAuthenticate}
+          />
+        </SectionRow>
+
+        <SectionRow
+          title={t('PasteUrl.UseShareableLink')}
+          accessibilityLabel={t('PasteUrl.UseShareableLink')}
+          testID={testIdWithKey('ToggleUseShareableLink')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={enableShareableLink ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleShareableLinkSwitch}
+            value={enableShareableLink}
             disabled={!store.authentication.didAuthenticate}
           />
         </SectionRow>
