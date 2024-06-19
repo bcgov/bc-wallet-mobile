@@ -80,6 +80,9 @@ const translation = {
     "StartProcess": "Start the process",
     "PageTitle": "Person Credential",
     "PleaseWait": "Please wait as we get things ready for you",
+    "WhatIsPersonCredentialLink": "What is a Person credential",
+    "WhereToUseLink": "Where to use",
+    "HelpLink": "Help",
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection",
