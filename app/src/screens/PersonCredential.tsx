@@ -101,6 +101,7 @@ export default function PersonCredential() {
     },
     link: {
       ...TextTheme.normal,
+      color: workflowInProgress ? ColorPallet.grayscale.lightGrey : TextTheme.normal.color,
       textAlign: 'left',
       textDecorationLine: 'none',
     },
@@ -353,21 +354,21 @@ export default function PersonCredential() {
           <Link
             style={styles.link}
             linkText={t('PersonCredential.WhatIsPersonCredentialLink')}
-            onPress={() => openLink(links.WhatIsPersonCredential)}
+            onPress={() => !workflowInProgress && openLink(links.WhatIsPersonCredential)}
             testID={testIdWithKey('WhatIsPersonCredentialLink')}
           />
           <View style={styles.line} />
           <Link
             style={styles.link}
             linkText={t('PersonCredential.WhereToUseLink')}
-            onPress={() => openLink(links.WhereToUse)}
+            onPress={() => !workflowInProgress && openLink(links.WhereToUse)}
             testID={testIdWithKey('WhereToUse')}
           />
           <View style={styles.line} />
           <Link
             style={styles.link}
             linkText={t('PersonCredential.HelpLink')}
-            onPress={() => openLink(links.Help)}
+            onPress={() => !workflowInProgress && openLink(links.Help)}
             testID={testIdWithKey('Help')}
           />
         </View>
