@@ -1,5 +1,5 @@
 diff --git a/build/anoncreds-rs/AnonCredsRsHolderService.js b/build/anoncreds-rs/AnonCredsRsHolderService.js
-index 36304094b5e75dde1d8538a49e2a9ff1093aca22..bae0068d7fbf2e4876f96e1f32d1f4381f2d3e61 100644
+index 36304094b5e75dde1d8538a49e2a9ff1093aca22..bcf3ec4ca67f539fbc9e92d6b68937c7fa647326 100644
 --- a/build/anoncreds-rs/AnonCredsRsHolderService.js
 +++ b/build/anoncreds-rs/AnonCredsRsHolderService.js
 @@ -18,6 +18,7 @@ const utils_1 = require("../utils");
@@ -28,16 +28,15 @@ index 36304094b5e75dde1d8538a49e2a9ff1093aca22..bae0068d7fbf2e4876f96e1f32d1f438
          const anonCredsCredentialRepository = agentContext.dependencyManager.resolve(repository_1.AnonCredsCredentialRepository);
          const anonCredsCredentialRecord = await anonCredsCredentialRepository.getByCredentialId(agentContext, options.id);
          agentContext.config.logger.warn([
-@@ -416,6 +417,8 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+@@ -416,6 +417,7 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
              throw new error_1.AnonCredsRsError(`Referent not found in proof request`);
          }
          const $and = [];
-+        const useUnqualifiedIdentifiers = (0, proofRequest_1.proofRequestUsesUnqualifiedIdentifiers)(proofRequest)
-+
++        const useUnqualifiedIdentifiers = (0, proofRequest_1.proofRequestUsesUnqualifiedIdentifiers)(proofRequest);
          // Make sure the attribute(s) that are requested are present using the marker tag
          const attributes = (_b = requestedAttribute.names) !== null && _b !== void 0 ? _b : [requestedAttribute.name];
          const attributeQuery = {};
-@@ -445,7 +448,7 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+@@ -445,7 +447,7 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
          }
          const credentialWithMetadata = credentials.map((credentialRecord) => {
              return {
@@ -47,7 +46,7 @@ index 36304094b5e75dde1d8538a49e2a9ff1093aca22..bae0068d7fbf2e4876f96e1f32d1f438
              };
          });
 diff --git a/build/formats/AnonCredsCredentialFormatService.js b/build/formats/AnonCredsCredentialFormatService.js
-index 32b00024498dab50a3482df27e6f97671009678e..ab0ba692cad260e902b9a5746e0632f362ef6b30 100644
+index 32b00024498dab50a3482df27e6f97671009678e..bd492add83af41486ef9901e8b8ef590264628b3 100644
 --- a/build/formats/AnonCredsCredentialFormatService.js
 +++ b/build/formats/AnonCredsCredentialFormatService.js
 @@ -203,7 +203,7 @@ class AnonCredsCredentialFormatService {
@@ -59,11 +58,10 @@ index 32b00024498dab50a3482df27e6f97671009678e..ab0ba692cad260e902b9a5746e0632f3
              credentialOffer,
              credentialRequest,
              credentialValues: (0, credential_1.convertAttributesToCredentialValues)(credentialAttributes),
-@@ -211,6 +211,19 @@ class AnonCredsCredentialFormatService {
+@@ -211,6 +211,17 @@ class AnonCredsCredentialFormatService {
              revocationRegistryIndex,
              revocationStatusList,
          });
-+
 +        // If the credential is revocable, store the revocation identifiers in the credential record
 +        if (credential.rev_reg_id) {
 +            credentialRecord.metadata.add<AnonCredsCredentialMetadata>(AnonCredsCredentialMetadataKey, {
@@ -75,7 +73,6 @@ index 32b00024498dab50a3482df27e6f97671009678e..ab0ba692cad260e902b9a5746e0632f3
 +                anonCredsCredentialRevocationId: credentialRevocationId,
 +            })
 +        }
-+
          const format = new core_1.CredentialFormatSpec({
              attachmentId,
              format: ANONCREDS_CREDENTIAL,
@@ -147,10 +144,10 @@ index ffa72b308239894b65fc796254e5c458299065fe..0702fb0d2a552434f79c0ecdc1343572
          return getUnqualifiedSchemaId(namespaceIdentifier, schemaName, schemaVersion);
 diff --git a/build/utils/proofRequest.js b/build/utils/proofRequest.js
 new file mode 100644
-index 0000000000000000000000000000000000000000..0310d8806e11b26ec5a06b287316ebbe200fb939
+index 0000000000000000000000000000000000000000..93208de78a7f13d64b756824c725d0b0bf263236
 --- /dev/null
 +++ b/build/utils/proofRequest.js
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,24 @@
 +"use strict";
 +Object.defineProperty(exports, "__esModule", { value: true });
 +exports.proofRequestUsesUnqualifiedIdentifiers = void 0;
@@ -158,7 +155,10 @@ index 0000000000000000000000000000000000000000..0310d8806e11b26ec5a06b287316ebbe
 +
 +function proofRequestUsesUnqualifiedIdentifiers(proofRequest) {
 +  // We assume that if any identifier is unqualified, all of them are unqualified as well
-+  return Object.values(proofRequest.requested_attributes).some((attribute) =>
++  return [
++    ...Object.values(proofRequest.requested_attributes),
++    ...Object.values(proofRequest.requested_predicates),
++  ].some((attribute) =>
 +    attribute.restrictions?.some(
 +      (restriction) =>
 +        (restriction.cred_def_id && (0, indyIdentifiers_1.isUnqualifiedCredentialDefinitionId)(restriction.cred_def_id)) ||
@@ -172,6 +172,7 @@ index 0000000000000000000000000000000000000000..0310d8806e11b26ec5a06b287316ebbe
 +  )
 +}
 +exports.proofRequestUsesUnqualifiedIdentifiers = proofRequestUsesUnqualifiedIdentifiers;
+\ No newline at end of file
 diff --git a/build/utils/w3cAnonCredsUtils.js b/build/utils/w3cAnonCredsUtils.js
 index ffd736f2261e9187b00e471c2ed1b2f4863960b9..6dfb1488a086516b9ffbaa28b454708eb76d49e0 100644
 --- a/build/utils/w3cAnonCredsUtils.js
