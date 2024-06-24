@@ -31,6 +31,7 @@ import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
+import { attestationCredDefIds } from './constants'
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
@@ -118,11 +119,7 @@ const configuration: ConfigurationContext = {
   // Contact theirLabel or alias
   contactHideList: ['BCAttestationService'],
   // Credential Definition IDs
-  credentialHideList: [
-    'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet',
-    'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet',
-    'XqaRXJt4sXE6TRpfGpVbGw:3:CL:655:bcwallet',
-  ],
+  credentialHideList: attestationCredDefIds,
 }
 
 export default { theme, localization, configuration }
