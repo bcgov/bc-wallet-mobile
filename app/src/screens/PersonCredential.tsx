@@ -257,8 +257,9 @@ export default function PersonCredential() {
     }
 
     const cb = (status: boolean) => {
-      agent!.config.logger.error(`Service card authentication reported ${status}`)
-
+      logger.info(`Service card authentication reported ${status}`)
+      // TODO(jl): Handle the case where the service card authentication fails for
+      // user reasons or otherwise.
       setWorkflowInProgress(false)
     }
 
@@ -267,10 +268,10 @@ export default function PersonCredential() {
 
     authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
       .then(() => {
-        agent!.config.logger.error('Completed service card authentication successfully')
+        logger.error('Completed service card authentication successfully')
       })
       .catch((error) => {
-        agent!.config.logger.error('Completed service card authentication with errir, error: ', error.message)
+        logger.error('Completed service card authentication with error, error: ', error.message)
       })
   }, [remoteAgentDetails, didCompleteAttestationProofRequest])
 
