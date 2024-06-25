@@ -17,6 +17,7 @@ import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
 import HomeFooterView from './components/HomeFooterView'
 import HomeHeaderView from './components/HomeHeaderView'
+import { attestationCredDefIds } from './constants'
 import { setup, activate, deactivate, status } from './helpers/PushNotificationsHelper'
 import { useNotifications } from './hooks/notifications'
 import { useAttestation } from './hooks/useAttestation'
@@ -31,7 +32,6 @@ import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
-import { attestationCredDefIds } from './constants'
 
 const localization = merge({}, translationResources, {
   en: { translation: en },

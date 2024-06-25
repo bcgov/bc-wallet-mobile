@@ -81,6 +81,7 @@ const AttestationErrorCodes = {
   FailedToFetchNonceForAttestation: 2031,
   FailedToGenerateAttestation: 2032,
   FailedToRequestAttestation: 2033,
+  FailedToValidateAttestation: 2034,
 } as const
 
 export const isProofRequestingAttestation = async (
@@ -168,7 +169,15 @@ export class AttestationMonitor {
         )
       }
 
-      const result = this.requestAttestation(connection, attestationObj)
+      const result = await this.requestAttestation(connection, attestationObj)
+      if (result.status !== 'success') {
+        throw new BifoldError(
+          'Attestation Service',
+          'There was a problem with the attestation service.',
+          'No details provided.',
+          AttestationErrorCodes.FailedToValidateAttestation
+        )
+      }
     } catch (error) {
       this._attestationWorkflowInProgress = false
       this.log?.error('Failed to fetch attestation credential', error as Error)
