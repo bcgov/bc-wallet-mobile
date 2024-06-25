@@ -119,11 +119,11 @@ export class AttestationMonitor {
   public async start(): Promise<void> {
     this.proofSubscription = this.agent.events
       .observable(ProofEventTypes.ProofStateChanged)
-      .subscribe(this.handleProofReceived)
+      .subscribe(this.handleProofStateChanged)
 
     this.offerSubscription = this.agent.events
       .observable(CredentialEventTypes.CredentialStateChanged)
-      .subscribe(this.handleCredentialOfferReceived)
+      .subscribe(this.handleCredentialStateChanged)
   }
 
   public stop(): void {
@@ -169,8 +169,6 @@ export class AttestationMonitor {
       }
 
       const result = this.requestAttestation(connection, attestationObj)
-
-      DeviceEventEmitter.emit(AttestationEventTypes.Completed, result)
     } catch (error) {
       this._attestationWorkflowInProgress = false
       this.log?.error('Failed to fetch attestation credential', error as Error)
@@ -179,9 +177,11 @@ export class AttestationMonitor {
     }
   }
 
-  private handleCredentialOfferReceived = async (event: BaseEvent) => {
+  private handleCredentialStateChanged = async (event: BaseEvent) => {
     const { credentialRecord } = event.payload
     const credential = credentialRecord as CredentialExchangeRecord
+
+    this.log?.info('Handling credential offer')
 
     try {
       const { offer } = await this.agent.credentials.getFormatData(credential.id)
@@ -203,7 +203,12 @@ export class AttestationMonitor {
 
       // only finish loading state once credential is fully accepted
       if (credential.state === CredentialState.Done) {
+        // TODO: credential.offer in flight completed
         this.log?.info('Credential accepted')
+
+        this._attestationWorkflowInProgress = false
+
+        DeviceEventEmitter.emit(AttestationEventTypes.Completed)
       }
     } catch (error) {
       this.log?.error('Failed to handle credential offer', error as Error)
@@ -212,9 +217,11 @@ export class AttestationMonitor {
     }
   }
 
-  private handleProofReceived = async (event: BaseEvent) => {
+  private handleProofStateChanged = async (event: BaseEvent) => {
     const { proofRecord } = event.payload
     const proof = proofRecord as ProofExchangeRecord
+
+    this.log?.info('Handling proof received')
 
     if (proof.state !== ProofState.RequestReceived) {
       return

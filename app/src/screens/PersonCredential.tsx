@@ -133,13 +133,13 @@ export default function PersonCredential() {
 
   // Use this function to accept the attestation proof request.
   const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
-    logger.info('Attestation: selecting credentials for Person proof request')
+    logger.info('Attestation: selecting credentials for attestation proof request')
     // This will throw if we don't have the necessary credentials
     const credentials = await agent.proofs.selectCredentialsForRequest({
       proofRecordId: proofRequest.id,
     })
 
-    logger.info('Attestation: accepting Person proof request')
+    logger.info('Attestation: accepting attestation proof request')
     await agent.proofs.acceptRequest({
       proofRecordId: proofRequest.id,
       proofFormats: credentials.proofFormats,
