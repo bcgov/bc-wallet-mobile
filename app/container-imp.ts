@@ -10,10 +10,13 @@ import {
   ToursState,
   OnboardingState,
   DispatchAction,
+  Stacks,
+  Screens,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { NavigationProp } from '@react-navigation/native'
 import { Config } from 'react-native-config'
 import {
   getVersion,
@@ -41,6 +44,27 @@ export class AppContainer implements Container {
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this.container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
+    this.container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [
+      {
+        credDefIds: [
+          'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
+          'KCxVC8GkKywjhWJnUfCmkW:3:CL:20:PersonQA',
+          '7xjfawcnyTUcduWVysLww5:3:CL:28075:PersonSIT',
+          'XpgeQa93eZvGSZBZef3PHn:3:CL:28075:PersonDEV',
+        ],
+        schemaIds: [
+          'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0',
+          'KCxVC8GkKywjhWJnUfCmkW:2:Person:1.0',
+          '7xjfawcnyTUcduWVysLww5:2:Person:1.0',
+          'XpgeQa93eZvGSZBZef3PHn:2:Person:1.0',
+        ],
+        action: (navigation: NavigationProp<ReactNavigation.RootParamList>) => {
+          navigation.getParent()?.navigate(Stacks.NotificationStack, {
+            screen: Screens.CustomNotification,
+          })
+        },
+      },
+    ])
     this.container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
     this.container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
 
