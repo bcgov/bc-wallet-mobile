@@ -260,6 +260,10 @@ export default function PersonCredential() {
       logger.info(`Service card authentication reported ${status}`)
       // TODO(jl): Handle the case where the service card authentication fails for
       // user reasons or otherwise.
+      if (!status) {
+        setDidCompleteAttestationProofRequest(false)
+      }
+
       setWorkflowInProgress(false)
     }
 
