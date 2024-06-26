@@ -9059,6 +9059,7 @@ __metadata:
     react-native-webview: "npm:11.26.1"
     react-test-renderer: "npm:18.2.0"
     reflect-metadata: "npm:0.1.13"
+    rxjs: "npm:^7.8.1"
     tsyringe: "npm:^4.7.0"
     typescript: "npm:5.2.2"
     uuid: "npm:9.0.0"
@@ -21120,7 +21121,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rxjs@npm:^7.2.0, rxjs@npm:^7.5.1, rxjs@npm:^7.8.0":
+"rxjs@npm:^7.2.0, rxjs@npm:^7.5.1, rxjs@npm:^7.8.0, rxjs@npm:^7.8.1":
   version: 7.8.1
   resolution: "rxjs@npm:7.8.1"
   dependencies:

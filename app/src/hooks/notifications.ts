@@ -17,10 +17,10 @@ import {
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
 import { useEffect, useState } from 'react'
 
-import { isProofRequestingAttestation } from '../helpers/Attestation'
+import { attestationCredDefIds } from '../constants'
 import { showPersonCredentialSelector } from '../helpers/BCIDHelper'
+import { isProofRequestingAttestation } from '../services/attestation'
 import { BCState } from '../store'
-
 interface CustomNotification {
   type: 'CustomNotification'
   createdAt: Date
@@ -67,7 +67,7 @@ export const useNotifications = (): Notifications => {
       const nonAttestationProofs = (
         await Promise.all(
           [...proofsRequested, ...proofsDone].map(async (proof: ProofExchangeRecord) => {
-            const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent)
+            const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent, attestationCredDefIds)
             return {
               value: proof,
               include: !isAttestation,

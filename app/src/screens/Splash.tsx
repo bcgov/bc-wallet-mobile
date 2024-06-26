@@ -36,7 +36,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { activate } from '../helpers/PushNotificationsHelper'
-import { useAttestation } from '../services/attestation'
+import { useAttestation } from '../hooks/useAttestation'
 import { BCState, BCLocalStorageKeys } from '../store'
 
 import { TermsVersion } from './Terms'
