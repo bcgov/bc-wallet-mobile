@@ -143,7 +143,7 @@ dependencies {
 
     implementation 'net.java.dev.jna:jna:5.2.0'
     
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
 
     implementation platform('com.google.firebase:firebase-bom:26.4.0')
     
