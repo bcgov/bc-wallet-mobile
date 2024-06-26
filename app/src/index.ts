@@ -14,8 +14,10 @@ import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
 import HomeFooterView from './components/HomeFooterView'
 import HomeHeaderView from './components/HomeHeaderView'
+import { attestationCredDefIds } from './constants'
 import { setup, activate, deactivate, status } from './helpers/PushNotificationsHelper'
 import { useNotifications } from './hooks/notifications'
+import { useAttestation } from './hooks/useAttestation'
 import en from './localization/en'
 import fr from './localization/fr'
 import ptBr from './localization/pt-br'
@@ -25,7 +27,6 @@ import PersonCredential from './screens/PersonCredential'
 import Preface from './screens/Preface'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
-import { useAttestation } from './services/attestation'
 import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
 
@@ -85,11 +86,7 @@ const configuration: ConfigurationContext = {
   // Contact theirLabel or alias
   contactHideList: ['BCAttestationService'],
   // Credential Definition IDs
-  credentialHideList: [
-    'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet',
-    'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet',
-    'XqaRXJt4sXE6TRpfGpVbGw:3:CL:655:bcwallet',
-  ],
+  credentialHideList: attestationCredDefIds,
 }
 
 export default { theme, localization, configuration }

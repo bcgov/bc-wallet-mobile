@@ -12,11 +12,25 @@ import {
   Stacks,
   InfoTextBox,
   Link,
+  BifoldError,
+  EventTypes as BifoldEventTypes,
+  TOKENS,
+  useContainer,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native'
+import {
+  DeviceEventEmitter,
+  EmitterSubscription,
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Linking,
+  Platform,
+  ScrollView,
+} from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -24,7 +38,7 @@ import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
-import { openLink } from '../helpers/utils'
+import { AttestationEventTypes } from '../services/attestation'
 import { BCState } from '../store'
 
 const attestationProofRequestWaitTimeout = 10000
@@ -50,6 +64,7 @@ export default function PersonCredential() {
   const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
   const timer = useRef<NodeJS.Timeout>()
+  const logger = useContainer().resolve(TOKENS.UTIL_LOGGER)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -118,13 +133,13 @@ export default function PersonCredential() {
 
   // Use this function to accept the attestation proof request.
   const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
-    agent.config.logger.info('Attestation: selecting credentials for Person proof request')
+    logger.info('Attestation: selecting credentials for attestation proof request')
     // This will throw if we don't have the necessary credentials
     const credentials = await agent.proofs.selectCredentialsForRequest({
       proofRecordId: proofRequest.id,
     })
 
-    agent.config.logger.info('Attestation: accepting Person proof request')
+    logger.info('Attestation: accepting attestation proof request')
     await agent.proofs.acceptRequest({
       proofRecordId: proofRequest.id,
       proofFormats: credentials.proofFormats,
@@ -146,6 +161,22 @@ export default function PersonCredential() {
     isBCServicesCardInstalled().then((result) => {
       setAppInstalled(result)
     })
+
+    const handleFailedAttestation = (error: BifoldError) => {
+      navigation.goBack()
+      DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+    }
+
+    const subscriptions = Array<EmitterSubscription>()
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, handleFailedAttestation))
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, handleFailedAttestation))
+    subscriptions.push(
+      DeviceEventEmitter.addListener(AttestationEventTypes.FailedRequestCredential, handleFailedAttestation)
+    )
+
+    return () => {
+      subscriptions.forEach((subscription) => subscription.remove())
+    }
   }, [])
 
   const acceptPersonCredentialOffer = useCallback(() => {
@@ -169,9 +200,10 @@ export default function PersonCredential() {
           const proofRequest = receivedProofRequests.find(
             (proof) => proof.connectionId === remoteAgentDetails.connectionId
           )
+
           if (!proofRequest) {
             // No proof from our IAS Agent to respond to, do nothing.
-            agent.config.logger.info(
+            logger.info(
               `Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`
             )
 
@@ -179,10 +211,10 @@ export default function PersonCredential() {
           }
         }, attestationProofRequestWaitTimeout)
 
-        agent.config.logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
+        logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
       })
       .catch((error) => {
-        agent.config.logger.error(`Failed to connect to IAS agent, error: ${error.message}`)
+        logger.error(`Failed to connect to IAS agent, error: ${error.message}`)
       })
   }, [])
 
@@ -210,11 +242,11 @@ export default function PersonCredential() {
           // We can unblock the workflow and proceed with
           // authentication.
           setDidCompleteAttestationProofRequest(status)
-          agent.config.logger.info(`Accepted IAS attestation proof request with status: ${status}`)
+          logger.info(`Accepted IAS attestation proof request with status: ${status}`)
         })
         .catch((error) => {
           setDidCompleteAttestationProofRequest(false)
-          agent.config.logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
+          logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
         })
     }
   }, [attestationLoading, receivedProofRequests, remoteAgentDetails, agent])
@@ -225,7 +257,12 @@ export default function PersonCredential() {
     }
 
     const cb = (status: boolean) => {
-      agent!.config.logger.error(`Service card authentication reported ${status}`)
+      logger.info(`Service card authentication reported ${status}`)
+      // TODO(jl): Handle the case where the service card authentication fails for
+      // user reasons or otherwise.
+      if (!status) {
+        setDidCompleteAttestationProofRequest(false)
+      }
 
       setWorkflowInProgress(false)
     }
@@ -235,10 +272,10 @@ export default function PersonCredential() {
 
     authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
       .then(() => {
-        agent!.config.logger.error('Completed service card authentication successfully')
+        logger.error('Completed service card authentication successfully')
       })
       .catch((error) => {
-        agent!.config.logger.error('Completed service card authentication with errir, error: ', error.message)
+        logger.error('Completed service card authentication with error, error: ', error.message)
       })
   }, [remoteAgentDetails, didCompleteAttestationProofRequest])
 

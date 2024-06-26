@@ -1,9 +1,9 @@
-import { AgentProvider, StoreProvider } from '@hyperledger/aries-bifold-core'
+import { AgentProvider, StoreProvider, useContainer } from '@hyperledger/aries-bifold-core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import PersonCredential from '../../src/screens/PersonCredential'
-import { AttestationProvider } from '../../src/services/attestation'
+import { AttestationProvider } from '../../src/hooks/useAttestation'
 import { initialState, reducer } from '../../src/store'
 
 const mockNavigation = jest.fn()
@@ -22,6 +22,12 @@ jest.mock('@hyperledger/aries-bifold-core', () => ({
   useConfiguration: () => {
     return { useAttestation: mockAttestation }
   },
+  useContainer: jest.fn().mockReturnValue({
+    resolve: jest.fn().mockReturnValue({
+      resolve: jest.fn().mockImplementation(() => Promise.resolve({})),
+      resolveAllBundles: jest.fn().mockImplementation(() => Promise.resolve({})),
+    }),
+  }),
 }))
 
 describe('Person Credential Screen', () => {
