@@ -14,8 +14,10 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View, Linking } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+
+import { openLink } from '../helpers/utils'
 
 const appleTermsUrl = 'https://www.apple.com/legal/internet-services/itunes/us/terms.html'
 const bcWalletHomeUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet'
@@ -86,16 +88,6 @@ const Terms = () => {
       }
     }
   }, [])
-
-  const openLink = async (url: string) => {
-    // Only `https://` is allowed. Update manifest as needed.
-    const supported = await Linking.canOpenURL(url)
-
-    if (supported) {
-      // Will open in device browser.
-      await Linking.openURL(url)
-    }
-  }
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={style.safeAreaView}>

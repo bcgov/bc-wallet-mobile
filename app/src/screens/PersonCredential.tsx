@@ -38,6 +38,7 @@ import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
+import { openLink } from '../helpers/utils'
 import { AttestationEventTypes } from '../services/attestation'
 import { BCState } from '../store'
 
