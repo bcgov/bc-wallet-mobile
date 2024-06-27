@@ -33,12 +33,15 @@ import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
 import { useProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
+import { BaseLogger } from '@credo-ts/core'
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
+  private log?: BaseLogger
 
-  public constructor(bifoldContainer: Container) {
+  public constructor(bifoldContainer: Container, log?: BaseLogger) {
     this._container = bifoldContainer.container.createChildContainer()
+    this.log = log
   }
 
   public get container(): DependencyContainer {
@@ -46,8 +49,8 @@ export class AppContainer implements Container {
   }
 
   public init(): Container {
-    // eslint-disable-next-line no-console
-    console.log(`Initializing BC Wallet App container`)
+    this.log?.info(`Initializing BC Wallet App container`)
+
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
@@ -150,8 +153,4 @@ export class AppContainer implements Container {
   public resolve<K extends keyof TokenMapping>(token: K): TokenMapping[K] {
     return this._container.resolve(token) as TokenMapping[K]
   }
-
-  // public resolveSome<K extends keyof TokenMapping>(tokens: K[]): TokenMapping[K][] {
-  //   return tokens.map((token) => this.resolve(token))
-  // }
 }
