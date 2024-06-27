@@ -134,6 +134,11 @@ const Splash = () => {
   const logger = container.resolve(TOKENS.UTIL_LOGGER)
   const indyLedgers = container.resolve(TOKENS.UTIL_LEDGERS)
   const ocaBundleResolver = container.resolve(TOKENS.UTIL_OCA_RESOLVER) as RemoteOCABundleResolver
+  // const [logger, indyLedgers, ocaBundleResolver] = container.resolveSome([
+  //   TOKENS.UTIL_LOGGER,
+  //   TOKENS.UTIL_LEDGERS,
+  //   TOKENS.UTIL_OCA_RESOLVER,
+  // ])
 
   const steps: string[] = [
     t('Init.Starting'),
