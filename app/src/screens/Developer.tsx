@@ -8,7 +8,7 @@ import { DeviceEventEmitter, Modal, StyleSheet, Switch, Text, Pressable, View, S
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import { BCState } from '../store'
+import { BCState, BCDispatchAction } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
@@ -203,6 +203,12 @@ const Settings: React.FC = () => {
     if (remoteLoggingEnabled) {
       DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, false)
       setRemoteLoggingEnabled(false)
+
+      dispatch({
+        type: BCDispatchAction.ENABLE_REMOTE_DEBUGGING,
+        payload: [{ enabled: false, expireAt: new Date() }],
+      })
+
       return
     }
 

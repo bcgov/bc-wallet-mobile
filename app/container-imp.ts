@@ -33,7 +33,16 @@ import { autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
 import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
-import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
+import {
+  BCLocalStorageKeys,
+  BCState,
+  DismissPersonCredentialOffer,
+  IASEnvironment,
+  RemoteDebuggingState,
+  initialState,
+} from './src/store'
+import { useProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
+import { BaseLogger } from '@credo-ts/core'
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
@@ -152,6 +161,7 @@ export class AppContainer implements Container {
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
       let environment = initialState.developer.environment
+      let remoteDebugging = initialState.remoteDebugging
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -168,6 +178,7 @@ export class AppContainer implements Container {
           (val) => (personCredOfferDissmissed = val)
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
+        loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
       ])
       const state: BCState = {
         ...initialState,
