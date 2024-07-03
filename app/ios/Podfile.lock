@@ -445,7 +445,7 @@ PODS:
   - React-jsinspector (0.72.5)
   - React-logger (0.72.5):
     - glog
-  - "react-native-attestation (1.0.0-alpha.259+2cda573d)":
+  - "react-native-attestation (1.0.0-alpha.261+0fba0883)":
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
   - react-native-config (1.5.0):
@@ -931,7 +931,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: ff70a72027dea5cc7d71cfcc6fad7f599f63987a
   React-jsinspector: aef73cbd43b70675f572214d10fa438c89bf11ba
   React-logger: 2e4aee3e11b3ec4fa6cfd8004610bbb3b8d6cca4
-  react-native-attestation: 7f043cf4a959e259492dcca3d9a6cc6b83517d53
+  react-native-attestation: e26b2c99b3b3a5ae38c3828378c78dca4f07cac7
   react-native-config: 5330c8258265c1e5fdb8c009d2cabd6badd96727
   react-native-encrypted-storage: db300a3f2f0aba1e818417c1c0a6be549038deb7
   react-native-get-random-values: a6ea6a8a65dc93e96e24a11105b1a9c8cfe1d72a

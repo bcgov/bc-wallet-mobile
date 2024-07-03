@@ -32,19 +32,29 @@ import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
+import { useProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
+import { BaseLogger } from '@credo-ts/core'
 
 export class AppContainer implements Container {
-  private container: DependencyContainer
-  public constructor(bifoldContainer: Container) {
-    this.container = bifoldContainer.getContainer().createChildContainer()
+  private _container: DependencyContainer
+  private log?: BaseLogger
+
+  public constructor(bifoldContainer: Container, log?: BaseLogger) {
+    this._container = bifoldContainer.container.createChildContainer()
+    this.log = log
   }
+
+  public get container(): DependencyContainer {
+    return this._container
+  }
+
   public init(): Container {
-    // eslint-disable-next-line no-console
-    console.log(`Initializing BC Wallet App container`)
+    this.log?.info(`Initializing BC Wallet App container`)
+
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
-    this.container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
-    this.container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [
+    this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
+    this._container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [
       {
         credDefIds: [
           'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person',
@@ -65,15 +75,16 @@ export class AppContainer implements Container {
         },
       },
     ])
-    this.container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
-    this.container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
+    this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
+    this._container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
 
     const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
       brandingOverlayType: BrandingOverlayType.Branding10,
     })
+    this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
 
-    this.container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
-    this.container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
+    this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, useProofRequestTemplates)
+    this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
         const data = await AsyncStorage.getItem(key)
         if (data) {
@@ -134,16 +145,12 @@ export class AppContainer implements Container {
     }
     const logger = new RemoteLogger(logOptions)
     logger.startEventListeners()
-    this.container.registerInstance(TOKENS.UTIL_LOGGER, logger)
+    this._container.registerInstance(TOKENS.UTIL_LOGGER, logger)
 
     return this
   }
 
   public resolve<K extends keyof TokenMapping>(token: K): TokenMapping[K] {
-    return this.container.resolve(token) as TokenMapping[K]
-  }
-
-  public getContainer(): DependencyContainer {
-    return this.container
+    return this._container.resolve(token) as TokenMapping[K]
   }
 }
