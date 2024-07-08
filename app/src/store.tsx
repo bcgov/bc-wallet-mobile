@@ -23,8 +23,7 @@ export interface DismissPersonCredentialOffer {
 }
 
 export type RemoteDebuggingState = {
-  enabled: boolean
-  expireAt: Date | undefined
+  enabledAt: Date | undefined
 }
 
 export interface BCState extends BifoldState {
@@ -94,7 +93,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 
 const remoteDebuggingState: RemoteDebuggingState = {
   enabled: false, // default to disabled
-  expireAt: undefined,
+  enabledAt: undefined,
 }
 
 export enum BCLocalStorageKeys {
@@ -114,8 +113,8 @@ export const initialState: BCState = {
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
     case RemoteDebuggingDispatchAction.ENABLE_REMOTE_DEBUGGING: {
-      const { enabled, expireAt } = (action.payload || []).pop()
-      const remoteDebugging = { ...state.remoteDebugging, enabled, expireAt }
+      const { enabledAt } = (action.payload || []).pop()
+      const remoteDebugging = { ...state.remoteDebugging, enabledAt }
       const newState = { ...state, remoteDebugging }
 
       AsyncStorage.setItem(BCLocalStorageKeys.RemoteDebugging, JSON.stringify(remoteDebugging))
