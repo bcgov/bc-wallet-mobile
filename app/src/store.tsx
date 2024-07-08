@@ -113,7 +113,7 @@ export const initialState: BCState = {
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
-    case RemoteDebuggingDispatchAction.ENABLE_REMOTE_LOGGING: {
+    case RemoteDebuggingDispatchAction.ENABLE_REMOTE_DEBUGGING: {
       const { enabled, expireAt } = (action.payload || []).pop()
       const remoteDebugging = { ...state.remoteDebugging, enabled, expireAt }
       const newState = { ...state, remoteDebugging }

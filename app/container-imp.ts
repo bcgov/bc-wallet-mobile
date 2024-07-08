@@ -60,6 +60,20 @@ export class AppContainer implements Container {
   public init(): Container {
     this.log?.info(`Initializing BC Wallet App container`)
 
+    const logOptions: RemoteLoggerOptions = {
+      lokiUrl: Config.REMOTE_LOGGING_URL,
+      lokiLabels: {
+        application: getApplicationName().toLowerCase(),
+        job: 'react-native-logs',
+        version: `${getVersion()}-${getBuildNumber()}`,
+        system: `${getSystemName()} v${getSystemVersion()}`,
+      },
+      autoDisableRemoteLoggingIntervalInMinutes,
+    }
+
+    const logger = new RemoteLogger(logOptions)
+    logger.startEventListeners()
+
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
@@ -192,22 +206,14 @@ export class AppContainer implements Container {
           ...initialState.developer,
           environment,
         },
+        remoteDebugging: { ...initialState.remoteDebugging, ...remoteDebugging },
       }
+
+      logger.remoteLoggingEnabled = state.remoteDebugging.enabled
+
       dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
     })
 
-    const logOptions: RemoteLoggerOptions = {
-      lokiUrl: Config.REMOTE_LOGGING_URL,
-      lokiLabels: {
-        application: getApplicationName().toLowerCase(),
-        job: 'react-native-logs',
-        version: `${getVersion()}-${getBuildNumber()}`,
-        system: `${getSystemName()} v${getSystemVersion()}`,
-      },
-      autoDisableRemoteLoggingIntervalInMinutes,
-    }
-    const logger = new RemoteLogger(logOptions)
-    logger.startEventListeners()
     this._container.registerInstance(TOKENS.UTIL_LOGGER, logger)
 
     return this
