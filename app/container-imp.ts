@@ -210,7 +210,6 @@ export class AppContainer implements Container {
       }
 
       const { enabledAt } = state.remoteDebugging
-      console.log('xxxxxxxxxxxxxxxxxxxxxx', enabledAt)
       if (enabledAt) {
         const threeMinutesAgo = new Date(new Date().getTime() - autoDisableRemoteLoggingIntervalInMinutes * 60000)
         const isOlderThanAutoDisableInterval = enabledAt < threeMinutesAgo
