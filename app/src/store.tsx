@@ -15,7 +15,6 @@ export interface IASEnvironment {
 }
 export interface Developer {
   environment: IASEnvironment
-  remoteDebuggingEnabled: boolean
 }
 
 export interface DismissPersonCredentialOffer {
@@ -84,7 +83,6 @@ export const iasEnvironments: Array<IASEnvironment> = [
 
 const developerState: Developer = {
   environment: iasEnvironments[0],
-  remoteDebuggingEnabled: false,
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
@@ -92,7 +90,6 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 const remoteDebuggingState: RemoteDebuggingState = {
-  enabled: false, // default to disabled
   enabledAt: undefined,
 }
 
