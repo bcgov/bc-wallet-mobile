@@ -222,7 +222,7 @@ const Settings: React.FC = () => {
     DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
     dispatch({
       type: BCDispatchAction.ENABLE_REMOTE_DEBUGGING,
-      payload: [{ enabledAt: new Date() }],
+      payload: [{ enabledAt: new Date(), sessionId: logger.sessionId }],
     })
     setRemoteLoggingEnabled(remoteLoggingEnabled)
 

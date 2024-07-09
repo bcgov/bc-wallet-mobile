@@ -13,22 +13,23 @@ export interface IASEnvironment {
   iasPortalUrl: string
   attestationInviteUrl: string
 }
+
+export type RemoteDebuggingState = {
+  enabledAt?: Date
+  sessionId?: number
+}
 export interface Developer {
   environment: IASEnvironment
+  remoteDebugging: RemoteDebuggingState
 }
 
 export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
-export type RemoteDebuggingState = {
-  enabledAt: Date | undefined
-}
-
 export interface BCState extends BifoldState {
   developer: Developer
   dismissPersonCredentialOffer: DismissPersonCredentialOffer
-  remoteDebugging: RemoteDebuggingState
 }
 
 enum DeveloperDispatchAction {
@@ -81,16 +82,18 @@ export const iasEnvironments: Array<IASEnvironment> = [
   },
 ]
 
+const remoteDebuggingState: RemoteDebuggingState = {
+  enabledAt: undefined,
+  sessionId: undefined,
+}
+
 const developerState: Developer = {
   environment: iasEnvironments[0],
+  remoteDebugging: remoteDebuggingState,
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
   personCredentialOfferDismissed: false,
-}
-
-const remoteDebuggingState: RemoteDebuggingState = {
-  enabledAt: undefined,
 }
 
 export enum BCLocalStorageKeys {
@@ -104,17 +107,20 @@ export const initialState: BCState = {
   ...defaultState,
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
-  remoteDebugging: remoteDebuggingState,
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
     case RemoteDebuggingDispatchAction.ENABLE_REMOTE_DEBUGGING: {
-      const { enabledAt } = (action.payload || []).pop()
-      const remoteDebugging = { ...state.remoteDebugging, enabledAt }
-      const newState = { ...state, remoteDebugging }
+      const { enabledAt, sessionId } = (action.payload || []).pop()
+      const developer = { ...state.developer, remoteDebugging: { enabledAt, sessionId } }
+      const newState = { ...state, developer }
 
-      AsyncStorage.setItem(BCLocalStorageKeys.RemoteDebugging, JSON.stringify(remoteDebugging))
+      if (enabledAt) {
+        AsyncStorage.setItem(BCLocalStorageKeys.RemoteDebugging, JSON.stringify(developer.remoteDebugging))
+      } else {
+        AsyncStorage.removeItem(BCLocalStorageKeys.RemoteDebugging)
+      }
 
       return newState
     }

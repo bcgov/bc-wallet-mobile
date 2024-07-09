@@ -175,7 +175,7 @@ export class AppContainer implements Container {
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
       let environment = initialState.developer.environment
-      let remoteDebugging = initialState.remoteDebugging
+      let remoteDebugging = initialState.developer.remoteDebugging
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -205,22 +205,30 @@ export class AppContainer implements Container {
         developer: {
           ...initialState.developer,
           environment,
+          remoteDebugging,
         },
-        remoteDebugging: { ...initialState.remoteDebugging, ...remoteDebugging },
       }
 
-      const { enabledAt } = state.remoteDebugging
+      const { enabledAt, sessionId } = state.developer.remoteDebugging
       if (enabledAt) {
         const autoDisableRemoteLoggingMinutesAgo = new Date(
           new Date().getTime() - autoDisableRemoteLoggingIntervalInMinutes * 60000
         )
         const isOlderThanAutoDisableInterval = enabledAt < autoDisableRemoteLoggingMinutesAgo
 
-        logger.info(
-          `Remote logging ${isOlderThanAutoDisableInterval ? 'expired' : 'enabled'}, last enabled at ${enabledAt}`
-        )
+        if (!isOlderThanAutoDisableInterval) {
+          logger.remoteLoggingEnabled = !isOlderThanAutoDisableInterval
+          logger.sessionId = sessionId
 
-        logger.remoteLoggingEnabled = !isOlderThanAutoDisableInterval
+          logger.info(
+            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}, ${sessionId}`
+          )
+        }
+        // logger.info(
+        //   `Remote logging ${
+        //     isOlderThanAutoDisableInterval ? 'expired' : 'enabled'
+        //   }, last enabled at ${enabledAt}, session id: ${sessionId}`
+        // )
       }
 
       dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
