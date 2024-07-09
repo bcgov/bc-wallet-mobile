@@ -21,4 +21,11 @@ describe('Helpers', () => {
 
     expect(value).toBe(27)
   })
+
+  test('ignore distant expirations ', () => {
+    const dateInThePast = new Date('2024-07-09T19:23:44.200Z')
+    const value = expirationOverrideInMinutes(dateInThePast, 60)
+
+    expect(value).toBe(0)
+  })
 })
