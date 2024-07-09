@@ -43,7 +43,7 @@ import {
 } from './src/store'
 import { useProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BaseLogger } from '@credo-ts/core'
-
+import { expirationOverrideInMinutes } from './src/helpers/utils'
 export class AppContainer implements Container {
   private _container: DependencyContainer
   private log?: BaseLogger
@@ -204,22 +204,25 @@ export class AppContainer implements Container {
         developer: {
           ...initialState.developer,
           environment,
-          remoteDebugging,
+          remoteDebugging: {
+            enabledAt: remoteDebugging.enabledAt ? new Date(remoteDebugging.enabledAt) : undefined,
+            sessionId: remoteDebugging.sessionId,
+          },
         },
       }
 
       const { enabledAt, sessionId } = state.developer.remoteDebugging
       if (enabledAt) {
-        const autoDisableRemoteLoggingMinutesAgo = new Date(
-          new Date().getTime() - autoDisableRemoteLoggingIntervalInMinutes * 60000
-        )
-        const isOlderThanAutoDisableInterval = enabledAt < autoDisableRemoteLoggingMinutesAgo
+        const override = expirationOverrideInMinutes(enabledAt, autoDisableRemoteLoggingIntervalInMinutes)
 
-        if (!isOlderThanAutoDisableInterval) {
-          logger.remoteLoggingEnabled = !isOlderThanAutoDisableInterval
+        if (override > 0) {
+          logger.remoteLoggingEnabled = true
           logger.sessionId = sessionId
+          logger.overrideCurrentAutoDisableExpiration(override)
 
-          logger.info(`Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}.`)
+          logger.info(
+            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}.  Expiration override is ${override} minutes`
+          )
         }
       }
 

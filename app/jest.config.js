@@ -27,8 +27,6 @@ module.exports = {
     '\\.snap$',
     '<rootDir>/node_modules/',
     '<rootDir>/lib',
-    '<rootDir>/__tests__/contexts/',
-    '<rootDir>/__tests__/helpers/',
-  ],
+    '<rootDir>/__tests__/contexts/'],
   cacheDirectory: '.jest/cache',
 }

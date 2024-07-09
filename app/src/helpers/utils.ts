@@ -9,3 +9,22 @@ export const openLink = async (url: string) => {
     await Linking.openURL(url)
   }
 }
+
+export const expirationOverrideInMinutes = (
+  enabledAt: Date,
+  autoDisableRemoteLoggingIntervalInMinutes: number
+): number => {
+  const now = new Date()
+  const autoDisableRemoteLoggingMinutesAgo = new Date(now.getTime() - autoDisableRemoteLoggingIntervalInMinutes * 60000)
+  const isOlderThanAutoDisableInterval = enabledAt < autoDisableRemoteLoggingMinutesAgo
+
+  if (isOlderThanAutoDisableInterval) {
+    return 0
+  }
+
+  const diffInMilliseconds = now.getTime() - enabledAt.getTime()
+  const diffInMinutes = Math.floor(diffInMilliseconds / 1000 / 60)
+  const expirationOverrideInMinutes = autoDisableRemoteLoggingIntervalInMinutes - diffInMinutes
+
+  return expirationOverrideInMinutes
+}
