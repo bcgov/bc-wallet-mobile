@@ -14,17 +14,14 @@ export const expirationOverrideInMinutes = (
   enabledAt: Date,
   autoDisableRemoteLoggingIntervalInMinutes: number
 ): number => {
-  const now = new Date()
-  const autoDisableRemoteLoggingMinutesAgo = new Date(now.getTime() - autoDisableRemoteLoggingIntervalInMinutes * 60000)
-  const isOlderThanAutoDisableInterval = enabledAt < autoDisableRemoteLoggingMinutesAgo
+  const now = Date.now()
+  const enabledAtTime = enabledAt.getTime()
+  const autoDisableIntervalInMilliseconds = autoDisableRemoteLoggingIntervalInMinutes * 60000
 
-  if (isOlderThanAutoDisableInterval) {
+  if (enabledAtTime < now - autoDisableIntervalInMilliseconds) {
     return 0
   }
 
-  const diffInMilliseconds = now.getTime() - enabledAt.getTime()
-  const diffInMinutes = Math.floor(diffInMilliseconds / 1000 / 60)
-  const expirationOverrideInMinutes = autoDisableRemoteLoggingIntervalInMinutes - diffInMinutes
-
-  return expirationOverrideInMinutes
+  const diffInMinutes = Math.floor((now - enabledAtTime) / 60000)
+  return autoDisableRemoteLoggingIntervalInMinutes - diffInMinutes
 }
