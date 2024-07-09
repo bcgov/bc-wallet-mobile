@@ -3,13 +3,6 @@ import { expirationOverrideInMinutes } from '../../src/helpers/utils'
 import MockDate from 'mockdate'
 
 jest.useFakeTimers({ legacyFakeTimers: true })
-// jest.spyOn(global, 'setTimeout')
-
-// const advanceToNextFrame = () => {
-//   const now = Date.now()
-//   MockDate.set(new Date(now + unitOfTime))
-//   jest.advanceTimersByTime(unitOfTime)
-// }
 
 describe('Helpers', () => {
   beforeAll(() => {
