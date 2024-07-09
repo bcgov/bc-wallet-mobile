@@ -219,9 +219,7 @@ export class AppContainer implements Container {
           logger.remoteLoggingEnabled = !isOlderThanAutoDisableInterval
           logger.sessionId = sessionId
 
-          logger.info(
-            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}, ${sessionId}`
-          )
+          logger.info(`Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}.`)
         }
       }
 
