@@ -174,8 +174,7 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let environment = initialState.developer.environment
-      let remoteDebugging = initialState.developer.remoteDebugging
+      let { environment, remoteDebugging } = initialState.developer
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -224,11 +223,6 @@ export class AppContainer implements Container {
             `Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}, ${sessionId}`
           )
         }
-        // logger.info(
-        //   `Remote logging ${
-        //     isOlderThanAutoDisableInterval ? 'expired' : 'enabled'
-        //   }, last enabled at ${enabledAt}, session id: ${sessionId}`
-        // )
       }
 
       dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })

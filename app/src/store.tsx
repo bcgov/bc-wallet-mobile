@@ -41,7 +41,7 @@ enum DismissPersonCredentialOfferDispatchAction {
 }
 
 enum RemoteDebuggingDispatchAction {
-  ENABLE_REMOTE_DEBUGGING = 'remoteDebugging/enable',
+  REMOTE_DEBUGGING_STATUS_UPDATE = 'remoteDebugging/enable',
 }
 
 export type BCDispatchAction =
@@ -111,7 +111,7 @@ export const initialState: BCState = {
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
-    case RemoteDebuggingDispatchAction.ENABLE_REMOTE_DEBUGGING: {
+    case RemoteDebuggingDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE: {
       const { enabledAt, sessionId } = (action.payload || []).pop()
       const developer = { ...state.developer, remoteDebugging: { enabledAt, sessionId } }
       const newState = { ...state, developer }
