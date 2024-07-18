@@ -23,6 +23,7 @@ import {
   useContainer,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
@@ -142,6 +143,7 @@ const Splash = () => {
     t('Init.GettingCredentials'),
     t('Init.RegisteringTransports'),
     t('Init.InitializingAgent'),
+    t('Init.CacheWarmup'),
     t('Init.ConnectingLedgers'),
     t('Init.SettingAgent'),
     t('Init.Finishing'),
@@ -410,15 +412,31 @@ const Splash = () => {
         }
 
         setStep(6)
-        await createLinkSecretIfRequired(newAgent)
+        const credDefs = container.resolve(TOKENS.CACHE_CRED_DEFS)
+        const schemas = container.resolve(TOKENS.CACHE_SCHEMAS)
+
+        credDefs.forEach(async ({ did, id }) => {
+          const pool = await poolService.getPoolForDid(newAgent.context, did)
+          const credDefRequest = new GetCredentialDefinitionRequest({ credentialDefinitionId: id })
+          await pool.pool.submitRequest(credDefRequest)
+        })
+
+        schemas.forEach(async ({ did, id }) => {
+          const pool = await poolService.getPoolForDid(newAgent.context, did)
+          const schemaRequest = new GetSchemaRequest({ schemaId: id })
+          await pool.pool.submitRequest(schemaRequest)
+        })
 
         setStep(7)
+        await createLinkSecretIfRequired(newAgent)
+
+        setStep(8)
         setAgent(newAgent)
         if (store.preferences.usePushNotifications) {
           activate(newAgent)
         }
 
-        setStep(8)
+        setStep(9)
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
