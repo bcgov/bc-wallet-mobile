@@ -23,12 +23,6 @@ module.exports = {
     'node_modules\\/(?!(.*react-native.*)|(uuid)|(@aries-framework\\/core)|(@aries-framework\\/anoncreds)|(@hyperledger\\/aries-bifold-core))',
   ],
   testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.[jt]sx?$',
-  testPathIgnorePatterns: [
-    '\\.snap$',
-    '<rootDir>/node_modules/',
-    '<rootDir>/lib',
-    '<rootDir>/__tests__/contexts/',
-    '<rootDir>/__tests__/helpers/',
-  ],
+  testPathIgnorePatterns: ['\\.snap$', '<rootDir>/node_modules/', '<rootDir>/lib', '<rootDir>/__tests__/contexts/'],
   cacheDirectory: '.jest/cache',
 }

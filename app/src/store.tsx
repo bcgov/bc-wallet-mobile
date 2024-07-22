@@ -13,9 +13,14 @@ export interface IASEnvironment {
   iasPortalUrl: string
   attestationInviteUrl: string
 }
+
+export type RemoteDebuggingState = {
+  enabledAt?: Date
+  sessionId?: number
+}
 export interface Developer {
   environment: IASEnvironment
-  remoteLoggingEnabled: boolean
+  remoteDebugging: RemoteDebuggingState
 }
 
 export interface DismissPersonCredentialOffer {
@@ -35,11 +40,19 @@ enum DismissPersonCredentialOfferDispatchAction {
   PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
 }
 
-export type BCDispatchAction = DeveloperDispatchAction | DismissPersonCredentialOfferDispatchAction
+enum RemoteDebuggingDispatchAction {
+  REMOTE_DEBUGGING_STATUS_UPDATE = 'remoteDebugging/enable',
+}
+
+export type BCDispatchAction =
+  | DeveloperDispatchAction
+  | DismissPersonCredentialOfferDispatchAction
+  | RemoteDebuggingDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...DismissPersonCredentialOfferDispatchAction,
+  ...RemoteDebuggingDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -69,9 +82,14 @@ export const iasEnvironments: Array<IASEnvironment> = [
   },
 ]
 
+const remoteDebuggingState: RemoteDebuggingState = {
+  enabledAt: undefined,
+  sessionId: undefined,
+}
+
 const developerState: Developer = {
   environment: iasEnvironments[0],
-  remoteLoggingEnabled: false,
+  remoteDebugging: remoteDebuggingState,
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
@@ -82,6 +100,7 @@ export enum BCLocalStorageKeys {
   PersonCredentialOfferDismissed = 'PersonCredentialOfferDismissed',
   Environment = 'Environment',
   GenesisTransactions = 'GenesisTransactions',
+  RemoteDebugging = 'RemoteDebugging',
 }
 
 export const initialState: BCState = {
@@ -92,6 +111,19 @@ export const initialState: BCState = {
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
+    case RemoteDebuggingDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE: {
+      const { enabledAt, sessionId } = (action.payload || []).pop()
+      const developer = { ...state.developer, remoteDebugging: { enabledAt, sessionId } }
+      const newState = { ...state, developer }
+
+      if (enabledAt) {
+        AsyncStorage.setItem(BCLocalStorageKeys.RemoteDebugging, JSON.stringify(developer.remoteDebugging))
+      } else {
+        AsyncStorage.removeItem(BCLocalStorageKeys.RemoteDebugging)
+      }
+
+      return newState
+    }
     case DeveloperDispatchAction.UPDATE_ENVIRONMENT: {
       const environment: IASEnvironment = (action?.payload || []).pop()
       const developer = { ...state.developer, environment }
