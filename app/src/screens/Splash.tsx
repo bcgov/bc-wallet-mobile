@@ -369,11 +369,11 @@ const Splash = () => {
 
         // If we haven't migrated to Aries Askar yet, we need to do this before we initialize the agent.
         if (!didMigrateToAskar(store.migration)) {
-          newAgent.config.logger.debug('Agent not updated to Aries Askar, updating...')
+          logger.debug('Agent not updated to Aries Askar, updating...')
 
           await migrateToAskar(credentials.id, credentials.key, newAgent)
 
-          newAgent.config.logger.debug('Successfully finished updating agent to Aries Askar')
+          logger.debug('Successfully finished updating agent to Aries Askar')
           // Store that we migrated to askar.
           dispatch({
             type: DispatchAction.DID_MIGRATE_TO_ASKAR,

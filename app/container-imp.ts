@@ -30,10 +30,18 @@ import {
 import { DependencyContainer } from 'tsyringe'
 
 import { autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
+import { expirationOverrideInMinutes } from './src/helpers/utils'
 import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
-import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
+import {
+  BCLocalStorageKeys,
+  BCState,
+  DismissPersonCredentialOffer,
+  IASEnvironment,
+  RemoteDebuggingState,
+  initialState,
+} from './src/store'
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
@@ -50,6 +58,20 @@ export class AppContainer implements Container {
 
   public init(): Container {
     this.log?.info(`Initializing BC Wallet App container`)
+
+    const logOptions: RemoteLoggerOptions = {
+      lokiUrl: Config.REMOTE_LOGGING_URL,
+      lokiLabels: {
+        application: getApplicationName().toLowerCase(),
+        job: 'react-native-logs',
+        version: `${getVersion()}-${getBuildNumber()}`,
+        system: `${getSystemName()} v${getSystemVersion()}`,
+      },
+      autoDisableRemoteLoggingIntervalInMinutes,
+    }
+
+    const logger = new RemoteLogger(logOptions)
+    logger.startEventListeners()
 
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
@@ -151,7 +173,7 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let environment = initialState.developer.environment
+      let { environment, remoteDebugging } = initialState.developer
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -168,6 +190,7 @@ export class AppContainer implements Container {
           (val) => (personCredOfferDissmissed = val)
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
+        loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
       ])
       const state: BCState = {
         ...initialState,
@@ -180,23 +203,31 @@ export class AppContainer implements Container {
         developer: {
           ...initialState.developer,
           environment,
+          remoteDebugging: {
+            enabledAt: remoteDebugging.enabledAt ? new Date(remoteDebugging.enabledAt) : undefined,
+            sessionId: remoteDebugging.sessionId,
+          },
         },
       }
+
+      const { enabledAt, sessionId } = state.developer.remoteDebugging
+      if (enabledAt) {
+        const override = expirationOverrideInMinutes(enabledAt, autoDisableRemoteLoggingIntervalInMinutes)
+
+        if (override > 0) {
+          logger.remoteLoggingEnabled = true
+          logger.sessionId = sessionId
+          logger.overrideCurrentAutoDisableExpiration(override)
+
+          logger.info(
+            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}.  Expiration override is ${override} minutes`
+          )
+        }
+      }
+
       dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
     })
 
-    const logOptions: RemoteLoggerOptions = {
-      lokiUrl: Config.REMOTE_LOGGING_URL,
-      lokiLabels: {
-        application: getApplicationName().toLowerCase(),
-        job: 'react-native-logs',
-        version: `${getVersion()}-${getBuildNumber()}`,
-        system: `${getSystemName()} v${getSystemVersion()}`,
-      },
-      autoDisableRemoteLoggingIntervalInMinutes,
-    }
-    const logger = new RemoteLogger(logOptions)
-    logger.startEventListeners()
     this._container.registerInstance(TOKENS.UTIL_LOGGER, logger)
 
     return this

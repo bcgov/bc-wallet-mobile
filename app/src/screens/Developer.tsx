@@ -8,7 +8,7 @@ import { DeviceEventEmitter, Modal, StyleSheet, Switch, Text, Pressable, View, S
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import { BCState } from '../store'
+import { BCState, BCDispatchAction } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
@@ -199,10 +199,18 @@ const Settings: React.FC = () => {
     setEnableWalletNaming((previousState) => !previousState)
   }
 
-  const toggleRemoteLoggingWarningSwitch = () => {
+  const toggleRemoteLoggingSwitch = () => {
     if (remoteLoggingEnabled) {
-      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, false)
-      setRemoteLoggingEnabled(false)
+      const remoteLoggingEnabled = false
+
+      DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
+      setRemoteLoggingEnabled(remoteLoggingEnabled)
+
+      dispatch({
+        type: BCDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE,
+        payload: [{ enabled: remoteLoggingEnabled, expireAt: undefined }],
+      })
+
       return
     }
 
@@ -210,7 +218,13 @@ const Settings: React.FC = () => {
   }
 
   const onEnableRemoteLoggingPressed = () => {
-    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, true)
+    const remoteLoggingEnabled = true
+    DeviceEventEmitter.emit(RemoteLoggerEventTypes.ENABLE_REMOTE_LOGGING, remoteLoggingEnabled)
+    dispatch({
+      type: BCDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE,
+      payload: [{ enabledAt: new Date(), sessionId: logger.sessionId }],
+    })
+    setRemoteLoggingEnabled(remoteLoggingEnabled)
 
     setRemoteLoggingWarningModalVisible(false)
     navigation.navigate(Screens.Home as never)
@@ -393,7 +407,7 @@ const Settings: React.FC = () => {
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
             thumbColor={remoteLoggingEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
-            onValueChange={toggleRemoteLoggingWarningSwitch}
+            onValueChange={toggleRemoteLoggingSwitch}
             value={remoteLoggingEnabled}
             disabled={!store.authentication.didAuthenticate}
           />
