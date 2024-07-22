@@ -8968,6 +8968,7 @@ __metadata:
     "@hyperledger/aries-oca": "npm:1.0.0-alpha.274"
     "@hyperledger/aries-react-native-attestation": "npm:1.0.0-alpha.274"
     "@hyperledger/indy-vdr-react-native": "npm:0.2.2"
+    "@hyperledger/indy-vdr-shared": "npm:0.2.2"
     "@react-native-async-storage/async-storage": "npm:1.15.11"
     "@react-native-community/masked-view": "npm:0.1.11"
     "@react-native-community/netinfo": "npm:9.3.7"

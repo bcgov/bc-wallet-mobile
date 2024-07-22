@@ -159,6 +159,7 @@ const translation = {
     "GettingCredentials": "Getting wallet credentials...",
     "RegisteringTransports": "Registering transports...",
     "InitializingAgent": "Initializing agent...",
+    "CacheWarmup": "Warming up cache...",
     "ConnectingLedgers": "Connecting to ledgers...",
     "SettingAgent": "Setting agent...",
     "Finishing": "Finishing..."

@@ -158,6 +158,7 @@ const translation = {
     "GettingCredentials": "Récupération des identifiants du portefeuille...",
     "RegisteringTransports": "Enregistrement des transports...",
     "InitializingAgent": "Initialisation de l'agent...",
+    "CacheWarmup": "Warming up cache... (FR)",
     "ConnectingLedgers": "Connexion aux registres...",
     "SettingAgent": "Paramétrage de l'agent...",
     "Finishing": "Finalisation...",
