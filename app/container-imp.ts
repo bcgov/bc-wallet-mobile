@@ -30,6 +30,7 @@ import {
 import { DependencyContainer } from 'tsyringe'
 
 import { autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
+import { expirationOverrideInMinutes } from './src/helpers/utils'
 import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
@@ -41,9 +42,7 @@ import {
   RemoteDebuggingState,
   initialState,
 } from './src/store'
-import { useProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
-import { BaseLogger } from '@credo-ts/core'
-import { expirationOverrideInMinutes } from './src/helpers/utils'
+
 export class AppContainer implements Container {
   private _container: DependencyContainer
   private log?: BaseLogger
