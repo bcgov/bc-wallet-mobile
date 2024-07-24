@@ -1,13 +1,11 @@
-import { ProofState, ProofExchangeRecord, CredentialState } from '@credo-ts/core'
+import { ProofState, CredentialState } from '@credo-ts/core'
 import { useAgent, useProofByState, useCredentialByState } from '@credo-ts/react-hooks'
 import {
-  useConfiguration,
   useStore,
   useTheme,
   Button,
   ButtonType,
   testIdWithKey,
-  BifoldAgent,
   Screens,
   Stacks,
   InfoTextBox,
@@ -57,12 +55,10 @@ export default function PersonCredential() {
   const [workflowInProgress, setWorkflowInProgress] = useState<boolean>(false)
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
-  const { useAttestation } = useConfiguration()
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
   const receivedProofRequests = useProofByState(ProofState.RequestReceived)
   const navigation = useNavigation()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
-  const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
   const timer = useRef<NodeJS.Timeout>()
   const logger = useContainer().resolve(TOKENS.UTIL_LOGGER)
@@ -132,23 +128,6 @@ export default function PersonCredential() {
     return await Linking.canOpenURL('ca.bc.gov.id.servicescard://')
   }
 
-  // Use this function to accept the attestation proof request.
-  const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
-    logger.info('Attestation: selecting credentials for attestation proof request')
-    // This will throw if we don't have the necessary credentials
-    const credentials = await agent.proofs.selectCredentialsForRequest({
-      proofRecordId: proofRequest.id,
-    })
-
-    logger.info('Attestation: accepting attestation proof request')
-    await agent.proofs.acceptRequest({
-      proofRecordId: proofRequest.id,
-      proofFormats: credentials.proofFormats,
-    })
-
-    return true
-  }
-
   // when a person credential offer is received, show the
   // offer screen to the user.
   const goToCredentialOffer = (credentialId?: string) => {
@@ -168,7 +147,19 @@ export default function PersonCredential() {
       DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
     }
 
+    const handleStartedAttestation = () => {
+      console.log('************************** 111 AttestationEventTypes.Started')
+    }
+
+    const handleStartedCompleted = () => {
+      console.log('************************** 111 AttestationEventTypes.Completed')
+      timer.current && clearTimeout(timer.current)
+      setDidCompleteAttestationProofRequest(true)
+    }
+
     const subscriptions = Array<EmitterSubscription>()
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Started, handleStartedAttestation))
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Completed, handleStartedCompleted))
     subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, handleFailedAttestation))
     subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, handleFailedAttestation))
     subscriptions.push(
@@ -218,39 +209,6 @@ export default function PersonCredential() {
         logger.error(`Failed to connect to IAS agent, error: ${error.message}`)
       })
   }, [])
-
-  useEffect(() => {
-    // If we are fetching an attestation credential, do no yet have
-    // a remote connection ID to the IAS agent, or the agent is not
-    // initialized, do nothing.
-    if (attestationLoading || !remoteAgentDetails || !agent) {
-      return
-    }
-
-    // We have an attestation credential and can respond to an
-    // attestation proof request.
-    const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentDetails.connectionId)
-    if (!proofRequest) {
-      // No proof from our IAS Agent to respond to, do nothing.
-      return
-    }
-
-    timer.current && clearTimeout(timer.current)
-
-    if (!didCompleteAttestationProofRequest) {
-      acceptAttestationProofRequest(agent, proofRequest)
-        .then((status: boolean) => {
-          // We can unblock the workflow and proceed with
-          // authentication.
-          setDidCompleteAttestationProofRequest(status)
-          logger.info(`Accepted IAS attestation proof request with status: ${status}`)
-        })
-        .catch((error) => {
-          setDidCompleteAttestationProofRequest(false)
-          logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
-        })
-    }
-  }, [attestationLoading, receivedProofRequests, remoteAgentDetails, agent])
 
   useEffect(() => {
     if (!remoteAgentDetails || !remoteAgentDetails.legacyConnectionDid || !didCompleteAttestationProofRequest) {
