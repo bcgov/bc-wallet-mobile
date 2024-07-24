@@ -30,8 +30,18 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
 
   useEffect(() => {
     const subscriptions = Array<EmitterSubscription>()
-    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Started, () => setLoading(true)))
-    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Completed, () => setLoading(false)))
+    subscriptions.push(
+      DeviceEventEmitter.addListener(AttestationEventTypes.Started, () => {
+        console.log('************************** AttestationEventTypes.Started')
+        setLoading(true)
+      })
+    )
+    subscriptions.push(
+      DeviceEventEmitter.addListener(AttestationEventTypes.Completed, () => {
+        console.log('************************** AttestationEventTypes.Completed')
+        setLoading(false)
+      })
+    )
     subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, () => setLoading(false)))
     subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, () => setLoading(false)))
     subscriptions.push(
@@ -51,6 +61,7 @@ export const AttestationProvider: React.FC<AttestationProviderParams> = ({ child
     const options = {
       attestationInviteUrl,
       attestationCredDefIds,
+      shouldHandleProofRequestAutomatically: true,
     }
 
     am = new AttestationMonitor(agent, logger, options)
