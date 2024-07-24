@@ -1,7 +1,7 @@
 name: Native Build & Test
 
 env:
-  cacheId: "4" # increment to expire the cache
+  cacheId: "5" # increment to expire the cache
   appBuildNumber: ${{ github.run_number }}
   appBuildVersion: "0.0.3"
 
@@ -62,7 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
@@ -76,12 +76,10 @@ jobs:
 
       - name: What XCode are we using?
         run: |
-          find /Applications -type d -maxdepth 1 -iname 'xcode*.app'
-          sudo xcode-select --switch /Applications/Xcode_15.2.app
-          sudo xcode-select -p
+          xcode-select -p
 
       - name: Cached pip dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         id: pip-cache
         with:
           path: ~/.cache/pip
@@ -91,7 +89,7 @@ jobs:
 
       - name: Cache pod dependencies
         id: pod-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: |
             app/ios/Pods
@@ -103,7 +101,7 @@ jobs:
 
       - name: Restore cached derived data
         id: cache-dd-restore
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v3
         with:
           path: app/ios/xbuild/Build
           key: ${{ runner.os }}-dd-xcode
@@ -116,11 +114,12 @@ jobs:
 
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
-        working-directory: app
+        working-directory: app/ios
         run: |
-          yarn run ios:setup && \
+          bundle install --frozen --gemfile=${BUNDLE_GEMFILE} && \
+          pod install && \
           git status && \
-          git diff ios/Podfile.lock
+          git diff Podfile.lock
 
       - name: Bump Build No.
         working-directory: app/ios
@@ -186,7 +185,7 @@ jobs:
 
       - name: Save cache for derived data
         id: cache-dd-save
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v3
         with:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
@@ -252,7 +251,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
           distribution: "zulu"
           java-version: 11
@@ -324,7 +323,7 @@ jobs:
         run: |
           find . -type f -name '*.apk'
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: android
           path: |
@@ -432,7 +431,7 @@ jobs:
     needs: [ship-to-lambdatest]
     runs-on: ubuntu-22.04
     strategy:
-      max-parallel: 2
+      max-parallel: 1
       fail-fast: false
       matrix:
         include:
