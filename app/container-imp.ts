@@ -211,7 +211,7 @@ export class AppContainer implements Container {
       }
 
       const { enabledAt, sessionId } = state.developer.remoteDebugging
-      if (enabledAt) {
+      if (enabledAt && sessionId) {
         const override = expirationOverrideInMinutes(enabledAt, autoDisableRemoteLoggingIntervalInMinutes)
 
         if (override > 0) {
