@@ -1,12 +1,13 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   CredentialExchangeRecord,
   CredentialExchangeRecordProps,
   CredentialPreviewAttribute,
+  CredentialRole,
   CredentialState,
   RevocationNotification,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import {
   components,
   ConfigurationContext,
@@ -74,6 +75,7 @@ const CredentialWrapper = ({
 }: CredentialProps) => {
   const indyCredential = { credentialRecordType: 'indy', credentialRecordId }
   const props: CredentialExchangeRecordProps = {
+    role: CredentialRole.Issuer,
     connectionId: connectionId,
     threadId: '',
     state: CredentialState.CredentialIssued,

@@ -1,0 +1,131 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "logstack.fullname" . }}-loki
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: loki
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: loki
+        {{- include "logstack.labels" . | nindent 8 }}
+    spec:
+      volumes:
+        - name: loki-config
+          configMap:
+            name: {{ include "logstack.fullname" . }}-loki-config
+        - name: cache-volume
+          emptyDir:
+            sizeLimit: {{ .Values.cacheVolumeSize }}
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      initContainers:
+        - name: create-bucket
+          image: "{{ .Values.images.registry }}/{{ .Values.images.minio.repository }}:{{ .Values.images.minio.tag | default .Chart.AppVersion }}"
+          command:
+          - /bin/sh
+          - -c
+          - >
+            mc alias set minio http://{{ include "logstack.fullname" $ }}-minio.{{ $.Values.namespace }}.svc.cluster.local:9000 $MINIO_ACCESS_KEY $MINIO_SECRET_KEY &&
+            mc mb --ignore-existing minio/loki-data
+          envFrom:
+            - secretRef:
+                name: {{ include "logstack.fullname" . }}-minio-creds
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.images.registry }}/{{ .Values.images.loki.repository }}:{{ .Values.images.loki.tag | default .Chart.AppVersion }}"
+          resources:
+            {{- toYaml .Values.resources.loki | nindent 12 }}
+          ports:
+            {{- range $name, $port := .Values.services.loki }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+            {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ include "logstack.fullname" . }}-minio-creds
+          args:
+            - -config.file={{ .Values.env.LOKI_CONFIG_PATH }}  
+            - -config.expand-env=true
+          volumeMounts:
+            - name: loki-config
+              mountPath: {{ .Values.env.LOKI_CONFIG_PATH }} 
+              subPath: {{ .Values.env.LOKI_CONFIG_PATH | base}}
+            - name: cache-volume
+              mountPath: /var/loki
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 120
+            periodSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 90
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "logstack.fullname" . }}-proxy
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: proxy
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: proxy
+        {{- include "logstack.labels" . | nindent 8 }}
+    spec:
+      volumes:
+        - name: loki-proxy-config
+          configMap:
+            name: {{ include "logstack.fullname" . }}-proxy-config
+      imagePullSecrets:
+        {{- toYaml .Values.imagePullSecrets | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.images.registry }}/{{ .Values.images.proxy.repository }}:{{ .Values.images.proxy.tag | default .Chart.AppVersion }}"
+          resources:
+            {{- toYaml .Values.resources.proxy | nindent 12 }}
+          ports:
+            {{- range $name, $port := .Values.services.proxy }}
+            - name: {{ .name }}
+              containerPort: {{ .port }}
+            {{- end }}
+          volumeMounts:
+            - name: loki-proxy-config
+              mountPath: {{.Values.env.CADDY_CONFIG_PATH }} 
+              subPath: {{.Values.env.CADDY_CONFIG_PATH | base}}
+          livenessProbe:
+            httpGet:
+              path: /ehlo
+              port: http
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ehlo
+              port: http
+            timeoutSeconds: 3

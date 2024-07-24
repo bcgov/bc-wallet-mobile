@@ -12,14 +12,14 @@ export interface IASEnvironment {
   name: string
   iasAgentInviteUrl: string
   iasPortalUrl: string
+  attestationInviteUrl: string
 }
-interface Developer {
+export interface Developer {
   environment: IASEnvironment
-  attestationSupportEnabled: boolean
   remoteLoggingEnabled: boolean
 }
 
-interface DismissPersonCredentialOffer {
+export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
@@ -30,7 +30,6 @@ export interface BCState extends BifoldState {
 
 enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
-  ATTESTATION_SUPPORT = 'preferences/attestationSupport',
 }
 
 enum DismissPersonCredentialOfferDispatchAction {
@@ -49,17 +48,18 @@ export const iasEnvironments: Array<IASEnvironment> = [
     name: 'MCN',
     iasAgentInviteUrl: Config.MCN_MEDIATOR_URL ?? '',
     iasPortalUrl: '',
+    attestationInviteUrl: '',
   },
   {
     name: 'CQEN',
     iasAgentInviteUrl: Config.CQEN_MEDIATOR_URL ?? '',
     iasPortalUrl: '',
+    attestationInviteUrl: '',
   },
 ]
 
 const developerState: Developer = {
   environment: iasEnvironments[0],
-  attestationSupportEnabled: false,
   remoteLoggingEnabled: false,
 }
 
@@ -70,7 +70,6 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 export enum BCLocalStorageKeys {
   PersonCredentialOfferDismissed = 'PersonCredentialOfferDismissed',
   Environment = 'Environment',
-  Attestation = 'Attestation',
   GenesisTransactions = 'GenesisTransactions',
 }
 
@@ -82,13 +81,6 @@ export const initialState: BCState = {
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
-    case BCDispatchAction.ATTESTATION_SUPPORT: {
-      const choice = (action?.payload ?? []).pop() ?? false
-      const developer = { ...state.developer, attestationSupportEnabled: choice }
-      AsyncStorage.setItem(BCLocalStorageKeys.Attestation, JSON.stringify(developer.attestationSupportEnabled))
-
-      return { ...state, developer }
-    }
     case DeveloperDispatchAction.UPDATE_ENVIRONMENT: {
       const environment: IASEnvironment = (action?.payload || []).pop()
       const developer = { ...state.developer, environment }

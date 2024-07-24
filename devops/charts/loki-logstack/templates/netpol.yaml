@@ -1,0 +1,151 @@
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "logstack.fullname" . }}-proxy-ingress
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: proxy
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network.openshift.io/policy-group: ingress
+  policyTypes:
+    - Ingress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "logstack.fullname" . }}-proxy-to-loki
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: loki
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  ingress:
+    - ports:
+      - protocol: TCP
+        port: 3100
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: proxy
+              {{- include "logstack.selectorLabels" . | nindent 14 }}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+  policyTypes:
+    - Ingress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "logstack.fullname" . }}-loki-to-memcached
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: memcached
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  ingress:
+    - ports:
+      - protocol: TCP
+        port: 11211
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: loki
+              {{- include "logstack.selectorLabels" . | nindent 14 }}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+  policyTypes:
+    - Ingress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "logstack.fullname" . }}-loki-to-minio
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: minio
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  ingress:
+    - ports:
+      - protocol: TCP
+        port: 9000
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: loki
+              {{- include "logstack.selectorLabels" . | nindent 14 }}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+  policyTypes:
+    - Ingress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "logstack.fullname" . }}-minio-to-minio
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: minio
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  ingress:
+    - ports:
+      - protocol: TCP
+        port: 9000
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: minio
+              {{- include "logstack.selectorLabels" . | nindent 14 }}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+  policyTypes:
+    - Ingress
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: {{ include "logstack.fullname" . }}-loki-to-loki
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+  annotations: {{- toYaml .Values.route.annotations | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: loki
+      {{- include "logstack.selectorLabels" . | nindent 6 }}
+  ingress:
+    - ports:
+      - protocol: TCP
+        port: 7946
+      - protocol: UDP
+        port: 7946
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: loki
+              {{- include "logstack.selectorLabels" . | nindent 14 }}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.namespace }}
+  policyTypes:
+    - Ingress

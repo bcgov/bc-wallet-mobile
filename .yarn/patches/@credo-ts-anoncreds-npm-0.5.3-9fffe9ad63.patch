@@ -1,0 +1,240 @@
+diff --git a/build/anoncreds-rs/AnonCredsRsHolderService.js b/build/anoncreds-rs/AnonCredsRsHolderService.js
+index 36304094b5e75dde1d8538a49e2a9ff1093aca22..bcf3ec4ca67f539fbc9e92d6b68937c7fa647326 100644
+--- a/build/anoncreds-rs/AnonCredsRsHolderService.js
++++ b/build/anoncreds-rs/AnonCredsRsHolderService.js
+@@ -18,6 +18,7 @@ const utils_1 = require("../utils");
+ const indyIdentifiers_1 = require("../utils/indyIdentifiers");
+ const linkSecret_1 = require("../utils/linkSecret");
+ const metadata_1 = require("../utils/metadata");
++const proofRequest_1 = require("../utils/proofRequest");
+ const w3cAnonCredsUtils_1 = require("../utils/w3cAnonCredsUtils");
+ const utils_2 = require("./utils");
+ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+@@ -81,7 +82,7 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+                         ].join('\n'));
+                     }
+                 }
+-                const { linkSecretId, revocationRegistryId, credentialRevocationId } = (0, w3cAnonCredsUtils_1.getAnoncredsCredentialInfoFromRecord)(credentialRecord);
++                const { linkSecretId, revocationRegistryId, credentialRevocationId } = (0, w3cAnonCredsUtils_1.getAnoncredsCredentialInfoFromRecord)(credentialRecord, (0, proofRequest_1.proofRequestUsesUnqualifiedIdentifiers)(proofRequest));
+                 // TODO: Check if credential has a revocation registry id (check response from anoncreds-rs API, as it is
+                 // sending back a mandatory string in Credential.revocationRegistryId)
+                 const timestamp = attribute.timestamp;
+@@ -307,7 +308,7 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+         const w3cCredentialRepository = agentContext.dependencyManager.resolve(core_1.W3cCredentialRepository);
+         const w3cCredentialRecord = await w3cCredentialRepository.findById(agentContext, options.id);
+         if (w3cCredentialRecord)
+-            return (0, w3cAnonCredsUtils_1.getAnoncredsCredentialInfoFromRecord)(w3cCredentialRecord);
++            return (0, w3cAnonCredsUtils_1.getAnoncredsCredentialInfoFromRecord)(w3cCredentialRecord, options.useUnqualifiedIdentifiersIfPresent);
+         const anonCredsCredentialRepository = agentContext.dependencyManager.resolve(repository_1.AnonCredsCredentialRepository);
+         const anonCredsCredentialRecord = await anonCredsCredentialRepository.getByCredentialId(agentContext, options.id);
+         agentContext.config.logger.warn([
+@@ -416,6 +417,7 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+             throw new error_1.AnonCredsRsError(`Referent not found in proof request`);
+         }
+         const $and = [];
++        const useUnqualifiedIdentifiers = (0, proofRequest_1.proofRequestUsesUnqualifiedIdentifiers)(proofRequest);
+         // Make sure the attribute(s) that are requested are present using the marker tag
+         const attributes = (_b = requestedAttribute.names) !== null && _b !== void 0 ? _b : [requestedAttribute.name];
+         const attributeQuery = {};
+@@ -445,7 +447,7 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+         }
+         const credentialWithMetadata = credentials.map((credentialRecord) => {
+             return {
+-                credentialInfo: (0, w3cAnonCredsUtils_1.getAnoncredsCredentialInfoFromRecord)(credentialRecord),
++                credentialInfo: (0, w3cAnonCredsUtils_1.getAnoncredsCredentialInfoFromRecord)(credentialRecord, useUnqualifiedIdentifiers),
+                 interval: proofRequest.non_revoked,
+             };
+         });
+diff --git a/build/formats/AnonCredsCredentialFormatService.js b/build/formats/AnonCredsCredentialFormatService.js
+index 32b00024498dab50a3482df27e6f97671009678e..bd492add83af41486ef9901e8b8ef590264628b3 100644
+--- a/build/formats/AnonCredsCredentialFormatService.js
++++ b/build/formats/AnonCredsCredentialFormatService.js
+@@ -203,7 +203,7 @@ class AnonCredsCredentialFormatService {
+             const revocationStatusListResult = await (0, utils_1.fetchRevocationStatusList)(agentContext, revocationRegistryDefinitionId, (0, utils_1.dateToTimestamp)(new Date()));
+             revocationStatusList = revocationStatusListResult.revocationStatusList;
+         }
+-        const { credential } = await anonCredsIssuerService.createCredential(agentContext, {
++        const { credential, credentialRevocationId } = await anonCredsIssuerService.createCredential(agentContext, {
+             credentialOffer,
+             credentialRequest,
+             credentialValues: (0, credential_1.convertAttributesToCredentialValues)(credentialAttributes),
+@@ -211,6 +211,17 @@ class AnonCredsCredentialFormatService {
+             revocationRegistryIndex,
+             revocationStatusList,
+         });
++        // If the credential is revocable, store the revocation identifiers in the credential record
++        if (credential.rev_reg_id) {
++            credentialRecord.metadata.add<AnonCredsCredentialMetadata>(AnonCredsCredentialMetadataKey, {
++                revocationRegistryId: revocationRegistryDefinitionId ?? undefined,
++                credentialRevocationId: credentialRevocationId ?? undefined,
++            })
++            credentialRecord.setTags({
++                anonCredsRevocationRegistryId: revocationRegistryDefinitionId,
++                anonCredsCredentialRevocationId: credentialRevocationId,
++            })
++        }
+         const format = new core_1.CredentialFormatSpec({
+             attachmentId,
+             format: ANONCREDS_CREDENTIAL,
+diff --git a/build/formats/LegacyIndyCredentialFormatService.js b/build/formats/LegacyIndyCredentialFormatService.js
+index 05f6bfef79ed716036430de6903348c11675a131..0f09bd59b8db5243e082a3f093d23bea89278d3c 100644
+--- a/build/formats/LegacyIndyCredentialFormatService.js
++++ b/build/formats/LegacyIndyCredentialFormatService.js
+@@ -198,6 +198,7 @@ class LegacyIndyCredentialFormatService {
+             });
+             credentialRecord.setTags({
+                 anonCredsRevocationRegistryId: credential.rev_reg_id,
++                anonCredsUnqualifiedRevocationRegistryId: credential.rev_reg_id,
+                 anonCredsCredentialRevocationId: credentialRevocationId,
+             });
+         }
+@@ -256,6 +257,7 @@ class LegacyIndyCredentialFormatService {
+             });
+             credentialRecord.setTags({
+                 anonCredsRevocationRegistryId: credential.revocationRegistryId,
++                anonCredsUnqualifiedRevocationRegistryId: anonCredsCredential.rev_reg_id,
+                 anonCredsCredentialRevocationId: credential.credentialRevocationId,
+             });
+         }
+diff --git a/build/updates/0.4-0.5/anonCredsCredentialRecord.js b/build/updates/0.4-0.5/anonCredsCredentialRecord.js
+index 915dffae9bd592aa489ef8ce5c31c9d3a8ce2ec3..559ae3352106e063ec7da045054bed096148fb2f 100644
+--- a/build/updates/0.4-0.5/anonCredsCredentialRecord.js
++++ b/build/updates/0.4-0.5/anonCredsCredentialRecord.js
+@@ -112,6 +112,16 @@ async function migrateLegacyToW3cCredential(agentContext, legacyRecord) {
+                 credentialRecordType: 'w3c',
+                 credentialRecordId: w3cCredentialRecord.id,
+             };
++            // If using Indy dids, store both qualified/unqualified revRegId forms
++            // to allow retrieving it from revocation notification service
++            if (legacyTags.revocationRegistryId && indyNamespace) {
++                const { credentialDefinitionTag, namespaceIdentifier, revocationRegistryTag, schemaSeqNo } =
++                    (0, indyIdentifiers_1.parseIndyRevocationRegistryId)(legacyTags.revocationRegistryId)
++                relatedCredentialExchangeRecord.setTags({
++                    anonCredsRevocationRegistryId: (0, indyIdentifiers_1.getQualifiedDidIndyDid)(legacyTags.revocationRegistryId, indyNamespace),
++                    anonCredsUnqualifiedRevocationRegistryId: (0, indyIdentifiers_1.getUnqualifiedRevocationRegistryDefinitionId)(namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag),
++                })
++            }
+             await credentialExchangeRepository.update(agentContext, relatedCredentialExchangeRecord);
+         }
+     }
+@@ -130,11 +140,11 @@ async function storeAnonCredsInW3cFormatV0_5(agent) {
+         try {
+             await migrateLegacyToW3cCredential(agent.context, record);
+             await anoncredsRepository.delete(agent.context, record);
++            agent.config.logger.debug(`Successfully migrated w3c credential record with id ${record.id} to storage version 0.5`);
+         }
+         catch (error) {
+             agent.config.logger.error(`Failed to migrate w3c credential record with id ${record.id} to storage version 0.5`, error);
+         }
+-        agent.config.logger.debug(`Successfully migrated w3c credential record with id ${record.id} to storage version 0.5`);
+     }
+ }
+ exports.storeAnonCredsInW3cFormatV0_5 = storeAnonCredsInW3cFormatV0_5;
+diff --git a/build/utils/indyIdentifiers.js b/build/utils/indyIdentifiers.js
+index ffa72b308239894b65fc796254e5c458299065fe..0702fb0d2a552434f79c0ecdc134357280e4a4a1 100644
+--- a/build/utils/indyIdentifiers.js
++++ b/build/utils/indyIdentifiers.js
+@@ -167,6 +167,7 @@ function getIndyNamespaceFromIndyDid(identifier) {
+ }
+ exports.getIndyNamespaceFromIndyDid = getIndyNamespaceFromIndyDid;
+ function getUnQualifiedDidIndyDid(identifier) {
++    if (isUnqualifiedIndyDid(identifier)) return identifier;
+     if (isDidIndySchemaId(identifier)) {
+         const { schemaName, schemaVersion, namespaceIdentifier } = parseIndySchemaId(identifier);
+         return getUnqualifiedSchemaId(namespaceIdentifier, schemaName, schemaVersion);
+diff --git a/build/utils/proofRequest.js b/build/utils/proofRequest.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..93208de78a7f13d64b756824c725d0b0bf263236
+--- /dev/null
++++ b/build/utils/proofRequest.js
+@@ -0,0 +1,24 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.proofRequestUsesUnqualifiedIdentifiers = void 0;
++const indyIdentifiers_1 = require("./indyIdentifiers");
++
++function proofRequestUsesUnqualifiedIdentifiers(proofRequest) {
++  // We assume that if any identifier is unqualified, all of them are unqualified as well
++  return [
++    ...Object.values(proofRequest.requested_attributes),
++    ...Object.values(proofRequest.requested_predicates),
++  ].some((attribute) =>
++    attribute.restrictions?.some(
++      (restriction) =>
++        (restriction.cred_def_id && (0, indyIdentifiers_1.isUnqualifiedCredentialDefinitionId)(restriction.cred_def_id)) ||
++        (restriction.schema_id && (0, indyIdentifiers_1.isUnqualifiedSchemaId)(restriction.schema_id)) ||
++        (restriction.issuer_did && (0, indyIdentifiers_1.isUnqualifiedIndyDid)(restriction.issuer_did)) ||
++        (restriction.issuer_id && (0, indyIdentifiers_1.isUnqualifiedIndyDid)(restriction.issuer_id)) ||
++        (restriction.schema_issuer_did && (0, indyIdentifiers_1.isUnqualifiedIndyDid)(restriction.schema_issuer_did)) ||
++        (restriction.schema_issuer_id && (0, indyIdentifiers_1.isUnqualifiedIndyDid)(restriction.schema_issuer_id)) ||
++        (restriction.rev_reg_id && (0, indyIdentifiers_1.isUnqualifiedRevocationRegistryId)(restriction.rev_reg_id))
++    )
++  )
++}
++exports.proofRequestUsesUnqualifiedIdentifiers = proofRequestUsesUnqualifiedIdentifiers;
+\ No newline at end of file
+diff --git a/build/utils/w3cAnonCredsUtils.js b/build/utils/w3cAnonCredsUtils.js
+index ffd736f2261e9187b00e471c2ed1b2f4863960b9..6dfb1488a086516b9ffbaa28b454708eb76d49e0 100644
+--- a/build/utils/w3cAnonCredsUtils.js
++++ b/build/utils/w3cAnonCredsUtils.js
+@@ -5,7 +5,7 @@ const core_1 = require("@credo-ts/core");
+ const credential_1 = require("./credential");
+ const indyIdentifiers_1 = require("./indyIdentifiers");
+ const metadata_1 = require("./metadata");
+-function anonCredsCredentialInfoFromW3cRecord(w3cCredentialRecord) {
++function anonCredsCredentialInfoFromW3cRecord(w3cCredentialRecord, useUnqualifiedIdentifiers) {
+     var _a, _b, _c, _d;
+     if (Array.isArray(w3cCredentialRecord.credential.credentialSubject)) {
+         throw new core_1.CredoError('Credential subject must be an object, not an array.');
+@@ -16,13 +16,27 @@ function anonCredsCredentialInfoFromW3cRecord(w3cCredentialRecord) {
+     const anonCredsCredentialMetadata = w3cCredentialRecord.metadata.get(metadata_1.W3cAnonCredsCredentialMetadataKey);
+     if (!anonCredsCredentialMetadata)
+         throw new core_1.CredoError('AnonCreds metadata not found on credential record.');
++    const credentialDefinitionId =
++        useUnqualifiedIdentifiers && anonCredsTags.anonCredsUnqualifiedCredentialDefinitionId
++        ? anonCredsTags.anonCredsUnqualifiedCredentialDefinitionId
++        : anonCredsTags.anonCredsCredentialDefinitionId
++
++    const schemaId =
++        useUnqualifiedIdentifiers && anonCredsTags.anonCredsUnqualifiedSchemaId
++        ? anonCredsTags.anonCredsUnqualifiedSchemaId
++        : anonCredsTags.anonCredsSchemaId
++
++    const revocationRegistryId =
++        useUnqualifiedIdentifiers && anonCredsTags.anonCredsUnqualifiedRevocationRegistryId
++        ? anonCredsTags.anonCredsUnqualifiedRevocationRegistryId
++        : anonCredsTags.anonCredsRevocationRegistryId ?? null
+     return {
+         attributes: (_a = w3cCredentialRecord.credential.credentialSubject.claims) !== null && _a !== void 0 ? _a : {},
+         credentialId: w3cCredentialRecord.id,
+-        credentialDefinitionId: anonCredsTags.anonCredsCredentialDefinitionId,
+-        schemaId: anonCredsTags.anonCredsSchemaId,
++        credentialDefinitionId,
++        schemaId,
+         credentialRevocationId: (_b = anonCredsCredentialMetadata.credentialRevocationId) !== null && _b !== void 0 ? _b : null,
+-        revocationRegistryId: (_c = anonCredsTags.anonCredsRevocationRegistryId) !== null && _c !== void 0 ? _c : null,
++        revocationRegistryId,
+         methodName: anonCredsCredentialMetadata.methodName,
+         linkSecretId: anonCredsCredentialMetadata.linkSecretId,
+         createdAt: w3cCredentialRecord.createdAt,
+@@ -48,9 +62,9 @@ function anonCredsCredentialInfoFromAnonCredsRecord(anonCredsCredentialRecord) {
+         updatedAt: (_c = anonCredsCredentialRecord.updatedAt) !== null && _c !== void 0 ? _c : anonCredsCredentialRecord.createdAt,
+     };
+ }
+-function getAnoncredsCredentialInfoFromRecord(credentialRecord) {
++function getAnoncredsCredentialInfoFromRecord(credentialRecord, useUnqualifiedIdentifiersIfPresent) {
+     if (credentialRecord instanceof core_1.W3cCredentialRecord) {
+-        return anonCredsCredentialInfoFromW3cRecord(credentialRecord);
++        return anonCredsCredentialInfoFromW3cRecord(credentialRecord, useUnqualifiedIdentifiersIfPresent);
+     }
+     else {
+         return anonCredsCredentialInfoFromAnonCredsRecord(credentialRecord);
+@@ -104,7 +118,7 @@ exports.getStoreCredentialOptions = getStoreCredentialOptions;
+ function getW3cRecordAnonCredsTags(options) {
+     var _a;
+     const { credentialSubject, issuerId, schema, schemaId, credentialDefinitionId, revocationRegistryId, credentialRevocationId, linkSecretId, methodName, } = options;
+-    const anonCredsCredentialRecordTags = Object.assign({ anonCredsLinkSecretId: linkSecretId, anonCredsCredentialDefinitionId: credentialDefinitionId, anonCredsSchemaId: schemaId, anonCredsSchemaName: schema.name, anonCredsSchemaIssuerId: schema.issuerId, anonCredsSchemaVersion: schema.version, anonCredsMethodName: methodName, anonCredsRevocationRegistryId: revocationRegistryId, anonCredsCredentialRevocationId: credentialRevocationId }, ((0, indyIdentifiers_1.isIndyDid)(issuerId) && {
++    const anonCredsCredentialRecordTags = Object.assign({ anonCredsLinkSecretId: linkSecretId, anonCredsCredentialDefinitionId: credentialDefinitionId, anonCredsSchemaId: schemaId, anonCredsSchemaName: schema.name, anonCredsSchemaIssuerId: schema.issuerId, anonCredsSchemaVersion: schema.version, anonCredsMethodName: methodName, anonCredsRevocationRegistryId: revocationRegistryId, anonCredsCredentialRevocationId: credentialRevocationId }, (((0, indyIdentifiers_1.isIndyDid)(issuerId) || (0, indyIdentifiers_1.isUnqualifiedIndyDid(issuerId))) && {
+         anonCredsUnqualifiedIssuerId: (0, indyIdentifiers_1.getUnQualifiedDidIndyDid)(issuerId),
+         anonCredsUnqualifiedCredentialDefinitionId: (0, indyIdentifiers_1.getUnQualifiedDidIndyDid)(credentialDefinitionId),
+         anonCredsUnqualifiedSchemaId: (0, indyIdentifiers_1.getUnQualifiedDidIndyDid)(schemaId),

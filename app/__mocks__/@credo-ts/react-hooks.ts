@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { LegacyIndyCredentialFormat } from '@aries-framework/anoncreds'
-import { CredentialExchangeRecord, CredentialProtocolOptions, ProofExchangeRecord } from '@aries-framework/core'
+import { LegacyIndyCredentialFormat } from '@credo-ts/anoncreds'
+import { CredentialExchangeRecord, CredentialProtocolOptions, ProofExchangeRecord } from '@credo-ts/core'
 
 const useCredentials = jest.fn().mockReturnValue({ credentials: [] } as any)
 const useCredentialByState = jest.fn().mockReturnValue([] as CredentialExchangeRecord[])
@@ -27,6 +27,11 @@ const useAgent = () => ({
       logger: {
         info: jest.fn(),
       },
+    },
+    events: {
+      observable: jest.fn().mockReturnValue({
+        subscribe: jest.fn(),
+      }),
     },
   },
 })

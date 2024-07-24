@@ -18,6 +18,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import { AccordionItem } from '../components/react-native-accordion-list-view'
 
+export const TermsVersion = '2'
+
 const Terms = () => {
   const [store, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
@@ -63,22 +65,10 @@ const Terms = () => {
   const onSubmitPressed = useCallback(() => {
     dispatch({
       type: DispatchAction.DID_AGREE_TO_TERMS,
-      payload: [{ DidAgreeToTerms: checked }],
+      payload: [{ DidAgreeToTerms: TermsVersion }],
     })
 
     navigation.navigate(Screens.CreatePIN)
-  }, [])
-
-  const onBackPressed = useCallback(() => {
-    //TODO:(jl) goBack() does not unwind the navigation stack but rather goes
-    //back to the splash screen. Needs fixing before the following code will
-    //work as expected.
-
-    // if (nav.canGoBack()) {
-    //   nav.goBack()
-    // }
-
-    navigation.navigate(Screens.Onboarding)
   }, [])
 
   return (
@@ -140,15 +130,6 @@ const Terms = () => {
                   disabled={!checked}
                   onPress={onSubmitPressed}
                   buttonType={ButtonType.Primary}
-                />
-              </View>
-              <View style={[{ paddingTop: 10, marginBottom: 20 }]}>
-                <Button
-                  title={t('Global.Back')}
-                  accessibilityLabel={t('Global.Back')}
-                  testID={testIdWithKey('Back')}
-                  onPress={onBackPressed}
-                  buttonType={ButtonType.Secondary}
                 />
               </View>
             </>

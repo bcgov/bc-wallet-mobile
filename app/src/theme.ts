@@ -180,12 +180,10 @@ export const TextTheme: ITextTheme = {
   },
   modalHeadingOne: {
     fontSize: 38,
-    fontWeight: 'bold',
     color: ColorPallet.grayscale.darkGrey,
   },
   modalHeadingThree: {
     fontSize: 26,
-    fontWeight: 'bold',
     color: ColorPallet.grayscale.darkGrey,
   },
   popupModalText: {

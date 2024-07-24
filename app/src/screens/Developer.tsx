@@ -1,18 +1,15 @@
-import { useAgent } from '@aries-framework/react-hooks'
 import { useTheme, useStore, testIdWithKey, DispatchAction } from '@hyperledger/aries-bifold-core'
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import { useAttestation } from '../services/attestation'
-import { BCDispatchAction, BCState } from '../store'
+import { BCState } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 
 const Settings: React.FC = () => {
-  const { agent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
@@ -26,10 +23,6 @@ const Settings: React.FC = () => {
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
-  const [attestationSupportEnabled, setAttestationSupportEnabled] = useState(
-    !!store.developer.attestationSupportEnabled
-  )
-  const { start, stop } = useAttestation()
 
   const styles = StyleSheet.create({
     container: {
@@ -38,8 +31,7 @@ const Settings: React.FC = () => {
     },
     section: {
       backgroundColor: SettingsTheme.groupBackground,
-      paddingHorizontal: 25,
-      paddingVertical: 24,
+      padding: 24,
     },
     sectionHeader: {
       flexDirection: 'row',
@@ -54,10 +46,16 @@ const Settings: React.FC = () => {
       alignItems: 'center',
       justifyContent: 'space-between',
     },
-    itemSeparator: {
+    rowTitle: {
+      ...TextTheme.headingFour,
+      flex: 1,
+      fontWeight: 'normal',
+      flexWrap: 'wrap',
+    },
+    rowSeparator: {
       borderBottomWidth: 1,
       borderBottomColor: ColorPallet.brand.primaryBackground,
-      marginHorizontal: 25,
+      marginHorizontal: 24,
     },
     logo: {
       height: 64,
@@ -69,19 +67,6 @@ const Settings: React.FC = () => {
       alignItems: 'center',
     },
   })
-
-  useEffect(() => {
-    if (!agent) {
-      return
-    }
-
-    if (!attestationSupportEnabled) {
-      stop()
-      return
-    }
-
-    start()
-  }, [attestationSupportEnabled])
 
   const shouldDismissModal = () => {
     setEnvironmentModalVisible(false)
@@ -101,21 +86,41 @@ const Settings: React.FC = () => {
     accessibilityLabel?: string
     testID?: string
     children: JSX.Element
+    showRowSeparator?: boolean
+    subContent?: JSX.Element
     onPress?: () => void
   }
-  const SectionRow = ({ title, accessibilityLabel, testID, onPress, children }: SectionRowProps) => (
-    <View style={[styles.section, { flexDirection: 'row' }]}>
-      <Text style={[TextTheme.headingFour, { flex: 1, fontWeight: 'normal', flexWrap: 'wrap' }]}>{title}</Text>
-      <Pressable
-        onPress={onPress}
-        accessible={true}
-        accessibilityLabel={accessibilityLabel}
-        testID={testID}
-        style={styles.sectionRow}
-      >
-        {children}
-      </Pressable>
-    </View>
+  const SectionRow = ({
+    title,
+    accessibilityLabel,
+    testID,
+    onPress,
+    children,
+    showRowSeparator,
+    subContent,
+  }: SectionRowProps) => (
+    <>
+      <View style={[styles.section]}>
+        <View style={{ flexDirection: 'row' }}>
+          <Text style={styles.rowTitle}>{title}</Text>
+          <Pressable
+            onPress={onPress}
+            accessible={true}
+            accessibilityLabel={accessibilityLabel}
+            testID={testID}
+            style={styles.sectionRow}
+          >
+            {children}
+          </Pressable>
+        </View>
+        {subContent}
+      </View>
+      {showRowSeparator && (
+        <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
+          <View style={[styles.rowSeparator]}></View>
+        </View>
+      )}
+    </>
   )
 
   const toggleSwitch = () => {
@@ -193,15 +198,6 @@ const Settings: React.FC = () => {
     setPreventAutoLock((previousState) => !previousState)
   }
 
-  const toggleAttestationSupport = () => {
-    dispatch({
-      type: BCDispatchAction.ATTESTATION_SUPPORT,
-      payload: [!attestationSupportEnabled],
-    })
-
-    setAttestationSupportEnabled((previousState) => !previousState)
-  }
-
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -247,6 +243,7 @@ const Settings: React.FC = () => {
           title={t('Verifier.UseVerifierCapability')}
           accessibilityLabel={t('Verifier.Toggle')}
           testID={testIdWithKey('ToggleVerifierCapability')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -260,6 +257,7 @@ const Settings: React.FC = () => {
           title={t('Verifier.AcceptDevCredentials')}
           accessibilityLabel={t('Verifier.Toggle')}
           testID={testIdWithKey('ToggleAcceptDevCredentials')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -273,6 +271,7 @@ const Settings: React.FC = () => {
           title={t('Connection.UseConnectionInviterCapability')}
           accessibilityLabel={t('Connection.Toggle')}
           testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -286,6 +285,7 @@ const Settings: React.FC = () => {
           title={t('Verifier.UseDevVerifierTemplates')}
           accessibilityLabel={t('Verifier.ToggleDevTemplates')}
           testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -300,6 +300,7 @@ const Settings: React.FC = () => {
             title={t('NameWallet.EnableWalletNaming')}
             accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
             testID={testIdWithKey('ToggleWalletNamingSwitch')}
+            showRowSeparator
           >
             <Switch
               trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -314,6 +315,7 @@ const Settings: React.FC = () => {
           title={t('Settings.PreventAutoLock')}
           accessibilityLabel={t('Settings.TogglePreventAutoLock')}
           testID={testIdWithKey('TogglePreventAutoLockSwitch')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -321,19 +323,6 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={togglePreventAutoLockSwitch}
             value={preventAutoLock}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Developer.AttestationSupport')}
-          accessibilityLabel={t('Developer.AttestationSupport')}
-          testID={testIdWithKey('AttestationSupportSwitch')}
-        >
-          <Switch
-            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={attestationSupportEnabled ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
-            onValueChange={toggleAttestationSupport}
-            value={attestationSupportEnabled}
           />
         </SectionRow>
       </ScrollView>

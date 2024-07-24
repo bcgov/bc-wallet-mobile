@@ -1,0 +1,88 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "logstack.fullname" . }}-loki-memberlist
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    {{- range $name, $port := .Values.services.memberlist }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .port }}
+      protocol: TCP
+    {{- end }}  
+  selector: 
+    app.kubernetes.io/component: loki
+    {{- include "logstack.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "logstack.fullname" . }}-loki
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  ports:
+    {{- range $name, $port := .Values.services.loki }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .port }}
+      protocol: TCP
+    {{- end }}  
+  selector: 
+    app.kubernetes.io/component: loki
+    {{- include "logstack.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "logstack.fullname" . }}-proxy
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  ports:
+    {{- range $name, $port := .Values.services.proxy }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .port }}
+      protocol: TCP
+    {{- end }}  
+  selector:
+    app.kubernetes.io/component: proxy
+    {{- include "logstack.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "logstack.fullname" . }}-memcached
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    {{- range $name, $port := .Values.services.memcached }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .port }}
+      protocol: TCP
+    {{- end }}  
+  selector:
+    app.kubernetes.io/component: memcached
+    {{- include "logstack.selectorLabels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "logstack.fullname" . }}-minio
+  labels: {{- include "logstack.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    {{- range $name, $port := .Values.services.minio }}
+    - name: {{ .name }}
+      port: {{ .port }}
+      targetPort: {{ .port }}
+      protocol: TCP
+    {{- end }}  
+  selector:
+    app.kubernetes.io/component: minio
+    {{- include "logstack.selectorLabels" . | nindent 4 }}

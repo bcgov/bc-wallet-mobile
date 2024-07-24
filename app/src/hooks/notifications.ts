@@ -1,23 +1,25 @@
-import { AnonCredsCredentialMetadataKey } from '@aries-framework/anoncreds/build/utils/metadata'
+import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   BasicMessageRecord,
   CredentialExchangeRecord as CredentialRecord,
   CredentialState,
   ProofExchangeRecord,
   ProofState,
-} from '@aries-framework/core'
-import { useCredentialByState, useProofByState, useBasicMessages } from '@aries-framework/react-hooks'
-import { useStore } from '@hyperledger/aries-bifold-core'
+} from '@credo-ts/core'
+import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@credo-ts/react-hooks'
+import { BifoldAgent, useStore } from '@hyperledger/aries-bifold-core'
 import {
   BasicMessageMetadata,
   CredentialMetadata,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
 } from '@hyperledger/aries-bifold-core/App/types/metadata'
-//aries-bifold/App/types/metadata
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
+import { useEffect, useState } from 'react'
 
-import { getUnlockCredentialDate, showPersonCredentialSelector } from '../helpers/BCIDHelper'
+import { attestationCredDefIds } from '../constants'
+import { showPersonCredentialSelector } from '../helpers/BCIDHelper'
+import { isProofRequestingAttestation } from '../services/attestation'
 import { BCState } from '../store'
 interface CustomNotification {
   type: 'CustomNotification'
@@ -31,9 +33,11 @@ interface Notifications {
 }
 
 export const useNotifications = (): Notifications => {
+  const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const offers = useCredentialByState(CredentialState.OfferReceived)
   const proofsRequested = useProofByState(ProofState.RequestReceived)
+  const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
   const { records: basicMessages } = useBasicMessages()
   // get all unseen messages
   const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg) => {
@@ -57,6 +61,28 @@ export const useNotifications = (): Notifications => {
       return !metadata?.details_seen
     }
   )
+
+  useEffect(() => {
+    const getNonAttestationProofs = async () => {
+      const nonAttestationProofs = (
+        await Promise.all(
+          [...proofsRequested, ...proofsDone].map(async (proof: ProofExchangeRecord) => {
+            const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent, attestationCredDefIds)
+            return {
+              value: proof,
+              include: !isAttestation,
+            }
+          })
+        )
+      )
+        .filter((v) => v.include)
+        .map((data) => data.value)
+
+      setNonAttestationProofs(nonAttestationProofs)
+    }
+    getNonAttestationProofs()
+  }, [proofsRequested.length, proofsDone.length])
+
   const revoked = useCredentialByState(CredentialState.Done).filter((cred: CredentialRecord) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const metadata = cred!.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata
@@ -72,10 +98,9 @@ export const useNotifications = (): Notifications => {
   const credentialDefinitionIDs = credentials.map(
     (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
   )
-  const invitationDate = getUnlockCredentialDate(credentials)
+  const invitationDate = new Date()
   const custom: CustomNotification[] =
     showPersonCredentialSelector(credentialDefinitionIDs) &&
-    invitationDate &&
     !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
       ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
       : []
@@ -83,8 +108,7 @@ export const useNotifications = (): Notifications => {
   let notifications: (BasicMessageRecord | CredentialRecord | ProofExchangeRecord | CustomNotification)[] = [
     ...messagesToShow,
     ...offers,
-    ...proofsRequested,
-    ...proofsDone,
+    ...nonAttestationProofs,
     ...revoked,
   ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 

@@ -1,4 +1,4 @@
-import { IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
+import { IndyVdrPoolConfig } from '@credo-ts/indy-vdr/build/pool'
 
 import _ledgers from './ledgers.json'
 
