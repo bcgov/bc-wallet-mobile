@@ -64,7 +64,6 @@
 		<string>$(PRODUCT_NAME) wants to use your FaceID/TouchID to authenticate your identity</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>We include this permission because a library our app uses references it, even though we don't use it directly.</string>
-		<string/>
 		<key>UIAppFonts</key>
 		<array>
 			<string>MaterialIcons.ttf</string>
