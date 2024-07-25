@@ -1,4 +1,10 @@
-import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
+import {
+  Agent,
+  ConnectionsModule,
+  HttpOutboundTransport,
+  MediatorPickupStrategy,
+  WsOutboundTransport,
+} from '@credo-ts/core'
 import { DrpcModule } from '@credo-ts/drpc'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
 import { useAgent } from '@credo-ts/react-hooks'
@@ -350,6 +356,16 @@ const Splash = () => {
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? allLedgers
 
+        const modules = getAgentModules({
+          indyNetworks: ledgers,
+          mediatorInvitationUrl: environment,
+        })
+
+        modules.connections = new ConnectionsModule({
+          autoAcceptConnections: true,
+          peerNumAlgoForDidExchangeRequests: 4,
+        })
+
         const options = {
           config: {
             label: store.preferences.walletName || 'Portefeuille QC',
@@ -362,10 +378,7 @@ const Splash = () => {
             autoAcceptConnections: true,
           },
           dependencies: agentDependencies,
-          modules: getAgentModules({
-            indyNetworks: ledgers,
-            mediatorInvitationUrl: environment,
-          }),
+          modules,
           drpc: new DrpcModule(),
         }
 

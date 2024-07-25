@@ -46,6 +46,7 @@ const configuration: ConfigurationContext = {
   enableTours: true,
   supportedLanguages: Object.keys(localization) as Locales[],
   useAttestation: useAttestation,
+  enableReuseConnections: true,
 }
 
 export default { theme, localization, configuration }
