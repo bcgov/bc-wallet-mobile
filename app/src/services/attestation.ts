@@ -11,7 +11,12 @@ import {
   BaseLogger,
   ConnectionRecord,
 } from '@credo-ts/core'
-import { BifoldError, BifoldAgent } from '@hyperledger/aries-bifold-core'
+import {
+  BifoldError,
+  BifoldAgent,
+  AttestationEventTypes,
+  AttestationMonitor as AttestationMonitorI,
+} from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
   appleAttestation,
@@ -25,25 +30,17 @@ import { Subscription } from 'rxjs'
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 import { credentialsMatchForProof } from '../helpers/credentials'
 import { AttestationRequestParams, AttestationResult, requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
+import { AttestationRestrictions } from '../constants'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 
 export type AttestationMonitorOptions = {
-  attestationInviteUrl: string
-  attestationCredDefIds: string[]
   shouldHandleProofRequestAutomatically?: boolean
 }
 
-export const AttestationEventTypes = {
-  Started: 'AttestationEvent.Started',
-  Completed: 'AttestationEvent.Completed',
-  FailedHandleOffer: 'AttestationEvent.FailedHandleOffer',
-  FailedHandleProof: 'AttestationEvent.FailedHandleProof',
-  FailedRequestCredential: 'AttestationEvent.FailedRequestCredential',
-} as const
-
 type AttestationEventTypeKeys = keyof typeof AttestationEventTypes
 type AttestationEventTypeValues = (typeof AttestationEventTypes)[AttestationEventTypeKeys]
+type AttestationRestrictionsType = typeof AttestationRestrictions
 
 export interface AttestationCredentialFormat {
   attributes: {
@@ -88,23 +85,69 @@ const AttestationErrorCodes = {
   FailedToValidateAttestation: 2034,
 } as const
 
-export const isProofRequestingAttestation = async (
+type Restriction = {
+  schema_id?: string
+  issuer_did?: string
+  cred_def_id?: string
+  schema_version?: string
+}
+
+const findCredDefIDs = (restrictions: [Restriction]): Array<string> => {
+  return restrictions.map((rstr) => rstr.cred_def_id).filter((credDefId) => credDefId !== undefined)
+}
+
+const invitationUrlFromRestrictions = async (
   proof: ProofExchangeRecord,
   agent: BifoldAgent,
-  attestationCredDefIds: string[]
-): Promise<boolean> => {
+  restrictions: AttestationRestrictionsType
+): Promise<string | undefined> => {
   const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
   const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
 
-  return !!format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions?.some((rstr) =>
-    attestationCredDefIds ? attestationCredDefIds.includes(rstr.cred_def_id) : false
-  )
+  if (!formatToUse || (!format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions ?? false)) {
+    return undefined
+  }
+
+  const pRestrictions = format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions
+  const cred_def_ids = findCredDefIDs(pRestrictions as [any])
+
+  for (const env in restrictions) {
+    for (const credDefId of cred_def_ids) {
+      if ((restrictions as Record<string, any>)[env].credDefIDs.includes(credDefId)) {
+        return (restrictions as Record<string, any>)[env].invitationUrl
+      }
+    }
+  }
+
+  return undefined
 }
 
-export class AttestationMonitor {
+export const isProofRequestingAttestation = async (
+  proof: ProofExchangeRecord,
+  agent: BifoldAgent,
+  restrictions: AttestationRestrictionsType
+): Promise<boolean> => {
+  return invitationUrlFromRestrictions(proof, agent, restrictions) !== undefined
+}
+
+export const allCredDefIds = (restrictions: AttestationRestrictionsType): string[] => {
+  const allCredDefIds: string[] = []
+
+  for (const env in restrictions) {
+    allCredDefIds.push(...(restrictions as Record<string, any>)[env].credDefIDs)
+  }
+
+  return allCredDefIds
+}
+
+export const isOfferingAttestation = (credDefId: string, restrictions: AttestationRestrictionsType) => {
+  return allCredDefIds(restrictions).includes(credDefId)
+}
+
+export class AttestationMonitor implements AttestationMonitorI {
   private proofSubscription?: Subscription
   private offerSubscription?: Subscription
-  private agent: Agent
+  private agent?: Agent
   private options: AttestationMonitorOptions
   private log?: BaseLogger
   private _attestationWorkflowInProgress = false
@@ -114,14 +157,11 @@ export class AttestationMonitor {
 
   // take in options, agent, and logger. Options should include the attestation service URL
   // and the proof to watch for along with the cred_ef_id of the attestation credentials.
-  public constructor(agent: Agent, logger: BaseLogger, options: AttestationMonitorOptions) {
-    this.agent = agent
+  public constructor(logger: BaseLogger, options: AttestationMonitorOptions) {
     this.log = logger
     this.options = options
     const { shouldHandleProofRequestAutomatically } = options
     this._shouldHandleProofRequestAutomatically = shouldHandleProofRequestAutomatically ?? false
-
-    console.log('aytio proof === ', this._shouldHandleProofRequestAutomatically)
   }
 
   public get attestationWorkflowInProgress() {
@@ -136,12 +176,14 @@ export class AttestationMonitor {
     return this._shouldHandleProofRequestAutomatically
   }
 
-  public async start(): Promise<void> {
-    this.proofSubscription = this.agent.events
+  public async start(agent: Agent): Promise<void> {
+    this.agent = agent
+
+    this.proofSubscription = this.agent?.events
       .observable(ProofEventTypes.ProofStateChanged)
       .subscribe(this.handleProofStateChanged)
 
-    this.offerSubscription = this.agent.events
+    this.offerSubscription = this.agent?.events
       .observable(CredentialEventTypes.CredentialStateChanged)
       .subscribe(this.handleCredentialStateChanged)
   }
@@ -151,13 +193,36 @@ export class AttestationMonitor {
     this.offerSubscription?.unsubscribe()
   }
 
-  public requestAttestationCredential = async () => {
+  public requestAttestationCredential = async (): Promise<void> => {
+    if (!this.agent || !this._proofRequest) {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        'The agent cannot be undefined.',
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
+
     this.log?.info('Fetching attestation credential')
 
     this.startWorkflow()
 
     try {
-      const connection = await this.connectToAttestationAgent()
+      const invitationUrl = await invitationUrlFromRestrictions(
+        this._proofRequest,
+        this.agent!,
+        AttestationRestrictions
+      )
+      if (!invitationUrl) {
+        throw new BifoldError(
+          'Attestation Service',
+          'Unable to connect to the attestation service.',
+          'No details provided.',
+          AttestationErrorCodes.FailedToConnectToAttestationAgent
+        )
+      }
+
+      const connection = await this.connectToAttestationAgent(invitationUrl)
       if (!connection) {
         throw new BifoldError(
           'Attestation Service',
@@ -215,6 +280,10 @@ export class AttestationMonitor {
   }
 
   private handleProofRequest = async (proofRequest: ProofExchangeRecord): Promise<boolean> => {
+    if (!this.agent) {
+      return false
+    }
+
     this.log?.info('Selecting credentials for attestation proof request')
     // This will throw if we don't have the necessary credentials
     const credentials = await this.agent.proofs.selectCredentialsForRequest({
@@ -231,6 +300,15 @@ export class AttestationMonitor {
   }
 
   private handleCredentialStateChanged = async (event: BaseEvent) => {
+    if (!this.agent) {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        'The agent cannot be undefined.',
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
+
     const { credentialRecord } = event.payload
     const credential = credentialRecord as CredentialExchangeRecord
 
@@ -241,8 +319,9 @@ export class AttestationMonitor {
       const offerData = (offer?.anoncreds ?? offer?.indy) as AnonCredsCredentialOffer
 
       // do nothing if not an attestation credential
-      const { attestationCredDefIds } = this.options
-      if (!attestationCredDefIds.includes(offerData?.cred_def_id ?? '')) {
+      const rrr = await isOfferingAttestation(offerData?.cred_def_id ?? '', AttestationRestrictions)
+
+      if (!rrr) {
         return
       }
 
@@ -278,6 +357,15 @@ export class AttestationMonitor {
   }
 
   private handleProofStateChanged = async (event: BaseEvent) => {
+    if (!this.agent) {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        'The agent cannot be undefined.',
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
+
     const { proofRecord } = event.payload
     const proof = proofRecord as ProofExchangeRecord
 
@@ -291,7 +379,7 @@ export class AttestationMonitor {
 
     try {
       // 1. Is the proof requesting an attestation credential
-      if (!(await isProofRequestingAttestation(proof, this.agent, this.options.attestationCredDefIds))) {
+      if (!(await isProofRequestingAttestation(proof, this.agent, AttestationRestrictions))) {
         this.log?.info('Proof nope!!!!')
 
         return
@@ -334,8 +422,17 @@ export class AttestationMonitor {
     }
   }
 
-  private async connectToAttestationAgent(): Promise<ConnectionRecord | undefined> {
-    const invite = await this.agent.oob.parseInvitation(this.options.attestationInviteUrl)
+  private async connectToAttestationAgent(invitationUrl: string): Promise<ConnectionRecord | undefined> {
+    if (!this.agent) {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        'The agent cannot be undefined.',
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
+
+    const invite = await this.agent.oob.parseInvitation(invitationUrl)
 
     if (!invite) {
       this.log?.error('Unable to parse attestation agent invitation')
@@ -368,6 +465,15 @@ export class AttestationMonitor {
   }
 
   private async fetchNonceForAttestation(connection: ConnectionRecord): Promise<string> {
+    if (!this.agent) {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        'The agent cannot be undefined.',
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
+
     this.log?.info('Requesting nonce from controller')
 
     const requestNonceCb = await requestNonceDrpc(this.agent, connection)
@@ -408,6 +514,15 @@ export class AttestationMonitor {
     connection: ConnectionRecord,
     attestationObj: AttestationRequestParams
   ): Promise<AttestationResult> {
+    if (!this.agent) {
+      throw new BifoldError(
+        'Attestation Service',
+        'There was a problem with the remote attestation service.',
+        'No details provided.',
+        AttestationErrorCodes.FailedToFetchNonceForAttestation
+      )
+    }
+
     this.log?.info('Requesting attestation credential from controller')
 
     const requestAttestationCb = await requestAttestationDrpc(this.agent, connection, attestationObj)

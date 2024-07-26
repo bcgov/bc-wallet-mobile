@@ -42,6 +42,7 @@ import {
   RemoteDebuggingState,
   initialState,
 } from './src/store'
+import { AttestationMonitor } from './src/services/attestation'
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
@@ -73,6 +74,11 @@ export class AppContainer implements Container {
     const logger = new RemoteLogger(logOptions)
     logger.startEventListeners()
 
+    const options = {
+      shouldHandleProofRequestAutomatically: true,
+    }
+
+    this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(logger, options))
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)

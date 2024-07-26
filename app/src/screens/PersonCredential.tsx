@@ -14,6 +14,7 @@ import {
   EventTypes as BifoldEventTypes,
   TOKENS,
   useContainer,
+  AttestationEventTypes,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState, useCallback, useEffect, useRef } from 'react'
@@ -37,7 +38,6 @@ import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import LoadingIcon from '../components/LoadingIcon'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
 import { openLink } from '../helpers/utils'
-import { AttestationEventTypes } from '../services/attestation'
 import { BCState } from '../store'
 
 const attestationProofRequestWaitTimeout = 10000

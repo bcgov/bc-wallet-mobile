@@ -37,7 +37,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { activate } from '../helpers/PushNotificationsHelper'
-import { useAttestation } from '../hooks/useAttestation'
 import { BCState, BCLocalStorageKeys } from '../store'
 
 import { TermsVersion } from './Terms'
@@ -135,6 +134,9 @@ const Splash = () => {
   const logger = container.resolve(TOKENS.UTIL_LOGGER)
   const indyLedgers = container.resolve(TOKENS.UTIL_LEDGERS)
   const ocaBundleResolver = container.resolve(TOKENS.UTIL_OCA_RESOLVER) as RemoteOCABundleResolver
+  const attestationMonitor = container.resolve(TOKENS.UTIL_ATTESTATION_MONITOR)
+  const credDefs = container.resolve(TOKENS.CACHE_CRED_DEFS)
+  const schemas = container.resolve(TOKENS.CACHE_SCHEMAS)
 
   const steps: string[] = [
     t('Init.Starting'),
@@ -148,7 +150,6 @@ const Splash = () => {
     t('Init.SettingAgent'),
     t('Init.Finishing'),
   ]
-  const { start: startAttestationListeners } = useAttestation()
 
   const setStep = (stepIdx: number) => {
     setStepText(steps[stepIdx])
@@ -195,14 +196,6 @@ const Splash = () => {
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    if (!agent || !store.authentication.didAuthenticate) {
-      return
-    }
-
-    startAttestationListeners()
-  }, [agent, store.authentication.didAuthenticate])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
@@ -412,9 +405,6 @@ const Splash = () => {
         }
 
         setStep(6)
-        const credDefs = container.resolve(TOKENS.CACHE_CRED_DEFS)
-        const schemas = container.resolve(TOKENS.CACHE_SCHEMAS)
-
         credDefs.forEach(async ({ did, id }) => {
           const pool = await poolService.getPoolForDid(newAgent.context, did)
           const credDefRequest = new GetCredentialDefinitionRequest({ credentialDefinitionId: id })
@@ -435,6 +425,8 @@ const Splash = () => {
         if (store.preferences.usePushNotifications) {
           activate(newAgent)
         }
+
+        attestationMonitor?.start(newAgent)
 
         setStep(9)
         navigation.dispatch(
