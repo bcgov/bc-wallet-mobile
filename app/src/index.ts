@@ -6,7 +6,6 @@ import {
   Agent,
 } from '@hyperledger/aries-bifold-core'
 import merge from 'lodash.merge'
-import { ReducerAction } from 'react'
 import { Config } from 'react-native-config'
 
 import AddCredentialButton from './components/AddCredentialButton'
@@ -23,11 +22,9 @@ import fr from './localization/fr'
 import ptBr from './localization/pt-br'
 import Developer from './screens/Developer'
 import { pages } from './screens/OnboardingPages'
-import PersonCredential from './screens/PersonCredential'
 import Preface from './screens/Preface'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
-import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
 
 const localization = merge({}, translationResources, {
@@ -50,22 +47,6 @@ const configuration: ConfigurationContext = {
   proofTemplateBaseUrl: Config.PROOF_TEMPLATE_URL,
   record: Record,
   settings: [],
-  customNotification: {
-    component: PersonCredential,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onCloseAction: (dispatch?: React.Dispatch<ReducerAction<any>>) => {
-      if (dispatch) {
-        dispatch({
-          type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
-          payload: [{ personCredentialOfferDismissed: true }],
-        })
-      }
-    },
-    pageTitle: 'PersonCredential.PageTitle',
-    title: 'PersonCredentialNotification.Title',
-    description: 'PersonCredentialNotification.Description',
-    buttonTitle: 'PersonCredentialNotification.ButtonTitle',
-  },
   enableTours: true,
   showPreface: true,
   disableOnboardingSkip: true,
