@@ -13,10 +13,8 @@ import AddCredentialSlider from './components/AddCredentialSlider'
 import EmptyList from './components/EmptyList'
 import HomeFooterView from './components/HomeFooterView'
 import HomeHeaderView from './components/HomeHeaderView'
-import { attestationCredDefIds } from './constants'
 import { setup, activate, deactivate, status } from './helpers/PushNotificationsHelper'
 import { useNotifications } from './hooks/notifications'
-import { useAttestation } from './hooks/useAttestation'
 import en from './localization/en'
 import fr from './localization/fr'
 import ptBr from './localization/pt-br'
@@ -26,12 +24,17 @@ import Preface from './screens/Preface'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { defaultTheme as theme } from './theme'
+import { allCredDefIds } from './services/attestation'
+import { AttestationRestrictions } from './constants'
+
+const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
   fr: { translation: fr },
   'pt-BR': { translation: ptBr },
 })
+
 const configuration: ConfigurationContext = {
   ...defaultConfiguration,
   pages,
@@ -51,7 +54,6 @@ const configuration: ConfigurationContext = {
   showPreface: true,
   disableOnboardingSkip: true,
   useCustomNotifications: useNotifications,
-  useAttestation: useAttestation,
   enablePushNotifications: {
     status: status,
     setup: setup,

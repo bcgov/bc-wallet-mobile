@@ -14,6 +14,7 @@ import {
   EventTypes as BifoldEventTypes,
   TOKENS,
   useContainer,
+  AttestationEventTypes,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState, useCallback, useEffect } from 'react'
