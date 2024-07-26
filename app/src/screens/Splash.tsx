@@ -121,7 +121,7 @@ const Splash = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()
-  const { getWalletCredentials } = useAuth()
+  const { walletSecret } = useAuth()
   const { ColorPallet, Assets } = useTheme()
   const { showPreface, enablePushNotifications } = useConfiguration()
   const [mounted, setMounted] = useState(false)
@@ -314,6 +314,8 @@ const Splash = () => {
           !mounted ||
           !store.authentication.didAuthenticate ||
           !store.onboarding.didConsiderBiometry ||
+          !walletSecret?.id ||
+          !walletSecret.key ||
           store.onboarding.postAuthScreens.length > 0
         ) {
           return
@@ -322,12 +324,6 @@ const Splash = () => {
         setStep(3)
 
         await ocaBundleResolver.checkForUpdates()
-        const credentials = await getWalletCredentials()
-
-        if (!credentials?.id || !credentials.key) {
-          // Cannot find wallet id/secret
-          return
-        }
 
         setStep(4)
         const cachedLedgers = await loadCachedLedgers()
@@ -337,8 +333,8 @@ const Splash = () => {
           config: {
             label: store.preferences.walletName || 'BC Wallet',
             walletConfig: {
-              id: credentials.id,
-              key: credentials.key,
+              id: walletSecret.id,
+              key: walletSecret.key,
             },
             logger,
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
@@ -371,7 +367,7 @@ const Splash = () => {
         if (!didMigrateToAskar(store.migration)) {
           logger.debug('Agent not updated to Aries Askar, updating...')
 
-          await migrateToAskar(credentials.id, credentials.key, newAgent)
+          await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
 
           logger.debug('Successfully finished updating agent to Aries Askar')
           // Store that we migrated to askar.
@@ -455,6 +451,7 @@ const Splash = () => {
     store.authentication.didAuthenticate,
     store.onboarding.postAuthScreens.length,
     store.onboarding.didConsiderBiometry,
+    walletSecret,
     initAgentCount,
   ])
 
