@@ -27,10 +27,10 @@ import { DeviceEventEmitter, Platform } from 'react-native'
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 import { Subscription } from 'rxjs'
 
+import { AttestationRestrictions } from '../constants'
 import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 import { credentialsMatchForProof } from '../helpers/credentials'
 import { AttestationRequestParams, AttestationResult, requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
-import { AttestationRestrictions } from '../constants'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 

@@ -34,6 +34,7 @@ import { expirationOverrideInMinutes } from './src/helpers/utils'
 import Developer from './src/screens/Developer'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
+import { AttestationMonitor } from './src/services/attestation'
 import {
   BCLocalStorageKeys,
   BCState,
@@ -42,7 +43,6 @@ import {
   RemoteDebuggingState,
   initialState,
 } from './src/store'
-import { AttestationMonitor } from './src/services/attestation'
 
 export class AppContainer implements Container {
   private _container: DependencyContainer

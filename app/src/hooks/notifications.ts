@@ -17,9 +17,9 @@ import {
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
 import { useEffect, useState } from 'react'
 
+import { AttestationRestrictions } from '../constants'
 import { showPersonCredentialSelector } from '../helpers/BCIDHelper'
 import { isProofRequestingAttestation } from '../services/attestation'
-import { AttestationRestrictions } from '../constants'
 import { BCState } from '../store'
 interface CustomNotification {
   type: 'CustomNotification'

@@ -1,9 +1,8 @@
-import { AgentProvider, StoreProvider, useContainer } from '@hyperledger/aries-bifold-core'
+import { StoreProvider } from '@hyperledger/aries-bifold-core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import PersonCredential from '../../src/screens/PersonCredential'
-// import { AttestationProvider } from '../../src/hooks/useAttestation'
 import { initialState, reducer } from '../../src/store'
 
 const mockNavigation = jest.fn()
@@ -46,9 +45,7 @@ describe('Person Credential Screen', () => {
   test('screen renders correctly', () => {
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
-        <AttestationProvider>
-          <PersonCredential />
-        </AttestationProvider>
+        <PersonCredential />
       </StoreProvider>
     )
 
