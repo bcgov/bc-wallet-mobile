@@ -36,6 +36,7 @@ import PersonCredential from './src/screens/PersonCredential'
 import PersonCredentialLoading from './src/screens/PersonCredentialLoading'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
+import { AttestationMonitor } from './src/services/attestation'
 import {
   BCDispatchAction,
   BCLocalStorageKeys,
@@ -45,7 +46,6 @@ import {
   RemoteDebuggingState,
   initialState,
 } from './src/store'
-import { AttestationMonitor } from './src/services/attestation'
 
 export class AppContainer implements Container {
   private _container: DependencyContainer

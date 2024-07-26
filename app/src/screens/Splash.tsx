@@ -115,7 +115,7 @@ const resumeOnboardingAt = (
 */
 const Splash = () => {
   const { width } = useWindowDimensions()
-  const { agent, setAgent } = useAgent()
+  const { setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()

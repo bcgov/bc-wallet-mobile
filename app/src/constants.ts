@@ -1,6 +1,3 @@
-import { credDefIdFromRestrictions } from '@hyperledger/aries-bifold-core/lib/typescript/App/utils/helpers'
-import { invert } from 'react-native-svg/lib/typescript/elements/Shape'
-
 export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
