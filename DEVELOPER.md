@@ -98,7 +98,11 @@ In the `./app/` directory copy the .env.sample `cp .env.sample .env`
 
 ```
 MEDIATOR_URL=<url>
+OCA_URL=<url>
 MEDIATOR_USE_PUSH_NOTIFICATIONS=false
+PROOF_TEMPLATE_URL=<url>
+REMOTE_LOGGING_URL=<url>
+INDY_VDR_PROXY_URL=<url>
 ```
 
 Push notifications can be used locally if the mediator service has the firebase plugin and it's configured correctly. 
