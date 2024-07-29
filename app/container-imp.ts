@@ -173,7 +173,7 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let { environment, remoteDebugging } = initialState.developer
+      let { environment, remoteDebugging, enableProxy } = initialState.developer
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -191,6 +191,7 @@ export class AppContainer implements Container {
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
+        loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
       ])
       const state: BCState = {
         ...initialState,
@@ -207,6 +208,7 @@ export class AppContainer implements Container {
             enabledAt: remoteDebugging.enabledAt ? new Date(remoteDebugging.enabledAt) : undefined,
             sessionId: remoteDebugging.sessionId,
           },
+          enableProxy,
         },
       }
 

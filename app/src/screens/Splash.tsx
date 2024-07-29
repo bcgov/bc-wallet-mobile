@@ -1,5 +1,4 @@
 import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
-import { DrpcModule } from '@credo-ts/drpc'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
 import { useAgent } from '@credo-ts/react-hooks'
 import { agentDependencies } from '@credo-ts/react-native'
@@ -17,7 +16,6 @@ import {
   testIdWithKey,
   didMigrateToAskar,
   migrateToAskar,
-  getAgentModules,
   createLinkSecretIfRequired,
   TOKENS,
   useContainer,
@@ -37,6 +35,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import { activate } from '../helpers/PushNotificationsHelper'
+import { getBCAgentModules } from '../helpers/bc-agent-modules'
 import { useAttestation } from '../hooks/useAttestation'
 import { BCState, BCLocalStorageKeys } from '../store'
 
@@ -342,19 +341,26 @@ const Splash = () => {
             autoAcceptConnections: true,
           },
           dependencies: agentDependencies,
-          modules: {
-            ...getAgentModules({
-              indyNetworks: ledgers,
-              mediatorInvitationUrl: Config.MEDIATOR_URL,
-              txnCache: {
-                capacity: 1000,
-                expiryOffsetMs: 1000 * 60 * 60 * 24 * 7,
-                path: CachesDirectoryPath + '/txn-cache',
-              },
-            }),
-            drpc: new DrpcModule(),
-          },
+          modules: getBCAgentModules({
+            indyNetworks: ledgers,
+            mediatorInvitationUrl: Config.MEDIATOR_URL,
+            txnCache: {
+              capacity: 1000,
+              expiryOffsetMs: 1000 * 60 * 60 * 24 * 7,
+              path: CachesDirectoryPath + '/txn-cache',
+            },
+            enableProxy: store.developer.enableProxy,
+            proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
+            proxyCacheSettings: {
+              allowCaching: true,
+              cacheDurationInSeconds: 60 * 60 * 24 * 7,
+            },
+          }),
         }
+
+        logger.info(
+          store.developer.enableProxy && Config.INDY_VDR_PROXY_URL ? 'VDR Proxy enabled' : 'VDR Proxy disabled'
+        )
 
         const newAgent = new Agent(options)
         const wsTransport = new WsOutboundTransport()
