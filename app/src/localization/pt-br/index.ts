@@ -130,6 +130,7 @@ const translation = {
     "DeveloperMode": "Developer mode",
     "Toggle": "Toggle Developer Mode",
     "AttestationSupport": "Attestation support (PT-BR)",
+    "EnableProxy": "Enable proxy (PT-BR)",
   },
   "Tips": {
     "Header": "Tips (PT-BR)",
