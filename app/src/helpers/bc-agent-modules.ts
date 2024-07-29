@@ -37,6 +37,7 @@ interface GetBCAgentModulesOptions {
   indyNetworks: IndyVdrPoolConfig[]
   mediatorInvitationUrl?: string
   txnCache?: { capacity: number; expiryOffsetMs: number; path?: string }
+  enableProxy?: boolean
   proxyBaseUrl?: string
   proxyCacheSettings?: CacheSettings
 }
@@ -46,6 +47,7 @@ interface GetBCAgentModulesOptions {
  * @param indyNetworks
  * @param mediatorInvitationUrl determine which mediator to use
  * @param txnCache optional local cache config for indyvdr
+ * @param enableProxy boolean from the store to determine if proxy should be used
  * @param proxyBaseUrl URL of indy vdr proxy
  * @param proxyCacheSettings settings for above mentioned proxy client caching
  * @returns modules to be used in agent setup
@@ -54,6 +56,7 @@ export function getBCAgentModules({
   indyNetworks,
   mediatorInvitationUrl,
   txnCache,
+  enableProxy,
   proxyBaseUrl,
   proxyCacheSettings,
 }: GetBCAgentModulesOptions) {
@@ -119,7 +122,7 @@ export function getBCAgentModules({
     drpc: new DrpcModule(),
   }
 
-  if (proxyBaseUrl) {
+  if (enableProxy && proxyBaseUrl) {
     modules.anoncreds = new AnonCredsModule({
       anoncreds,
       registries: [new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings })],

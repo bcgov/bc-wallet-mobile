@@ -32,6 +32,7 @@ const Settings: React.FC = () => {
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
   const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
+  const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
   const navigation = useNavigation()
 
   const styles = StyleSheet.create({
@@ -251,6 +252,14 @@ const Settings: React.FC = () => {
     setEnableShareableLink((previousState) => !previousState)
   }
 
+  const toggleEnableProxySwitch = () => {
+    dispatch({
+      type: BCDispatchAction.TOGGLE_PROXY,
+      payload: [!enableProxy],
+    })
+    setEnableProxy((previousState) => !previousState)
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -425,6 +434,20 @@ const Settings: React.FC = () => {
             onValueChange={toggleShareableLinkSwitch}
             value={enableShareableLink}
             disabled={!store.authentication.didAuthenticate}
+          />
+        </SectionRow>
+
+        <SectionRow
+          title={t('Developer.EnableProxy')}
+          accessibilityLabel={t('Developer.EnableProxy')}
+          testID={testIdWithKey('ToggleEnableProxy')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={enableProxy ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleEnableProxySwitch}
+            value={enableProxy}
           />
         </SectionRow>
       </ScrollView>

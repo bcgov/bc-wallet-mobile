@@ -2122,24 +2122,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/anoncreds@npm:0.5.3":
-  version: 0.5.3
-  resolution: "@credo-ts/anoncreds@npm:0.5.3"
-  dependencies:
-    "@astronautlabs/jsonpath": "npm:^1.1.2"
-    "@credo-ts/core": "npm:0.5.3"
-    big-integer: "npm:^1.6.51"
-    bn.js: "npm:^5.2.1"
-    class-transformer: "npm:0.5.1"
-    class-validator: "npm:0.14.1"
-    reflect-metadata: "npm:^0.1.13"
-  peerDependencies:
-    "@hyperledger/anoncreds-shared": ^0.2.2
-  checksum: 433b374d9acca06a937b4a538ff1db92188a18cf23c93f934336e8346df42ed3708325cfac0bed9b2181c41e5887681f14379b8dc6a7f2fbc0044d5c1b9f7db3
-  languageName: node
-  linkType: hard
-
-"@credo-ts/anoncreds@npm:0.5.9":
+"@credo-ts/anoncreds@npm:0.5.9, @credo-ts/anoncreds@npm:^0.5.6":
   version: 0.5.9
   resolution: "@credo-ts/anoncreds@npm:0.5.9"
   dependencies:
@@ -2173,48 +2156,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/core@npm:0.5.3":
-  version: 0.5.3
-  resolution: "@credo-ts/core@npm:0.5.3"
-  dependencies:
-    "@digitalcredentials/jsonld": "npm:^6.0.0"
-    "@digitalcredentials/jsonld-signatures": "npm:^9.4.0"
-    "@digitalcredentials/vc": "npm:^6.0.1"
-    "@multiformats/base-x": "npm:^4.0.1"
-    "@sd-jwt/core": "npm:^0.6.1"
-    "@sd-jwt/decode": "npm:^0.6.1"
-    "@sd-jwt/types": "npm:^0.6.1"
-    "@sd-jwt/utils": "npm:^0.6.1"
-    "@sphereon/pex": "npm:^3.3.2"
-    "@sphereon/pex-models": "npm:^2.2.4"
-    "@sphereon/ssi-types": "npm:^0.23.0"
-    "@stablelib/ed25519": "npm:^1.0.2"
-    "@stablelib/sha256": "npm:^1.0.1"
-    "@types/ws": "npm:^8.5.4"
-    abort-controller: "npm:^3.0.0"
-    big-integer: "npm:^1.6.51"
-    borc: "npm:^3.0.0"
-    buffer: "npm:^6.0.3"
-    class-transformer: "npm:0.5.1"
-    class-validator: "npm:0.14.1"
-    did-resolver: "npm:^4.1.0"
-    jsonpath: "npm:^1.1.1"
-    lru_map: "npm:^0.4.1"
-    luxon: "npm:^3.3.0"
-    make-error: "npm:^1.3.6"
-    object-inspect: "npm:^1.10.3"
-    query-string: "npm:^7.0.1"
-    reflect-metadata: "npm:^0.1.13"
-    rxjs: "npm:^7.8.0"
-    tsyringe: "npm:^4.8.0"
-    uuid: "npm:^9.0.0"
-    varint: "npm:^6.0.0"
-    web-did-resolver: "npm:^2.0.21"
-  checksum: b1d9e6968bd8b95d932f333a48d15c19841a1e474ea0255a3eb880b85827f207f9011867cb051df56954e52bab273f5ec859a3bf4c82b438fffe70872adc8489
-  languageName: node
-  linkType: hard
-
-"@credo-ts/core@npm:0.5.9":
+"@credo-ts/core@npm:0.5.9, @credo-ts/core@npm:^0.5.6":
   version: 0.5.9
   resolution: "@credo-ts/core@npm:0.5.9"
   dependencies:
@@ -4404,18 +4346,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/core@npm:^0.6.1":
-  version: 0.6.1
-  resolution: "@sd-jwt/core@npm:0.6.1"
-  dependencies:
-    "@sd-jwt/decode": "npm:0.6.1"
-    "@sd-jwt/present": "npm:0.6.1"
-    "@sd-jwt/types": "npm:0.6.1"
-    "@sd-jwt/utils": "npm:0.6.1"
-  checksum: d6951aaaab78a8f8f8d109fc7312ede9b52874507e8075967ec501d2a7d6b158d959d0d99ab6d71ca69ff9133f082421bab37f0bb218b731152f8d43f924f647
-  languageName: node
-  linkType: hard
-
 "@sd-jwt/decode@npm:0.6.1, @sd-jwt/decode@npm:^0.6.1":
   version: 0.6.1
   resolution: "@sd-jwt/decode@npm:0.6.1"
@@ -4447,17 +4377,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/present@npm:0.6.1, @sd-jwt/present@npm:^0.6.1":
-  version: 0.6.1
-  resolution: "@sd-jwt/present@npm:0.6.1"
-  dependencies:
-    "@sd-jwt/decode": "npm:0.6.1"
-    "@sd-jwt/types": "npm:0.6.1"
-    "@sd-jwt/utils": "npm:0.6.1"
-  checksum: a0ffb5b5dea15c139ae1361abc6eaa7fcef26f74e60f58c0667968a54b1e16660d72679667e2f052f59209b1d0e9081e1b9e3680f9c703cf85697e6ec39f6c5c
-  languageName: node
-  linkType: hard
-
 "@sd-jwt/present@npm:0.7.2":
   version: 0.7.2
   resolution: "@sd-jwt/present@npm:0.7.2"
@@ -4466,6 +4385,17 @@ __metadata:
     "@sd-jwt/types": "npm:0.7.2"
     "@sd-jwt/utils": "npm:0.7.2"
   checksum: f1ef635774ac336e1763709d28142b06707477c20ddef3d1bad695a61b1881f2ba230686dce1635850ea66cf2ad530d27c399c27067ad96c6cda74e51793a94a
+  languageName: node
+  linkType: hard
+
+"@sd-jwt/present@npm:^0.6.1":
+  version: 0.6.1
+  resolution: "@sd-jwt/present@npm:0.6.1"
+  dependencies:
+    "@sd-jwt/decode": "npm:0.6.1"
+    "@sd-jwt/types": "npm:0.6.1"
+    "@sd-jwt/utils": "npm:0.6.1"
+  checksum: a0ffb5b5dea15c139ae1361abc6eaa7fcef26f74e60f58c0667968a54b1e16660d72679667e2f052f59209b1d0e9081e1b9e3680f9c703cf85697e6ec39f6c5c
   languageName: node
   linkType: hard
 
@@ -4494,7 +4424,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sd-jwt/utils@npm:0.6.1, @sd-jwt/utils@npm:^0.6.1":
+"@sd-jwt/utils@npm:0.6.1":
   version: 0.6.1
   resolution: "@sd-jwt/utils@npm:0.6.1"
   dependencies:
@@ -4657,17 +4587,6 @@ __metadata:
     "@stablelib/binary": "npm:^1.0.1"
     "@stablelib/wipe": "npm:^1.0.1"
   checksum: f5ace0a588dc4c21f01cb85837892d4c872e994ae77a58a8eb7dd61aa0b26fb1e9b46b0445e71af57d963ef7d9f5965c64258fc0d04df7b2947bc48f2d3560c5
-  languageName: node
-  linkType: hard
-
-"@stablelib/sha256@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@stablelib/sha256@npm:1.0.1"
-  dependencies:
-    "@stablelib/binary": "npm:^1.0.1"
-    "@stablelib/hash": "npm:^1.0.1"
-    "@stablelib/wipe": "npm:^1.0.1"
-  checksum: 4d55f6c676e2cc0dd2a32be0cfa96837f3e15ae48dc50a340e56db2b201f1341a9ecabb429a3a44a5bf31adee0a8151467a8e7cc15346c561c914faad415d4d4
   languageName: node
   linkType: hard
 
@@ -7865,7 +7784,7 @@ __metadata:
     buffer: "npm:6.0.3"
     commitlint: "npm:17.7.1"
     copyfiles: "npm:2.4.1"
-    credo-ts-indy-vdr-proxy-client: "npm:0.1.2"
+    credo-ts-indy-vdr-proxy-client: "npm:0.1.3"
     eslint: "npm:8.50.0"
     eslint-import-resolver-typescript: "npm:2.7.1"
     eslint-plugin-import: "npm:2.28.1"
@@ -9571,14 +9490,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"credo-ts-indy-vdr-proxy-client@npm:0.1.2":
-  version: 0.1.2
-  resolution: "credo-ts-indy-vdr-proxy-client@npm:0.1.2"
+"credo-ts-indy-vdr-proxy-client@npm:0.1.3":
+  version: 0.1.3
+  resolution: "credo-ts-indy-vdr-proxy-client@npm:0.1.3"
   dependencies:
-    "@credo-ts/anoncreds": "npm:0.5.3"
-    "@credo-ts/core": "npm:0.5.3"
+    "@credo-ts/anoncreds": "npm:^0.5.6"
+    "@credo-ts/core": "npm:^0.5.6"
     uuid: "npm:^9.0.0"
-  checksum: df7bc1f285e484118435c2a552a6a8571fef9f1baf4c372072466f973ffd91d97c46d4c553bf7811fe94788532882367b9c9848c97282b0c841949b41909fb20
+  checksum: 5a034fcee3f5dadadab98dcd89db51c1b821185a50ca38ad1459d338bd8d1c626e96fa59917350306c800e553c5db96d4cd196edbfa70c9cc0cbe2cf3c6c86d3
   languageName: node
   linkType: hard
 

@@ -21,6 +21,7 @@ export type RemoteDebuggingState = {
 export interface Developer {
   environment: IASEnvironment
   remoteDebugging: RemoteDebuggingState
+  enableProxy: boolean
 }
 
 export interface DismissPersonCredentialOffer {
@@ -34,6 +35,7 @@ export interface BCState extends BifoldState {
 
 enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
+  TOGGLE_PROXY = 'developer/toggleProxy',
 }
 
 enum DismissPersonCredentialOfferDispatchAction {
@@ -88,6 +90,7 @@ const remoteDebuggingState: RemoteDebuggingState = {
 }
 
 const developerState: Developer = {
+  enableProxy: false,
   environment: iasEnvironments[0],
   remoteDebugging: remoteDebuggingState,
 }
@@ -101,6 +104,7 @@ export enum BCLocalStorageKeys {
   Environment = 'Environment',
   GenesisTransactions = 'GenesisTransactions',
   RemoteDebugging = 'RemoteDebugging',
+  EnableProxy = 'EnableProxy',
 }
 
 export const initialState: BCState = {
@@ -130,6 +134,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       // Persist IAS environment between app restarts
       AsyncStorage.setItem(BCLocalStorageKeys.Environment, JSON.stringify(developer.environment))
+      return { ...state, developer }
+    }
+    case DeveloperDispatchAction.TOGGLE_PROXY: {
+      const enableProxy: boolean = (action?.payload || []).pop() || false
+      const developer = { ...state.developer, enableProxy }
+
+      AsyncStorage.setItem(BCLocalStorageKeys.EnableProxy, JSON.stringify(developer.enableProxy))
       return { ...state, developer }
     }
     case DismissPersonCredentialOfferDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED: {

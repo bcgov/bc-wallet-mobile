@@ -349,6 +349,7 @@ const Splash = () => {
               expiryOffsetMs: 1000 * 60 * 60 * 24 * 7,
               path: CachesDirectoryPath + '/txn-cache',
             },
+            enableProxy: store.developer.enableProxy,
             proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
             proxyCacheSettings: {
               allowCaching: true,
@@ -356,6 +357,10 @@ const Splash = () => {
             },
           }),
         }
+
+        logger.info(
+          store.developer.enableProxy && Config.INDY_VDR_PROXY_URL ? 'VDR Proxy enabled' : 'VDR Proxy disabled'
+        )
 
         const newAgent = new Agent(options)
         const wsTransport = new WsOutboundTransport()
