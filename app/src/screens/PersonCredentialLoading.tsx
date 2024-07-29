@@ -42,7 +42,7 @@ export default function PersonCredentialLoading() {
   const timer = useRef<NodeJS.Timeout>()
   const logger = useContainer().resolve(TOKENS.UTIL_LOGGER)
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
-  const { loading: attestationLoading } = useAttestation ? useAttestation() : { loading: false }
+  const { loading: attestationLoading } = useAttestation()
   const { agent } = useAgent()
   if (!agent) {
     throw new Error('Unable to fetch agent from Credo')
@@ -80,36 +80,36 @@ export default function PersonCredentialLoading() {
     },
   })
 
+  const connect = async () => {
+    try {
+      const remoteAgentDetails = await connectToIASAgent(agent, store, t)
+      setRemoteAgentDetails(remoteAgentDetails)
+      logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
+    } catch (err) {
+      logger.error(`Failed to connect to IAS agent, error: ${(err as BifoldError).message}`)
+    }
+  }
+
   useEffect(() => {
-    connectToIASAgent(agent, store, t)
-      .then((remoteAgentDetails: WellKnownAgentDetails) => {
-        setRemoteAgentDetails(remoteAgentDetails)
-
-        timer.current = setTimeout(() => {
-          if (!remoteAgentDetails || !remoteAgentDetails.connectionId) {
-            return
-          }
-
-          const proofRequest = receivedProofRequests.find(
-            (proof) => proof.connectionId === remoteAgentDetails.connectionId
-          )
-
-          if (!proofRequest) {
-            // No proof from our IAS Agent to respond to, do nothing.
-            logger.info(
-              `Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`
-            )
-
-            setDidCompleteAttestationProofRequest(true)
-          }
-        }, attestationProofRequestWaitTimeout)
-
-        logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails?.connectionId}`)
-      })
-      .catch((error) => {
-        logger.error(`Failed to connect to IAS agent, error: ${error.message}`)
-      })
+    connect()
   }, [])
+
+  useEffect(() => {
+    if (!remoteAgentDetails) {
+      return
+    }
+
+    timer.current = setTimeout(() => {
+      const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentDetails.connectionId)
+
+      if (!proofRequest) {
+        // No proof from our IAS Agent to respond to, do nothing.
+        logger.info(`Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`)
+
+        setDidCompleteAttestationProofRequest(true)
+      }
+    }, attestationProofRequestWaitTimeout)
+  }, [remoteAgentDetails, receivedProofRequests])
 
   // Use this function to accept the attestation proof request.
   const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
@@ -212,17 +212,13 @@ export default function PersonCredentialLoading() {
       .catch((error) => {
         logger.error('Completed service card authentication with error, error: ', error.message)
       })
-  }, [remoteAgentDetails, didCompleteAttestationProofRequest])
+  }, [remoteAgentDetails, didCompleteAttestationProofRequest, store.developer.environment.iasPortalUrl])
 
   useEffect(() => {
-    if (!remoteAgentDetails || !remoteAgentDetails.connectionId) {
-      return
-    }
-
     for (const credential of receivedCredentialOffers) {
       if (
         credential.state == CredentialState.OfferReceived &&
-        credential.connectionId === remoteAgentDetails.connectionId
+        credential.connectionId === remoteAgentDetails?.connectionId
       ) {
         goToCredentialOffer(credential.id)
       }
