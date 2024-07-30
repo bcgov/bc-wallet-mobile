@@ -32,9 +32,12 @@ import { DependencyContainer } from 'tsyringe'
 import { autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
 import { expirationOverrideInMinutes } from './src/helpers/utils'
 import Developer from './src/screens/Developer'
+import PersonCredential from './src/screens/PersonCredential'
+import PersonCredentialLoading from './src/screens/PersonCredentialLoading'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import {
+  BCDispatchAction,
   BCLocalStorageKeys,
   BCState,
   DismissPersonCredentialOffer,
@@ -156,6 +159,29 @@ export class AppContainer implements Container {
       brandingOverlayType: BrandingOverlayType.Branding10,
     })
     this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
+
+    this._container.registerInstance(TOKENS.CUSTOM_NOTIFICATION, {
+      component: PersonCredential,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onCloseAction: (dispatch?: React.Dispatch<ReducerAction<any>>) => {
+        if (dispatch) {
+          dispatch({
+            type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
+            payload: [{ personCredentialOfferDismissed: true }],
+          })
+        }
+      },
+      additionalStackItems: [
+        {
+          component: PersonCredentialLoading,
+          name: 'PersonCredentialLoading',
+        },
+      ],
+      pageTitle: 'PersonCredential.PageTitle',
+      title: 'PersonCredentialNotification.Title',
+      description: 'PersonCredentialNotification.Description',
+      buttonTitle: 'PersonCredentialNotification.ButtonTitle',
+    })
 
     this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, useProofRequestTemplates)
     this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
