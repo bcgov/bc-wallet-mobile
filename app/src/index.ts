@@ -25,7 +25,6 @@ import Preface from './screens/Preface'
 import Splash from './screens/Splash'
 import Terms from './screens/Terms'
 import { allCredDefIds } from './services/attestation'
-import { BCDispatchAction } from './store'
 import { defaultTheme as theme } from './theme'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
