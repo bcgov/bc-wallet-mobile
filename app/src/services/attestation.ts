@@ -209,11 +209,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     this.startWorkflow()
 
     try {
-      const invitationUrl = await invitationUrlFromRestrictions(
-        this._proofRequest,
-        this.agent!,
-        AttestationRestrictions
-      )
+      const invitationUrl = await invitationUrlFromRestrictions(this._proofRequest, this.agent, AttestationRestrictions)
       if (!invitationUrl) {
         throw new BifoldError(
           'Attestation Service',
@@ -320,9 +316,8 @@ export class AttestationMonitor implements AttestationMonitorI {
       const offerData = (offer?.anoncreds ?? offer?.indy) as AnonCredsCredentialOffer
 
       // do nothing if not an attestation credential
-      const rrr = await isOfferingAttestation(offerData?.cred_def_id ?? '', AttestationRestrictions)
-
-      if (!rrr) {
+      const offerIsForAttestation = await isOfferingAttestation(offerData?.cred_def_id ?? '', AttestationRestrictions)
+      if (!offerIsForAttestation) {
         return
       }
 

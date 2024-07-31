@@ -109,23 +109,6 @@ const PersonCredentialLoading: React.FC = () => {
     }, attestationProofRequestWaitTimeout)
   }, [remoteAgentDetails, receivedProofRequests])
 
-  // Use this function to accept the attestation proof request.
-  const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
-    logger.info('Attestation: selecting credentials for attestation proof request')
-    // This will throw if we don't have the necessary credentials
-    const credentials = await agent.proofs.selectCredentialsForRequest({
-      proofRecordId: proofRequest.id,
-    })
-
-    logger.info('Attestation: accepting attestation proof request')
-    await agent.proofs.acceptRequest({
-      proofRecordId: proofRequest.id,
-      proofFormats: credentials.proofFormats,
-    })
-
-    return true
-  }
-
   // when a person credential offer is received, show the
   // offer screen to the user.
   const goToCredentialOffer = (credentialId?: string) => {
