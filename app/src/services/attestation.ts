@@ -103,7 +103,7 @@ const invitationUrlFromRestrictions = async (
 ): Promise<string | undefined> => {
   const format = (await agent.proofs.getFormatData(proof.id)) as unknown as AttestationProofRequestFormat
   const formatToUse = format.request?.anoncreds ? 'anoncreds' : 'indy'
-  const restrictionsArePresent = !format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions
+  const restrictionsArePresent = format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions
 
   if (!formatToUse || !restrictionsArePresent) {
     return undefined
