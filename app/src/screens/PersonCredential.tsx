@@ -1,21 +1,5 @@
-import { ProofState, CredentialState } from '@credo-ts/core'
-import { useAgent, useProofByState, useCredentialByState } from '@credo-ts/react-hooks'
-import {
-  useStore,
-  useTheme,
-  Button,
-  ButtonType,
-  testIdWithKey,
-  Screens,
-  Stacks,
-  InfoTextBox,
-  Link,
-  BifoldError,
-  EventTypes as BifoldEventTypes,
-  TOKENS,
-  useContainer,
-  AttestationEventTypes,
-} from '@hyperledger/aries-bifold-core'
+import { useAgent } from '@credo-ts/react-hooks'
+import { useStore, useTheme, Button, ButtonType, testIdWithKey, Stacks, Link } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -34,19 +18,13 @@ const links = {
   Help: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential#help',
 } as const
 
-export default function PersonCredential() {
+const PersonCredential: React.FC = () => {
   const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const [appInstalled, setAppInstalled] = useState<boolean>(false)
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
-  const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
-  const receivedProofRequests = useProofByState(ProofState.RequestReceived)
   const navigation = useNavigation()
-  const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
-  const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
-  const timer = useRef<NodeJS.Timeout>()
-  const logger = useContainer().resolve(TOKENS.UTIL_LOGGER)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -113,47 +91,10 @@ export default function PersonCredential() {
     return await Linking.canOpenURL('ca.bc.gov.id.servicescard://')
   }
 
-  // when a person credential offer is received, show the
-  // offer screen to the user.
-  const goToCredentialOffer = (credentialId?: string) => {
-    navigation.getParent()?.navigate(Stacks.NotificationStack, {
-      screen: Screens.CredentialOffer,
-      params: { credentialId },
-    })
-  }
-
   useEffect(() => {
     isBCServicesCardInstalled().then((result) => {
       setAppInstalled(result)
     })
-
-    const handleFailedAttestation = (error: BifoldError) => {
-      navigation.goBack()
-      DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
-    }
-
-    const handleStartedAttestation = () => {
-      console.log('************************** 111 AttestationEventTypes.Started')
-    }
-
-    const handleStartedCompleted = () => {
-      console.log('************************** 111 AttestationEventTypes.Completed')
-      timer.current && clearTimeout(timer.current)
-      setDidCompleteAttestationProofRequest(true)
-    }
-
-    const subscriptions = Array<EmitterSubscription>()
-    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Started, handleStartedAttestation))
-    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Completed, handleStartedCompleted))
-    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, handleFailedAttestation))
-    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, handleFailedAttestation))
-    subscriptions.push(
-      DeviceEventEmitter.addListener(AttestationEventTypes.FailedRequestCredential, handleFailedAttestation)
-    )
-
-    return () => {
-      subscriptions.forEach((subscription) => subscription.remove())
-    }
   }, [])
 
   const acceptPersonCredentialOffer = useCallback(() => {
@@ -165,49 +106,6 @@ export default function PersonCredential() {
       screen: 'PersonCredentialLoading',
     })
   }, [])
-
-  useEffect(() => {
-    if (!remoteAgentDetails || !remoteAgentDetails.legacyConnectionDid || !didCompleteAttestationProofRequest) {
-      return
-    }
-
-    const cb = (status: boolean) => {
-      logger.info(`Service card authentication reported ${status}`)
-      // TODO(jl): Handle the case where the service card authentication fails for
-      // user reasons or otherwise.
-      if (!status) {
-        setDidCompleteAttestationProofRequest(false)
-      }
-
-      setWorkflowInProgress(false)
-    }
-
-    const { iasPortalUrl } = store.developer.environment
-    const { legacyConnectionDid } = remoteAgentDetails
-
-    authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
-      .then(() => {
-        logger.error('Completed service card authentication successfully')
-      })
-      .catch((error) => {
-        logger.error('Completed service card authentication with error, error: ', error.message)
-      })
-  }, [remoteAgentDetails, didCompleteAttestationProofRequest])
-
-  useEffect(() => {
-    if (!remoteAgentDetails || !remoteAgentDetails.connectionId) {
-      return
-    }
-
-    for (const credential of receivedCredentialOffers) {
-      if (
-        credential.state == CredentialState.OfferReceived &&
-        credential.connectionId === remoteAgentDetails.connectionId
-      ) {
-        goToCredentialOffer(credential.id)
-      }
-    }
-  }, [receivedCredentialOffers, remoteAgentDetails])
 
   const getBCServicesCardApp = useCallback(() => {
     setAppInstalled(true)
@@ -318,3 +216,5 @@ export default function PersonCredential() {
     </SafeAreaView>
   )
 }
+
+export default PersonCredential
