@@ -1,7 +1,6 @@
-import { CredentialState, ProofExchangeRecord, ProofState } from '@credo-ts/core'
+import { CredentialState, ProofState } from '@credo-ts/core'
 import { useAgent, useCredentialByState, useProofByState } from '@credo-ts/react-hooks'
 import {
-  BifoldAgent,
   Button,
   ButtonType,
   Screens,
