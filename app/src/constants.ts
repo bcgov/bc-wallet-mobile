@@ -6,7 +6,7 @@ export const AttestationRestrictions = {
   Development: {
     credDefIDs: ['NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet', 'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet_dev_v2'],
     invitationUrl:
-      'https://traction-acapy-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJodHRwczovL2RpZGNvbW0ub3JnL2Nvbm5lY3Rpb25zLzEuMC9pbnZpdGF0aW9uIiwgIkBpZCI6ICI5NDc5MTk2Yi01NmY5LTRiYmItYTFmOC0xYTQzZGVlNzcyOGIiLCAibGFiZWwiOiAiQkNBdHRlc3RhdGlvblNlcnZpY2UiLCAicmVjaXBpZW50S2V5cyI6IFsiRXNiWkxWUERrSFNMTUtUS3BYZkZLQ3hqcGFvb2ZVa1VHNUIxdTQ5b0JYRlYiXSwgInNlcnZpY2VFbmRwb2ludCI6ICJodHRwczovL3RyYWN0aW9uLWFjYXB5LWRldi5hcHBzLnNpbHZlci5kZXZvcHMuZ292LmJjLmNhIn0=',
+      'https://traction-acapy-dev.apps.silver.devops.gov.bc.ca?c_i=eyJAdHlwZSI6ICJodHRwczovL2RpZGNvbW0ub3JnL2Nvbm5lY3Rpb25zLzEuMC9pbnZpdGF0aW9uIiwgIkBpZCI6ICI0OGRkNzViNi0wMGI4LTQwZGItOTYxNy01MWIwNDZhZDI0MmEiLCAibGFiZWwiOiAiQkNBdHRlc3RhdGlvblNlcnZpY2VfREVWIiwgInJlY2lwaWVudEtleXMiOiBbIkVjZ0Q5VzRTVGVxa21zU1pOWUpBUEdRV2Y0d25IRFR5U01UUFJDdHpYRUVaIl0sICJzZXJ2aWNlRW5kcG9pbnQiOiAiaHR0cHM6Ly90cmFjdGlvbi1hY2FweS1kZXYuYXBwcy5zaWx2ZXIuZGV2b3BzLmdvdi5iYy5jYSIsICJpbWFnZVVybCI6ICJodHRwOi8vZXhhbXBsZS5jb20vIn0=',
   },
   Test: {
     credDefIDs: ['RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet', 'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet_test_v2'],
