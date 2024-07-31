@@ -36,6 +36,7 @@ import PersonCredential from './src/screens/PersonCredential'
 import PersonCredentialLoading from './src/screens/PersonCredentialLoading'
 import Preface from './src/screens/Preface'
 import Terms, { TermsVersion } from './src/screens/Terms'
+import { AttestationMonitor } from './src/services/attestation'
 import {
   BCDispatchAction,
   BCLocalStorageKeys,
@@ -76,6 +77,11 @@ export class AppContainer implements Container {
     const logger = new RemoteLogger(logOptions)
     logger.startEventListeners()
 
+    const options = {
+      shouldHandleProofRequestAutomatically: true,
+    }
+
+    this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(logger, options))
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)

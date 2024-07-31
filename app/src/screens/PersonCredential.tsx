@@ -18,7 +18,7 @@ const links = {
   Help: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential#help',
 } as const
 
-export default function PersonCredential() {
+const PersonCredential: React.FC = () => {
   const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const [appInstalled, setAppInstalled] = useState<boolean>(false)
@@ -216,3 +216,5 @@ export default function PersonCredential() {
     </SafeAreaView>
   )
 }
+
+export default PersonCredential

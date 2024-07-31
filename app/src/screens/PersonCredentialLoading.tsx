@@ -1,7 +1,6 @@
-import { CredentialState, ProofExchangeRecord, ProofState } from '@credo-ts/core'
+import { CredentialState, ProofState } from '@credo-ts/core'
 import { useAgent, useCredentialByState, useProofByState } from '@credo-ts/react-hooks'
 import {
-  BifoldAgent,
   Button,
   ButtonType,
   Screens,
@@ -13,6 +12,7 @@ import {
   useTheme,
   EventTypes as BifoldEventTypes,
   BifoldError,
+  AttestationEventTypes,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useRef, useState } from 'react'
@@ -30,11 +30,9 @@ import {
 
 import PersonCredentialSpinner from '../components/PersonCredentialSpinner'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
-import { useAttestation } from '../hooks/useAttestation'
-import { AttestationEventTypes } from '../services/attestation'
 import { BCState } from '../store'
 
-export default function PersonCredentialLoading() {
+const PersonCredentialLoading: React.FC = () => {
   const { ColorPallet, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
@@ -42,7 +40,6 @@ export default function PersonCredentialLoading() {
   const timer = useRef<NodeJS.Timeout>()
   const logger = useContainer().resolve(TOKENS.UTIL_LOGGER)
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
-  const { loading: attestationLoading } = useAttestation()
   const { agent } = useAgent()
   if (!agent) {
     throw new Error('Unable to fetch agent from Credo')
@@ -111,23 +108,6 @@ export default function PersonCredentialLoading() {
     }, attestationProofRequestWaitTimeout)
   }, [remoteAgentDetails, receivedProofRequests])
 
-  // Use this function to accept the attestation proof request.
-  const acceptAttestationProofRequest = async (agent: BifoldAgent, proofRequest: ProofExchangeRecord) => {
-    logger.info('Attestation: selecting credentials for attestation proof request')
-    // This will throw if we don't have the necessary credentials
-    const credentials = await agent.proofs.selectCredentialsForRequest({
-      proofRecordId: proofRequest.id,
-    })
-
-    logger.info('Attestation: accepting attestation proof request')
-    await agent.proofs.acceptRequest({
-      proofRecordId: proofRequest.id,
-      proofFormats: credentials.proofFormats,
-    })
-
-    return true
-  }
-
   // when a person credential offer is received, show the
   // offer screen to the user.
   const goToCredentialOffer = (credentialId?: string) => {
@@ -143,7 +123,20 @@ export default function PersonCredentialLoading() {
       DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
     }
 
+    const handleStartedAttestation = () => {
+      logger.info('Attestation proof request started')
+    }
+
+    const handleStartedCompleted = () => {
+      logger.info('Attestation proof request completed')
+
+      timer.current && clearTimeout(timer.current)
+      setDidCompleteAttestationProofRequest(true)
+    }
+
     const subscriptions = Array<EmitterSubscription>()
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Started, handleStartedAttestation))
+    subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.Completed, handleStartedCompleted))
     subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleProof, handleFailedAttestation))
     subscriptions.push(DeviceEventEmitter.addListener(AttestationEventTypes.FailedHandleOffer, handleFailedAttestation))
     subscriptions.push(
@@ -154,39 +147,6 @@ export default function PersonCredentialLoading() {
       subscriptions.forEach((subscription) => subscription.remove())
     }
   }, [])
-
-  useEffect(() => {
-    // If we are fetching an attestation credential, do no yet have
-    // a remote connection ID to the IAS agent, or the agent is not
-    // initialized, do nothing.
-    if (attestationLoading || !remoteAgentDetails || !agent) {
-      return
-    }
-
-    // We have an attestation credential and can respond to an
-    // attestation proof request.
-    const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentDetails.connectionId)
-    if (!proofRequest) {
-      // No proof from our IAS Agent to respond to, do nothing.
-      return
-    }
-
-    timer.current && clearTimeout(timer.current)
-
-    if (!didCompleteAttestationProofRequest) {
-      acceptAttestationProofRequest(agent, proofRequest)
-        .then((status: boolean) => {
-          // We can unblock the workflow and proceed with
-          // authentication.
-          setDidCompleteAttestationProofRequest(status)
-          logger.info(`Accepted IAS attestation proof request with status: ${status}`)
-        })
-        .catch((error) => {
-          setDidCompleteAttestationProofRequest(false)
-          logger.error(`Unable to accept IAS attestation proof request, error: ${error.message}`)
-        })
-    }
-  }, [attestationLoading, receivedProofRequests, remoteAgentDetails, agent])
 
   useEffect(() => {
     if (!remoteAgentDetails || !remoteAgentDetails.legacyConnectionDid || !didCompleteAttestationProofRequest) {
@@ -257,3 +217,5 @@ export default function PersonCredentialLoading() {
     </Modal>
   )
 }
+
+export default PersonCredentialLoading
