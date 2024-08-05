@@ -155,7 +155,6 @@ export const authenticateWithServiceCard = async (
         forceCloseOnRedirection: false,
         showInRecents: true,
       })
-
       // When `result.type` is "Cancel" that comes from the alert box or
       // secure browser `result.url` will be undefined.
       if (
