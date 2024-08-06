@@ -93,7 +93,7 @@ type Restriction = {
 }
 
 const findCredDefIDs = (restrictions: [Restriction]): Array<string> => {
-  return restrictions.map((rstr) => rstr.cred_def_id).filter((credDefId) => credDefId !== undefined)
+  return restrictions.map((rstr) => rstr.cred_def_id).filter((credDefId) => credDefId !== undefined) as string[]
 }
 
 const invitationUrlFromRestrictions = async (
@@ -110,12 +110,12 @@ const invitationUrlFromRestrictions = async (
   }
 
   const pRestrictions = format.request?.[formatToUse]?.requested_attributes?.attestationInfo?.restrictions
-  const cred_def_ids = findCredDefIDs(pRestrictions as [any])
+  const cred_def_ids = findCredDefIDs(pRestrictions as [Restriction])
 
   for (const env in restrictions) {
     for (const credDefId of cred_def_ids) {
-      if ((restrictions as Record<string, any>)[env].credDefIDs.includes(credDefId)) {
-        return (restrictions as Record<string, any>)[env].invitationUrl
+      if (restrictions[env].credDefIDs.includes(credDefId)) {
+        return restrictions[env].invitationUrl
       }
     }
   }
@@ -135,7 +135,7 @@ export const allCredDefIds = (restrictions: AttestationRestrictionsType): string
   const allCredDefIds: string[] = []
 
   for (const env in restrictions) {
-    allCredDefIds.push(...(restrictions as Record<string, any>)[env].credDefIDs)
+    allCredDefIds.push(...restrictions[env].credDefIDs)
   }
 
   return allCredDefIds

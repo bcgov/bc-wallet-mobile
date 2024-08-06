@@ -2,7 +2,11 @@ export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
 export const hitSlop = { top: 44, bottom: 44, left: 44, right: 44 }
-export const AttestationRestrictions = {
+interface AttestationRestrictionEnvironment {
+  credDefIDs: readonly string[]
+  invitationUrl: string
+}
+export const AttestationRestrictions: { [key: string]: AttestationRestrictionEnvironment } = {
   Development: {
     credDefIDs: ['NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet', 'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet_dev_v2'],
     invitationUrl:

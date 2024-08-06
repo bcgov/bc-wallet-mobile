@@ -159,6 +159,7 @@ const PersonCredentialLoading: React.FC = () => {
       // user reasons or otherwise.
       if (!status) {
         setDidCompleteAttestationProofRequest(false)
+        navigation.goBack()
       }
     }
 
