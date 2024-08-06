@@ -128,7 +128,7 @@ export const isProofRequestingAttestation = async (
   agent: BifoldAgent,
   restrictions: AttestationRestrictionsType
 ): Promise<boolean> => {
-  return invitationUrlFromRestrictions(proof, agent, restrictions) !== undefined
+  return (await invitationUrlFromRestrictions(proof, agent, restrictions)) !== undefined
 }
 
 export const allCredDefIds = (restrictions: AttestationRestrictionsType): string[] => {
