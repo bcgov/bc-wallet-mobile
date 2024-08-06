@@ -4,6 +4,7 @@ import React from 'react'
 
 import PersonCredential from '../../src/screens/PersonCredential'
 import { initialState, reducer } from '../../src/store'
+import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 
 const mockNavigation = jest.fn()
 jest.mock('@react-navigation/native', () => ({
@@ -43,9 +44,10 @@ describe('Person Credential Screen', () => {
   })
 
   test('screen renders correctly', () => {
+    const navigation = useNavigation()
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
-        <PersonCredential />
+        <PersonCredential navigation={navigation as never} route={{} as never} />
       </StoreProvider>
     )
 

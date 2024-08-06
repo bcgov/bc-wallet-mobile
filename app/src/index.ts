@@ -15,7 +15,6 @@ import HomeFooterView from './components/HomeFooterView'
 import HomeHeaderView from './components/HomeHeaderView'
 import { AttestationRestrictions } from './constants'
 import { setup, activate, deactivate, status } from './helpers/PushNotificationsHelper'
-import { useNotifications } from './hooks/notifications'
 import en from './localization/en'
 import fr from './localization/fr'
 import ptBr from './localization/pt-br'
@@ -53,7 +52,6 @@ const configuration: ConfigurationContext = {
   enableTours: true,
   showPreface: true,
   disableOnboardingSkip: true,
-  useCustomNotifications: useNotifications,
   enablePushNotifications: {
     status: status,
     setup: setup,

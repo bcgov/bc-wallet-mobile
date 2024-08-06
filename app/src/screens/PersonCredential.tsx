@@ -1,6 +1,7 @@
 import { useAgent } from '@credo-ts/react-hooks'
-import { useStore, useTheme, Button, ButtonType, testIdWithKey, Stacks, Link } from '@hyperledger/aries-bifold-core'
-import { useNavigation } from '@react-navigation/native'
+import { useStore, useTheme, Button, ButtonType, testIdWithKey, Link } from '@hyperledger/aries-bifold-core'
+import { NotificationStackParams, Screens } from '@hyperledger/aries-bifold-core/lib/typescript/App/types/navigators'
+import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, Text, View, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native'
@@ -18,13 +19,14 @@ const links = {
   Help: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential#help',
 } as const
 
-const PersonCredential: React.FC = () => {
+type PersonProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
+
+const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
   const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const [appInstalled, setAppInstalled] = useState<boolean>(false)
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
-  const navigation = useNavigation()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -102,9 +104,7 @@ const PersonCredential: React.FC = () => {
       return
     }
 
-    navigation.getParent()?.navigate(Stacks.NotificationStack, {
-      screen: 'PersonCredentialLoading',
-    })
+    navigation.replace('PersonCredentialLoading' as never, {} as never)
   }, [])
 
   const getBCServicesCardApp = useCallback(() => {
