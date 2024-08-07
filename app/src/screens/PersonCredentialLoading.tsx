@@ -4,7 +4,7 @@ import {
   Button,
   ButtonType,
   Screens,
-  Stacks,
+  NotificationStackParams,
   TOKENS,
   testIdWithKey,
   useContainer,
@@ -14,7 +14,7 @@ import {
   BifoldError,
   AttestationEventTypes,
 } from '@hyperledger/aries-bifold-core'
-import { useNavigation } from '@react-navigation/native'
+import { StackScreenProps } from '@react-navigation/stack'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -31,8 +31,9 @@ import {
 import PersonCredentialSpinner from '../components/PersonCredentialSpinner'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
 import { BCState } from '../store'
+type PersonProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
-const PersonCredentialLoading: React.FC = () => {
+const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const { ColorPallet, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
@@ -44,7 +45,6 @@ const PersonCredentialLoading: React.FC = () => {
   if (!agent) {
     throw new Error('Unable to fetch agent from Credo')
   }
-  const navigation = useNavigation()
   const { t } = useTranslation()
   const attestationProofRequestWaitTimeout = 10000
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
@@ -110,11 +110,8 @@ const PersonCredentialLoading: React.FC = () => {
 
   // when a person credential offer is received, show the
   // offer screen to the user.
-  const goToCredentialOffer = (credentialId?: string) => {
-    navigation.getParent()?.navigate(Stacks.NotificationStack, {
-      screen: Screens.CredentialOffer,
-      params: { credentialId },
-    })
+  const goToCredentialOffer = (credentialId: string) => {
+    navigation.replace(Screens.CredentialOffer, { credentialId })
   }
 
   useEffect(() => {
