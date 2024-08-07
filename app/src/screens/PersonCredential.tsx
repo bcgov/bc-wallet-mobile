@@ -1,6 +1,14 @@
 import { useAgent } from '@credo-ts/react-hooks'
-import { useStore, useTheme, Button, ButtonType, testIdWithKey, Link } from '@hyperledger/aries-bifold-core'
-import { NotificationStackParams, Screens } from '@hyperledger/aries-bifold-core/lib/typescript/App/types/navigators'
+import {
+  useStore,
+  useTheme,
+  Button,
+  ButtonType,
+  testIdWithKey,
+  Link,
+  Screens,
+  NotificationStackParams,
+} from '@hyperledger/aries-bifold-core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
