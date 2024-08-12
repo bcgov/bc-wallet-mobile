@@ -147,7 +147,7 @@ dependencies {
 
     implementation platform('com.google.firebase:firebase-bom:26.8.0')
     
-    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
+    implementation 'com.google.mlkit:barcode-scanning:17.3.0'
     
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
