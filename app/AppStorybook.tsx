@@ -1,13 +1,13 @@
-import { initLanguages } from '@hyperledger/aries-bifold-core'
+// import { initLanguages } from '@hyperledger/aries-bifold-core'
 import React from 'react'
 import { LogBox } from 'react-native'
 
-import bcwallet from './src'
+// import bcwallet from './src'
 import StorybookUIRoot from './storybook'
 
-const { localization } = bcwallet
+// const { localization } = bcwallet
 
-initLanguages(localization)
+// initLanguages(localization)
 
 LogBox.ignoreAllLogs()
 

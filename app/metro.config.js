@@ -1,3 +1,4 @@
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config')
 const fs = require('fs')
 const path = require('path')
 const escape = require('escape-string-regexp')
@@ -32,7 +33,6 @@ for (const packageDir of packageDirs) {
   }, extraNodeModules)
 }
 
-const { getDefaultConfig } = require('metro-config')
 module.exports = (async () => {
   const {
     resolver: { sourceExts, assetExts },
@@ -58,5 +58,5 @@ module.exports = (async () => {
     watchFolders,
   }
 
-  return metroConfig
+  return mergeConfig(getDefaultConfig(__dirname), metroConfig)
 })()
