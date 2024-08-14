@@ -77,7 +77,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
 
     const notificationsWithCustom = [...custom, ...notif]
     setNotifications(notificationsWithCustom as never[])
-  }, [credsReceived, credsDone, basicMessages, nonAttestationProofs])
+  }, [offers, credsReceived, credsDone, basicMessages, nonAttestationProofs])
 
   useEffect(() => {
     const validProofsDone = proofsDone.filter((proof: ProofExchangeRecord) => {

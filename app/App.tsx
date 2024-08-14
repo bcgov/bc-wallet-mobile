@@ -2,6 +2,8 @@ import {
   Stacks,
   Screens,
   AgentProvider,
+  AnimatedComponentsProvider,
+  animatedComponents,
   TourProvider,
   AuthProvider,
   toastConfig,
@@ -18,7 +20,9 @@ import {
   ContainerProvider,
   MainContainer,
 } from '@hyperledger/aries-bifold-core'
+import { RootStackParams } from '@hyperledger/aries-bifold-core/lib/typescript/App/types/navigators'
 import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StatusBar } from 'react-native'
@@ -51,7 +55,7 @@ const App = () => {
   }, [])
   const [surveyVisible, setSurveyVisible] = useState(false)
   const { t } = useTranslation()
-  const { navigate } = useNavigation()
+  const { navigate } = useNavigation<StackNavigationProp<RootStackParams>>()
   const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
 
   const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
@@ -97,13 +101,13 @@ const App = () => {
           title: t('Settings.TermsOfUse'),
           accessibilityLabel: t('Settings.TermsOfUse'),
           testID: testIdWithKey('TermsOfUse'),
-          onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
+          onPress: () => navigate(Stacks.SettingStack, { screen: Screens.Terms }),
         },
         {
           title: t('Settings.IntroductionToTheApp'),
           accessibilityLabel: t('Settings.IntroductionToTheApp'),
           testID: testIdWithKey('IntroductionToTheApp'),
-          onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Onboarding } as never),
+          onPress: () => navigate(Stacks.SettingStack, { screen: Screens.Onboarding }),
         },
         {
           title: t('Settings.PlayWithBCWallet'),
@@ -128,37 +132,39 @@ const App = () => {
       <StoreProvider initialState={initialState} reducer={reducer}>
         <AgentProvider agent={undefined}>
           <ThemeProvider value={theme}>
-            <ConfigurationProvider value={configuration}>
-              <AuthProvider>
-                <NetworkProvider>
-                  <StatusBar
-                    barStyle="light-content"
-                    hidden={false}
-                    backgroundColor={theme.ColorPallet.brand.primary}
-                    translucent={false}
-                  />
-                  <NetInfo />
-                  <ErrorModal />
-                  <WebDisplay
-                    destinationUrl={surveyMonkeyUrl}
-                    exitUrl={surveyMonkeyExitUrl}
-                    visible={surveyVisible}
-                    onClose={toggleSurveyVisibility}
-                  />
-                  <TourProvider
-                    homeTourSteps={homeTourSteps}
-                    credentialsTourSteps={credentialsTourSteps}
-                    credentialOfferTourSteps={credentialOfferTourSteps}
-                    proofRequestTourSteps={proofRequestTourSteps}
-                    overlayColor={'black'}
-                    overlayOpacity={0.7}
-                  >
-                    <RootStack />
-                  </TourProvider>
-                  <Toast topOffset={15} config={toastConfig} />
-                </NetworkProvider>
-              </AuthProvider>
-            </ConfigurationProvider>
+            <AnimatedComponentsProvider value={animatedComponents}>
+              <ConfigurationProvider value={configuration}>
+                <AuthProvider>
+                  <NetworkProvider>
+                    <StatusBar
+                      barStyle="light-content"
+                      hidden={false}
+                      backgroundColor={theme.ColorPallet.brand.primary}
+                      translucent={false}
+                    />
+                    <NetInfo />
+                    <ErrorModal />
+                    <WebDisplay
+                      destinationUrl={surveyMonkeyUrl}
+                      exitUrl={surveyMonkeyExitUrl}
+                      visible={surveyVisible}
+                      onClose={toggleSurveyVisibility}
+                    />
+                    <TourProvider
+                      homeTourSteps={homeTourSteps}
+                      credentialsTourSteps={credentialsTourSteps}
+                      credentialOfferTourSteps={credentialOfferTourSteps}
+                      proofRequestTourSteps={proofRequestTourSteps}
+                      overlayColor={'black'}
+                      overlayOpacity={0.7}
+                    >
+                      <RootStack />
+                    </TourProvider>
+                    <Toast topOffset={15} config={toastConfig} />
+                  </NetworkProvider>
+                </AuthProvider>
+              </ConfigurationProvider>
+            </AnimatedComponentsProvider>
           </ThemeProvider>
         </AgentProvider>
       </StoreProvider>
