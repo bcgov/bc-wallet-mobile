@@ -1,5 +1,7 @@
 import {
   AgentProvider,
+  AnimatedComponentsProvider,
+  animatedComponents,
   TourProvider,
   AuthProvider,
   toastConfig,
@@ -63,35 +65,37 @@ const App = () => {
       <StoreProvider initialState={initialState} reducer={reducer}>
         <AgentProvider agent={undefined}>
           <ThemeProvider value={theme}>
-            <AuthProvider>
-              <NetworkProvider>
-                <StatusBar
-                  barStyle="light-content"
-                  hidden={false}
-                  backgroundColor={theme.ColorPallet.brand.primary}
-                  translucent={false}
-                />
-                <NetInfo />
-                <ErrorModal />
-                <WebDisplay
-                  destinationUrl={surveyMonkeyUrl}
-                  exitUrl={surveyMonkeyExitUrl}
-                  visible={appState.showSurvey}
-                  onClose={() => setAppState({ showSurvey: false })}
-                />
-                <TourProvider
-                  homeTourSteps={homeTourSteps}
-                  credentialsTourSteps={credentialsTourSteps}
-                  credentialOfferTourSteps={credentialOfferTourSteps}
-                  proofRequestTourSteps={proofRequestTourSteps}
-                  overlayColor={'black'}
-                  overlayOpacity={0.7}
-                >
-                  <RootStack />
-                </TourProvider>
-                <Toast topOffset={15} config={toastConfig} />
-              </NetworkProvider>
-            </AuthProvider>
+            <AnimatedComponentsProvider value={animatedComponents}>
+              <AuthProvider>
+                <NetworkProvider>
+                  <StatusBar
+                    barStyle="light-content"
+                    hidden={false}
+                    backgroundColor={theme.ColorPallet.brand.primary}
+                    translucent={false}
+                  />
+                  <NetInfo />
+                  <ErrorModal />
+                  <WebDisplay
+                    destinationUrl={surveyMonkeyUrl}
+                    exitUrl={surveyMonkeyExitUrl}
+                    visible={appState.showSurvey}
+                    onClose={() => setAppState({ showSurvey: false })}
+                  />
+                  <TourProvider
+                    homeTourSteps={homeTourSteps}
+                    credentialsTourSteps={credentialsTourSteps}
+                    credentialOfferTourSteps={credentialOfferTourSteps}
+                    proofRequestTourSteps={proofRequestTourSteps}
+                    overlayColor={'black'}
+                    overlayOpacity={0.7}
+                  >
+                    <RootStack />
+                  </TourProvider>
+                  <Toast topOffset={15} config={toastConfig} />
+                </NetworkProvider>
+              </AuthProvider>
+            </AnimatedComponentsProvider>
           </ThemeProvider>
         </AgentProvider>
       </StoreProvider>
