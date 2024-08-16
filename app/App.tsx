@@ -1,9 +1,5 @@
 import {
-  Stacks,
-  Screens,
   AgentProvider,
-  AnimatedComponentsProvider,
-  animatedComponents,
   TourProvider,
   AuthProvider,
   toastConfig,
@@ -14,25 +10,21 @@ import {
   ErrorModal,
   StoreProvider,
   ThemeProvider,
-  ConfigurationProvider,
   initLanguages,
-  testIdWithKey,
   ContainerProvider,
   MainContainer,
 } from '@hyperledger/aries-bifold-core'
-import { RootStackParams } from '@hyperledger/aries-bifold-core/lib/typescript/App/types/navigators'
 import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Linking, StatusBar } from 'react-native'
+import { StatusBar } from 'react-native'
 import { isTablet } from 'react-native-device-info'
 import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
-import { AppContainer } from './container-imp'
+import { AppContainer, AppState } from './container-imp'
 import bcwallet from './src'
 import { credentialOfferTourSteps } from './src/components/tours/CredentialOfferTourSteps'
 import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
@@ -42,84 +34,23 @@ import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
 import WebDisplay from './src/screens/WebDisplay'
 import { initialState, reducer } from './src/store'
 
-const { theme, localization, configuration } = bcwallet
+const { theme, localization } = bcwallet
 
 initLanguages(localization)
-
-const bifoldContainer = new MainContainer(container.createChildContainer()).init()
-const bcwContainer = new AppContainer(bifoldContainer).init()
 
 const App = () => {
   useMemo(() => {
     initStoredLanguage().then()
   }, [])
-  const [surveyVisible, setSurveyVisible] = useState(false)
   const { t } = useTranslation()
-  const { navigate } = useNavigation<StackNavigationProp<RootStackParams>>()
-  const toggleSurveyVisibility = () => setSurveyVisible(!surveyVisible)
-
-  const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
+  const { navigate } = useNavigation()
+  const [appState, setAppState] = useState<AppState>({ showSurvey: false })
+  const bifoldContainer = new MainContainer(container.createChildContainer()).init()
+  const bcwContainer = new AppContainer(bifoldContainer, t, navigate, [appState, setAppState]).init()
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
   }
-
-  const settings = [
-    {
-      header: {
-        title: t('Settings.Help'),
-        icon: { name: 'help' },
-      },
-      data: [
-        {
-          title: t('Settings.HelpUsingBCWallet'),
-          accessibilityLabel: t('Settings.HelpUsingBCWallet'),
-          testID: testIdWithKey('HelpUsingBCWallet'),
-          onPress: () => Linking.openURL(helpLink),
-        },
-        {
-          title: t('Settings.GiveFeedback'),
-          accessibilityLabel: t('Settings.GiveFeedback'),
-          testID: testIdWithKey('GiveFeedback'),
-          onPress: toggleSurveyVisibility,
-        },
-        {
-          title: t('Settings.ReportAProblem'),
-          accessibilityLabel: t('Settings.ReportAProblem'),
-          testID: testIdWithKey('ReportAProblem'),
-          onPress: toggleSurveyVisibility,
-        },
-      ],
-    },
-    {
-      header: {
-        title: t('Settings.MoreInformation'),
-        icon: { name: 'info' },
-      },
-      data: [
-        {
-          title: t('Settings.TermsOfUse'),
-          accessibilityLabel: t('Settings.TermsOfUse'),
-          testID: testIdWithKey('TermsOfUse'),
-          onPress: () => navigate(Stacks.SettingStack, { screen: Screens.Terms }),
-        },
-        {
-          title: t('Settings.IntroductionToTheApp'),
-          accessibilityLabel: t('Settings.IntroductionToTheApp'),
-          testID: testIdWithKey('IntroductionToTheApp'),
-          onPress: () => navigate(Stacks.SettingStack, { screen: Screens.Onboarding }),
-        },
-        {
-          title: t('Settings.PlayWithBCWallet'),
-          accessibilityLabel: t('Settings.PlayWithBCWallet'),
-          testID: testIdWithKey('PlayWithBCWallet'),
-          onPress: () => Linking.openURL('https://digital.gov.bc.ca/digital-trust/showcase/'),
-        },
-      ],
-    },
-  ]
-
-  configuration.settings = settings
 
   useEffect(() => {
     // Hide the native splash / loading screen so that our
@@ -132,39 +63,35 @@ const App = () => {
       <StoreProvider initialState={initialState} reducer={reducer}>
         <AgentProvider agent={undefined}>
           <ThemeProvider value={theme}>
-            <AnimatedComponentsProvider value={animatedComponents}>
-              <ConfigurationProvider value={configuration}>
-                <AuthProvider>
-                  <NetworkProvider>
-                    <StatusBar
-                      barStyle="light-content"
-                      hidden={false}
-                      backgroundColor={theme.ColorPallet.brand.primary}
-                      translucent={false}
-                    />
-                    <NetInfo />
-                    <ErrorModal />
-                    <WebDisplay
-                      destinationUrl={surveyMonkeyUrl}
-                      exitUrl={surveyMonkeyExitUrl}
-                      visible={surveyVisible}
-                      onClose={toggleSurveyVisibility}
-                    />
-                    <TourProvider
-                      homeTourSteps={homeTourSteps}
-                      credentialsTourSteps={credentialsTourSteps}
-                      credentialOfferTourSteps={credentialOfferTourSteps}
-                      proofRequestTourSteps={proofRequestTourSteps}
-                      overlayColor={'black'}
-                      overlayOpacity={0.7}
-                    >
-                      <RootStack />
-                    </TourProvider>
-                    <Toast topOffset={15} config={toastConfig} />
-                  </NetworkProvider>
-                </AuthProvider>
-              </ConfigurationProvider>
-            </AnimatedComponentsProvider>
+            <AuthProvider>
+              <NetworkProvider>
+                <StatusBar
+                  barStyle="light-content"
+                  hidden={false}
+                  backgroundColor={theme.ColorPallet.brand.primary}
+                  translucent={false}
+                />
+                <NetInfo />
+                <ErrorModal />
+                <WebDisplay
+                  destinationUrl={surveyMonkeyUrl}
+                  exitUrl={surveyMonkeyExitUrl}
+                  visible={appState.showSurvey}
+                  onClose={() => setAppState({ showSurvey: false })}
+                />
+                <TourProvider
+                  homeTourSteps={homeTourSteps}
+                  credentialsTourSteps={credentialsTourSteps}
+                  credentialOfferTourSteps={credentialOfferTourSteps}
+                  proofRequestTourSteps={proofRequestTourSteps}
+                  overlayColor={'black'}
+                  overlayOpacity={0.7}
+                >
+                  <RootStack />
+                </TourProvider>
+                <Toast topOffset={15} config={toastConfig} />
+              </NetworkProvider>
+            </AuthProvider>
           </ThemeProvider>
         </AgentProvider>
       </StoreProvider>

@@ -14,22 +14,6 @@ jest.mock('@react-navigation/native', () => ({
   },
 }))
 
-const mockAttestation = () => {
-  return { loading: false }
-}
-jest.mock('@hyperledger/aries-bifold-core', () => ({
-  ...jest.requireActual('@hyperledger/aries-bifold-core'),
-  useConfiguration: () => {
-    return { useAttestation: mockAttestation }
-  },
-  useContainer: jest.fn().mockReturnValue({
-    resolve: jest.fn().mockReturnValue({
-      resolve: jest.fn().mockImplementation(() => Promise.resolve({})),
-      resolveAllBundles: jest.fn().mockImplementation(() => Promise.resolve({})),
-    }),
-  }),
-}))
-
 describe('Person Credential Screen', () => {
   beforeEach(() => {
     // Silence console.error because it will print a warning about Switch

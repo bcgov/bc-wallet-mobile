@@ -1,4 +1,4 @@
-import { BaseLogger } from '@credo-ts/core'
+import { Agent, BaseLogger } from '@credo-ts/core'
 import {
   Container,
   TOKENS,
@@ -13,12 +13,20 @@ import {
   DispatchAction,
   Stacks,
   Screens,
+  UseBiometry,
+  Record,
+  Scan,
+  Onboarding,
+  PINRules,
+  testIdWithKey,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import { useProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { NavigationProp } from '@react-navigation/native'
+import { TFunction } from 'react-i18next'
+import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import {
   getVersion,
@@ -29,15 +37,23 @@ import {
 } from 'react-native-device-info'
 import { DependencyContainer } from 'tsyringe'
 
-import { autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
+import AddCredentialButton from './src/components/AddCredentialButton'
+import AddCredentialSlider from './src/components/AddCredentialSlider'
+import EmptyList from './src/components/EmptyList'
+import HomeFooterView from './src/components/HomeFooterView'
+import HomeHeaderView from './src/components/HomeHeaderView'
+import { AttestationRestrictions, autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
+import { activate, deactivate, setup, status } from './src/helpers/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from './src/helpers/utils'
 import { useNotifications } from './src/hooks/notifications'
 import Developer from './src/screens/Developer'
+import { pages } from './src/screens/OnboardingPages'
 import PersonCredential from './src/screens/PersonCredential'
 import PersonCredentialLoading from './src/screens/PersonCredentialLoading'
 import Preface from './src/screens/Preface'
+import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
-import { AttestationMonitor } from './src/services/attestation'
+import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
 import {
   BCDispatchAction,
   BCLocalStorageKeys,
@@ -48,13 +64,35 @@ import {
   initialState,
 } from './src/store'
 
+const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
+const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
+
+export interface AppState {
+  showSurvey: boolean
+}
+
 export class AppContainer implements Container {
   private _container: DependencyContainer
   private log?: BaseLogger
+  private t: TFunction<'translation', undefined>
+  private navigate: (stack: never, params: never) => void
+  private setAppState: React.Dispatch<React.SetStateAction<AppState>>
+  private appState: AppState
 
-  public constructor(bifoldContainer: Container, log?: BaseLogger) {
+  public constructor(
+    bifoldContainer: Container,
+    t: TFunction<'translation', undefined>,
+    navigate: (stack: never, params: never) => void,
+    useState: [AppState, React.Dispatch<React.SetStateAction<AppState>>],
+    log?: BaseLogger
+  ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.log = log
+    this.t = t
+    this.navigate = navigate
+    const [appState, setAppState] = useState
+    this.setAppState = setAppState
+    this.appState = appState
   }
 
   public get container(): DependencyContainer {
@@ -86,6 +124,12 @@ export class AppContainer implements Container {
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
+    this._container.registerInstance(TOKENS.SCREEN_SPLASH, Splash)
+    this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_PAGES, pages)
+    this._container.registerInstance(TOKENS.SCREEN_USE_BIOMETRY, UseBiometry)
+    this._container.registerInstance(TOKENS.SCREEN_SCAN, Scan)
+    this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_ITEM, Onboarding)
+
     this._container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [
       {
         credDefIds: [
@@ -107,6 +151,92 @@ export class AppContainer implements Container {
         },
       },
     ])
+    this._container.registerInstance(TOKENS.CONFIG, {
+      PINSecurity: { rules: PINRules, displayHelper: false },
+      settings: [
+        {
+          header: {
+            title: this.t('Settings.Help'),
+            icon: { name: 'help' },
+          },
+          data: [
+            {
+              title: this.t('Settings.HelpUsingBCWallet'),
+              accessibilityLabel: this.t('Settings.HelpUsingBCWallet'),
+              testID: testIdWithKey('HelpUsingBCWallet'),
+              onPress: () => Linking.openURL(helpLink),
+            },
+            {
+              title: this.t('Settings.GiveFeedback'),
+              accessibilityLabel: this.t('Settings.GiveFeedback'),
+              testID: testIdWithKey('GiveFeedback'),
+              onPress: () => this.setAppState({ ...this.appState, showSurvey: true }),
+            },
+            {
+              title: this.t('Settings.ReportAProblem'),
+              accessibilityLabel: this.t('Settings.ReportAProblem'),
+              testID: testIdWithKey('ReportAProblem'),
+              onPress: () => this.setAppState({ ...this.appState, showSurvey: true }),
+            },
+          ],
+        },
+        {
+          header: {
+            title: this.t('Settings.MoreInformation'),
+            icon: { name: 'info' },
+          },
+          data: [
+            {
+              title: this.t('Settings.TermsOfUse'),
+              accessibilityLabel: this.t('Settings.TermsOfUse'),
+              testID: testIdWithKey('TermsOfUse'),
+              onPress: () => this.navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
+            },
+            {
+              title: this.t('Settings.IntroductionToTheApp'),
+              accessibilityLabel: this.t('Settings.IntroductionToTheApp'),
+              testID: testIdWithKey('IntroductionToTheApp'),
+              onPress: () => this.navigate(Stacks.SettingStack as never, { screen: Screens.Onboarding } as never),
+            },
+            {
+              title: this.t('Settings.PlayWithBCWallet'),
+              accessibilityLabel: this.t('Settings.PlayWithBCWallet'),
+              testID: testIdWithKey('PlayWithBCWallet'),
+              onPress: () => Linking.openURL('https://digital.gov.bc.ca/digital-trust/showcase/'),
+            },
+          ],
+        },
+      ],
+      enableTours: false,
+      supportedLanguages: ['en'],
+      showPreface: false,
+      disableOnboardingSkip: false,
+      whereToUseWalletUrl: 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet#where',
+      showScanHelp: true,
+      showScanButton: true,
+      showDetailsInfo: true,
+      contactHideList: ['BCAttestationService'],
+      proofTemplateBaseUrl: Config.PROOF_TEMPLATE_URL,
+      // Credential Definition IDs
+      credentialHideList: attestationCredDefIds,
+      enablePushNotifications: {
+        status: status,
+        setup: setup,
+        toggle: async (state: boolean, agent: Agent) => {
+          if (state) {
+            await activate(agent)
+          } else {
+            await deactivate(agent)
+          }
+        },
+      },
+    })
+    this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, AddCredentialButton)
+    this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
+    this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeaderView)
+    this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooterView)
+    this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, EmptyList)
+    this._container.registerInstance(TOKENS.COMPONENT_RECORD, Record)
     this._container.registerInstance(TOKENS.CACHE_CRED_DEFS, [
       // { did: "4WW6792ksq62UroZyfd6nQ", id: "4WW6792ksq62UroZyfd6nQ:3:CL:1098:SellingItRight" },
       { did: 'TeT8SJGHruVL9up3Erp4o', id: 'TeT8SJGHruVL9up3Erp4o:3:CL:224665:Selling It Right' },
