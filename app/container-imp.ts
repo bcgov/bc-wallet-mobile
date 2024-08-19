@@ -295,6 +295,7 @@ export class AppContainer implements Container {
     const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
       brandingOverlayType: BrandingOverlayType.Branding10,
     })
+    resolver.log = logger
     this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
 
     this._container.registerInstance(TOKENS.NOTIFICATIONS, {
