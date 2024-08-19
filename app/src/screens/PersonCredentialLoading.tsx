@@ -7,12 +7,12 @@ import {
   NotificationStackParams,
   TOKENS,
   testIdWithKey,
-  useContainer,
   useStore,
   useTheme,
   EventTypes as BifoldEventTypes,
   BifoldError,
   AttestationEventTypes,
+  useServices,
 } from '@hyperledger/aries-bifold-core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useEffect, useRef, useState } from 'react'
@@ -39,7 +39,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
   const receivedProofRequests = useProofByState(ProofState.RequestReceived)
   const timer = useRef<NodeJS.Timeout>()
-  const logger = useContainer().resolve(TOKENS.UTIL_LOGGER)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
   const { agent } = useAgent()
   if (!agent) {
