@@ -12,16 +12,6 @@ jest.mock('@react-navigation/native', () => ({
     return mockNavigation
   },
 }))
-jest.mock('@hyperledger/aries-bifold-core', () => ({
-  ...jest.requireActual('@hyperledger/aries-bifold-core'),
-  useConfiguration: jest.fn(),
-  useContainer: jest.fn().mockReturnValue({
-    resolve: jest.fn().mockReturnValue({
-      resolve: jest.fn().mockImplementation(() => Promise.resolve({})),
-      resolveAllBundles: jest.fn().mockImplementation(() => Promise.resolve({})),
-    }),
-  }),
-}))
 
 describe('Developer Screen', () => {
   beforeEach(() => {

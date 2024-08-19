@@ -6,16 +6,6 @@ import RemoteLogWarning from '../../src/screens/RemoteLogWarning'
 import { initialState, reducer } from '../../src/store'
 
 jest.mock('react-native-splash-screen', () => ({}))
-jest.mock('@hyperledger/aries-bifold-core', () => ({
-  ...jest.requireActual('@hyperledger/aries-bifold-core'),
-  useConfiguration: jest.fn(),
-  useContainer: jest.fn().mockReturnValue({
-    resolve: jest.fn().mockReturnValue({
-      resolve: jest.fn().mockImplementation(() => Promise.resolve({})),
-      resolveAllBundles: jest.fn().mockImplementation(() => Promise.resolve({})),
-    }),
-  }),
-}))
 
 describe('RemoteLogWarning Screen', () => {
   // beforeEach(() => {

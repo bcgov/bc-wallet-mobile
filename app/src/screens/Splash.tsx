@@ -10,7 +10,6 @@ import {
   useAuth,
   useTheme,
   useStore,
-  useConfiguration,
   InfoBox,
   InfoBoxType,
   testIdWithKey,
@@ -18,7 +17,7 @@ import {
   migrateToAskar,
   createLinkSecretIfRequired,
   TOKENS,
-  useContainer,
+  useServices,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
@@ -121,7 +120,6 @@ const Splash = () => {
   const navigation = useNavigation()
   const { walletSecret } = useAuth()
   const { ColorPallet, Assets } = useTheme()
-  const { showPreface, enablePushNotifications } = useConfiguration()
   const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
@@ -129,13 +127,23 @@ const Splash = () => {
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
-  const container = useContainer()
-  const logger = container.resolve(TOKENS.UTIL_LOGGER)
-  const indyLedgers = container.resolve(TOKENS.UTIL_LEDGERS)
-  const ocaBundleResolver = container.resolve(TOKENS.UTIL_OCA_RESOLVER) as RemoteOCABundleResolver
-  const attestationMonitor = container.resolve(TOKENS.UTIL_ATTESTATION_MONITOR)
-  const credDefs = container.resolve(TOKENS.CACHE_CRED_DEFS)
-  const schemas = container.resolve(TOKENS.CACHE_SCHEMAS)
+  const [
+    logger,
+    indyLedgers,
+    ocaBundleResolver,
+    { showPreface, enablePushNotifications },
+    attestationMonitor,
+    credDefs,
+    schemas,
+  ] = useServices([
+    TOKENS.UTIL_LOGGER,
+    TOKENS.UTIL_LEDGERS,
+    TOKENS.UTIL_OCA_RESOLVER,
+    TOKENS.CONFIG,
+    TOKENS.UTIL_ATTESTATION_MONITOR,
+    TOKENS.CACHE_CRED_DEFS,
+    TOKENS.CACHE_SCHEMAS,
+  ])
 
   const steps: string[] = [
     t('Init.Starting'),
@@ -315,7 +323,7 @@ const Splash = () => {
 
         setStep(3)
 
-        await ocaBundleResolver.checkForUpdates()
+        await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
         setStep(4)
         const cachedLedgers = await loadCachedLedgers()
