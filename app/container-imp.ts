@@ -21,7 +21,7 @@ import {
   testIdWithKey,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
-import { useProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
+import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { NavigationProp } from '@react-navigation/native'
@@ -324,7 +324,7 @@ export class AppContainer implements Container {
       },
     })
 
-    this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, useProofRequestTemplates)
+    this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, getProofRequestTemplates)
     this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
         const data = await AsyncStorage.getItem(key)
