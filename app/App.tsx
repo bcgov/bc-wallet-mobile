@@ -56,6 +56,9 @@ const App = () => {
   }
 
   useEffect(() => {
+    // this block fixes an issue when deep-link doesn't work
+    // when the app is fully terminated on Android.
+    // TODO: review and look for a fix
     async function getInitialURL() {
       const url = await Linking.getInitialURL()
       const logger = bcwContainer.resolve(TOKENS.UTIL_LOGGER)
