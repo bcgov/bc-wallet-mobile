@@ -71,7 +71,10 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
         ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
         : []
 
-    const notif = [...messagesToShow, ...offers, ...nonAttestationProofs, ...revoked].sort(
+    const proofs = nonAttestationProofs.filter((proof) => {
+      return !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen
+    })
+    const notif = [...messagesToShow, ...offers, ...proofs, ...revoked].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
@@ -81,10 +84,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
 
   useEffect(() => {
     const validProofsDone = proofsDone.filter((proof: ProofExchangeRecord) => {
-      if (proof.isVerified === undefined) return false
-
-      const metadata = proof.metadata.get(ProofMetadata.customMetadata) as ProofCustomMetadata
-      return !metadata?.details_seen
+      return proof.isVerified !== undefined
     })
     Promise.all(
       [...proofsRequested, ...validProofsDone].map(async (proof: ProofExchangeRecord) => {
