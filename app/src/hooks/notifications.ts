@@ -67,12 +67,12 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
     const invitationDate = new Date()
     const custom =
       showPersonCredentialSelector(credentialDefinitionIDs) &&
-      !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
+        !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
         ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
         : []
-
     const proofs = nonAttestationProofs.filter((proof) => {
-      return !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen
+      return ![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) ||
+        (proof.isVerified !== undefined && !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen)
     })
     const notif = [...messagesToShow, ...offers, ...proofs, ...revoked].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -83,11 +83,8 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
   }, [offers, credsReceived, credsDone, basicMessages, nonAttestationProofs])
 
   useEffect(() => {
-    const validProofsDone = proofsDone.filter((proof: ProofExchangeRecord) => {
-      return proof.isVerified !== undefined
-    })
     Promise.all(
-      [...proofsRequested, ...validProofsDone].map(async (proof: ProofExchangeRecord) => {
+      [...proofsRequested, ...proofsDone].map(async (proof: ProofExchangeRecord) => {
         const isAttestation = await isProofRequestingAttestation(proof, agent as BifoldAgent, AttestationRestrictions)
         return {
           value: proof,
