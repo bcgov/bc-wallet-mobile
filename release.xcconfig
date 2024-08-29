@@ -1,5 +1,5 @@
-CODE_SIGN_STYLE = Manual
-CODE_SIGNING_REQUIRED = NO
-CODE_SIGNING_ALLOWED = YES
-CODE_SIGN_IDENTITY = iPhone Distribution
-DEVELOPMENT_TEAM = 2RST8749NS
+CODE_SIGN_STYLE=Manual
+DEVELOPMENT_TEAM=2RST8749NS
+PRODUCT_BUNDLE_IDENTIFIER=ca.qc.gouv.portefeuillemobileqc
+PROVISIONING_PROFILE_SPECIFIER=Portefeuille Numerique Qc (Ne pas supprimer)
+CODE_SIGN_IDENTITY=iPhone Distribution: Ministere de la Cybersecurite et du Numerique (2RST8749NS)
