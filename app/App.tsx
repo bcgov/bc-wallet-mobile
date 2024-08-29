@@ -15,12 +15,11 @@ import {
   initLanguages,
   ContainerProvider,
   MainContainer,
-  TOKENS,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Linking, StatusBar } from 'react-native'
+import { StatusBar } from 'react-native'
 import { isTablet } from 'react-native-device-info'
 import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
@@ -56,19 +55,6 @@ const App = () => {
   }
 
   useEffect(() => {
-    // this block fixes an issue when deep-link doesn't work
-    // when the app is fully terminated on Android.
-    // TODO: review and look for a fix
-    async function getInitialURL() {
-      const url = await Linking.getInitialURL()
-      const logger = bcwContainer.resolve(TOKENS.UTIL_LOGGER)
-      if (url) {
-        logger.info(`App launched with URL: ${url}`)
-      } else {
-        logger.info('App launched without URL')
-      }
-    }
-    getInitialURL()
     // Hide the native splash / loading screen so that our
     // RN version can be displayed.
     SplashScreen.hide()
