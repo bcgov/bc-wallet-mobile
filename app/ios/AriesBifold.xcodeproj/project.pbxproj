@@ -613,7 +613,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = ca.qc.gouv.portefeuillemobileqc;
 				PRODUCT_NAME = AriesBifold;
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = "Portefeuille Numerique Qc (Ne pas supprimer)";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Portefeuille Numerique Qc (Ne pas supprimer)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
