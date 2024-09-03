@@ -372,7 +372,7 @@ const Terms = () => {
             </Text>
             , certain information will be collected from you as outlined in the{' '}
             <Text style={[style.link]} onPress={useCallback(() => openLink(bcWebPrivacyUrl), [])}>
-              Province's Privacy Statement for government websites
+              Province’s Privacy Statement for government websites
             </Text>{' '}
             Certain information is also collected by BC Wallet as outlined in the{' '}
             <Text style={[style.link]} onPress={useCallback(() => openLink(digitalWalletPrivacyUrl), [])}>
