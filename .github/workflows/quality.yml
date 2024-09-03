@@ -18,7 +18,7 @@ jobs:
           python-version: '3.11'
 
       - name: Setup NodeJS
-        uses: ./.github/actions/setup-node
+        uses: ./.github/workflows/actions/setup-node
 
       - name: Install dependencies
         run: |
@@ -48,7 +48,7 @@ jobs:
           python-version: '3.11'
 
       - name: Setup NodeJS
-        uses: ./.github/actions/setup-node
+        uses: ./.github/workflows/actions/setup-node
 
       - name: Install dependencies
         run: |
