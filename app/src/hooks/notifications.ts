@@ -67,12 +67,15 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
     const invitationDate = new Date()
     const custom =
       showPersonCredentialSelector(credentialDefinitionIDs) &&
-        !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
+      !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
         ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
         : []
     const proofs = nonAttestationProofs.filter((proof) => {
-      return ![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) ||
-        (proof.isVerified !== undefined && !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen)
+      return (
+        ![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) ||
+        (proof.isVerified !== undefined &&
+          !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen)
+      )
     })
     const notif = [...messagesToShow, ...offers, ...proofs, ...revoked].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
