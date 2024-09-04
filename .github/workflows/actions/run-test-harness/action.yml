@@ -17,7 +17,7 @@ inputs:
     required: true
     default: "-w bc_wallet"
   BUILD_NAME:
-    description: "Build Name eg. -b BCWallet.ipa"
+    description: "Build Name eg. -b QCWallet.ipa"
     required: false
     default: ""
   ISSUER_AGENT:

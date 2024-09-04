@@ -37,7 +37,7 @@ jobs:
             "KEYCHIAN_PASSWD"
             "PROVISIONING_PROFILE"
             "PLAY_STORE_JKS_BASE64"
-            "PLAY_STORE_JSK_ALIAS"
+            "PLAY_STORE_JKS_ALIAS"
             "PLAY_STORE_JKS_PASSWD"
           )
           for var in "${required_env_vars[@]}"; do
@@ -165,9 +165,10 @@ jobs:
           echo "OCA_URL=${OCA_URL}" >>.env
 
       - name: Update APS environment
+        working-directory: app/ios/AriesBifold
         run: |
-          sed -i '' 's/development/production/g' app/ios/AriesBifold/AriesBifold.entitlements
-          cat app/ios/AriesBifold/AriesBifold.entitlements
+          sed -i '' 's/development/production/g' AriesBifold.entitlements
+          cat AriesBifold.entitlements
 
       - name: Create prod signing credentials
         uses: ./.github/workflows/actions/create-ios-sig-creds
@@ -215,7 +216,7 @@ jobs:
           version_name: ${{ env.appBuildVersion }}
 
   build-android:
-    needs: [check-android-secrets]
+    needs: [check-secrets, check-vars]
     runs-on: ubuntu-22.04
     permissions:
       contents: read
@@ -338,7 +339,7 @@ jobs:
           node ./deploy-to-playstore.js 
 
   release:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    if: github.ref_name == 'main' 
     needs: [build-ios, build-android]
     runs-on: ubuntu-latest
     steps:
@@ -399,7 +400,7 @@ jobs:
           echo "ANDROID_APP_URL=lt://$(jq -r '.app_id' $HOME/lt_android_resp.json)" >> "$GITHUB_OUTPUT"
 
   run-on-device-tests:
-    if: github.ref_name == 'main' && needs.check-android-secrets.outputs.isReleaseBuild == 'true' && needs.check-ios-secrets.outputs.isReleaseBuild == 'true'
+    if: github.ref_name == 'main' 
     needs: [ship-to-lambdatest]
     runs-on: ubuntu-22.04
     strategy:

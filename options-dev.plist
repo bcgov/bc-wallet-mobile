@@ -10,17 +10,17 @@
 	<string>development</string>
 	<key>provisioningProfiles</key>
 	<dict>
-		<key>ca.bc.gov.BCWallet</key>
-		<string>BC Wallet - Development Jason</string>
+		<key>ca.qc.gouv.portefeuillemobileqc</key>
+		<string>Portefeuille Qc</string>
 	</dict>
 	<key>signingCertificate</key>
-	<string>67D6BA0FEC3E43792AABC24ED686303A9E3BB23F</string>
+	<string>Signing certificate</string>
 	<key>signingStyle</key>
 	<string>manual</string>
 	<key>stripSwiftSymbols</key>
 	<true/>
 	<key>teamID</key>
-	<string>L796QSLV3E</string>
+	<string>2RST8749NS</string>
 	<key>thinning</key>
 	<string>&lt;none&gt;</string>
 </dict>

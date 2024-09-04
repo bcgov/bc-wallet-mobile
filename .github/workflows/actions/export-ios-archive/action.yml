@@ -30,6 +30,6 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.ouput_artifact_ref }}
-        path: export/BCWallet.ipa
+        path: export/PortefeuilleQc.ipa
         if-no-files-found: error
         retention-days: 1

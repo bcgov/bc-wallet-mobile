@@ -18,7 +18,7 @@ index 4cfa156..30dc17d 100644
 -				DEVELOPMENT_TEAM = "";
 +				DEVELOPMENT_TEAM = "2RST8749NS";
  				INFOPLIST_FILE = AriesBifoldTests/Info.plist;
- 				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+ 				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
  				LD_RUNPATH_SEARCH_PATHS = (
 @@ -537,9 +537,10 @@
  			buildSettings = {
