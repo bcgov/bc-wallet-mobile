@@ -10,23 +10,33 @@ import {
 } from '@credo-ts/core'
 import {
   components,
-  ConfigurationContext,
-  ConfigurationProvider,
   StoreContext,
   contexts,
   ThemeProvider,
+  TOKENS,
+  MainContainer,
+  ContainerProvider,
 } from '@hyperledger/aries-bifold-core'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { select } from '@storybook/addon-knobs'
 import { storiesOf } from '@storybook/react-native'
-import React, { Dispatch, useEffect, useState } from 'react'
+import React, { Dispatch, PropsWithChildren, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, ListRenderItem, View } from 'react-native'
 import { Config } from 'react-native-config'
+import { container } from 'tsyringe'
 
 import qcwallet from '../../../src'
 
 const { theme } = qcwallet
+const OCABundleResolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
+  brandingOverlayType: BrandingOverlayType.Branding10,
+})
+const BasicAppContext: React.FC<PropsWithChildren> = ({ children }) => {
+  const context = useMemo(() => new MainContainer(container.createChildContainer()).init(), [])
+  context.container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, OCABundleResolver)
+  return <ContainerProvider value={context}>{children}</ContainerProvider>
+}
 
 enum CREDENTIALS {
   LSBC_TEST = 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default',
@@ -152,16 +162,8 @@ const Credentials = ({ items }: CredentialsProps) => {
   )
 }
 
-const OCABundleResolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
-  brandingOverlayType: BrandingOverlayType.Branding10,
-})
-
 storiesOf('Brandings', module)
   .add('All', () => {
-    const configuration: ConfigurationContext = {
-      OCABundleResolver: OCABundleResolver,
-    } as unknown as ConfigurationContext
-
     const state = contexts.store.defaultState
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dispatch: Dispatch<any> = () => {
@@ -237,20 +239,16 @@ storiesOf('Brandings', module)
       },
     ]
     return (
-      <ConfigurationProvider value={configuration}>
+      <BasicAppContext>
         <StoreContext.Provider value={[state, dispatch]}>
           <ThemeProvider value={theme}>
             <Credentials items={list} />
           </ThemeProvider>
         </StoreContext.Provider>
-      </ConfigurationProvider>
+      </BasicAppContext>
     )
   })
   .add('Person: Default', (): React.ReactNode => {
-    const configuration: ConfigurationContext = {
-      OCABundleResolver: OCABundleResolver,
-    } as unknown as ConfigurationContext
-
     const state = contexts.store.defaultState
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dispatch: Dispatch<any> = () => {
@@ -265,21 +263,17 @@ storiesOf('Brandings', module)
     ]
     return (
       <>
-        <ConfigurationProvider value={configuration}>
+        <BasicAppContext>
           <StoreContext.Provider value={[state, dispatch]}>
             <ThemeProvider value={theme}>
               <Credentials items={list} />
             </ThemeProvider>
           </StoreContext.Provider>
-        </ConfigurationProvider>
+        </BasicAppContext>
       </>
     )
   })
   .add('Person: Revoked', (): React.ReactNode => {
-    const configuration: ConfigurationContext = {
-      OCABundleResolver: OCABundleResolver,
-    } as unknown as ConfigurationContext
-
     const state = contexts.store.defaultState
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dispatch: Dispatch<any> = () => {
@@ -293,10 +287,10 @@ storiesOf('Brandings', module)
       },
     ]
     return (
-      <ConfigurationProvider value={configuration}>
+      <BasicAppContext>
         <StoreContext.Provider value={[state, dispatch]}>
           <Credentials items={list} />
         </StoreContext.Provider>
-      </ConfigurationProvider>
+      </BasicAppContext>
     )
   })

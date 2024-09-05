@@ -1,0 +1,10 @@
+diff --git a/App/types/config.ts b/App/types/config.ts
+index ad1a7351b07e5ef30200c5b322dade69705bf360..eda623050eff3d638199a9c673bc6dee463f82eb 100644
+--- a/App/types/config.ts
++++ b/App/types/config.ts
+@@ -1,4 +1,4 @@
+-import { Locales } from "localization";
++import { Locales } from "../localization";
+ import { PINSecurityParams } from "./security";
+ import { SettingSection } from "./settings";
+ import { Agent } from "@credo-ts/core";

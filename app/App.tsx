@@ -1,7 +1,7 @@
 import {
-  Stacks,
-  Screens,
   AgentProvider,
+  AnimatedComponentsProvider,
+  animatedComponents,
   TourProvider,
   AuthProvider,
   toastConfig,
@@ -12,9 +12,7 @@ import {
   ErrorModal,
   StoreProvider,
   ThemeProvider,
-  ConfigurationProvider,
   initLanguages,
-  testIdWithKey,
   ContainerProvider,
   MainContainer,
 } from '@hyperledger/aries-bifold-core'
@@ -34,15 +32,11 @@ import { credentialOfferTourSteps } from './src/components/tours/CredentialOffer
 import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
-import { AttestationProvider } from './src/hooks/useAttestation'
 import { initialState, reducer } from './src/store'
 
-const { theme, localization, configuration } = qcwallet
+const { theme, localization } = qcwallet
 
 initLanguages(localization)
-
-const bifoldContainer = new MainContainer(container.createChildContainer()).init()
-const qcwContainer = new AppContainer(bifoldContainer).init()
 
 const App = () => {
   useMemo(() => {
@@ -50,35 +44,12 @@ const App = () => {
   }, [])
   const { t } = useTranslation()
   const { navigate } = useNavigation()
+  const bifoldContainer = new MainContainer(container.createChildContainer()).init()
+  const qcwContainer = new AppContainer(bifoldContainer, t, navigate).init()
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
   }
-
-  const settings = [
-    {
-      header: {
-        title: t('Settings.MoreInformation'),
-        icon: { name: 'info' },
-      },
-      data: [
-        {
-          title: t('Settings.TermsOfUse'),
-          accessibilityLabel: t('Settings.TermsOfUse'),
-          testID: testIdWithKey('TermsOfUse'),
-          onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
-        },
-        {
-          title: t('Settings.IntroductionToTheApp'),
-          accessibilityLabel: t('Settings.IntroductionToTheApp'),
-          testID: testIdWithKey('IntroductionToTheApp'),
-          onPress: () => navigate(Stacks.SettingStack as never, { screen: Screens.Onboarding } as never),
-        },
-      ],
-    },
-  ]
-
-  configuration.settings = settings
 
   useEffect(() => {
     // Hide the native splash / loading screen so that our
@@ -91,33 +62,31 @@ const App = () => {
       <StoreProvider initialState={initialState} reducer={reducer}>
         <AgentProvider agent={undefined}>
           <ThemeProvider value={theme}>
-            <ConfigurationProvider value={configuration}>
+            <AnimatedComponentsProvider value={animatedComponents}>
               <AuthProvider>
                 <NetworkProvider>
-                  <AttestationProvider>
-                    <StatusBar
-                      barStyle="light-content"
-                      hidden={false}
-                      backgroundColor={theme.ColorPallet.brand.primary}
-                      translucent={false}
-                    />
-                    <NetInfo />
-                    <ErrorModal />
-                    <TourProvider
-                      homeTourSteps={homeTourSteps}
-                      credentialsTourSteps={credentialsTourSteps}
-                      credentialOfferTourSteps={credentialOfferTourSteps}
-                      proofRequestTourSteps={proofRequestTourSteps}
-                      overlayColor={'black'}
-                      overlayOpacity={0.7}
-                    >
-                      <RootStack />
-                    </TourProvider>
-                    <Toast topOffset={15} config={toastConfig} />
-                  </AttestationProvider>
+                  <StatusBar
+                    barStyle="light-content"
+                    hidden={false}
+                    backgroundColor={theme.ColorPallet.brand.primary}
+                    translucent={false}
+                  />
+                  <NetInfo />
+                  <ErrorModal />
+                  <TourProvider
+                    homeTourSteps={homeTourSteps}
+                    credentialsTourSteps={credentialsTourSteps}
+                    credentialOfferTourSteps={credentialOfferTourSteps}
+                    proofRequestTourSteps={proofRequestTourSteps}
+                    overlayColor={'black'}
+                    overlayOpacity={0.7}
+                  >
+                    <RootStack />
+                  </TourProvider>
+                  <Toast topOffset={15} config={toastConfig} />
                 </NetworkProvider>
               </AuthProvider>
-            </ConfigurationProvider>
+            </AnimatedComponentsProvider>
           </ThemeProvider>
         </AgentProvider>
       </StoreProvider>

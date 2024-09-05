@@ -1,6 +1,7 @@
 import {
   Agent,
   ConnectionsModule,
+  DidsModule,
   HttpOutboundTransport,
   MediatorPickupStrategy,
   WsOutboundTransport,
@@ -17,7 +18,6 @@ import {
   useAuth,
   useTheme,
   useStore,
-  useConfiguration,
   InfoBox,
   InfoBoxType,
   testIdWithKey,
@@ -26,7 +26,7 @@ import {
   getAgentModules,
   createLinkSecretIfRequired,
   TOKENS,
-  useContainer,
+  useServices,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
@@ -39,10 +39,8 @@ import { StyleSheet, View, Text, Image } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import ledgers from '../../config/ledgers'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
-import { useAttestation } from '../hooks/useAttestation'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
 
 import { TermsVersion } from './Terms'
@@ -119,13 +117,12 @@ const resumeOnboardingAt = (
   of this view.
 */
 const Splash = () => {
-  const { agent, setAgent } = useAgent()
+  const { setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()
-  const { getWalletCredentials } = useAuth()
+  const { walletSecret } = useAuth()
   const { ColorPallet } = useTheme()
-  const { showPreface } = useConfiguration()
   const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
@@ -133,13 +130,12 @@ const Splash = () => {
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
-  const container = useContainer()
-  const indyLedgers = container.resolve(TOKENS.UTIL_LEDGERS)
-  const ocaBundleResolver = container.resolve(TOKENS.UTIL_OCA_RESOLVER) as RemoteOCABundleResolver
-
-  const qcLedgers: IndyVdrPoolConfig[] = ledgers
-
-  const allLedgers = [...qcLedgers, ...indyLedgers]
+  const [allLedgers, ocaBundleResolver, credDefs, schemas] = useServices([
+    TOKENS.UTIL_LEDGERS,
+    TOKENS.UTIL_OCA_RESOLVER,
+    TOKENS.CACHE_CRED_DEFS,
+    TOKENS.CACHE_SCHEMAS,
+  ])
 
   const steps: string[] = [
     t('Init.Starting'),
@@ -153,7 +149,6 @@ const Splash = () => {
     t('Init.SettingAgent'),
     t('Init.Finishing'),
   ]
-  const { start: startAttestationListeners } = useAttestation()
 
   const setStep = (stepIdx: number) => {
     setStepText(steps[stepIdx])
@@ -209,14 +204,6 @@ const Splash = () => {
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    if (!agent || !store.authentication.didAuthenticate) {
-      return
-    }
-
-    startAttestationListeners()
-  }, [agent, store.authentication.didAuthenticate])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
@@ -313,7 +300,6 @@ const Splash = () => {
             {
               name: resumeOnboardingAt(store.onboarding, {
                 enableWalletNaming: store.preferences.enableWalletNaming,
-                showPreface,
                 termsVersion: TermsVersion,
               }),
             },
@@ -335,6 +321,8 @@ const Splash = () => {
           !mounted ||
           !store.authentication.didAuthenticate ||
           !store.onboarding.didConsiderBiometry ||
+          !walletSecret?.id ||
+          !walletSecret.key ||
           store.onboarding.postAuthScreens.length > 0
         ) {
           return
@@ -344,13 +332,7 @@ const Splash = () => {
 
         setStep(3)
 
-        await ocaBundleResolver.checkForUpdates()
-        const credentials = await getWalletCredentials()
-
-        if (!credentials?.id || !credentials.key) {
-          // Cannot find wallet id/secret
-          return
-        }
+        await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
         setStep(4)
         const cachedLedgers = await loadCachedLedgers()
@@ -370,8 +352,8 @@ const Splash = () => {
           config: {
             label: store.preferences.walletName || 'Portefeuille QC',
             walletConfig: {
-              id: credentials.id,
-              key: credentials.key,
+              id: walletSecret.id,
+              key: walletSecret.key,
             },
             mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
             autoUpdateStorageOnStartup: true,
@@ -380,6 +362,7 @@ const Splash = () => {
           dependencies: agentDependencies,
           modules,
           drpc: new DrpcModule(),
+          dids: new DidsModule(),
         }
 
         const newAgent = new Agent(options)
@@ -393,7 +376,7 @@ const Splash = () => {
         if (!didMigrateToAskar(store.migration)) {
           newAgent.config.logger.debug('Agent not updated to Aries Askar, updating...')
 
-          await migrateToAskar(credentials.id, credentials.key, newAgent)
+          await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
 
           newAgent.config.logger.debug('Successfully finished updating agent to Aries Askar')
           // Store that we migrated to askar.
@@ -435,9 +418,6 @@ const Splash = () => {
         }
 
         setStep(6)
-        const credDefs = container.resolve(TOKENS.CACHE_CRED_DEFS)
-        const schemas = container.resolve(TOKENS.CACHE_SCHEMAS)
-
         credDefs.forEach(async ({ did, id }) => {
           // @ts-ignore:next-line
           const pool = await poolService.getPoolForDid(newAgent.context, did)
@@ -477,6 +457,7 @@ const Splash = () => {
     store.authentication.didAuthenticate,
     store.onboarding.postAuthScreens.length,
     store.onboarding.didConsiderBiometry,
+    walletSecret,
     initAgentCount,
   ])
 

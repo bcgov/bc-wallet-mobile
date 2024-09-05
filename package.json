@@ -51,10 +51,8 @@
     "react-native": "0.72.5",
     "@types/react-native": "0.72.3",
     "react-i18next": "11.18.6",
-    "react-native-vision-camera": "4.0.1",
+    "react-native-vision-camera": "4.3.1",
     "@credo-ts/react-hooks": "patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch",
-    "@credo-ts/anoncreds@npm:0.5.3": "patch:@credo-ts/anoncreds@npm%3A0.5.3#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.3-9fffe9ad63.patch",
-    "@credo-ts/core@npm:0.5.3": "patch:@credo-ts/core@npm%3A0.5.3#~/.yarn/patches/@credo-ts-core-npm-0.5.3-39fe4d2bdd.patch",
     "@hyperledger/indy-vdr-shared@npm:0.2.2": "patch:@hyperledger/indy-vdr-shared@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-shared-npm-0.2.2-b989282fc6.patch",
     "@hyperledger/indy-vdr-react-native": "patch:@hyperledger/indy-vdr-react-native@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.2.2-627d424b96.patch"
   }

@@ -1,5 +1,5 @@
 import { useTheme } from '@hyperledger/aries-bifold-core'
-import { createDefaultStackOptions } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
+import { useDefaultStackOptions } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
 import { createStackNavigator } from '@react-navigation/stack'
 import React from 'react'
 
@@ -10,7 +10,7 @@ import { Screens, TermsStackParams } from './navigators'
 const TermsStack: React.FC = () => {
   const StackTerms = createStackNavigator<TermsStackParams>()
   const theme = useTheme()
-  const defaultStackOptions = createDefaultStackOptions(theme)
+  const defaultStackOptions = useDefaultStackOptions(theme)
 
   return (
     <StackTerms.Navigator
