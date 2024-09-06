@@ -35,7 +35,7 @@ import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, Text, Image } from 'react-native'
+import { StyleSheet, Text, View, Image } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -163,32 +163,48 @@ const Splash = () => {
       flexDirection: 'column',
       justifyContent: 'space-between',
       alignItems: 'center',
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPallet.brand.primary,
     },
     img: {
-      width: '51.5%',
+      width: '70.5%',
+      height: '70.5%',
       resizeMode: 'contain',
     },
     progressContainer: {
-      flex: 2,
+      flex: 1,
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'space-between',
+
       width: '60%',
-      minHeight: 37,
+    },
+    tipCarouselContainer: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    logoAndProgressContainer: {
+      marginTop: '15%',
+      alignItems: 'center',
+      maxHeight: 600,
+    },
+    progressAndTextContainer: {
+      flex: 1,
+      width: '100%',
+      alignContent: 'center',
     },
     stepTextContainer: {
-      marginTop: 10,
+      paddingTop: 15,
       justifyContent: 'center',
       alignItems: 'center',
     },
     stepText: {
       fontFamily: 'BCSans-Regular',
       fontSize: 16,
-      color: '#a8abae',
+      color: '#ffffff',
     },
     errorBoxContainer: {
+      paddingTop: 50,
       paddingHorizontal: 20,
+      position: 'absolute',
     },
     logoContainer: {
       flex: 1,
@@ -196,7 +212,7 @@ const Splash = () => {
       alignItems: 'center',
       justifyContent: 'center',
       width: '100%',
-      marginBottom: '10%',
+      marginTop: '80%',
     },
   })
 
@@ -472,33 +488,36 @@ const Splash = () => {
 
   return (
     <SafeAreaView style={styles.splashContainer}>
-      <View style={{ flex: 2, width: '100%' }}>
-        {initError ? (
-          <View style={styles.errorBoxContainer}>
-            <InfoBox
-              notificationType={InfoBoxType.Error}
-              title={t('Error.Title2026')}
-              description={t('Error.Message2026')}
-              message={initError?.message || t('Error.Unknown')}
-              onCallToActionLabel={t('Init.Retry')}
-              onCallToActionPressed={handleErrorCallToActionPressed}
-            />
+      {initError && (
+        <View style={styles.errorBoxContainer}>
+          <InfoBox
+            notificationType={InfoBoxType.Error}
+            title={t('Error.Title2026')}
+            description={t('Error.Message2026')}
+            message={initError?.message || t('Error.Unknown')}
+            onCallToActionLabel={t('Init.Retry')}
+            onCallToActionPressed={handleErrorCallToActionPressed}
+          />
+        </View>
+      )}
+      <View>
+        <View style={styles.logoAndProgressContainer}>
+          <View style={styles.logoContainer}>
+            {<Image source={require('../assets/img/QUEBEC_w3_blanc.png')} style={styles.img} />}
           </View>
-        ) : (
-          <TipCarousel />
-        )}
-      </View>
-      <View style={styles.logoContainer}>
-        <Image source={require('../assets/img/Quebec.png')} style={styles.img} />
-      </View>
-      <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
-        <View style={{ flex: 1, width: '100%', alignContent: 'center' }}>
-          <View>
-            <ProgressBar progressPercent={progressPercent} />
+          <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
+            <View style={styles.progressAndTextContainer}>
+              <View>
+                <ProgressBar progressPercent={progressPercent} />
+              </View>
+              <View style={styles.stepTextContainer}>
+                <Text style={styles.stepText}>{stepText}</Text>
+              </View>
+            </View>
           </View>
-          <View style={styles.stepTextContainer}>
-            <Text style={styles.stepText}>{stepText}</Text>
-          </View>
+        </View>
+        <View style={styles.tipCarouselContainer}>
+          <View>{<TipCarousel />}</View>
         </View>
       </View>
     </SafeAreaView>

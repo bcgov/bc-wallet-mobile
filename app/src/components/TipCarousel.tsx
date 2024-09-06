@@ -32,7 +32,7 @@ export interface TipProps extends PropsWithChildren {
 
 // memo used here to optimize for FlatList rendering
 const Comp: FunctionComponent<TipProps> = ({ item, width, header }) => {
-  const { TextTheme, ColorPallet } = useTheme()
+  const { ColorPallet } = useTheme()
   // not making use of useTheme here to optimize FlatList rendering
   const tipStyles = StyleSheet.create({
     tipContainer: {
@@ -48,16 +48,14 @@ const Comp: FunctionComponent<TipProps> = ({ item, width, header }) => {
     },
     tipHeader: {
       paddingBottom: 3,
-      fontSize: 26,
+      fontSize: 16,
       fontFamily: 'BCSans-Regular',
-      fontWeight: 'bold',
-      color: TextTheme.title.color,
+      color: ColorPallet.grayscale.white,
     },
     tipText: {
-      fontSize: 26,
+      fontSize: 16,
       fontFamily: 'BCSans-Regular',
-      fontWeight: 'bold',
-      color: TextTheme.title.color,
+      color: ColorPallet.grayscale.white,
       marginTop: 10,
       textAlign: 'center',
     },

@@ -2,6 +2,8 @@ import { useTheme } from '@hyperledger/aries-bifold-core'
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, View, Animated, useWindowDimensions } from 'react-native'
 
+import { TextTheme } from '../theme'
+
 export interface ProgressBarProps {
   progressPercent: number
 }
@@ -23,14 +25,14 @@ const ProgressBar = ({ progressPercent }: ProgressBarProps) => {
     progressBarContainer: {
       width: '100%',
       height: 11,
-      backgroundColor: ColorPallet.grayscale.lightGrey,
+      backgroundColor: ColorPallet.brand.secondaryBackground,
       borderRadius: 4,
       overflow: 'hidden',
     },
     progressBar: {
       height: '100%',
       width: '100%',
-      backgroundColor: ColorPallet.brand.primary,
+      backgroundColor: TextTheme.title.color,
     },
   })
   // scaleX rather than width is used for the progress bar as this allows useNativeDriver to be true
