@@ -14,7 +14,6 @@ import {
   DispatchAction,
   Stacks,
   Screens,
-  PINRules,
   testIdWithKey,
 } from '@hyperledger/aries-bifold-core'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
@@ -28,6 +27,7 @@ import ledgers from './config/ledgers'
 import AddCredentialButton from './src/components/AddCredentialButton'
 import AddCredentialSlider from './src/components/AddCredentialSlider'
 import EmptyList from './src/components/EmptyList'
+import { PINValidationRules } from './src/constants'
 import Developer from './src/screens/Developer'
 import { pages } from './src/screens/OnboardingPages'
 import Splash from './src/screens/Splash'
@@ -75,7 +75,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
     this._container.registerInstance(TOKENS.SCREEN_SPLASH, Splash)
     this._container.registerInstance(TOKENS.CONFIG, {
-      PINSecurity: { rules: PINRules, displayHelper: true },
+      PINSecurity: { rules: PINValidationRules, displayHelper: true },
       settings: [
         {
           header: {
