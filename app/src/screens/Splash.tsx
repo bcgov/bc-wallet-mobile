@@ -159,9 +159,7 @@ const Splash = () => {
   const styles = StyleSheet.create({
     splashContainer: {
       flex: 1,
-      width: '100%',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
+      justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: ColorPallet.brand.primary,
     },
@@ -179,16 +177,13 @@ const Splash = () => {
     },
     tipCarouselContainer: {
       flex: 1,
-      justifyContent: 'center',
     },
     logoAndProgressContainer: {
-      marginTop: '15%',
+      flex: 2,
       alignItems: 'center',
-      maxHeight: 600,
     },
     progressAndTextContainer: {
       flex: 1,
-      width: '100%',
       alignContent: 'center',
     },
     stepTextContainer: {

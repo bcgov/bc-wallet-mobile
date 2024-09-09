@@ -40,16 +40,13 @@ const Comp: FunctionComponent<TipProps> = ({ item, width, header }) => {
       height: '100%',
       width,
       justifyContent: 'center',
-      alignItems: 'center',
-    },
-    tipHeaderContainer: {
-      borderBottomWidth: 1,
-      borderBottomColor: ColorPallet.brand.highlight,
+      alignItems: 'flex-start',
     },
     tipHeader: {
       paddingBottom: 3,
-      fontSize: 16,
+      fontSize: 19,
       fontFamily: 'BCSans-Regular',
+      fontWeight: '700',
       color: ColorPallet.grayscale.white,
     },
     tipText: {
@@ -57,18 +54,16 @@ const Comp: FunctionComponent<TipProps> = ({ item, width, header }) => {
       fontFamily: 'BCSans-Regular',
       color: ColorPallet.grayscale.white,
       marginTop: 10,
-      textAlign: 'center',
+      textAlign: 'left',
     },
   })
 
   return (
     <View style={tipStyles.tipContainer}>
       {item.showHeader && (
-        <View style={tipStyles.tipHeaderContainer}>
-          <Text adjustsFontSizeToFit style={tipStyles.tipHeader}>
-            {header}
-          </Text>
-        </View>
+        <Text adjustsFontSizeToFit style={tipStyles.tipHeader}>
+          {header}
+        </Text>
       )}
       <Text adjustsFontSizeToFit style={tipStyles.tipText}>
         {item.text}
@@ -85,11 +80,6 @@ const TipCarousel = () => {
   const { t } = useTranslation()
   const delay = 10000 // ms
   const tips = [
-    {
-      id: '0',
-      showHeader: false,
-      text: t('Tips.GettingReady'),
-    },
     ...tipOrder.map((num, index) => {
       return {
         id: `${index + 1}`,
@@ -130,14 +120,9 @@ const TipCarousel = () => {
 
   useEffect(() => {
     // Function to announce the current item to VoiceOver
-    const currentTip = tipOrder[currentPosition - 1]
-    if (currentTip) {
-      const tipBody = t(`Tips.Tip${tipOrder[currentPosition - 1]}`)
-      const tipHeader = t('Tips.Header')
-      AccessibilityInfo.announceForAccessibility(`${tipHeader}, ${tipBody}`)
-    } else if (currentPosition === 0) {
-      AccessibilityInfo.announceForAccessibility(t('Tips.GettingReady'))
-    }
+    const tipBody = t(`Tips.Tip${tipOrder[currentPosition]}`)
+    const tipHeader = t('Tips.Header')
+    AccessibilityInfo.announceForAccessibility(`${tipHeader}, ${tipBody}`)
   }, [currentPosition])
 
   // translating once here to prevent many repeated translations for each tip item
