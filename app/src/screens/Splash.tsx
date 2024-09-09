@@ -13,7 +13,6 @@ import { agentDependencies } from '@credo-ts/react-native'
 import {
   DispatchAction,
   Screens,
-  Stacks,
   OnboardingState,
   useAuth,
   useTheme,
@@ -27,6 +26,7 @@ import {
   createLinkSecretIfRequired,
   TOKENS,
   useServices,
+  Stacks,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
@@ -130,6 +130,7 @@ const Splash = () => {
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
+  const [opacity, setOpacity] = useState(0)
   const [allLedgers, ocaBundleResolver, credDefs, schemas] = useServices([
     TOKENS.UTIL_LEDGERS,
     TOKENS.UTIL_OCA_RESOLVER,
@@ -170,13 +171,14 @@ const Splash = () => {
     },
     progressContainer: {
       flex: 1,
+      opacity: opacity,
       flexDirection: 'column',
       alignItems: 'center',
-
       width: '60%',
     },
     tipCarouselContainer: {
       flex: 1,
+      opacity: opacity,
     },
     logoAndProgressContainer: {
       flex: 2,
@@ -184,10 +186,12 @@ const Splash = () => {
     },
     progressAndTextContainer: {
       flex: 1,
+      width: '100%',
       alignContent: 'center',
     },
     stepTextContainer: {
       paddingTop: 15,
+      width: '100%',
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -198,6 +202,7 @@ const Splash = () => {
     },
     errorBoxContainer: {
       paddingTop: 50,
+      top: 0,
       paddingHorizontal: 20,
       position: 'absolute',
     },
@@ -246,6 +251,14 @@ const Splash = () => {
       return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
     }
   }
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setOpacity(1)
+    }, 1000)
+
+    return () => clearTimeout(timeout)
+  }, [])
 
   useEffect(() => {
     try {
@@ -502,9 +515,7 @@ const Splash = () => {
           </View>
           <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
             <View style={styles.progressAndTextContainer}>
-              <View>
-                <ProgressBar progressPercent={progressPercent} />
-              </View>
+              <ProgressBar progressPercent={progressPercent} />
               <View style={styles.stepTextContainer}>
                 <Text style={styles.stepText}>{stepText}</Text>
               </View>

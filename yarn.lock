@@ -18247,7 +18247,7 @@ __metadata:
     react-native-safe-area-context: "npm:3.4.1"
     react-native-scalable-image: "npm:1.1.0"
     react-native-screens: "npm:3.25.0"
-    react-native-splash-screen: "npm:3.3.0"
+    react-native-splash-screen: "npm:^3.3.0"
     react-native-svg: "npm:12.5.1"
     react-native-svg-transformer: "npm:0.14.3"
     react-native-tcp-socket: "npm:6.0.6"
@@ -19057,7 +19057,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-splash-screen@npm:3.3.0":
+"react-native-splash-screen@npm:^3.3.0":
   version: 3.3.0
   resolution: "react-native-splash-screen@npm:3.3.0"
   peerDependencies:

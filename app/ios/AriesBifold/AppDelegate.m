@@ -1,5 +1,5 @@
 #import "AppDelegate.h"
-
+#import "RNSplashScreen.h"
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTRootView.h>
@@ -23,7 +23,9 @@
   UIViewController *rootViewController = [UIViewController new];	
   rootViewController.view = rootView;	
   self.window.rootViewController = rootViewController;	
-  [self.window makeKeyAndVisible];	
+  [self.window makeKeyAndVisible];
+
+  [RNSplashScreen show];
   return YES;	
 }
 

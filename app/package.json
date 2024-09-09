@@ -112,7 +112,7 @@
     "react-native-safe-area-context": "3.4.1",
     "react-native-scalable-image": "1.1.0",
     "react-native-screens": "3.25.0",
-    "react-native-splash-screen": "3.3.0",
+    "react-native-splash-screen": "^3.3.0",
     "react-native-svg": "12.5.1",
     "react-native-tcp-socket": "6.0.6",
     "react-native-toast-message": "2.1.6",
