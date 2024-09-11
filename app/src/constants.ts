@@ -17,3 +17,6 @@ export const attestationCredDefIds = [
   'RycQpZ9b4NaXuT5ZGjXkUE:3:CL:120:bcwallet_test_v2',
   'XqaRXJt4sXE6TRpfGpVbGw:3:CL:655:bcwallet',
 ]
+
+export const SplashLargeScreenWidthPercentage = 51.5
+export const SplashSmallScreenWidthPercentage = 67.5

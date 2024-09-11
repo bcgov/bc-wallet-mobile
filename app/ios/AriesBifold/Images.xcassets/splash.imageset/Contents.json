@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "QUEBEC_w3_blanc.png",
+      "filename" : "LogoQuebecBlanc.svg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "QUEBEC_w3_blanc@2x.png",
+      "filename" : "LogoQuebecBlanc 1.svg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "QUEBEC_w3_blanc@3x.png",
+      "filename" : "LogoQuebecBlanc 2.svg",
       "idiom" : "universal",
       "scale" : "3x"
     }

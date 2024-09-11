@@ -3,6 +3,8 @@ import React, { FunctionComponent, PropsWithChildren, memo, useEffect, useRef, u
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem, AccessibilityInfo } from 'react-native'
 
+import { SplashLargeScreenWidthPercentage } from '../constants'
+
 // used for randomizng tip order
 const shuffleArray = (arr: number[]) => {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -60,14 +62,8 @@ const Comp: FunctionComponent<TipProps> = ({ item, width, header }) => {
 
   return (
     <View style={tipStyles.tipContainer}>
-      {item.showHeader && (
-        <Text adjustsFontSizeToFit style={tipStyles.tipHeader}>
-          {header}
-        </Text>
-      )}
-      <Text adjustsFontSizeToFit style={tipStyles.tipText}>
-        {item.text}
-      </Text>
+      {item.showHeader && <Text style={tipStyles.tipHeader}>{header}</Text>}
+      <Text style={tipStyles.tipText}>{item.text}</Text>
     </View>
   )
 }
@@ -76,6 +72,9 @@ const Tip = memo<TipProps>(Comp)
 const TipCarousel = () => {
   const flatListRef = useRef<FlatList>(null)
   const { width } = useWindowDimensions()
+
+  const widthAjustedForSize = width > 600 ? (width * SplashLargeScreenWidthPercentage) / 100 : width
+
   const [currentPosition, setCurrentPosition] = useState(0)
   const { t } = useTranslation()
   const delay = 10000 // ms
@@ -91,8 +90,8 @@ const TipCarousel = () => {
 
   const scrolling = () => {
     if (flatListRef.current) {
-      const newOffset = (currentPosition + 1) * width
-      const maxOffset = tips.length * width
+      const newOffset = (currentPosition + 1) * widthAjustedForSize
+      const maxOffset = tips.length * widthAjustedForSize
       if (newOffset >= maxOffset) {
         flatListRef.current.scrollToOffset({ offset: 0, animated: false })
         setCurrentPosition(0)
@@ -128,8 +127,9 @@ const TipCarousel = () => {
   // translating once here to prevent many repeated translations for each tip item
   const tipHeader = t('Tips.Header')
   const keyExtractor = (item: TipItem) => item.id
+
   const renderItem: ListRenderItem<TipItem> = ({ item }) => {
-    return <Tip item={item} width={width} header={tipHeader} />
+    return <Tip item={item} width={widthAjustedForSize} header={tipHeader} />
   }
 
   return (
