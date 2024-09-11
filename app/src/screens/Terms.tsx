@@ -2,7 +2,6 @@ import {
   Button,
   ButtonType,
   CheckBoxRow,
-  InfoTextBox,
   DispatchAction,
   AuthenticateStackParams,
   Screens,
@@ -16,6 +15,8 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
+import HeaderText from '../components/HeaderText'
+import Progress from '../components/Progress'
 import { AccordionItem } from '../components/react-native-accordion-list-view'
 
 export const TermsVersion = '2'
@@ -30,6 +31,7 @@ const Terms = () => {
     container: {
       backgroundColor: ColorPallet.brand.primaryBackground,
       paddingHorizontal: 20,
+      flex: 1,
     },
     bodyText: {
       ...TextTheme.normal,
@@ -60,6 +62,14 @@ const Terms = () => {
       textDecorationLine: 'underline',
       fontWeight: 'bold',
     },
+    headerText: {
+      ...TextTheme.headingTwo,
+      color: ColorPallet.notification.infoText,
+      marginTop: 16,
+    },
+    progressContainer: {
+      marginTop: 25,
+    },
   })
 
   const onSubmitPressed = useCallback(() => {
@@ -73,8 +83,17 @@ const Terms = () => {
 
   return (
     <View style={[style.container]}>
+      {!(store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate) && (
+        <View style={style.progressContainer}>
+          <View style={{ marginHorizontal: 50 }}>
+            <Progress progressPercent={33.3333} progressText={t('TermsV2.ProgressBarText')} progressFill="primary" />
+          </View>
+        </View>
+      )}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <InfoTextBox>{t('TermsV2.Consent.body')}</InfoTextBox>
+        {!(store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate) && (
+          <HeaderText title={t('Screens.Terms')} />
+        )}
         <Text style={[style.title, { marginTop: 20 }]}>{t('TermsV2.Consent.title')}</Text>
         <Text style={[style.bodyText, { marginTop: 20 }]}>{t('TermsV2.Consent.body')}</Text>
 

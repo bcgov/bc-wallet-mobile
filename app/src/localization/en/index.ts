@@ -262,6 +262,7 @@ const translation = {
     InitAgent: 'Initializing agent ..',
   },
   TermsV2: {
+    ProgressBarText: '1. Terms & Conditions',
     Consent: {
       title: 'Consent',
       body: 'The terms of use below are for illustrative purposes only. The Quebec conditions are being drafted.',

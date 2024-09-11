@@ -16,6 +16,7 @@ import {
   Screens,
   testIdWithKey,
 } from '@hyperledger/aries-bifold-core'
+import { DefaultScreenOptionsDictionary } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -28,10 +29,11 @@ import AddCredentialButton from './src/components/AddCredentialButton'
 import AddCredentialSlider from './src/components/AddCredentialSlider'
 import EmptyList from './src/components/EmptyList'
 import { PINValidationRules } from './src/constants'
+import TermsStack from './src/navigators/TermsStack'
 import Developer from './src/screens/Developer'
 import { pages } from './src/screens/OnboardingPages'
 import Splash from './src/screens/Splash'
-import Terms, { TermsVersion } from './src/screens/Terms'
+import { TermsVersion } from './src/screens/Terms'
 import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
 
 export interface AppState {
@@ -68,11 +70,19 @@ export class AppContainer implements Container {
     const indyLedgers = this._container.resolve(TOKENS.UTIL_LEDGERS) satisfies IndyVdrPoolConfig[]
     const allLedgers = [...qcLedgers, ...indyLedgers]
 
+    const defaultScreenOptionsDict = DefaultScreenOptionsDictionary
+
+    defaultScreenOptionsDict[Screens.Terms] = {
+      ...defaultScreenOptionsDict[Screens.Terms],
+      headerShown: false,
+    }
+
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.UTIL_LEDGERS, allLedgers)
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_PAGES, pages)
-    this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
+    this._container.registerInstance(TOKENS.OBJECT_ONBOARDING_CONFIG, defaultScreenOptionsDict)
+    this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: TermsStack, version: TermsVersion })
     this._container.registerInstance(TOKENS.SCREEN_SPLASH, Splash)
     this._container.registerInstance(TOKENS.CONFIG, {
       PINSecurity: { rules: PINValidationRules, displayHelper: true },

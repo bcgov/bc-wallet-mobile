@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { View, Animated, LayoutAnimation, I18nManager, Pressable } from 'react-native'
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { toggleAnimation } from '../../animations/toggleAnimation'
 import { AccordionItemProps } from '../../models/AccordionItem'
@@ -39,22 +39,23 @@ const AccordionItem = ({
     }
   }, [isOpen])
 
-  const arrowTransform = animationController.interpolate({
+  const iconRotation = animationController.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', isRTL ? '-90deg' : '90deg'],
+    outputRange: ['0deg', isRTL ? '-180deg' : '180deg'],
   })
+
   return (
     <View style={[styles.container, containerStyle]}>
       <Pressable onPress={() => toggleListItem()} testID={testID}>
         <View style={styles.titleContainer}>
           {(!isRTL || I18nManager.isRTL) && customTitle()}
-          <Animated.View style={{ transform: [{ rotateZ: arrowTransform }] }}>
-            {!customIcon ? (
-              <MaterialIcons name={isRTL ? 'keyboard-arrow-left' : 'keyboard-arrow-right'} size={30} />
-            ) : (
-              customIcon()
-            )}
-          </Animated.View>
+          {!customIcon ? (
+            <Animated.View style={{ transform: [{ rotate: iconRotation }] }}>
+              <MaterialCommunityIcons name={showContent || isOpen ? 'minus' : 'plus'} size={30} />
+            </Animated.View>
+          ) : (
+            customIcon()
+          )}
           {isRTL && !I18nManager.isRTL && customTitle()}
         </View>
       </Pressable>

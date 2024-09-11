@@ -223,6 +223,7 @@ const translation = {
     InitAgent: "Initialisation de l'agent ...",
   },
   TermsV2: {
+    ProgressBarText: "1. Conditions d'utilisation",
     Consent: {
       title: 'Consentement',
       body: "Les conditions d'utilisation ci-présente sont seulement à titre d'exemple. Les conditions québécoise sont en cours de rédaction.",

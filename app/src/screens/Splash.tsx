@@ -35,12 +35,12 @@ import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native'
+import { StyleSheet, View, useWindowDimensions } from 'react-native'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import LogoQuebecBlanc from '../assets/img/LogoQuebecBlanc.svg'
-import ProgressBar from '../components/ProgressBar'
+import Progress from '../components/Progress'
 import TipCarousel from '../components/TipCarousel'
 import { SplashSmallScreenWidthPercentage } from '../constants'
 import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
@@ -175,9 +175,7 @@ const Splash = () => {
     progressContainer: {
       flex: 1,
       opacity: opacity,
-      paddingTop: 20,
-      flexDirection: 'column',
-      alignItems: 'center',
+      paddingHorizontal: 40,
       width: '100%',
     },
     tipCarouselContainer: {
@@ -205,17 +203,12 @@ const Splash = () => {
       alignContent: 'center',
     },
     stepTextContainer: {
-      paddingTop: 15,
-      width: '100%',
       minHeight: 50,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     stepText: {
       fontFamily: 'BCSans-Regular',
       fontSize: 16,
       color: '#ffffff',
-      fontWeight: '500',
     },
     errorBoxContainer: {
       flex: 1,
@@ -528,11 +521,8 @@ const Splash = () => {
             <LogoQuebecBlanc style={styles.img} width={'100%'} height={'100%'} />
           </View>
           <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
-            <View style={styles.progressAndTextContainer}>
-              <ProgressBar progressPercent={progressPercent} />
-              <View style={styles.stepTextContainer}>
-                <Text style={styles.stepText}>{stepText}</Text>
-              </View>
+            <View style={styles.stepTextContainer}>
+              <Progress progressPercent={progressPercent} progressText={stepText} textStyle={styles.stepText} />
             </View>
           </View>
         </View>

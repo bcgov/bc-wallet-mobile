@@ -2,6 +2,7 @@ import { useTheme } from '@hyperledger/aries-bifold-core'
 import { useDefaultStackOptions } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
 import { createStackNavigator } from '@react-navigation/stack'
 import React from 'react'
+import { Platform } from 'react-native'
 
 import Terms from '../screens/Terms'
 
@@ -13,11 +14,18 @@ const TermsStack: React.FC = () => {
   const defaultStackOptions = useDefaultStackOptions(theme)
 
   return (
-    <StackTerms.Navigator
-      initialRouteName={Screens.TermsAndConditions}
-      screenOptions={{ ...defaultStackOptions, headerShown: false }}
-    >
-      <StackTerms.Screen name={Screens.TermsAndConditions} component={Terms} />
+    <StackTerms.Navigator initialRouteName={Screens.TermsAndConditions} screenOptions={{ ...defaultStackOptions }}>
+      <StackTerms.Screen
+        name={Screens.TermsAndConditions}
+        component={Terms}
+        options={{
+          headerTitle: '',
+          headerStyle: {
+            height: Platform.OS == 'ios' ? 50 : 0,
+          },
+          headerLeft: () => undefined,
+        }}
+      />
     </StackTerms.Navigator>
   )
 }
