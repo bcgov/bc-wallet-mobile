@@ -21,6 +21,7 @@ import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { TFunction } from 'react-i18next'
+import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
 
@@ -74,7 +75,11 @@ export class AppContainer implements Container {
 
     defaultScreenOptionsDict[Screens.Terms] = {
       ...defaultScreenOptionsDict[Screens.Terms],
-      headerShown: false,
+      headerShown: Platform.OS == 'ios',
+      headerTitle: '',
+      headerStyle: {
+        height: 50,
+      },
     }
 
     // Here you can register any component to override components in core package
