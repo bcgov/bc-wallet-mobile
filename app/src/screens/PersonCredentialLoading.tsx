@@ -190,19 +190,19 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   return (
     <Modal transparent animationType={'slide'}>
       <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground }}>
-        <ScrollView style={[styles.container]}>
-          <View style={[styles.messageContainer]}>
+        <ScrollView style={styles.container}>
+          <View style={styles.messageContainer}>
             <Text style={[TextTheme.modalHeadingThree, styles.messageText]} testID={testIdWithKey('RequestProcessing')}>
               {t('ProofRequest.RequestProcessing')}
             </Text>
           </View>
 
-          <View style={[styles.image]}>
+          <View style={styles.image}>
             <PersonCredentialSpinner />
           </View>
           <Text style={[TextTheme.normal, styles.messageText]}>This can take a few seconds</Text>
         </ScrollView>
-        <View style={[styles.controlsContainer]}>
+        <View style={styles.controlsContainer}>
           <Button
             title={t('Global.GoBack')}
             accessibilityLabel={t('Global.GoBack')}

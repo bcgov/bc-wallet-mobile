@@ -35,12 +35,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
     <View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -130,11 +128,9 @@ exports[`Developer Screen screen renders correctly 1`] = `
       </View>
       <View
         style={
-          [
-            {
-              "marginBottom": 10,
-            },
-          ]
+          {
+            "marginBottom": 10,
+          }
         }
       />
       <View
@@ -195,12 +191,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -285,21 +279,17 @@ exports[`Developer Screen screen renders correctly 1`] = `
       </View>
       <View
         style={
-          [
-            {
-              "marginBottom": 10,
-            },
-          ]
+          {
+            "marginBottom": 10,
+          }
         }
       />
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -396,24 +386,20 @@ exports[`Developer Screen screen renders correctly 1`] = `
       >
         <View
           style={
-            [
-              {
-                "borderBottomColor": "#000000",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              },
-            ]
+            {
+              "borderBottomColor": "#000000",
+              "borderBottomWidth": 1,
+              "marginHorizontal": 24,
+            }
           }
         />
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -510,24 +496,20 @@ exports[`Developer Screen screen renders correctly 1`] = `
       >
         <View
           style={
-            [
-              {
-                "borderBottomColor": "#000000",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              },
-            ]
+            {
+              "borderBottomColor": "#000000",
+              "borderBottomWidth": 1,
+              "marginHorizontal": 24,
+            }
           }
         />
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -624,24 +606,20 @@ exports[`Developer Screen screen renders correctly 1`] = `
       >
         <View
           style={
-            [
-              {
-                "borderBottomColor": "#000000",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              },
-            ]
+            {
+              "borderBottomColor": "#000000",
+              "borderBottomWidth": 1,
+              "marginHorizontal": 24,
+            }
           }
         />
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -738,24 +716,20 @@ exports[`Developer Screen screen renders correctly 1`] = `
       >
         <View
           style={
-            [
-              {
-                "borderBottomColor": "#000000",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              },
-            ]
+            {
+              "borderBottomColor": "#000000",
+              "borderBottomWidth": 1,
+              "marginHorizontal": 24,
+            }
           }
         />
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -852,24 +826,20 @@ exports[`Developer Screen screen renders correctly 1`] = `
       >
         <View
           style={
-            [
-              {
-                "borderBottomColor": "#000000",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              },
-            ]
+            {
+              "borderBottomColor": "#000000",
+              "borderBottomWidth": 1,
+              "marginHorizontal": 24,
+            }
           }
         />
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -966,24 +936,20 @@ exports[`Developer Screen screen renders correctly 1`] = `
       >
         <View
           style={
-            [
-              {
-                "borderBottomColor": "#000000",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              },
-            ]
+            {
+              "borderBottomColor": "#000000",
+              "borderBottomWidth": 1,
+              "marginHorizontal": 24,
+            }
           }
         />
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -1074,12 +1040,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View
@@ -1170,12 +1134,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
       </View>
       <View
         style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
-            },
-          ]
+          {
+            "backgroundColor": "#313132",
+            "padding": 24,
+          }
         }
       >
         <View

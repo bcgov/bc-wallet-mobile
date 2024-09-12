@@ -111,7 +111,7 @@ const Settings: React.FC = () => {
     subContent,
   }: SectionRowProps) => (
     <>
-      <View style={[styles.section]}>
+      <View style={styles.section}>
         <View style={{ flexDirection: 'row' }}>
           <Text style={styles.rowTitle}>{title}</Text>
           <Pressable
@@ -128,7 +128,7 @@ const Settings: React.FC = () => {
       </View>
       {showRowSeparator && (
         <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-          <View style={[styles.rowSeparator]}></View>
+          <View style={styles.rowSeparator}></View>
         </View>
       )}
     </>
@@ -296,7 +296,7 @@ const Settings: React.FC = () => {
             value={devMode}
           />
         </SectionRow>
-        <View style={[styles.sectionSeparator]}></View>
+        <View style={styles.sectionSeparator}></View>
         <SectionHeader icon={'apartment'} title={'IAS'} />
         <SectionRow
           title={t('Developer.Environment')}
@@ -310,7 +310,7 @@ const Settings: React.FC = () => {
             {store.developer.environment.name}
           </Text>
         </SectionRow>
-        <View style={[styles.sectionSeparator]}></View>
+        <View style={styles.sectionSeparator}></View>
         <SectionRow
           title={t('Verifier.UseVerifierCapability')}
           accessibilityLabel={t('Verifier.Toggle')}
