@@ -33,7 +33,7 @@ export default function LoadingIcon({ size, color, active }: Readonly<LoadingIco
 
   return (
     <>
-      <Animated.View style={[{ transform: [{ rotate: rotation }] }]}>
+      <Animated.View style={{ transform: [{ rotate: rotation }] }}>
         <Icon style={{ color }} size={size} name="refresh" />
       </Animated.View>
     </>
