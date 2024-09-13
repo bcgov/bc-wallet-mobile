@@ -448,7 +448,7 @@ const translation = {
     CountNotifications: '{{ count }} Notifications',
     NoNewUpdates: "Vous n'avez pas de nouvelles notifications.",
     NoCredentials: "Vous n'avez pas d'attestation dans votre portefeuille.",
-    SeeAll: 'Afficher tout',
+    SeeAll: 'Voir toutes les notifications',
     YouHave: 'Vous avez',
     Credential: 'attestation',
     Credentials: 'attestations',

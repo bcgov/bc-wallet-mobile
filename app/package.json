@@ -60,7 +60,7 @@
     "@formatjs/intl-numberformat": "7.2.4",
     "@formatjs/intl-pluralrules": "4.1.4",
     "@formatjs/intl-relativetimeformat": "9.3.1",
-    "@hyperledger/anoncreds-react-native": "0.2.2",
+    "@hyperledger/anoncreds-react-native": "0.2.3",
     "@hyperledger/aries-askar-react-native": "0.2.3",
     "@hyperledger/aries-bifold-core": "patch:@hyperledger/aries-bifold-core@npm%3A1.0.0-alpha.315#~/.yarn/patches/@hyperledger-aries-bifold-core-npm-1.0.0-alpha.315-d7bce720fa.patch",
     "@hyperledger/aries-bifold-remote-logs": "1.0.0-alpha.315",

@@ -2927,23 +2927,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/anoncreds-react-native@npm:0.2.2":
-  version: 0.2.2
-  resolution: "@hyperledger/anoncreds-react-native@npm:0.2.2"
+"@hyperledger/anoncreds-react-native@npm:0.2.3":
+  version: 0.2.3
+  resolution: "@hyperledger/anoncreds-react-native@npm:0.2.3"
   dependencies:
-    "@hyperledger/anoncreds-shared": "npm:0.2.2"
+    "@hyperledger/anoncreds-shared": "npm:0.2.3"
     "@mapbox/node-pre-gyp": "npm:^1.0.10"
   peerDependencies:
     react: ">= 16"
     react-native: ">= 0.66.0"
-  checksum: e9bc5fe98b31d4b8b23e89a6aa044829a6dc3701d08632ae57e777cb5e96df8ae6fd5e281071fdb12f19458c07f1fb7ae4e7c0fcb97cb31ce222ee5407daad63
+  checksum: 59336496bf0744a7c4889f53f450a084c5514d410908592ca608e786334259ecd7de052e5be4e7f88bbd7cad32292c0bb8be8089ffaa0223e1216dd4a99a1211
   languageName: node
   linkType: hard
 
-"@hyperledger/anoncreds-shared@npm:0.2.2":
-  version: 0.2.2
-  resolution: "@hyperledger/anoncreds-shared@npm:0.2.2"
-  checksum: 598972c59cdb3fdf5affc1e343eb876800674a697f198e5888f01f12bac75a4189b100d1e981f11ad2cbc8d935aca983268cd5c3323cca287de5a09125ef8c82
+"@hyperledger/anoncreds-shared@npm:0.2.3":
+  version: 0.2.3
+  resolution: "@hyperledger/anoncreds-shared@npm:0.2.3"
+  checksum: 133e1442080a28e9db77044277b6d618d65c1831b351d75cf122cfdecbc0c08a50f0d987fba10f5938607a6b9c2c1b35d37ad0f64b4cc8e550a3d2297ff2fac9
   languageName: node
   linkType: hard
 
@@ -18157,7 +18157,7 @@ __metadata:
     "@formatjs/intl-numberformat": "npm:7.2.4"
     "@formatjs/intl-pluralrules": "npm:4.1.4"
     "@formatjs/intl-relativetimeformat": "npm:9.3.1"
-    "@hyperledger/anoncreds-react-native": "npm:0.2.2"
+    "@hyperledger/anoncreds-react-native": "npm:0.2.3"
     "@hyperledger/aries-askar-react-native": "npm:0.2.3"
     "@hyperledger/aries-bifold-core": "patch:@hyperledger/aries-bifold-core@npm%3A1.0.0-alpha.315#~/.yarn/patches/@hyperledger-aries-bifold-core-npm-1.0.0-alpha.315-d7bce720fa.patch"
     "@hyperledger/aries-bifold-remote-logs": "npm:1.0.0-alpha.315"
