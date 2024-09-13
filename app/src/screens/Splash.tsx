@@ -25,7 +25,7 @@ import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/i
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
@@ -123,7 +123,6 @@ const Splash = () => {
   const { walletSecret } = useAuth()
   const { ColorPallet, Assets } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const hasMounted = useRef(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -204,10 +203,7 @@ const Splash = () => {
 
   // navigation calls that occur before the screen is fully mounted will fail
   useEffect(() => {
-    if (!hasMounted.current) {
-      setMounted(true)
-      hasMounted.current = true
-    }
+    setMounted(true)
   }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
