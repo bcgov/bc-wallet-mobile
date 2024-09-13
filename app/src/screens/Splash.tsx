@@ -62,8 +62,8 @@ const resumeOnboardingAt = (
     showPreface?: boolean
   }
 ): Screens => {
-  console.log('********** resumeOnboardingAt', state, params)
   const termsVer = params.termsVersion ?? true
+
   if (
     (state.didSeePreface || !params.showPreface) &&
     state.didCompleteTutorial &&
@@ -146,10 +146,6 @@ const Splash = () => {
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
   ])
-
-  useEffect(() => {
-    console.log(`************* Splash screen mounted, ${mounted}, ${Math.floor(Math.random() * 10) + 1}`)
-  }, [mounted])
 
   const steps: string[] = [
     t('Init.Starting'),
