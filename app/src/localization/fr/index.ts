@@ -439,7 +439,9 @@ const translation = {
       'Vous devrez vous rendre auprès de l’organisation qui vous a délivré cette attestation et la demander à nouveau.',
   },
   Home: {
-    Welcome: 'Bienvenue',
+    Welcome: 'Bonjour!',
+    ScanQrCode: 'Balayer un code QR',
+    NotificationTitle: 'Nouvelles activités',
     Notification: 'Notification',
     Notifications: 'Notifications',
     OneNotification: '1 Notification',
