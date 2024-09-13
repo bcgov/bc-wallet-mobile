@@ -24,7 +24,7 @@ import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/i
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
@@ -62,6 +62,7 @@ const resumeOnboardingAt = (
     showPreface?: boolean
   }
 ): Screens => {
+  console.log('********** resumeOnboardingAt', state, params)
   const termsVer = params.termsVersion ?? true
   if (
     (state.didSeePreface || !params.showPreface) &&
@@ -114,13 +115,14 @@ const resumeOnboardingAt = (
 */
 const Splash = () => {
   const { width } = useWindowDimensions()
-  const { setAgent } = useAgent()
+  const { agent, setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()
   const { walletSecret } = useAuth()
   const { ColorPallet, Assets } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const hasMounted = useRef(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -144,6 +146,10 @@ const Splash = () => {
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
   ])
+
+  useEffect(() => {
+    console.log(`************* Splash screen mounted, ${mounted}, ${Math.floor(Math.random() * 10) + 1}`)
+  }, [mounted])
 
   const steps: string[] = [
     t('Init.Starting'),
@@ -201,7 +207,10 @@ const Splash = () => {
 
   // navigation calls that occur before the screen is fully mounted will fail
   useEffect(() => {
-    setMounted(true)
+    if (!hasMounted.current) {
+      setMounted(true)
+      hasMounted.current = true
+    }
   }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -321,6 +330,33 @@ const Splash = () => {
           return
         }
 
+        if (agent) {
+          logger.info('Agent already initialized, restarting...')
+
+          try {
+            await agent.wallet.open({
+              id: walletSecret.id,
+              key: walletSecret.key,
+            })
+          } catch (error) {
+            logger.error('Error opening existing wallet', error)
+          }
+
+          await agent.mediationRecipient.initiateMessagePickup()
+
+          setStep(9)
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: Stacks.TabStack }],
+            })
+          )
+
+          return
+        }
+
+        logger.info('No agent initialized, creating a new one')
+
         setStep(3)
 
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
@@ -328,7 +364,6 @@ const Splash = () => {
         setStep(4)
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
-
         const options = {
           config: {
             label: store.preferences.walletName || 'BC Wallet',
