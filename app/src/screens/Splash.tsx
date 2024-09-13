@@ -3,6 +3,7 @@ import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/
 import { useAgent } from '@credo-ts/react-hooks'
 import { agentDependencies } from '@credo-ts/react-native'
 import {
+  BifoldError,
   DispatchAction,
   Screens,
   Stacks,
@@ -326,6 +327,10 @@ const Splash = () => {
           return
         }
 
+        setStep(3)
+
+        await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
+
         if (agent) {
           logger.info('Agent already initialized, restarting...')
 
@@ -336,6 +341,13 @@ const Splash = () => {
             })
           } catch (error) {
             logger.error('Error opening existing wallet', error)
+
+            throw new BifoldError(
+              'Wallet Service',
+              'There was a problem unlocking the wallet.',
+              (error as Error).message,
+              1047
+            )
           }
 
           await agent.mediationRecipient.initiateMessagePickup()
@@ -352,10 +364,6 @@ const Splash = () => {
         }
 
         logger.info('No agent initialized, creating a new one')
-
-        setStep(3)
-
-        await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
         setStep(4)
         const cachedLedgers = await loadCachedLedgers()
