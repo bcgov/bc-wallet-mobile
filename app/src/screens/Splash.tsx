@@ -3,6 +3,7 @@ import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/
 import { useAgent } from '@credo-ts/react-hooks'
 import { agentDependencies } from '@credo-ts/react-native'
 import {
+  BifoldError,
   DispatchAction,
   Screens,
   Stacks,
@@ -63,6 +64,7 @@ const resumeOnboardingAt = (
   }
 ): Screens => {
   const termsVer = params.termsVersion ?? true
+
   if (
     (state.didSeePreface || !params.showPreface) &&
     state.didCompleteTutorial &&
@@ -114,7 +116,7 @@ const resumeOnboardingAt = (
 */
 const Splash = () => {
   const { width } = useWindowDimensions()
-  const { setAgent } = useAgent()
+  const { agent, setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()
@@ -325,10 +327,43 @@ const Splash = () => {
 
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
+        if (agent) {
+          logger.info('Agent already initialized, restarting...')
+
+          try {
+            await agent.wallet.open({
+              id: walletSecret.id,
+              key: walletSecret.key,
+            })
+          } catch (error) {
+            logger.error('Error opening existing wallet', error)
+
+            throw new BifoldError(
+              'Wallet Service',
+              'There was a problem unlocking the wallet.',
+              (error as Error).message,
+              1047
+            )
+          }
+
+          await agent.mediationRecipient.initiateMessagePickup()
+
+          setStep(9)
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: Stacks.TabStack }],
+            })
+          )
+
+          return
+        }
+
+        logger.info('No agent initialized, creating a new one')
+
         setStep(4)
         const cachedLedgers = await loadCachedLedgers()
         const ledgers = cachedLedgers ?? indyLedgers
-
         const options = {
           config: {
             label: store.preferences.walletName || 'BC Wallet',
