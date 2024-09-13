@@ -51,14 +51,14 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
   }
 
   return (
-    <SafeAreaView style={[styles.container]}>
+    <SafeAreaView style={styles.container}>
       <FlatList
         data={environments}
         renderItem={({ item: environment }) => {
           const { name }: IASEnvironment = environment
           return (
             <View style={[styles.section, styles.sectionRow]}>
-              <Text style={[TextTheme.title]}>{t(`Developer.${name}`)}</Text>
+              <Text style={TextTheme.title}>{t(`Developer.${name}`)}</Text>
               <BouncyCheckbox
                 accessibilityLabel={name}
                 disableText
@@ -79,7 +79,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
         }}
         ItemSeparatorComponent={() => (
           <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-            <View style={[styles.itemSeparator]}></View>
+            <View style={styles.itemSeparator}></View>
           </View>
         )}
       />

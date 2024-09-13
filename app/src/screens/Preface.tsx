@@ -75,7 +75,7 @@ const Preface: React.FC = () => {
           <View style={style.contentContainer}>
             <Assets.svg.preface style={{ alignSelf: 'center', marginBottom: 20 }} height={200} />
             <Pressable onPress={incrementDeveloperMenuCounter} testID={testIdWithKey('DeveloperCounter')}>
-              <Text style={[TextTheme.headingTwo]}>{t('Preface.PrimaryHeading')}</Text>
+              <Text style={TextTheme.headingTwo}>{t('Preface.PrimaryHeading')}</Text>
             </Pressable>
             <Text style={[TextTheme.normal, { marginTop: 10, marginBottom: 10 }]}>{t('Preface.Paragraph1')}</Text>
             <Link style={{ marginTop: 10, marginBottom: 10 }} onPress={onPressInfoLink} linkText={t('Preface.Link1')} />
@@ -92,7 +92,7 @@ const Preface: React.FC = () => {
               reverse
               titleStyle={{ fontWeight: 'bold' }}
             />
-            <View style={[{ paddingTop: 10 }]}>
+            <View style={{ paddingTop: 10 }}>
               <Button
                 title={t('Global.Continue')}
                 accessibilityLabel={t('Global.Continue')}
