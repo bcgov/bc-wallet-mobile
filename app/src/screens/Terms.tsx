@@ -69,6 +69,7 @@ const Terms = () => {
     },
     progressContainer: {
       marginTop: 25,
+      marginBottom: 16,
     },
   })
 

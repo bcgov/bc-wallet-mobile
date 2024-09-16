@@ -20,6 +20,7 @@ import { DefaultScreenOptionsDictionary } from '@hyperledger/aries-bifold-core/A
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { StackNavigationOptions } from '@react-navigation/stack'
 import { TFunction } from 'react-i18next'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
@@ -38,6 +39,7 @@ import Developer from './src/screens/Developer'
 import { pages } from './src/screens/OnboardingPages'
 import Splash from './src/screens/Splash'
 import { TermsVersion } from './src/screens/Terms'
+import UseBiometry from './src/screens/UseBiometry'
 import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
 
 export interface AppState {
@@ -76,13 +78,22 @@ export class AppContainer implements Container {
 
     const defaultScreenOptionsDict = DefaultScreenOptionsDictionary
 
-    defaultScreenOptionsDict[Screens.Terms] = {
-      ...defaultScreenOptionsDict[Screens.Terms],
+    const onboardingScreenOptions: StackNavigationOptions = {
       headerShown: Platform.OS == 'ios',
       headerTitle: '',
       headerStyle: {
         height: 50,
       },
+    }
+
+    defaultScreenOptionsDict[Screens.Terms] = {
+      ...defaultScreenOptionsDict[Screens.Terms],
+      ...onboardingScreenOptions,
+    }
+
+    defaultScreenOptionsDict[Screens.UseBiometry] = {
+      ...defaultScreenOptionsDict[Screens.UseBiometry],
+      ...onboardingScreenOptions,
     }
 
     // Here you can register any component to override components in core package
@@ -91,6 +102,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_PAGES, pages)
     this._container.registerInstance(TOKENS.OBJECT_ONBOARDING_CONFIG, defaultScreenOptionsDict)
     this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: TermsStack, version: TermsVersion })
+    this._container.registerInstance(TOKENS.SCREEN_USE_BIOMETRY, UseBiometry)
     this._container.registerInstance(TOKENS.SCREEN_SPLASH, Splash)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeader)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooter)

@@ -122,6 +122,7 @@ const translation = {
     NoBiometricsErrorTitle: 'Pas de biométrie',
     NoBiometricsErrorMessage: "La biométrie n'est pas activée sur cet appareil.",
     NoBiometricsErrorDetails: 'Pour résoudre ce problème, activez la biométrie dans les paramètres de votre appareil.',
+    ProgressBarText: '3. Activer la biométrie',
   },
   Error: {
     ReportThisProblem: 'Signaler ce problème',

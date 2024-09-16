@@ -115,6 +115,7 @@ const translation = {
       'If you wish to enable this feature turn biometrics on in the device settings and then return to this screen.',
     UnlockPromptTitle: 'Wallet Unlock',
     UnlockPromptDescription: 'Use biometrics to unlock your wallet',
+    ProgressBarText: '3. Toggle Biometrics',
   },
   Credentials: {
     AddCredential: 'Add Credential',
