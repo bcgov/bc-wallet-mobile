@@ -150,7 +150,7 @@ const UseBiometry: React.FC = () => {
         <View style={{ marginTop: 20 }}>
           {biometryAvailable ? (
             <>
-              <Text style={TextTheme.bold}>{t('Biometry.EnabledText1')}</Text>
+              <Text style={TextTheme.normal}>{t('Biometry.EnabledText1')}</Text>
               <Text></Text>
               <Text style={TextTheme.normal}>
                 {t('Biometry.EnabledText2')}
