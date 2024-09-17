@@ -188,7 +188,7 @@ export class AppContainer implements Container {
         preferences: { ...initialState.preferences, ...preferences },
         migration: { ...initialState.migration, ...migration },
         tours: { ...initialState.tours, ...tours },
-        onboarding: { ...initialState.onboarding, ...onboarding },
+        onboarding: { ...initialState.onboarding, ...onboarding, didCompleteTutorial: true },
         dismissPersonCredentialOffer: { ...initialState.dismissPersonCredentialOffer, ...personCredOfferDissmissed },
         developer: {
           ...initialState.developer,
