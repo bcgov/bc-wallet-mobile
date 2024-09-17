@@ -321,7 +321,11 @@ const translation = {
     ReenterPIN: 'Veuillez saisir à nouveau votre NIP',
     CreatePIN: 'Veuillez créer un NIP à 6 chiffres',
     ReenterPINTitle: 'Veuillez saisir à nouveau votre NIP',
-    RememberPIN: 'Veuillez créer un NIP à 6 chiffres afin de sécuriser votre application.',
+    RememberPIN: "Ne pas oublier votre numéro d'identification personnel (NIP).",
+    Warning: "Il n'y a aucun moyen de le récupérer. Si vous l'oubliez, vous devrez\u00A0:",
+    BulletPoint1: 'Configurer votre portefeuille à nouveau',
+    BulletPoint2: 'Demander de nouveau les attestations déjà émises dans votre portefeuille',
+    MoreInformation: 'En savoir plus sur le NIP.',
     PINDisclaimer:
       'Si vous oubliez votre NIP, vous devrez configurer votre application et ajouter vos cartes à nouveau.',
     Show: 'Afficher le NIP',
@@ -359,6 +363,7 @@ const translation = {
       PINTooShortValidation: 'Votre NIP doit contenir 6 chiffres.',
       PINTooLongValidation: 'Votre NIP doit contenir 6 chiffres.',
     },
+    ProgressBarText: '2. Sécuriser le portefeuille',
   },
   AttemptLockout: {
     Title: 'Votre portefeuille est temporairement verrouillé ',
@@ -771,8 +776,8 @@ const translation = {
     PlayWithBCWallet: 'Jouer avec le Portefeuille Québec',
   },
   Tour: {
-    GuideTitle: 'Bienvenue à Aries Bifold',
-    WouldYouLike: "Souhaitez-vous obtenir des conseils sur la façon d'utiliser Aries Bifold?",
+    GuideTitle: 'Bienvenue au Portefeuille numérique',
+    WouldYouLike: "Souhaitez-vous obtenir des conseils sur la façon d'utiliser le Portefeuille numérique?",
     UseAppGuides: 'Utiliser les conseils',
     DoNotUseAppGuides: 'Ne pas utiliser les conseils',
     AddAndShare: 'Ajouter et partager des attestations',

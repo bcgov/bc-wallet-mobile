@@ -363,6 +363,10 @@ const translation = {
     ReenterPINTitle: 'Re-Enter PIN',
     CreatePIN: 'Create PIN',
     RememberPIN: 'Create a PIN to secure your wallet.',
+    Warning: "There's no way to get it back. If you forget, you'll have to:",
+    BulletPoint1: 'Configure your wallet again',
+    BulletPoint2: 'Re-apply for attestations already issued in your wallet',
+    MoreInformation: 'Find out more about the PIN.',
     PINDisclaimer: 'If you forget it, you may need to set up your wallet again and re-add your cards.',
     Show: 'Show PIN',
     Hide: 'Hide PIN',
@@ -396,6 +400,7 @@ const translation = {
       PINTooShortValidation: 'The PIN is long enought.',
       PINTooLongValidation: 'The PIN is long enought.',
     },
+    ProgressBarText: '2. Securing the wallet',
   },
   PINEnter: {
     IncorrectPin: 'Incorrect Pin',

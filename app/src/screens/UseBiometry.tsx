@@ -134,6 +134,7 @@ const UseBiometry: React.FC = () => {
   }
 
   const showHeader = store.onboarding.didAgreeToTerms && !store.onboarding.didConsiderBiometry
+  const inBiometryScreenFromSettings = store.onboarding.didAgreeToTerms && store.onboarding.didConsiderBiometry
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']}>
@@ -145,8 +146,8 @@ const UseBiometry: React.FC = () => {
         </View>
       )}
       <ScrollView style={styles.container}>
-        {showHeader && <HeaderText title={t('Screens.Biometry')} />}
-        <View style={{ marginTop: showHeader ? 20 : 0 }}>
+        <HeaderText title={!inBiometryScreenFromSettings ? t('Screens.Biometry') : t('Screens.UseBiometry')} />
+        <View style={{ marginTop: 20 }}>
           {biometryAvailable ? (
             <>
               <Text style={TextTheme.bold}>{t('Biometry.EnabledText1')}</Text>

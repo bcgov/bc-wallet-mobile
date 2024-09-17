@@ -82,9 +82,11 @@ const Terms = () => {
     navigation.navigate(Screens.CreatePIN)
   }, [])
 
+  const didAgreeToTermsAndAuthenticated = store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate
+
   return (
     <View style={[style.container]}>
-      {!(store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate) && (
+      {!didAgreeToTermsAndAuthenticated && (
         <View style={style.progressContainer}>
           <View style={{ marginHorizontal: 50 }}>
             <Progress progressPercent={33.3333} progressText={t('TermsV2.ProgressBarText')} progressFill="primary" />
@@ -92,9 +94,9 @@ const Terms = () => {
         </View>
       )}
       <ScrollView showsVerticalScrollIndicator={false}>
-        {!(store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate) && (
+        <View style={{ marginTop: didAgreeToTermsAndAuthenticated ? 20 : 0 }}>
           <HeaderText title={t('Screens.Terms')} />
-        )}
+        </View>
         <Text style={[style.title, { marginTop: 20 }]}>{t('TermsV2.Consent.title')}</Text>
         <Text style={[style.bodyText, { marginTop: 20 }]}>{t('TermsV2.Consent.body')}</Text>
 

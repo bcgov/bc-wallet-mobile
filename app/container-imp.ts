@@ -33,6 +33,7 @@ import EmptyList from './src/components/EmptyList'
 import HomeEmptyList from './src/components/HomeEmptyList'
 import HomeFooter from './src/components/HomeFooter'
 import HomeHeader from './src/components/HomeHeader'
+import PINCreateHeader from './src/components/PINCreateHeader'
 import { PINValidationRules } from './src/constants'
 import TermsStack from './src/navigators/TermsStack'
 import Developer from './src/screens/Developer'
@@ -96,12 +97,18 @@ export class AppContainer implements Container {
       ...onboardingScreenOptions,
     }
 
+    defaultScreenOptionsDict[Screens.CreatePIN] = {
+      ...defaultScreenOptionsDict[Screens.CreatePIN],
+      ...onboardingScreenOptions,
+    }
+
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.UTIL_LEDGERS, allLedgers)
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_PAGES, pages)
     this._container.registerInstance(TOKENS.OBJECT_ONBOARDING_CONFIG, defaultScreenOptionsDict)
     this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: TermsStack, version: TermsVersion })
+    this._container.registerInstance(TOKENS.COMPONENT_PIN_CREATE_HEADER, PINCreateHeader)
     this._container.registerInstance(TOKENS.SCREEN_USE_BIOMETRY, UseBiometry)
     this._container.registerInstance(TOKENS.SCREEN_SPLASH, Splash)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeader)

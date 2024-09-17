@@ -1,0 +1,181 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PINCreateHeader Component Renders correctly 1`] = `
+<View>
+  <View
+    style={
+      {
+        "marginBottom": 16,
+        "marginTop": 0,
+      }
+    }
+  >
+    <View>
+      <Text
+        style={
+          [
+            {
+              "color": "#FFFFFF",
+              "fontSize": 32,
+              "fontWeight": "bold",
+            },
+          ]
+        }
+      >
+        Screens.ChangePIN
+      </Text>
+      <View
+        style={
+          {
+            "backgroundColor": "#FCBA19",
+            "height": 4,
+            "width": 48,
+          }
+        }
+      />
+    </View>
+  </View>
+  <Text
+    style={
+      [
+        {
+          "color": "#FFFFFF",
+          "fontSize": 18,
+          "fontWeight": "bold",
+        },
+        {
+          "marginBottom": 16,
+        },
+      ]
+    }
+  >
+    PINCreate.RememberChangePIN
+  </Text>
+  <Text
+    style={
+      [
+        {
+          "color": "#FFFFFF",
+          "fontSize": 18,
+          "fontWeight": "normal",
+        },
+        {
+          "marginBottom": 16,
+        },
+      ]
+    }
+  >
+    PINCreate.Warning
+  </Text>
+  <View
+    style={
+      [
+        {
+          "alignItems": "flex-start",
+          "flexDirection": "row",
+        },
+        undefined,
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "marginRight": 10,
+          "marginVertical": 10,
+        }
+      }
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#FFFFFF",
+              "fontSize": 6,
+            },
+            undefined,
+            {
+              "fontFamily": "Material Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        
+      </Text>
+    </View>
+    <Text
+      style={
+        {
+          "color": "#FFFFFF",
+          "fontSize": 18,
+          "fontWeight": "normal",
+          "textAlign": "left",
+        }
+      }
+    >
+      PINCreate.BulletPoint1
+    </Text>
+  </View>
+  <View
+    style={
+      [
+        {
+          "alignItems": "flex-start",
+          "flexDirection": "row",
+        },
+        {
+          "marginBottom": 32,
+        },
+      ]
+    }
+  >
+    <View
+      style={
+        {
+          "marginRight": 10,
+          "marginVertical": 10,
+        }
+      }
+    >
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#FFFFFF",
+              "fontSize": 6,
+            },
+            undefined,
+            {
+              "fontFamily": "Material Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        
+      </Text>
+    </View>
+    <Text
+      style={
+        {
+          "color": "#FFFFFF",
+          "fontSize": 18,
+          "fontWeight": "normal",
+          "textAlign": "left",
+        }
+      }
+    >
+      PINCreate.BulletPoint2
+    </Text>
+  </View>
+</View>
+`;
