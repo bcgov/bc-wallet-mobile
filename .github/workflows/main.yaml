@@ -2,7 +2,7 @@ name: Native Build & Test
 
 env:
   appBuildNumber: ${{ github.run_number }}
-  appBuildVersion: "1.0.19"
+  appBuildVersion: "1.0.20"
 
 on:
   workflow_dispatch:
