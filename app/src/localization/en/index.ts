@@ -152,8 +152,8 @@ const translation = {
   DefaultNotification: {
     PageTitle: 'Home',
     Title: "Demander votre attestation numérique d'attestation gouvernementale(EN)",
-    Description: 'Ministère de cybersécurité et du numérique.(EN)',
-    ButtonTitle: 'Démarrer(EN)',
+    Description: 'Ministère de la Cybersécurité et du Numérique',
+    ButtonTitle: 'Start',
   },
   DefaultNotificationPage: {
     Title: 'Demander son ANIG (EN)',
@@ -533,6 +533,11 @@ const translation = {
     SentMessage: 'sent a message',
     ReceivedMessage: 'You received a new message',
     ViewMessage: 'View message',
+    SentCredential: 'sent a credential',
+    ReceivedCredential: 'You received a new credential',
+  },
+  Notifications: {
+    Dismiss: 'Delete',
   },
   Scan: {
     SuccessfullyAcceptedConnection: 'Successfully Accepted Connection',

@@ -64,7 +64,7 @@ const BrandColors: IBrandColors = {
   secondaryDisabled: `rgba(218, 230, 240, ${heavyOpacity})`,
   primaryLight: '#D9EAF7',
   highlight: '#E58271',
-  primaryBackground: '#F1F1F2',
+  primaryBackground: '#FFFFFF',
   secondaryBackground: '#FFFFFF',
   modalPrimaryBackground: '#FFFFFF',
   modalSecondaryBackground: '#F1F1F2',
@@ -98,9 +98,9 @@ export const TextTheme: ITextTheme = {
   },
   headingTwo: {
     fontFamily: 'BCSans-Regular',
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: ColorPallet.grayscale.darkGrey,
+    color: ColorPallet.notification.infoText,
   },
   headingThree: {
     fontFamily: 'BCSans-Regular',

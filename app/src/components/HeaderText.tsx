@@ -10,7 +10,8 @@ const HeaderText = ({ title }: Props) => {
   const style = StyleSheet.create({
     headerText: {
       ...TextTheme.headingTwo,
-      color: ColorPallet.notification.infoText,
+      lineHeight: 32,
+      // color: ColorPallet.notification.infoText,
     },
     headerBottomLine: {
       height: 4,

@@ -33,6 +33,7 @@ import EmptyList from './src/components/EmptyList'
 import HomeEmptyList from './src/components/HomeEmptyList'
 import HomeFooter from './src/components/HomeFooter'
 import HomeHeader from './src/components/HomeHeader'
+import NotificationListItem from './src/components/NotificationListItem'
 import PINCreateHeader from './src/components/PINCreateHeader'
 import { PINValidationRules } from './src/constants'
 import { useNotifications } from './src/hooks/notifications'
@@ -123,6 +124,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeader)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooter)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_NOTIFICATIONS_EMPTY_LIST, HomeEmptyList)
+    this._container.registerInstance(TOKENS.NOTIFICATIONS_LIST_ITEM, NotificationListItem)
     this._container.registerInstance(TOKENS.CONFIG, {
       PINSecurity: { rules: PINValidationRules, displayHelper: true },
       settings: [

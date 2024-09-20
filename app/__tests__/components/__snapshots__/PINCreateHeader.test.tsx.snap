@@ -18,6 +18,7 @@ exports[`PINCreateHeader Component Renders correctly 1`] = `
               "color": "#FFFFFF",
               "fontSize": 32,
               "fontWeight": "bold",
+              "lineHeight": 32,
             },
           ]
         }

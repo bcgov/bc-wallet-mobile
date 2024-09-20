@@ -18,5 +18,7 @@ export const attestationCredDefIds = [
   'XqaRXJt4sXE6TRpfGpVbGw:3:CL:655:bcwallet',
 ]
 
+export const customNotificationDate = new Date()
+
 export const SplashLargeScreenWidthPercentage = 51.5
 export const SplashSmallScreenWidthPercentage = 67.5

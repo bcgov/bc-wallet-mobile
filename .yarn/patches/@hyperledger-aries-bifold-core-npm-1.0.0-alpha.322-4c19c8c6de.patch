@@ -1,0 +1,121 @@
+diff --git a/App/components/listItems/NotificationListItem.tsx b/App/components/listItems/NotificationListItem.tsx
+index 5abd8e4c3ad6729871b57fb225c702524d9f6d1d..66fb3342e448a972c451395ff98e76c12c513523 100644
+--- a/App/components/listItems/NotificationListItem.tsx
++++ b/App/components/listItems/NotificationListItem.tsx
+@@ -46,6 +46,8 @@ export interface NotificationListItemProps {
+   notificationType: NotificationType
+   notification: BasicMessageRecord | CredentialExchangeRecord | ProofExchangeRecord | CustomNotificationRecord
+   customNotification?: CustomNotification
++  openSwipeableId: string | null
++  onOpenSwipeable: (id: string) => void
+ }
+ 
+ type DisplayDetails = {
+@@ -84,8 +86,8 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
+   const [closeAction, setCloseAction] = useState<any>()
+   const connectionId =
+     notification instanceof BasicMessageRecord ||
+-    notification instanceof CredentialExchangeRecord ||
+-    notification instanceof ProofExchangeRecord
++      notification instanceof CredentialExchangeRecord ||
++      notification instanceof ProofExchangeRecord
+       ? notification.connectionId ?? ''
+       : ''
+   const connection = useConnectionById(connectionId)
+@@ -450,18 +452,18 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
+           NotificationType.ProofRequest,
+           NotificationType.CredentialOffer,
+         ].includes(notificationType) && (
+-          <View>
+-            <TouchableOpacity
+-              accessibilityLabel={t('Global.Dismiss')}
+-              accessibilityRole={'button'}
+-              testID={testIdWithKey(`Dismiss${notificationType}`)}
+-              onPress={closeAction}
+-              hitSlop={hitSlop}
+-            >
+-              <Icon name={'close'} size={iconSize} color={styleConfig.iconColor} />
+-            </TouchableOpacity>
+-          </View>
+-        )}
++            <View>
++              <TouchableOpacity
++                accessibilityLabel={t('Global.Dismiss')}
++                accessibilityRole={'button'}
++                testID={testIdWithKey(`Dismiss${notificationType}`)}
++                onPress={closeAction}
++                hitSlop={hitSlop}
++              >
++                <Icon name={'close'} size={iconSize} color={styleConfig.iconColor} />
++              </TouchableOpacity>
++            </View>
++          )}
+       </View>
+       <View style={styles.bodyContainer}>
+         <Text style={[styles.bodyText, styleConfig.textStyle]} testID={testIdWithKey('BodyText')}>
+diff --git a/App/screens/Home.tsx b/App/screens/Home.tsx
+index 6868de332dc827c25d16e4a3a472023c694d6db5..f93319dc3a0276e850e050f666d2ab6704ce13ef 100644
+--- a/App/screens/Home.tsx
++++ b/App/screens/Home.tsx
+@@ -40,6 +40,11 @@ const Home: React.FC<HomeProps> = () => {
+   const { start } = useTour()
+   const [showTourPopup, setShowTourPopup] = useState(false)
+   const screenIsFocused = useIsFocused()
++  const [notificationItemId, setNotificationItemId] = useState<string | null>(null)
++
++  const handleOpenSwipeable = (id: string | null) => {
++    setNotificationItemId(id)
++  }
+ 
+   const styles = StyleSheet.create({
+     flatlist: {
+@@ -50,23 +55,46 @@ const Home: React.FC<HomeProps> = () => {
+   const DisplayListItemType = (item: any): React.ReactNode => {
+     let component: React.ReactNode
+     if (item.type === 'BasicMessageRecord') {
+-      component = <NotificationListItem notificationType={NotificationType.BasicMessage} notification={item} />
++      component = (
++        <NotificationListItem
++          openSwipeableId={notificationItemId}
++          onOpenSwipeable={handleOpenSwipeable}
++          notificationType={NotificationType.BasicMessage}
++          notification={item}
++        />
++      )
+     } else if (item.type === 'CredentialRecord') {
+       let notificationType = NotificationType.CredentialOffer
+       if (item.revocationNotification) {
+         notificationType = NotificationType.Revocation
+       }
+-      component = <NotificationListItem notificationType={notificationType} notification={item} />
++      component = (
++        <NotificationListItem
++          openSwipeableId={notificationItemId}
++          onOpenSwipeable={handleOpenSwipeable}
++          notificationType={notificationType}
++          notification={item}
++        />
++      )
+     } else if (item.type === 'CustomNotification' && customNotification) {
+       component = (
+         <NotificationListItem
++          openSwipeableId={notificationItemId}
++          onOpenSwipeable={handleOpenSwipeable}
+           notificationType={NotificationType.Custom}
+           notification={item}
+           customNotification={customNotification}
+         />
+       )
+     } else {
+-      component = <NotificationListItem notificationType={NotificationType.ProofRequest} notification={item} />
++      component = (
++        <NotificationListItem
++          openSwipeableId={notificationItemId}
++          onOpenSwipeable={handleOpenSwipeable}
++          notificationType={NotificationType.ProofRequest}
++          notification={item}
++        />
++      )
+     }
+     return component
+   }
