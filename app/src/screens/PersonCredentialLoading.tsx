@@ -46,7 +46,6 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     throw new Error('Unable to fetch agent from Credo')
   }
   const { t } = useTranslation()
-  const attestationProofRequestWaitTimeout = 10000
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
 
   const styles = StyleSheet.create({
@@ -90,23 +89,6 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   useEffect(() => {
     connect()
   }, [])
-
-  useEffect(() => {
-    if (!remoteAgentDetails) {
-      return
-    }
-
-    timer.current = setTimeout(() => {
-      const proofRequest = receivedProofRequests.find((proof) => proof.connectionId === remoteAgentDetails.connectionId)
-
-      if (!proofRequest) {
-        // No proof from our IAS Agent to respond to, do nothing.
-        logger.info(`Waited ${attestationProofRequestWaitTimeout / 1000}sec on attestation proof request, continuing`)
-
-        setDidCompleteAttestationProofRequest(true)
-      }
-    }, attestationProofRequestWaitTimeout)
-  }, [remoteAgentDetails, receivedProofRequests])
 
   // when a person credential offer is received, show the
   // offer screen to the user.
