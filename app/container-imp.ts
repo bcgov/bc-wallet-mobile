@@ -35,13 +35,22 @@ import HomeFooter from './src/components/HomeFooter'
 import HomeHeader from './src/components/HomeHeader'
 import PINCreateHeader from './src/components/PINCreateHeader'
 import { PINValidationRules } from './src/constants'
+import { useNotifications } from './src/hooks/notifications'
 import TermsStack from './src/navigators/TermsStack'
+import DefaultNotification from './src/screens/DefaultNotification'
 import Developer from './src/screens/Developer'
 import { pages } from './src/screens/OnboardingPages'
 import Splash from './src/screens/Splash'
 import { TermsVersion } from './src/screens/Terms'
 import UseBiometry from './src/screens/UseBiometry'
-import { BCLocalStorageKeys, BCState, DismissPersonCredentialOffer, IASEnvironment, initialState } from './src/store'
+import {
+  BCDispatchAction,
+  BCLocalStorageKeys,
+  BCState,
+  DismissPersonCredentialOffer,
+  IASEnvironment,
+  initialState,
+} from './src/store'
 
 export interface AppState {
   showSurvey: boolean
@@ -154,6 +163,26 @@ export class AppContainer implements Container {
 
     const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
       brandingOverlayType: BrandingOverlayType.Branding10,
+    })
+
+    this._container.registerInstance(TOKENS.NOTIFICATIONS, {
+      useNotifications,
+      customNotificationConfig: {
+        component: DefaultNotification,
+
+        onCloseAction: (dispatch?: React.Dispatch<ReducerAction<string>>) => {
+          if (dispatch) {
+            dispatch({
+              type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
+              payload: [{ personCredentialOfferDismissed: true }],
+            })
+          }
+        },
+        pageTitle: 'DefaultNotification.PageTitle',
+        title: 'DefaultNotification.Title',
+        description: 'DefaultNotification.Description',
+        buttonTitle: 'DefaultNotification.ButtonTitle',
+      },
     })
     this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
     this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, getProofRequestTemplates)
