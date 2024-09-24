@@ -336,7 +336,7 @@ const Splash = () => {
               key: walletSecret.key,
             })
           } catch (error) {
-            logger.error('Error opening existing wallet', error)
+            logger.error('Error opening existing wallet', error as BifoldError)
 
             throw new BifoldError(
               'Wallet Service',

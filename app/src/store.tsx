@@ -102,6 +102,7 @@ export enum BCLocalStorageKeys {
 
 export const initialState: BCState = {
   ...defaultState,
+  preferences: { ...defaultState.preferences, useDataRetention: false, disableDataRetentionOption: true },
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
 }
