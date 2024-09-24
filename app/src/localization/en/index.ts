@@ -156,14 +156,16 @@ const translation = {
     ButtonTitle: 'Start',
   },
   DefaultNotificationPage: {
-    Title: 'Demander son ANIG (EN)',
+    Title: 'Request your Authentication Attestation',
     Description:
-      "L'attestation numérique d'identité gouvernemental (ANIG) est une attestation qui vous permettra de vous identifier, en ligne et en personne, en partageant le minimum d'information nécessaire.(EN)",
-    SAGConnexion: 'Étape 1 - Connexion au SAG(EN)',
-    SAGConnexionDescription: 'Lorem ipsum dolor amet lorem ipsum dolor set amet lorem ipsum.(EN)',
-    ANIGAccept: "Étape 2 - Accepter l'offre d'attestation(EN)",
-    ANIGAcceptDescription: 'Lorem ipsum dolor amet lorem ipsum dolor set amet lorem ipsum.(EN)',
-    ButtonTitle: 'Recevoir mon attestation',
+      'The Authentication Attestation is a attestation that will allow you to identify yourself more quickly with government services using the Government Authentication Service.',
+    SAGConnexion: 'Step 1 - Log in to the Government Authentication Service',
+    SAGConnexionDescription: 'You must authenticate yourself with the service.',
+    ANIGRequest: 'Step 2 - Request the attestation',
+    ANIGAcceptDescription:
+      'From the account management, you will need to scan the QR code that will be presented to you.\r\n\r\nYou will then need to accept the certificate offer that will be proposed to you.',
+    ButtonTitle: 'Receive my attestation',
+    ButtonHome: 'Return to home page',
   },
   Screens: {
     Splash: 'Splash',
