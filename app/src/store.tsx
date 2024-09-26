@@ -147,7 +147,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, dismissPersonCredentialOffer }
 
       // save to storage so notification doesn't reapper on app restart
-      PersistentStorage.storeValueForKey<boolean>(
+      PersistentStorage.storeValueForKey<DismissPersonCredentialOffer>(
         BCLocalStorageKeys.PersonCredentialOfferDismissed,
         newState.dismissPersonCredentialOffer
       )
