@@ -207,6 +207,7 @@ const Splash = () => {
   }, [])
 
   const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cachedTransactions = await PersistentStorage.fetchValueForKey<any>(BCLocalStorageKeys.GenesisTransactions)
     if (cachedTransactions) {
       const { timestamp, transactions } = cachedTransactions
@@ -430,6 +431,7 @@ const Splash = () => {
               }, ''),
             }))
           if (transactions) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await PersistentStorage.storeValueForKey<any>(BCLocalStorageKeys.GenesisTransactions, {
               timestamp: moment().toISOString(),
               transactions,

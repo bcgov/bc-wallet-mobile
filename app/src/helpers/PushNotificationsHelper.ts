@@ -1,10 +1,11 @@
 import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
+import { PersistentStorage } from '@hyperledger/aries-bifold-core'
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { request, check, PERMISSIONS, RESULTS, PermissionStatus } from 'react-native-permissions'
+
 import { BCLocalStorageKeys } from '../store'
-import { PersistentStorage } from '@hyperledger/aries-bifold-core'
 
 const enum NotificationPermissionStatus {
   DENIED = 'denied',

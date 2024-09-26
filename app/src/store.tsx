@@ -117,7 +117,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, developer }
 
       if (enabledAt) {
-        PersistentStorage.storeValueForKey<any>(BCLocalStorageKeys.RemoteDebugging, developer.remoteDebugging)
+        PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.RemoteDebugging, developer.remoteDebugging)
       } else {
         PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
       }
@@ -129,7 +129,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const developer = { ...state.developer, environment }
 
       // Persist IAS environment between app restarts
-      PersistentStorage.storeValueForKey<any>(BCLocalStorageKeys.Environment, developer.environment)
+      PersistentStorage.storeValueForKey<IASEnvironment>(BCLocalStorageKeys.Environment, developer.environment)
 
       return { ...state, developer }
     }
