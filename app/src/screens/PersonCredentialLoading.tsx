@@ -1,5 +1,5 @@
-import { CredentialState, ProofState } from '@credo-ts/core'
-import { useAgent, useCredentialByState, useProofByState } from '@credo-ts/react-hooks'
+import { CredentialState } from '@credo-ts/core'
+import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import {
   Button,
   ButtonType,
@@ -37,7 +37,6 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const { ColorPallet, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
-  const receivedProofRequests = useProofByState(ProofState.RequestReceived)
   const timer = useRef<NodeJS.Timeout>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
