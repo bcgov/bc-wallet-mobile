@@ -4,8 +4,8 @@ import {
   reducer as bifoldReducer,
   defaultState,
   ReducerAction,
+  PersistentStorage,
 } from '@hyperledger/aries-bifold-core'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export interface IASEnvironment {
   name: string
@@ -98,10 +98,13 @@ export enum BCLocalStorageKeys {
   GenesisTransactions = 'GenesisTransactions',
   RemoteDebugging = 'RemoteDebugging',
   EnableProxy = 'EnableProxy',
+  UserDeniedPushNotifications = 'userDeniedPushNotifications',
+  DeviceToken = 'deviceToken',
 }
 
 export const initialState: BCState = {
   ...defaultState,
+  preferences: { ...defaultState.preferences, useDataRetention: false, disableDataRetentionOption: true },
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
 }
@@ -114,9 +117,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, developer }
 
       if (enabledAt) {
-        AsyncStorage.setItem(BCLocalStorageKeys.RemoteDebugging, JSON.stringify(developer.remoteDebugging))
+        PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.RemoteDebugging, developer.remoteDebugging)
       } else {
-        AsyncStorage.removeItem(BCLocalStorageKeys.RemoteDebugging)
+        PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
       }
 
       return newState
@@ -126,14 +129,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const developer = { ...state.developer, environment }
 
       // Persist IAS environment between app restarts
-      AsyncStorage.setItem(BCLocalStorageKeys.Environment, JSON.stringify(developer.environment))
+      PersistentStorage.storeValueForKey<IASEnvironment>(BCLocalStorageKeys.Environment, developer.environment)
+
       return { ...state, developer }
     }
     case DeveloperDispatchAction.TOGGLE_PROXY: {
       const enableProxy: boolean = (action?.payload || []).pop() || false
       const developer = { ...state.developer, enableProxy }
 
-      AsyncStorage.setItem(BCLocalStorageKeys.EnableProxy, JSON.stringify(developer.enableProxy))
+      PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableProxy, developer.enableProxy)
+
       return { ...state, developer }
     }
     case DismissPersonCredentialOfferDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED: {
@@ -142,10 +147,11 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, dismissPersonCredentialOffer }
 
       // save to storage so notification doesn't reapper on app restart
-      AsyncStorage.setItem(
+      PersistentStorage.storeValueForKey<DismissPersonCredentialOffer>(
         BCLocalStorageKeys.PersonCredentialOfferDismissed,
-        JSON.stringify(newState.dismissPersonCredentialOffer)
+        newState.dismissPersonCredentialOffer
       )
+
       return newState
     }
     default:
