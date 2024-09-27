@@ -11,6 +11,13 @@
 </div>
 <!-- FIN ENTETE -->
 
-# TL;DR
+Prerequisite
+Before running the mobile app it is expected to the following services up and running. (Either locally or hosted somewhere on the internet.)
+
+Von-Network Blockchain Ledger
+Mediator
+Credential Issuer
+An account in NgRok
+Follow the steps in the Developer Guide
 
 Under construction...
