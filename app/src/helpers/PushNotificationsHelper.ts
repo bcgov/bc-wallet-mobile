@@ -1,11 +1,11 @@
 import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { PersistentStorage } from '@hyperledger/aries-bifold-core'
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { request, check, PERMISSIONS, RESULTS, PermissionStatus } from 'react-native-permissions'
 
-const TOKEN_STORAGE_KEY = 'deviceToken'
+import { BCLocalStorageKeys } from '../store'
 
 const enum NotificationPermissionStatus {
   DENIED = 'denied',
@@ -117,7 +117,7 @@ const getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | u
  * @returns {Promise<boolean>}
  */
 const isUserDenied = async (): Promise<boolean> => {
-  return (await AsyncStorage.getItem('userDeniedPushNotifications')) === 'true'
+  return (await PersistentStorage.fetchValueForKey<boolean>(BCLocalStorageKeys.UserDeniedPushNotifications)) ?? false
 }
 
 /**
@@ -157,13 +157,14 @@ const isMediatorCapable = async (agent: Agent): Promise<boolean | undefined> => 
  */
 const isRegistered = async (): Promise<boolean> => {
   const authorized = (await messaging().hasPermission()) === messaging.AuthorizationStatus.AUTHORIZED
+  const tokenValue = await PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
 
   // Need to register for push notification capability on iOS
   if (Platform.OS === 'ios' && !messaging().isDeviceRegisteredForRemoteMessages) {
     await messaging().registerDeviceForRemoteMessages()
   }
 
-  if (authorized && (await AsyncStorage.getItem(TOKEN_STORAGE_KEY)) !== null) {
+  if (authorized && tokenValue !== null) {
     return true
   }
   return false
@@ -175,7 +176,10 @@ const isRegistered = async (): Promise<boolean> => {
  */
 const isEnabled = async (): Promise<boolean> => {
   try {
-    return (await messaging().getToken()) === (await AsyncStorage.getItem(TOKEN_STORAGE_KEY))
+    const deviceTokenValue = await PersistentStorage.fetchValueForKey<string>(BCLocalStorageKeys.DeviceToken)
+    const messageTokenValue = await messaging().getToken()
+
+    return messageTokenValue === deviceTokenValue
   } catch (error) {
     return false
   }
@@ -207,9 +211,9 @@ const setDeviceInfo = async (agent: Agent, blankDeviceToken = false): Promise<vo
       devicePlatform: Platform.OS,
     })
     if (blankDeviceToken) {
-      AsyncStorage.setItem(TOKEN_STORAGE_KEY, 'blank')
+      await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, 'blank')
     } else {
-      AsyncStorage.setItem(TOKEN_STORAGE_KEY, token)
+      await PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.DeviceToken, token)
     }
   } catch (error) {
     agent.config.logger.error('Error sending device token info to mediator agent')

@@ -19,10 +19,10 @@ import {
   createLinkSecretIfRequired,
   TOKENS,
   useServices,
+  PersistentStorage,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
 import React, { useEffect, useState } from 'react'
@@ -206,20 +206,9 @@ const Splash = () => {
     setMounted(true)
   }, [])
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
-    try {
-      const data = await AsyncStorage.getItem(key)
-      if (data) {
-        return JSON.parse(data)
-      }
-    } catch {
-      return
-    }
-  }
-
   const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
-    const cachedTransactions = await loadObjectFromStorage(BCLocalStorageKeys.GenesisTransactions)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cachedTransactions = await PersistentStorage.fetchValueForKey<any>(BCLocalStorageKeys.GenesisTransactions)
     if (cachedTransactions) {
       const { timestamp, transactions } = cachedTransactions
       return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
@@ -442,10 +431,11 @@ const Splash = () => {
               }, ''),
             }))
           if (transactions) {
-            await AsyncStorage.setItem(
-              BCLocalStorageKeys.GenesisTransactions,
-              JSON.stringify({ timestamp: moment().toISOString(), transactions })
-            )
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await PersistentStorage.storeValueForKey<any>(BCLocalStorageKeys.GenesisTransactions, {
+              timestamp: moment().toISOString(),
+              transactions,
+            })
           }
         }
 

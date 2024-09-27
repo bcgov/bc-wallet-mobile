@@ -19,11 +19,12 @@ import {
   Onboarding,
   PINRules,
   testIdWithKey,
+  PersistentStorage,
+  PersistentState,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 import { NavigationProp } from '@react-navigation/native'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
@@ -78,6 +79,7 @@ export class AppContainer implements Container {
   private navigate: (stack: never, params: never) => void
   private setAppState: React.Dispatch<React.SetStateAction<AppState>>
   private appState: AppState
+  private storage: PersistentStorage<PersistentState>
 
   public constructor(
     bifoldContainer: Container,
@@ -93,6 +95,7 @@ export class AppContainer implements Container {
     const [appState, setAppState] = useState
     this.setAppState = setAppState
     this.appState = appState
+    this.storage = new PersistentStorage(log)
   }
 
   public get container(): DependencyContainer {
@@ -294,6 +297,7 @@ export class AppContainer implements Container {
 
     const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
       brandingOverlayType: BrandingOverlayType.Branding10,
+      verifyCacheIntegrity: true,
     })
     resolver.log = logger
     this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
@@ -327,10 +331,9 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, getProofRequestTemplates)
     this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
-        const data = await AsyncStorage.getItem(key)
+        const data = (await this.storage.getValueForKey(key)) as Type
         if (data) {
-          const dataAsJSON = JSON.parse(data) as Type
-          updateVal(dataAsJSON)
+          updateVal(data)
         }
       }
 
