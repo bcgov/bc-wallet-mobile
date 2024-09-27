@@ -1,4 +1,3 @@
-/* eslint-disable import/no-extraneous-dependencies */
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   CredentialExchangeRecord,
@@ -152,7 +151,7 @@ const Credentials = ({ items }: CredentialsProps) => {
       setLoaded(true)
     }
     changeFlag()
-  }, [lang])
+  }, [lang, i18n])
   return (
     <>
       {isLoaded && (

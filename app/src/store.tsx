@@ -153,5 +153,5 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
   }
 }
 
-// @ts-ignore
+// @ts-expect-error - states for the bifoldReducer and bcReducer are different, still works though
 export const reducer = mergeReducers(bifoldReducer, bcReducer)

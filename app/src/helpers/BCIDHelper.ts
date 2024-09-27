@@ -4,8 +4,6 @@ import { TFunction } from 'react-i18next'
 import { Linking, Platform, DeviceEventEmitter } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
-import { BCState } from '../store'
-
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
 const trustedPersonCredentialIssuerRe =
@@ -58,12 +56,12 @@ export const removeExistingInvitationIfRequired = async (
 
 export const connectToIASAgent = async (
   agent: Agent,
-  store: BCState,
+  iasAgentInviteUrl: string,
   t: TFunction<'translation', undefined>
 ): Promise<WellKnownAgentDetails> => {
   // connect to the agent, this will re-format the legacy invite
   // until we have OOB working in ACA-py.
-  const invite = await agent.oob.parseInvitation(store.developer.environment.iasAgentInviteUrl)
+  const invite = await agent.oob.parseInvitation(iasAgentInviteUrl)
 
   if (!invite) {
     throw new BifoldError(t('Error.Title2020'), t('Error.Message2020'), t('Error.NoMessage'), ErrorCodes.BadInvitation)

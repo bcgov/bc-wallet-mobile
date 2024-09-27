@@ -54,6 +54,11 @@
     "react-native-vision-camera": "4.3.1",
     "@credo-ts/react-hooks": "patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch",
     "@hyperledger/indy-vdr-shared@npm:0.2.2": "patch:@hyperledger/indy-vdr-shared@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-shared-npm-0.2.2-b989282fc6.patch",
-    "@hyperledger/indy-vdr-react-native": "patch:@hyperledger/indy-vdr-react-native@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.2.2-627d424b96.patch"
+    "@hyperledger/indy-vdr-react-native": "patch:@hyperledger/indy-vdr-react-native@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.2.2-627d424b96.patch",
+    "@hyperledger/aries-bifold-core": "portal:bifold/packages/legacy/core",
+    "@hyperledger/aries-oca": "portal:bifold/packages/oca",
+    "@hyperledger/aries-react-native-attestation": "portal:bifold/packages/react-native-attestation",
+    "@hyperledger/aries-bifold-remote-logs": "portal:bifold/packages/remote-logs",
+    "@hyperledger/aries-bifold-verifier": "portal:bifold/packages/verifier"
   }
 }

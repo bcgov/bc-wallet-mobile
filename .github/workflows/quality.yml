@@ -1,0 +1,57 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
+
+jobs:
+  lint:
+    runs-on: ubuntu-22.04
+    name: Linting
+    steps:
+      - name: Checkout bc-wallet-mobile
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+      - name: Switch to app folder
+        run: |
+          cd app
+      - name: Check style
+        run: |
+          yarn prettier
+      - name: LINTing
+        run: |
+          yarn lint
+  test:
+    runs-on: ubuntu-22.04
+    name: Testing
+    steps:
+      - name: Checkout bc-wallet-mobile
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+      - name: Switch to app folder
+        run: |
+          cd app
+      - name: Automated testing
+        run: |
+          yarn test

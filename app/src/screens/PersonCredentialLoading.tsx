@@ -1,5 +1,5 @@
-import { CredentialState, ProofState } from '@credo-ts/core'
-import { useAgent, useCredentialByState, useProofByState } from '@credo-ts/react-hooks'
+import { CredentialState } from '@credo-ts/core'
+import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import {
   Button,
   ButtonType,
@@ -15,7 +15,7 @@ import {
   useServices,
 } from '@hyperledger/aries-bifold-core'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   DeviceEventEmitter,
@@ -37,7 +37,6 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const { ColorPallet, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
-  const receivedProofRequests = useProofByState(ProofState.RequestReceived)
   const timer = useRef<NodeJS.Timeout>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
@@ -76,25 +75,25 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     },
   })
 
-  const connect = async () => {
-    try {
-      const remoteAgentDetails = await connectToIASAgent(agent, store, t)
-      setRemoteAgentDetails(remoteAgentDetails)
-      logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
-    } catch (err) {
-      logger.error(`Failed to connect to IAS agent, error: ${(err as BifoldError).message}`)
-    }
-  }
-
   useEffect(() => {
+    const connect = async () => {
+      try {
+        const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl, t)
+        setRemoteAgentDetails(remoteAgentDetails)
+        logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
+      } catch (err) {
+        logger.error(`Failed to connect to IAS agent, error: ${(err as BifoldError).message}`)
+      }
+    }
+
     connect()
-  }, [])
+  }, [agent, store.developer.environment.iasAgentInviteUrl, logger, t])
 
   // when a person credential offer is received, show the
   // offer screen to the user.
-  const goToCredentialOffer = (credentialId: string) => {
+  const goToCredentialOffer = useCallback((credentialId: string) => {
     navigation.replace(Screens.CredentialOffer, { credentialId })
-  }
+  }, [navigation])
 
   useEffect(() => {
     const handleFailedAttestation = (error: BifoldError) => {
@@ -125,10 +124,12 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     return () => {
       subscriptions.forEach((subscription) => subscription.remove())
     }
-  }, [])
+  }, [navigation, logger])
 
   useEffect(() => {
-    if (!remoteAgentDetails || !remoteAgentDetails.legacyConnectionDid || !didCompleteAttestationProofRequest) {
+    const legacyConnectionDid = remoteAgentDetails?.legacyConnectionDid
+
+    if (!remoteAgentDetails || !legacyConnectionDid || !didCompleteAttestationProofRequest) {
       return
     }
 
@@ -142,8 +143,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       }
     }
 
-    const { iasPortalUrl } = store.developer.environment
-    const { legacyConnectionDid } = remoteAgentDetails
+    const iasPortalUrl = store.developer.environment.iasPortalUrl
 
     authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
       .then(() => {
@@ -152,7 +152,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       .catch((error) => {
         logger.error('Completed service card authentication with error, error: ', error.message)
       })
-  }, [remoteAgentDetails, didCompleteAttestationProofRequest, store.developer.environment.iasPortalUrl])
+  }, [remoteAgentDetails, didCompleteAttestationProofRequest, logger, navigation, store.developer.environment.iasPortalUrl])
 
   useEffect(() => {
     for (const credential of receivedCredentialOffers) {
@@ -163,11 +163,11 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
         goToCredentialOffer(credential.id)
       }
     }
-  }, [receivedCredentialOffers, remoteAgentDetails])
+  }, [receivedCredentialOffers, remoteAgentDetails, goToCredentialOffer])
 
-  const onDismissModalTouched = () => {
+  const onDismissModalTouched = useCallback(() => {
     navigation.goBack()
-  }
+  }, [navigation])
 
   return (
     <Modal transparent animationType={'slide'}>

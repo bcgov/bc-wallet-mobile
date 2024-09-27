@@ -22,11 +22,11 @@ const EmptyList = ({ message }: EmptyListProps) => {
     return () => {
       handle.remove()
     }
-  }, [])
+  }, [addCredentialPressed])
 
   const addCredentialPress = useCallback(() => {
     DeviceEventEmitter.emit(BCWalletEventTypes.ADD_CREDENTIAL_PRESSED, !addCredentialPressed)
-  }, [])
+  }, [addCredentialPressed])
 
   return (
     <View style={{ marginTop: 100, height: '100%' }}>

@@ -7,14 +7,12 @@ import {
   DispatchAction,
   Screens,
   Stacks,
-  OnboardingState,
   useAuth,
   useTheme,
   useStore,
   InfoBox,
   InfoBoxType,
   testIdWithKey,
-  didMigrateToAskar,
   migrateToAskar,
   createLinkSecretIfRequired,
   TOKENS,
@@ -25,7 +23,7 @@ import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/i
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
@@ -47,66 +45,85 @@ enum InitErrorTypes {
   Agent,
 }
 
-const onboardingComplete = (state: OnboardingState): boolean => {
-  return (
-    (state.onboardingVersion !== 0 && state.didCompleteOnboarding) ||
-    (state.onboardingVersion === 0 && state.didConsiderBiometry)
-  )
+const onboardingComplete = (
+  onboardingVersion: number,
+  didCompleteOnboarding: boolean,
+  didConsiderBiometry: boolean
+): boolean => {
+  return (onboardingVersion !== 0 && didCompleteOnboarding) || (onboardingVersion === 0 && didConsiderBiometry)
 }
 
 const resumeOnboardingAt = (
-  state: OnboardingState,
-  params: {
-    termsVersion?: boolean | string
-    enableWalletNaming?: boolean
-    enablePushNotifications?: boolean
-    showPreface?: boolean
-  }
+  didSeePreface: boolean,
+  didCompleteTutorial: boolean,
+  didAgreeToTerms: boolean | string,
+  didCreatePIN: boolean,
+  didNameWallet: boolean,
+  didConsiderBiometry: boolean,
+  didConsiderPushNotifications?: boolean,
+  termsVersion?: boolean | string,
+  enableWalletNaming?: boolean,
+  showPreface?: boolean,
+  enablePushNotifications?: boolean
 ): Screens => {
-  const termsVer = params.termsVersion ?? true
+  const termsVer = termsVersion ?? true
 
   if (
-    (state.didSeePreface || !params.showPreface) &&
-    state.didCompleteTutorial &&
-    state.didAgreeToTerms === termsVer &&
-    state.didCreatePIN &&
-    (state.didConsiderPushNotifications || !params.enablePushNotifications) &&
-    (state.didNameWallet || !params.enableWalletNaming) &&
-    !state.didConsiderBiometry
+    (didSeePreface || !showPreface) &&
+    didCompleteTutorial &&
+    didAgreeToTerms === termsVer &&
+    didCreatePIN &&
+    (didConsiderPushNotifications || !enablePushNotifications) &&
+    (didNameWallet || !enableWalletNaming) &&
+    !didConsiderBiometry
   ) {
     return Screens.UseBiometry
   }
 
   if (
-    (state.didSeePreface || !params.showPreface) &&
-    state.didCompleteTutorial &&
-    state.didAgreeToTerms === termsVer &&
-    state.didCreatePIN &&
-    (state.didConsiderPushNotifications || !params.enablePushNotifications) &&
-    params.enableWalletNaming &&
-    !state.didNameWallet
+    (didSeePreface || !showPreface) &&
+    didCompleteTutorial &&
+    didAgreeToTerms === termsVer &&
+    didCreatePIN &&
+    (didConsiderPushNotifications || !enablePushNotifications) &&
+    enableWalletNaming &&
+    !didNameWallet
   ) {
     return Screens.NameWallet
   }
 
-  if (
-    (state.didSeePreface || !params.showPreface) &&
-    state.didCompleteTutorial &&
-    state.didAgreeToTerms === termsVer &&
-    !state.didCreatePIN
-  ) {
+  if ((didSeePreface || !showPreface) && didCompleteTutorial && didAgreeToTerms === termsVer && !didCreatePIN) {
     return Screens.CreatePIN
   }
 
-  if ((state.didSeePreface || !params.showPreface) && state.didCompleteTutorial && !state.didAgreeToTerms) {
+  if ((didSeePreface || !showPreface) && didCompleteTutorial && !didAgreeToTerms) {
     return Screens.Terms
   }
 
-  if (state.didSeePreface || !params.showPreface) {
+  if (didSeePreface || !showPreface) {
     return Screens.Onboarding
   }
 
   return Screens.Preface
+}
+
+const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
+  try {
+    const data = await AsyncStorage.getItem(key)
+    if (data) {
+      return JSON.parse(data)
+    }
+  } catch {
+    return
+  }
+}
+
+const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
+  const cachedTransactions = await loadObjectFromStorage(BCLocalStorageKeys.GenesisTransactions)
+  if (cachedTransactions) {
+    const { timestamp, transactions } = cachedTransactions
+    return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
+  }
 }
 
 /*
@@ -147,7 +164,7 @@ const Splash = () => {
     TOKENS.CACHE_SCHEMAS,
   ])
 
-  const steps: string[] = [
+  const steps: string[] = useMemo(() => [
     t('Init.Starting'),
     t('Init.FetchingPreferences'),
     t('Init.VerifyingOnboarding'),
@@ -158,13 +175,13 @@ const Splash = () => {
     t('Init.ConnectingLedgers'),
     t('Init.SettingAgent'),
     t('Init.Finishing'),
-  ]
+  ], [t])
 
-  const setStep = (stepIdx: number) => {
+  const setStep = useCallback((stepIdx: number) => {
     setStepText(steps[stepIdx])
     const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
     setProgressPercent(percent)
-  }
+  }, [steps])
 
   const styles = StyleSheet.create({
     screenContainer: {
@@ -206,26 +223,6 @@ const Splash = () => {
     setMounted(true)
   }, [])
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const loadObjectFromStorage = async (key: string): Promise<undefined | any> => {
-    try {
-      const data = await AsyncStorage.getItem(key)
-      if (data) {
-        return JSON.parse(data)
-      }
-    } catch {
-      return
-    }
-  }
-
-  const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
-    const cachedTransactions = await loadObjectFromStorage(BCLocalStorageKeys.GenesisTransactions)
-    if (cachedTransactions) {
-      const { timestamp, transactions } = cachedTransactions
-      return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
-    }
-  }
-
   useEffect(() => {
     try {
       setStep(0)
@@ -240,74 +237,113 @@ const Splash = () => {
 
       if (store.onboarding.onboardingVersion !== OnboardingVersion) {
         dispatch({ type: DispatchAction.ONBOARDING_VERSION, payload: [OnboardingVersion] })
+        return
       }
-      if (onboardingComplete(store.onboarding)) {
-        if (!store.onboarding.didCompleteOnboarding) {
-          dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING })
-        }
-        // if they previously completed onboarding before wallet naming was enabled, mark complete
-        if (!store.onboarding.didNameWallet) {
-          dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
-        }
 
-        // if they previously completed onboarding before preface was enabled, mark seen
-        if (!store.onboarding.didSeePreface) {
-          dispatch({ type: DispatchAction.DID_SEE_PREFACE })
-        }
-
-        // add post authentication screens
-        const postAuthScreens = []
-        if (store.onboarding.didAgreeToTerms !== TermsVersion) {
-          postAuthScreens.push(Screens.Terms)
-        }
-        if (!store.onboarding.didConsiderPushNotifications && enablePushNotifications) {
-          postAuthScreens.push(Screens.UsePushNotifications)
-        }
-        dispatch({ type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [postAuthScreens] })
-
-        if (!store.loginAttempt.lockoutDate) {
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: Screens.EnterPIN }],
-            })
-          )
-        } else {
-          // return to lockout screen if lockout date is set
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: Screens.AttemptLockout }],
-            })
-          )
-        }
+      if (
+        !onboardingComplete(
+          store.onboarding.onboardingVersion,
+          store.onboarding.didCompleteOnboarding,
+          store.onboarding.didConsiderBiometry
+        )
+      ) {
+        // If onboarding was interrupted we need to pickup from where we left off.
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [
+              {
+                name: resumeOnboardingAt(
+                  store.onboarding.didSeePreface,
+                  store.onboarding.didCompleteTutorial,
+                  store.onboarding.didAgreeToTerms,
+                  store.onboarding.didCreatePIN,
+                  store.onboarding.didNameWallet,
+                  store.onboarding.didConsiderBiometry,
+                  store.onboarding.didConsiderPushNotifications,
+                  TermsVersion,
+                  store.preferences.enableWalletNaming,
+                  showPreface,
+                  !!enablePushNotifications
+                ),
+              },
+            ],
+          })
+        )
 
         return
       }
 
-      // If onboarding was interrupted we need to pickup from where we left off.
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            {
-              name: resumeOnboardingAt(store.onboarding, {
-                enableWalletNaming: store.preferences.enableWalletNaming,
-                enablePushNotifications: !!enablePushNotifications,
-                showPreface,
-                termsVersion: TermsVersion,
-              }),
-            },
-          ],
-        })
-      )
+      if (!store.onboarding.didCompleteOnboarding) {
+        dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING })
+        return
+      }
 
-      return
+      // if they previously completed onboarding before wallet naming was enabled, mark complete
+      if (!store.onboarding.didNameWallet) {
+        dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
+        return
+      }
+
+      // if they previously completed onboarding before preface was enabled, mark seen
+      if (!store.onboarding.didSeePreface) {
+        dispatch({ type: DispatchAction.DID_SEE_PREFACE })
+        return
+      }
+
+      // add post authentication screens
+      const postAuthScreens = []
+      if (store.onboarding.didAgreeToTerms !== TermsVersion) {
+        postAuthScreens.push(Screens.Terms)
+      }
+      if (!store.onboarding.didConsiderPushNotifications && enablePushNotifications) {
+        postAuthScreens.push(Screens.UsePushNotifications)
+      }
+      dispatch({ type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [postAuthScreens] })
+
+      if (!store.loginAttempt.lockoutDate) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: Screens.EnterPIN }],
+          })
+        )
+      } else {
+        // return to lockout screen if lockout date is set
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: Screens.AttemptLockout }],
+          })
+        )
+      }
     } catch (e: unknown) {
       setInitErrorType(InitErrorTypes.Onboarding)
       setInitError(e as Error)
     }
-  }, [mounted, store.authentication.didAuthenticate, initOnboardingCount, store.stateLoaded])
+  }, [
+    mounted,
+    setStep,
+    store.authentication.didAuthenticate,
+    store.stateLoaded,
+    store.onboarding.onboardingVersion,
+    store.onboarding.didCompleteOnboarding,
+    store.onboarding.didSeePreface,
+    store.onboarding.didCompleteTutorial,
+    store.onboarding.didAgreeToTerms,
+    store.onboarding.didCreatePIN,
+    store.onboarding.didConsiderPushNotifications,
+    store.onboarding.didNameWallet,
+    store.onboarding.didConsiderBiometry,
+    store.preferences.enableWalletNaming,
+    enablePushNotifications,
+    showPreface,
+    dispatch,
+    store.loginAttempt.lockoutDate,
+    navigation,
+    initOnboardingCount,
+    t,
+  ])
 
   useEffect(() => {
     const initAgent = async (): Promise<void> => {
@@ -336,7 +372,7 @@ const Splash = () => {
               key: walletSecret.key,
             })
           } catch (error) {
-            logger.error('Error opening existing wallet', error)
+            logger.error('Error opening existing wallet', error as Error)
 
             throw new BifoldError(
               'Wallet Service',
@@ -406,7 +442,7 @@ const Splash = () => {
         newAgent.registerOutboundTransport(httpTransport)
 
         // If we haven't migrated to Aries Askar yet, we need to do this before we initialize the agent.
-        if (!didMigrateToAskar(store.migration)) {
+        if (!store.migration.didMigrateToAskar) {
           logger.debug('Agent not updated to Aries Askar, updating...')
 
           await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
@@ -489,9 +525,24 @@ const Splash = () => {
     initAgent()
   }, [
     mounted,
+    agent,
+    setAgent,
+    setStep,
+    ocaBundleResolver,
     store.authentication.didAuthenticate,
     store.onboarding.postAuthScreens.length,
     store.onboarding.didConsiderBiometry,
+    store.developer.enableProxy,
+    store.migration.didMigrateToAskar,
+    store.preferences.usePushNotifications,
+    store.preferences.walletName,
+    indyLedgers,
+    credDefs,
+    schemas,
+    dispatch,
+    navigation,
+    logger,
+    attestationMonitor,
     walletSecret,
     initAgentCount,
   ])
