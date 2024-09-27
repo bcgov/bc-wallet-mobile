@@ -117,7 +117,10 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, developer }
 
       if (enabledAt) {
-        PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.RemoteDebugging, developer.remoteDebugging)
+        PersistentStorage.storeValueForKey<RemoteDebuggingState>(
+          BCLocalStorageKeys.RemoteDebugging,
+          developer.remoteDebugging
+        )
       } else {
         PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
       }
