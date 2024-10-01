@@ -83,7 +83,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
 
     const notificationsWithCustom = [...custom, ...notif]
     setNotifications(notificationsWithCustom as never[])
-  }, [offers, credsReceived, credsDone, basicMessages, nonAttestationProofs])
+  }, [offers, credsReceived, credsDone, basicMessages, nonAttestationProofs, store.dismissPersonCredentialOffer.personCredentialOfferDismissed])
 
   useEffect(() => {
     Promise.all(
@@ -95,7 +95,7 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
         }
       })
     ).then((val) => setNonAttestationProofs(val.filter((v) => v.include).map((data) => data.value)))
-  }, [proofsRequested, proofsDone])
+  }, [proofsRequested, proofsDone, agent])
 
   return notifications
 }

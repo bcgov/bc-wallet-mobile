@@ -97,15 +97,15 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
     },
   })
 
-  const isBCServicesCardInstalled = async () => {
+  const isBCServicesCardInstalled = useCallback(async () => {
     return await Linking.canOpenURL('ca.bc.gov.id.servicescard://')
-  }
+  }, [])
 
   useEffect(() => {
     isBCServicesCardInstalled().then((result) => {
       setAppInstalled(result)
     })
-  }, [])
+  }, [isBCServicesCardInstalled])
 
   const acceptPersonCredentialOffer = useCallback(() => {
     if (!agent || !store || !t) {
@@ -113,7 +113,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
     }
 
     navigation.replace('PersonCredentialLoading' as never, {} as never)
-  }, [])
+  }, [agent, store, t, navigation])
 
   const getBCServicesCardApp = useCallback(() => {
     setAppInstalled(true)

@@ -8,19 +8,20 @@ interface LoadingIconProps {
   active: boolean
 }
 
+const timing: Animated.TimingAnimationConfig = {
+  toValue: 1,
+  duration: 2000,
+  useNativeDriver: true,
+}
+
 export default function LoadingIcon({ size, color, active }: Readonly<LoadingIconProps>) {
-  const rotationAnim = useRef(new Animated.Value(0)).current
-  const timing: Animated.TimingAnimationConfig = {
-    toValue: 1,
-    duration: 2000,
-    useNativeDriver: true,
-  }
-  const rotation = rotationAnim.interpolate({
+  const rotationAnim = useRef(new Animated.Value(0))
+  const rotation = rotationAnim.current.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
   })
 
-  const animation = Animated.loop(Animated.timing(rotationAnim, timing))
+  const animation = Animated.loop(Animated.timing(rotationAnim.current, timing))
 
   useEffect(() => {
     animation.reset()
@@ -29,7 +30,7 @@ export default function LoadingIcon({ size, color, active }: Readonly<LoadingIco
     } else {
       animation.stop()
     }
-  }, [rotationAnim, active])
+  }, [animation, active])
 
   return (
     <>
