@@ -117,7 +117,10 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, developer }
 
       if (enabledAt) {
-        PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.RemoteDebugging, developer.remoteDebugging)
+        PersistentStorage.storeValueForKey<RemoteDebuggingState>(
+          BCLocalStorageKeys.RemoteDebugging,
+          developer.remoteDebugging
+        )
       } else {
         PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
       }
@@ -159,5 +162,5 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
   }
 }
 
-// @ts-ignore
+// @ts-expect-error - states for the bifoldReducer and bcReducer are different, still works though
 export const reducer = mergeReducers(bifoldReducer, bcReducer)
