@@ -940,6 +940,9 @@ const translation = {
     Choose: 'Choose',
     ScanQRCode: 'Scan a QR code',
   },
+  HelpCenter: {
+    Help: 'Help',
+  },
 }
 
 export default translation

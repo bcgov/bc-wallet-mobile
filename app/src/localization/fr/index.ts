@@ -973,6 +973,9 @@ const translation = {
     Choose: 'Choisir',
     ScanQRCode: 'Lire un code QR',
   },
+  HelpCenter: {
+    Help: 'Aide',
+  },
 }
 
 export default translation

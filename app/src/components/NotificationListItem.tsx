@@ -39,7 +39,7 @@ import FleurLysImg from '../assets/img/FleurLys.svg'
 import MessageImg from '../assets/img/Message.svg'
 import ProofRequestImg from '../assets/img/ProofRequest.svg'
 import RevocationImg from '../assets/img/Revocation.svg'
-import { customNotificationDate, hitSlop } from '../constants'
+import { hitSlop } from '../constants'
 
 const iconSize = 20
 
@@ -125,6 +125,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       marginVertical: 8,
     },
     bodyEventTime: {
+      ...TextTheme.labelSubtitle,
       color: ColorPallet.grayscale.mediumGrey,
       fontSize: 12,
     },
@@ -319,7 +320,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
           resolve({
             title: t(customNotification?.title as string),
             body: t(customNotification?.description as string),
-            eventTime: formatTime(customNotificationDate, { shortMonth: true, includeHour: true }),
+            eventTime: formatTime(notification.createdAt, { shortMonth: true, includeHour: true }),
           })
           break
         default:
@@ -443,7 +444,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
           <Text style={[styles.bodyText]} testID={testIdWithKey('BodyText')}>
             {details.body}
           </Text>
-          <Text style={[styles.bodyText, styles.bodyEventTime]} testID={testIdWithKey('BodyEventTime')}>
+          <Text style={styles.bodyEventTime} testID={testIdWithKey('BodyEventTime')}>
             {details.eventTime}
           </Text>
         </View>

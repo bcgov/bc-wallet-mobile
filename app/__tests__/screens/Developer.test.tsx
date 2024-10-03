@@ -1,16 +1,9 @@
-import { AgentProvider, StoreProvider } from '@hyperledger/aries-bifold-core'
+import { StoreProvider } from '@hyperledger/aries-bifold-core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import Developer from '../../src/screens/Developer'
-import { AttestationProvider } from '../../src/hooks/useAttestation'
 import { initialState, reducer } from '../../src/store'
-
-// Mock the RNPermissionsModule
-jest.mock('react-native-permissions', () => ({
-  check: jest.fn(),
-  request: jest.fn(),
-}))
 
 const mockNavigation = jest.fn()
 jest.mock('@react-navigation/native', () => ({
@@ -20,15 +13,18 @@ jest.mock('@react-navigation/native', () => ({
   },
 }))
 
-jest.mock('@hyperledger/aries-bifold-core', () => ({
-  ...jest.requireActual('@hyperledger/aries-bifold-core'),
-  useConfiguration: jest.fn(),
-  useContainer: jest.fn().mockReturnValue({
-    resolve: jest.fn().mockReturnValue({
-      resolve: jest.fn().mockImplementation(() => Promise.resolve({})),
-      resolveAllBundles: jest.fn().mockImplementation(() => Promise.resolve({})),
-    }),
-  }),
+jest.mock('react-native-permissions', () => ({
+  check: jest.fn().mockResolvedValue('granted'),
+  request: jest.fn().mockResolvedValue('granted'),
+  PERMISSIONS: {
+    IOS: {},
+    ANDROID: {},
+  },
+  RESULTS: {
+    GRANTED: 'granted',
+    DENIED: 'denied',
+    BLOCKED: 'blocked',
+  },
 }))
 
 describe('Developer Screen', () => {
@@ -47,9 +43,7 @@ describe('Developer Screen', () => {
   test('screen renders correctly', () => {
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
-        <AttestationProvider>
-          <Developer />
-        </AttestationProvider>
+        <Developer />
       </StoreProvider>
     )
 

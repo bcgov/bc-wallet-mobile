@@ -5,9 +5,12 @@ import {
   CredentialState,
   ProofExchangeRecord,
   ProofState,
+  SdJwtVcRecord,
+  W3cCredentialRecord,
 } from '@credo-ts/core'
 import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@credo-ts/react-hooks'
 import { BifoldAgent, useStore } from '@hyperledger/aries-bifold-core'
+import { useOpenID } from '@hyperledger/aries-bifold-core/App/modules/openid/hooks/openid'
 import {
   BasicMessageMetadata,
   CredentialMetadata,
@@ -28,18 +31,28 @@ interface CustomNotification {
   id: string
 }
 
-export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord> => {
-  const { agent } = useAgent()
-  const [store] = useStore<BCState>()
-  const offers = useCredentialByState(CredentialState.OfferReceived)
-  const proofsRequested = useProofByState(ProofState.RequestReceived)
-  const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
-  const [notifications, setNotifications] = useState([])
+export type NotificationsInputProps = {
+  openIDUri?: string
+}
+
+export type NotificationReturnType = Array<
+  BasicMessageRecord | CredentialRecord | ProofExchangeRecord | CustomNotification | SdJwtVcRecord | W3cCredentialRecord
+>
+
+export const useNotifications = ({ openIDUri }: NotificationsInputProps): NotificationReturnType => {
   const { records: basicMessages } = useBasicMessages()
+  const [notifications, setNotifications] = useState([])
 
   const credsReceived = useCredentialByState(CredentialState.CredentialReceived)
   const credsDone = useCredentialByState(CredentialState.Done)
   const proofsDone = useProofByState([ProofState.Done, ProofState.PresentationReceived])
+  const offers = useCredentialByState(CredentialState.OfferReceived)
+  const proofsRequested = useProofByState(ProofState.RequestReceived)
+  const openIDCredReceived = useOpenID({ openIDUri })
+
+  const { agent } = useAgent()
+  const [store] = useStore<BCState>()
+  const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
 
   useEffect(() => {
     // get all unseen messages
@@ -83,7 +96,13 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
           !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen)
       )
     })
-    const notif = [...messagesToShow, ...offers, ...proofs, ...revoked].sort(
+
+    const openIDCreds: Array<SdJwtVcRecord | W3cCredentialRecord> = []
+    if (openIDCredReceived) {
+      openIDCreds.push(openIDCredReceived)
+    }
+
+    const notif = [...messagesToShow, ...offers, ...proofs, ...revoked, ...openIDCreds].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 

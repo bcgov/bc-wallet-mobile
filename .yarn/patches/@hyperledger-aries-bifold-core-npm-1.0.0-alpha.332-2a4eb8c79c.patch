@@ -1,5 +1,5 @@
 diff --git a/App/components/listItems/NotificationListItem.tsx b/App/components/listItems/NotificationListItem.tsx
-index 5abd8e4c3ad6729871b57fb225c702524d9f6d1d..66fb3342e448a972c451395ff98e76c12c513523 100644
+index 6c6844839e569d7855b72c0635457da37482c0d2..a71c9641dfcf85d5e43cb00e63e6397f65cf22ff 100644
 --- a/App/components/listItems/NotificationListItem.tsx
 +++ b/App/components/listItems/NotificationListItem.tsx
 @@ -46,6 +46,8 @@ export interface NotificationListItemProps {
@@ -11,7 +11,7 @@ index 5abd8e4c3ad6729871b57fb225c702524d9f6d1d..66fb3342e448a972c451395ff98e76c1
  }
  
  type DisplayDetails = {
-@@ -84,8 +86,8 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
+@@ -91,8 +93,8 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
    const [closeAction, setCloseAction] = useState<any>()
    const connectionId =
      notification instanceof BasicMessageRecord ||
@@ -22,7 +22,36 @@ index 5abd8e4c3ad6729871b57fb225c702524d9f6d1d..66fb3342e448a972c451395ff98e76c1
        ? notification.connectionId ?? ''
        : ''
    const connection = useConnectionById(connectionId)
-@@ -450,18 +452,18 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
+@@ -147,8 +149,8 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
+ 
+   const isReceivedProof = useMemo(() => {
+     return notificationType === NotificationType.ProofRequest &&
+-    ((notification as ProofExchangeRecord).state === ProofState.Done ||
+-      (notification as ProofExchangeRecord).state === ProofState.PresentationSent)
++      ((notification as ProofExchangeRecord).state === ProofState.Done ||
++        (notification as ProofExchangeRecord).state === ProofState.PresentationSent)
+   }, [notificationType, notification])
+ 
+   const toggleDeclineModalVisible = useCallback(() => setDeclineModalVisible(prev => !prev), [])
+@@ -273,7 +275,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
+           break
+         }
+         case NotificationType.Revocation:
+-          details =  ({
++          details = ({
+             type: InfoBoxType.Error,
+             title: t('CredentialDetails.NewRevoked'),
+             body: `${name + (version ? ` v${version}` : '')}`,
+@@ -281,7 +283,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
+           })
+           break
+         case NotificationType.Custom:
+-          details =  ({
++          details = ({
+             type: InfoBoxType.Info,
+             title: t(customNotification?.title as any),
+             body: t(customNotification?.description as any),
+@@ -441,18 +443,18 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
            NotificationType.ProofRequest,
            NotificationType.CredentialOffer,
          ].includes(notificationType) && (
@@ -54,23 +83,24 @@ index 5abd8e4c3ad6729871b57fb225c702524d9f6d1d..66fb3342e448a972c451395ff98e76c1
        <View style={styles.bodyContainer}>
          <Text style={[styles.bodyText, styleConfig.textStyle]} testID={testIdWithKey('BodyText')}>
 diff --git a/App/screens/Home.tsx b/App/screens/Home.tsx
-index 6868de332dc827c25d16e4a3a472023c694d6db5..f93319dc3a0276e850e050f666d2ab6704ce13ef 100644
+index a514b5f64216055ddc0ce105bfe74d41959d34b6..8130e8f496cbec31111afe2314856b81c9848beb 100644
 --- a/App/screens/Home.tsx
 +++ b/App/screens/Home.tsx
-@@ -40,6 +40,11 @@ const Home: React.FC<HomeProps> = () => {
-   const { start } = useTour()
+@@ -41,6 +41,12 @@ const Home: React.FC<HomeProps> = () => {
    const [showTourPopup, setShowTourPopup] = useState(false)
    const screenIsFocused = useIsFocused()
+ 
 +  const [notificationItemId, setNotificationItemId] = useState<string | null>(null)
 +
 +  const handleOpenSwipeable = (id: string | null) => {
 +    setNotificationItemId(id)
 +  }
- 
++
    const styles = StyleSheet.create({
      flatlist: {
-@@ -50,23 +55,46 @@ const Home: React.FC<HomeProps> = () => {
-   const DisplayListItemType = (item: any): React.ReactNode => {
+       marginBottom: 35,
+@@ -50,23 +56,46 @@ const Home: React.FC<HomeProps> = () => {
+   const DisplayListItemType = useCallback((item: any): React.ReactNode => {
      let component: React.ReactNode
      if (item.type === 'BasicMessageRecord') {
 -      component = <NotificationListItem notificationType={NotificationType.BasicMessage} notification={item} />
@@ -118,4 +148,4 @@ index 6868de332dc827c25d16e4a3a472023c694d6db5..f93319dc3a0276e850e050f666d2ab67
 +      )
      }
      return component
-   }
+   }, [customNotification, NotificationListItem])

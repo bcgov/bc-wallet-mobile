@@ -10,7 +10,7 @@ const HomeFooter = () => {
   const { ColorPallet } = useTheme()
   const { navigate } = useNavigation<StackNavigationProp<HistoryStackParams>>()
   const [{ useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
-  const notifications = useNotifications()
+  const notifications = useNotifications({})
 
   const styles = StyleSheet.create({
     footerContainer: {
