@@ -1,4 +1,4 @@
-import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
+import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport, WalletError } from '@credo-ts/core'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
 import { useAgent } from '@credo-ts/react-hooks'
 import { agentDependencies } from '@credo-ts/react-native'
@@ -154,24 +154,30 @@ const Splash = () => {
     TOKENS.CACHE_SCHEMAS,
   ])
 
-  const steps: string[] = useMemo(() => [
-    t('Init.Starting'),
-    t('Init.FetchingPreferences'),
-    t('Init.VerifyingOnboarding'),
-    t('Init.GettingCredentials'),
-    t('Init.RegisteringTransports'),
-    t('Init.InitializingAgent'),
-    t('Init.CacheWarmup'),
-    t('Init.ConnectingLedgers'),
-    t('Init.SettingAgent'),
-    t('Init.Finishing'),
-  ], [t])
+  const steps: string[] = useMemo(
+    () => [
+      t('Init.Starting'),
+      t('Init.FetchingPreferences'),
+      t('Init.VerifyingOnboarding'),
+      t('Init.GettingCredentials'),
+      t('Init.RegisteringTransports'),
+      t('Init.InitializingAgent'),
+      t('Init.CacheWarmup'),
+      t('Init.ConnectingLedgers'),
+      t('Init.SettingAgent'),
+      t('Init.Finishing'),
+    ],
+    [t]
+  )
 
-  const setStep = useCallback((stepIdx: number) => {
-    setStepText(steps[stepIdx])
-    const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
-    setProgressPercent(percent)
-  }, [steps])
+  const setStep = useCallback(
+    (stepIdx: number) => {
+      setStepText(steps[stepIdx])
+      const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
+      setProgressPercent(percent)
+    },
+    [steps]
+  )
 
   const styles = StyleSheet.create({
     screenContainer: {
@@ -362,14 +368,22 @@ const Splash = () => {
               key: walletSecret.key,
             })
           } catch (error) {
-            logger.error('Error opening existing wallet', error as Error)
+            // Credo does not use error codes but this will be in the
+            // the error message if the wallet is already open
+            const catchPhrase = 'instance already opened'
 
-            throw new BifoldError(
-              'Wallet Service',
-              'There was a problem unlocking the wallet.',
-              (error as Error).message,
-              1047
-            )
+            if (error instanceof WalletError && error.message.includes(catchPhrase)) {
+              logger.warn('Wallet already open, nothing to do')
+            } else {
+              logger.error('Error opening existing wallet:', error as Error)
+
+              throw new BifoldError(
+                'Wallet Service',
+                'There was a problem unlocking the wallet.',
+                (error as Error).message,
+                1047
+              )
+            }
           }
 
           await agent.mediationRecipient.initiateMessagePickup()
