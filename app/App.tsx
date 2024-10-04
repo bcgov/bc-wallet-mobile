@@ -6,7 +6,6 @@ import {
   AuthProvider,
   toastConfig,
   initStoredLanguage,
-  RootStack,
   NetInfo,
   NetworkProvider,
   ErrorModal,
@@ -22,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { StatusBar } from 'react-native'
 import { isTablet } from 'react-native-device-info'
 import Orientation from 'react-native-orientation-locker'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
@@ -32,6 +32,7 @@ import { credentialOfferTourSteps } from './src/components/tours/CredentialOffer
 import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
+import RootStack from './src/navigators/RootStack'
 import { initialState, reducer } from './src/store'
 
 const { theme, localization } = qcwallet
@@ -82,7 +83,9 @@ const App = () => {
                     overlayColor={'black'}
                     overlayOpacity={0.7}
                   >
-                    <RootStack />
+                    <SafeAreaProvider>
+                      <RootStack />
+                    </SafeAreaProvider>
                   </TourProvider>
                   <Toast topOffset={15} config={toastConfig} />
                 </NetworkProvider>

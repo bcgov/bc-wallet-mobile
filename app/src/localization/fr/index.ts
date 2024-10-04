@@ -645,8 +645,9 @@ const translation = {
   },
   TabStack: {
     Home: 'Accueil',
-    Scan: 'Balayer',
+    Activities: 'Activités',
     Credentials: 'Attestations',
+    More: 'Plus',
   },
   RootStack: {
     Contacts: 'Contacts',
