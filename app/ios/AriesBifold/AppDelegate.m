@@ -62,6 +62,7 @@
       return;
     }
 
+    // Exclude the folder from backup
     NSError *error = nil;
     BOOL success = [folderURL setResourceValue:@YES 
                                         forKey:NSURLIsExcludedFromBackupKey 
