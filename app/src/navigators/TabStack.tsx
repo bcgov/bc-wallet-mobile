@@ -20,6 +20,7 @@ import HomeTabIcon from '../assets/img/icons/home.svg'
 import NotificationTabIcon from '../assets/img/icons/notification.svg'
 import PlusTabIcon from '../assets/img/icons/plus.svg'
 
+import PlusStack from './PlusStack'
 import { TabStackParams, TabStacks } from './navigators'
 
 const TabStack: React.FC = () => {
@@ -58,7 +59,7 @@ const TabStack: React.FC = () => {
       label: t('TabStack.Credentials'),
       icon: AtestationTabIcon,
     },
-    { name: TabStacks.MoreStack, component: CredentialStack, label: t('TabStack.More'), icon: PlusTabIcon },
+    { name: TabStacks.OptionsPlusStack, component: PlusStack, label: t('TabStack.OptionsPlus'), icon: PlusTabIcon },
   ]
 
   const TabBarIcon = (props: {

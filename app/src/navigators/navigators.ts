@@ -18,8 +18,8 @@ import { NavigatorScreenParams } from '@react-navigation/native'
 export enum Screens {
   TermsAndConditions = 'TermsAndConditions',
   Legal = 'Legal',
+  OptionsPlus = 'OptionsPlus',
   Activities = 'Activities',
-  More = 'More',
 }
 
 export enum Stacks {
@@ -32,7 +32,7 @@ export enum TabStacks {
   HomeStack = 'Tab Home Stack',
   ActivitiesStack = 'Tab Activities Stack',
   CredentialStack = 'Tab Credential Stack',
-  MoreStack = 'Tab More Stack',
+  OptionsPlusStack = 'Tab Options Plus Stack',
 }
 
 export type RootStackParams = {
@@ -52,7 +52,7 @@ export type TabStackParams = {
   [TabStacks.HomeStack]: NavigatorScreenParams<HomeStackParams>
   [TabStacks.ActivitiesStack]: NavigatorScreenParams<ActivitiesStackParams>
   [TabStacks.CredentialStack]: NavigatorScreenParams<CredentialStackParams>
-  [TabStacks.MoreStack]: NavigatorScreenParams<MoreStackParams>
+  [TabStacks.OptionsPlusStack]: NavigatorScreenParams<OptionsPlusStackParams>
 }
 
 export type TermsStackParams = {
@@ -64,7 +64,8 @@ export type ActivitiesStackParams = {
   [Screens.Activities]: undefined
 }
 
-export type MoreStackParams = {
+export type OptionsPlusStackParams = {
+  [Screens.OptionsPlus]: undefined
   [BifoldStacks.SettingStack]: undefined
   [Stacks.HelpCenterStack]: undefined
   [Stacks.AboutStack]: undefined
