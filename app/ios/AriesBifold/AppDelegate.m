@@ -17,6 +17,8 @@
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
 
+  [self excludeDotAFJFolderFromBackup];
+  
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 
@@ -42,6 +44,23 @@
 
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
   return [Orientation getOrientation];
+}
+
+// The .afj folder from Credo cannot be restored.
+- (void)excludeDotAFJFolderFromBackup {
+  NSString *fileName = @".afj";
+  NSURL *documentsURL = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory
+                                                                inDomains:NSUserDomainMask] firstObject];
+  NSURL *folderURL = [documentsURL URLByAppendingPathComponent:fileName];
+
+  NSError *error = nil;
+  BOOL success = [folderURL setResourceValue:@YES
+                                      forKey:NSURLIsExcludedFromBackupKey
+                                       error:&error];
+  
+  if (!success) {
+      NSLog(@"Error excluding folder %@ from backup: %@", fileName, error);
+  }
 }
 
 @end
