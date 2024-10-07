@@ -23,7 +23,7 @@ import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { Config } from 'react-native-config'
@@ -136,6 +136,7 @@ const Splash = () => {
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
+  const initializing = useRef(false)
   const [
     logger,
     indyLedgers,
@@ -346,6 +347,7 @@ const Splash = () => {
       try {
         if (
           !mounted ||
+          initializing.current ||
           !store.authentication.didAuthenticate ||
           !store.onboarding.didConsiderBiometry ||
           !walletSecret?.id ||
@@ -355,6 +357,7 @@ const Splash = () => {
           return
         }
 
+        initializing.current = true
         setStep(3)
 
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
@@ -522,6 +525,7 @@ const Splash = () => {
           })
         )
       } catch (e: unknown) {
+        initializing.current = false
         setInitErrorType(InitErrorTypes.Agent)
         setInitError(e as Error)
       }
