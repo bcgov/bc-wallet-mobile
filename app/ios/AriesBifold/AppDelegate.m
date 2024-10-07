@@ -58,7 +58,7 @@
     BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:[folderURL path]
                                                            isDirectory:&isDir];
     if (!fileExists || !isDir) {
-        NSLog(@"Directory %@ does not exist. Skipping backup exclusion.", folderName);
+      NSLog(@"Directory %@ does not exist. Skipping backup exclusion.", folderName);
       return;
     }
 
