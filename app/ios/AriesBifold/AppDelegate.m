@@ -48,19 +48,28 @@
 
 // The .afj folder from Credo cannot be restored.
 - (void)excludeDotAFJFolderFromBackup {
-  NSString *fileName = @".afj";
-  NSURL *documentsURL = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory
-                                                                inDomains:NSUserDomainMask] firstObject];
-  NSURL *folderURL = [documentsURL URLByAppendingPathComponent:fileName];
+    NSString *folderName = @".afj";
+    NSURL *documentsURL = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory
+                                                                  inDomains:NSUserDomainMask] firstObject];
+    NSURL *folderURL = [documentsURL URLByAppendingPathComponent:folderName];
 
-  NSError *error = nil;
-  BOOL success = [folderURL setResourceValue:@YES
-                                      forKey:NSURLIsExcludedFromBackupKey
-                                       error:&error];
-  
-  if (!success) {
-      NSLog(@"Error excluding folder %@ from backup: %@", fileName, error);
-  }
+    // Check if the directory exists
+    BOOL isDir;
+    BOOL fileExists = [[NSFileManager defaultManager] fileExistsAtPath:[folderURL path]
+                                                           isDirectory:&isDir];
+    if (!fileExists || !isDir) {
+        NSLog(@"Directory %@ does not exist. Skipping backup exclusion.", folderName);
+      return;
+    }
+
+    NSError *error = nil;
+    BOOL success = [folderURL setResourceValue:@YES 
+                                        forKey:NSURLIsExcludedFromBackupKey 
+                                         error:&error];
+
+    if (!success) {
+        NSLog(@"Error excluding folder %@ from backup: %@", folderName, error);
+    }
 }
 
 @end
