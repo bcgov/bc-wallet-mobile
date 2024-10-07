@@ -21,7 +21,6 @@ import { useTranslation } from 'react-i18next'
 import { StatusBar } from 'react-native'
 import { isTablet } from 'react-native-device-info'
 import Orientation from 'react-native-orientation-locker'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
@@ -83,9 +82,7 @@ const App = () => {
                     overlayColor={'black'}
                     overlayOpacity={0.7}
                   >
-                    <SafeAreaProvider>
-                      <RootStack />
-                    </SafeAreaProvider>
+                    <RootStack />
                   </TourProvider>
                   <Toast topOffset={15} config={toastConfig} />
                 </NetworkProvider>

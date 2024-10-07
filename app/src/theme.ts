@@ -431,7 +431,7 @@ export const ListItems = StyleSheet.create({
 
 export const TabTheme = {
   tabBarStyle: {
-    height: 72,
+    height: 80,
     backgroundColor: ColorPallet.brand.secondaryBackground,
     shadowOffset: { width: 0, height: -3 },
     shadowRadius: 6,
@@ -439,6 +439,7 @@ export const TabTheme = {
     shadowOpacity: 0.1,
     borderTopWidth: 0,
     paddingBottom: 0,
+    elevation: 6,
   },
   tabBarContainerStyle: {
     flex: 1,

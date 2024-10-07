@@ -38,10 +38,10 @@ const TabStack: React.FC = () => {
 
   const tabBarIconContainerStyles = (focused: boolean): ViewStyle => ({
     ...TabTheme.tabBarContainerStyle,
-    borderTopWidth: focused ? 4 : 0,
-    borderTopColor: ColorPallet.brand.primary,
+    borderTopWidth: 4,
+    borderTopColor: focused ? ColorPallet.brand.primary : ColorPallet.brand.primaryBackground,
     width: '100%',
-    justifyContent: showLabels ? 'flex-end' : 'center',
+    justifyContent: 'center',
   })
 
   const tabs = [
@@ -88,7 +88,7 @@ const TabStack: React.FC = () => {
             <View
               style={{
                 position: 'absolute',
-                top: props.focused ? 2 : 10,
+                top: 2,
                 left: '55%',
                 width: 16,
                 height: 16,
@@ -96,7 +96,6 @@ const TabStack: React.FC = () => {
                 backgroundColor: ColorPallet.brand.primary,
                 justifyContent: 'center',
                 alignItems: 'center',
-                borderWidth: 1,
               }}
             >
               <Text
@@ -116,7 +115,7 @@ const TabStack: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: ColorPallet.brand.primary }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: ColorPallet.brand.primary }}>
       <Tab.Navigator
         initialRouteName={TabStacks.HomeStack}
         screenOptions={{
