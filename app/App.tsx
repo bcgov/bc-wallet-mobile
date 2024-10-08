@@ -16,7 +16,7 @@ import {
   MainContainer,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
-import React, { useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StatusBar } from 'react-native'
 import { isTablet } from 'react-native-device-info'
@@ -32,7 +32,7 @@ import { credentialsTourSteps } from './src/components/tours/CredentialsTourStep
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
 import RootStack from './src/navigators/RootStack'
-import { initialState, reducer } from './src/store'
+import { BCState, getInitialState, reducer } from './src/store'
 
 const { theme, localization } = qcwallet
 
@@ -46,6 +46,15 @@ const App = () => {
   const { navigate } = useNavigation()
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
   const qcwContainer = new AppContainer(bifoldContainer, t, navigate).init()
+  const [initialState, setInitialState] = useState<BCState>()
+
+  useEffect(() => {
+    const getAsyncInitialState = async () => {
+      const initial = await getInitialState()
+      setInitialState(initial)
+    }
+    getAsyncInitialState()
+  }, [])
 
   if (!isTablet()) {
     Orientation.lockToPortrait()

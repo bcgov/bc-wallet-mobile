@@ -3,7 +3,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import Developer from '../../src/screens/Developer'
-import { initialState, reducer } from '../../src/store'
+import { getInitialState, reducer } from '../../src/store'
 
 const mockNavigation = jest.fn()
 jest.mock('@react-navigation/native', () => ({
@@ -40,7 +40,9 @@ describe('Developer Screen', () => {
     jest.clearAllMocks()
   })
 
-  test('screen renders correctly', () => {
+  test('screen renders correctly', async () => {
+    const initialState = await getInitialState()
+
     const tree = render(
       <StoreProvider initialState={initialState} reducer={reducer}>
         <Developer />

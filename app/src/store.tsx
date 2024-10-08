@@ -19,28 +19,33 @@ export interface Developer {
   remoteLoggingEnabled: boolean
 }
 
-export interface DismissPersonCredentialOffer {
-  personCredentialOfferDismissed: boolean
+export interface AttestationAuthentification {
+  id: string
+  type: string
+  createdAt: Date
+  isDismissed: boolean
+  isSeenOnHome: boolean
 }
 
 export interface BCState extends BifoldState {
   developer: Developer
-  dismissPersonCredentialOffer: DismissPersonCredentialOffer
+  attestationAuthentification: AttestationAuthentification
 }
 
 enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
 }
 
-enum DismissPersonCredentialOfferDispatchAction {
-  PERSON_CREDENTIAL_OFFER_DISMISSED = 'dismissPersonCredentialOffer/personCredentialOfferDismissed',
+enum AttestationAuthentificationDispatchAction {
+  ATTESTATION_AUTHENTIFICATION_DISMISS = 'attestationAuthentification/attestationAuthentificationDismiss',
+  ATTESTATION_AUTHENTIFICATION_SEEN_ON_HOME = 'attestationAuthentification/attestationAuthentificationSeenOnHome',
 }
 
-export type BCDispatchAction = DeveloperDispatchAction | DismissPersonCredentialOfferDispatchAction
+export type BCDispatchAction = DeveloperDispatchAction | AttestationAuthentificationDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
-  ...DismissPersonCredentialOfferDispatchAction,
+  ...AttestationAuthentificationDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -63,20 +68,38 @@ const developerState: Developer = {
   remoteLoggingEnabled: false,
 }
 
-const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
-  personCredentialOfferDismissed: false,
-}
-
 export enum BCLocalStorageKeys {
-  PersonCredentialOfferDismissed = 'PersonCredentialOfferDismissed',
+  AttestationAuthentification = 'AttestationAuthentification',
   Environment = 'Environment',
   GenesisTransactions = 'GenesisTransactions',
 }
 
-export const initialState: BCState = {
-  ...defaultState,
-  developer: developerState,
-  dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
+const getInitialAttestationAuthentification = async (): Promise<AttestationAuthentification> => {
+  const attestationAuthentificationString = await AsyncStorage.getItem(BCLocalStorageKeys.AttestationAuthentification)
+  let attestationAuthentification = {}
+  if (attestationAuthentificationString) {
+    attestationAuthentification = JSON.parse(attestationAuthentificationString) as AttestationAuthentification
+  } else {
+    attestationAuthentification = {
+      id: 'custom',
+      type: 'CustomNotification',
+      createdAt: new Date(),
+      isDismissed: false,
+      seenOnHome: false,
+    }
+    AsyncStorage.setItem(BCLocalStorageKeys.AttestationAuthentification, JSON.stringify(attestationAuthentification))
+  }
+
+  return attestationAuthentification as AttestationAuthentification
+}
+
+export const getInitialState = async (): Promise<BCState> => {
+  const attestationAuthentification = await getInitialAttestationAuthentification()
+  return {
+    ...defaultState,
+    developer: developerState,
+    attestationAuthentification,
+  }
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
@@ -89,16 +112,26 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       AsyncStorage.setItem(BCLocalStorageKeys.Environment, JSON.stringify(developer.environment))
       return { ...state, developer }
     }
-    case DismissPersonCredentialOfferDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED: {
-      const { personCredentialOfferDismissed } = (action?.payload || []).pop()
-      const dismissPersonCredentialOffer = { ...state.dismissPersonCredentialOffer, personCredentialOfferDismissed }
-      const newState = { ...state, dismissPersonCredentialOffer }
+    case AttestationAuthentificationDispatchAction.ATTESTATION_AUTHENTIFICATION_DISMISS: {
+      const { isDismissed } = (action?.payload || []).pop()
+      const attestationAuthentification = { ...state.attestationAuthentification, isDismissed: isDismissed }
+
+      const newState = { ...state, attestationAuthentification }
 
       // save to storage so notification doesn't reapper on app restart
       AsyncStorage.setItem(
-        BCLocalStorageKeys.PersonCredentialOfferDismissed,
-        JSON.stringify(newState.dismissPersonCredentialOffer)
+        BCLocalStorageKeys.AttestationAuthentification,
+        JSON.stringify(newState.attestationAuthentification)
       )
+      return newState
+    }
+    case AttestationAuthentificationDispatchAction.ATTESTATION_AUTHENTIFICATION_SEEN_ON_HOME: {
+      const { isSeenOnHome } = (action?.payload || []).pop()
+      const attestationAuthentification = { ...state.attestationAuthentification, isSeenOnHome: isSeenOnHome }
+
+      const newState = { ...state, attestationAuthentification }
+      // save to storage so notification doesn't reapper on app restart
+      AsyncStorage.setItem(BCLocalStorageKeys.AttestationAuthentification, JSON.stringify(attestationAuthentification))
       return newState
     }
     default:

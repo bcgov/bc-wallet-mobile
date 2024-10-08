@@ -49,9 +49,9 @@ import {
   BCDispatchAction,
   BCLocalStorageKeys,
   BCState,
-  DismissPersonCredentialOffer,
+  AttestationAuthentification,
   IASEnvironment,
-  initialState,
+  getInitialState,
 } from './src/store'
 
 export interface AppState {
@@ -177,8 +177,8 @@ export class AppContainer implements Container {
         onCloseAction: (dispatch?: React.Dispatch<ReducerAction<string>>) => {
           if (dispatch) {
             dispatch({
-              type: BCDispatchAction.PERSON_CREDENTIAL_OFFER_DISMISSED,
-              payload: [{ personCredentialOfferDismissed: true }],
+              type: BCDispatchAction.ATTESTATION_AUTHENTIFICATION_DISMISS,
+              payload: [{ isDismissed: true }],
             })
           }
         },
@@ -198,13 +198,14 @@ export class AppContainer implements Container {
           updateVal(dataAsJSON)
         }
       }
+      const initialState = await getInitialState()
 
       let loginAttempt = initialState.loginAttempt
       let preferences = initialState.preferences
       let migration = initialState.migration
       let tours = initialState.tours
       let onboarding = initialState.onboarding
-      let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
+      let attestationAuthentificationDissmissed = initialState.attestationAuthentification
       let { environment } = initialState.developer
 
       await Promise.all([
@@ -217,9 +218,9 @@ export class AppContainer implements Container {
         loadState<MigrationState>(LocalStorageKeys.Migration, (val) => (migration = val)),
         loadState<ToursState>(LocalStorageKeys.Tours, (val) => (tours = val)),
         loadState<OnboardingState>(LocalStorageKeys.Onboarding, (val) => (onboarding = val)),
-        loadState<DismissPersonCredentialOffer>(
-          BCLocalStorageKeys.PersonCredentialOfferDismissed,
-          (val) => (personCredOfferDissmissed = val)
+        loadState<AttestationAuthentification>(
+          BCLocalStorageKeys.AttestationAuthentification,
+          (val) => (attestationAuthentificationDissmissed = val)
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
       ])
@@ -230,7 +231,10 @@ export class AppContainer implements Container {
         migration: { ...initialState.migration, ...migration },
         tours: { ...initialState.tours, ...tours },
         onboarding: { ...initialState.onboarding, ...onboarding, didCompleteTutorial: true },
-        dismissPersonCredentialOffer: { ...initialState.dismissPersonCredentialOffer, ...personCredOfferDissmissed },
+        attestationAuthentification: {
+          ...initialState.attestationAuthentification,
+          ...attestationAuthentificationDissmissed,
+        },
         developer: {
           ...initialState.developer,
           environment,

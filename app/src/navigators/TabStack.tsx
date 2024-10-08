@@ -1,3 +1,4 @@
+import { useAgent } from '@credo-ts/react-hooks'
 import {
   AttachTourStep,
   CredentialStack,
@@ -5,13 +6,14 @@ import {
   TOKENS,
   testIdWithKey,
   useServices,
+  useStore,
   useTheme,
 } from '@hyperledger/aries-bifold-core'
 import { TourID } from '@hyperledger/aries-bifold-core/App/types/tour'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import React from 'react'
+import React, { ReducerAction, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Text, useWindowDimensions, View, StyleSheet, ViewStyle } from 'react-native'
+import { Text, useWindowDimensions, View, StyleSheet, ViewStyle, AppState } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { SvgProps } from 'react-native-svg'
 
@@ -19,14 +21,21 @@ import AtestationTabIcon from '../assets/img/icons/atestation.svg'
 import HomeTabIcon from '../assets/img/icons/home.svg'
 import NotificationTabIcon from '../assets/img/icons/notification.svg'
 import PlusTabIcon from '../assets/img/icons/plus.svg'
+import { NotificationReturnType, NotificationsInputProps } from '../hooks/notifications'
+import { notificationsSeenOnHome } from '../utils/notificationsSeenOnHome'
 
 import PlusStack from './PlusStack'
 import { TabStackParams, TabStacks } from './navigators'
 
 const TabStack: React.FC = () => {
   const { fontScale } = useWindowDimensions()
+  const { agent } = useAgent()
+  const [, dispatch] = useStore()
+  const appState = useRef(AppState.currentState)
+
   const [{ useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
-  const notifications = useNotifications({})
+
+  const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
   const { t } = useTranslation()
   const Tab = createBottomTabNavigator<TabStackParams>()
   const { ColorPallet, TabTheme, TextTheme } = useTheme()
@@ -61,6 +70,27 @@ const TabStack: React.FC = () => {
     },
     { name: TabStacks.OptionsPlusStack, component: PlusStack, label: t('TabStack.OptionsPlus'), icon: PlusTabIcon },
   ]
+
+  useEffect(() => {
+    AppState.addEventListener('change', (nextAppState) => {
+      if (appState.current === 'active' && ['inactive', 'background'].includes(nextAppState)) {
+        if (nextAppState === 'inactive') {
+          // on iOS this happens when any OS prompt is shown. We
+          // don't want to lock the user out in this case or preform
+          // background tasks.
+          return
+        }
+        if (agent) {
+          notificationsSeenOnHome(
+            agent,
+            notifications as NotificationReturnType,
+            // eslint-disable-next-line
+            dispatch as React.Dispatch<ReducerAction<any>>
+          )
+        }
+      }
+    })
+  }, [notifications])
 
   const TabBarIcon = (props: {
     focused: boolean

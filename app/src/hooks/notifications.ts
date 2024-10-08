@@ -17,6 +17,7 @@ import {
   basicMessageCustomMetadata,
   credentialCustomMetadata,
 } from '@hyperledger/aries-bifold-core/App/types/metadata'
+import { CustomNotificationRecord } from '@hyperledger/aries-bifold-core/App/types/notification'
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
 import { useEffect, useState } from 'react'
 
@@ -31,15 +32,26 @@ interface CustomNotification {
   id: string
 }
 
-export type NotificationsInputProps = {
-  openIDUri?: string
+export interface CustomMetadata extends ProofCustomMetadata {
+  seenOnHome?: boolean
 }
 
-export type NotificationReturnType = Array<
-  BasicMessageRecord | CredentialRecord | ProofExchangeRecord | CustomNotification | SdJwtVcRecord | W3cCredentialRecord
->
+export type NotificationsInputProps = {
+  openIDUri?: string
+  isHome?: boolean
+}
 
-export const useNotifications = ({ openIDUri }: NotificationsInputProps): NotificationReturnType => {
+export type NotificationType =
+  | BasicMessageRecord
+  | CredentialRecord
+  | ProofExchangeRecord
+  | CustomNotificationRecord
+  | SdJwtVcRecord
+  | W3cCredentialRecord
+
+export type NotificationReturnType = Array<NotificationType>
+
+export const useNotifications = ({ openIDUri, isHome = true }: NotificationsInputProps): NotificationReturnType => {
   const { records: basicMessages } = useBasicMessages()
   const [notifications, setNotifications] = useState([])
 
@@ -58,7 +70,7 @@ export const useNotifications = ({ openIDUri }: NotificationsInputProps): Notifi
     // get all unseen messages
     const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg) => {
       const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
-      return !meta?.seen
+      return !meta?.seen && (!meta?.seenOnHome || !isHome)
     })
 
     // add one unseen message per contact to notifications
@@ -71,10 +83,20 @@ export const useNotifications = ({ openIDUri }: NotificationsInputProps): Notifi
       }
     })
 
+    const receivedOffers: CredentialRecord[] = offers.filter((offer) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const metadata = offer.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata
+      return !metadata?.seenOnHome || !isHome
+    })
+
     const revoked = credsDone.filter((cred: CredentialRecord) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const metadata = cred!.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata
-      if (cred?.revocationNotification && metadata?.revoked_seen == undefined) {
+      if (
+        cred?.revocationNotification &&
+        metadata?.revoked_seen == undefined &&
+        (metadata?.seenOnHome == undefined || !isHome)
+      ) {
         return cred
       }
     })
@@ -83,17 +105,27 @@ export const useNotifications = ({ openIDUri }: NotificationsInputProps): Notifi
     const credentialDefinitionIDs = credentials.map(
       (c) => c.metadata.data[AnonCredsCredentialMetadataKey].credentialDefinitionId as string
     )
-    const invitationDate = new Date()
+
+    const invitationDate = new Date(store.attestationAuthentification.createdAt)
     const custom: CustomNotification[] =
       showPersonCredentialSelector(credentialDefinitionIDs) &&
-      !store.dismissPersonCredentialOffer.personCredentialOfferDismissed
-        ? [{ type: 'CustomNotification', createdAt: invitationDate, id: 'custom' }]
+      !store.attestationAuthentification.isDismissed &&
+      (!store.attestationAuthentification.isSeenOnHome || !isHome)
+        ? [
+            {
+              id: store.attestationAuthentification.id,
+              type: store.attestationAuthentification.type as 'CustomNotification',
+              createdAt: invitationDate,
+            },
+          ]
         : []
+
     const proofs = nonAttestationProofs.filter((proof) => {
       return (
         ![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) ||
         (proof.isVerified !== undefined &&
-          !(proof.metadata.data[ProofMetadata.customMetadata] as ProofCustomMetadata)?.details_seen)
+          !(proof.metadata.data[ProofMetadata.customMetadata] as CustomMetadata)?.details_seen &&
+          (!(proof.metadata.data[ProofMetadata.customMetadata] as CustomMetadata)?.seenOnHome || !isHome))
       )
     })
 
@@ -102,19 +134,19 @@ export const useNotifications = ({ openIDUri }: NotificationsInputProps): Notifi
       openIDCreds.push(openIDCredReceived)
     }
 
-    const notif = [...messagesToShow, ...offers, ...proofs, ...revoked, ...openIDCreds].sort(
+    const notif = [...messagesToShow, ...custom, ...receivedOffers, ...proofs, ...revoked, ...openIDCreds].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
 
-    const notificationsWithCustom = [...custom, ...notif]
-    setNotifications(notificationsWithCustom as never[])
+    setNotifications(isHome ? (notif.splice(0, 5) as never[]) : (notif as never[]))
   }, [
     offers,
     credsReceived,
     credsDone,
     basicMessages,
     nonAttestationProofs,
-    store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
+    store.attestationAuthentification.isDismissed,
+    store.attestationAuthentification.isSeenOnHome,
   ])
 
   useEffect(() => {
