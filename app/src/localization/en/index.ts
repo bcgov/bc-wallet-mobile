@@ -194,6 +194,7 @@ const translation = {
     Credentials: 'Credentials',
     CredentialDetails: 'Credential Details',
     Notifications: 'Notifications',
+    History: 'History',
     CredentialOffer: 'Credential Offer',
     ProofChangeCredential: 'Choose a credential',
     ProofRequest: 'Proof Request',
@@ -555,6 +556,15 @@ const translation = {
   },
   Notifications: {
     Dismiss: 'Delete',
+  },
+  Activities: {
+    Timing: {
+      Today: 'Today',
+      ThisWeek: 'This week',
+      LastWeek: 'Last week',
+      Older: 'Older',
+    },
+    FooterNothingElse: 'There is nothing else',
   },
   Scan: {
     SuccessfullyAcceptedConnection: 'Successfully Accepted Connection',

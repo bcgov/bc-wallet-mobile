@@ -26,6 +26,7 @@ export enum Stacks {
   SettingsStack = 'Settings Stack',
   HelpCenterStack = 'Help Center Stack',
   AboutStack = 'About Stack',
+  ActivitiesStack = 'Activities Stack',
 }
 
 export enum TabStacks {

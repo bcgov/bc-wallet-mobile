@@ -24,6 +24,7 @@ import PlusTabIcon from '../assets/img/icons/plus.svg'
 import { NotificationReturnType, NotificationsInputProps } from '../hooks/notifications'
 import { notificationsSeenOnHome } from '../utils/notificationsSeenOnHome'
 
+import ActivitiesStack from './ActivitiesStack'
 import PlusStack from './PlusStack'
 import { TabStackParams, TabStacks } from './navigators'
 
@@ -58,7 +59,7 @@ const TabStack: React.FC = () => {
     { name: TabStacks.HomeStack, component: HomeStack, label: t('TabStack.Home'), icon: HomeTabIcon },
     {
       name: TabStacks.ActivitiesStack,
-      component: CredentialStack,
+      component: ActivitiesStack,
       label: t('TabStack.Activities'),
       icon: NotificationTabIcon,
     },

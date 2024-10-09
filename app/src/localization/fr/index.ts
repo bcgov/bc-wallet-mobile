@@ -501,6 +501,15 @@ const translation = {
   Notifications: {
     Dismiss: 'Supprimer',
   },
+  Activities: {
+    Timing: {
+      Today: 'Aujourd’hui',
+      ThisWeek: 'Cette semaine',
+      LastWeek: 'La semaine dernière',
+      Older: 'Plus ancien',
+    },
+    FooterNothingElse: "Il n'y a rien d'autre",
+  },
   PrivacyPolicy: {
     Title: 'Politique de confidentialité',
     CameraDisclosure:
@@ -715,6 +724,7 @@ const translation = {
     OptionsPlus: "Plus d'options",
     CredentialDetails: 'Détails des attestations',
     Notifications: 'Notifications',
+    History: 'Historique',
     CredentialOffer: "Proposition d'attestation",
     ProofRequest: 'Demande de preuve',
     ProofChangeCredential: "Changer l'attestation",
