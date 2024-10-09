@@ -431,7 +431,7 @@ const Splash = () => {
             enableProxy: store.developer.enableProxy,
             proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
             proxyCacheSettings: {
-              allowCaching: true,
+              allowCaching: false,
               cacheDurationInSeconds: 60 * 60 * 24 * 7,
             },
           }),
