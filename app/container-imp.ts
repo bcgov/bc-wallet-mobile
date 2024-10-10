@@ -319,6 +319,7 @@ export class AppContainer implements Container {
           {
             component: PersonCredentialLoading,
             name: 'PersonCredentialLoading',
+            stackOptions: { headerShown: false },
           },
         ],
         pageTitle: 'PersonCredential.PageTitle',

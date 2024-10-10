@@ -13,20 +13,12 @@ import {
   BifoldError,
   AttestationEventTypes,
   useServices,
+  Stacks,
 } from '@hyperledger/aries-bifold-core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import {
-  DeviceEventEmitter,
-  EmitterSubscription,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native'
+import { DeviceEventEmitter, EmitterSubscription, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import PersonCredentialSpinner from '../components/PersonCredentialSpinner'
 import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
@@ -91,9 +83,15 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
 
   // when a person credential offer is received, show the
   // offer screen to the user.
-  const goToCredentialOffer = useCallback((credentialId: string) => {
-    navigation.replace(Screens.CredentialOffer, { credentialId })
-  }, [navigation])
+  const goToCredentialOffer = useCallback(
+    (credentialId: string) => {
+      navigation.getParent()?.navigate(Stacks.ConnectionStack, {
+        screen: Screens.Connection,
+        params: { credentialId },
+      })
+    },
+    [navigation]
+  )
 
   useEffect(() => {
     const handleFailedAttestation = (error: BifoldError) => {
@@ -152,7 +150,13 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       .catch((error) => {
         logger.error('Completed service card authentication with error, error: ', error.message)
       })
-  }, [remoteAgentDetails, didCompleteAttestationProofRequest, logger, navigation, store.developer.environment.iasPortalUrl])
+  }, [
+    remoteAgentDetails,
+    didCompleteAttestationProofRequest,
+    logger,
+    navigation,
+    store.developer.environment.iasPortalUrl,
+  ])
 
   useEffect(() => {
     for (const credential of receivedCredentialOffers) {
@@ -170,31 +174,29 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   }, [navigation])
 
   return (
-    <Modal transparent animationType={'slide'}>
-      <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground }}>
-        <ScrollView style={styles.container}>
-          <View style={styles.messageContainer}>
-            <Text style={[TextTheme.modalHeadingThree, styles.messageText]} testID={testIdWithKey('RequestProcessing')}>
-              {t('ProofRequest.RequestProcessing')}
-            </Text>
-          </View>
-
-          <View style={styles.image}>
-            <PersonCredentialSpinner />
-          </View>
-          <Text style={[TextTheme.normal, styles.messageText]}>This can take a few seconds</Text>
-        </ScrollView>
-        <View style={styles.controlsContainer}>
-          <Button
-            title={t('Global.GoBack')}
-            accessibilityLabel={t('Global.GoBack')}
-            testID={testIdWithKey('BackToPersonScreen')}
-            onPress={onDismissModalTouched}
-            buttonType={ButtonType.ModalSecondary}
-          />
+    <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground }}>
+      <ScrollView style={styles.container}>
+        <View style={styles.messageContainer}>
+          <Text style={[TextTheme.modalHeadingThree, styles.messageText]} testID={testIdWithKey('RequestProcessing')}>
+            {t('ProofRequest.RequestProcessing')}
+          </Text>
         </View>
-      </SafeAreaView>
-    </Modal>
+
+        <View style={styles.image}>
+          <PersonCredentialSpinner />
+        </View>
+        <Text style={[TextTheme.normal, styles.messageText]}>This can take a few seconds</Text>
+      </ScrollView>
+      <View style={styles.controlsContainer}>
+        <Button
+          title={t('Global.GoBack')}
+          accessibilityLabel={t('Global.GoBack')}
+          testID={testIdWithKey('BackToPersonScreen')}
+          onPress={onDismissModalTouched}
+          buttonType={ButtonType.ModalSecondary}
+        />
+      </View>
+    </SafeAreaView>
   )
 }
 

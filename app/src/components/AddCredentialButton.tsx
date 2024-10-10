@@ -1,4 +1,4 @@
-import { testIdWithKey, HeaderButton, ButtonLocation } from '@hyperledger/aries-bifold-core'
+import { testIdWithKey, IconButton, ButtonLocation } from '@hyperledger/aries-bifold-core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter } from 'react-native'
@@ -13,7 +13,7 @@ const AddCredentialButton = () => {
   }, [])
 
   return (
-    <HeaderButton
+    <IconButton
       buttonLocation={ButtonLocation.Right}
       accessibilityLabel={t('Credentials.AddCredential')}
       testID={testIdWithKey('AddCredential')}

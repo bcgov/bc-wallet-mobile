@@ -1,5 +1,5 @@
 PODS:
-  - anoncreds (0.2.2):
+  - anoncreds (0.2.4):
     - React
     - React-callinvoker
     - React-Core
@@ -445,7 +445,7 @@ PODS:
   - React-jsinspector (0.72.5)
   - React-logger (0.72.5):
     - glog
-  - "react-native-attestation (1.0.0-alpha.338+92b87193)":
+  - "react-native-attestation (1.0.0-alpha.342+d7dbeef6)":
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
   - react-native-config (1.5.0):
@@ -891,7 +891,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  anoncreds: c709906b5a3caaf6bbe871646e6c16b522c6531d
+  anoncreds: 045f191123bb20d7dcdc2f7c19df57ae30c427f6
   aries-askar: 3a78d5cfc8faedbfc55a9ff35e2309fc4574a147
   boost: 57d2868c099736d80fcd648bf211b4431e51a558
   CatCrypto: a477899b6be4954e75be4897e732da098cc0a5a8
@@ -931,7 +931,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: ff70a72027dea5cc7d71cfcc6fad7f599f63987a
   React-jsinspector: aef73cbd43b70675f572214d10fa438c89bf11ba
   React-logger: 2e4aee3e11b3ec4fa6cfd8004610bbb3b8d6cca4
-  react-native-attestation: d46ae990ce701264d514e6db2fa3bfc5f22e8e59
+  react-native-attestation: 2fce2f60bd1eaa80040509b63b941a16e44e4e2d
   react-native-config: 5330c8258265c1e5fdb8c009d2cabd6badd96727
   react-native-encrypted-storage: db300a3f2f0aba1e818417c1c0a6be549038deb7
   react-native-get-random-values: a6ea6a8a65dc93e96e24a11105b1a9c8cfe1d72a
