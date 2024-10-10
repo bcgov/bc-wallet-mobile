@@ -128,7 +128,7 @@ export function getBCAgentModules({
       registries: [new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings })],
     })
     modules.dids = new DidsModule({
-      resolvers: [new IndyVdrProxyDidResolver(proxyBaseUrl)],
+      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl })],
     })
   }
 
