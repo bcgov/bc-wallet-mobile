@@ -49,7 +49,8 @@ const Plus: React.FC = () => {
     },
     scroll: {
       flexGrow: 1,
-      paddingHorizontal: 20,
+      paddingHorizontal: 16,
+      paddingVertical: 24,
     },
     sectionRow: {
       flexDirection: 'row',

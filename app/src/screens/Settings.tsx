@@ -3,12 +3,12 @@ import { i18n, Locales } from '@hyperledger/aries-bifold-core/App/localization'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native'
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native'
 import { getVersion } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 
-import { Screens, SettingStackParams } from '../navigators/navigators'
+import { Screens, SettingStackParams, Stacks } from '../navigators/navigators'
 import { BCState } from '../store'
 
 import Developer from './Developer'
@@ -74,6 +74,7 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
+      gap: 8,
     },
     rowTitle: {
       ...TextTheme.headingFour,
@@ -117,19 +118,11 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
     subContent,
     rowIcon,
   }: SectionRowProps) => (
-    <>
+    <TouchableOpacity accessibilityLabel={accessibilityLabel} testID={testID} onPress={onPress}>
       <View style={[styles.section]}>
-        <View style={{ flexDirection: 'row' }}>
+        <View style={styles.sectionRow}>
           <Text style={styles.rowTitle}>{title}</Text>
-          <Pressable
-            onPress={onPress}
-            accessible={true}
-            accessibilityLabel={accessibilityLabel}
-            testID={testID}
-            style={styles.sectionRow}
-          >
-            {children}
-          </Pressable>
+          {children}
           {rowIcon}
         </View>
         {subContent}
@@ -139,9 +132,9 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
           <View style={[styles.rowSeparator]}></View>
         </View>
       )}
-    </>
+    </TouchableOpacity>
   )
-  const arrowIcon = <MaterialIcon style={{ paddingLeft: 10 }} name={'keyboard-arrow-right'} size={iconSize} />
+  const arrowIcon = <MaterialIcon name={'keyboard-arrow-right'} size={iconSize} />
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -173,7 +166,11 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
           title={t('Settings.MyPin')}
           accessibilityLabel={t('Settings.MyPin')}
           testID={testIdWithKey(t('Settings.MyPin').toLowerCase())}
-          onPress={() => navigation.navigate(Screens.CreatePIN)}
+          onPress={() =>
+            navigation
+              .getParent()
+              ?.navigate(Stacks.SettingsStack, { screen: Screens.CreatePIN, params: { updatePin: true } })
+          }
           showRowSeparator
           rowIcon={arrowIcon}
         >
