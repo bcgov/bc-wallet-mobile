@@ -3,7 +3,6 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import { BCState } from '../store'
 
@@ -31,11 +30,12 @@ const Settings: React.FC = () => {
     },
     section: {
       backgroundColor: SettingsTheme.groupBackground,
-      padding: 24,
+      paddingTop: 24,
     },
     sectionHeader: {
       flexDirection: 'row',
       alignItems: 'center',
+      marginTop: 8,
       paddingBottom: 0,
     },
     sectionSeparator: {
@@ -54,8 +54,8 @@ const Settings: React.FC = () => {
     },
     rowSeparator: {
       borderBottomWidth: 1,
-      borderBottomColor: ColorPallet.brand.primaryBackground,
-      marginHorizontal: 24,
+      borderBottomColor: ColorPallet.brand.secondary,
+      marginTop: 10,
     },
     logo: {
       height: 64,
@@ -72,10 +72,9 @@ const Settings: React.FC = () => {
     setEnvironmentModalVisible(false)
   }
 
-  const SectionHeader = ({ icon, title }: { icon: string; title: string }): JSX.Element => (
+  const SectionHeader = ({ title }: { title: string }): JSX.Element => (
     <>
       <View style={[styles.section, styles.sectionHeader]}>
-        <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
         <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
       </View>
     </>
@@ -211,10 +210,12 @@ const Settings: React.FC = () => {
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </Modal>
       <ScrollView style={styles.container}>
+        <SectionHeader title={t('Settings.Developer')} />
         <SectionRow
           title={t('Developer.DeveloperMode')}
           accessibilityLabel={t('Developer.Toggle')}
           testID={testIdWithKey('ToggleDeveloper')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -225,11 +226,12 @@ const Settings: React.FC = () => {
           />
         </SectionRow>
         <View style={[styles.sectionSeparator]}></View>
-        <SectionHeader icon={'apartment'} title={'IAS'} />
+
         <SectionRow
           title={t('Developer.Environment')}
           accessibilityLabel={t('Developer.Environment')}
           testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
+          showRowSeparator={true}
           onPress={() => {
             setEnvironmentModalVisible(true)
           }}
@@ -315,7 +317,6 @@ const Settings: React.FC = () => {
           title={t('Settings.PreventAutoLock')}
           accessibilityLabel={t('Settings.TogglePreventAutoLock')}
           testID={testIdWithKey('TogglePreventAutoLockSwitch')}
-          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}

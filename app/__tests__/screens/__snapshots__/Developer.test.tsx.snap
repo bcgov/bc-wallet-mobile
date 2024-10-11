@@ -31,7 +31,40 @@ exports[`Developer Screen screen renders correctly 1`] = `
           [
             {
               "backgroundColor": "#313132",
-              "padding": 24,
+              "paddingTop": 24,
+            },
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "marginTop": 8,
+              "paddingBottom": 0,
+            },
+          ]
+        }
+      >
+        <Text
+          style={
+            [
+              {
+                "color": "#FFFFFF",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              {
+                "flexShrink": 1,
+              },
+            ]
+          }
+        >
+          Settings.Developer
+        </Text>
+      </View>
+      <View
+        style={
+          [
+            {
+              "backgroundColor": "#313132",
+              "paddingTop": 24,
             },
           ]
         }
@@ -123,6 +156,25 @@ exports[`Developer Screen screen renders correctly 1`] = `
       </View>
       <View
         style={
+          {
+            "backgroundColor": "#313132",
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "borderBottomColor": "#FFFFFFFF",
+                "borderBottomWidth": 1,
+                "marginTop": 10,
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
           [
             {
               "marginBottom": 10,
@@ -135,63 +187,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
           [
             {
               "backgroundColor": "#313132",
-              "padding": 24,
-            },
-            {
-              "alignItems": "center",
-              "flexDirection": "row",
-              "paddingBottom": 0,
-            },
-          ]
-        }
-      >
-        <Text
-          allowFontScaling={false}
-          selectable={false}
-          style={
-            [
-              {
-                "color": undefined,
-                "fontSize": 24,
-              },
-              {
-                "color": "#FFFFFF",
-                "marginRight": 10,
-              },
-              {
-                "fontFamily": "Material Icons",
-                "fontStyle": "normal",
-                "fontWeight": "normal",
-              },
-              {},
-            ]
-          }
-        >
-          
-        </Text>
-        <Text
-          style={
-            [
-              {
-                "color": "#FFFFFF",
-                "fontSize": 26,
-                "fontWeight": "bold",
-              },
-              {
-                "flexShrink": 1,
-              },
-            ]
-          }
-        >
-          IAS
-        </Text>
-      </View>
-      <View
-        style={
-          [
-            {
-              "backgroundColor": "#313132",
-              "padding": 24,
+              "paddingTop": 24,
             },
           ]
         }
@@ -278,6 +274,25 @@ exports[`Developer Screen screen renders correctly 1`] = `
       </View>
       <View
         style={
+          {
+            "backgroundColor": "#313132",
+          }
+        }
+      >
+        <View
+          style={
+            [
+              {
+                "borderBottomColor": "#FFFFFFFF",
+                "borderBottomWidth": 1,
+                "marginTop": 10,
+              },
+            ]
+          }
+        />
+      </View>
+      <View
+        style={
           [
             {
               "marginBottom": 10,
@@ -290,7 +305,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
           [
             {
               "backgroundColor": "#313132",
-              "padding": 24,
+              "paddingTop": 24,
             },
           ]
         }
@@ -391,9 +406,9 @@ exports[`Developer Screen screen renders correctly 1`] = `
           style={
             [
               {
-                "borderBottomColor": "#000000",
+                "borderBottomColor": "#FFFFFFFF",
                 "borderBottomWidth": 1,
-                "marginHorizontal": 24,
+                "marginTop": 10,
               },
             ]
           }
@@ -404,7 +419,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
           [
             {
               "backgroundColor": "#313132",
-              "padding": 24,
+              "paddingTop": 24,
             },
           ]
         }
@@ -505,9 +520,9 @@ exports[`Developer Screen screen renders correctly 1`] = `
           style={
             [
               {
-                "borderBottomColor": "#000000",
+                "borderBottomColor": "#FFFFFFFF",
                 "borderBottomWidth": 1,
-                "marginHorizontal": 24,
+                "marginTop": 10,
               },
             ]
           }
@@ -518,7 +533,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
           [
             {
               "backgroundColor": "#313132",
-              "padding": 24,
+              "paddingTop": 24,
             },
           ]
         }
@@ -619,9 +634,9 @@ exports[`Developer Screen screen renders correctly 1`] = `
           style={
             [
               {
-                "borderBottomColor": "#000000",
+                "borderBottomColor": "#FFFFFFFF",
                 "borderBottomWidth": 1,
-                "marginHorizontal": 24,
+                "marginTop": 10,
               },
             ]
           }
@@ -632,7 +647,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
           [
             {
               "backgroundColor": "#313132",
-              "padding": 24,
+              "paddingTop": 24,
             },
           ]
         }
@@ -733,9 +748,9 @@ exports[`Developer Screen screen renders correctly 1`] = `
           style={
             [
               {
-                "borderBottomColor": "#000000",
+                "borderBottomColor": "#FFFFFFFF",
                 "borderBottomWidth": 1,
-                "marginHorizontal": 24,
+                "marginTop": 10,
               },
             ]
           }
@@ -746,7 +761,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
           [
             {
               "backgroundColor": "#313132",
-              "padding": 24,
+              "paddingTop": 24,
             },
           ]
         }
@@ -847,9 +862,9 @@ exports[`Developer Screen screen renders correctly 1`] = `
           style={
             [
               {
-                "borderBottomColor": "#000000",
+                "borderBottomColor": "#FFFFFFFF",
                 "borderBottomWidth": 1,
-                "marginHorizontal": 24,
+                "marginTop": 10,
               },
             ]
           }
@@ -860,7 +875,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
           [
             {
               "backgroundColor": "#313132",
-              "padding": 24,
+              "paddingTop": 24,
             },
           ]
         }
@@ -949,25 +964,6 @@ exports[`Developer Screen screen renders correctly 1`] = `
             />
           </View>
         </View>
-      </View>
-      <View
-        style={
-          {
-            "backgroundColor": "#313132",
-          }
-        }
-      >
-        <View
-          style={
-            [
-              {
-                "borderBottomColor": "#000000",
-                "borderBottomWidth": 1,
-                "marginHorizontal": 24,
-              },
-            ]
-          }
-        />
       </View>
     </View>
   </RCTScrollView>

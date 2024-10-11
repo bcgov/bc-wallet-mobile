@@ -13,7 +13,6 @@ import {
   NotificationStack,
   ProofRequestStack,
   Screens,
-  SettingStack,
   Stacks,
   TOKENS,
   TabStacks,
@@ -40,6 +39,8 @@ import {
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AppState, DeviceEventEmitter } from 'react-native'
+
+import SettingStack from '../navigators/SettingStack'
 
 import TabStack from './TabStack'
 import { RootStackParams } from './navigators'

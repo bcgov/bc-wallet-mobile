@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next'
 
 import Plus from '../screens/Plus'
 
-import { Screens, OptionsPlusStackParams } from './navigators'
+import SettingStack from './SettingStack'
+import { Screens, OptionsPlusStackParams, Stacks } from './navigators'
 
 const PlusStack: React.FC = () => {
   const StackPlus = createStackNavigator<OptionsPlusStackParams>()
@@ -20,7 +21,14 @@ const PlusStack: React.FC = () => {
         name={Screens.OptionsPlus}
         component={Plus}
         options={{
-          title: t('TabStack.OptionsPlus'),
+          title: t('Screens.OptionsPlus'),
+        }}
+      />
+      <StackPlus.Screen
+        name={Stacks.SettingsStack}
+        component={SettingStack}
+        options={{
+          headerShown: false,
         }}
       />
     </StackPlus.Navigator>

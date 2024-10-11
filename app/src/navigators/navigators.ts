@@ -10,7 +10,6 @@ import {
   DeliveryStackParams,
   HomeStackParams,
   ProofRequestsStackParams,
-  SettingStackParams,
 } from '@hyperledger/aries-bifold-core/App/types/navigators'
 import { HistoryStackParams } from '@hyperledger/aries-bifold-core/lib/typescript/App/types/navigators'
 import { NavigatorScreenParams } from '@react-navigation/native'
@@ -20,6 +19,12 @@ export enum Screens {
   Legal = 'Legal',
   OptionsPlus = 'OptionsPlus',
   Activities = 'Activities',
+  Settings = 'Settings',
+  Language = 'Language',
+  HistoryPage = 'History',
+  Notification = 'Notifications',
+  CreatePIN = 'Create a PIN',
+  UseBiometry = 'Use Biometry',
 }
 
 export enum Stacks {
@@ -61,13 +66,22 @@ export type TermsStackParams = {
   [Screens.Legal]: undefined
 }
 
+export type SettingStackParams = {
+  [Screens.Settings]: undefined
+  [Screens.Language]: undefined
+  [Screens.HistoryPage]: undefined
+  [Screens.Notification]: undefined
+  [Screens.CreatePIN]: undefined
+  [Screens.UseBiometry]: undefined
+}
+
 export type ActivitiesStackParams = {
   [Screens.Activities]: undefined
 }
 
 export type OptionsPlusStackParams = {
   [Screens.OptionsPlus]: undefined
-  [BifoldStacks.SettingStack]: undefined
+  [Stacks.SettingsStack]: NavigatorScreenParams<SettingStackParams>
   [Stacks.HelpCenterStack]: undefined
   [Stacks.AboutStack]: undefined
 }
