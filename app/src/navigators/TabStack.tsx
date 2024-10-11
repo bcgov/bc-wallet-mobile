@@ -104,7 +104,10 @@ const TabStack: React.FC = () => {
     return (
       <AttachTourStep tourID={TourID.HomeTour} index={1}>
         <View style={tabBarIconContainerStyles(props.focused)}>
-          <props.Icon color={props.focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor} />
+          <props.Icon
+            color={props.focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
+            height={24}
+          />
           {showLabels && (
             <Text
               style={{

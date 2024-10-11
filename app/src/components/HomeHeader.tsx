@@ -44,7 +44,7 @@ const HomeHeader = () => {
       height: 170,
       width: '100%',
       backgroundColor: ColorPallet.brand.secondary,
-      justifyContent: 'center',
+      justifyContent: 'flex-end',
       alignItems: 'center',
     },
     ScanText: {

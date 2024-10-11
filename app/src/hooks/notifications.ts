@@ -36,6 +36,14 @@ export interface CustomMetadata extends ProofCustomMetadata {
   seenOnHome?: boolean
 }
 
+export interface BasicMessageCustomMetadata extends basicMessageCustomMetadata {
+  seenOnHome?: boolean
+}
+
+export interface CredentialCustomMetadata extends credentialCustomMetadata {
+  seenOnHome?: boolean
+}
+
 export type NotificationsInputProps = {
   openIDUri?: string
   isHome?: boolean
@@ -69,7 +77,7 @@ export const useNotifications = ({ openIDUri, isHome = true }: NotificationsInpu
   useEffect(() => {
     // get all unseen messages
     const unseenMessages: BasicMessageRecord[] = basicMessages.filter((msg) => {
-      const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as basicMessageCustomMetadata
+      const meta = msg.metadata.get(BasicMessageMetadata.customMetadata) as BasicMessageCustomMetadata
       return !meta?.seen && (!meta?.seenOnHome || !isHome)
     })
 
@@ -85,13 +93,13 @@ export const useNotifications = ({ openIDUri, isHome = true }: NotificationsInpu
 
     const receivedOffers: CredentialRecord[] = offers.filter((offer) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const metadata = offer.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata
+      const metadata = offer.metadata.get(CredentialMetadata.customMetadata) as CredentialCustomMetadata
       return !metadata?.seenOnHome || !isHome
     })
 
     const revoked = credsDone.filter((cred: CredentialRecord) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const metadata = cred!.metadata.get(CredentialMetadata.customMetadata) as credentialCustomMetadata
+      const metadata = cred!.metadata.get(CredentialMetadata.customMetadata) as CredentialCustomMetadata
       if (
         cred?.revocationNotification &&
         metadata?.revoked_seen == undefined &&
