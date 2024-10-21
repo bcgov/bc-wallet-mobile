@@ -47,6 +47,7 @@ import { AttestationRestrictions, autoDisableRemoteLoggingIntervalInMinutes } fr
 import { activate, deactivate, setup, status } from './src/helpers/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from './src/helpers/utils'
 import { useNotifications } from './src/hooks/notifications'
+import VerifiedPersonStack from './src/navigators/VerifiedPersonStack'
 import Developer from './src/screens/Developer'
 import { pages } from './src/screens/OnboardingPages'
 import PersonCredential from './src/screens/PersonCredential'
@@ -330,6 +331,7 @@ export class AppContainer implements Container {
     })
 
     this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, getProofRequestTemplates)
+    this._container.registerInstance(TOKENS.CUSTOM_NAV_STACK_1, VerifiedPersonStack)
     this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
         const data = (await this.storage.getValueForKey(key)) as Type
@@ -344,7 +346,7 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let { environment, remoteDebugging, enableProxy } = initialState.developer
+      let { environment, remoteDebugging, enableProxy, enableAltPersonFlow } = initialState.developer
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -363,6 +365,7 @@ export class AppContainer implements Container {
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
+        loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
       ])
       const state: BCState = {
         ...initialState,
@@ -380,6 +383,7 @@ export class AppContainer implements Container {
             sessionId: remoteDebugging.sessionId,
           },
           enableProxy,
+          enableAltPersonFlow,
         },
       }
 

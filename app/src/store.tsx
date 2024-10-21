@@ -21,6 +21,7 @@ export interface Developer {
   environment: IASEnvironment
   remoteDebugging: RemoteDebuggingState
   enableProxy: boolean
+  enableAltPersonFlow: boolean
 }
 
 export interface DismissPersonCredentialOffer {
@@ -35,6 +36,7 @@ export interface BCState extends BifoldState {
 enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
   TOGGLE_PROXY = 'developer/toggleProxy',
+  TOGGLE_ALT_PERSON_FLOW = 'developer/toggleAltPersonFlow',
 }
 
 enum DismissPersonCredentialOfferDispatchAction {
@@ -86,6 +88,7 @@ const developerState: Developer = {
   enableProxy: false,
   environment: iasEnvironments[0],
   remoteDebugging: remoteDebuggingState,
+  enableAltPersonFlow: false,
 }
 
 const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
@@ -98,6 +101,7 @@ export enum BCLocalStorageKeys {
   GenesisTransactions = 'GenesisTransactions',
   RemoteDebugging = 'RemoteDebugging',
   EnableProxy = 'EnableProxy',
+  EnableAltPersonFlow = 'EnableAltPersonFlow',
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
 }
@@ -141,6 +145,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const developer = { ...state.developer, enableProxy }
 
       PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableProxy, developer.enableProxy)
+
+      return { ...state, developer }
+    }
+    case DeveloperDispatchAction.TOGGLE_ALT_PERSON_FLOW: {
+      const enableAltPersonFlow: boolean = (action?.payload || []).pop() || false
+      const developer = { ...state.developer, enableAltPersonFlow }
+
+      PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, developer.enableAltPersonFlow)
 
       return { ...state, developer }
     }

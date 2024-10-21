@@ -8,6 +8,7 @@ import {
   Link,
   Screens,
   NotificationStackParams,
+  Stacks,
 } from '@hyperledger/aries-bifold-core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState, useCallback, useEffect } from 'react'
@@ -20,6 +21,7 @@ import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import { openLink } from '../helpers/utils'
 import { BCState } from '../store'
+import { BCScreens } from '../navigators/navigators'
 
 const links = {
   WhatIsPersonCredential: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential',
@@ -115,6 +117,12 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
     navigation.replace('PersonCredentialLoading' as never, {} as never)
   }, [agent, store, t, navigation])
 
+  const startAltPersonFlow = useCallback(() => {
+    navigation.getParent()?.navigate(Stacks.CustomNavStack1, {
+      screen: BCScreens.VerificationSteps,
+    })
+  }, [navigation])
+
   const getBCServicesCardApp = useCallback(() => {
     setAppInstalled(true)
     const url =
@@ -127,77 +135,100 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView style={styles.pageContent}>
-        <View style={styles.credentialCardContainer}>{appInstalled ? <PersonIssuance2 /> : <PersonIssuance1 />}</View>
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text
-              accessibilityRole={'header'}
-              style={[
-                TextTheme.headingThree,
-                {
-                  flexShrink: 1,
-                  color: appInstalled ? ColorPallet.brand.primaryDisabled : TextTheme.headingThree.color,
-                },
-              ]}
-            >
-              {appInstalled ? t('PersonCredential.ServicesCardInstalled') : t('PersonCredential.InstallServicesCard')}
-            </Text>
-            {appInstalled && (
-              <Icon
-                name="check-circle"
-                testID={testIdWithKey('AppInstalledIcon')}
-                size={35}
-                style={{ marginLeft: 10, color: ColorPallet.semantic.success }}
-              />
-            )}
-          </View>
-          {appInstalled ? null : (
-            <View style={{ marginTop: 10 }}>
-              <Button
-                buttonType={ButtonType.Primary}
-                onPress={getBCServicesCardApp}
-                accessibilityLabel={t('PersonCredential.InstallApp')}
-                testID={testIdWithKey('InstallApp')}
-                title={t('PersonCredential.InstallApp')}
-              />
-              <TouchableOpacity
-                onPress={() => setAppInstalled(true)}
-                accessibilityLabel={t('PersonCredential.AppOnOtherDevice')}
-                testID={testIdWithKey('AppOnOtherDevice')}
-                style={styles.sectionSecondaryAction}
-              >
-                <Text style={{ ...TextTheme.bold, color: ColorPallet.brand.primary }}>
-                  {t('PersonCredential.AppOnOtherDevice')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
+        <View style={styles.credentialCardContainer}>
+          {appInstalled || store.developer.enableAltPersonFlow ? <PersonIssuance2 /> : <PersonIssuance1 />}
         </View>
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text
-              accessibilityRole={'header'}
-              style={[
-                TextTheme.headingThree,
-                {
-                  flexShrink: 1,
-                  color: appInstalled ? TextTheme.headingThree.color : ColorPallet.brand.primaryDisabled,
-                },
-              ]}
-            >
-              {t('PersonCredential.CreatePersonCred')}
-            </Text>
-          </View>
-          {appInstalled ? (
+        {store.developer.enableAltPersonFlow ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text accessibilityRole={'header'} style={TextTheme.headingThree}>
+                {t('BCID.GetDigitalID')}
+              </Text>
+            </View>
             <Button
               buttonType={ButtonType.Primary}
               testID={testIdWithKey('StartProcess')}
               accessibilityLabel={t('PersonCredential.StartProcess')}
               title={t('PersonCredential.StartProcess')}
-              onPress={acceptPersonCredentialOffer}
+              onPress={startAltPersonFlow}
             ></Button>
-          ) : null}
-        </View>
+          </View>
+        ) : (
+          <>
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text
+                  accessibilityRole={'header'}
+                  style={[
+                    TextTheme.headingThree,
+                    {
+                      flexShrink: 1,
+                      color: appInstalled ? ColorPallet.brand.primaryDisabled : TextTheme.headingThree.color,
+                    },
+                  ]}
+                >
+                  {appInstalled
+                    ? t('PersonCredential.ServicesCardInstalled')
+                    : t('PersonCredential.InstallServicesCard')}
+                </Text>
+                {appInstalled && (
+                  <Icon
+                    name="check-circle"
+                    testID={testIdWithKey('AppInstalledIcon')}
+                    size={35}
+                    style={{ marginLeft: 10, color: ColorPallet.semantic.success }}
+                  />
+                )}
+              </View>
+              {appInstalled ? null : (
+                <View style={{ marginTop: 10 }}>
+                  <Button
+                    buttonType={ButtonType.Primary}
+                    onPress={getBCServicesCardApp}
+                    accessibilityLabel={t('PersonCredential.InstallApp')}
+                    testID={testIdWithKey('InstallApp')}
+                    title={t('PersonCredential.InstallApp')}
+                  />
+                  <TouchableOpacity
+                    onPress={() => setAppInstalled(true)}
+                    accessibilityLabel={t('PersonCredential.AppOnOtherDevice')}
+                    testID={testIdWithKey('AppOnOtherDevice')}
+                    style={styles.sectionSecondaryAction}
+                  >
+                    <Text style={{ ...TextTheme.bold, color: ColorPallet.brand.primary }}>
+                      {t('PersonCredential.AppOnOtherDevice')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text
+                  accessibilityRole={'header'}
+                  style={[
+                    TextTheme.headingThree,
+                    {
+                      flexShrink: 1,
+                      color: appInstalled ? TextTheme.headingThree.color : ColorPallet.brand.primaryDisabled,
+                    },
+                  ]}
+                >
+                  {t('PersonCredential.CreatePersonCred')}
+                </Text>
+              </View>
+              {appInstalled ? (
+                <Button
+                  buttonType={ButtonType.Primary}
+                  testID={testIdWithKey('StartProcess')}
+                  accessibilityLabel={t('PersonCredential.StartProcess')}
+                  title={t('PersonCredential.StartProcess')}
+                  onPress={acceptPersonCredentialOffer}
+                ></Button>
+              ) : null}
+            </View>
+          </>
+        )}
         <View style={[styles.section, { marginBottom: 20 }]}>
           <Link
             style={styles.link}
