@@ -3,7 +3,7 @@ import { i18n, Locales } from '@hyperledger/aries-bifold-core/App/localization'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from 'react-native'
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Pressable } from 'react-native'
 import { getVersion } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
@@ -120,11 +120,21 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
   }: SectionRowProps) => (
     <TouchableOpacity accessibilityLabel={accessibilityLabel} testID={testID} onPress={onPress}>
       <View style={[styles.section]}>
-        <View style={styles.sectionRow}>
-          <Text style={styles.rowTitle}>{title}</Text>
-          {children}
-          {rowIcon}
-        </View>
+        <Pressable
+          onPress={onPress}
+          accessible={true}
+          accessibilityLabel={accessibilityLabel}
+          testID={testID}
+          style={styles.sectionRow}
+        >
+          <View style={{ flexDirection: 'row' }}>
+            <Text style={styles.rowTitle}>{title}</Text>
+
+            {children}
+
+            {rowIcon}
+          </View>
+        </Pressable>
         {subContent}
       </View>
       {showRowSeparator && (

@@ -722,6 +722,8 @@ const translation = {
     Scan: 'Lire un code QR',
     Credentials: 'Attestations',
     OptionsPlus: "Plus d'options",
+    HelpCenter: "Centre d'aide",
+    About: 'À propos',
     CredentialDetails: 'Détails des attestations',
     Notifications: 'Notifications',
     History: 'Historique',
@@ -1011,6 +1013,11 @@ const translation = {
   },
   HelpCenter: {
     Help: 'Aide',
+  },
+  About: {
+    Accessibility: 'Accessibilité',
+    TermsOfUse: "Conditions d'utilisation",
+    PrivacyPolicy: 'Politique de confidentialité',
   },
 }
 

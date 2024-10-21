@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next'
 
 import Plus from '../screens/Plus'
 
+import AboutStack from './AboutStack'
+import HelpCenterStack from './HelpCenterStack'
 import SettingStack from './SettingStack'
 import { Screens, OptionsPlusStackParams, Stacks } from './navigators'
 
@@ -27,6 +29,20 @@ const PlusStack: React.FC = () => {
       <StackPlus.Screen
         name={Stacks.SettingsStack}
         component={SettingStack}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <StackPlus.Screen
+        name={Stacks.HelpCenterStack}
+        component={HelpCenterStack}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <StackPlus.Screen
+        name={Stacks.AboutStack}
+        component={AboutStack}
         options={{
           headerShown: false,
         }}

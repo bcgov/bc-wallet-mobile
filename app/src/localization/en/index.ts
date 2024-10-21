@@ -191,6 +191,8 @@ const translation = {
     Home: 'Home',
     Scan: 'Scan',
     OptionsPlus: 'More Options',
+    HelpCenter: 'Help Center',
+    About: 'About',
     Credentials: 'Credentials',
     CredentialDetails: 'Credential Details',
     Notifications: 'Notifications',
@@ -978,6 +980,11 @@ const translation = {
   },
   HelpCenter: {
     Help: 'Help',
+  },
+  About: {
+    Accessibility: 'Accessibility',
+    TermsOfUse: 'Terms of Use',
+    PrivacyPolicy: 'Privacy Policy',
   },
 }
 

@@ -1,14 +1,12 @@
-import { useTheme, Button, ButtonType, testIdWithKey, Screens, TabStacks } from '@hyperledger/aries-bifold-core'
+import { useTheme, Button, ButtonType, testIdWithKey } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import CalendarImg from '../assets/img/calendar-empty.svg'
-import ClockImg from '../assets/img/clock.svg'
-import PhoneImg from '../assets/img/telephone.svg'
-import { SettingStackParams, Stacks } from '../navigators/navigators'
+import ContactUs from '../components/ContactUs'
+import { SettingStackParams, Stacks, Screens } from '../navigators/navigators'
 
 const Plus: React.FC = () => {
   const { ColorPallet, TextTheme } = useTheme()
@@ -108,7 +106,7 @@ const Plus: React.FC = () => {
                 testID={testIdWithKey('HelpCenter')}
                 accessibilityLabel={t('OptionsPlus.ButtonHelpCenter')}
                 title={t('OptionsPlus.ButtonHelpCenter')}
-                onPress={() => navigate(TabStacks.HomeStack as never, { screen: Screens.Home } as never)}
+                onPress={() => navigate(Stacks.HelpCenterStack as never, { screen: Screens.HelpCenter } as never)}
               />
             </View>
             <View style={styles.button}>
@@ -117,32 +115,14 @@ const Plus: React.FC = () => {
                 testID={testIdWithKey('StartProcess')}
                 accessibilityLabel={t('OptionsPlus.ButtonAbout')}
                 title={t('OptionsPlus.ButtonAbout')}
-                onPress={() => navigate(TabStacks.HomeStack as never, { screen: Screens.Home } as never)}
+                onPress={() => navigate(Stacks.AboutStack as never, { screen: Screens.About } as never)}
               />
             </View>
             <View style={styles.section}>
               <Text style={styles.textHeaderTitle}> {t('OptionsPlus.TitleSupport')}</Text>
               <Text style={styles.sectionDescription}> {t('OptionsPlus.DetailSupport')}</Text>
             </View>
-            <View style={styles.section}>
-              <Text style={styles.textSectionTitle}> {t('OptionsPlus.JoinUsTitle')}</Text>
-            </View>
-            <View style={styles.sectionRow}>
-              <CalendarImg />
-              <Text style={styles.sectionDescription}> {t('OptionsPlus.DaysOpen')}</Text>
-            </View>
-            <View style={styles.sectionRow}>
-              <ClockImg />
-              <Text style={styles.sectionDescription}> {t('OptionsPlus.OpeningHours')}</Text>
-            </View>
-            <View style={styles.sectionDoubleRow}>
-              <PhoneImg style={styles.phoneImage} />
-              <Text style={styles.sectionDescription}>
-                {t('OptionsPlus.PhoneNumber')}
-                {'\n'}
-                {t('OptionsPlus.TollFreeNumber')}
-              </Text>
-            </View>
+            <ContactUs />
           </View>
           <View style={[styles.sectionCopyright]}>
             <Text style={styles.sectionCopyrightText}> {t('OptionsPlus.Copyright')}</Text>
