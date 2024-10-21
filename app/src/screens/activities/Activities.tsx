@@ -1,9 +1,11 @@
 import { TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native'
 
 import { NotificationReturnType, NotificationsInputProps } from '../../hooks/notifications'
+import { ActivitiesStackParams } from '../../navigators/navigators'
 
 import HistoryList from './HistoryList'
 import NotificationsList from './NotificationsList'
@@ -11,7 +13,11 @@ import NotificationsList from './NotificationsList'
 const NotificationTab = 'Notifications'
 const HistoryTab = 'Historique'
 
-const Activities: React.FC = () => {
+export type ActivitiesProps = {
+  navigation: StackNavigationProp<ActivitiesStackParams>
+}
+
+const Activities: React.FC<ActivitiesProps> = ({ navigation }) => {
   const [openSwipeableId, setOpenSwipeableId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState(NotificationTab)
   const { t } = useTranslation()
@@ -23,16 +29,18 @@ const Activities: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      padding: 16,
+      paddingTop: 16,
       backgroundColor: ColorPallet.brand.primaryBackground,
     },
     tabHeader: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      gap: 32,
+      gap: 8,
       borderBottomColor: ColorPallet.brand.secondary,
       marginBottom: 16,
+      marginHorizontal: 16,
       alignItems: 'center',
+      maxHeight: 70,
     },
     tab: {
       flex: 1,
@@ -87,6 +95,7 @@ const Activities: React.FC = () => {
           customNotification={customNotification}
           openSwipeableId={openSwipeableId}
           handleOpenSwipeable={setOpenSwipeableId}
+          navigation={navigation}
         />
       ) : (
         <HistoryList />

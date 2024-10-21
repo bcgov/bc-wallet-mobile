@@ -10,42 +10,29 @@ import {
   W3cCredentialRecord,
 } from '@credo-ts/core'
 import { useAgent, useConnectionById } from '@credo-ts/react-hooks'
-import {
-  BifoldError,
-  EventTypes,
-  GenericFn,
-  Screens,
-  Stacks,
-  testIdWithKey,
-  useStore,
-  useTheme,
-} from '@hyperledger/aries-bifold-core'
-import CommonRemoveModal from '@hyperledger/aries-bifold-core/App/components/modals/CommonRemoveModal'
+import { BifoldError, EventTypes, GenericFn, Screens, Stacks, useStore, useTheme } from '@hyperledger/aries-bifold-core'
 import { BasicMessageMetadata, basicMessageCustomMetadata } from '@hyperledger/aries-bifold-core/App/types/metadata'
 import { HomeStackParams } from '@hyperledger/aries-bifold-core/App/types/navigators'
 import { CustomNotification, CustomNotificationRecord } from '@hyperledger/aries-bifold-core/App/types/notification'
-import { ModalUsage } from '@hyperledger/aries-bifold-core/App/types/remove'
 import { formatTime, getConnectionName } from '@hyperledger/aries-bifold-core/App/utils/helpers'
 import { markProofAsViewed } from '@hyperledger/aries-bifold-verifier'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, Image, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { DeviceEventEmitter, Image, StyleSheet } from 'react-native'
 import { Swipeable } from 'react-native-gesture-handler'
-import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 
 import CredentialAddedImg from '../assets/img/CredentialAdded.svg'
 import FleurLysImg from '../assets/img/FleurLys.svg'
 import MessageImg from '../assets/img/Message.svg'
 import ProofRequestImg from '../assets/img/ProofRequest.svg'
 import RevocationImg from '../assets/img/Revocation.svg'
-import { hitSlop } from '../constants'
 
-const iconSize = 20
+import CustomCheckBox from './CustomCheckBox'
+import EventItem from './EventItem'
 
-export enum NotificationType {
+export enum NotificationTypeEnum {
   BasicMessage = 'BasicMessage',
   CredentialOffer = 'Offer',
   ProofRequest = 'ProofRecord',
@@ -55,7 +42,7 @@ export enum NotificationType {
 }
 
 interface NotificationListItemProps {
-  notificationType: NotificationType
+  notificationType: NotificationTypeEnum
   notification:
     | BasicMessageRecord
     | CredentialExchangeRecord
@@ -66,6 +53,9 @@ interface NotificationListItemProps {
   customNotification?: CustomNotification
   openSwipeableId: string | null
   onOpenSwipeable: (id: string | null) => void
+  selected?: boolean
+  setSelected?: ({ id, deleteAction }: { id: string; deleteAction?: () => void }) => void
+  activateSelection?: boolean
 }
 
 type DisplayDetails = {
@@ -87,15 +77,16 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
   customNotification,
   openSwipeableId,
   onOpenSwipeable,
+  selected,
+  setSelected,
+  activateSelection,
 }) => {
   const navigation = useNavigation<StackNavigationProp<HomeStackParams>>()
   const [store, dispatch] = useStore()
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
   const { agent } = useAgent()
-  const [declineModalVisible, setDeclineModalVisible] = useState(false)
   const [action, setAction] = useState<GenericFn>()
-  const [closeAction, setCloseAction] = useState<() => void>()
   const isNotCustomNotification =
     notification instanceof BasicMessageRecord ||
     notification instanceof CredentialExchangeRecord ||
@@ -175,29 +166,23 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
     }
   }
 
-  const handleSwipeOpen = () => {
-    onOpenSwipeable(notification.id) // Call the parent function to notify which item is opened
-  }
-
-  const getConnectionImage = (connection: ConnectionRecord | undefined, notificationType: NotificationType) => {
+  const getConnectionImage = (connection: ConnectionRecord | undefined, notificationType: NotificationTypeEnum) => {
     if (connection?.imageUrl) return <Image source={{ uri: connection.imageUrl }} style={styles.icon} />
     const dimensions = { width: 24, height: 24 }
     switch (notificationType) {
-      case NotificationType.BasicMessage:
+      case NotificationTypeEnum.BasicMessage:
         return <MessageImg width={dimensions.width} height={dimensions.height} />
-      case NotificationType.CredentialOffer:
+      case NotificationTypeEnum.CredentialOffer:
         return <CredentialAddedImg width={dimensions.width} height={dimensions.height} />
-      case NotificationType.ProofRequest:
-      case NotificationType.Proof:
+      case NotificationTypeEnum.ProofRequest:
+      case NotificationTypeEnum.Proof:
         return <ProofRequestImg width={dimensions.width} height={dimensions.height} />
-      case NotificationType.Revocation:
+      case NotificationTypeEnum.Revocation:
         return <RevocationImg width={dimensions.width} height={dimensions.height} />
       default:
         return <FleurLysImg width={dimensions.width} height={dimensions.height} />
     }
   }
-
-  const toggleDeclineModalVisible = () => setDeclineModalVisible(!declineModalVisible)
 
   const declineProofRequest = async () => {
     try {
@@ -209,18 +194,16 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       const error = new BifoldError(t('Error.Title1028'), t('Error.Message1028'), (err as Error)?.message ?? err, 1028)
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
     }
-
-    toggleDeclineModalVisible()
   }
 
   const dismissProofRequest = async () => {
-    if (agent && notificationType === NotificationType.ProofRequest) {
+    if (agent && notificationType === NotificationTypeEnum.ProofRequest) {
       markProofAsViewed(agent, notification as ProofExchangeRecord)
     }
   }
 
   const dismissBasicMessage = async () => {
-    if (agent && notificationType === NotificationType.BasicMessage) {
+    if (agent && notificationType === NotificationTypeEnum.BasicMessage) {
       markMessageAsSeen(agent, notification as BasicMessageRecord)
     }
   }
@@ -235,53 +218,35 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       const error = new BifoldError(t('Error.Title1028'), t('Error.Message1028'), (err as Error)?.message ?? err, 1028)
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
     }
-
-    toggleDeclineModalVisible()
   }
 
   const declineCustomNotification = async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     customNotification?.onCloseAction(dispatch as any)
-    toggleDeclineModalVisible()
   }
 
-  const commonRemoveModal = () => {
-    let usage: ModalUsage | undefined
-    let onSubmit: GenericFn | undefined
-
-    if (notificationType === NotificationType.ProofRequest) {
-      usage = ModalUsage.ProofRequestDecline
+  const removeNotification = () => {
+    if (notificationType === NotificationTypeEnum.ProofRequest) {
       if ((notification as ProofExchangeRecord).state === ProofState.Done) {
-        onSubmit = dismissProofRequest
+        dismissProofRequest()
       } else {
-        onSubmit = declineProofRequest
+        declineProofRequest()
       }
-    } else if (notificationType === NotificationType.CredentialOffer) {
-      usage = ModalUsage.CredentialOfferDecline
-      onSubmit = declineCredentialOffer
-    } else if (notificationType === NotificationType.Custom) {
-      usage = ModalUsage.CustomNotificationDecline
-      onSubmit = declineCustomNotification
-    } else {
-      usage = undefined
+    } else if (notificationType === NotificationTypeEnum.CredentialOffer) {
+      declineCredentialOffer()
+    } else if (notificationType === NotificationTypeEnum.BasicMessage) {
+      dismissBasicMessage()
+    } else if (notificationType === NotificationTypeEnum.Custom) {
+      declineCustomNotification()
     }
-
-    return usage !== undefined && onSubmit !== undefined ? (
-      <CommonRemoveModal
-        usage={usage}
-        visible={declineModalVisible}
-        onSubmit={onSubmit}
-        onCancel={toggleDeclineModalVisible}
-      />
-    ) : null
   }
 
-  const detailsForNotificationType = async (notificationType: NotificationType): Promise<DisplayDetails> => {
+  const detailsForNotificationType = async (notificationType: NotificationTypeEnum): Promise<DisplayDetails> => {
     return new Promise((resolve) => {
       const theirLabel = getConnectionName(connection, store.preferences.alternateContactNames)
 
       switch (notificationType) {
-        case NotificationType.BasicMessage:
+        case NotificationTypeEnum.BasicMessage:
           resolve({
             title: t('Home.NewMessage'),
             body: theirLabel ? `${theirLabel} ${t('Home.SentMessage')}` : t('Home.ReceivedMessage'),
@@ -290,7 +255,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
               : '',
           })
           break
-        case NotificationType.CredentialOffer: {
+        case NotificationTypeEnum.CredentialOffer: {
           const credentialId = (notification as CredentialExchangeRecord).id
           agent?.credentials.findById(credentialId).then((cred) => {
             resolve({
@@ -301,7 +266,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
           })
           break
         }
-        case NotificationType.ProofRequest: {
+        case NotificationTypeEnum.ProofRequest: {
           const proofId = (notification as ProofExchangeRecord).id
           agent?.proofs.findById(proofId).then((proof) => {
             resolve({
@@ -312,7 +277,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
           })
           break
         }
-        case NotificationType.Revocation: {
+        case NotificationTypeEnum.Revocation: {
           const credentialId = (notification as CredentialExchangeRecord).id
           agent?.credentials.findById(credentialId).then((cred) => {
             const revocationDate = cred?.revocationNotification?.revocationDate
@@ -324,7 +289,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
           })
           break
         }
-        case NotificationType.Custom:
+        case NotificationTypeEnum.Custom:
           resolve({
             title: t(customNotification?.title as string),
             body: t(customNotification?.description as string),
@@ -345,30 +310,27 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       | CustomNotificationRecord
       | SdJwtVcRecord
       | W3cCredentialRecord,
-    notificationType: NotificationType
+    notificationType: NotificationTypeEnum
   ) => {
     let onPress
-    let onClose
     switch (notificationType) {
-      case NotificationType.BasicMessage:
+      case NotificationTypeEnum.BasicMessage:
         onPress = () => {
           navigation.getParent()?.navigate(Stacks.ContactStack, {
             screen: Screens.Chat,
             params: { connectionId: (notification as BasicMessageRecord).connectionId },
           })
         }
-        onClose = dismissBasicMessage
         break
-      case NotificationType.CredentialOffer:
+      case NotificationTypeEnum.CredentialOffer:
         onPress = () => {
           navigation.getParent()?.navigate(Stacks.NotificationStack, {
             screen: Screens.CredentialOffer,
             params: { credentialId: notification.id },
           })
         }
-        onClose = toggleDeclineModalVisible
         break
-      case NotificationType.ProofRequest:
+      case NotificationTypeEnum.ProofRequest:
         if (
           (notification as ProofExchangeRecord).state === ProofState.Done ||
           (notification as ProofExchangeRecord).state === ProofState.PresentationReceived
@@ -387,39 +349,36 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
             })
           }
         }
-        onClose = toggleDeclineModalVisible
         break
-      case NotificationType.Proof:
+      case NotificationTypeEnum.Proof:
         onPress = () =>
           navigation.getParent()?.navigate(Stacks.NotificationStack, {
             screen: Screens.ProofDetails,
             params: { recordId: notification.id, isHistory: true },
           })
         break
-      case NotificationType.Revocation:
+      case NotificationTypeEnum.Revocation:
         onPress = () =>
           navigation.getParent()?.navigate(Stacks.NotificationStack, {
             screen: Screens.CredentialDetails,
             params: { credential: notification },
           })
         break
-      case NotificationType.Custom:
+      case NotificationTypeEnum.Custom:
         onPress = () =>
           navigation.getParent()?.navigate(Stacks.NotificationStack, {
             screen: Screens.CustomNotification,
           })
-        onClose = toggleDeclineModalVisible
         break
       default:
         throw new Error('NotificationType was not set correctly.')
     }
-    return { onPress, onClose }
+    return { onPress }
   }
 
   useEffect(() => {
-    const { onPress, onClose } = getActionForNotificationType(notification, notificationType)
+    const { onPress } = getActionForNotificationType(notification, notificationType)
     setAction(() => onPress)
-    setCloseAction(() => onClose)
   }, [notification])
 
   useEffect(() => {
@@ -430,73 +389,31 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
     detailsPromise()
   }, [notificationType, t])
 
-  const isReceivedProof =
-    notificationType === NotificationType.ProofRequest &&
-    ((notification as ProofExchangeRecord).state === ProofState.Done ||
-      (notification as ProofExchangeRecord).state === ProofState.PresentationSent)
-  const includesNotificationType = [
-    NotificationType.BasicMessage,
-    NotificationType.Custom,
-    NotificationType.ProofRequest,
-    NotificationType.CredentialOffer,
-  ].includes(notificationType)
-
-  const body = (
-    <Pressable
-      accessibilityLabel={t('Global.View')}
-      accessibilityRole={'button'}
-      testID={testIdWithKey(`View${notificationType}${isReceivedProof ? 'Received' : ''}`)}
-      onPress={action}
-      hitSlop={hitSlop}
-    >
-      <View style={[styles.container]} testID={testIdWithKey('NotificationListItem')}>
-        {getConnectionImage(connection, notificationType)}
-        <View style={styles.infoContainer}>
-          <Text style={[styles.headerText]} testID={testIdWithKey('HeaderText')}>
-            {details.title}
-          </Text>
-          <Text style={[styles.bodyText]} testID={testIdWithKey('BodyText')}>
-            {details.body}
-          </Text>
-          <Text style={styles.bodyEventTime} testID={testIdWithKey('BodyEventTime')}>
-            {details.eventTime}
-          </Text>
-        </View>
-        <View style={styles.arrowContainer}>
-          <MaterialIcon name={'keyboard-arrow-right'} size={iconSize} />
-        </View>
-        {commonRemoveModal()}
-      </View>
-    </Pressable>
-  )
-
-  const handleDelete = () => {
-    closeAction?.()
+  const removeCurrentNotification = () => {
+    removeNotification()
     handleSwipeClose()
   }
 
-  const rightSwipeAction = () => {
-    return (
-      <TouchableOpacity onPress={handleDelete}>
-        <View style={styles.rightAction}>
-          <MaterialCommunityIcon name={'trash-can-outline'} size={20} style={styles.rightActionIcon} />
-          <Text style={styles.rightActionText}>{t('Notifications.Dismiss')}</Text>
-        </View>
-      </TouchableOpacity>
-    )
-  }
-
-  return includesNotificationType ? (
-    <Swipeable
-      ref={swipeableRef}
-      onSwipeableWillOpen={handleSwipeOpen}
-      onSwipeableClose={handleSwipeClose}
-      renderRightActions={rightSwipeAction}
-    >
-      {body}
-    </Swipeable>
-  ) : (
-    body
+  return (
+    <EventItem
+      action={action}
+      handleDelete={removeCurrentNotification}
+      event={{
+        id: notification.id,
+        title: details.title,
+        body: details.body,
+        eventTime: details.eventTime,
+        image: activateSelection ? (
+          <CustomCheckBox selected={selected} setSelected={() => setSelected} />
+        ) : (
+          getConnectionImage(connection, notificationType)
+        ),
+      }}
+      openSwipeableId={openSwipeableId}
+      onOpenSwipeable={onOpenSwipeable}
+      setSelected={setSelected}
+      activateSelection={activateSelection}
+    />
   )
 }
 

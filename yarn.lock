@@ -3923,6 +3923,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-native-community/checkbox@npm:^0.5.17":
+  version: 0.5.17
+  resolution: "@react-native-community/checkbox@npm:0.5.17"
+  peerDependencies:
+    react: "*"
+    react-native: ">= 0.62"
+    react-native-windows: ">=0.62"
+  peerDependenciesMeta:
+    react-native-windows:
+      optional: true
+  checksum: dcb2335c37f56fc707f0a513d84af74641894778c20e57bd3f98accb6f15498a7ec1754b576e58a3984680df54c7dd7c577777141393ea8ade7e7972871fce96
+  languageName: node
+  linkType: hard
+
 "@react-native-community/cli-clean@npm:11.3.7":
   version: 11.3.7
   resolution: "@react-native-community/cli-clean@npm:11.3.7"
@@ -18136,6 +18150,7 @@ __metadata:
     "@hyperledger/indy-vdr-react-native": "npm:0.2.2"
     "@hyperledger/indy-vdr-shared": "npm:0.2.2"
     "@react-native-async-storage/async-storage": "npm:1.15.11"
+    "@react-native-community/checkbox": "npm:^0.5.17"
     "@react-native-community/masked-view": "npm:0.1.11"
     "@react-native-community/netinfo": "npm:9.3.7"
     "@react-native/eslint-config": "npm:0.72.2"

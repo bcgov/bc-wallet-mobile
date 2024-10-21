@@ -11,7 +11,7 @@ import {
 } from '@hyperledger/aries-bifold-core'
 import { TourID } from '@hyperledger/aries-bifold-core/App/types/tour'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import React, { ReducerAction, useEffect, useRef } from 'react'
+import React, { ReducerAction, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Text, useWindowDimensions, View, StyleSheet, ViewStyle, AppState } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -32,7 +32,6 @@ const TabStack: React.FC = () => {
   const { fontScale } = useWindowDimensions()
   const { agent } = useAgent()
   const [, dispatch] = useStore()
-  const appState = useRef(AppState.currentState)
 
   const [{ useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
 
@@ -74,13 +73,7 @@ const TabStack: React.FC = () => {
 
   useEffect(() => {
     AppState.addEventListener('change', (nextAppState) => {
-      if (appState.current === 'active' && ['inactive', 'background'].includes(nextAppState)) {
-        if (nextAppState === 'inactive') {
-          // on iOS this happens when any OS prompt is shown. We
-          // don't want to lock the user out in this case or preform
-          // background tasks.
-          return
-        }
+      if ('background' == nextAppState) {
         if (agent) {
           notificationsSeenOnHome(
             agent,
@@ -157,7 +150,6 @@ const TabStack: React.FC = () => {
           unmountOnBlur: true,
           tabBarStyle: {
             ...TabTheme.tabBarStyle,
-            gap: 8,
           },
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
