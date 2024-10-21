@@ -65,6 +65,8 @@ const translation = {
     "Terms": "Terms of Use",
     "Settings": "Menu",
     "Preface": "BC Wallet",
+    "VerificationSteps": "Setup steps",
+    "ChooseID": "Choose your identification",
   },
   "PersonCredentialNotification": {
     "Title": "Get your Person credential",
@@ -83,6 +85,7 @@ const translation = {
     "WhatIsPersonCredentialLink": "What is a Person credential",
     "WhereToUseLink": "Where to use",
     "HelpLink": "Help",
+    "ScanOrTakePhotos": "Scan or take photos of your ID."
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection",
@@ -132,6 +135,7 @@ const translation = {
     "Toggle": "Toggle Developer Mode",
     "AttestationSupport": "Attestation support",
     "EnableProxy": "Enable proxy",
+    "EnableAltPersonFlow": "Alt Person flow",
   },
   "Tips": {
     "Header": "Tips",

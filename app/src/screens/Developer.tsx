@@ -33,6 +33,7 @@ const Settings: React.FC = () => {
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
   const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
   const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
+  const [enableAltPersonFlow, setEnableAltPersonFlow] = useState(!!store.developer.enableAltPersonFlow)
   const navigation = useNavigation()
 
   const styles = StyleSheet.create({
@@ -260,6 +261,14 @@ const Settings: React.FC = () => {
     setEnableProxy((previousState) => !previousState)
   }
 
+  const toggleEnableAltPersonFlowSwitch = () => {
+    dispatch({
+      type: BCDispatchAction.TOGGLE_ALT_PERSON_FLOW,
+      payload: [!enableAltPersonFlow],
+    })
+    setEnableAltPersonFlow((previousState) => !previousState)
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <Modal
@@ -448,6 +457,20 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleEnableProxySwitch}
             value={enableProxy}
+          />
+        </SectionRow>
+
+        <SectionRow
+          title={t('Developer.EnableAltPersonFlow')}
+          accessibilityLabel={t('Developer.EnableAltPersonFlow')}
+          testID={testIdWithKey('ToggleEnableAltPersonFlow')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={enableAltPersonFlow ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleEnableAltPersonFlowSwitch}
+            value={enableAltPersonFlow}
           />
         </SectionRow>
       </ScrollView>
