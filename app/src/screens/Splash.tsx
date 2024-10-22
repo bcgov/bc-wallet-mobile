@@ -248,7 +248,7 @@ const Splash = () => {
         payload: [environment],
       })
     }
-    return environment?.iasAgentInviteUrl ?? Config.MCN_MEDIATOR_URL
+    return environment?.iasAgentInviteUrl ?? Config.MEDIATOR_URL
   }
 
   const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {

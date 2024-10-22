@@ -51,7 +51,7 @@ export const BCDispatchAction = {
 export const iasEnvironments: Array<IASEnvironment> = [
   {
     name: 'MCN',
-    iasAgentInviteUrl: Config.MCN_MEDIATOR_URL ?? '',
+    iasAgentInviteUrl: Config.MEDIATOR_URL ?? '',
     iasPortalUrl: '',
     attestationInviteUrl: '',
   },
