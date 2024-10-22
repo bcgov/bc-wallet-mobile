@@ -47,9 +47,9 @@ const translation = {
   },
   "Onboarding": {
     "DifferentWalletHeading": "A different smart wallet",
-    "DifferentWalletParagraph": "Unlike other digital wallets, BC Wallet helps you prove who you are in-person or online by storing and using digital credentials issued by participating services.\n\nInteract with confidence with individuals and organisations you trust.",
+    "DifferentWalletParagraph": "Unlike other digital wallets, BC Wallet helps you prove who you are in-person or online by storing and using digital credentials issued by participating services.\n\nInteract with confidence with individuals and organizations you trust.",
     "DigitalCredentialsHeading": "Digital credentials",
-    "DigitalCredentialsParagraph": "Digital credentials are the electronic equivalent of physical credentials such as certifications and permits offered by participating services.\n\nServices are simplified and expedited as organisations and individuals can confirm who you are with trusted information from digital credentials.",
+    "DigitalCredentialsParagraph": "Digital credentials are the electronic equivalent of physical credentials such as certifications and permits offered by participating services.\n\nServices are simplified and expedited as organizations and individuals can confirm who you are with trusted information from digital credentials.",
     "PrivateConfidentialHeading": "Private and confidential",
     "PrivateConfidentialParagraph": "Your privacy is important.\n\nThe B.C. government doesn't know when you use digital credentials, unless you're interacting with them. No analytics are recorded.\n\nYou approve every use of your digital credentials, and only provide the information that's needed.",
     "GetStarted": "Get Started",
@@ -153,7 +153,7 @@ const translation = {
     "Tip11": "You can turn on the camera flash if the QR code is hard to see",
     "Tip12": "If the QR code isn't scanning, try increasing the screen's brightness",
     "Tip13": "Information sent via your wallet is trusted by you and your Contacts you interact with",
-    "Tip14": "Even revoked or expired credentials can be usable if the organisation doesn't request for it",
+    "Tip14": "Even revoked or expired credentials can be usable if the organization doesn't request for it",
   },
   "Init": {
     "Retry": "Retry",

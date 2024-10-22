@@ -15,6 +15,7 @@ import {
   initLanguages,
   ContainerProvider,
   MainContainer,
+  InactivityWrapper,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useMemo } from 'react'
@@ -68,31 +69,33 @@ const App = () => {
             <AnimatedComponentsProvider value={animatedComponents}>
               <AuthProvider>
                 <NetworkProvider>
-                  <StatusBar
-                    barStyle="light-content"
-                    hidden={false}
-                    backgroundColor={theme.ColorPallet.brand.primary}
-                    translucent={false}
-                  />
-                  <NetInfo />
-                  <ErrorModal />
-                  <WebDisplay
-                    destinationUrl={surveyMonkeyUrl}
-                    exitUrl={surveyMonkeyExitUrl}
-                    visible={appState.showSurvey}
-                    onClose={() => setAppState({ showSurvey: false })}
-                  />
-                  <TourProvider
-                    homeTourSteps={homeTourSteps}
-                    credentialsTourSteps={credentialsTourSteps}
-                    credentialOfferTourSteps={credentialOfferTourSteps}
-                    proofRequestTourSteps={proofRequestTourSteps}
-                    overlayColor={'black'}
-                    overlayOpacity={0.7}
-                  >
-                    <RootStack />
-                  </TourProvider>
-                  <Toast topOffset={15} config={toastConfig} />
+                  <InactivityWrapper>
+                    <StatusBar
+                      barStyle="light-content"
+                      hidden={false}
+                      backgroundColor={theme.ColorPallet.brand.primary}
+                      translucent={false}
+                    />
+                    <NetInfo />
+                    <ErrorModal />
+                    <WebDisplay
+                      destinationUrl={surveyMonkeyUrl}
+                      exitUrl={surveyMonkeyExitUrl}
+                      visible={appState.showSurvey}
+                      onClose={() => setAppState({ showSurvey: false })}
+                    />
+                    <TourProvider
+                      homeTourSteps={homeTourSteps}
+                      credentialsTourSteps={credentialsTourSteps}
+                      credentialOfferTourSteps={credentialOfferTourSteps}
+                      proofRequestTourSteps={proofRequestTourSteps}
+                      overlayColor={'black'}
+                      overlayOpacity={0.7}
+                    >
+                      <RootStack />
+                    </TourProvider>
+                    <Toast topOffset={15} config={toastConfig} />
+                  </InactivityWrapper>
                 </NetworkProvider>
               </AuthProvider>
             </AnimatedComponentsProvider>
