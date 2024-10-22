@@ -18,10 +18,9 @@ import { formatTime, getConnectionName } from '@hyperledger/aries-bifold-core/Ap
 import { markProofAsViewed } from '@hyperledger/aries-bifold-verifier'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Image, StyleSheet } from 'react-native'
-import { Swipeable } from 'react-native-gesture-handler'
 
 import CredentialAddedImg from '../assets/img/CredentialAdded.svg'
 import FleurLysImg from '../assets/img/FleurLys.svg'
@@ -150,15 +149,6 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       fontWeight: '600',
     },
   })
-
-  const swipeableRef = useRef<Swipeable>(null)
-
-  // Close the swipeable if it is not the currently open one
-  useEffect(() => {
-    if (openSwipeableId !== notification.id && swipeableRef.current) {
-      swipeableRef.current.close()
-    }
-  }, [openSwipeableId])
 
   const handleSwipeClose = () => {
     if (openSwipeableId === notification.id) {

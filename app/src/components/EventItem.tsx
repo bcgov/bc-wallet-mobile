@@ -1,5 +1,5 @@
 import { GenericFn, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Swipeable } from 'react-native-gesture-handler'
@@ -109,6 +109,13 @@ const EventItem = ({
       action?.()
     }
   }
+
+  // Close the swipeable if it is not the currently open one
+  useEffect(() => {
+    if (openSwipeableId != event.id) {
+      swipeableRef?.current?.close()
+    }
+  }, [openSwipeableId, swipeableRef.current])
 
   const body = (
     <Pressable

@@ -1,4 +1,4 @@
-import { ButtonLocation, HeaderButton, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
+import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Text, StyleSheet, Platform } from 'react-native'
@@ -50,7 +50,7 @@ const FauxHeader: React.FC<FauxHeaderProps> = ({ title, onBackPressed }) => {
   return (
     <View style={styles.header}>
       <View style={styles.left}>
-        <HeaderButton
+        <IconButton
           buttonLocation={ButtonLocation.Left}
           accessibilityLabel={t('Global.Back')}
           testID={testIdWithKey('BackButton')}

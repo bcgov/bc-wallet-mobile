@@ -73,20 +73,32 @@ const Terms = () => {
     },
   })
 
+  const agreedToPreviousTerms = store.onboarding.didAgreeToTerms
+  const agreesToCurrentTerms = store.onboarding.didAgreeToTerms === TermsVersion
+
   const onSubmitPressed = useCallback(() => {
     dispatch({
       type: DispatchAction.DID_AGREE_TO_TERMS,
       payload: [{ DidAgreeToTerms: TermsVersion }],
     })
 
-    navigation.navigate(Screens.CreatePIN)
-  }, [])
-
-  const didAgreeToTermsAndAuthenticated = store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate
+    if (!agreedToPreviousTerms) {
+      navigation.navigate(Screens.CreatePIN)
+    } else if (store.onboarding.postAuthScreens.length) {
+      const screens: string[] = store.onboarding.postAuthScreens
+      screens.shift()
+      dispatch({ type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [screens] })
+      if (screens.length) {
+        navigation.navigate(screens[0] as never)
+      } else {
+        dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING, payload: [true] })
+      }
+    }
+  }, [dispatch, agreedToPreviousTerms, navigation, store.onboarding.postAuthScreens])
 
   return (
     <View style={[style.container]}>
-      {!didAgreeToTermsAndAuthenticated && (
+      {!agreedToPreviousTerms && !agreesToCurrentTerms && (
         <View style={style.progressContainer}>
           <View style={{ marginHorizontal: 50 }}>
             <Progress progressPercent={33.3333} progressText={t('TermsV2.ProgressBarText')} progressFill="primary" />
@@ -94,7 +106,7 @@ const Terms = () => {
         </View>
       )}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ marginTop: didAgreeToTermsAndAuthenticated ? 20 : 0 }}>
+        <View style={{ marginTop: agreedToPreviousTerms ? 20 : 0 }}>
           <HeaderText title={t('Screens.Terms')} />
         </View>
         <Text style={[style.title, { marginTop: 20 }]}>{t('TermsV2.Consent.title')}</Text>
@@ -135,7 +147,7 @@ const Terms = () => {
         ></AccordionItem>
 
         <View style={[style.controlsContainer]}>
-          {!(store.onboarding.didAgreeToTerms && store.authentication.didAuthenticate) && (
+          {!(agreesToCurrentTerms && agreedToPreviousTerms) && (
             <>
               <CheckBoxRow
                 title={t('Terms.Attestation')}

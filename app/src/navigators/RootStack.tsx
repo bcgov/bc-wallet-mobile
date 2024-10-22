@@ -9,7 +9,7 @@ import {
   DeliveryStack,
   DispatchAction,
   EventTypes,
-  HeaderButton,
+  IconButton,
   NotificationStack,
   ProofRequestStack,
   Screens,
@@ -280,7 +280,7 @@ const RootStack: React.FC = () => {
             headerShown: true,
             title: t('Screens.CredentialOffer'),
             headerLeft: () => (
-              <HeaderButton
+              <IconButton
                 buttonLocation={ButtonLocation.Left}
                 accessibilityLabel={t('Global.Back')}
                 testID={testIdWithKey('BackButton')}
