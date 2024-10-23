@@ -23,6 +23,7 @@ on:
       - yarn.lock
       - .yarnrc.yml
       - .yarn/**
+      - .gitignore
 
 jobs:
   check-secrets:
