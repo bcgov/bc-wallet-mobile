@@ -83,6 +83,17 @@ jobs:
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all branches, main needed.
+
+      - name: Run early exit check
+        id: should_early_exit
+        uses: ./.github/workflows/actions/early-exit-check
+
+      - name: Terminate workflow if early exit check passes
+        if: steps.should_early_exit.outputs.result == 'true'
+        run: |
+          exit 0
 
       - uses: actions/setup-python@v5
         with:
@@ -243,6 +254,15 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+
+      - name: Run early exit check
+        id: should_early_exit
+        uses: ./.github/workflows/actions/early-exit-check
+
+      - name: Terminate workflow if early exit check passes
+        if: steps.should_early_exit.outputs.result == 'true'
+        run: |
+          exit 0
 
       - uses: actions/setup-python@v5
         with:
