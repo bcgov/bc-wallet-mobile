@@ -237,6 +237,8 @@ Another method for adding images to an emulated android device is through the ex
 
 To place a QR code into the emulators camera view, you'll first need open android studio and create a new virtual device. Once the virtual device is created, start it. In the running Devices tab, look for a kebob menu in the tray (photo below), this is the extended controls menu.
 
+![Extended controls menu](/docs/extended-controls-kebob.png)
+
 when that menu opens, navigate to the Camera section, there you'll see two options for adding an image, the wall and the table. Add the image of the QR code you'd like to scan and close the menu.
 
 Once inside the app, open the QR scanning screen, you'll be dropped into a virtual scene where you'll be able to navigate around and find the QR code to scan.
