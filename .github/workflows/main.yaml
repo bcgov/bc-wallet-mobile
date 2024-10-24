@@ -80,7 +80,7 @@ jobs:
         id: should_early_exit
         uses: ./.github/workflows/actions/early-exit-check
 
-      - name: Terminate workflow if early exit check passes
+      - name: Exit if no changes in core paths
         if: steps.should_early_exit.outputs.result == 'true'
         run: |
           exit 0
@@ -251,7 +251,7 @@ jobs:
         id: should_early_exit
         uses: ./.github/workflows/actions/early-exit-check
 
-      - name: Terminate workflow if early exit check passes
+      - name: Exit if no changes in core paths
         if: steps.should_early_exit.outputs.result == 'true'
         run: |
           exit 0
