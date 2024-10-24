@@ -18,7 +18,6 @@ on:
       - app/**
       - .yarn/**
       - .github/workflows/**
-      - .gitmodules
       - package.json
       - yarn.lock
       - .yarnrc.yml
