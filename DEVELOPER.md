@@ -68,7 +68,7 @@ To work on changes to BC Wallet in Bifold (the underlying Aries project) you wil
 
 ```sh
 # from bc-wallet-mobile
-git clone git@github.com:hyperledger/aries-mobile-agent-react-native.git bifold 
+git clone git@github.com:hyperledger/aries-mobile-agent-react-native.git bifold
 ```
 
 ```sh
@@ -97,15 +97,16 @@ Then once your PR is merged and the packages have been published, make a PR in b
 In the `./app/` directory copy the .env.sample `cp .env.sample .env`
 
 ```
-MEDIATOR_URL=<url>
+LOAD_STORYBOOK=false
 OCA_URL=<url>
+MEDIATOR_URL=<url>
 MEDIATOR_USE_PUSH_NOTIFICATIONS=false
 PROOF_TEMPLATE_URL=<url>
 REMOTE_LOGGING_URL=<url>
 INDY_VDR_PROXY_URL=<url>
 ```
 
-Push notifications can be used locally if the mediator service has the firebase plugin and it's configured correctly. 
+Push notifications can be used locally if the mediator service has the firebase plugin and it's configured correctly.
 
 ### Adding ledger configurations
 
@@ -229,6 +230,20 @@ default custom.png
 Note: You may have to reboot your emulator once this is complete for it to take effect.
 
 Now, to add any image to the virtual scene (an image of a QR code for example), simply place the image file in this directory with the name `custom.png`
+
+### Adding QR code to emulator camera view (Extended controls)
+
+Another method for adding images to an emulated android device is through the extended controls panel
+
+To place a QR code into the emulators camera view, you'll first need open android studio and create a new virtual device. Once the virtual device is created, start it. In the running Devices tab, look for a kebob menu in the tray (photo below), this is the extended controls menu.
+
+![Extended controls menu](/docs/extended-controls-kebob.png)
+
+when that menu opens, navigate to the Camera section, there you'll see two options for adding an image, the wall and the table. Add the image of the QR code you'd like to scan and close the menu.
+
+Once inside the app, open the QR scanning screen, you'll be dropped into a virtual scene where you'll be able to navigate around and find the QR code to scan.
+To move around: hold `shift` + (`W`,`A`,`S`,`D`)
+To look around: use the arrow keys
 
 ## Troubleshooting and debugging
 
