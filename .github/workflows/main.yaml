@@ -14,15 +14,6 @@ on:
       - .github/workflows/**
   pull_request:
     branches: [main]
-    paths:
-      - app/**
-      - .yarn/**
-      - .github/workflows/**
-      - package.json
-      - yarn.lock
-      - .yarnrc.yml
-      - .yarn/**
-      - .gitignore
 
 jobs:
   check-secrets:
