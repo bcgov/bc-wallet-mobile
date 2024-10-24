@@ -10,7 +10,7 @@ import {
   W3cCredentialRecord,
 } from '@credo-ts/core'
 import { useAgent, useConnectionById } from '@credo-ts/react-hooks'
-import { BifoldError, EventTypes, GenericFn, Screens, Stacks, useStore, useTheme } from '@hyperledger/aries-bifold-core'
+import { BifoldError, EventTypes, Screens, Stacks, useStore, useTheme } from '@hyperledger/aries-bifold-core'
 import { BasicMessageMetadata, basicMessageCustomMetadata } from '@hyperledger/aries-bifold-core/App/types/metadata'
 import { HomeStackParams } from '@hyperledger/aries-bifold-core/App/types/navigators'
 import { CustomNotification, CustomNotificationRecord } from '@hyperledger/aries-bifold-core/App/types/notification'
@@ -18,7 +18,7 @@ import { formatTime, getConnectionName } from '@hyperledger/aries-bifold-core/Ap
 import { markProofAsViewed } from '@hyperledger/aries-bifold-verifier'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Image, StyleSheet } from 'react-native'
 
@@ -85,7 +85,6 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
   const { agent } = useAgent()
-  const [action, setAction] = useState<GenericFn>()
   const isNotCustomNotification =
     notification instanceof BasicMessageRecord ||
     notification instanceof CredentialExchangeRecord ||
@@ -274,7 +273,9 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
             resolve({
               title: t('CredentialDetails.NewRevoked'),
               body: theirLabel,
-              eventTime: revocationDate ? formatTime(revocationDate, { shortMonth: true, includeHour: true }) : '',
+              eventTime: revocationDate
+                ? formatTime(new Date(revocationDate), { shortMonth: true, includeHour: true })
+                : '',
             })
           })
           break
@@ -302,74 +303,60 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       | W3cCredentialRecord,
     notificationType: NotificationTypeEnum
   ) => {
-    let onPress
     switch (notificationType) {
       case NotificationTypeEnum.BasicMessage:
-        onPress = () => {
-          navigation.getParent()?.navigate(Stacks.ContactStack, {
-            screen: Screens.Chat,
-            params: { connectionId: (notification as BasicMessageRecord).connectionId },
-          })
-        }
+        navigation.getParent()?.navigate(Stacks.ContactStack, {
+          screen: Screens.Chat,
+          params: { connectionId: (notification as BasicMessageRecord).connectionId },
+        })
         break
       case NotificationTypeEnum.CredentialOffer:
-        onPress = () => {
-          navigation.getParent()?.navigate(Stacks.NotificationStack, {
-            screen: Screens.CredentialOffer,
-            params: { credentialId: notification.id },
-          })
-        }
+        navigation.getParent()?.navigate(Stacks.ConnectionStack, {
+          screen: Screens.Connection,
+          params: { credentialId: notification.id },
+        })
         break
       case NotificationTypeEnum.ProofRequest:
         if (
           (notification as ProofExchangeRecord).state === ProofState.Done ||
           (notification as ProofExchangeRecord).state === ProofState.PresentationReceived
         ) {
-          onPress = () => {
-            navigation.getParent()?.navigate(Stacks.ContactStack, {
-              screen: Screens.ProofDetails,
-              params: { recordId: notification.id, isHistory: true },
-            })
-          }
-        } else {
-          onPress = () => {
-            navigation.getParent()?.navigate(Stacks.NotificationStack, {
-              screen: Screens.ProofRequest,
-              params: { proofId: (notification as ProofExchangeRecord).id },
-            })
-          }
-        }
-        break
-      case NotificationTypeEnum.Proof:
-        onPress = () =>
-          navigation.getParent()?.navigate(Stacks.NotificationStack, {
+          navigation.getParent()?.navigate(Stacks.ContactStack, {
             screen: Screens.ProofDetails,
             params: { recordId: notification.id, isHistory: true },
           })
+        } else {
+          navigation.getParent()?.navigate(Stacks.ConnectionStack, {
+            screen: Screens.Connection,
+            params: { proofId: (notification as ProofExchangeRecord).id },
+          })
+        }
+        break
+      case NotificationTypeEnum.Proof:
+        navigation.getParent()?.navigate(Stacks.NotificationStack, {
+          screen: Screens.ProofDetails,
+          params: { recordId: notification.id, isHistory: true },
+        })
         break
       case NotificationTypeEnum.Revocation:
-        onPress = () =>
-          navigation.getParent()?.navigate(Stacks.NotificationStack, {
-            screen: Screens.CredentialDetails,
-            params: { credential: notification },
-          })
+        navigation.getParent()?.navigate(Stacks.NotificationStack, {
+          screen: Screens.CredentialDetails,
+          params: { credential: notification },
+        })
         break
       case NotificationTypeEnum.Custom:
-        onPress = () =>
-          navigation.getParent()?.navigate(Stacks.NotificationStack, {
-            screen: Screens.CustomNotification,
-          })
+        navigation.getParent()?.navigate(Stacks.NotificationStack, {
+          screen: Screens.CustomNotification,
+        })
         break
       default:
         throw new Error('NotificationType was not set correctly.')
     }
-    return { onPress }
   }
 
-  useEffect(() => {
-    const { onPress } = getActionForNotificationType(notification, notificationType)
-    setAction(() => onPress)
-  }, [notification])
+  const action = useCallback(() => {
+    getActionForNotificationType(notification, notificationType)
+  }, [notification, notificationType])
 
   useEffect(() => {
     const detailsPromise = async () => {
