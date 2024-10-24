@@ -9,7 +9,18 @@ runs:
     - name: Check location of changed files
       shell: bash
       run: |
-        change_count=$(git diff --name-only origin/main..HEAD | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' | wc -l)
+        # On main branch, compare with the previous
+        # commit otherwise (for PRs) compare with the
+        # current commit.
+        if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          end_ref="HEAD^"
+        else
+          end_ref="HEAD"
+        fi
+
+        echo "Comparing origin/${GITHUB_BASE_REF:-HEAD} with ${end_ref}"
+
+        change_count=$(git diff --name-only origin/${GITHUB_BASE_REF:-HEAD}..${end_ref} | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' | wc -l | awk '{$1=$1};1')
         echo "$change_count files changed in app, .yarn, or .github/workflows"
         if [ $change_count -gt 0 ]; then
           # A result greater than 0 means there are changes
@@ -18,10 +29,3 @@ runs:
         else
           echo "result=true" >> $GITHUB_OUTPUT
         fi
-
-    # - name: Record output
-    #   if: env.output > 0
-    #   shell: bash
-    #   run: |
-    #     echo "${{ env.output }} files changed in app, .yarn, or .github/workflows"
-    #     echo "result=false" >> $GITHUB_OUTPUT
