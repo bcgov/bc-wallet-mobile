@@ -9,6 +9,22 @@ runs:
     - name: Check location of changed files
       shell: bash
       run: |
+        git branch
+
+        echo "a"
+
+        pwd
+        echo "b"
+
+        git diff --name-only origin/main..HEAD
+        echo "c"
+
+        git diff --name-only origin/main..HEAD | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)'
+        echo "d"
+
+        git diff --name-only origin/main..HEAD | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' | wc -l
+        echo "e"
+
         change_count=$(git diff --name-only origin/main..HEAD | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' | wc -l)
         echo "$change_count files changed in app, .yarn, or .github/workflows"
         if [ $change_count -gt 0 ]; then
@@ -18,10 +34,3 @@ runs:
         else
           echo "result=true" >> $GITHUB_OUTPUT
         fi
-
-    # - name: Record output
-    #   if: env.output > 0
-    #   shell: bash
-    #   run: |
-    #     echo "${{ env.output }} files changed in app, .yarn, or .github/workflows"
-    #     echo "result=false" >> $GITHUB_OUTPUT
