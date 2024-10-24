@@ -14,15 +14,6 @@ on:
       - .github/workflows/**
   pull_request:
     branches: [main]
-    paths:
-      - app/**
-      - .yarn/**
-      - .github/workflows/**
-      - .gitmodules
-      - package.json
-      - yarn.lock
-      - .yarnrc.yml
-      - .yarn/**
 
 jobs:
   check-secrets:
@@ -82,6 +73,17 @@ jobs:
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all branches, main needed.
+
+      - name: Run early exit check
+        id: should_early_exit
+        uses: ./.github/workflows/actions/early-exit-check
+
+      - name: Exit if no changes in core paths
+        if: steps.should_early_exit.outputs.result == 'true'
+        run: |
+          exit 0
 
       - uses: actions/setup-python@v5
         with:
@@ -242,6 +244,17 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all branches, main needed.
+
+      - name: Run early exit check
+        id: should_early_exit
+        uses: ./.github/workflows/actions/early-exit-check
+
+      - name: Exit if no changes in core paths
+        if: steps.should_early_exit.outputs.result == 'true'
+        run: |
+          exit 0
 
       - uses: actions/setup-python@v5
         with:
