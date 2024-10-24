@@ -254,6 +254,8 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all branches, main needed.
 
       - name: Run early exit check
         id: should_early_exit
