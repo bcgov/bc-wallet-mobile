@@ -20,7 +20,7 @@ runs:
 
         echo "Comparing ${GITHUB_BASE_REF:-HEAD} with ${end_ref}"
 
-        change_count=$(git diff --name-only origin/${GITHUB_BASE_REF:-HEAD}..${end_ref} | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' | wc -l)
+        change_count=$(git diff --name-only origin/${GITHUB_BASE_REF:-HEAD}..${end_ref} | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' | wc -l | awk '{$1=$1};1')
         echo "$change_count files changed in app, .yarn, or .github/workflows"
         if [ $change_count -gt 0 ]; then
           # A result greater than 0 means there are changes
