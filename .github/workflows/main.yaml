@@ -71,14 +71,14 @@ jobs:
   early-exit-check:
     runs-on: ubuntu-22.04
     outputs:
-      should_skip_build: ${{ steps.core_files_check.outputs.result == 'false' }}
+      should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all branches, main needed.
 
       - name: Check if core files changed
-        id: core_files_check
+        id: core_files_changed
         shell: bash
         run: |
           set -x
