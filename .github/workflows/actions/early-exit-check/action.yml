@@ -34,7 +34,7 @@ runs:
         if [ $change_count -gt 0 ]; then
           # A result greater than 0 means there are changes
           # in the specified directories.
-          echo "result=zz" >> $GITHUB_OUTPUT
+          echo "result=true" >> $GITHUB_OUTPUT
         else
-          echo "result=xx" >> $GITHUB_OUTPUT
+          echo "result=false" >> $GITHUB_OUTPUT
         fi
