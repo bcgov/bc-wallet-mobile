@@ -71,7 +71,7 @@ jobs:
   early-exit-check:
     runs-on: ubuntu-22.04
     outputs:
-      should_skip_build: ${{ steps.core_files_check.outputs.result != 'true' }}
+      should_skip_build: ${{ steps.core_files_check.outputs.result == 'false' }}
     steps:
       - uses: actions/checkout@v4
         with:
