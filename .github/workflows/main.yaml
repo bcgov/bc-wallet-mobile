@@ -98,7 +98,7 @@ jobs:
           echo "Comparing ${parent_ref} with ${child_ref}"
 
           diff_output=$(git diff --name-only ${parent_ref}..${child_ref})
-          change_count=$(echo "$diff_output" | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' | wc -l | awk '{$1=$1};1' || true)
+          change_count=$(echo "$diff_output" | (grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' || true) | wc -l | awk '{$1=$1};1')
 
           echo "$change_count files changed in app, .yarn, or .github/workflows"
 
