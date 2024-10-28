@@ -68,22 +68,54 @@ jobs:
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
 
-  build-ios:
-    needs: [check-secrets, check-vars]
-    runs-on: macos-13
+  early-exit-check:
+    runs-on: ubuntu-22.04
+    outputs:
+      should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all branches, main needed.
 
-      - name: Run early exit check
-        id: should_early_exit
-        uses: ./.github/workflows/actions/early-exit-check
-
-      - name: Exit if no changes in core paths
-        if: steps.should_early_exit.outputs.result == 'true'
+      - name: Check if core files changed
+        id: core_files_changed
+        shell: bash
         run: |
-          exit 0
+          set -x
+
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then 
+            # On main branch, compare with the previous
+            # commit otherwise (for PRs) compare with the
+            # current commit.
+            parent_ref="${GITHUB_REF_NAME:-main}^"
+            child_ref="${GITHUB_SHA}"
+          else
+            # On PRs, compare with the base branch.
+            parent_ref="origin/${GITHUB_BASE_REF:-main}"
+            child_ref="HEAD"
+          fi
+
+          echo "Comparing ${parent_ref} with ${child_ref}"
+
+          diff_output=$(git diff --name-only ${parent_ref}..${child_ref})
+          change_count=$(echo "$diff_output" | grep -E '^(app/.*)|(.yarn/.*)|(.github/workflows/.*)' | wc -l | awk '{$1=$1};1' || true)
+
+          echo "$change_count files changed in app, .yarn, or .github/workflows"
+
+          if [ $change_count -gt 0 ]; then
+            # A result greater than 0 means there are changes
+            # in the specified directories.
+            echo "result=true" >> $GITHUB_OUTPUT
+          else
+            echo "result=false" >> $GITHUB_OUTPUT
+          fi
+
+  build-ios:
+    needs: [check-secrets, check-vars, early-exit-check]
+    if: ${{ needs.early-exit-check.outputs.should_skip_build != 'true' }}
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
@@ -237,24 +269,14 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
-    needs: [check-secrets, check-vars]
+    needs: [check-secrets, check-vars, early-exit-check]
+    if: ${{ needs.early-exit-check.outputs.should_skip_build != 'true' }}
     runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all branches, main needed.
-
-      - name: Run early exit check
-        id: should_early_exit
-        uses: ./.github/workflows/actions/early-exit-check
-
-      - name: Exit if no changes in core paths
-        if: steps.should_early_exit.outputs.result == 'true'
-        run: |
-          exit 0
 
       - uses: actions/setup-python@v5
         with:
