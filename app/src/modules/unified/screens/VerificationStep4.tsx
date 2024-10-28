@@ -1,6 +1,6 @@
 import { Text, View, StyleSheet } from 'react-native'
 
-const ChooseID: React.FC = () => {
+const Step4Screen: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -18,4 +18,4 @@ const ChooseID: React.FC = () => {
   )
 }
 
-export default ChooseID
+export default Step4Screen

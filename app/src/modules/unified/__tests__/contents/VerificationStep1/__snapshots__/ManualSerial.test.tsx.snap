@@ -1,0 +1,226 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ManualSerialContent Component renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    [
+      "bottom",
+      "left",
+      "right",
+    ]
+  }
+  style={
+    {
+      "flex": 1,
+    }
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        {
+          "flexGrow": 1,
+        }
+      }
+      keyboardShouldPersistTaps="handled"
+    >
+      <View>
+        <View
+          style={
+            {
+              "backgroundColor": "#313132",
+              "height": "100%",
+              "justifyContent": "space-between",
+              "padding": 24,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "flexDirection": "column",
+              }
+            }
+          >
+            <Image
+              resizeMode="contain"
+              source={
+                {
+                  "default": "",
+                }
+              }
+              style={
+                {
+                  "height": 470.34000000000003,
+                  "marginBottom": 24,
+                  "width": 702,
+                }
+              }
+            />
+            <View
+              style={
+                {
+                  "marginVertical": 10,
+                  "width": "100%",
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                    "marginBottom": 5,
+                  }
+                }
+              >
+                Unified.ManualSerial.InputLabel
+              </Text>
+              <TextInput
+                accessibilityLabel="Unified.ManualSerial.InputLabel"
+                defaultValue=""
+                onBlur={[Function]}
+                onChangeText={[Function]}
+                onFocus={[Function]}
+                selectionColor="#42803E"
+                style={
+                  [
+                    {
+                      "backgroundColor": "#000000",
+                      "borderColor": "#FFFFFFFF",
+                      "borderRadius": 4,
+                      "borderWidth": 2,
+                      "color": "#FFFFFF",
+                      "fontSize": 16,
+                      "padding": 10,
+                    },
+                    false,
+                  ]
+                }
+                testID="com.ariesbifold:id/SerialInput"
+              />
+              <Text
+                style={
+                  {
+                    "alignSelf": "flex-end",
+                    "color": "#FFFFFF",
+                  }
+                }
+              >
+                0
+                /
+                15
+              </Text>
+            </View>
+            <Text
+              style={
+                {
+                  "color": "#FFFFFF",
+                  "fontSize": 14,
+                  "fontWeight": "normal",
+                  "marginBottom": 16,
+                }
+              }
+            >
+              Unified.ManualSerial.InputSubText
+            </Text>
+          </View>
+          <View
+            style={{}}
+          >
+            <View
+              style={
+                {
+                  "width": "100%",
+                }
+              }
+            >
+              <View
+                accessibilityLabel="Global.Continue"
+                accessibilityRole="button"
+                accessibilityState={
+                  {
+                    "busy": undefined,
+                    "checked": undefined,
+                    "disabled": false,
+                    "expanded": undefined,
+                    "selected": undefined,
+                  }
+                }
+                accessibilityValue={
+                  {
+                    "max": undefined,
+                    "min": undefined,
+                    "now": undefined,
+                    "text": undefined,
+                  }
+                }
+                accessible={true}
+                collapsable={false}
+                focusable={true}
+                onClick={[Function]}
+                onResponderGrant={[Function]}
+                onResponderMove={[Function]}
+                onResponderRelease={[Function]}
+                onResponderTerminate={[Function]}
+                onResponderTerminationRequest={[Function]}
+                onStartShouldSetResponder={[Function]}
+                style={
+                  {
+                    "backgroundColor": "#42803E",
+                    "borderRadius": 4,
+                    "opacity": 1,
+                    "padding": 16,
+                  }
+                }
+                testID="com.ariesbifold:id/Continue"
+              >
+                <View
+                  style={
+                    {
+                      "alignItems": "center",
+                      "flexDirection": "row",
+                      "justifyContent": "center",
+                    }
+                  }
+                >
+                  <Text
+                    style={
+                      [
+                        {
+                          "color": "#FFFFFF",
+                          "fontSize": 18,
+                          "fontWeight": "bold",
+                          "textAlign": "center",
+                        },
+                        false,
+                        false,
+                        false,
+                      ]
+                    }
+                  >
+                    Global.Continue
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+</RNCSafeAreaView>
+`;

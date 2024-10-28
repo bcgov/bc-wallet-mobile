@@ -1,0 +1,33 @@
+import { useTheme } from '@hyperledger/aries-bifold-core'
+import { Text, StyleSheet, ScrollView } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+
+type ContentProps = {
+  goToBirthdate: () => void
+}
+
+const ScanContent: React.FC<ContentProps> = () => {
+  const { ColorPallet, TextTheme } = useTheme()
+
+  const styles = StyleSheet.create({
+    pageContainer: {
+      height: '100%',
+      justifyContent: 'space-between',
+      backgroundColor: ColorPallet.brand.secondaryBackground,
+    },
+    scrollView: {
+      flex: 1,
+      padding: 24,
+    },
+  })
+
+  return (
+    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <Text style={TextTheme.headingThree}>Coming soon!</Text>
+      </ScrollView>
+    </SafeAreaView>
+  )
+}
+
+export default ScanContent

@@ -21,7 +21,7 @@ import PersonIssuance1 from '../assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '../assets/img/PersonIssuance2.svg'
 import { openLink } from '../helpers/utils'
 import { BCState } from '../store'
-import { BCScreens } from '../navigators/navigators'
+import { BCScreens } from '../types/navigators'
 
 const links = {
   WhatIsPersonCredential: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential',
