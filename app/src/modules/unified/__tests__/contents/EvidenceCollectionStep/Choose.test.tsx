@@ -3,7 +3,7 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 
 import { initialState, reducer } from '../../../../../store'
-import ChooseContent from '../../../contents/VerificationStep1/Choose'
+import ChooseContent from '../../../contents/EvidenceCollectionStep/Choose'
 
 describe('ChooseContent Component', () => {
   const goToInstructions = jest.fn()
@@ -28,9 +28,9 @@ describe('ChooseContent Component', () => {
       </StoreProvider>
     )
 
-    const continueButton = getByTestId(testIdWithKey('CombinedCard'))
-    expect(continueButton).toBeDefined()
-    fireEvent(continueButton, 'press')
+    const combinedCardTileButton = getByTestId(testIdWithKey('CombinedCard'))
+    expect(combinedCardTileButton).toBeDefined()
+    fireEvent(combinedCardTileButton, 'press')
     expect(goToInstructions).toHaveBeenCalledTimes(1)
   })
 })

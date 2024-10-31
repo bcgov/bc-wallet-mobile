@@ -14,17 +14,19 @@ import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native
 import { BCDispatchAction, BCState } from '../../../../store'
 
 const pagePadding = 24
+const twoThirds = 0.67
+const maxSerialNumberLength = 15
 
 type ErrorState = {
   visible: boolean
   description: string
 }
 
-interface ContentProps {
+type ManualSerialContentProps = {
   goToBirthdate: () => void
 }
 
-const ManualSerialContent: React.FC<ContentProps> = ({ goToBirthdate }: ContentProps) => {
+const ManualSerialContent: React.FC<ManualSerialContentProps> = ({ goToBirthdate }: ManualSerialContentProps) => {
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
@@ -47,7 +49,7 @@ const ManualSerialContent: React.FC<ContentProps> = ({ goToBirthdate }: ContentP
     },
     image: {
       width: width - pagePadding * 2,
-      height: (width - pagePadding * 2) * 0.67,
+      height: (width - pagePadding * 2) * twoThirds,
       marginBottom: 24,
     },
     error: {
@@ -79,15 +81,19 @@ const ManualSerialContent: React.FC<ContentProps> = ({ goToBirthdate }: ContentP
         description: t('Unified.ManualSerial.EmptySerialError'),
         visible: true,
       })
-    } else if (serial.length > 15) {
+      return
+    }
+
+    if (serial.length > maxSerialNumberLength) {
       setErrorState({
         description: t('Unified.ManualSerial.CharCountError'),
         visible: true,
       })
-    } else {
-      dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [serial] })
-      goToBirthdate()
+      return
     }
+
+    dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [serial] })
+    goToBirthdate()
   }, [serial, t, dispatch, goToBirthdate])
 
   return (
@@ -102,7 +108,7 @@ const ManualSerialContent: React.FC<ContentProps> = ({ goToBirthdate }: ContentP
           <LimitedTextInput
             defaultValue={serial}
             label={t('Unified.ManualSerial.InputLabel')}
-            limit={15}
+            limit={maxSerialNumberLength}
             handleChangeText={handleChangeText}
             accessibilityLabel={t('Unified.ManualSerial.InputLabel')}
             testID={testIdWithKey('SerialInput')}

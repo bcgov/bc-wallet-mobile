@@ -2,11 +2,11 @@ import { useTheme } from '@hyperledger/aries-bifold-core'
 import { Text, StyleSheet, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-type ContentProps = {
+type ScanContentProps = {
   goToBirthdate: () => void
 }
 
-const ScanContent: React.FC<ContentProps> = () => {
+const ScanContent: React.FC<ScanContentProps> = () => {
   const { ColorPallet, TextTheme } = useTheme()
 
   const styles = StyleSheet.create({

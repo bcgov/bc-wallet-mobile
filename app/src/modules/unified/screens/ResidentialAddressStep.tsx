@@ -1,6 +1,6 @@
 import { Text, View, StyleSheet } from 'react-native'
 
-const Step3Screen: React.FC = () => {
+const ResidentialAddressScreen: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -18,4 +18,4 @@ const Step3Screen: React.FC = () => {
   )
 }
 
-export default Step3Screen
+export default ResidentialAddressScreen

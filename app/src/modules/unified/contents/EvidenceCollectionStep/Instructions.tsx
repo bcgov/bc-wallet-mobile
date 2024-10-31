@@ -4,13 +4,17 @@ import { Text, StyleSheet, ScrollView, Image, View, useWindowDimensions } from '
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const pagePadding = 24
+const twoThirds = 0.67
 
-type ContentProps = {
+type InstructionsContentProps = {
   goToScan: () => void
   goToManualSerial: () => void
 }
 
-const InstructionsContent: React.FC<ContentProps> = ({ goToScan, goToManualSerial }: ContentProps) => {
+const InstructionsContent: React.FC<InstructionsContentProps> = ({
+  goToScan,
+  goToManualSerial,
+}: InstructionsContentProps) => {
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
   const { width } = useWindowDimensions()
@@ -33,7 +37,7 @@ const InstructionsContent: React.FC<ContentProps> = ({ goToScan, goToManualSeria
     },
     image: {
       width: width - pagePadding * 2,
-      height: (width - pagePadding * 2) * 0.67,
+      height: (width - pagePadding * 2) * twoThirds,
       marginBottom: 24,
     },
     heading: {

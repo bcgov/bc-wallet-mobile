@@ -2,7 +2,7 @@ import { testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
 import { Text, View, Image, StyleSheet, Pressable, ImageSourcePropType, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-export type CardButtonProps = {
+export type TileButtonProps = {
   onPress: () => void
   testIDKey: string
   accessibilityLabel: string
@@ -12,7 +12,7 @@ export type CardButtonProps = {
   style?: ViewStyle
 }
 
-const CardButton: React.FC<CardButtonProps> = ({
+const TileButton: React.FC<TileButtonProps> = ({
   onPress,
   testIDKey,
   accessibilityLabel,
@@ -20,10 +20,10 @@ const CardButton: React.FC<CardButtonProps> = ({
   description,
   imgSrc,
   style,
-}: CardButtonProps) => {
+}: TileButtonProps) => {
   const { ColorPallet, TextTheme } = useTheme()
   const styles = StyleSheet.create({
-    card: {
+    tile: {
       borderRadius: 4,
       backgroundColor: ColorPallet.notification.info,
       padding: 24,
@@ -50,7 +50,7 @@ const CardButton: React.FC<CardButtonProps> = ({
       testID={testIdWithKey(testIDKey)}
       accessibilityLabel={accessibilityLabel}
     >
-      <View style={styles.card}>
+      <View style={styles.tile}>
         <Text style={styles.actionText}>
           {actionText}
           <Icon size={20} color={ColorPallet.brand.primary} name={'arrow-right-thin'} />
@@ -64,4 +64,4 @@ const CardButton: React.FC<CardButtonProps> = ({
   )
 }
 
-export default CardButton
+export default TileButton

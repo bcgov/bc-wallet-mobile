@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 
-import InstructionsContent from '../../../contents/VerificationStep1/Instructions'
+import InstructionsContent from '../../../contents/EvidenceCollectionStep/Instructions'
 import { testIdWithKey } from '@hyperledger/aries-bifold-core'
 
 describe('InstructionsContent Component', () => {

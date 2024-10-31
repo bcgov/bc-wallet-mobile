@@ -3,7 +3,7 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 
 import { initialState, reducer } from '../../../../../store'
-import ManualSerialContent from '../../../contents/VerificationStep1/ManualSerial'
+import ManualSerialContent from '../../../contents/EvidenceCollectionStep/ManualSerial'
 
 describe('ManualSerialContent Component', () => {
   const goToBirthdate = jest.fn()

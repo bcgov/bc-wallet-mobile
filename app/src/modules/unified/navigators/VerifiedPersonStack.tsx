@@ -7,20 +7,20 @@ import {
 } from '@hyperledger/aries-bifold-core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import VerificationStep1 from '../screens/VerificationStep1'
-import VerificationStep2 from '../screens/VerificationStep2'
-import VerificationStep3 from '../screens/VerificationStep3'
-import VerificationStep4 from '../screens/VerificationStep4'
-import VerificationSteps from '../screens/VerificationSteps'
 
+import EvidenceCollectionStep from '../screens/EvidenceCollectionStep'
+import ResidentialAddressStep from '../screens/ResidentialAddressStep'
+import EmailStep from '../screens/EmailStep'
+import VerifyIdentityStep from '../screens/VerifyIdentityStep'
+import VerificationSteps from '../screens/VerificationSteps'
 import { BCScreens } from '../../../types/navigators'
 
 export type BCVerifiedPersonStackParams = {
   [BCScreens.VerificationSteps]: undefined
-  [BCScreens.VerificationStep1]: undefined
-  [BCScreens.VerificationStep2]: undefined
-  [BCScreens.VerificationStep3]: undefined
-  [BCScreens.VerificationStep4]: undefined
+  [BCScreens.EvidenceCollectionStep]: undefined
+  [BCScreens.ResidentialAddressStep]: undefined
+  [BCScreens.EmailStep]: undefined
+  [BCScreens.VerifyIdentityStep]: undefined
 }
 
 const VerifiedPersonStack: React.FC = () => {
@@ -48,10 +48,10 @@ const VerifiedPersonStack: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name={BCScreens.VerificationStep1}
-        component={VerificationStep1}
+        name={BCScreens.EvidenceCollectionStep}
+        component={EvidenceCollectionStep}
         options={{
-          title: t('Screens.VerificationStep1.Stage1'),
+          title: t('Screens.EvidenceCollectionStep.Stage1'),
           headerRight: () => (
             <IconButton
               buttonLocation={ButtonLocation.Right}
@@ -64,10 +64,10 @@ const VerifiedPersonStack: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name={BCScreens.VerificationStep2}
-        component={VerificationStep2}
+        name={BCScreens.ResidentialAddressStep}
+        component={ResidentialAddressStep}
         options={{
-          title: t('Screens.VerificationStep2.Stage1'),
+          title: t('Screens.ResidentialAddressStep.Stage1'),
           headerRight: () => (
             <IconButton
               buttonLocation={ButtonLocation.Right}
@@ -80,10 +80,10 @@ const VerifiedPersonStack: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name={BCScreens.VerificationStep3}
-        component={VerificationStep3}
+        name={BCScreens.EmailStep}
+        component={EmailStep}
         options={{
-          title: t('Screens.VerificationStep3.Stage1'),
+          title: t('Screens.EmailStep.Stage1'),
           headerRight: () => (
             <IconButton
               buttonLocation={ButtonLocation.Right}
@@ -96,10 +96,10 @@ const VerifiedPersonStack: React.FC = () => {
         }}
       />
       <Stack.Screen
-        name={BCScreens.VerificationStep4}
-        component={VerificationStep4}
+        name={BCScreens.VerifyIdentityStep}
+        component={VerifyIdentityStep}
         options={{
-          title: t('Screens.VerificationStep4.Stage1'),
+          title: t('Screens.VerifyIdentityStep.Stage1'),
           headerRight: () => (
             <IconButton
               buttonLocation={ButtonLocation.Right}

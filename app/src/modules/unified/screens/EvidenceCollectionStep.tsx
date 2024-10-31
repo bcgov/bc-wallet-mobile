@@ -4,11 +4,11 @@ import { HeaderBackButton, HeaderBackButtonProps } from '@react-navigation/eleme
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import ChooseContent from '../contents/VerificationStep1/Choose'
-import InstructionsContent from '../contents/VerificationStep1/Instructions'
-import ScanContent from '../contents/VerificationStep1/Scan'
-import ManualSerialContent from '../contents/VerificationStep1/ManualSerial'
-import BirthdateContent from '../contents/VerificationStep1/Birthdate'
+import ChooseContent from '../contents/EvidenceCollectionStep/Choose'
+import InstructionsContent from '../contents/EvidenceCollectionStep/Instructions'
+import ScanContent from '../contents/EvidenceCollectionStep/Scan'
+import ManualSerialContent from '../contents/EvidenceCollectionStep/ManualSerial'
+import BirthdateContent from '../contents/EvidenceCollectionStep/Birthdate'
 
 const Stages = {
   Choose: 1,
@@ -18,7 +18,7 @@ const Stages = {
   Birthdate: 5,
 } as const
 
-const Step1Screen: React.FC = () => {
+const EvidenceCollectionStepScreen: React.FC = () => {
   const [stage, setStage] = useState(1)
   const navigation = useNavigation()
   const { t } = useTranslation()
@@ -26,7 +26,7 @@ const Step1Screen: React.FC = () => {
   const StageNavOptionsMap = useMemo(
     () => ({
       1: {
-        title: t('Screens.VerificationStep1.Stage1'),
+        title: t('Screens.EvidenceCollectionStep.Stage1'),
         headerLeft: (props: HeaderBackButtonProps) => (
           <HeaderBackButton
             {...props}
@@ -46,7 +46,7 @@ const Step1Screen: React.FC = () => {
         ),
       },
       2: {
-        title: t('Screens.VerificationStep1.Stage2'),
+        title: t('Screens.EvidenceCollectionStep.Stage2'),
         headerLeft: (props: HeaderBackButtonProps) => (
           <HeaderBackButton
             {...props}
@@ -69,7 +69,7 @@ const Step1Screen: React.FC = () => {
         ),
       },
       3: {
-        title: t('Screens.VerificationStep1.Stage3'),
+        title: t('Screens.EvidenceCollectionStep.Stage3'),
         headerLeft: (props: HeaderBackButtonProps) => (
           <HeaderBackButton
             {...props}
@@ -92,7 +92,7 @@ const Step1Screen: React.FC = () => {
         ),
       },
       4: {
-        title: t('Screens.VerificationStep1.Stage4'),
+        title: t('Screens.EvidenceCollectionStep.Stage4'),
         headerLeft: (props: HeaderBackButtonProps) => (
           <HeaderBackButton
             {...props}
@@ -115,7 +115,7 @@ const Step1Screen: React.FC = () => {
         ),
       },
       5: {
-        title: t('Screens.VerificationStep1.Stage5'),
+        title: t('Screens.EvidenceCollectionStep.Stage5'),
         headerLeft: (props: HeaderBackButtonProps) => (
           <HeaderBackButton
             {...props}
@@ -184,4 +184,4 @@ const Step1Screen: React.FC = () => {
   return <BirthdateContent onComplete={onComplete} />
 }
 
-export default Step1Screen
+export default EvidenceCollectionStepScreen

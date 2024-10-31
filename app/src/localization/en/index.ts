@@ -66,20 +66,20 @@ const translation = {
     "Settings": "Menu",
     "Preface": "BC Wallet",
     "VerificationSteps": "Setup steps",
-    "VerificationStep1": {
+    "EvidenceCollectionStep": {
       "Stage1": "Choose your identification",
       "Stage2": "Instructions",
       "Stage3": "Scan your identification",
       "Stage4": "Enter serial number",
       "Stage5": "Enter birthdate",
     },
-    "VerificationStep2": {
+    "ResidentialAddressStep": {
       "Stage1": "TODO",
     },
-    "VerificationStep3": {
+    "EmailStep": {
       "Stage1": "TODO",
     },
-    "VerificationStep4": {
+    "VerifyIdentityStep": {
       "Stage1": "TODO",
     },
   },

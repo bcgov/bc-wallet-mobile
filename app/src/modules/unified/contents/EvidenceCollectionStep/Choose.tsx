@@ -5,17 +5,17 @@ import { Text, StyleSheet, ScrollView, Pressable, View, useWindowDimensions } fr
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import CardButton, { CardButtonProps } from '../../components/CardButton'
+import TileButton, { TileButtonProps } from '../../components/TileButton'
 import { BCDispatchAction, BCState } from '../../../../store'
 import { UnifiedCardType } from '../../types'
 
 const pagePadding = 24
 
-type ContentProps = {
+type ChooseContentProps = {
   goToInstructions: () => void
 }
 
-const ChooseContent: React.FC<ContentProps> = ({ goToInstructions }: ContentProps) => {
+const ChooseContent: React.FC<ChooseContentProps> = ({ goToInstructions }: ChooseContentProps) => {
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
   const [, dispatch] = useStore<BCState>()
@@ -111,8 +111,8 @@ const ChooseContent: React.FC<ContentProps> = ({ goToInstructions }: ContentProp
           imgSrc: require('../../assets/img/no_photo_card.png'),
           style: { marginBottom: 16 },
         },
-      ] as CardButtonProps[]
-    ).map((props, i) => <CardButton {...props} key={i + 1} />)
+      ] as TileButtonProps[]
+    ).map((props, i) => <TileButton {...props} key={i + 1} />)
   }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t])
 
   return (
@@ -137,7 +137,7 @@ const ChooseContent: React.FC<ContentProps> = ({ goToInstructions }: ContentProp
             <Icon size={20} color={ColorPallet.brand.primary} name={'help-circle-outline'} />
           </Text>
         </Pressable>
-        <CardButton
+        <TileButton
           onPress={onPressOtherID}
           testIDKey={'OtherID'}
           accessibilityLabel={t('Unified.ChooseYourID.OtherID')}

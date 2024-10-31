@@ -1,15 +1,15 @@
+import { testIdWithKey } from '@hyperledger/aries-bifold-core'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 
-import CardButton from '../../components/CardButton'
-import { testIdWithKey } from '@hyperledger/aries-bifold-core'
+import TileButton from '../../components/TileButton'
 
-describe('CardButton Component', () => {
+describe('TileButton Component', () => {
   const onPress = jest.fn()
   const actionText = 'Action text'
   const description =
     'Lorem ipsum dolor sit amet consectetur adipisicing elit. Quasi et consectetur iusto error aliquam'
-  const testIDKey = 'CardButton'
+  const testIDKey = 'TileButton'
   const accessibilityLabel = 'Card'
 
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe('CardButton Component', () => {
 
   test('renders correctly', () => {
     const tree = render(
-      <CardButton
+      <TileButton
         onPress={onPress}
         actionText={actionText}
         description={description}
@@ -31,7 +31,7 @@ describe('CardButton Component', () => {
 
   test('test ID is present and press handler works', () => {
     const { getByTestId } = render(
-      <CardButton
+      <TileButton
         onPress={onPress}
         actionText={actionText}
         description={description}
@@ -40,9 +40,9 @@ describe('CardButton Component', () => {
       />
     )
 
-    const cardButton = getByTestId(testIdWithKey(testIDKey))
-    expect(cardButton).toBeDefined()
-    fireEvent(cardButton, 'press')
+    const tileButton = getByTestId(testIdWithKey(testIDKey))
+    expect(tileButton).toBeDefined()
+    fireEvent(tileButton, 'press')
     expect(onPress).toHaveBeenCalledTimes(1)
   })
 })

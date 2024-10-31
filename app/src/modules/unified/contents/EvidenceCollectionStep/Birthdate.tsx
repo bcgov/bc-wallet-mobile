@@ -7,11 +7,11 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { BCDispatchAction, BCState } from '../../../../store'
 
-type ContentProps = {
+type BirthdateContentProps = {
   onComplete: () => void
 }
 
-const BirthdateContent: React.FC<ContentProps> = ({ onComplete }: ContentProps) => {
+const BirthdateContent: React.FC<BirthdateContentProps> = ({ onComplete }: BirthdateContentProps) => {
   const today = new Date()
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()

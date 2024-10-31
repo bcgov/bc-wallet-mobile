@@ -3,7 +3,7 @@ import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 
 import { initialState, reducer } from '../../../../../store'
-import BirthdateContent from '../../../contents/VerificationStep1/Birthdate'
+import BirthdateContent from '../../../contents/EvidenceCollectionStep/Birthdate'
 
 describe('BirthdateContent Component', () => {
   const onComplete = jest.fn()

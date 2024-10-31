@@ -13,14 +13,16 @@ interface SetupStep {
   testIDKey: string
 }
 
-type ContentProps = {
-  goToStep1: () => void
-  goToStep2: () => void
-  goToStep3: () => void
-  goToStep4: () => void
+type VerificationStepsContentProps = {
+  goToEvidenceCollectionStep: () => void
+  goToResidentialAddressStep: () => void
+  goToEmailStep: () => void
+  goToVerifyIdentityStep: () => void
 }
 
-export const VerificationStepsContent: React.FC<ContentProps> = ({ goToStep1 }: ContentProps) => {
+export const VerificationStepsContent: React.FC<VerificationStepsContentProps> = ({
+  goToEvidenceCollectionStep,
+}: VerificationStepsContentProps) => {
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
 
@@ -74,7 +76,7 @@ export const VerificationStepsContent: React.FC<ContentProps> = ({ goToStep1 }: 
         active: true,
         complete: false,
         content: <Text style={styles.contentText}>{t('Unified.Steps.ScanOrTakePhotos')}</Text>,
-        onPress: () => goToStep1(),
+        onPress: () => goToEvidenceCollectionStep(),
         testIDKey: 'Step1',
       },
       {
@@ -111,7 +113,7 @@ export const VerificationStepsContent: React.FC<ContentProps> = ({ goToStep1 }: 
         testIDKey: 'Step4',
       },
     ]
-  }, [styles, t, goToStep1])
+  }, [styles, t, goToEvidenceCollectionStep])
 
   return (
     <View style={styles.container}>

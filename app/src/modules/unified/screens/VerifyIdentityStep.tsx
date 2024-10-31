@@ -1,6 +1,6 @@
 import { Text, View, StyleSheet } from 'react-native'
 
-const Step2Screen: React.FC = () => {
+const VerifyIdentityStepScreen: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -18,4 +18,4 @@ const Step2Screen: React.FC = () => {
   )
 }
 
-export default Step2Screen
+export default VerifyIdentityStepScreen

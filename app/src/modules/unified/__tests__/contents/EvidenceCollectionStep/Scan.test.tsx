@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
-import ScanContent from '../../../contents/VerificationStep1/Scan'
+import ScanContent from '../../../contents/EvidenceCollectionStep/Scan'
 
 describe('ScanContent Component', () => {
   const goToBirthdate = jest.fn()

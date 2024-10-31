@@ -1,6 +1,6 @@
 import { Text, View, StyleSheet } from 'react-native'
 
-const Step4Screen: React.FC = () => {
+const EmailStepScreen: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -18,4 +18,4 @@ const Step4Screen: React.FC = () => {
   )
 }
 
-export default Step4Screen
+export default EmailStepScreen
