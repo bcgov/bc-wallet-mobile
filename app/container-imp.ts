@@ -47,7 +47,7 @@ import { AttestationRestrictions, autoDisableRemoteLoggingIntervalInMinutes } fr
 import { activate, deactivate, setup, status } from './src/helpers/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from './src/helpers/utils'
 import { useNotifications } from './src/hooks/notifications'
-import VerifiedPersonStack from './src/navigators/VerifiedPersonStack'
+import VerifiedPersonStack from './src/modules/unified/navigators/VerifiedPersonStack'
 import Developer from './src/screens/Developer'
 import { pages } from './src/screens/OnboardingPages'
 import PersonCredential from './src/screens/PersonCredential'
@@ -63,6 +63,7 @@ import {
   DismissPersonCredentialOffer,
   IASEnvironment,
   RemoteDebuggingState,
+  Unified,
   initialState,
 } from './src/store'
 
@@ -212,6 +213,7 @@ export class AppContainer implements Container {
         },
       ],
       enableTours: true,
+      enableChat: true,
       supportedLanguages: ['en'],
       showPreface: true,
       disableOnboardingSkip: true,
@@ -347,6 +349,7 @@ export class AppContainer implements Container {
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
       let { environment, remoteDebugging, enableProxy, enableAltPersonFlow } = initialState.developer
+      let unified = initialState.unified
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -366,7 +369,14 @@ export class AppContainer implements Container {
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
+        loadState<Unified>(BCLocalStorageKeys.Unified, (val) => (unified = val)),
       ])
+
+      // Convert date string to Date object (async-storage converts Dates to strings)
+      if (typeof unified.birthdate === 'string') {
+        unified.birthdate = new Date(Date.parse(unified.birthdate))
+      }
+
       const state: BCState = {
         ...initialState,
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
@@ -385,6 +395,7 @@ export class AppContainer implements Container {
           enableProxy,
           enableAltPersonFlow,
         },
+        unified: { ...initialState.unified, ...unified },
       }
 
       const { enabledAt, sessionId } = state.developer.remoteDebugging

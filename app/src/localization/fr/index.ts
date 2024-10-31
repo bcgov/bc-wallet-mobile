@@ -66,7 +66,22 @@ const translation = {
     "Settings": "Menu",
     "Preface": "BC Wallet",
     "VerificationSteps": "Setup steps (FR)",
-    "ChooseID": "Choose your identification (FR)",
+    "EvidenceCollectionStep": {
+      "Stage1": "Choose your identification (FR)",
+      "Stage2": "Instructions (FR)",
+      "Stage3": "Scan your identification (FR)",
+      "Stage4": "Enter serial number (FR)",
+      "Stage5": "Enter birthdate (FR)",
+    },
+    "ResidentialAddressStep": {
+      "Stage1": "TODO",
+    },
+    "EmailStep": {
+      "Stage1": "TODO",
+    },
+    "VerifyIdentityStep": {
+      "Stage1": "TODO",
+    },
   },
   "PersonCredentialNotification": {
     "Title": "Obtener votre carte d'identité",
@@ -84,7 +99,6 @@ const translation = {
     "WhatIsPersonCredentialLink": "Qu'est-ce qu'un justificatif personnel",
     "WhereToUseLink": "Où l'utiliser",
     "HelpLink": "Aide",
-    "ScanOrTakePhotos": "Scan or take photos of your ID. (FR)"
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "Aucune connection internet",
@@ -183,6 +197,50 @@ const translation = {
     "ScanOnlySpecial3": "BC Wallet ne prend actuellement pas en charge l'ajout de justificatifs numériques en scannant ou en prenant des photos de justificatifs physiques.",
     "WhereToUseLink": "Voyez où vous pouvez utiliser BC Wallet.",
     "BadQRCodeDescription": "Le code QR scanné ne fonctionne pas avec BC Wallet. BC Wallet ne fonctionne qu'avec les services participants.\n\nIl ne peut actuellement pas ajouter de justificatifs numériques en prenant des photos de justificatifs physiques."
+  },
+  "Unified": {
+    "Steps": {
+      "ScanOrTakePhotos": "Scan or take photos of your ID. (FR)",
+    },
+    "ChooseYourID": {
+      "WhatCardDoYou": "What BC Services Card do you have? (FR)",
+      "SomePeopleStillCallIt": "Some people still call it a CareCard or a Health Card. It has your personal health number (PHN) on the back. (FR)",
+      "CombinedCard": "Combined card (FR)",
+      "CombinedCardActionText": "It's combined with my driver's licence (FR)",
+      "CombinedCardDescription": "Use this card for a faster way to set up the app. (FR)",
+      "PhotoCard": "Photo card (FR)",
+      "PhotoCardActionText": "A card with my photo (FR)",
+      "PhotoCardDescription": "Use this card for a faster way to set up the app. (FR)",
+      "NoPhotoCard": "Non photo card (FR)",
+      "NoPhotoCardActionText": "A card without a photo (FR)",
+      "NoPhotoCardDescription": "Use this card + photo ID to set up the app. (FR)",
+      "DontHaveOne": "Don't have one? (FR)",
+      "CheckBefore": "Check before you continue. It's faster to set up with one of the above. (FR)",
+      "CheckForServicesCard": "Check for BC Services Card (FR)",
+      "CheckIfIHave": "Check if I have a BC Services Card (FR)",
+      "OtherID": "Other ID (FR)",
+      "OtherIDActionText": "Set up with other ID (FR)",
+      "OtherIDDescription": "This option takes the longest to set up. You'll need 2 IDs to set up the app and have limited access to services. (FR)",
+    },
+    "Instructions": {
+      "Heading": "Provide the card serial number on the back right side of your card. (FR)",
+      "Paragraph": "When scanning, you should place the card in front of a white background for best results. (FR)",
+      "ScanBarcode": "Scan Barcode with Camera (FR)",
+      "EnterManually": "Enter Serial Number Manually (FR)",
+    },
+    "Scan": {},
+    "ManualSerial": {
+      "InputLabel": "Serial number (FR)",
+      "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (FR)",
+      "EmptySerialError": "Required (FR)",
+      "CharCountError": "Cannot exceed 15 characters (FR)",
+    },
+    "Birthdate": {
+      "CardSerialNumber": "Card serial number: {{ serial }} (FR)",
+      "Heading": "Enter your birthdate (FR)",
+      "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (FR)",
+      "InputLabel": "Birthdate (FR)",
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Dépannage à distance",

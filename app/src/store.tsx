@@ -7,6 +7,8 @@ import {
   PersistentStorage,
 } from '@hyperledger/aries-bifold-core'
 
+import { UnifiedCardType } from './modules/unified/types'
+
 export interface IASEnvironment {
   name: string
   iasAgentInviteUrl: string
@@ -17,6 +19,7 @@ export type RemoteDebuggingState = {
   enabledAt?: Date
   sessionId?: number
 }
+
 export interface Developer {
   environment: IASEnvironment
   remoteDebugging: RemoteDebuggingState
@@ -28,9 +31,16 @@ export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
+export interface Unified {
+  cardType: UnifiedCardType
+  serial: string
+  birthdate?: Date
+}
+
 export interface BCState extends BifoldState {
   developer: Developer
   dismissPersonCredentialOffer: DismissPersonCredentialOffer
+  unified: Unified
 }
 
 enum DeveloperDispatchAction {
@@ -47,15 +57,23 @@ enum RemoteDebuggingDispatchAction {
   REMOTE_DEBUGGING_STATUS_UPDATE = 'remoteDebugging/enable',
 }
 
+enum UnifiedDispatchAction {
+  UPDATE_CARD_TYPE = 'unified/updateCardType',
+  UPDATE_SERIAL = 'unified/updateSerial',
+  UPDATE_BIRTHDATE = 'unified/updateBirthdate',
+}
+
 export type BCDispatchAction =
   | DeveloperDispatchAction
   | DismissPersonCredentialOfferDispatchAction
   | RemoteDebuggingDispatchAction
+  | UnifiedDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...DismissPersonCredentialOfferDispatchAction,
   ...RemoteDebuggingDispatchAction,
+  ...UnifiedDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -95,6 +113,12 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
   personCredentialOfferDismissed: false,
 }
 
+const unifiedState: Unified = {
+  cardType: UnifiedCardType.None,
+  serial: '',
+  birthdate: undefined,
+}
+
 export enum BCLocalStorageKeys {
   PersonCredentialOfferDismissed = 'PersonCredentialOfferDismissed',
   Environment = 'Environment',
@@ -104,6 +128,7 @@ export enum BCLocalStorageKeys {
   EnableAltPersonFlow = 'EnableAltPersonFlow',
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
+  Unified = 'Unified',
 }
 
 export const initialState: BCState = {
@@ -111,6 +136,7 @@ export const initialState: BCState = {
   preferences: { ...defaultState.preferences, useDataRetention: false, disableDataRetentionOption: true },
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
+  unified: unifiedState,
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
@@ -166,6 +192,33 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         BCLocalStorageKeys.PersonCredentialOfferDismissed,
         newState.dismissPersonCredentialOffer
       )
+
+      return newState
+    }
+    case UnifiedDispatchAction.UPDATE_CARD_TYPE: {
+      const cardType = (action?.payload || []).pop() ?? UnifiedCardType.None
+      const unified = { ...state.unified, cardType }
+      const newState = { ...state, unified }
+
+      PersistentStorage.storeValueForKey<Unified>(BCLocalStorageKeys.Unified, unified)
+
+      return newState
+    }
+    case UnifiedDispatchAction.UPDATE_SERIAL: {
+      const serial = (action?.payload || []).pop() ?? ''
+      const unified = { ...state.unified, serial }
+      const newState = { ...state, unified }
+
+      PersistentStorage.storeValueForKey<Unified>(BCLocalStorageKeys.Unified, unified)
+
+      return newState
+    }
+    case UnifiedDispatchAction.UPDATE_BIRTHDATE: {
+      const birthdate = (action?.payload || []).pop() ?? undefined
+      const unified = { ...state.unified, birthdate }
+      const newState = { ...state, unified }
+
+      PersistentStorage.storeValueForKey<Unified>(BCLocalStorageKeys.Unified, unified)
 
       return newState
     }
