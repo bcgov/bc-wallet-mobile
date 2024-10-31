@@ -66,7 +66,22 @@ const translation = {
     "Settings": "Menu (PT-BR)",
     "Preface": "BC Wallet",
     "VerificationSteps": "Setup steps (PT-BR)",
-    "ChooseID": "Choose your identification (PT-BR)",
+    "EvidenceCollectionStep": {
+      "Stage1": "Choose your identification (PT-BR)",
+      "Stage2": "Instructions (PT-BR)",
+      "Stage3": "Scan your identification (PT-BR)",
+      "Stage4": "Enter serial number (PT-BR)",
+      "Stage5": "Enter birthdate (PT-BR)",
+    },
+    "ResidentialAddressStep": {
+      "Stage1": "TODO",
+    },
+    "EmailStep": {
+      "Stage1": "TODO",
+    },
+    "VerifyIdentityStep": {
+      "Stage1": "TODO",
+    },
   },
   "PersonCredentialNotification": {
     "Title": "Get your Person credential (PT-BR)",
@@ -84,7 +99,6 @@ const translation = {
     "WhatIsPersonCredentialLink": "What is a Person credential (PT-BR)",
     "WhereToUseLink": "Where to use (PT-BR)",
     "HelpLink": "Help (PT-BR)",
-    "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection (PT-BR)",
@@ -183,6 +197,50 @@ const translation = {
     "ScanOnlySpecial3": "BC Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones. (PT-BR)",
     "WhereToUseLink": "See where you can use BC Wallet (PT-BR)",
     "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones. (PT-BR)"
+  },
+  "Unified": {
+    "Steps": {
+      "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
+    },
+    "ChooseYourID": {
+      "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",
+      "SomePeopleStillCallIt": "Some people still call it a CareCard or a Health Card. It has your personal health number (PHN) on the back. (PT-BR)",
+      "CombinedCard": "Combined card (PT-BR)",
+      "CombinedCardActionText": "It's combined with my driver's licence (PT-BR)",
+      "CombinedCardDescription": "Use this card for a faster way to set up the app. (PT-BR)",
+      "PhotoCard": "Photo card (PT-BR)",
+      "PhotoCardActionText": "A card with my photo (PT-BR)",
+      "PhotoCardDescription": "Use this card for a faster way to set up the app. (PT-BR)",
+      "NoPhotoCard": "Non photo card (PT-BR)",
+      "NoPhotoCardActionText": "A card without a photo (PT-BR)",
+      "NoPhotoCardDescription": "Use this card + photo ID to set up the app. (PT-BR)",
+      "DontHaveOne": "Don't have one? (PT-BR)",
+      "CheckBefore": "Check before you continue. It's faster to set up with one of the above. (PT-BR)",
+      "CheckForServicesCard": "Check for BC Services Card (PT-BR)",
+      "CheckIfIHave": "Check if I have a BC Services Card (PT-BR)",
+      "OtherID": "Other ID (PT-BR)",
+      "OtherIDActionText": "Set up with other ID (PT-BR)",
+      "OtherIDDescription": "This option takes the longest to set up. You'll need 2 IDs to set up the app and have limited access to services. (PT-BR)",
+    },
+    "Instructions": {
+      "Heading": "Provide the card serial number on the back right side of your card. (PT-BR)",
+      "Paragraph": "When scanning, you should place the card in front of a white background for best results. (PT-BR)",
+      "ScanBarcode": "Scan Barcode with Camera (PT-BR)",
+      "EnterManually": "Enter Serial Number Manually (PT-BR)",
+    },
+    "Scan": {},
+    "ManualSerial": {
+      "InputLabel": "Serial number (PT-BR)",
+      "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (PT-BR)",
+      "EmptySerialError": "Required (PT-BR)",
+      "CharCountError": "Cannot exceed 15 characters (PT-BR)",
+    },
+    "Birthdate": {
+      "CardSerialNumber": "Card serial number: {{ serial }} (PT-BR)",
+      "Heading": "Enter your birthdate (PT-BR)",
+      "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (PT-BR)",
+      "InputLabel": "Birthdate (PT-BR)",
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting (PT-BR)",

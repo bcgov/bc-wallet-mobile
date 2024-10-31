@@ -445,12 +445,14 @@ PODS:
   - React-jsinspector (0.72.5)
   - React-logger (0.72.5):
     - glog
-  - "react-native-attestation (1.0.0-alpha.350+f774551f)":
+  - "react-native-attestation (1.0.0-alpha.353+7257e199)":
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
   - react-native-config (1.5.0):
     - react-native-config/App (= 1.5.0)
   - react-native-config/App (1.5.0):
+    - React-Core
+  - react-native-date-picker (5.0.7):
     - React-Core
   - react-native-encrypted-storage (4.0.3):
     - React-Core
@@ -685,6 +687,7 @@ DEPENDENCIES:
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
   - "react-native-attestation (from `../node_modules/@hyperledger/aries-react-native-attestation`)"
   - react-native-config (from `../node_modules/react-native-config`)
+  - react-native-date-picker (from `../node_modules/react-native-date-picker`)
   - react-native-encrypted-storage (from `../node_modules/react-native-encrypted-storage`)
   - react-native-get-random-values (from `../node_modules/react-native-get-random-values`)
   - "react-native-netinfo (from `../node_modules/@react-native-community/netinfo`)"
@@ -803,6 +806,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@hyperledger/aries-react-native-attestation"
   react-native-config:
     :path: "../node_modules/react-native-config"
+  react-native-date-picker:
+    :path: "../node_modules/react-native-date-picker"
   react-native-encrypted-storage:
     :path: "../node_modules/react-native-encrypted-storage"
   react-native-get-random-values:
@@ -931,8 +936,9 @@ SPEC CHECKSUMS:
   React-jsiexecutor: ff70a72027dea5cc7d71cfcc6fad7f599f63987a
   React-jsinspector: aef73cbd43b70675f572214d10fa438c89bf11ba
   React-logger: 2e4aee3e11b3ec4fa6cfd8004610bbb3b8d6cca4
-  react-native-attestation: 7c223c9b56e30beee893b4495f72a85798a6b00d
+  react-native-attestation: 6e7fb59eb29b078162071fcc6c84752d2f88e1e4
   react-native-config: 5330c8258265c1e5fdb8c009d2cabd6badd96727
+  react-native-date-picker: 06a4d96ab525a163c7a90bccd68833d136b0bb13
   react-native-encrypted-storage: db300a3f2f0aba1e818417c1c0a6be549038deb7
   react-native-get-random-values: a6ea6a8a65dc93e96e24a11105b1a9c8cfe1d72a
   react-native-netinfo: 2517ad504b3d303e90d7a431b0fcaef76d207983

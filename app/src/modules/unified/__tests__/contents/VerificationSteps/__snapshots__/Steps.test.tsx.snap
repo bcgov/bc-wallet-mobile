@@ -1,0 +1,647 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VerificationStepsContent Component renders correctly 1`] = `
+<View
+  style={
+    {
+      "backgroundColor": "#000000",
+      "flex": 1,
+    }
+  }
+>
+  <RCTScrollView
+    ItemSeparatorComponent={[Function]}
+    data={
+      [
+        {
+          "active": true,
+          "complete": false,
+          "content": <Text
+            style={
+              {
+                "flex": 1,
+                "flexWrap": "wrap",
+                "fontSize": 16,
+              }
+            }
+          >
+            Unified.Steps.ScanOrTakePhotos
+          </Text>,
+          "onPress": [Function],
+          "testIDKey": "Step1",
+          "title": "Step 1",
+        },
+        {
+          "active": false,
+          "complete": true,
+          "content": <Text
+            style={
+              {
+                "flex": 1,
+                "flexWrap": "wrap",
+                "fontSize": 16,
+              }
+            }
+          >
+            Address: Residential address from your BC Services Card will be used
+          </Text>,
+          "onPress": [Function],
+          "testIDKey": "Step2",
+          "title": "Step 2",
+        },
+        {
+          "active": false,
+          "complete": true,
+          "content": <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "space-between",
+              }
+            }
+          >
+            <Text
+              style={
+                {
+                  "flex": 1,
+                  "flexWrap": "wrap",
+                  "fontSize": 16,
+                }
+              }
+            >
+              Email: j.lee-martinez@email.com
+            </Text>
+            <View
+              style={
+                {
+                  "alignSelf": "flex-end",
+                }
+              }
+            >
+              <Link
+                linkText="Edit"
+                onPress={[Function]}
+                style={
+                  {
+                    "textDecorationLine": "none",
+                  }
+                }
+              />
+            </View>
+          </View>,
+          "onPress": [Function],
+          "testIDKey": "Step3",
+          "title": "Step 3",
+        },
+        {
+          "active": false,
+          "complete": false,
+          "content": <Text
+            style={
+              {
+                "flex": 1,
+                "flexWrap": "wrap",
+                "fontSize": 16,
+              }
+            }
+          >
+            Verify identity by April 20, 2025
+          </Text>,
+          "onPress": [Function],
+          "testIDKey": "Step4",
+          "title": "Step 4",
+        },
+      ]
+    }
+    getItem={[Function]}
+    getItemCount={[Function]}
+    keyExtractor={[Function]}
+    onContentSizeChange={[Function]}
+    onLayout={[Function]}
+    onMomentumScrollBegin={[Function]}
+    onMomentumScrollEnd={[Function]}
+    onScroll={[Function]}
+    onScrollBeginDrag={[Function]}
+    onScrollEndDrag={[Function]}
+    removeClippedSubviews={false}
+    renderItem={[Function]}
+    scrollEventThrottle={50}
+    stickyHeaderIndices={[]}
+    viewabilityConfigCallbackPairs={[]}
+  >
+    <View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          accessibilityLabel="Step 1"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          testID="com.ariesbifold:id/Step1"
+        >
+          <View
+            style={
+              [
+                {
+                  "flex": 1,
+                  "paddingHorizontal": 24,
+                  "paddingVertical": 24,
+                },
+                {
+                  "backgroundColor": "#f2f8ff",
+                },
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontSize": 21,
+                      "fontWeight": "bold",
+                    },
+                    {
+                      "marginRight": 16,
+                    },
+                  ]
+                }
+              >
+                Step 1
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "flex": 1,
+                  "marginTop": 16,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "flex": 1,
+                    "flexWrap": "wrap",
+                    "fontSize": 16,
+                  }
+                }
+              >
+                Unified.Steps.ScanOrTakePhotos
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#000000",
+              "height": 8,
+              "width": "100%",
+            }
+          }
+        />
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          accessibilityLabel="Step 2"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          testID="com.ariesbifold:id/Step2"
+        >
+          <View
+            style={
+              [
+                {
+                  "flex": 1,
+                  "paddingHorizontal": 24,
+                  "paddingVertical": 24,
+                },
+                {
+                  "backgroundColor": "#313132",
+                },
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontSize": 21,
+                      "fontWeight": "bold",
+                    },
+                    {
+                      "marginRight": 16,
+                    },
+                  ]
+                }
+              >
+                Step 2
+              </Text>
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#2E8540",
+                      "fontSize": 24,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰗠
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "flex": 1,
+                  "marginTop": 16,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "flex": 1,
+                    "flexWrap": "wrap",
+                    "fontSize": 16,
+                  }
+                }
+              >
+                Address: Residential address from your BC Services Card will be used
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#000000",
+              "height": 8,
+              "width": "100%",
+            }
+          }
+        />
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          accessibilityLabel="Step 3"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          testID="com.ariesbifold:id/Step3"
+        >
+          <View
+            style={
+              [
+                {
+                  "flex": 1,
+                  "paddingHorizontal": 24,
+                  "paddingVertical": 24,
+                },
+                {
+                  "backgroundColor": "#313132",
+                },
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontSize": 21,
+                      "fontWeight": "bold",
+                    },
+                    {
+                      "marginRight": 16,
+                    },
+                  ]
+                }
+              >
+                Step 3
+              </Text>
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#2E8540",
+                      "fontSize": 24,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Design Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                󰗠
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "flex": 1,
+                  "marginTop": 16,
+                }
+              }
+            >
+              <View
+                style={
+                  {
+                    "alignItems": "center",
+                    "flexDirection": "row",
+                    "justifyContent": "space-between",
+                  }
+                }
+              >
+                <Text
+                  style={
+                    {
+                      "flex": 1,
+                      "flexWrap": "wrap",
+                      "fontSize": 16,
+                    }
+                  }
+                >
+                  Email: j.lee-martinez@email.com
+                </Text>
+                <View
+                  style={
+                    {
+                      "alignSelf": "flex-end",
+                    }
+                  }
+                >
+                  <Text
+                    accessibilityLabel="Edit"
+                    accessibilityRole="link"
+                    accessible={true}
+                    onPress={[Function]}
+                    style={
+                      [
+                        {
+                          "alignSelf": "flex-start",
+                          "color": "#FFFFFF",
+                          "fontSize": 18,
+                          "fontWeight": "normal",
+                          "textDecorationLine": "underline",
+                        },
+                        {
+                          "textDecorationLine": "none",
+                        },
+                      ]
+                    }
+                    testID="com.ariesbifold:id/Edit"
+                  >
+                    Edit
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+        <View
+          style={
+            {
+              "backgroundColor": "#000000",
+              "height": 8,
+              "width": "100%",
+            }
+          }
+        />
+      </View>
+      <View
+        onFocusCapture={[Function]}
+        onLayout={[Function]}
+        style={null}
+      >
+        <View
+          accessibilityLabel="Step 4"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          testID="com.ariesbifold:id/Step4"
+        >
+          <View
+            style={
+              [
+                {
+                  "flex": 1,
+                  "paddingHorizontal": 24,
+                  "paddingVertical": 24,
+                },
+                {
+                  "backgroundColor": "#313132",
+                },
+              ]
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontSize": 21,
+                      "fontWeight": "bold",
+                    },
+                    {
+                      "marginRight": 16,
+                    },
+                  ]
+                }
+              >
+                Step 4
+              </Text>
+            </View>
+            <View
+              style={
+                {
+                  "flex": 1,
+                  "marginTop": 16,
+                }
+              }
+            >
+              <Text
+                style={
+                  {
+                    "flex": 1,
+                    "flexWrap": "wrap",
+                    "fontSize": 16,
+                  }
+                }
+              >
+                Verify identity by April 20, 2025
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</View>
+`;
