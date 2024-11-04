@@ -1,15 +1,25 @@
 import { useTheme, testIdWithKey } from '@hyperledger/aries-bifold-core'
+import { i18n } from '@hyperledger/aries-bifold-core/App/localization'
+import { StackScreenProps } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import ContactUs from '../components/ContactUs'
-import RowSection from '../components/RowSection'
+import { itemsDataEn } from '../assets/Index_en'
+import { itemsDataFr } from '../assets/Index_fr'
+import HelpContactUs from '../components/HelpContactUs'
+import HelpRowSection from '../components/HelpRowSection'
+import { HelpCenterStackParams } from '../navigators/navigators'
 
-const HelpCenter: React.FC = () => {
+type HelpCenterProps = StackScreenProps<HelpCenterStackParams>
+
+const HelpCenter: React.FC<HelpCenterProps> = ({ navigation }) => {
   const { TextTheme, ColorPallet } = useTheme()
   const { t } = useTranslation()
+  const currentLanguage = i18n.language
+  const indexJs = currentLanguage === 'fr' ? itemsDataFr.centreAide.sommaire : itemsDataEn.centreAide.sommaire
+  //const indexJson = currentLanguage === 'fr' ? require("../assets/json/Index_en.json") : require("../assets/json/Index_en.json")
 
   const styles = StyleSheet.create({
     container: {
@@ -34,77 +44,29 @@ const HelpCenter: React.FC = () => {
       marginLeft: 10,
     },
   })
+
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <RowSection
-          showSectionTitle
-          sectionTitle="Apprendre l'Application"
-          title="Guide d'utilisation"
-          accessibilityLabel={t('About.Accessibility')}
-          testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
-          showRowSeparator
-          showArrowIcon={true}
-          showSectionSeparator
-        />
-        <RowSection
-          title="Lorem ipsum"
-          accessibilityLabel={t('About.Accessibility')}
-          testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
-          showRowSeparator
-          showArrowIcon={true}
-          showSectionSeparator
-        />
-        <RowSection
-          title="Lorem ipsum dolor"
-          accessibilityLabel={t('About.Accessibility')}
-          testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
-          showArrowIcon={true}
-          showSectionSeparator
-        />
-        <RowSection
-          showSectionTitle
-          sectionTitle="Tutoriel"
-          title="Tour guidé de l'application"
-          accessibilityLabel={t('About.Accessibility')}
-          testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
-          showRowSeparator
-          showArrowIcon={true}
-          showSectionSeparator
-        />
-        <RowSection
-          title="Recevoir et partager une attestation"
-          accessibilityLabel={t('About.Accessibility')}
-          testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
-          showRowSeparator
-          showArrowIcon={true}
-          showSectionSeparator
-        />
-        <RowSection
-          title="Aidez nous à améliorer l'application"
-          accessibilityLabel={t('About.Accessibility')}
-          testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
-          showArrowIcon={true}
-          showSectionSeparator
-        />
-        <RowSection
-          showSectionTitle
-          sectionTitle="Votre opinion"
-          title="Signaler un problème"
-          accessibilityLabel={t('About.Accessibility')}
-          testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
-          showRowSeparator
-          showArrowIcon={true}
-          showSectionSeparator
-        />
-        <RowSection
-          title="Partager votre opinion de l'application"
-          accessibilityLabel={t('About.Accessibility')}
-          testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
-          showArrowIcon={true}
-          showSectionSeparator
-        />
-        <ContactUs />
+        {indexJs.map((item, index) => (
+          <View key={index}>
+            <HelpRowSection
+              showSectionTitle
+              sectionTitle={item.title}
+              itemSection={item.sections ? item.sections : []}
+              accessibilityLabel={t('About.Accessibility')}
+              testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
+              showRowSeparator
+              showArrowIcon={true}
+              navigation={navigation}
+            />
+          </View>
+        ))}
+        {indexJs.map((item, index) => (
+          <View key={index}>
+            <HelpContactUs itemContact={item.contacts ? item.contacts : []} />
+          </View>
+        ))}
         <View style={[styles.sectionCopyright]}>
           <Text style={styles.sectionCopyrightText}> {t('OptionsPlus.Copyright')}</Text>
         </View>
