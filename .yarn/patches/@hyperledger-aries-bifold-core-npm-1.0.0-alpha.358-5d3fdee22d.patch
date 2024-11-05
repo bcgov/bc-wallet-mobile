@@ -1,0 +1,81 @@
+diff --git a/App/components/listItems/NotificationListItem.tsx b/App/components/listItems/NotificationListItem.tsx
+index 748f2db63a2d24bb0d867255ddead7ba60602b75..c396366585a5eaf9f0e9a669fa86abd34caa28b5 100644
+--- a/App/components/listItems/NotificationListItem.tsx
++++ b/App/components/listItems/NotificationListItem.tsx
+@@ -47,7 +47,9 @@ export enum NotificationType {
+ export interface NotificationListItemProps {
+   notificationType: NotificationType
+   notification: BasicMessageRecord | CredentialExchangeRecord | ProofExchangeRecord | CustomNotificationRecord
+-  customNotification?: CustomNotification
++  customNotification?: CustomNotification,
++  openSwipeableId?: string | null,
++  onOpenSwipeable?: (id: string | null) => void
+ }
+ 
+ type DisplayDetails = {
+@@ -82,6 +84,8 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
+   notificationType,
+   notification,
+   customNotification,
++  openSwipeableId,
++  onOpenSwipeable,
+ }) => {
+   const navigation = useNavigation<StackNavigationProp<HomeStackParams>>()
+   const [store, dispatch] = useStore()
+diff --git a/App/screens/Home.tsx b/App/screens/Home.tsx
+index 09e11c197f4f45d0ebdb41b2b1971b944e39b819..eb0f2a66ca66e55fd5a1ef5cb44cd7b9dcda00d2 100644
+--- a/App/screens/Home.tsx
++++ b/App/screens/Home.tsx
+@@ -40,6 +40,8 @@ const Home: React.FC<HomeProps> = () => {
+   const [showTourPopup, setShowTourPopup] = useState(false)
+   const screenIsFocused = useIsFocused()
+ 
++  const [notificationItemId, setNotificationItemId] = useState<string | null>(null)
++
+   const styles = StyleSheet.create({
+     flatlist: {
+       marginBottom: 35,
+@@ -49,23 +51,40 @@ const Home: React.FC<HomeProps> = () => {
+   const DisplayListItemType = useCallback((item: any): React.ReactNode => {
+     let component: React.ReactNode
+     if (item.type === 'BasicMessageRecord') {
+-      component = <NotificationListItem notificationType={NotificationType.BasicMessage} notification={item} />
++      component = <NotificationListItem
++        openSwipeableId={notificationItemId}
++        onOpenSwipeable={setNotificationItemId}
++        notificationType={NotificationType.BasicMessage}
++        notification={item}
++      />
+     } else if (item.type === 'CredentialRecord') {
+       let notificationType = NotificationType.CredentialOffer
+       if (item.revocationNotification) {
+         notificationType = NotificationType.Revocation
+       }
+-      component = <NotificationListItem notificationType={notificationType} notification={item} />
++      component = <NotificationListItem
++        openSwipeableId={notificationItemId}
++        onOpenSwipeable={setNotificationItemId}
++        notificationType={notificationType}
++        notification={item}
++      />
+     } else if (item.type === 'CustomNotification' && customNotification) {
+       component = (
+         <NotificationListItem
++          openSwipeableId={notificationItemId}
++          onOpenSwipeable={setNotificationItemId}
+           notificationType={NotificationType.Custom}
+           notification={item}
+           customNotification={customNotification}
+         />
+       )
+     } else {
+-      component = <NotificationListItem notificationType={NotificationType.ProofRequest} notification={item} />
++      component = <NotificationListItem
++        openSwipeableId={notificationItemId}
++        onOpenSwipeable={setNotificationItemId}
++        notificationType={NotificationType.ProofRequest}
++        notification={item}
++      />
+     }
+     return component
+   }, [customNotification, NotificationListItem])

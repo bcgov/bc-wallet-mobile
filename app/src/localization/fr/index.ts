@@ -425,6 +425,10 @@ const translation = {
       "Soyez informé des mises à jour de vos informations d'identification émises par ce contact.",
     RemoveContactsBulletPoint4: 'Demander des informations à ce contact ou celui-ci vous demande des informations.',
     RemoveContact: 'Supprimer le contact',
+    GoToCredentialDetail: "Aller au détail de l'attestation",
+    CredentialName: "Nom de l'attestation",
+    Credentials: 'Mes attestations avec ce contact',
+    NoCredentials: "Vous n'avez aucune attestation de ce contact.",
   },
   WhatAreContacts: {
     Title: "Qu'est-ce qu'un contact?",

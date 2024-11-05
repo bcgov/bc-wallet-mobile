@@ -12,11 +12,11 @@ import {
   ToursState,
   OnboardingState,
   DispatchAction,
-  Stacks,
   Screens,
-  testIdWithKey,
 } from '@hyperledger/aries-bifold-core'
+import { Locales } from '@hyperledger/aries-bifold-core/App/localization'
 import { DefaultScreenOptionsDictionary } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
+import { Config as BifoldConfig } from '@hyperledger/aries-bifold-core/App/types/config'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -56,6 +56,47 @@ import {
 
 export interface AppState {
   showSurvey: boolean
+}
+
+const defaultConfig: BifoldConfig = {
+  PINSecurity: { rules: PINValidationRules, displayHelper: true },
+  settings: [],
+  /* settings: [
+    {
+      header: {
+        title: this.t('Settings.MoreInformation'),
+        icon: { name: 'info' },
+      },
+      data: [
+        {
+          title: this.t('Settings.TermsOfUse'),
+          accessibilityLabel: this.t('Settings.TermsOfUse'),
+          testID: testIdWithKey('TermsOfUse'),
+          onPress: () => this.navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
+        },
+        {
+          title: this.t('Settings.IntroductionToTheApp'),
+          accessibilityLabel: this.t('Settings.IntroductionToTheApp'),
+          testID: testIdWithKey('IntroductionToTheApp'),
+          onPress: () => this.navigate(Stacks.SettingStack as never, { screen: Screens.Onboarding } as never),
+        },
+      ],
+    },
+  ], */
+  enableTours: true,
+  enableChat: false,
+  supportedLanguages: [Locales.en, Locales.fr],
+  showPreface: false,
+  enableReuseConnections: true,
+  disableOnboardingSkip: true,
+  showScanHelp: true,
+  showScanButton: true,
+  showDetailsInfo: true,
+  contactDetailsOptions: {
+    showConnectedTime: false,
+    enableEditContactName: false,
+    enableCredentialList: true,
+  },
 }
 
 export class AppContainer implements Container {
@@ -126,39 +167,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooter)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_NOTIFICATIONS_EMPTY_LIST, HomeEmptyList)
     this._container.registerInstance(TOKENS.NOTIFICATIONS_LIST_ITEM, NotificationListItem)
-    this._container.registerInstance(TOKENS.CONFIG, {
-      PINSecurity: { rules: PINValidationRules, displayHelper: true },
-      settings: [
-        {
-          header: {
-            title: this.t('Settings.MoreInformation'),
-            icon: { name: 'info' },
-          },
-          data: [
-            {
-              title: this.t('Settings.TermsOfUse'),
-              accessibilityLabel: this.t('Settings.TermsOfUse'),
-              testID: testIdWithKey('TermsOfUse'),
-              onPress: () => this.navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
-            },
-            {
-              title: this.t('Settings.IntroductionToTheApp'),
-              accessibilityLabel: this.t('Settings.IntroductionToTheApp'),
-              testID: testIdWithKey('IntroductionToTheApp'),
-              onPress: () => this.navigate(Stacks.SettingStack as never, { screen: Screens.Onboarding } as never),
-            },
-          ],
-        },
-      ],
-      enableTours: true,
-      supportedLanguages: ['en', 'fr'],
-      showPreface: false,
-      enableReuseConnections: true,
-      disableOnboardingSkip: true,
-      showScanHelp: true,
-      showScanButton: true,
-      showDetailsInfo: true,
-    })
+    this._container.registerInstance(TOKENS.CONFIG, defaultConfig)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_FOOTER, AddCredentialButton)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, HelpCenterButton)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
