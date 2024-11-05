@@ -138,25 +138,6 @@ export const itemsDataEn = {
           },
         ],
       },
-      {
-        title: 'Contact Us',
-        contacts: [
-          {
-            contact: 'Contacte1',
-            details: {
-              Nom: 'Joindre le ministère',
-              daysOpen: 'Monday to Friday',
-              openingHours: 'From 8 a.m. to 6 p.m.',
-              phone: '1 877 644-4545',
-              phoneSec: '1 800 361-9596 (ATS number for the hearing impaired)',
-              address: '123 rue Giffard Québec G1R 1R1',
-              courriel: 'contenu',
-              webSite: 'contenu',
-              webSiteLabel: 'Libellé du lien',
-            },
-          },
-        ],
-      },
     ],
   },
 }

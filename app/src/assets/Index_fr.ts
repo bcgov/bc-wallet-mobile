@@ -138,26 +138,6 @@ export const itemsDataFr = {
           },
         ],
       },
-      {
-        title: 'Contacter nous',
-        contacts: [
-          {
-            contact: 'Contacte1',
-            details: {
-              Nom: 'contenu',
-              daysOpen: 'Du lundi au vendredi',
-              openingHours: 'De 8h à 18h',
-              phone: '1 877 644-4545',
-              phoneSec: '1 800 361-9596 (numéro ATS pour malentendants)',
-              Courriel: 'contenu',
-              address: '123 rue Giffard Québec G1R 1R1',
-              courriel: 'contenu',
-              webSite: 'contenu',
-              webSiteLabel: 'Libellé du lien',
-            },
-          },
-        ],
-      },
     ],
   },
 }

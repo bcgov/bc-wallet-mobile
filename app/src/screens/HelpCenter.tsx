@@ -8,7 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { itemsDataEn } from '../assets/Index_en'
 import { itemsDataFr } from '../assets/Index_fr'
-import HelpContactUs from '../components/HelpContactUs'
 import HelpRowSection from '../components/HelpRowSection'
 import { HelpCenterStackParams } from '../navigators/navigators'
 
@@ -60,11 +59,6 @@ const HelpCenter: React.FC<HelpCenterProps> = ({ navigation }) => {
               showArrowIcon={true}
               navigation={navigation}
             />
-          </View>
-        ))}
-        {indexJs.map((item, index) => (
-          <View key={index}>
-            <HelpContactUs itemContact={item.contacts ? item.contacts : []} />
           </View>
         ))}
         <View style={[styles.sectionCopyright]}>
