@@ -686,6 +686,19 @@ const PINInputTheme = {
   icon: {
     color: ColorPallet.grayscale.darkGrey,
   },
+  codeFieldRoot: {
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  labelAndFieldContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: ColorPallet.grayscale.lightGrey,
+    borderColor: ColorPallet.grayscale.lightGrey,
+  },
 }
 
 export const Assets: IAssets = {

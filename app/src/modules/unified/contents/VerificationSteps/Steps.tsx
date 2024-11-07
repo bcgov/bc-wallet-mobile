@@ -1,10 +1,8 @@
-import { Link, useTheme } from '@hyperledger/aries-bifold-core'
-import { useNavigation } from '@react-navigation/native'
+import { Link, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Text, View, StyleSheet, FlatList, Pressable } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { BCScreens } from '../navigators/navigators'
 
 interface SetupStep {
   title: string
@@ -12,11 +10,20 @@ interface SetupStep {
   complete: boolean
   content: JSX.Element
   onPress?: () => void
+  testIDKey: string
 }
 
-const VerificationSteps: React.FC = () => {
+type VerificationStepsContentProps = {
+  goToEvidenceCollectionStep: () => void
+  goToResidentialAddressStep: () => void
+  goToEmailStep: () => void
+  goToVerifyIdentityStep: () => void
+}
+
+export const VerificationStepsContent: React.FC<VerificationStepsContentProps> = ({
+  goToEvidenceCollectionStep,
+}: VerificationStepsContentProps) => {
   const { ColorPallet, TextTheme } = useTheme()
-  const navigation = useNavigation()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
@@ -68,8 +75,9 @@ const VerificationSteps: React.FC = () => {
         title: 'Step 1',
         active: true,
         complete: false,
-        content: <Text style={styles.contentText}>{t('PersonCredential.ScanOrTakePhotos')}</Text>,
-        onPress: () => navigation.navigate(BCScreens.ChooseID as never),
+        content: <Text style={styles.contentText}>{t('Unified.Steps.ScanOrTakePhotos')}</Text>,
+        onPress: () => goToEvidenceCollectionStep(),
+        testIDKey: 'Step1',
       },
       {
         title: 'Step 2',
@@ -79,6 +87,7 @@ const VerificationSteps: React.FC = () => {
           <Text style={styles.contentText}>Address: Residential address from your BC Services Card will be used</Text>
         ),
         onPress: () => null,
+        testIDKey: 'Step2',
       },
       {
         title: 'Step 3',
@@ -93,6 +102,7 @@ const VerificationSteps: React.FC = () => {
           </View>
         ),
         onPress: () => null,
+        testIDKey: 'Step3',
       },
       {
         title: 'Step 4',
@@ -100,16 +110,22 @@ const VerificationSteps: React.FC = () => {
         complete: false,
         content: <Text style={styles.contentText}>Verify identity by April 20, 2025</Text>,
         onPress: () => null,
+        testIDKey: 'Step4',
       },
     ]
-  }, [styles, navigation, t])
+  }, [styles, t, goToEvidenceCollectionStep])
 
   return (
     <View style={styles.container}>
       <FlatList
         data={steps}
         renderItem={({ item }) => (
-          <Pressable onPress={() => item.onPress?.()} accessible={!!item.onPress} accessibilityLabel={item.title}>
+          <Pressable
+            onPress={() => item.onPress?.()}
+            accessible={!!item.onPress}
+            testID={testIdWithKey(item.testIDKey)}
+            accessibilityLabel={item.title}
+          >
             <View
               style={[
                 styles.step,
@@ -131,4 +147,4 @@ const VerificationSteps: React.FC = () => {
   )
 }
 
-export default VerificationSteps
+export default VerificationStepsContent

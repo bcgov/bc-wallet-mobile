@@ -8368,6 +8368,7 @@ __metadata:
     react-native-collapsible: "npm:1.6.1"
     react-native-config: "npm:1.5.0"
     react-native-confirmation-code-field: "npm:7.3.1"
+    react-native-date-picker: "npm:^5.0.7"
     react-native-device-info: "npm:8.7.1"
     react-native-encrypted-storage: "npm:4.0.3"
     react-native-fs: "npm:2.20.0"
@@ -19602,6 +19603,16 @@ __metadata:
     react-native:
       optional: true
   checksum: b24b0bc942fe9220e9805a3ef1b110c1cfcfb797b1015e4476a45a127b06222a747c69552a0a0d8bcb6258373f310a2901ade2f559d64f26afc7e95a4ac92800
+  languageName: node
+  linkType: hard
+
+"react-native-date-picker@npm:^5.0.7":
+  version: 5.0.7
+  resolution: "react-native-date-picker@npm:5.0.7"
+  peerDependencies:
+    react: ">= 17.0.1"
+    react-native: ">= 0.64.3"
+  checksum: e1ae4ac7b864c6934c8537d2dee1984e85f8fb028824b8fe51b79ab424dcc0003756e4d063f6520d8ec2d62dc87c7cd52390cc44d4d48e542128e8438f6d3478
   languageName: node
   linkType: hard
 
