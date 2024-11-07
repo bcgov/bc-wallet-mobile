@@ -211,6 +211,7 @@ export class AppContainer implements Container {
           ],
         },
       ],
+      enableChat: false,
       enableTours: true,
       supportedLanguages: ['en'],
       showPreface: true,
@@ -219,6 +220,11 @@ export class AppContainer implements Container {
       showScanHelp: true,
       showScanButton: true,
       showDetailsInfo: true,
+      contactDetailsOptions: {
+        showConnectedTime: false,
+        enableEditContactName: false,
+        enableCredentialList: false,
+      },
       contactHideList: ['BCAttestationService'],
       proofTemplateBaseUrl: Config.PROOF_TEMPLATE_URL,
       // Credential Definition IDs
