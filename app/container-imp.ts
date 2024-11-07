@@ -21,6 +21,7 @@ import {
   testIdWithKey,
   PersistentStorage,
   PersistentState,
+  defaultConfig,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
@@ -157,6 +158,7 @@ export class AppContainer implements Container {
       },
     ])
     this._container.registerInstance(TOKENS.CONFIG, {
+      ...defaultConfig,
       PINSecurity: { rules: PINRules, displayHelper: false },
       settings: [
         {
