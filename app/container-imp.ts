@@ -216,6 +216,7 @@ export class AppContainer implements Container {
       ],
       enableTours: true,
       enableChat: true,
+      enableReuseConnections: true,
       supportedLanguages: ['en'],
       showPreface: true,
       disableOnboardingSkip: true,
