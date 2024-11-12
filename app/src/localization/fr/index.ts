@@ -171,15 +171,10 @@ const translation = {
   "Init": {
     "Retry": "Réessayer",
     "Starting": "Démarrage...",
-    "CheckingAuth": "Vérification de l'authentification...",
     "FetchingPreferences": "Récupération des préférences...",
     "VerifyingOnboarding": "Vérification de l'intégration...",
-    "GettingCredentials": "Récupération des identifiants du portefeuille...",
-    "RegisteringTransports": "Enregistrement des transports...",
+    "CheckingOCA": "Checking for OCA updates... (FR)",
     "InitializingAgent": "Initialisation de l'agent...",
-    "CacheWarmup": "Warming up cache... (FR)",
-    "ConnectingLedgers": "Connexion aux registres...",
-    "SettingAgent": "Paramétrage de l'agent...",
     "Finishing": "Finalisation...",
   },
   "Feedback": {
