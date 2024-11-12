@@ -172,15 +172,10 @@ const translation = {
   "Init": {
     "Retry": "Retry",
     "Starting": "Starting...",
-    "CheckingAuth": "Checking authentication...",
     "FetchingPreferences": "Fetching preferences...",
     "VerifyingOnboarding": "Verifying onboarding...",
-    "GettingCredentials": "Getting wallet credentials...",
-    "RegisteringTransports": "Registering transports...",
+    "CheckingOCA": "Checking for OCA updates...",
     "InitializingAgent": "Initializing agent...",
-    "CacheWarmup": "Warming up cache...",
-    "ConnectingLedgers": "Connecting to ledgers...",
-    "SettingAgent": "Setting agent...",
     "Finishing": "Finishing..."
   },
   "Feedback": {

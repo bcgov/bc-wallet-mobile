@@ -1,40 +1,26 @@
-import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport, WalletError } from '@credo-ts/core'
-import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
-import { useAgent } from '@credo-ts/react-hooks'
-import { agentDependencies } from '@credo-ts/react-native'
 import {
-  BifoldError,
   DispatchAction,
   Screens,
   Stacks,
-  useAuth,
   useTheme,
   useStore,
   InfoBox,
   InfoBoxType,
   testIdWithKey,
-  migrateToAskar,
-  createLinkSecretIfRequired,
   TOKENS,
   useServices,
-  PersistentStorage,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
-import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import { CommonActions, useNavigation } from '@react-navigation/native'
-import moment from 'moment'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
-import { Config } from 'react-native-config'
-import { CachesDirectoryPath } from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
-import { activate } from '../helpers/PushNotificationsHelper'
-import { getBCAgentModules } from '../helpers/bc-agent-modules'
-import { BCState, BCLocalStorageKeys } from '../store'
+import useInitializeBCAgent from '../hooks/initialize-agent'
+import { BCState } from '../store'
 
 import { TermsVersion } from './Terms'
 
@@ -107,15 +93,6 @@ const resumeOnboardingAt = (
   return Screens.Preface
 }
 
-const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const cachedTransactions = await PersistentStorage.fetchValueForKey<any>(BCLocalStorageKeys.GenesisTransactions)
-  if (cachedTransactions) {
-    const { timestamp, transactions } = cachedTransactions
-    return moment().diff(moment(timestamp), 'days') >= 1 ? undefined : transactions
-  }
-}
-
 /*
   To customize this splash screen set the background color of the
   iOS and Android launch screen to match the background color of
@@ -123,11 +100,9 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
 */
 const Splash = () => {
   const { width } = useWindowDimensions()
-  const { agent, setAgent } = useAgent()
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation()
-  const { walletSecret } = useAuth()
   const { ColorPallet, Assets } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
@@ -137,22 +112,10 @@ const Splash = () => {
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<Error | null>(null)
   const initializing = useRef(false)
-  const [
-    logger,
-    indyLedgers,
-    ocaBundleResolver,
-    { showPreface, enablePushNotifications },
-    attestationMonitor,
-    credDefs,
-    schemas,
-  ] = useServices([
-    TOKENS.UTIL_LOGGER,
-    TOKENS.UTIL_LEDGERS,
+  const { initializeAgent } = useInitializeBCAgent()
+  const [ocaBundleResolver, { showPreface, enablePushNotifications }] = useServices([
     TOKENS.UTIL_OCA_RESOLVER,
     TOKENS.CONFIG,
-    TOKENS.UTIL_ATTESTATION_MONITOR,
-    TOKENS.CACHE_CRED_DEFS,
-    TOKENS.CACHE_SCHEMAS,
   ])
 
   const steps: string[] = useMemo(
@@ -160,12 +123,8 @@ const Splash = () => {
       t('Init.Starting'),
       t('Init.FetchingPreferences'),
       t('Init.VerifyingOnboarding'),
-      t('Init.GettingCredentials'),
-      t('Init.RegisteringTransports'),
+      t('Init.CheckingOCA'),
       t('Init.InitializingAgent'),
-      t('Init.CacheWarmup'),
-      t('Init.ConnectingLedgers'),
-      t('Init.SettingAgent'),
       t('Init.Finishing'),
     ],
     [t]
@@ -222,7 +181,6 @@ const Splash = () => {
 
   useEffect(() => {
     try {
-      setStep(0)
       if (!mounted || store.authentication.didAuthenticate || !store.stateLoaded) {
         if (!store.stateLoaded) {
           setStep(1)
@@ -343,181 +301,31 @@ const Splash = () => {
   ])
 
   useEffect(() => {
-    const initAgent = async (): Promise<void> => {
+    const initAgentAsyncEffect = async (): Promise<void> => {
       try {
         if (
           !mounted ||
           initializing.current ||
           !store.authentication.didAuthenticate ||
           !store.onboarding.didConsiderBiometry ||
-          !walletSecret?.id ||
-          !walletSecret.key ||
           store.onboarding.postAuthScreens.length > 0
         ) {
           return
         }
 
         initializing.current = true
-        setStep(3)
 
+        setStep(3)
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
-        if (agent) {
-          logger.info('Agent already initialized, restarting...')
-
-          try {
-            await agent.wallet.open({
-              id: walletSecret.id,
-              key: walletSecret.key,
-            })
-          } catch (error) {
-            // Credo does not use error codes but this will be in the
-            // the error message if the wallet is already open
-            const catchPhrase = 'instance already opened'
-
-            if (error instanceof WalletError && error.message.includes(catchPhrase)) {
-              logger.warn('Wallet already open, nothing to do')
-            } else {
-              logger.error('Error opening existing wallet:', error as Error)
-
-              throw new BifoldError(
-                'Wallet Service',
-                'There was a problem unlocking the wallet.',
-                (error as Error).message,
-                1047
-              )
-            }
-          }
-
-          await agent.mediationRecipient.initiateMessagePickup()
-
-          setStep(9)
-          navigation.dispatch(
-            CommonActions.reset({
-              index: 0,
-              routes: [{ name: Stacks.TabStack }],
-            })
-          )
-
+        setStep(4)
+        const newAgent = await initializeAgent()
+        if (!newAgent) {
+          initializing.current = false
           return
         }
 
-        logger.info('No agent initialized, creating a new one')
-
-        setStep(4)
-        const cachedLedgers = await loadCachedLedgers()
-        const ledgers = cachedLedgers ?? indyLedgers
-        const options = {
-          config: {
-            label: store.preferences.walletName || 'BC Wallet',
-            walletConfig: {
-              id: walletSecret.id,
-              key: walletSecret.key,
-            },
-            logger,
-            mediatorPickupStrategy: MediatorPickupStrategy.Implicit,
-            autoUpdateStorageOnStartup: true,
-            autoAcceptConnections: true,
-          },
-          dependencies: agentDependencies,
-          modules: getBCAgentModules({
-            indyNetworks: ledgers,
-            mediatorInvitationUrl: Config.MEDIATOR_URL,
-            txnCache: {
-              capacity: 1000,
-              expiryOffsetMs: 1000 * 60 * 60 * 24 * 7,
-              path: CachesDirectoryPath + '/txn-cache',
-            },
-            enableProxy: store.developer.enableProxy,
-            proxyBaseUrl: Config.INDY_VDR_PROXY_URL,
-            proxyCacheSettings: {
-              allowCaching: false,
-              cacheDurationInSeconds: 60 * 60 * 24 * 7,
-            },
-          }),
-        }
-
-        logger.info(
-          store.developer.enableProxy && Config.INDY_VDR_PROXY_URL ? 'VDR Proxy enabled' : 'VDR Proxy disabled'
-        )
-
-        const newAgent = new Agent(options)
-        const wsTransport = new WsOutboundTransport()
-        const httpTransport = new HttpOutboundTransport()
-
-        newAgent.registerOutboundTransport(wsTransport)
-        newAgent.registerOutboundTransport(httpTransport)
-
-        // If we haven't migrated to Aries Askar yet, we need to do this before we initialize the agent.
-        if (!store.migration.didMigrateToAskar) {
-          logger.debug('Agent not updated to Aries Askar, updating...')
-
-          await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)
-
-          logger.debug('Successfully finished updating agent to Aries Askar')
-          // Store that we migrated to askar.
-          dispatch({
-            type: DispatchAction.DID_MIGRATE_TO_ASKAR,
-          })
-        }
-
         setStep(5)
-        await newAgent.initialize()
-        const poolService = newAgent.dependencyManager.resolve(IndyVdrPoolService)
-        if (!cachedLedgers) {
-          // these escapes can be removed once Indy VDR has been upgraded and the patch is no longer needed
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore:next-line
-          await poolService.refreshPoolConnections()
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore:next-line
-          const raw_transactions = await poolService.getAllPoolTransactions()
-          const transactions = raw_transactions
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore:next-line
-            .map((item) => item.value)
-            .map(({ config, transactions }) => ({
-              ...config,
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore:next-line
-              genesisTransactions: transactions.reduce((prev, curr) => {
-                return prev + JSON.stringify(curr)
-              }, ''),
-            }))
-          if (transactions) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await PersistentStorage.storeValueForKey<any>(BCLocalStorageKeys.GenesisTransactions, {
-              timestamp: moment().toISOString(),
-              transactions,
-            })
-          }
-        }
-
-        setStep(6)
-        credDefs.forEach(async ({ did, id }) => {
-          const pool = await poolService.getPoolForDid(newAgent.context, did)
-          const credDefRequest = new GetCredentialDefinitionRequest({ credentialDefinitionId: id })
-          await pool.pool.submitRequest(credDefRequest)
-        })
-
-        schemas.forEach(async ({ did, id }) => {
-          const pool = await poolService.getPoolForDid(newAgent.context, did)
-          const schemaRequest = new GetSchemaRequest({ schemaId: id })
-          await pool.pool.submitRequest(schemaRequest)
-        })
-
-        setStep(7)
-        await createLinkSecretIfRequired(newAgent)
-
-        setStep(8)
-        setAgent(newAgent)
-        if (store.preferences.usePushNotifications) {
-          activate(newAgent)
-        }
-
-        attestationMonitor?.start(newAgent)
-
-        setStep(9)
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
@@ -531,28 +339,16 @@ const Splash = () => {
       }
     }
 
-    initAgent()
+    initAgentAsyncEffect()
   }, [
+    initializeAgent,
     mounted,
-    agent,
-    setAgent,
     setStep,
     ocaBundleResolver,
     store.authentication.didAuthenticate,
     store.onboarding.postAuthScreens.length,
     store.onboarding.didConsiderBiometry,
-    store.developer.enableProxy,
-    store.migration.didMigrateToAskar,
-    store.preferences.usePushNotifications,
-    store.preferences.walletName,
-    indyLedgers,
-    credDefs,
-    schemas,
-    dispatch,
     navigation,
-    logger,
-    attestationMonitor,
-    walletSecret,
     initAgentCount,
   ])
 
