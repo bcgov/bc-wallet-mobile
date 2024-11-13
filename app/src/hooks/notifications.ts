@@ -130,7 +130,8 @@ export const useNotifications = ({ openIDUri, isHome = true }: NotificationsInpu
 
     const proofs = nonAttestationProofs.filter((proof) => {
       return (
-        ![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) ||
+        (![ProofState.Done, ProofState.PresentationReceived].includes(proof.state) &&
+          (!(proof.metadata.data[ProofMetadata.customMetadata] as CustomMetadata)?.seenOnHome || !isHome)) ||
         (proof.isVerified !== undefined &&
           !(proof.metadata.data[ProofMetadata.customMetadata] as CustomMetadata)?.details_seen &&
           (!(proof.metadata.data[ProofMetadata.customMetadata] as CustomMetadata)?.seenOnHome || !isHome))

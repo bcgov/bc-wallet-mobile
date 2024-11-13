@@ -1,10 +1,9 @@
-import { TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
+import { useTheme } from '@hyperledger/aries-bifold-core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native'
 
-import { NotificationReturnType, NotificationsInputProps } from '../../hooks/notifications'
 import { ActivitiesStackParams } from '../../navigators/navigators'
 
 import HistoryList from './HistoryList'
@@ -22,9 +21,6 @@ const Activities: React.FC<ActivitiesProps> = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState(NotificationTab)
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
-
-  const [{ customNotificationConfig: customNotification, useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
-  const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
 
   const styles = StyleSheet.create({
     container: {
@@ -91,8 +87,6 @@ const Activities: React.FC<ActivitiesProps> = ({ navigation }) => {
 
       {activeTab === NotificationTab ? (
         <NotificationsList
-          notifications={notifications as NotificationReturnType}
-          customNotification={customNotification}
           openSwipeableId={openSwipeableId}
           handleOpenSwipeable={setOpenSwipeableId}
           navigation={navigation}

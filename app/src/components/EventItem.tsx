@@ -12,7 +12,7 @@ const iconSize = 20
 
 interface EventItemProps {
   action?: GenericFn
-  handleDelete?: () => void
+  handleDelete?: () => Promise<void>
   event: {
     id: string
     title?: string
@@ -23,7 +23,7 @@ interface EventItemProps {
   openSwipeableId: string | null
   onOpenSwipeable: (id: string | null) => void
   activateSelection?: boolean
-  setSelected?: ({ id, deleteAction }: { id: string; deleteAction?: () => void }) => void
+  setSelected?: ({ id, deleteAction }: { id: string; deleteAction?: () => Promise<void> }) => void
 }
 
 const EventItem = ({

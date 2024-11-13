@@ -53,7 +53,7 @@ interface NotificationListItemProps {
   openSwipeableId: string | null
   onOpenSwipeable: (id: string | null) => void
   selected?: boolean
-  setSelected?: ({ id, deleteAction }: { id: string; deleteAction?: () => void }) => void
+  setSelected?: ({ id, deleteAction }: { id: string; deleteAction?: () => Promise<void> }) => void
   activateSelection?: boolean
 }
 
@@ -214,19 +214,19 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
     customNotification?.onCloseAction(dispatch as any)
   }
 
-  const removeNotification = () => {
+  const removeNotification = async () => {
     if (notificationType === NotificationTypeEnum.ProofRequest) {
       if ((notification as ProofExchangeRecord).state === ProofState.Done) {
-        dismissProofRequest()
+        await dismissProofRequest()
       } else {
-        declineProofRequest()
+        await declineProofRequest()
       }
     } else if (notificationType === NotificationTypeEnum.CredentialOffer) {
-      declineCredentialOffer()
+      await declineCredentialOffer()
     } else if (notificationType === NotificationTypeEnum.BasicMessage) {
-      dismissBasicMessage()
+      await dismissBasicMessage()
     } else if (notificationType === NotificationTypeEnum.Custom) {
-      declineCustomNotification()
+      await declineCustomNotification()
     }
   }
 
@@ -366,8 +366,8 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
     detailsPromise()
   }, [notificationType, t])
 
-  const removeCurrentNotification = () => {
-    removeNotification()
+  const removeCurrentNotification = async () => {
+    await removeNotification()
     handleSwipeClose()
   }
 

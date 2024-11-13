@@ -48,8 +48,8 @@ const TabStack: React.FC = () => {
 
   const tabBarIconContainerStyles = (focused: boolean): ViewStyle => ({
     ...TabTheme.tabBarContainerStyle,
-    borderTopWidth: 4,
-    borderTopColor: focused ? ColorPallet.brand.primary : ColorPallet.brand.primaryBackground,
+    borderTopWidth: 2,
+    borderTopColor: focused ? ColorPallet.brand.primary : 'transparent',
     width: '100%',
     justifyContent: 'center',
   })
@@ -72,19 +72,23 @@ const TabStack: React.FC = () => {
   ]
 
   useEffect(() => {
-    AppState.addEventListener('change', (nextAppState) => {
-      if ('background' == nextAppState) {
-        if (agent) {
-          notificationsSeenOnHome(
-            agent,
-            notifications as NotificationReturnType,
-            // eslint-disable-next-line
-            dispatch as React.Dispatch<ReducerAction<any>>
-          )
-        }
+    const handleAppStateChange = async (nextAppState: string) => {
+      if (nextAppState === 'background' && agent) {
+        await notificationsSeenOnHome(
+          agent,
+          notifications as NotificationReturnType,
+          // eslint-disable-next-line
+          dispatch as React.Dispatch<ReducerAction<any>>
+        )
       }
-    })
-  }, [notifications])
+    }
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange)
+
+    return () => {
+      subscription.remove()
+    }
+  }, [agent, notifications])
 
   const TabBarIcon = (props: {
     focused: boolean

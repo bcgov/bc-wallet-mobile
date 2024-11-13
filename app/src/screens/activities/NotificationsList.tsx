@@ -1,5 +1,4 @@
-import { Button, ButtonType, useTheme } from '@hyperledger/aries-bifold-core'
-import { CustomNotification } from '@hyperledger/aries-bifold-core/App/types/notification'
+import { Button, ButtonType, TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import React, { useCallback, useEffect, useState } from 'react'
@@ -8,11 +7,11 @@ import { View, StyleSheet, SectionList, Text } from 'react-native'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import NotificationListItem, { NotificationTypeEnum } from '../../components/NotificationListItem'
-import { NotificationReturnType, NotificationType } from '../../hooks/notifications'
+import { NotificationReturnType, NotificationsInputProps, NotificationType } from '../../hooks/notifications'
 import { ActivitiesStackParams } from '../../navigators/navigators'
 import { TabTheme } from '../../theme'
 
-export type SelectedNotificationType = { id: string; deleteAction?: () => void }
+export type SelectedNotificationType = { id: string; deleteAction?: () => Promise<void> }
 
 const iconSize = 24
 // Function to group notifications by date
@@ -60,12 +59,13 @@ const groupNotificationsByDate = (notifications: NotificationReturnType, t: TFun
 type SectionType = { title: string; data: NotificationReturnType }
 
 const NotificationsList: React.FC<{
-  notifications: NotificationReturnType
-  customNotification: CustomNotification | undefined
   openSwipeableId: string | null
   handleOpenSwipeable: (id: string | null) => void
   navigation: StackNavigationProp<ActivitiesStackParams>
-}> = ({ notifications, customNotification, openSwipeableId, handleOpenSwipeable, navigation }) => {
+}> = ({ openSwipeableId, handleOpenSwipeable, navigation }) => {
+  const [{ customNotificationConfig: customNotification, useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
+  const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
+
   const [setions, setSections] = useState<SectionType[]>([])
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
@@ -83,6 +83,13 @@ const NotificationsList: React.FC<{
       navigation?.getParent()?.setOptions({ tabBarStyle: { display: 'flex', ...TabTheme.tabBarStyle } })
     }
   }, [selectedNotification])
+
+  const deleteMultipleNotifications = async () => {
+    for await (const notif of selectedNotification ?? []) {
+      await notif.deleteAction?.()
+    }
+    setSelectedNotification(null)
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -283,14 +290,7 @@ const NotificationsList: React.FC<{
       {selectedNotification != null && (
         <View style={styles.selectionMultiActionContainer}>
           <View style={styles.actionButtonContainer}>
-            <Button
-              title={'Supprimer'}
-              onPress={() => {
-                selectedNotification.forEach((notification) => notification.deleteAction?.())
-                setSelectedNotification(null)
-              }}
-              buttonType={ButtonType.ModalCritical}
-            >
+            <Button title={'Supprimer'} onPress={deleteMultipleNotifications} buttonType={ButtonType.ModalCritical}>
               <MaterialCommunityIcon name={'trash-can-outline'} size={iconSize} style={{ color: 'white' }} />
             </Button>
             <View style={{ height: 24 }} />
