@@ -19843,10 +19843,11 @@ __metadata:
     react-native-animated-pagination-dots: "npm:0.1.73"
     react-native-argon2: "npm:2.0.1"
     react-native-bouncy-checkbox: "npm:3.0.7"
+    react-native-check-version: "npm:^1.3.0"
     react-native-collapsible: "npm:1.6.1"
     react-native-config: "npm:1.5.0"
     react-native-confirmation-code-field: "npm:7.3.1"
-    react-native-device-info: "npm:8.7.1"
+    react-native-device-info: "npm:^14.0.0"
     react-native-encrypted-storage: "npm:4.0.3"
     react-native-fs: "npm:2.20.0"
     react-native-gesture-handler: "npm:2.18.0"
@@ -20335,6 +20336,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-check-version@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "react-native-check-version@npm:1.3.0"
+  peerDependencies:
+    react-native: ">=0.40.0"
+    react-native-device-info: ">=0.20.0"
+  checksum: 11a0d4b5b04681f63ee8c1ea228865c1e31f895f42af792379618d3316e39e71a729fae928c43b19837df39af02c274f6c4451cc9bcec1899cb9db29528e90cc
+  languageName: node
+  linkType: hard
+
 "react-native-collapsible@npm:1.6.1":
   version: 1.6.1
   resolution: "react-native-collapsible@npm:1.6.1"
@@ -20379,12 +20390,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-device-info@npm:8.7.1":
-  version: 8.7.1
-  resolution: "react-native-device-info@npm:8.7.1"
+"react-native-device-info@npm:^14.0.0":
+  version: 14.0.0
+  resolution: "react-native-device-info@npm:14.0.0"
   peerDependencies:
     react-native: "*"
-  checksum: de0fc179415f7ebf69805093e25600ac57ecae3d47d5abd4734d7eb76c6884fe67d1140c9aa7dd01deba7c5d0deeb524b993d350487d67a50059352b07740292
+  checksum: 7fb7b21e43940793fa5cc5fe55237e383403b44fc31b2b47ba93f31624a616bc0d24320a3eb23f25cb0ad31ee6dba6372febb88857e38c33a677181b9e719c10
   languageName: node
   linkType: hard
 

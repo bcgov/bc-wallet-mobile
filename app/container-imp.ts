@@ -7,7 +7,6 @@ import {
   ReducerAction,
   loadLoginAttempt,
   LocalStorageKeys,
-  PreferencesState,
   MigrationState,
   ToursState,
   OnboardingState,
@@ -52,6 +51,7 @@ import {
   AttestationAuthentification,
   IASEnvironment,
   getInitialState,
+  QCPreferences,
 } from './src/store'
 
 export interface AppState {
@@ -223,7 +223,7 @@ export class AppContainer implements Container {
             loginAttempt = data
           }
         }),
-        loadState<PreferencesState>(LocalStorageKeys.Preferences, (val) => (preferences = val)),
+        loadState<QCPreferences>(LocalStorageKeys.Preferences, (val) => (preferences = val)),
         loadState<MigrationState>(LocalStorageKeys.Migration, (val) => (migration = val)),
         loadState<ToursState>(LocalStorageKeys.Tours, (val) => (tours = val)),
         loadState<OnboardingState>(LocalStorageKeys.Onboarding, (val) => (onboarding = val)),

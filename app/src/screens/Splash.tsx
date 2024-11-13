@@ -35,7 +35,8 @@ import { CommonActions, useNavigation } from '@react-navigation/native'
 import moment from 'moment'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, useWindowDimensions } from 'react-native'
+import { Alert, Linking, StyleSheet, View, useWindowDimensions } from 'react-native'
+import { CheckVersionResponse, checkVersion } from 'react-native-check-version'
 import { Config } from 'react-native-config'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -128,6 +129,7 @@ const Splash = () => {
   const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
+  const [didCheckForUpdate, setDidCheckForUpdate] = useState(false)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
@@ -223,6 +225,42 @@ const Splash = () => {
     },
   })
 
+  const openAppUpdateLinkUrl = async (version: CheckVersionResponse) => {
+    await Linking.openURL(version.url)
+    setDidCheckForUpdate(true)
+  }
+
+  useEffect(() => {
+    const checkForUpdates = async () => {
+      if (store.preferences.useForcedAppUpdate && !store.authentication.didAuthenticate) {
+        const version = await checkVersion({
+          bundleId: 'ca.bc.gov.BCWallet',
+        })
+
+        if (version.needsUpdate && version.updateType === 'major') {
+          setDidCheckForUpdate(false)
+          Alert.alert(t('Global.UpdateRequired.Title'), t('Global.UpdateRequired.Body'), [
+            {
+              text: t('Global.UpdateRequired.Cancel'),
+              onPress: () => {
+                setDidCheckForUpdate(true)
+              },
+            },
+            {
+              text: t('Global.UpdateRequired.Confirm'),
+              onPress: () => {
+                openAppUpdateLinkUrl(version)
+              },
+            },
+          ])
+        } else {
+          setDidCheckForUpdate(true)
+        }
+      }
+    }
+    checkForUpdates()
+  }, [store.preferences.useForcedAppUpdate])
+
   // navigation calls that occur before the screen is fully mounted will fail
   useEffect(() => {
     setMounted(true)
@@ -270,7 +308,12 @@ const Splash = () => {
   useEffect(() => {
     try {
       setStep(0)
-      if (!mounted || store.authentication.didAuthenticate || !store.stateLoaded) {
+      if (
+        !mounted ||
+        store.authentication.didAuthenticate ||
+        !store.stateLoaded ||
+        (!didCheckForUpdate && store.preferences.useForcedAppUpdate)
+      ) {
         if (!store.stateLoaded) {
           setStep(1)
         }
@@ -343,7 +386,7 @@ const Splash = () => {
       setInitErrorType(InitErrorTypes.Onboarding)
       setInitError(e as Error)
     }
-  }, [mounted, store.authentication.didAuthenticate, initOnboardingCount, store.stateLoaded])
+  }, [mounted, store.authentication.didAuthenticate, initOnboardingCount, store.stateLoaded, didCheckForUpdate])
 
   useEffect(() => {
     const initAgent = async (): Promise<void> => {

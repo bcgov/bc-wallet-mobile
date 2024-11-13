@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { BCState } from '../store'
+import { BCState, PreferencesQCDispatchAction } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 
@@ -14,12 +14,13 @@ const Settings: React.FC = () => {
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
+  const [useAppForcedUpdate, setUseAppForcedUpdate] = useState<boolean>(!!store.preferences.useForcedAppUpdate)
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
-  const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
+  const [useConnectionInviterCapability, setUseConnectionInviterCapability] = useState(
     !!store.preferences.useConnectionInviterCapability
   )
-  const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
+  const [useDevVerifierTemplates, setUseDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
 
@@ -73,11 +74,9 @@ const Settings: React.FC = () => {
   }
 
   const SectionHeader = ({ title }: { title: string }): JSX.Element => (
-    <>
-      <View style={[styles.section, styles.sectionHeader]}>
-        <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
-      </View>
-    </>
+    <View style={[styles.section, styles.sectionHeader]}>
+      <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
+    </View>
   )
 
   interface SectionRowProps {
@@ -137,7 +136,7 @@ const Settings: React.FC = () => {
         type: DispatchAction.USE_DEV_VERIFIER_TEMPLATES,
         payload: [false],
       })
-      setDevVerifierTemplates(false)
+      setUseDevVerifierTemplates(false)
     }
     dispatch({
       type: DispatchAction.USE_VERIFIER_CAPABILITY,
@@ -159,7 +158,7 @@ const Settings: React.FC = () => {
       type: DispatchAction.USE_CONNECTION_INVITER_CAPABILITY,
       payload: [!useConnectionInviterCapability],
     })
-    setConnectionInviterCapability((previousState) => !previousState)
+    setUseConnectionInviterCapability((previousState) => !previousState)
   }
 
   const toggleDevVerifierTemplatesSwitch = () => {
@@ -176,7 +175,7 @@ const Settings: React.FC = () => {
       type: DispatchAction.USE_DEV_VERIFIER_TEMPLATES,
       payload: [!useDevVerifierTemplates],
     })
-    setDevVerifierTemplates((previousState) => !previousState)
+    setUseDevVerifierTemplates((previousState) => !previousState)
   }
 
   const toggleWalletNamingSwitch = () => {
@@ -195,6 +194,15 @@ const Settings: React.FC = () => {
     })
 
     setPreventAutoLock((previousState) => !previousState)
+  }
+
+  const toggleAppForcedUpdatesSwitch = () => {
+    dispatch({
+      type: PreferencesQCDispatchAction.USE_APP_FORCED_UPDATE,
+      payload: [!useAppForcedUpdate],
+    })
+
+    setUseAppForcedUpdate((previousState) => !previousState)
   }
 
   return (
@@ -317,6 +325,7 @@ const Settings: React.FC = () => {
           title={t('Settings.PreventAutoLock')}
           accessibilityLabel={t('Settings.TogglePreventAutoLock')}
           testID={testIdWithKey('TogglePreventAutoLockSwitch')}
+          showRowSeparator
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
@@ -324,6 +333,19 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={togglePreventAutoLockSwitch}
             value={preventAutoLock}
+          />
+        </SectionRow>
+        <SectionRow
+          title={t('Settings.ForcedUpdates')}
+          accessibilityLabel={t('Settings.ToggleForcedUpdates')}
+          testID={testIdWithKey('ToggleForcedUpdatesSwitch')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={useAppForcedUpdate ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleAppForcedUpdatesSwitch}
+            value={useAppForcedUpdate}
           />
         </SectionRow>
       </ScrollView>

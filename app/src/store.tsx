@@ -4,7 +4,9 @@ import {
   reducer as bifoldReducer,
   defaultState,
   ReducerAction,
+  LocalStorageKeys,
 } from '@hyperledger/aries-bifold-core'
+import { Preferences } from '@hyperledger/aries-bifold-core/lib/typescript/App/types/state'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Config from 'react-native-config'
 
@@ -27,9 +29,14 @@ export interface AttestationAuthentification {
   isSeenOnHome: boolean
 }
 
+export interface QCPreferences extends Preferences {
+  useForcedAppUpdate?: boolean
+}
+
 export interface BCState extends BifoldState {
   developer: Developer
   attestationAuthentification: AttestationAuthentification
+  preferences: QCPreferences
 }
 
 enum DeveloperDispatchAction {
@@ -41,11 +48,19 @@ enum AttestationAuthentificationDispatchAction {
   ATTESTATION_AUTHENTIFICATION_SEEN_ON_HOME = 'attestationAuthentification/attestationAuthentificationSeenOnHome',
 }
 
-export type BCDispatchAction = DeveloperDispatchAction | AttestationAuthentificationDispatchAction
+export enum PreferencesQCDispatchAction {
+  USE_APP_FORCED_UPDATE = 'preferences/appForcedUpdate',
+}
+
+export type BCDispatchAction =
+  | DeveloperDispatchAction
+  | AttestationAuthentificationDispatchAction
+  | PreferencesQCDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...AttestationAuthentificationDispatchAction,
+  ...PreferencesQCDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -99,6 +114,10 @@ export const getInitialState = async (): Promise<BCState> => {
     ...defaultState,
     developer: developerState,
     attestationAuthentification,
+    preferences: {
+      ...defaultState.preferences,
+      useForcedAppUpdate: false,
+    },
   }
 }
 
@@ -132,6 +151,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, attestationAuthentification }
       // save to storage so notification doesn't reapper on app restart
       AsyncStorage.setItem(BCLocalStorageKeys.AttestationAuthentification, JSON.stringify(attestationAuthentification))
+      return newState
+    }
+    case PreferencesQCDispatchAction.USE_APP_FORCED_UPDATE: {
+      const useForcedAppUpdate: boolean = (action?.payload || []).pop()
+      const preferences = { ...state.preferences, useForcedAppUpdate: useForcedAppUpdate }
+
+      const newState = { ...state, preferences }
+      AsyncStorage.setItem(LocalStorageKeys.Preferences, JSON.stringify(preferences))
       return newState
     }
     default:

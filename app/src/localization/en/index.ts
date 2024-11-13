@@ -44,6 +44,22 @@ const translation = {
     On: 'On',
     Off: 'Off',
     Remove: 'Remove',
+    UpdateRequired: {
+      Title: 'Update Required',
+      Body: 'A new major version of the app is available. Please update to continue using the app.',
+      Confirm: 'Update Now',
+      Cancel: 'Cancel',
+      ErrorTitle: 'Update Unavailable',
+      ErrorMsg: 'Unable to update the app.',
+    },
+    UpdateAvailable: {
+      Title: 'Update Available',
+      Body: 'A new version of the app is available. Please update to continue using the app.',
+      Confirm: 'Update Now',
+      Cancel: 'Cancel',
+      ErrorTitle: 'Update Unavailable',
+      ErrorMsg: 'Unable to update the app.',
+    },
   },
   Language: {
     code_en: 'English',
@@ -109,7 +125,6 @@ const translation = {
     EnabledText3Bold: 'Ensure only you have access to your wallet.',
     Warning: '\n\nEnsure only you have access to your wallet.',
     UseToUnlock: 'Use biometrics to unlock wallet?',
-
     NotEnabledText1: 'Biometrics is not currently setup on this device and therefore cannot be enabled.',
     NotEnabledText2:
       'If you wish to enable this feature turn biometrics on in the device settings and then return to this screen.',
@@ -268,7 +283,7 @@ const translation = {
     Message1027: 'There was a problem while accepting the proof request.',
     Title1028: 'Unable to reject proof request',
     Message1028: 'There was a problem while rejecting the proof request',
-    Title1029: 'Details	Unable to update retrieved credentials.',
+    Title1029: 'Details\tUnable to update retrieved credentials.',
     Message1029: 'There was a problem while updating retrieved credentials.',
     Title1030: 'Unable to accept connection.',
     Message1030: 'There was a problem while accepting the connection redirection.',
@@ -305,27 +320,10 @@ const translation = {
       body: 'The terms of use below are for illustrative purposes only. The Quebec conditions are being drafted.',
       PersonalUse: {
         title: 'Exclusive Personal Use',
-        body:
-          'You are responsible for the confidentiality of your digital portfolio. You must use it exclusively for your own purposes. Do not divulge your access code to anyone and protect your mobile phone adequately.\n' +
-          'You will find recommendations in the Security section.',
+        body: 'You are responsible for the confidentiality of your digital portfolio. You must use it exclusively for your own purposes. Do not divulge your access code to anyone and protect your mobile phone adequately.\nYou will find recommendations in the Security section.',
         subsection: {
           title: 'Acceptable Use',
-          body:
-            'In connection with your use of the Licensed Application, you shall not take any action that may jeopardise the security, integrity and/or availability of the Licensed Application, including, without limitation:  \n' +
-            '\n' +
-            'Using the Licensed Application for illegal or improper purposes;  \n' +
-            '\n' +
-            'Tampering with any part of the Licensed Application;  \n' +
-            '\n' +
-            'Using the Licensed Application to transmit any virus or other harmful or destructive computer code, files or programs, or to conduct hacking and/or intrusive activities;  \n' +
-            '\n' +
-            'Attempt to circumvent or subvert any security measures associated with the Licensed Application;  \n' +
-            '\n' +
-            'Take any action that could reasonably be construed to adversely affect other users of the Licensed Application;  \n' +
-            '\n' +
-            'Where  \n' +
-            '\n' +
-            'Remove or alter any proprietary symbols or notices, including any copyright, trademark or logo notices, displayed in connection with the Licensed Application.  ',
+          body: 'In connection with your use of the Licensed Application, you shall not take any action that may jeopardise the security, integrity and/or availability of the Licensed Application, including, without limitation:  \n\nUsing the Licensed Application for illegal or improper purposes;  \n\nTampering with any part of the Licensed Application;  \n\nUsing the Licensed Application to transmit any virus or other harmful or destructive computer code, files or programs, or to conduct hacking and/or intrusive activities;  \n\nAttempt to circumvent or subvert any security measures associated with the Licensed Application;  \n\nTake any action that could reasonably be construed to adversely affect other users of the Licensed Application;  \n\nWhere  \n\nRemove or alter any proprietary symbols or notices, including any copyright, trademark or logo notices, displayed in connection with the Licensed Application.  ',
         },
       },
       IdentityTheft: {
@@ -333,16 +331,7 @@ const translation = {
         body: 'If you suspect that the security of your wallet and its contents has been compromised, you must contact *the Identity Quebec Customer Relations Centre* immediately. You will not be held responsible for identity theft as long as you comply with these terms and conditions',
         subsection: {
           title: 'Indemnification',
-          body:
-            'You agree to indemnify, defend and hold harmless the Province and all of its respective officers, employees and agents from and against any and all claims, demands, obligations, losses, liabilities, costs or debts and expenses (including, without limitation, reasonable legal fees).\n' +
-            '\n' +
-            ' Arising out of:\n' +
-            '\n' +
-            ' (a) your use of the Licensed Application;\n' +
-            '\n' +
-            ' Where\n' +
-            '\n' +
-            ' (b) your breach of any provision of this EULA',
+          body: 'You agree to indemnify, defend and hold harmless the Province and all of its respective officers, employees and agents from and against any and all claims, demands, obligations, losses, liabilities, costs or debts and expenses (including, without limitation, reasonable legal fees).\n\n Arising out of:\n\n (a) your use of the Licensed Application;\n\n Where\n\n (b) your breach of any provision of this EULA',
         },
       },
       Privacy: {
@@ -350,12 +339,7 @@ const translation = {
         body: "The Government of Quebec is concerned about the protection of your privacy and the personal and confidential information contained in this application. You are responsible for consulting the 'Privacy Policy' to learn about the Government of Quebec's practices in this regard",
         subsection: {
           title: 'Personal Information Protection',
-          body:
-            'If you visit the website of the application licensed to\n' +
-            '\n' +
-            'https://www.quebec.ca/gouvernement/ministere/cybersecurite-numerique,\n' +
-            '\n' +
-            'including accessing the Help Function for the licensed application or related content at https://www.quebec.ca/gouvernement/ministere/cybersecurite-numerique, certain information will be provided to you in accordance with the Province\'s Privacy Statement for Government Websites. Certain information is also collected as part of the licence application as set out in the Quebec Wallet App Privacy Policy (the "Privacy Policy"), which is incorporated by reference into and forms part of this EULA. You consent to the collection by the Licensed App of such information which, together with your Content, is stored locally on your device and is not accessible to the Province, except in cases where you choose to provide information to the Province as set forth in the Privacy Policy. Any information you provide to the Province that is "personal information", as defined in the Quebec Freedom of Information and Protection of Privacy Act ("the Act"), is collected by the Province pursuant to section 26c of the Act, for the purposes set out in the Privacy Policy. Any questions regarding the collection of this information may be directed to the contact person identified in Section 11. The consents you have provided pursuant to this section will continue until you revoke them in writing to the contact person identified in section 11, at which time this EULA will terminate immediately in accordance with section 9.',
+          body: 'If you visit the website of the application licensed to\n\nhttps://www.quebec.ca/gouvernement/ministere/cybersecurite-numerique,\n\nincluding accessing the Help Function for the licensed application or related content at https://www.quebec.ca/gouvernement/ministere/cybersecurite-numerique, certain information will be provided to you in accordance with the Province\'s Privacy Statement for Government Websites. Certain information is also collected as part of the licence application as set out in the Quebec Wallet App Privacy Policy (the "Privacy Policy"), which is incorporated by reference into and forms part of this EULA. You consent to the collection by the Licensed App of such information which, together with your Content, is stored locally on your device and is not accessible to the Province, except in cases where you choose to provide information to the Province as set forth in the Privacy Policy. Any information you provide to the Province that is "personal information", as defined in the Quebec Freedom of Information and Protection of Privacy Act ("the Act"), is collected by the Province pursuant to section 26c of the Act, for the purposes set out in the Privacy Policy. Any questions regarding the collection of this information may be directed to the contact person identified in Section 11. The consents you have provided pursuant to this section will continue until you revoke them in writing to the contact person identified in section 11, at which time this EULA will terminate immediately in accordance with section 9.',
         },
       },
       AppAccess: {
@@ -363,14 +347,7 @@ const translation = {
         body: 'The Government of Quebec may suspend access to this application if you fail to comply with these terms of use. It may also do so for these terms of use. It may also do so for security or administrative purposes',
         subsection: {
           title: 'Limitation of liability',
-          body:
-            'To the extent permitted by applicable law, in no event shall the Province be liable to any person or entity for any direct, indirect, special, incidental or consequential loss, claim, injury or damage, or for any other loss, claim, injury or damage.  \n' +
-            '\n' +
-            'If foreseeable or unforeseeable (including claims for limitation of damages for loss of profits or business opportunities, use or misuse of, or inability to use, the Licensed Application, interruptions, deletion or corruption of files, loss of programs or information, errors, defects or delays) arising out of or in any way connected with your use of the Licensed Application, whether based on contract, tort, strict liability or any other legal theory. The preceding sentence shall apply even if the Province has been expressly advised of the possibility of such loss, claim, injury or damage. The parties acknowledge that Apple is not responsible for: \n' +
-            '\n' +
-            '(a) dealing with any claim you or any third party may have in connection with the Authorized Application;  \n' +
-            '\n' +
-            'b) your possession and/or use of the Permitted Application.',
+          body: 'To the extent permitted by applicable law, in no event shall the Province be liable to any person or entity for any direct, indirect, special, incidental or consequential loss, claim, injury or damage, or for any other loss, claim, injury or damage.  \n\nIf foreseeable or unforeseeable (including claims for limitation of damages for loss of profits or business opportunities, use or misuse of, or inability to use, the Licensed Application, interruptions, deletion or corruption of files, loss of programs or information, errors, defects or delays) arising out of or in any way connected with your use of the Licensed Application, whether based on contract, tort, strict liability or any other legal theory. The preceding sentence shall apply even if the Province has been expressly advised of the possibility of such loss, claim, injury or damage. The parties acknowledge that Apple is not responsible for: \n\n(a) dealing with any claim you or any third party may have in connection with the Authorized Application;  \n\nb) your possession and/or use of the Permitted Application.',
         },
       },
       More: {
@@ -829,6 +806,8 @@ const translation = {
     TogglePreventAutoLock: 'Toggle prevent auto-lock',
     ScanMyQR: 'Scan my QR code',
     PlayWithBCWallet: 'Play with QC Wallet',
+    ForcedUpdates: 'Use app forced updates',
+    ToggleForcedUpdates: 'Toggle app forced updates',
   },
   Tour: {
     GuideTitle: 'Welcome to QC Wallet',
@@ -908,6 +887,7 @@ const translation = {
     GettingCredentials: 'Getting wallet credentials...',
     RegisteringTransports: 'Registering transports...',
     InitializingAgent: 'Initializing agent...',
+    CacheWarmup: 'Warming up cache...',
     ConnectingLedgers: 'Connecting to ledgers...',
     SettingAgent: 'Setting agent...',
     Finishing: 'Finishing...',
