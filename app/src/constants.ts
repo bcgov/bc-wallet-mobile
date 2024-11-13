@@ -20,3 +20,5 @@ export const attestationCredDefIds = [
 
 export const SplashLargeScreenWidthPercentage = 51.5
 export const SplashSmallScreenWidthPercentage = 67.5
+
+export const urlGestionDeCompteSag = 'https://authentification.quebec.ca/acces/verification/'

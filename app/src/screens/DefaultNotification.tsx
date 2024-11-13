@@ -11,10 +11,11 @@ import { HomeStackParams } from '@hyperledger/aries-bifold-core/App/types/naviga
 import { useNavigation } from '@react-navigation/native'
 import { StackScreenProps, StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import HeaderText from '../components/HeaderText'
+import { urlGestionDeCompteSag } from '../constants'
 
 type DefaultProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
@@ -89,6 +90,7 @@ const DefaultNotification: React.FC<DefaultProps> = () => {
           testID={testIdWithKey('StartProcess')}
           accessibilityLabel={t('DefaultNotificationPage.ButtonTitle')}
           title={t('DefaultNotificationPage.ButtonTitle')}
+          onPress={async () => await Linking.openURL(urlGestionDeCompteSag)}
         ></Button>
       </View>
       <View style={styles.button}>
