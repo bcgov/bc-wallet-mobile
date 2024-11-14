@@ -17,6 +17,8 @@
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = @{};
 
+  // Because certain file operations can reset resource values, we
+  // excluded file’s resource values each time the application starts.
   [self excludeDotAFJFolderFromBackup];
   
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
@@ -68,8 +70,10 @@
                                         forKey:NSURLIsExcludedFromBackupKey 
                                          error:&error];
 
-    if (!success) {
-        NSLog(@"Error excluding folder %@ from backup: %@", folderName, error);
+    if (success) {
+      NSLog(@"Excluded folder %@ from backup.", folderName);
+    } else {
+      NSLog(@"Error excluding folder %@ from backup: %@", folderName, error);
     }
 }
 
