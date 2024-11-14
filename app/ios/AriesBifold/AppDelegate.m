@@ -70,11 +70,11 @@
                                         forKey:NSURLIsExcludedFromBackupKey 
                                          error:&error];
 
-    if (!success) {
-        NSLog(@"Error excluding folder %@ from backup: %@", folderName, error);
+    if (success) {
+      NSLog(@"Excluded folder %@ from backup.", folderName);
+    } else {
+      NSLog(@"Error excluding folder %@ from backup: %@", folderName, error);
     }
-  
-    NSLog(@"Excluded folder %@ from backup.", folderName);
 }
 
 @end
