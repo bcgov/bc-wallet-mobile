@@ -7,8 +7,16 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate;
 import androidx.core.app.NotificationManagerCompat;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Bundle;
 
 public class MainActivity extends ReactActivity {
+
+  // react-native-screens override
+  // https://github.com/software-mansion/react-native-screens#android
+  @Override
+  protected void onCreate(Bundle savedInstanceState) {
+      super.onCreate(null);
+  }
 
   /**
    * Detects changes in device orientation and sends them to JavaScript by broadcasting an event.
