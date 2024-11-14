@@ -20,7 +20,6 @@ import {
   InfoBox,
   InfoBoxType,
   testIdWithKey,
-  didMigrateToAskar,
   migrateToAskar,
   getAgentModules,
   createLinkSecretIfRequired,
@@ -447,7 +446,7 @@ const Splash = () => {
         newAgent.registerOutboundTransport(httpTransport)
 
         // If we haven't migrated to Aries Askar yet, we need to do this before we initialize the agent.
-        if (!didMigrateToAskar(store.migration)) {
+        if (!store.migration.didMigrateToAskar) {
           newAgent.config.logger.debug('Agent not updated to Aries Askar, updating...')
 
           await migrateToAskar(walletSecret.id, walletSecret.key, newAgent)

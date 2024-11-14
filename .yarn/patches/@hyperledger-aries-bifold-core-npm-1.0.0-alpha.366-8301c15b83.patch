@@ -1,13 +1,11 @@
 diff --git a/App/components/listItems/NotificationListItem.tsx b/App/components/listItems/NotificationListItem.tsx
-index 756959ae4072234d3bb50b32504ec6904ca389b2..35717e63e4f793d8cbb8df12132898661c09a224 100644
+index 748f2db63a2d24bb0d867255ddead7ba60602b75..e4c661206bb33bfe2ec4f2d0c6355ec250958c5b 100644
 --- a/App/components/listItems/NotificationListItem.tsx
 +++ b/App/components/listItems/NotificationListItem.tsx
-@@ -47,7 +47,9 @@ export enum NotificationType {
- export interface NotificationListItemProps {
+@@ -48,6 +48,8 @@ export interface NotificationListItemProps {
    notificationType: NotificationType
    notification: BasicMessageRecord | CredentialExchangeRecord | ProofExchangeRecord | CustomNotificationRecord
--  customNotification?: CustomNotification
-+  customNotification?: CustomNotification,
+   customNotification?: CustomNotification
 +  openSwipeableId?: string | null,
 +  onOpenSwipeable?: (id: string | null) => void
  }

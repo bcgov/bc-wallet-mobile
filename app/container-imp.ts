@@ -16,6 +16,7 @@ import {
 import { Locales } from '@hyperledger/aries-bifold-core/App/localization'
 import { DefaultScreenOptionsDictionary } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
 import { Config as BifoldConfig } from '@hyperledger/aries-bifold-core/App/types/config'
+import { InlineErrorPosition } from '@hyperledger/aries-bifold-core/App/types/error'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -100,10 +101,10 @@ const defaultConfig: BifoldConfig = {
 }
 
 export class AppContainer implements Container {
-  private _container: DependencyContainer
-  private log?: BaseLogger
-  private t: TFunction<'translation', undefined>
-  private navigate: (stack: never, params: never) => void
+  private readonly _container: DependencyContainer
+  private readonly log?: BaseLogger
+  private readonly t: TFunction<'translation', undefined>
+  private readonly navigate: (stack: never, params: never) => void
 
   public constructor(
     bifoldContainer: Container,
@@ -173,6 +174,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, EmptyList)
     this._container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
+    this._container.registerInstance(TOKENS.INLINE_ERRORS, { enabled: true, position: InlineErrorPosition.Below })
 
     const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
       brandingOverlayType: BrandingOverlayType.Branding10,
@@ -255,7 +257,7 @@ export class AppContainer implements Container {
   }
 
   public resolve<K extends keyof TokenMapping>(token: K): TokenMapping[K] {
-    return this._container.resolve(token) as TokenMapping[K]
+    return this._container.resolve(token)
   }
   public resolveAll<K extends keyof TokenMapping, T extends K[]>(
     tokens: [...T]
