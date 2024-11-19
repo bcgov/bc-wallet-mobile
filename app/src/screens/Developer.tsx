@@ -27,7 +27,7 @@ const Settings: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       backgroundColor: ColorPallet.brand.primaryBackground,
-      width: '100%',
+      width: '10%',
     },
     section: {
       backgroundColor: SettingsTheme.groupBackground,
