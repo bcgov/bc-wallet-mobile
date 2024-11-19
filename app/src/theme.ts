@@ -14,6 +14,7 @@ import React from 'react'
 import { StyleSheet } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
+import { IInlineInputMessage } from '@hyperledger/aries-bifold-core/lib/typescript/App/theme'
 
 export const borderRadius = 4
 export const heavyOpacity = 0.7
@@ -80,6 +81,8 @@ const BrandColors: IBrandColors = {
   headerText: GrayscaleColors.white,
   buttonText: GrayscaleColors.white,
   tabBarInactive: GrayscaleColors.white,
+  inlineError: '',
+  inlineWarning: '',
 }
 
 export const ColorPallet: IColorPallet = {
@@ -196,6 +199,18 @@ export const TextTheme: ITextTheme = {
     fontSize: 21,
     fontWeight: 'normal',
     color: ColorPallet.grayscale.darkGrey,
+  },
+  inlineErrorText: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 16,
+    fontWeight: 'normal',
+    color: ColorPallet.notification.error,
+  },
+  inlineWarningText: {
+    fontFamily: 'BCSans-Regular',
+    fontSize: 16,
+    fontWeight: 'normal',
+    color: ColorPallet.notification.warn,
   },
 }
 
@@ -720,6 +735,13 @@ export const Assets: IAssets = {
   },
 }
 
+const InputInlineMessage: IInlineInputMessage = {
+  inlineErrorText: { ...TextTheme.inlineErrorText },
+  InlineErrorIcon: Assets.svg.iconError,
+  inlineWarningText: { ...TextTheme.inlineWarningText },
+  InlineWarningIcon: Assets.svg.iconWarning,
+}
+
 export const defaultTheme: ITheme = {
   ColorPallet,
   TextTheme,
@@ -740,4 +762,5 @@ export const defaultTheme: ITheme = {
   PINEnterTheme,
   PINInputTheme,
   Assets,
+  InputInlineMessage,
 }
