@@ -1079,6 +1079,31 @@ exports[`Developer Screen screen renders correctly 1`] = `
           </View>
         </View>
       </View>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
+            "paddingBottom": 12,
+            "paddingTop": 24,
+            "width": "100%",
+          }
+        }
+      >
+        <Text
+          style={
+            {
+              "color": "#FFFFFF",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            }
+          }
+          testID="com.ariesbifold:id/Version"
+        >
+          Settings.Version 1 Settings.Build (1)
+        </Text>
+      </View>
     </View>
   </RCTScrollView>
 </RNCSafeAreaView>

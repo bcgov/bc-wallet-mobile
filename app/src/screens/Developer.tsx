@@ -2,6 +2,7 @@ import { useTheme, useStore, testIdWithKey, DispatchAction } from '@hyperledger/
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
+import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { BCState, PreferencesQCDispatchAction } from '../store'
@@ -29,6 +30,15 @@ const Settings: React.FC = () => {
       backgroundColor: ColorPallet.brand.primaryBackground,
       width: '100%',
     },
+    versionContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: 24,
+      paddingBottom: 12,
+    },
+
     section: {
       backgroundColor: SettingsTheme.groupBackground,
       paddingTop: 24,
@@ -348,6 +358,11 @@ const Settings: React.FC = () => {
             value={useAppForcedUpdate}
           />
         </SectionRow>
+        <View style={styles.versionContainer}>
+          <Text style={TextTheme.normal} testID={testIdWithKey('Version')}>
+            {`${t('Settings.Version')} ${getVersion()} ${t('Settings.Build')} (${getBuildNumber()})`}
+          </Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   )

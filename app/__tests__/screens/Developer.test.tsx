@@ -6,6 +6,13 @@ import Developer from '../../src/screens/Developer'
 import { getInitialState, reducer } from '../../src/store'
 
 const mockNavigation = jest.fn()
+
+jest.mock('react-native-device-info', () => {
+  return {
+    getVersion: () => 1,
+    getBuildNumber: () => 1,
+  }
+})
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: () => {
