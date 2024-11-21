@@ -177,7 +177,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     return this._shouldHandleProofRequestAutomatically
   }
 
-  public async start(agent: Agent): Promise<void> {
+  public async start(agent: Agent): void {
     this.agent = agent
 
     this.proofSubscription = this.agent?.events
@@ -376,8 +376,6 @@ export class AttestationMonitor implements AttestationMonitorI {
     try {
       // 1. Is the proof requesting an attestation credential
       if (!(await isProofRequestingAttestation(proof, this.agent, AttestationRestrictions))) {
-        this.log?.info('Proof nope!!!!')
-
         return
       }
 
