@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Spinner Component Renders correctly 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "justifyContent": "center",
+    }
+  }
+  testID="com.ariesbifold:id/LoadingActivityIndicator"
+>
+  <View
+    collapsable={false}
+    style={
+      {
+        "position": "absolute",
+        "transform": [
+          {
+            "rotate": "0deg",
+          },
+        ],
+      }
+    }
+  >
+    <
+      height={85}
+      width={85}
+    />
+  </View>
+</View>
+`;

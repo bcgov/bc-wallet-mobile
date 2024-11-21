@@ -68,5 +68,5 @@ xcuserdata/
 # gem
 app/vendor/bundle/**
 
-# child packages
-bifold/
+# coverage report
+app/coverage

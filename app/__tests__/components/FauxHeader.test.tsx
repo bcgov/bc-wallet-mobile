@@ -1,12 +1,6 @@
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
-// Mock the RNPermissionsModule
-jest.mock('react-native-permissions', () => ({
-  check: jest.fn(),
-  request: jest.fn(),
-}))
-
 import FauxHeader from '../../src/components/FauxHeader'
 
 describe('FauxHeader Component', () => {

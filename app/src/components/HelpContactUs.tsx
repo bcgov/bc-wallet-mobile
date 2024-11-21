@@ -17,7 +17,7 @@ type ContactType = {
   details: DetailsType
 }
 
-type HelpContactUsProps = {
+export type HelpContactUsProps = {
   itemContact: ContactType[]
 }
 const HelpContactUs = ({ itemContact = [] }: HelpContactUsProps) => {
@@ -72,26 +72,24 @@ const HelpContactUs = ({ itemContact = [] }: HelpContactUsProps) => {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       {itemContact.map((item, index) => (
-        <>
-          <View key={index}>
-            <View style={styles.sectionRow}>
-              <CalendarImg />
-              <Text style={styles.sectionDescription}> {item.details.daysOpen}</Text>
-            </View>
-            <View style={styles.sectionRow}>
-              <ClockImg />
-              <Text style={styles.sectionDescription}> {item.details.openingHours}</Text>
-            </View>
-            <View style={styles.sectionDoubleRow}>
-              <PhoneImg style={styles.phoneImage} />
-              <Text style={styles.sectionDescription}>
-                {item.details.phone}
-                {'\n'}
-                {item.details.phoneSec}
-              </Text>
-            </View>
+        <View key={index}>
+          <View style={styles.sectionRow}>
+            <CalendarImg />
+            <Text style={styles.sectionDescription}> {item.details.daysOpen}</Text>
           </View>
-        </>
+          <View style={styles.sectionRow}>
+            <ClockImg />
+            <Text style={styles.sectionDescription}> {item.details.openingHours}</Text>
+          </View>
+          <View style={styles.sectionDoubleRow}>
+            <PhoneImg style={styles.phoneImage} />
+            <Text style={styles.sectionDescription}>
+              {item.details.phone}
+              {'\n'}
+              {item.details.phoneSec}
+            </Text>
+          </View>
+        </View>
       ))}
     </SafeAreaView>
   )

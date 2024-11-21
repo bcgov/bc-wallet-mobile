@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HeaderText Component Renders correctly 1`] = `
+<View>
+  <Text
+    style={
+      [
+        {
+          "color": "#FFFFFF",
+          "fontSize": 32,
+          "fontWeight": "bold",
+          "lineHeight": 32,
+        },
+      ]
+    }
+  >
+    Any Title
+  </Text>
+  <View
+    style={
+      {
+        "backgroundColor": "#FCBA19",
+        "height": 4,
+        "width": 48,
+      }
+    }
+  />
+</View>
+`;

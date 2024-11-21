@@ -1,0 +1,106 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`HelpContactUs Component Renders Correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    [
+      "left",
+      "right",
+    ]
+  }
+  style={
+    {
+      "backgroundColor": "#000000",
+      "flex": 1,
+    }
+  }
+>
+  <View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+        }
+      }
+    >
+      < />
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "fontSize": 18,
+            "fontWeight": "normal",
+            "marginLeft": 10,
+            "textAlign": "left",
+            "textDecorationLine": "none",
+          }
+        }
+      >
+         
+        any_days_open
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "flexDirection": "row",
+        }
+      }
+    >
+      < />
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "fontSize": 18,
+            "fontWeight": "normal",
+            "marginLeft": 10,
+            "textAlign": "left",
+            "textDecorationLine": "none",
+          }
+        }
+      >
+         
+        any_opening_hours
+      </Text>
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "flex-start",
+          "flexDirection": "row",
+          "height": 100,
+          "paddingTop": 10,
+        }
+      }
+    >
+      <
+        style={
+          {
+            "height": 24,
+            "width": 24,
+          }
+        }
+      />
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "fontSize": 18,
+            "fontWeight": "normal",
+            "marginLeft": 10,
+            "textAlign": "left",
+            "textDecorationLine": "none",
+          }
+        }
+      >
+        any_phone
+        
+
+      </Text>
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;
