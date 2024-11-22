@@ -491,6 +491,8 @@ const translation = {
       Older: 'Plus ancien',
     },
     FooterNothingElse: "Il n'y a rien d'autre",
+    NotificationsDeleted_one: '{{ count }} notification supprimée.',
+    NotificationsDeleted_other: '{{ count }} notifications supprimées.',
   },
   PrivacyPolicy: {
     Title: 'Politique de confidentialité',

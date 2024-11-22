@@ -548,6 +548,8 @@ const translation = {
       Older: 'Older',
     },
     FooterNothingElse: 'There is nothing else',
+    NotificationsDeleted_one: '{{ count }} notification deleted.',
+    NotificationsDeleted_other: '{{ count }} notifications deleted.',
   },
   Scan: {
     SuccessfullyAcceptedConnection: 'Successfully Accepted Connection',

@@ -1,9 +1,10 @@
-import { Button, ButtonType, TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
+import { Button, ButtonType, ToastType, TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { TFunction, useTranslation } from 'react-i18next'
 import { View, StyleSheet, SectionList, Text } from 'react-native'
+import Toast from 'react-native-toast-message'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import NotificationListItem, { NotificationTypeEnum } from '../../components/NotificationListItem'
@@ -65,16 +66,24 @@ const NotificationsList: React.FC<{
 }> = ({ openSwipeableId, handleOpenSwipeable, navigation }) => {
   const [{ customNotificationConfig: customNotification, useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
   const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
+  const [notificationsToShow, setNotificationsToShow] = useState<typeof notifications>()
 
   const [setions, setSections] = useState<SectionType[]>([])
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
 
   const [selectedNotification, setSelectedNotification] = useState<SelectedNotificationType[] | null>(null)
+  const hasCanceledRef = useRef(false)
 
   useEffect(() => {
-    setSections(groupNotificationsByDate(notifications as NotificationReturnType, t))
-  }, [notifications])
+    setNotificationsToShow(notifications)
+  }, [notifications, hasCanceledRef.current])
+
+  useEffect(() => {
+    if (notificationsToShow) {
+      setSections(groupNotificationsByDate(notificationsToShow as NotificationReturnType, t))
+    }
+  }, [notificationsToShow])
 
   useEffect(() => {
     if (selectedNotification != null) {
@@ -87,6 +96,32 @@ const NotificationsList: React.FC<{
   const deleteMultipleNotifications = async () => {
     for await (const notif of selectedNotification ?? []) {
       await notif.deleteAction?.()
+    }
+  }
+
+  const handleMultipleDelete = () => {
+    const selected = selectedNotification ?? []
+    if (selected.length > 0) {
+      Toast.show({
+        type: ToastType.Info,
+        text1: t('Activities.NotificationsDeleted', { count: selected.length }),
+        onShow() {
+          setNotificationsToShow((prev) =>
+            prev?.filter((n) => !selected.some((s) => s.id === (n as NotificationType).id))
+          )
+        },
+        onHide: () => {
+          if (!hasCanceledRef.current) {
+            deleteMultipleNotifications()
+          }
+          setNotificationsToShow(notifications)
+          hasCanceledRef.current = false
+        },
+        props: {
+          onCancel: () => (hasCanceledRef.current = true),
+        },
+        position: 'bottom',
+      })
     }
     setSelectedNotification(null)
   }
@@ -290,7 +325,7 @@ const NotificationsList: React.FC<{
       {selectedNotification != null && (
         <View style={styles.selectionMultiActionContainer}>
           <View style={styles.actionButtonContainer}>
-            <Button title={'Supprimer'} onPress={deleteMultipleNotifications} buttonType={ButtonType.ModalCritical}>
+            <Button title={'Supprimer'} onPress={handleMultipleDelete} buttonType={ButtonType.ModalCritical}>
               <MaterialCommunityIcon name={'trash-can-outline'} size={iconSize} style={{ color: 'white' }} />
             </Button>
             <View style={{ height: 24 }} />
