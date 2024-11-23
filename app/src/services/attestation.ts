@@ -177,7 +177,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     return this._shouldHandleProofRequestAutomatically
   }
 
-  public async start(agent: Agent): void {
+  public start(agent: Agent): void {
     this.agent = agent
 
     this.proofSubscription = this.agent?.events
