@@ -15,7 +15,7 @@ import {
   initLanguages,
   ContainerProvider,
   MainContainer,
-  InactivityWrapper,
+  ActivityProvider,
   OpenIDCredentialRecordProvider,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
@@ -71,7 +71,7 @@ const App = () => {
               <AnimatedComponentsProvider value={animatedComponents}>
                 <AuthProvider>
                   <NetworkProvider>
-                    <InactivityWrapper>
+                    <ActivityProvider>
                       <StatusBar
                         barStyle="light-content"
                         hidden={false}
@@ -97,7 +97,7 @@ const App = () => {
                         <RootStack />
                       </TourProvider>
                       <Toast topOffset={15} config={toastConfig} />
-                    </InactivityWrapper>
+                    </ActivityProvider>
                   </NetworkProvider>
                 </AuthProvider>
               </AnimatedComponentsProvider>

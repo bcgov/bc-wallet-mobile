@@ -380,8 +380,7 @@ export class AppContainer implements Container {
         unified.birthdate = new Date(Date.parse(unified.birthdate))
       }
 
-      const state: BCState = {
-        ...initialState,
+      const state = {
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
         preferences: { ...initialState.preferences, ...preferences },
         migration: { ...initialState.migration, ...migration },
@@ -399,7 +398,7 @@ export class AppContainer implements Container {
           enableAltPersonFlow,
         },
         unified: { ...initialState.unified, ...unified },
-      }
+      } as BCState
 
       const { enabledAt, sessionId } = state.developer.remoteDebugging
       if (enabledAt && sessionId) {
