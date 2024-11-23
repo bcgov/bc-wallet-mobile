@@ -319,8 +319,8 @@ const Splash = () => {
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
         setStep(4)
-        const newAgent = await initializeAgent()
-        if (!newAgent) {
+        const agent = await initializeAgent()
+        if (!agent) {
           initializing.current = false
           return
         }
