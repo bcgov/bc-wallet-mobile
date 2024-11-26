@@ -2,14 +2,13 @@ import { GenericFn, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-co
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Text, useWindowDimensions, StyleSheet, TouchableOpacity } from 'react-native'
-import Toast, { ToastPosition } from 'react-native-toast-message'
+import Toast from 'react-native-toast-message'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 interface BaseToastProps {
   title?: string
   body?: string
   toastType: string
-  position?: ToastPosition
   onPress?: GenericFn
   onShow?: GenericFn
   onHide?: GenericFn
@@ -23,15 +22,8 @@ export enum ToastType {
   Error = 'error',
 }
 
-const BaseToast: React.FC<BaseToastProps> = ({
-  title,
-  body,
-  toastType,
-  position = 'top',
-  onPress = () => null,
-  onCancel,
-}) => {
-  const { TextTheme, TabTheme, borderRadius, ColorPallet } = useTheme()
+const BaseToast: React.FC<BaseToastProps> = ({ title, body, toastType, onPress = () => null, onCancel }) => {
+  const { TextTheme, borderRadius, ColorPallet } = useTheme()
   const { t } = useTranslation()
   const { width } = useWindowDimensions()
   const iconSize = 24
@@ -45,9 +37,6 @@ const BaseToast: React.FC<BaseToastProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       borderRadius,
-      ...(position == 'top'
-        ? { marginTop: TabTheme.tabBarStyle.height }
-        : { marginBottom: TabTheme.tabBarStyle.height }),
       padding: 16,
     },
     textContainer: {

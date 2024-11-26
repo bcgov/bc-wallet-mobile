@@ -43,7 +43,6 @@ exports[`BaseToast Component Error renders correctly 1`] = `
           "borderRadius": 4,
           "flex": 1,
           "flexDirection": "row",
-          "marginTop": 60,
           "padding": 16,
         },
         {
@@ -221,7 +220,6 @@ exports[`BaseToast Component Info renders correctly 1`] = `
           "borderRadius": 4,
           "flex": 1,
           "flexDirection": "row",
-          "marginTop": 60,
           "padding": 16,
         },
         {
@@ -399,7 +397,6 @@ exports[`BaseToast Component Success renders correctly 1`] = `
           "borderRadius": 4,
           "flex": 1,
           "flexDirection": "row",
-          "marginTop": 60,
           "padding": 16,
         },
         {
@@ -577,7 +574,6 @@ exports[`BaseToast Component Warn renders correctly 1`] = `
           "borderRadius": 4,
           "flex": 1,
           "flexDirection": "row",
-          "marginTop": 60,
           "padding": 16,
         },
         {

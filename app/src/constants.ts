@@ -1,3 +1,5 @@
+import { TabTheme } from './theme'
+
 export const PINValidationRules = {
   only_numbers: true,
   min_length: 6,
@@ -9,6 +11,9 @@ export const PINValidationRules = {
   no_cross_pattern: false,
 }
 export const hitSlop = { top: 44, bottom: 44, left: 44, right: 44 }
+
+export const toastTopOffset = TabTheme.tabBarStyle.height + 20
+export const toastBottomOffset = TabTheme.tabBarStyle.height + 10
 
 export const attestationCredDefIds = [
   'NXp6XcGeCR2MviWuY51Dva:3:CL:33557:bcwallet',

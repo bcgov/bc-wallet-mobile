@@ -10,42 +10,17 @@ interface CustomToastParams extends ToastShowParams {
 
 export const Config = {
   success: (props: CustomToastParams) => (
-    <BaseToast
-      title={props?.text1}
-      body={props?.text2}
-      onPress={props?.onPress}
-      toastType={ToastType.Success}
-      position={props?.position}
-    />
+    <BaseToast title={props?.text1} body={props?.text2} onPress={props?.onPress} toastType={ToastType.Success} />
   ),
   warn: (props: CustomToastParams) => (
-    <BaseToast
-      title={props?.text1}
-      body={props?.text2}
-      toastType={ToastType.Warn}
-      onPress={props?.onPress}
-      position={props?.position}
-    />
+    <BaseToast title={props?.text1} body={props?.text2} toastType={ToastType.Warn} onPress={props?.onPress} />
   ),
   error: (props: CustomToastParams) => (
-    <BaseToast
-      title={props?.text1}
-      body={props?.text2}
-      toastType={ToastType.Error}
-      onPress={props?.onPress}
-      position={props?.position}
-    />
+    <BaseToast title={props?.text1} body={props?.text2} toastType={ToastType.Error} onPress={props?.onPress} />
   ),
-  info: ({ text1, text2, onPress, position, props }: CustomToastParams) => {
+  info: ({ text1, text2, onPress, props }: CustomToastParams) => {
     return (
-      <BaseToast
-        title={text1}
-        body={text2}
-        toastType={ToastType.Info}
-        onPress={onPress}
-        onCancel={props?.onCancel}
-        position={position}
-      />
+      <BaseToast title={text1} body={text2} toastType={ToastType.Info} onPress={onPress} onCancel={props?.onCancel} />
     )
   },
 }

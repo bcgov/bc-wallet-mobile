@@ -1,12 +1,14 @@
-import { GenericFn, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
-import { useEffect, useRef } from 'react'
+import { GenericFn, testIdWithKey, ToastType, useTheme } from '@hyperledger/aries-bifold-core'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Swipeable } from 'react-native-gesture-handler'
+import { ToastShowParams } from 'react-native-toast-message'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 
 import { hitSlop } from '../constants'
+import { useToast } from '../hooks/toast'
 
 const iconSize = 20
 
@@ -37,6 +39,11 @@ const EventItem = ({
 }: EventItemProps): React.JSX.Element => {
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
+  const hasCanceledRef = useRef(false)
+  const [toastEnabled, setToastEnabled] = useState(false)
+  const [toastOptions, setToastOptions] = useState<ToastShowParams>({})
+  const [showEvent, setShowEvent] = useState(true)
+  useToast({ enabled: toastEnabled, options: toastOptions })
 
   const styles = StyleSheet.create({
     container: {
@@ -117,7 +124,7 @@ const EventItem = ({
     }
   }, [openSwipeableId, swipeableRef.current])
 
-  const body = (
+  const body = showEvent && (
     <Pressable
       accessibilityLabel={t('Global.View')}
       accessibilityRole={'button'}
@@ -149,8 +156,31 @@ const EventItem = ({
   )
 
   const rightSwipeAction = () => {
+    const onDelete = () => {
+      handleSwipeClose()
+      setToastOptions({
+        type: ToastType.Info,
+        text1: t('Activities.NotificationsDeleted', { count: 1 }),
+        onShow() {
+          setShowEvent(false)
+        },
+        onHide: () => {
+          if (!hasCanceledRef.current) {
+            handleDelete?.()
+          }
+          setShowEvent(true)
+          hasCanceledRef.current = false
+          setToastEnabled(false)
+        },
+        props: {
+          onCancel: () => (hasCanceledRef.current = true),
+        },
+        position: 'bottom',
+      })
+      setToastEnabled(true)
+    }
     return (
-      <TouchableOpacity onPress={handleDelete}>
+      <TouchableOpacity onPress={onDelete}>
         <View style={styles.rightAction}>
           <MaterialCommunityIcon name={'trash-can-outline'} size={20} style={styles.rightActionIcon} />
           <Text style={styles.rightActionText}>{t('Notifications.Dismiss')}</Text>

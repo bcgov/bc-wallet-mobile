@@ -32,6 +32,7 @@ import { credentialOfferTourSteps } from './src/components/tours/CredentialOffer
 import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
 import { homeTourSteps } from './src/components/tours/HomeTourSteps'
 import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
+import { toastBottomOffset, toastTopOffset } from './src/constants'
 import RootStack from './src/navigators/RootStack'
 import { BCState, getInitialState, reducer } from './src/store'
 
@@ -95,7 +96,7 @@ const App = () => {
                     >
                       <RootStack />
                     </TourProvider>
-                    <Toast topOffset={15} config={ToastConfig} />
+                    <Toast topOffset={toastTopOffset} bottomOffset={toastBottomOffset} config={ToastConfig} />
                   </NetworkProvider>
                 </AuthProvider>
               </AnimatedComponentsProvider>

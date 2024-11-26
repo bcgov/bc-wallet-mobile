@@ -4,11 +4,12 @@ import moment from 'moment'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { TFunction, useTranslation } from 'react-i18next'
 import { View, StyleSheet, SectionList, Text } from 'react-native'
-import Toast from 'react-native-toast-message'
+import { ToastShowParams } from 'react-native-toast-message'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import NotificationListItem, { NotificationTypeEnum } from '../../components/NotificationListItem'
 import { NotificationReturnType, NotificationsInputProps, NotificationType } from '../../hooks/notifications'
+import { useToast } from '../../hooks/toast'
 import { ActivitiesStackParams } from '../../navigators/navigators'
 import { TabTheme } from '../../theme'
 
@@ -68,6 +69,10 @@ const NotificationsList: React.FC<{
   const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
   const [notificationsToShow, setNotificationsToShow] = useState<typeof notifications>()
 
+  const [toastEnabled, setToastEnabled] = useState(false)
+  const [toastOptions, setToastOptions] = useState<ToastShowParams>({})
+  useToast({ enabled: toastEnabled, options: toastOptions })
+
   const [setions, setSections] = useState<SectionType[]>([])
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
@@ -102,7 +107,7 @@ const NotificationsList: React.FC<{
   const handleMultipleDelete = () => {
     const selected = selectedNotification ?? []
     if (selected.length > 0) {
-      Toast.show({
+      setToastOptions({
         type: ToastType.Info,
         text1: t('Activities.NotificationsDeleted', { count: selected.length }),
         onShow() {
@@ -116,12 +121,14 @@ const NotificationsList: React.FC<{
           }
           setNotificationsToShow(notifications)
           hasCanceledRef.current = false
+          setToastEnabled(false)
         },
         props: {
           onCancel: () => (hasCanceledRef.current = true),
         },
         position: 'bottom',
       })
+      setToastEnabled(true)
     }
     setSelectedNotification(null)
   }
