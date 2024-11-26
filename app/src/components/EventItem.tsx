@@ -1,4 +1,4 @@
-import { GenericFn, testIdWithKey, ToastType, useTheme } from '@hyperledger/aries-bifold-core'
+import { GenericFn, testIdWithKey, ToastType, useStore, useTheme } from '@hyperledger/aries-bifold-core'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
@@ -9,6 +9,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 
 import { hitSlop } from '../constants'
 import { useToast } from '../hooks/toast'
+import { BCDispatchAction, BCState } from '../store'
 
 const iconSize = 20
 
@@ -42,7 +43,7 @@ const EventItem = ({
   const hasCanceledRef = useRef(false)
   const [toastEnabled, setToastEnabled] = useState(false)
   const [toastOptions, setToastOptions] = useState<ToastShowParams>({})
-  const [showEvent, setShowEvent] = useState(true)
+  const [, dispatch] = useStore<BCState>()
   useToast({ enabled: toastEnabled, options: toastOptions })
 
   const styles = StyleSheet.create({
@@ -124,7 +125,7 @@ const EventItem = ({
     }
   }, [openSwipeableId, swipeableRef.current])
 
-  const body = showEvent && (
+  const body = (
     <Pressable
       accessibilityLabel={t('Global.View')}
       accessibilityRole={'button'}
@@ -162,18 +163,26 @@ const EventItem = ({
         type: ToastType.Info,
         text1: t('Activities.NotificationsDeleted', { count: 1 }),
         onShow() {
-          setShowEvent(false)
+          dispatch({
+            type: BCDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS,
+            payload: [event.id],
+          })
         },
         onHide: () => {
           if (!hasCanceledRef.current) {
             handleDelete?.()
           }
-          setShowEvent(true)
           hasCanceledRef.current = false
           setToastEnabled(false)
         },
         props: {
-          onCancel: () => (hasCanceledRef.current = true),
+          onCancel: () => {
+            hasCanceledRef.current = true
+            dispatch({
+              type: BCDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS,
+              payload: [],
+            })
+          },
         },
         position: 'bottom',
       })

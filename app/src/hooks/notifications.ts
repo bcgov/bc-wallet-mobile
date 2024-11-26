@@ -143,9 +143,11 @@ export const useNotifications = ({ openIDUri, isHome = true }: NotificationsInpu
       openIDCreds.push(openIDCredReceived)
     }
 
-    const notif = [...messagesToShow, ...custom, ...receivedOffers, ...proofs, ...revoked, ...openIDCreds].sort(
+    let notif = [...messagesToShow, ...custom, ...receivedOffers, ...proofs, ...revoked, ...openIDCreds].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
+
+    notif = notif.filter((n) => !store.notificationsTempDeletedIds.includes((n as NotificationType).id))
 
     setNotifications(isHome ? (notif.splice(0, 5) as never[]) : (notif as never[]))
   }, [
@@ -156,6 +158,7 @@ export const useNotifications = ({ openIDUri, isHome = true }: NotificationsInpu
     nonAttestationProofs,
     store.attestationAuthentification.isDismissed,
     store.attestationAuthentification.isSeenOnHome,
+    store.notificationsTempDeletedIds,
   ])
 
   useEffect(() => {

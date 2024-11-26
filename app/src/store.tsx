@@ -37,6 +37,7 @@ export interface BCState extends BifoldState {
   developer: Developer
   attestationAuthentification: AttestationAuthentification
   preferences: QCPreferences
+  notificationsTempDeletedIds: string[]
 }
 
 enum DeveloperDispatchAction {
@@ -48,6 +49,10 @@ enum AttestationAuthentificationDispatchAction {
   ATTESTATION_AUTHENTIFICATION_SEEN_ON_HOME = 'attestationAuthentification/attestationAuthentificationSeenOnHome',
 }
 
+enum NotificationsTemporarilyDeletedDispatchAction {
+  NOTIFICATIONS_TEMPORARILY_DELETED_IDS = 'notifications/temporarilyDeletedIds',
+}
+
 export enum PreferencesQCDispatchAction {
   USE_APP_FORCED_UPDATE = 'preferences/appForcedUpdate',
 }
@@ -56,11 +61,13 @@ export type BCDispatchAction =
   | DeveloperDispatchAction
   | AttestationAuthentificationDispatchAction
   | PreferencesQCDispatchAction
+  | NotificationsTemporarilyDeletedDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...AttestationAuthentificationDispatchAction,
   ...PreferencesQCDispatchAction,
+  ...NotificationsTemporarilyDeletedDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -87,6 +94,7 @@ export enum BCLocalStorageKeys {
   AttestationAuthentification = 'AttestationAuthentification',
   Environment = 'Environment',
   GenesisTransactions = 'GenesisTransactions',
+  NotificationsTemporarilyDeleted = 'NotificationsTemporarilyDeleted',
 }
 
 const getInitialAttestationAuthentification = async (): Promise<AttestationAuthentification> => {
@@ -118,6 +126,7 @@ export const getInitialState = async (): Promise<BCState> => {
       ...defaultState.preferences,
       useForcedAppUpdate: false,
     },
+    notificationsTempDeletedIds: [],
   }
 }
 
@@ -151,6 +160,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newState = { ...state, attestationAuthentification }
       // save to storage so notification doesn't reapper on app restart
       AsyncStorage.setItem(BCLocalStorageKeys.AttestationAuthentification, JSON.stringify(attestationAuthentification))
+      return newState
+    }
+    case NotificationsTemporarilyDeletedDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS: {
+      const ids: string[] = action?.payload || []
+      const newState = { ...state, notificationsTempDeletedIds: ids }
+      AsyncStorage.setItem(BCLocalStorageKeys.NotificationsTemporarilyDeleted, JSON.stringify(ids))
       return newState
     }
     case PreferencesQCDispatchAction.USE_APP_FORCED_UPDATE: {

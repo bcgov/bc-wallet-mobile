@@ -1,4 +1,4 @@
-import { Button, ButtonType, ToastType, TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
+import { Button, ButtonType, ToastType, TOKENS, useServices, useStore, useTheme } from '@hyperledger/aries-bifold-core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
@@ -11,6 +11,7 @@ import NotificationListItem, { NotificationTypeEnum } from '../../components/Not
 import { NotificationReturnType, NotificationsInputProps, NotificationType } from '../../hooks/notifications'
 import { useToast } from '../../hooks/toast'
 import { ActivitiesStackParams } from '../../navigators/navigators'
+import { BCDispatchAction, BCState } from '../../store'
 import { TabTheme } from '../../theme'
 
 export type SelectedNotificationType = { id: string; deleteAction?: () => Promise<void> }
@@ -67,7 +68,7 @@ const NotificationsList: React.FC<{
 }> = ({ openSwipeableId, handleOpenSwipeable, navigation }) => {
   const [{ customNotificationConfig: customNotification, useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
   const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
-  const [notificationsToShow, setNotificationsToShow] = useState<typeof notifications>()
+  const [, dispatch] = useStore<BCState>()
 
   const [toastEnabled, setToastEnabled] = useState(false)
   const [toastOptions, setToastOptions] = useState<ToastShowParams>({})
@@ -81,14 +82,8 @@ const NotificationsList: React.FC<{
   const hasCanceledRef = useRef(false)
 
   useEffect(() => {
-    setNotificationsToShow(notifications)
-  }, [notifications, hasCanceledRef.current])
-
-  useEffect(() => {
-    if (notificationsToShow) {
-      setSections(groupNotificationsByDate(notificationsToShow as NotificationReturnType, t))
-    }
-  }, [notificationsToShow])
+    setSections(groupNotificationsByDate(notifications as NotificationReturnType, t))
+  }, [notifications])
 
   useEffect(() => {
     if (selectedNotification != null) {
@@ -110,21 +105,27 @@ const NotificationsList: React.FC<{
       setToastOptions({
         type: ToastType.Info,
         text1: t('Activities.NotificationsDeleted', { count: selected.length }),
-        onShow() {
-          setNotificationsToShow((prev) =>
-            prev?.filter((n) => !selected.some((s) => s.id === (n as NotificationType).id))
-          )
+        onShow: () => {
+          dispatch({
+            type: BCDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS,
+            payload: [...selected.map((s) => s.id)],
+          })
         },
         onHide: () => {
           if (!hasCanceledRef.current) {
             deleteMultipleNotifications()
           }
-          setNotificationsToShow(notifications)
           hasCanceledRef.current = false
           setToastEnabled(false)
         },
         props: {
-          onCancel: () => (hasCanceledRef.current = true),
+          onCancel: () => {
+            hasCanceledRef.current = true
+            dispatch({
+              type: BCDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS,
+              payload: [],
+            })
+          },
         },
         position: 'bottom',
       })
