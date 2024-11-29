@@ -1,8 +1,7 @@
-import { useTheme } from '@hyperledger/aries-bifold-core'
+import { TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
 import { useDefaultStackOptions } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
 import Language from '@hyperledger/aries-bifold-core/App/screens/Language'
 import PINCreate from '@hyperledger/aries-bifold-core/App/screens/PINCreate'
-import UseBiometry from '@hyperledger/aries-bifold-core/App/screens/UseBiometry'
 import { createStackNavigator } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -16,6 +15,7 @@ const SettingsStack: React.FC = () => {
   const StackSettings = createStackNavigator<SettingStackParams>()
   const theme = useTheme()
   const defaultStackOptions = useDefaultStackOptions(theme)
+  const [UseBiometry] = useServices([TOKENS.SCREEN_USE_BIOMETRY])
   const { t } = useTranslation()
 
   return (

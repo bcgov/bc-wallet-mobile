@@ -11,6 +11,7 @@ import {
 import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@credo-ts/react-hooks'
 import { BifoldAgent, useStore } from '@hyperledger/aries-bifold-core'
 import { useOpenID } from '@hyperledger/aries-bifold-core/App/modules/openid/hooks/openid'
+import { OpenId4VPRequestRecord } from '@hyperledger/aries-bifold-core/App/modules/openid/types'
 import {
   BasicMessageMetadata,
   CredentialMetadata,
@@ -138,7 +139,7 @@ export const useNotifications = ({ openIDUri, isHome = true }: NotificationsInpu
       )
     })
 
-    const openIDCreds: Array<SdJwtVcRecord | W3cCredentialRecord> = []
+    const openIDCreds: Array<SdJwtVcRecord | W3cCredentialRecord | OpenId4VPRequestRecord> = []
     if (openIDCredReceived) {
       openIDCreds.push(openIDCredReceived)
     }

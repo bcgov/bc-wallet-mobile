@@ -13,6 +13,7 @@ import {
   initLanguages,
   ContainerProvider,
   MainContainer,
+  ActivityProvider,
 } from '@hyperledger/aries-bifold-core'
 import { OpenIDCredentialRecordProvider } from '@hyperledger/aries-bifold-core/App/modules/openid/context/OpenIDCredentialRecordProvider'
 import { useNavigation } from '@react-navigation/native'
@@ -78,25 +79,27 @@ const App = () => {
               <AnimatedComponentsProvider value={animatedComponents}>
                 <AuthProvider>
                   <NetworkProvider>
-                    <StatusBar
-                      barStyle="light-content"
-                      hidden={false}
-                      backgroundColor={theme.ColorPallet.brand.primary}
-                      translucent={false}
-                    />
-                    <NetInfo />
-                    <ErrorModal />
-                    <TourProvider
-                      homeTourSteps={homeTourSteps}
-                      credentialsTourSteps={credentialsTourSteps}
-                      credentialOfferTourSteps={credentialOfferTourSteps}
-                      proofRequestTourSteps={proofRequestTourSteps}
-                      overlayColor={'black'}
-                      overlayOpacity={0.7}
-                    >
-                      <RootStack />
-                    </TourProvider>
-                    <Toast topOffset={toastTopOffset} bottomOffset={toastBottomOffset} config={ToastConfig} />
+                    <ActivityProvider>
+                      <StatusBar
+                        barStyle="light-content"
+                        hidden={false}
+                        backgroundColor={theme.ColorPallet.brand.primary}
+                        translucent={false}
+                      />
+                      <NetInfo />
+                      <ErrorModal />
+                      <TourProvider
+                        homeTourSteps={homeTourSteps}
+                        credentialsTourSteps={credentialsTourSteps}
+                        credentialOfferTourSteps={credentialOfferTourSteps}
+                        proofRequestTourSteps={proofRequestTourSteps}
+                        overlayColor={'black'}
+                        overlayOpacity={0.7}
+                      >
+                        <RootStack />
+                      </TourProvider>
+                      <Toast topOffset={toastTopOffset} bottomOffset={toastBottomOffset} config={ToastConfig} />
+                    </ActivityProvider>
                   </NetworkProvider>
                 </AuthProvider>
               </AnimatedComponentsProvider>

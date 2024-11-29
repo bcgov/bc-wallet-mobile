@@ -159,7 +159,7 @@ export class AppContainer implements Container {
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.UTIL_LEDGERS, allLedgers)
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_PAGES, pages)
-    this._container.registerInstance(TOKENS.OBJECT_ONBOARDING_CONFIG, defaultScreenOptionsDict)
+    this._container.registerInstance(TOKENS.OBJECT_SCREEN_CONFIG, defaultScreenOptionsDict)
     this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: TermsStack, version: TermsVersion })
     this._container.registerInstance(TOKENS.COMPONENT_PIN_CREATE_HEADER, PINCreateHeader)
     this._container.registerInstance(TOKENS.SCREEN_USE_BIOMETRY, UseBiometry)

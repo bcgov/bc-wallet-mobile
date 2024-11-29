@@ -1,9 +1,13 @@
 import { useAgent } from '@credo-ts/react-hooks'
 import {
   AttachTourStep,
+  BifoldError,
   CredentialStack,
+  DispatchAction,
+  EventTypes,
   HomeStack,
   TOKENS,
+  connectFromScanOrDeepLink,
   testIdWithKey,
   useServices,
   useStore,
@@ -11,9 +15,11 @@ import {
 } from '@hyperledger/aries-bifold-core'
 import { TourID } from '@hyperledger/aries-bifold-core/App/types/tour'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import React, { ReducerAction, useEffect } from 'react'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { ReducerAction, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Text, useWindowDimensions, View, StyleSheet, ViewStyle, AppState } from 'react-native'
+import { Text, useWindowDimensions, View, StyleSheet, ViewStyle, AppState, DeviceEventEmitter } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { SvgProps } from 'react-native-svg'
 
@@ -31,9 +37,14 @@ import { TabStackParams, TabStacks } from './navigators'
 const TabStack: React.FC = () => {
   const { fontScale } = useWindowDimensions()
   const { agent } = useAgent()
-  const [, dispatch] = useStore()
+  const [store, dispatch] = useStore()
+  const navigation = useNavigation<StackNavigationProp<TabStackParams>>()
 
-  const [{ useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
+  const [{ useNotifications }, { enableImplicitInvitations, enableReuseConnections }, logger] = useServices([
+    TOKENS.NOTIFICATIONS,
+    TOKENS.CONFIG,
+    TOKENS.UTIL_LOGGER,
+  ])
 
   const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
   const { t } = useTranslation()
@@ -45,6 +56,53 @@ const TabStack: React.FC = () => {
       flex: 1,
     },
   })
+
+  const handleDeepLink = useCallback(
+    async (deepLink: string) => {
+      logger.info(`Handling deeplink: ${deepLink}`)
+
+      // If it's just the general link with no params, set link inactive and do nothing
+      if (deepLink.search(/oob=|c_i=|d_m=|url=/) < 0) {
+        dispatch({
+          type: DispatchAction.ACTIVE_DEEP_LINK,
+          payload: [undefined],
+        })
+        return
+      }
+
+      try {
+        await connectFromScanOrDeepLink(
+          deepLink,
+          agent,
+          logger,
+          navigation,
+          true, // isDeepLink
+          enableImplicitInvitations,
+          enableReuseConnections
+        )
+      } catch (err: unknown) {
+        const error = new BifoldError(
+          t('Error.Title1039'),
+          t('Error.Message1039'),
+          (err as Error)?.message ?? err,
+          1039
+        )
+        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
+      } finally {
+        dispatch({
+          type: DispatchAction.ACTIVE_DEEP_LINK,
+          payload: [undefined],
+        })
+      }
+    },
+    [agent, enableImplicitInvitations, enableReuseConnections, logger, navigation, t, dispatch]
+  )
+
+  useEffect(() => {
+    if (store.deepLink && agent && store.authentication.didAuthenticate) {
+      handleDeepLink(store.deepLink)
+    }
+  }, [store.deepLink, agent, store.authentication.didAuthenticate, handleDeepLink])
 
   const tabBarIconContainerStyles = (focused: boolean): ViewStyle => ({
     ...TabTheme.tabBarContainerStyle,
