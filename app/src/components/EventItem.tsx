@@ -218,7 +218,9 @@ const EventItem = ({
       </TouchableOpacity>
     )
   }
-  return (
+  return activateSelection ? (
+    <>{body}</>
+  ) : (
     <Swipeable
       ref={swipeableRef}
       onSwipeableWillOpen={handleSwipeOpen}
