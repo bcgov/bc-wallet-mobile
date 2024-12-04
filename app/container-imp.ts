@@ -53,6 +53,7 @@ import {
   IASEnvironment,
   getInitialState,
   QCPreferences,
+  ActivityState,
 } from './src/store'
 
 export interface AppState {
@@ -217,6 +218,7 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let attestationAuthentificationDissmissed = initialState.attestationAuthentification
+      let activities = initialState.activities
       let { environment } = initialState.developer
 
       await Promise.all([
@@ -233,6 +235,7 @@ export class AppContainer implements Container {
           BCLocalStorageKeys.AttestationAuthentification,
           (val) => (attestationAuthentificationDissmissed = val)
         ),
+        loadState<ActivityState>(BCLocalStorageKeys.Activities, (val) => (activities = val)),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
       ])
       const state: BCState = {
@@ -246,6 +249,7 @@ export class AppContainer implements Container {
           ...initialState.attestationAuthentification,
           ...attestationAuthentificationDissmissed,
         },
+        activities,
         developer: {
           ...initialState.developer,
           environment,

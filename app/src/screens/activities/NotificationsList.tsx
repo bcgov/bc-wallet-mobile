@@ -4,18 +4,19 @@ import moment from 'moment'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { TFunction, useTranslation } from 'react-i18next'
 import { View, StyleSheet, SectionList, Text } from 'react-native'
-import { ToastShowParams } from 'react-native-toast-message'
+import Toast, { ToastShowParams } from 'react-native-toast-message'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import NotificationListItem, { NotificationTypeEnum } from '../../components/NotificationListItem'
 import { NotificationReturnType, NotificationsInputProps, NotificationType } from '../../hooks/notifications'
 import { useToast } from '../../hooks/toast'
 import { ActivitiesStackParams } from '../../navigators/navigators'
-import { BCDispatchAction, BCState } from '../../store'
+import { BCDispatchAction, BCState, ActivityState } from '../../store'
 import { TabTheme } from '../../theme'
 
 export type SelectedNotificationType = { id: string; deleteAction?: () => Promise<void> }
 
+const isHome = false
 const iconSize = 24
 // Function to group notifications by date
 const groupNotificationsByDate = (notifications: NotificationReturnType, t: TFunction<'translation', undefined>) => {
@@ -67,12 +68,18 @@ const NotificationsList: React.FC<{
   navigation: StackNavigationProp<ActivitiesStackParams>
 }> = ({ openSwipeableId, handleOpenSwipeable, navigation }) => {
   const [{ customNotificationConfig: customNotification, useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
-  const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
-  const [, dispatch] = useStore<BCState>()
+  const notifications = useNotifications({ isHome } as NotificationsInputProps)
+  const [store, dispatch] = useStore<BCState>()
 
   const [toastEnabled, setToastEnabled] = useState(false)
   const [toastOptions, setToastOptions] = useState<ToastShowParams>({})
   useToast({ enabled: toastEnabled, options: toastOptions })
+
+  useEffect(() => {
+    return () => {
+      if (toastEnabled) Toast.hide()
+    }
+  }, [toastEnabled])
 
   const [setions, setSections] = useState<SectionType[]>([])
   const { t } = useTranslation()
@@ -93,37 +100,65 @@ const NotificationsList: React.FC<{
     }
   }, [selectedNotification])
 
+  const removeTempNot = () => {
+    const ids = (selectedNotification ?? []).map((s) => s.id)
+    const payload = {} as ActivityState
+    for (const key of ids) {
+      payload[key] = {
+        ...store.activities[key],
+      }
+    }
+    dispatch({
+      type: BCDispatchAction.ACTIVITY_MULTIPLE_DELETED,
+      payload: [payload],
+    })
+  }
+
   const deleteMultipleNotifications = async () => {
     for await (const notif of selectedNotification ?? []) {
       await notif.deleteAction?.()
     }
+    removeTempNot()
   }
 
   const handleMultipleDelete = () => {
     const selected = selectedNotification ?? []
     if (selected.length > 0) {
+      const ids = [...selected.map((s) => s.id)]
+      const payload = {} as ActivityState
       setToastOptions({
         type: ToastType.Info,
         text1: t('Activities.NotificationsDeleted', { count: selected.length }),
         onShow: () => {
+          for (const key of ids) {
+            payload[key] = {
+              ...store.activities[key],
+              isTempDeleted: true,
+            }
+          }
           dispatch({
-            type: BCDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS,
-            payload: [...selected.map((s) => s.id)],
+            type: BCDispatchAction.ACTIVITY_TEMPORARILY_DELETED_IDS,
+            payload: [payload],
           })
         },
         onHide: () => {
           if (!hasCanceledRef.current) {
             deleteMultipleNotifications()
           }
-          hasCanceledRef.current = false
           setToastEnabled(false)
         },
         props: {
           onCancel: () => {
             hasCanceledRef.current = true
+            for (const key of ids) {
+              payload[key] = {
+                ...store.activities[key],
+                isTempDeleted: false,
+              }
+            }
             dispatch({
-              type: BCDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS,
-              payload: [],
+              type: BCDispatchAction.ACTIVITY_TEMPORARILY_DELETED_IDS,
+              payload: [payload],
             })
           },
         },
@@ -138,13 +173,14 @@ const NotificationsList: React.FC<{
     container: {
       flex: 1,
       zIndex: 1,
+      marginBottom: 16,
     },
     sectionList: {
       flex: 1,
-      paddingHorizontal: 16,
     },
     separator: {
       borderBottomWidth: 1,
+      marginHorizontal: 16,
       borderBottomColor: ColorPallet.brand.secondary,
     },
     bodyText: {
@@ -158,10 +194,12 @@ const NotificationsList: React.FC<{
     sectionSeparator: {
       height: 1,
       backgroundColor: ColorPallet.brand.secondary,
+      paddingHorizontal: 16,
       marginTop: 4,
     },
     sectionHeaderContainer: {
       marginBottom: 12,
+      paddingHorizontal: 16,
       backgroundColor: ColorPallet.brand.primaryBackground,
     },
     notificationContainer: {
@@ -199,6 +237,7 @@ const NotificationsList: React.FC<{
             onOpenSwipeable={handleOpenSwipeable}
             notificationType={NotificationTypeEnum.BasicMessage}
             notification={item}
+            isHome={isHome}
             activateSelection={selectedNotification != null}
             selected={
               (selectedNotification?.filter((selectedNotification) => selectedNotification.id === item.id)?.length ??
@@ -229,6 +268,7 @@ const NotificationsList: React.FC<{
             onOpenSwipeable={handleOpenSwipeable}
             notificationType={notificationType}
             notification={item}
+            isHome={isHome}
             activateSelection={selectedNotification != null}
             selected={
               (selectedNotification?.filter((selectedNotification) => selectedNotification.id === item.id)?.length ??
@@ -255,6 +295,7 @@ const NotificationsList: React.FC<{
             onOpenSwipeable={handleOpenSwipeable}
             notificationType={NotificationTypeEnum.Custom}
             notification={item}
+            isHome={isHome}
             customNotification={customNotification}
             activateSelection={selectedNotification != null}
             selected={
@@ -282,6 +323,7 @@ const NotificationsList: React.FC<{
             onOpenSwipeable={handleOpenSwipeable}
             notificationType={NotificationTypeEnum.ProofRequest}
             notification={item}
+            isHome={isHome}
             activateSelection={selectedNotification != null}
             selected={
               (selectedNotification?.filter((selectedNotification) => selectedNotification.id === item.id)?.length ??
@@ -325,7 +367,7 @@ const NotificationsList: React.FC<{
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderSectionHeader={renderSectionHeader}
         ListFooterComponent={
-          <View style={selectedNotification != null && { paddingBottom: 200 }}>
+          <View style={[selectedNotification != null && { paddingBottom: 200 }, { paddingHorizontal: 16 }]}>
             <Text style={[styles.footerText]}>{t('Activities.FooterNothingElse')}</Text>
           </View>
         }

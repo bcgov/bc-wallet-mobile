@@ -16,6 +16,8 @@ const iconSize = 20
 interface EventItemProps {
   action?: GenericFn
   handleDelete?: () => Promise<void>
+  isRead?: boolean
+  isHome?: boolean
   event: {
     id: string
     title?: string
@@ -37,6 +39,8 @@ const EventItem = ({
   onOpenSwipeable,
   activateSelection,
   setSelected,
+  isRead = true,
+  isHome,
 }: EventItemProps): React.JSX.Element => {
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
@@ -51,8 +55,11 @@ const EventItem = ({
       flex: 1,
       flexDirection: 'row',
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.grayscale.white,
+      backgroundColor: !isHome && !isRead ? ColorPallet.notification.info : ColorPallet.grayscale.white,
       zIndex: 9999,
+      ...(!isHome && {
+        padding: 16,
+      }),
       gap: 8,
     },
     infoContainer: {
@@ -164,8 +171,15 @@ const EventItem = ({
         text1: t('Activities.NotificationsDeleted', { count: 1 }),
         onShow() {
           dispatch({
-            type: BCDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS,
-            payload: [event.id],
+            type: BCDispatchAction.ACTIVITY_TEMPORARILY_DELETED_IDS,
+            payload: [
+              {
+                [event.id]: {
+                  isRead,
+                  isTempDeleted: true,
+                },
+              },
+            ],
           })
         },
         onHide: () => {
@@ -179,8 +193,15 @@ const EventItem = ({
           onCancel: () => {
             hasCanceledRef.current = true
             dispatch({
-              type: BCDispatchAction.NOTIFICATIONS_TEMPORARILY_DELETED_IDS,
-              payload: [],
+              type: BCDispatchAction.ACTIVITY_TEMPORARILY_DELETED_IDS,
+              payload: [
+                {
+                  [event.id]: {
+                    isRead,
+                    isTempDeleted: false,
+                  },
+                },
+              ],
             })
           },
         },

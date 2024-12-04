@@ -27,7 +27,8 @@ import AtestationTabIcon from '../assets/img/icons/atestation.svg'
 import HomeTabIcon from '../assets/img/icons/home.svg'
 import NotificationTabIcon from '../assets/img/icons/notification.svg'
 import PlusTabIcon from '../assets/img/icons/plus.svg'
-import { NotificationReturnType, NotificationsInputProps } from '../hooks/notifications'
+import { NotificationReturnType, NotificationsInputProps, NotificationType } from '../hooks/notifications'
+import { BCDispatchAction, BCState, ActivityState } from '../store'
 import { notificationsSeenOnHome } from '../utils/notificationsSeenOnHome'
 
 import ActivitiesStack from './ActivitiesStack'
@@ -37,7 +38,7 @@ import { TabStackParams, TabStacks } from './navigators'
 const TabStack: React.FC = () => {
   const { fontScale } = useWindowDimensions()
   const { agent } = useAgent()
-  const [store, dispatch] = useStore()
+  const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<TabStackParams>>()
 
   const [{ useNotifications }, { enableImplicitInvitations, enableReuseConnections }, logger] = useServices([
@@ -147,6 +148,24 @@ const TabStack: React.FC = () => {
       subscription.remove()
     }
   }, [agent, notifications])
+
+  useEffect(() => {
+    const notificationsToAdd = {} as ActivityState
+    for (const n of notifications) {
+      if (!store.activities[(n as NotificationType).id]) {
+        notificationsToAdd[(n as NotificationType).id] = {
+          isRead: false,
+          isTempDeleted: false,
+        }
+      }
+    }
+    if (Object.keys(notificationsToAdd).length > 0) {
+      dispatch({
+        type: BCDispatchAction.NOTIFICATIONS_UPDATED,
+        payload: [notificationsToAdd],
+      })
+    }
+  }, [notifications])
 
   const TabBarIcon = (props: {
     focused: boolean
