@@ -22,6 +22,7 @@ import {
   PersistentStorage,
   PersistentState,
   defaultConfig,
+  InlineErrorPosition,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
@@ -298,6 +299,7 @@ export class AppContainer implements Container {
       { did: 'AcZpBDz3oxmKrpcuPcdKai', id: 'AcZpBDz3oxmKrpcuPcdKai:2:Digital Business Card:1.0.0' },
       { did: 'K9igebFysBL6jcBwR8bKuN', id: 'K9igebFysBL6jcBwR8bKuN:2:Digital Business Card:1.0.0' },
     ])
+    this._container.registerInstance(TOKENS.INLINE_ERRORS, { enabled: true, position: InlineErrorPosition.Below })
     this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
     this._container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
 
