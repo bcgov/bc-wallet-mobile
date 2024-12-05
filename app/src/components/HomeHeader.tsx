@@ -1,4 +1,4 @@
-import { Screens, Stacks, useTheme } from '@hyperledger/aries-bifold-core'
+import { Screens, Stacks, useNetwork, useTheme } from '@hyperledger/aries-bifold-core'
 import { ConnectStackParams } from '@hyperledger/aries-bifold-core/App/types/navigators'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -14,6 +14,14 @@ const HomeHeader = () => {
   const { t } = useTranslation()
   const { ColorPallet } = useTheme()
   const { navigate } = useNavigation<StackNavigationProp<ConnectStackParams>>()
+  const { assertNetworkConnected } = useNetwork()
+
+  const handleNavigation = () => {
+    if (!assertNetworkConnected()) {
+      return
+    }
+    navigate(Stacks.ConnectStack as never, { screen: Screens.Scan } as never)
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -74,9 +82,7 @@ const HomeHeader = () => {
     <View style={styles.container}>
       <HeaderText title={t('Home.Welcome')} />
       <View style={styles.ScanQrCodeContainer}>
-        <TouchableWithoutFeedback
-          onPress={() => navigate(Stacks.ConnectStack as never, { screen: Screens.Scan } as never)}
-        >
+        <TouchableWithoutFeedback onPress={handleNavigation}>
           <View style={styles.ScanQrCodeInnerContainer}>
             <View style={styles.imgContainer}>
               <HomeImg />

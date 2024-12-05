@@ -170,6 +170,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.COMPONENT_HOME_NOTIFICATIONS_EMPTY_LIST, HomeEmptyList)
     this._container.registerInstance(TOKENS.NOTIFICATIONS_LIST_ITEM, NotificationListItem)
     this._container.registerInstance(TOKENS.CONFIG, defaultConfig)
+    this._container.registerInstance(TOKENS.HISTORY_ENABLED, true)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_FOOTER, AddCredentialButton)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, HelpCenterButton)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)

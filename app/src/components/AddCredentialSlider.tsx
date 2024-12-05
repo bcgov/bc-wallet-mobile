@@ -1,7 +1,14 @@
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import { CredentialState } from '@credo-ts/core'
 import { useCredentialByState } from '@credo-ts/react-hooks'
-import { useTheme, Screens, Stacks, testIdWithKey, testIdForAccessabilityLabel } from '@hyperledger/aries-bifold-core'
+import {
+  useTheme,
+  Screens,
+  Stacks,
+  testIdWithKey,
+  testIdForAccessabilityLabel,
+  useNetwork,
+} from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -16,6 +23,7 @@ const AddCredentialSlider: React.FC = () => {
   const { ColorPallet, TextTheme } = useTheme()
   const navigation = useNavigation()
   const { t } = useTranslation()
+  const { assertNetworkConnected } = useNetwork()
 
   const [addCredentialPressed, setAddCredentialPressed] = useState<boolean>(false)
   const [showGetPersonCredential, setShowGetPersonCredential] = useState<boolean>(false)
@@ -73,6 +81,7 @@ const AddCredentialSlider: React.FC = () => {
 
   const goToScanScreen = useCallback(() => {
     deactivateSlider()
+    if (!assertNetworkConnected()) return
     navigation.getParent()?.navigate(Stacks.ConnectStack, { screen: Screens.Scan })
   }, [])
 

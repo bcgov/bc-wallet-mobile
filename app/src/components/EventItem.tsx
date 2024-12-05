@@ -1,5 +1,5 @@
 import { GenericFn, testIdWithKey, ToastType, useStore, useTheme } from '@hyperledger/aries-bifold-core'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Swipeable } from 'react-native-gesture-handler'
@@ -107,15 +107,15 @@ const EventItem = ({
 
   const swipeableRef = useRef<Swipeable>(null)
 
-  const handleSwipeClose = () => {
+  const handleSwipeClose = useCallback(() => {
     if (openSwipeableId === event.id) {
       onOpenSwipeable(null) // Close the current swipeable
     }
-  }
+  }, [openSwipeableId, onOpenSwipeable, event])
 
-  const handleSwipeOpen = () => {
+  const handleSwipeOpen = useCallback(() => {
     onOpenSwipeable(event.id) // Call the parent function to notify which item is opened
-  }
+  }, [event, onOpenSwipeable])
 
   const pressAction = () => {
     if (activateSelection) {
