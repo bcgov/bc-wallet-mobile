@@ -145,7 +145,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
 
   const dismissProofRequest = async () => {
     if (agent && notificationType === NotificationTypeEnum.ProofRequest) {
-      markProofAsViewed(agent, notification as ProofExchangeRecord)
+      await markProofAsViewed(agent, notification as ProofExchangeRecord)
     }
   }
 
@@ -172,8 +172,11 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
     customNotification?.onCloseAction(dispatch as any)
   }
 
-  const removeNotification = async () => {
-    if (notificationType === NotificationTypeEnum.ProofRequest) {
+  const removeNotification = useCallback(async () => {
+    if (
+      notificationType === NotificationTypeEnum.ProofRequest &&
+      (notification as ProofExchangeRecord).state !== ProofState.Declined
+    ) {
       if ((notification as ProofExchangeRecord).state === ProofState.Done) {
         await dismissProofRequest()
       } else {
@@ -186,7 +189,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
     } else if (notificationType === NotificationTypeEnum.Custom) {
       await declineCustomNotification()
     }
-  }
+  }, [notificationType, notification])
 
   const detailsForNotificationType = async (notificationType: NotificationTypeEnum): Promise<DisplayDetails> => {
     return new Promise((resolve) => {
