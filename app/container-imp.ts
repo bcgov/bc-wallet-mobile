@@ -89,6 +89,7 @@ const defaultConfig: BifoldConfig = {
   enableChat: false,
   supportedLanguages: [Locales.en, Locales.fr],
   showPreface: false,
+  showPINExplainer: false,
   enableReuseConnections: true,
   disableOnboardingSkip: true,
   showScanHelp: true,

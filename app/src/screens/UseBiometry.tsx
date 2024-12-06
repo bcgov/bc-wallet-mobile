@@ -196,8 +196,8 @@ const UseBiometry: React.FC = () => {
       <View style={{ marginTop: 'auto', margin: 20 }}>
         {store.onboarding.didCompleteOnboarding || (
           <Button
-            title={'Continue'}
-            accessibilityLabel={'Continue'}
+            title={t('Global.Continue')}
+            accessibilityLabel={t('Global.Continue')}
             testID={testIdWithKey('Continue')}
             onPress={continueTouched}
             buttonType={ButtonType.Primary}

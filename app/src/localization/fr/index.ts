@@ -925,6 +925,8 @@ const translation = {
     BiometricsNotProvided: 'La biométrie est indisponible. Veuillez saisir le NIP du portefeuille.',
     BiometricsError: 'Échec de la biométrie.',
     BiometricsErrorEnterPIN: 'Veuillez saisir le NIP du portefeuille.',
+    LockedOut: "Votre portefeuille a été verrouillé après {{ time }} minute(s) d'inactivité.",
+    ReEnterPIN: 'Saisissez à nouveau votre NIP.',
     BiometricsChangedEnterPIN: 'Veuillez saisir le NIP du portefeuille.',
     RepeatPIN: 'Essayez votre NIP à nouveau',
     LoggedOut: 'Vous avez été déconnecté du portefeuille.',
