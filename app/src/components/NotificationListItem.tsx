@@ -326,7 +326,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       case NotificationTypeEnum.Revocation:
         navigation.getParent()?.navigate(Stacks.NotificationStack, {
           screen: Screens.CredentialDetails,
-          params: { credential: notification },
+          params: { credential: notification.id },
         })
         break
       case NotificationTypeEnum.Custom:
