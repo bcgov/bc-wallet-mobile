@@ -9,7 +9,13 @@ import {
   W3cCredentialRecord,
 } from '@credo-ts/core'
 import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@credo-ts/react-hooks'
-import { BifoldAgent, useStore } from '@hyperledger/aries-bifold-core'
+import { BifoldAgent, TOKENS, useServices, useStore } from '@hyperledger/aries-bifold-core'
+import {
+  CustomRecord,
+  HistoryCardType,
+  HistoryRecord,
+  RecordType,
+} from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import {
   BasicMessageMetadata,
   CredentialMetadata,
@@ -17,8 +23,10 @@ import {
   credentialCustomMetadata,
 } from '@hyperledger/aries-bifold-core/App/types/metadata'
 import { CustomNotificationRecord } from '@hyperledger/aries-bifold-core/App/types/notification'
+import { parseCredDefFromId } from '@hyperledger/aries-bifold-core/App/utils/cred-def'
+import { getCredentialIdentifiers } from '@hyperledger/aries-bifold-core/App/utils/credential'
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { attestationCredDefIds } from '../constants'
 import { showPersonCredentialSelector } from '../helpers/BCIDHelper'
@@ -71,6 +79,53 @@ export const useNotifications = ({ isHome = true }: NotificationsInputProps): No
   const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const [nonAttestationProofs, setNonAttestationProofs] = useState<ProofExchangeRecord[]>([])
+  const [logger, historyManagerCurried, historyEnabled] = useServices([
+    TOKENS.UTIL_LOGGER,
+    TOKENS.FN_LOAD_HISTORY,
+    TOKENS.HISTORY_ENABLED,
+  ])
+
+  const logHistoryRecord = useCallback(
+    async (credential: CredentialRecord) => {
+      const connection = await agent?.connections.findById(credential?.connectionId ?? '')
+      const correspondenceName = connection?.alias || connection?.theirLabel || credential.connectionId
+      try {
+        if (!(agent && historyEnabled)) {
+          logger.trace(
+            `[${useNotifications.name}]:[logHistoryRecord] Skipping history log, either history function disabled or agent undefined!`
+          )
+          return
+        }
+        const historyManager = historyManagerCurried(agent)
+
+        const type = HistoryCardType.CardRevoked
+
+        const events = await historyManager.getHistoryItems({ type: RecordType.HistoryRecord })
+        if (
+          events.some(
+            (event: CustomRecord) => event.content.type === type && event.content.correspondenceId === credential.id
+          )
+        ) {
+          return
+        }
+        const ids = getCredentialIdentifiers(credential)
+        const name = parseCredDefFromId(ids.credentialDefinitionId, ids.schemaId)
+
+        /** Save history record for card accepted */
+        const recordData: HistoryRecord = {
+          type: type,
+          message: name,
+          createdAt: new Date(),
+          correspondenceId: credential.id,
+          correspondenceName: correspondenceName,
+        }
+        await historyManager.saveHistory(recordData)
+      } catch (err: unknown) {
+        logger.error(`[${useNotifications.name}]:[logHistoryRecord] Error saving history: ${err}`)
+      }
+    },
+    [agent, historyEnabled, logger, historyManagerCurried]
+  )
 
   useEffect(() => {
     // get all unseen messages
@@ -103,6 +158,7 @@ export const useNotifications = ({ isHome = true }: NotificationsInputProps): No
         metadata?.revoked_seen == undefined &&
         (metadata?.seenOnHome == undefined || !isHome)
       ) {
+        logHistoryRecord(cred)
         return cred
       }
     })
