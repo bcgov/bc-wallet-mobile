@@ -21,7 +21,6 @@ import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { StackNavigationOptions } from '@react-navigation/stack'
-import { TFunction } from 'react-i18next'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
@@ -63,28 +62,6 @@ export interface AppState {
 const defaultConfig: BifoldConfig = {
   PINSecurity: { rules: PINValidationRules, displayHelper: true },
   settings: [],
-  /* settings: [
-    {
-      header: {
-        title: this.t('Settings.MoreInformation'),
-        icon: { name: 'info' },
-      },
-      data: [
-        {
-          title: this.t('Settings.TermsOfUse'),
-          accessibilityLabel: this.t('Settings.TermsOfUse'),
-          testID: testIdWithKey('TermsOfUse'),
-          onPress: () => this.navigate(Stacks.SettingStack as never, { screen: Screens.Terms } as never),
-        },
-        {
-          title: this.t('Settings.IntroductionToTheApp'),
-          accessibilityLabel: this.t('Settings.IntroductionToTheApp'),
-          testID: testIdWithKey('IntroductionToTheApp'),
-          onPress: () => this.navigate(Stacks.SettingStack as never, { screen: Screens.Onboarding } as never),
-        },
-      ],
-    },
-  ], */
   enableTours: true,
   enableChat: false,
   supportedLanguages: [Locales.en, Locales.fr],
@@ -105,19 +82,10 @@ const defaultConfig: BifoldConfig = {
 export class AppContainer implements Container {
   private readonly _container: DependencyContainer
   private readonly log?: BaseLogger
-  private readonly t: TFunction<'translation', undefined>
-  private readonly navigate: (stack: never, params: never) => void
 
-  public constructor(
-    bifoldContainer: Container,
-    t: TFunction<'translation', undefined>,
-    navigate: (stack: never, params: never) => void,
-    log?: BaseLogger
-  ) {
+  public constructor(bifoldContainer: Container, log?: BaseLogger) {
     this._container = bifoldContainer.container.createChildContainer()
     this.log = log
-    this.t = t
-    this.navigate = navigate
   }
 
   public get container(): DependencyContainer {
@@ -155,6 +123,7 @@ export class AppContainer implements Container {
     defaultScreenOptionsDict[Screens.CreatePIN] = {
       ...defaultScreenOptionsDict[Screens.CreatePIN],
       ...onboardingScreenOptions,
+      gestureEnabled: false,
     }
 
     // Here you can register any component to override components in core package
@@ -177,7 +146,11 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, EmptyList)
     this._container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
-    this._container.registerInstance(TOKENS.INLINE_ERRORS, { enabled: true, position: InlineErrorPosition.Below })
+    this._container.registerInstance(TOKENS.INLINE_ERRORS, {
+      enabled: true,
+      hasErrorIcon: false,
+      position: InlineErrorPosition.Below,
+    })
 
     const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
       brandingOverlayType: BrandingOverlayType.Branding10,

@@ -21,12 +21,15 @@ import '@formatjs/intl-datetimeformat/locale-data/en' // locale-data for en
 import '@formatjs/intl-datetimeformat/add-all-tz' // Add ALL tz data
 import 'reflect-metadata'
 
-import { NavigationContainer } from '@react-navigation/native'
+import { MainContainer } from '@hyperledger/aries-bifold-core'
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native'
 import React from 'react'
 import { AppRegistry } from 'react-native'
+import { container } from 'tsyringe'
 
 import App from './App'
 import { name as appName } from './app.json'
+import { AppContainer } from './container-imp'
 import qcwallet from './src/'
 const { theme } = qcwallet
 
@@ -44,10 +47,14 @@ const navigationTheme = {
   },
 }
 
+const bifoldContainer = new MainContainer(container.createChildContainer()).init()
+const QCApp = App(new AppContainer(bifoldContainer).init())
+
 const Base = () => {
+  const navigationRef = useNavigationContainerRef()
   return (
-    <NavigationContainer theme={navigationTheme}>
-      <App />
+    <NavigationContainer ref={navigationRef} theme={navigationTheme}>
+      <QCApp />
     </NavigationContainer>
   )
 }

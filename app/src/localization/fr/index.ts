@@ -355,7 +355,7 @@ const translation = {
       NoRepetitionOfTheTwoSameNumbersValidation:
         'Votre NIP contient une répétition de deux chiffres (p. ex.: 1212). Veuillez choisir un autre NIP.',
       NoRepetitionOfTheSameNumbersValidation:
-        'Votre NIP contient une répétition de deux (2) chiffres (p. ex.: 22). Veuillez choisir un autre NIP. ',
+        'Votre NIP contient une répétition de trois (3) chiffres (p. ex.: 222). Veuillez choisir un autre NIP. ',
       NoSeriesOfNumbersValidation: 'Une série de nombres consécutifs a été détectée dans votre NIP.',
       PINOnlyContainDigitsValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
       PINTooShortValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
