@@ -9,6 +9,7 @@ import {
   testIdWithKey,
   TOKENS,
   useServices,
+  BifoldError,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { CommonActions, useNavigation } from '@react-navigation/native'
@@ -16,6 +17,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
@@ -110,13 +112,22 @@ const Splash = () => {
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
   const [initAgentCount, setInitAgentCount] = useState(0)
   const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
-  const [initError, setInitError] = useState<Error | null>(null)
+  const [initError, setInitError] = useState<BifoldError | null>(null)
+  const [reported, setReported] = useState(false)
   const initializing = useRef(false)
   const { initializeAgent } = useInitializeBCAgent()
-  const [ocaBundleResolver, { showPreface, enablePushNotifications }] = useServices([
+  const [logger, ocaBundleResolver, { showPreface, enablePushNotifications }] = useServices([
+    TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_OCA_RESOLVER,
     TOKENS.CONFIG,
   ])
+
+  const report = useCallback(() => {
+    if (initError) {
+      logger.report(initError)
+    }
+    setReported(true)
+  }, [logger, initError])
 
   const steps: string[] = useMemo(
     () => [
@@ -274,7 +285,7 @@ const Splash = () => {
       }
     } catch (e: unknown) {
       setInitErrorType(InitErrorTypes.Onboarding)
-      setInitError(e as Error)
+      setInitError(new BifoldError(t('Error.Title2030'), t('Error.Message2030'), (e as Error)?.message, 2030))
     }
   }, [
     mounted,
@@ -335,7 +346,7 @@ const Splash = () => {
       } catch (e: unknown) {
         initializing.current = false
         setInitErrorType(InitErrorTypes.Agent)
-        setInitError(e as Error)
+        setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), (e as Error)?.message, 2031))
       }
     }
 
@@ -350,6 +361,7 @@ const Splash = () => {
     store.onboarding.didConsiderBiometry,
     navigation,
     initAgentCount,
+    t,
   ])
 
   const handleErrorCallToActionPressed = () => {
@@ -380,6 +392,11 @@ const Splash = () => {
                 message={initError?.message || t('Error.Unknown')}
                 onCallToActionLabel={t('Init.Retry')}
                 onCallToActionPressed={handleErrorCallToActionPressed}
+                secondaryCallToActionTitle={reported ? t('Error.Reported') : t('Error.ReportThisProblem')}
+                secondaryCallToActionDisabled={reported}
+                secondaryCallToActionIcon={reported ? <Icon style={{ marginRight: 8 }} name={'check-circle'} size={18} color={ColorPallet.semantic.success} /> : undefined}
+                secondaryCallToActionPressed={initError ? report : undefined}
+                showVersionFooter
               />
             </View>
           ) : (

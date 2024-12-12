@@ -79,7 +79,7 @@ const App = () => {
                         translucent={false}
                       />
                       <NetInfo />
-                      <ErrorModal />
+                      <ErrorModal enableReport/>
                       <WebDisplay
                         destinationUrl={surveyMonkeyUrl}
                         exitUrl={surveyMonkeyExitUrl}

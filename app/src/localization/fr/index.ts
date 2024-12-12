@@ -21,6 +21,10 @@ const translation = {
     "Message2028": "Un problème est survenu pendant la réception de l'attestation de l'invitation de connection.",
     "Title2029": "Incapable de gérer la preuve d'attestation.",
     "Message2029": "Un problème est survenu de la gestion lors de la requête de preuve d'attestation.",
+    "Title2030": "Unable to complete app initialization (FR)",
+    "Message2030": "There was a problem while initializing the app. (FR)",
+    "Title2031": "Unable to complete agent initialization (FR)",
+    "Message2031": "There was a problem while initializing the agent. (FR)",
     "NoMessage": "Aucun message",
   },
   "CameraDisclosure": {

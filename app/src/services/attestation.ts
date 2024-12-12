@@ -8,12 +8,12 @@ import {
   ProofState,
   ProofEventTypes,
   ProofExchangeRecord,
-  BaseLogger,
   ConnectionRecord,
 } from '@credo-ts/core'
 import {
   BifoldError,
   BifoldAgent,
+  BifoldLogger,
   AttestationEventTypes,
   AttestationMonitor as AttestationMonitorI,
 } from '@hyperledger/aries-bifold-core'
@@ -150,7 +150,7 @@ export class AttestationMonitor implements AttestationMonitorI {
   private offerSubscription?: Subscription
   private agent?: Agent
   private options: AttestationMonitorOptions
-  private log?: BaseLogger
+  private log?: BifoldLogger
   private _attestationWorkflowInProgress = false
   private _shouldHandleProofRequestAutomatically = false
   private _proofRequest?: ProofExchangeRecord
@@ -158,7 +158,7 @@ export class AttestationMonitor implements AttestationMonitorI {
 
   // take in options, agent, and logger. Options should include the attestation service URL
   // and the proof to watch for along with the cred_ef_id of the attestation credentials.
-  public constructor(logger: BaseLogger, options: AttestationMonitorOptions) {
+  public constructor(logger: BifoldLogger, options: AttestationMonitorOptions) {
     this.log = logger
     this.options = options
     const { shouldHandleProofRequestAutomatically } = options
