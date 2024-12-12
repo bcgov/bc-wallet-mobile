@@ -112,7 +112,7 @@ const Plus: React.FC = () => {
             <View style={styles.button}>
               <Button
                 buttonType={ButtonType.Secondary}
-                testID={testIdWithKey('StartProcess')}
+                testID={testIdWithKey('About')}
                 accessibilityLabel={t('OptionsPlus.ButtonAbout')}
                 title={t('OptionsPlus.ButtonAbout')}
                 onPress={() => navigate(Stacks.AboutStack as never, { screen: Screens.About } as never)}

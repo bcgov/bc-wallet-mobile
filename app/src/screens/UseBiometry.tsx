@@ -355,7 +355,6 @@ const UseBiometry: React.FC = () => {
                 ios_backgroundColor={ColorPallet.grayscale.lightGrey}
                 onValueChange={toggleSwitch}
                 value={biometryEnabled}
-                disabled={!biometryAvailable}
               />
             </Pressable>
           </View>
