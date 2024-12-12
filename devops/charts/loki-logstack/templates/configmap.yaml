@@ -24,7 +24,7 @@ data:
       bind_port: 7946
       abort_if_cluster_join_fails: true
       join_members: 
-      - bcwallet-logstack-loki-memberlist.ca7f8f-test.svc.cluster.local:7946
+      - bcwallet-logstack-loki-memberlist.{{ $.Values.namespace }}.svc.cluster.local:7946
     
     ingester:
       lifecycler:
