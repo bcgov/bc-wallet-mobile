@@ -416,6 +416,7 @@ const translation = {
     ProgressBarText: '2. Securing the wallet',
   },
   PINEnter: {
+    Title: 'Québec Wallet',
     IncorrectPin: 'Incorrect Pin',
     EnterPIN: 'Enter your wallet PIN',
     Unlock: 'Unlock',

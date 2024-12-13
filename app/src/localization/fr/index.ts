@@ -912,6 +912,7 @@ const translation = {
     GiveFeedback: 'Donnez votre avis',
   },
   PINEnter: {
+    Title: 'Portefeuille numérique du Québec',
     EnterPIN: 'Veuiller saisir votre NIP',
     Unlock: 'Déverrouiller',
     Or: 'Ou',

@@ -123,7 +123,7 @@ export class AppContainer implements Container {
     defaultScreenOptionsDict[Screens.CreatePIN] = {
       ...defaultScreenOptionsDict[Screens.CreatePIN],
       ...onboardingScreenOptions,
-      gestureEnabled: false,
+      gestureEnabled: true,
     }
 
     // Here you can register any component to override components in core package

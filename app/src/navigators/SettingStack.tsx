@@ -47,7 +47,6 @@ const SettingsStack: React.FC = () => {
         component={PINCreate}
         options={{
           title: t('Screens.ChangePIN'),
-          gestureEnabled: true,
         }}
       />
       <StackSettings.Screen
