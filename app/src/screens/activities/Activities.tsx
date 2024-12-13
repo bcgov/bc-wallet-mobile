@@ -92,7 +92,11 @@ const Activities: React.FC<ActivitiesProps> = ({ navigation }) => {
           navigation={navigation}
         />
       ) : (
-        <HistoryList />
+        <HistoryList
+          openSwipeableId={openSwipeableId}
+          handleOpenSwipeable={setOpenSwipeableId}
+          navigation={navigation}
+        />
       )}
     </View>
   )

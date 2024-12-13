@@ -60,6 +60,7 @@ const translation = {
       ErrorTitle: 'Mise à jour indisponible',
       ErrorMsg: "Impossible de mettre à jour l'application.",
     },
+    Loading: 'Chargement en cours',
   },
   Language: {
     code_en: 'Anglais',
@@ -72,6 +73,9 @@ const translation = {
     MinuteAgo: 'Il y a une minute',
     MinutesAgo: 'Il y a quelques minutes',
     JustNow: 'À l’instant',
+    ModifiedOn: 'Modifié le',
+    acceptedOn: 'Accepté le',
+    DeclinedOn: 'Refusé le',
     MonthLong: {
       January: 'janvier',
       February: 'février',
@@ -493,6 +497,8 @@ const translation = {
     FooterNothingElse: "Il n'y a rien d'autre",
     NotificationsDeleted_one: '{{ count }} notification supprimée.',
     NotificationsDeleted_other: '{{ count }} notifications supprimées.',
+    HistoryDeleted_one: '{{ count }} historique supprimé.',
+    HistoryDeleted_other: '{{ count }} historiques supprimés.',
   },
   PrivacyPolicy: {
     Title: 'Politique de confidentialité',
@@ -1005,6 +1011,59 @@ const translation = {
     Accessibility: 'Accessibilité',
     TermsOfUse: "Conditions d'utilisation",
     PrivacyPolicy: 'Politique de confidentialité',
+  },
+  History: {
+    ConfirmDeleteEvent: 'Êtes-vous sûr de vouloir supprimer cet événement ?',
+    Initial: {
+      Description: {
+        Header: 'Cette section Historique peut lister lorsque :\n',
+        PointA: 'Vous avez <b>partagé des informations</b> avec un vérificateur',
+        PointAAxs: 'Vous avez partagé des informations avec un vérificateur',
+        PointB: 'Une carte est <b>acceptée, révoquée ou expirée</b>',
+        PointBAxs: 'Une carte est acceptée, révoquée ou expirée',
+        PointC: 'Vous avez mis à jour votre <b>NIP</b>',
+        PointCAxs: 'Vous avez mis à jour votre NIP',
+      },
+    },
+    Button: {
+      DeleteEvent: "Supprimer l'événement",
+    },
+    CardTitle: {
+      CardAccepted: 'Carte acceptée',
+      CardDeclined: 'Carte refusée',
+      CardChanged: 'Attestation {{operation}}',
+      CardExpired: 'Carte expirée',
+      CardRevoked: 'Carte révoquée',
+      InformationSent: 'Informations envoyées à :',
+      WalletPinUpdated: 'Modification du NIP',
+      BiometricUpdated: '{{operation}} de la biométrie',
+    },
+    CardDescription: {
+      CardExpired: '{{cardName}} expirée',
+      CardRevoked: '{{cardName}} révoquée',
+      CardAccepted: 'Attestation {{cardName}} acceptée',
+      CardChanged: 'Attestation {{cardName}} {{operation}}',
+      CardDeclined: 'Attestation {{cardName}} refusée',
+      WalletPinUpdated: 'Un nouveau NIP a été défini pour l’application',
+      BiometricUpdated: 'La biométrie a été {{operation}}',
+    },
+    Detail: {
+      InformationRequested: 'Les informations demandées',
+      Email: 'Adresse courriel',
+      Identifier: 'Identifiant unique',
+    },
+    Date: {
+      changedOn: '{{operation}} le',
+    },
+    Operations: {
+      Accepted: 'acceptée',
+      Declined: 'refusée',
+      Removed: 'supprimée',
+      Expired: 'expirée',
+      Revoked: 'révoquée',
+      Activated: 'activée',
+      Deactivated: 'désactivée',
+    },
   },
 }
 

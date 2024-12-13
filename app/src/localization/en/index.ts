@@ -60,6 +60,7 @@ const translation = {
       ErrorTitle: 'Update Unavailable',
       ErrorMsg: 'Unable to update the app.',
     },
+    Loading: 'Loading',
   },
   Language: {
     code_en: 'English',
@@ -72,6 +73,9 @@ const translation = {
     MinuteAgo: 'minute ago',
     MinutesAgo: 'minutes ago',
     JustNow: 'just now',
+    ModifiedOn: 'Modified on',
+    acceptedOn: 'Accepted on',
+    DeclinedOn: 'Declined on',
     MonthLong: {
       January: 'January',
       February: 'February',
@@ -550,6 +554,8 @@ const translation = {
     FooterNothingElse: 'There is nothing else',
     NotificationsDeleted_one: '{{ count }} notification deleted.',
     NotificationsDeleted_other: '{{ count }} notifications deleted.',
+    HistoryDeleted_one: '{{ count }} history deleted.',
+    HistoryDeleted_other: '{{ count }} histories deleted.',
   },
   Scan: {
     SuccessfullyAcceptedConnection: 'Successfully Accepted Connection',
@@ -972,6 +978,59 @@ const translation = {
     Accessibility: 'Accessibility',
     TermsOfUse: 'Terms of Use',
     PrivacyPolicy: 'Privacy Policy',
+  },
+  History: {
+    ConfirmDeleteEvent: 'Are you sure you want to delete this event?',
+    Initial: {
+      Description: {
+        Header: 'This History section can list when:\n',
+        PointA: 'You have <b>shared information</b> with a verifier',
+        PointAAxs: 'You have shared information with a verifier',
+        PointB: 'A card is <b>accepted, revoked or expired</b>',
+        PointBAxs: 'A card is accepted, revoked or expired',
+        PointC: 'You have updated your <b>PIN</b>',
+        PointCAxs: 'You have updated your PIN',
+      },
+    },
+    Button: {
+      DeleteEvent: 'Delete Event',
+    },
+    CardTitle: {
+      CardAccepted: 'Authentication Attestation accepted',
+      CardDeclined: 'Authentication Attestation declined',
+      CardExpired: 'Authentication Attestation expired',
+      CardRevoked: 'Authentication Attestation revoked',
+      CardChanged: 'Card {{operation}}',
+      InformationSent: 'Information sent to:',
+      WalletPinUpdated: 'Wallet PIN updated',
+      BiometricUpdated: '{{operation}} of biometrics',
+    },
+    CardDescription: {
+      CardExpired: '{{cardName}} expired',
+      CardRevoked: '{{cardName}} revoked',
+      CardAccepted: '{{cardName}} Accepted',
+      CardDeclined: 'Authentication Attestation {{cardName}} refused',
+      CardChanged: 'Card {{cardName}} {{operation}}',
+      WalletPinUpdated: 'New PIN set',
+      BiometricUpdated: 'Biometrics has been {{operation}}',
+    },
+    Detail: {
+      InformationRequested: 'The requested information',
+      Email: 'Email address',
+      Identifier: 'Unique identifier',
+    },
+    Date: {
+      changedOn: '{{operation}} on',
+    },
+    Operations: {
+      Accepted: 'accepted',
+      Declined: 'refused',
+      Removed: 'removed',
+      Expired: 'expired',
+      Revoked: 'revoked',
+      Activated: 'activated',
+      Deactivated: 'deactivated',
+    },
   },
 }
 

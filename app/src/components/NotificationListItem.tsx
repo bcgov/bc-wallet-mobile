@@ -357,6 +357,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       onOpenSwipeable={onOpenSwipeable}
       setSelected={setSelected}
       activateSelection={activateSelection}
+      deleteMessage={'Activities.NotificationsDeleted'}
     />
   )
 }
