@@ -28,13 +28,12 @@ The current proxy implementation is Caddy. Read more about Caddy [here](https://
 Deploy the Loki Logstack using the following command:
 
 ```bash
-helm template bcwallet ./devops/charts/loki-logstack -f ./devops/charts/loki-logstack/values_test.yaml \
---set-string namespace=ca7123-test \
+helm install bcwallet ./devops/charts/loki-logstack -f ./devops/charts/loki-logstack/values_dev.yaml \
+--set-string namespace=ca7123-dev \
 --set-string minio_access_key=$MINIO_ACCESS_KEY \
 --set-string minio_secret_key=$MINIO_SECRET_KEY \
 --set-string proxyUserName=$PROXY_USER_NAME \
---set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD| awk -F: '{ print $2 }'|tr -d '[:space:]'|base64)| \
-oc apply -n ca7123-test -f -
+--set-string proxyPassword=$(htpasswd -nbB $PROXY_USER_NAME $PROXY_PASSWORD| awk -F: '{ print $2 }'|tr -d '[:space:]'|base64)
 ```
 
 The parameters passed in via the `--set-string` argument for this command are as follows:
@@ -46,6 +45,10 @@ The parameters passed in via the `--set-string` argument for this command are as
 | proxyPassword    | The password for the Loki Proxy.This is part of the authentication credentials.                     |
 | minio_access_key | The access key associated with Minio                                                                |
 | minio_secret_key | The secret key associated with Minio                                                                |
+
+**Pro Tip 🤓**
+
+- Use `openssl rand -hex 8` to generate a random password. The number `8` can be changed to any number to generate a password of that length. i.e `MINIO_SECRET_KEY=$(openssl rand -hex 16)` will generate a 16 character password.
 
 Once deployed there will be several pods running, depending on your replication count, that can be verified with the following command:
 
@@ -98,5 +101,5 @@ Get and updated timestamp:
 Send a sample log with the updated timestamp:
 
 ```bash
-curl -v -H "Content-Type: application/json" -H "Authorization: Basic Base64-Encoded-USERNAME:PASSWORD" -X POST "https://bcwallet-logstack-proxy-ca7123-test.apps.silver.devops.gov.bc.ca/loki/api/v1/push" --data-raw '{"streams":[{"stream":{"job":"react-native-logs","level":"debug","application":"bc wallet","version":"1.0.1-444","system":"iOS v16.7.4","session_id":"463217"},"values":[["1713486470448000000","{\"message\":\"Successfully connected to WebSocket wss://aries-mediator-agent.vonx.io\"}"]]}]}'
+curl -v -H "Content-Type: application/json" -H "Authorization: Basic Base64-Encoded-USERNAME:PASSWORD" -X POST "https://bcwallet-logstack-proxy-caZZZZ-dev.apps.silver.devops.gov.bc.ca/loki/api/v1/push" --data-raw '{"streams":[{"stream":{"job":"react-native-logs","level":"debug","application":"bc wallet","version":"1.0.1-444","system":"iOS v16.7.4","session_id":"463217"},"values":[["1734028898448000000","{\"message\":\"Successfully connected to WebSocket wss://aries-mediator-agent.blah.gov.bc.ca\"}"]]}]}'
 ```

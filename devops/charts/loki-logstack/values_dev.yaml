@@ -65,10 +65,10 @@ resources:
       memory: 32Mi
   minio:
     requests:
-      memory: 34Mi
+      memory: 128Mi
       cpu: 20m
     limits:
-      memory: 64Mi
+      memory: 128Mi
       cpu: 40m
 
 services:
