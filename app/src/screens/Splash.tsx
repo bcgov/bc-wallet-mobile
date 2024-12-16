@@ -373,6 +373,14 @@ const Splash = () => {
     }
   }
 
+  const secondaryCallToActionIcon = useMemo(
+    () =>
+      reported ? (
+        <Icon style={{ marginRight: 8 }} name={'check-circle'} size={18} color={ColorPallet.semantic.success} />
+      ) : undefined,
+    [reported, ColorPallet.semantic.success]
+  )
+
   return (
     <SafeAreaView style={styles.screenContainer}>
       <ScrollView contentContainerStyle={styles.scrollContentContainer}>
@@ -394,7 +402,7 @@ const Splash = () => {
                 onCallToActionPressed={handleErrorCallToActionPressed}
                 secondaryCallToActionTitle={reported ? t('Error.Reported') : t('Error.ReportThisProblem')}
                 secondaryCallToActionDisabled={reported}
-                secondaryCallToActionIcon={reported ? <Icon style={{ marginRight: 8 }} name={'check-circle'} size={18} color={ColorPallet.semantic.success} /> : undefined}
+                secondaryCallToActionIcon={secondaryCallToActionIcon}
                 secondaryCallToActionPressed={initError ? report : undefined}
                 showVersionFooter
               />
