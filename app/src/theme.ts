@@ -204,13 +204,13 @@ export const TextTheme: ITextTheme = {
     fontFamily: 'BCSans-Regular',
     fontSize: 16,
     fontWeight: 'normal',
-    color: ColorPallet.notification.error,
+    color: ColorPallet.notification.errorText,
   },
   inlineWarningText: {
     fontFamily: 'BCSans-Regular',
     fontSize: 16,
     fontWeight: 'normal',
-    color: ColorPallet.notification.warn,
+    color: ColorPallet.notification.warnText,
   },
 }
 
