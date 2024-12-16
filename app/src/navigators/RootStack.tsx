@@ -62,16 +62,19 @@ const RootStack: React.FC = () => {
     })
   }, [declinedProofs, agent, store.preferences.useDataRetention])
 
+  const loadStateErrorTitle = t('Error.Title1044')
+  const loadStateErrorDescription = t('Error.Message1044')
+
   useEffect(() => {
     loadState(dispatch)
       .then(() => {
         dispatch({ type: DispatchAction.STATE_LOADED })
       })
       .catch((err: unknown) => {
-        const error = new BifoldError(t('Error.Title1044'), t('Error.Message1044'), (err as Error).message, 1001)
+        const error = new BifoldError(loadStateErrorTitle, loadStateErrorDescription, (err as Error).message, 1001)
         DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
       })
-  }, [dispatch, loadState, t])
+  }, [dispatch, loadState])
 
   const mainStack = () => {
     const Stack = createStackNavigator<RootStackParams>()
