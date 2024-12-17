@@ -57,7 +57,11 @@ const ActivitiesStack: React.FC = () => {
           title: t('History.CardTitle.CardChanged', { operation: route.params?.operation }),
         })}
       />
-      <StackActivities.Screen name={BifoldScreens.ContactDetails} component={ContactDetails} />
+      <StackActivities.Screen
+        name={BifoldScreens.ContactDetails}
+        component={ContactDetails}
+        options={{ title: t('Screens.ContactDetails') }}
+      />
     </StackActivities.Navigator>
   )
 }

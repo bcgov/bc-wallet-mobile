@@ -1,14 +1,23 @@
 import { useAgent } from '@credo-ts/react-hooks'
 import { TOKENS, useServices } from '@hyperledger/aries-bifold-core'
-import { CustomRecord, HistoryCardType } from '@hyperledger/aries-bifold-core/App/modules/history/types'
+import {
+  CustomRecord,
+  HistoryCardType,
+  IHistoryManager,
+} from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import { formatTime } from '@hyperledger/aries-bifold-core/App/utils/helpers'
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
+import ChangingSettingsImg from '../assets/img/ChangingSettings.svg'
 import CredentialAddedImg from '../assets/img/CredentialAdded.svg'
+import CardRemovedImg from '../assets/img/DeleteIcon.svg'
+import InformationNotSentImg from '../assets/img/ErrorIcon.svg'
+import CardExpiredImg from '../assets/img/ExpiredIcon.svg'
 import FleurLysImg from '../assets/img/FleurLys.svg'
+import MessageImg from '../assets/img/Message.svg'
 import ProofRequestImg from '../assets/img/ProofRequest.svg'
-import RevocationImg from '../assets/img/Revocation.svg'
-import ChangingSettings from '../assets/img/changing-settings.svg'
+import RevocationImg from '../assets/img/RevokeIconCircle.svg'
 
 import CustomCheckBox from './CustomCheckBox'
 import EventItem from './EventItem'
@@ -55,7 +64,9 @@ const HistoryListItem: React.FC<Props> = ({
   })
   const { agent } = useAgent()
   const [loadHistory] = useServices([TOKENS.FN_LOAD_HISTORY])
+  const [historyManager, setHistoryManager] = useState<IHistoryManager | null>(null)
   const content = item.content as HistoryContent
+  const { t } = useTranslation()
 
   const renderCardIcon = (type: HistoryCardType) => {
     const dimensions = { width: 24, height: 24 }
@@ -64,33 +75,74 @@ const HistoryListItem: React.FC<Props> = ({
         return <CredentialAddedImg width={dimensions.width} height={dimensions.height} />
       case HistoryCardType.CardDeclined:
         return <RevocationImg width={dimensions.width} height={dimensions.height} />
+      case HistoryCardType.CardRemoved:
+        return <CardRemovedImg width={dimensions.width} height={dimensions.height} />
+      case HistoryCardType.CardExpired:
+        return <CardExpiredImg width={dimensions.width} height={dimensions.height} />
+      case HistoryCardType.InformationNotSent:
+        return <InformationNotSentImg width={dimensions.width} height={dimensions.height} />
       case HistoryCardType.InformationSent:
         return <ProofRequestImg width={dimensions.width} height={dimensions.height} />
       case HistoryCardType.PinChanged:
-        return <ChangingSettings width={dimensions.width} height={dimensions.height} />
+        return <ChangingSettingsImg width={dimensions.width} height={dimensions.height} />
+      case HistoryCardType.Connection:
+        return <MessageImg width={dimensions.width} height={dimensions.height} />
+      case HistoryCardType.ConnectionRemoved:
+        return <CardRemovedImg width={dimensions.width} height={dimensions.height} />
       default:
         return <FleurLysImg width={dimensions.width} height={dimensions.height} />
     }
   }
 
   useEffect(() => {
-    const formatDetails = () => {
-      setDetails({
-        title: content.message ?? '',
-        body: content.correspondenceName ?? '',
-        eventTime: content.createdAt ? formatTime(new Date(content.createdAt), { shortMonth: true, trim: true }) : '',
-      })
+    const getTitleByType = (type: HistoryCardType): string => {
+      switch (type) {
+        case HistoryCardType.CardAccepted:
+          return t('History.CardTitle.CardChanged', { operation: t('History.Operations.Accepted') })
+        case HistoryCardType.CardDeclined:
+          return t('History.CardTitle.CardChanged', { operation: t('History.Operations.Declined') })
+        case HistoryCardType.CardRemoved:
+          return t('History.CardTitle.CardChanged', { operation: t('History.Operations.Removed') })
+        case HistoryCardType.PinChanged:
+          return t('History.CardTitle.WalletPinUpdated')
+        case HistoryCardType.InformationSent:
+          return t('History.CardTitle.InformationSent')
+        case HistoryCardType.ActivateBiometry:
+          return t('History.CardTitle.BiometricUpdated', { operation: t('History.Operations.Activated') })
+        case HistoryCardType.DeactivateBiometry:
+          return t('History.CardTitle.BiometricUpdated', { operation: t('History.Operations.Deactivated') })
+        case HistoryCardType.Connection:
+          return t('History.CardTitle.ConnectionEstablished')
+        case HistoryCardType.ConnectionRemoved:
+          return t('History.CardTitle.ConnectionRemoved')
+        default:
+          return t('History.CardTitle.Default')
+      }
     }
-    formatDetails()
+
+    setDetails({
+      title: getTitleByType(content.type),
+      body: content.correspondenceName ?? '',
+      eventTime: content.createdAt ? formatTime(new Date(content.createdAt), { shortMonth: true, trim: true }) : '',
+    })
   }, [item])
 
+  useEffect(() => {
+    if (agent) {
+      setHistoryManager(loadHistory(agent))
+    }
+  }, [agent, loadHistory])
+
   const removeHistoryItem = async () => {
-    const historyManager = agent ? loadHistory(agent) : undefined
     if (!historyManager) return
-    const record = await historyManager.findGenericRecordById(item.content.id || '')
-    if (record) {
-      await historyManager.removeGenericRecord(record)
-      onDelete(item.content.id ?? '')
+    try {
+      const record = await historyManager.findGenericRecordById(item.content.id || '')
+      if (record) {
+        await historyManager.removeGenericRecord(record)
+        onDelete(item.content.id ?? '')
+      }
+    } catch (error) {
+      //console.error('Failed to remove history item:', error)
     }
   }
 

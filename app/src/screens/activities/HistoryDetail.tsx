@@ -1,6 +1,6 @@
 import { useAgent } from '@credo-ts/react-hooks'
 import { HistoryCardType } from '@hyperledger/aries-bifold-core/App/modules/history/types'
-import { useRoute, RouteProp, useNavigation } from '@react-navigation/native'
+import { StackScreenProps } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
@@ -9,7 +9,7 @@ import Toast from 'react-native-toast-message'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { Buttons, ColorPallet, TextTheme } from '../../theme'
 
-type HistoryDetailRouteProp = RouteProp<ActivitiesStackParams, Screens.HistoryDetail>
+type HistoryDetailProp = StackScreenProps<ActivitiesStackParams, Screens.HistoryDetail>
 
 const styles = StyleSheet.create({
   container: {
@@ -85,9 +85,7 @@ const styles = StyleSheet.create({
   },
 })
 
-const HistoryDetail: React.FC = () => {
-  const route = useRoute<HistoryDetailRouteProp>()
-  const navigation = useNavigation()
+const HistoryDetail: React.FC<HistoryDetailProp> = ({ navigation, route }) => {
   const { item } = route.params
   const { t } = useTranslation()
   const { agent } = useAgent()

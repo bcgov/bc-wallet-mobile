@@ -45,7 +45,6 @@ export interface BCState extends BifoldState {
   attestationAuthentification: AttestationAuthentification
   preferences: QCPreferences
   activities: ActivityState
-  historyTempDeletedIds: string[]
 }
 
 enum DeveloperDispatchAction {
@@ -150,7 +149,6 @@ export const getInitialState = async (): Promise<BCState> => {
       useForcedAppUpdate: false,
     },
     activities,
-    historyTempDeletedIds: [],
   }
 }
 

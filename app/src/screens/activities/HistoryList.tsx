@@ -1,3 +1,4 @@
+import { ProofState } from '@credo-ts/core'
 import { useAgent } from '@credo-ts/react-hooks'
 import {
   Button,
@@ -28,7 +29,7 @@ import { v4 as uuidv4 } from 'uuid'
 import HistoryListItem from '../../components/HistoryListItem'
 import { useToast } from '../../hooks/toast'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
-import { BCDispatchAction, BCState } from '../../store'
+import { ActivityState, BCDispatchAction, BCState } from '../../store'
 import { TabTheme } from '../../theme'
 
 export type SelectedHistoryType = { id: string; deleteAction?: () => void }
@@ -99,7 +100,7 @@ const HistoryList: React.FC<{
   const [refreshing, setRefreshing] = useState(false)
 
   const hasCanceledRef = useRef(false)
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { agent } = useAgent()
   const [loadHistory] = useServices([TOKENS.FN_LOAD_HISTORY])
   const [isLoading, setIsLoading] = useState(true)
@@ -226,6 +227,22 @@ const HistoryList: React.FC<{
     }
   }
 
+  const proofExistsAndCheckReview = async (id: string): Promise<boolean> => {
+    try {
+      const proofRecord = await agent?.proofs.getById(id)
+      if (proofRecord) {
+        return (
+          proofRecord.state === ProofState.PresentationSent ||
+          (proofRecord.state === ProofState.Done && proofRecord.isVerified === undefined)
+        )
+      }
+    } catch (error) {
+      //console.error('Error checking proof record:', error)
+      return false
+    }
+    return false
+  }
+
   const handleViewDetails = async (item: CustomRecord) => {
     const historyRecord = item.content as HistoryRecord
 
@@ -235,7 +252,7 @@ const HistoryList: React.FC<{
       | { credentialId: string; item: CustomRecord }
       | { recordId: string; item: CustomRecord }
       | { recordId: string; operation: string; item: CustomRecord }
-      | { recordId: string; isHistory: boolean }
+      | { recordId: string; isHistory: boolean; senderReview: boolean }
 
     switch (historyRecord.type) {
       case HistoryCardType.Connection:
@@ -245,15 +262,18 @@ const HistoryList: React.FC<{
 
       // TODO Create InformationNotSent screen
       // TODO Not tested
-      case HistoryCardType.InformationSent:
+      case HistoryCardType.InformationSent: {
         screen = BifoldScreens.ProofDetails
-        params = { recordId: historyRecord.id || '', isHistory: true }
+        const senderReview = await proofExistsAndCheckReview(historyRecord.correspondenceId || '')
+        params = { recordId: historyRecord.correspondenceId || '', isHistory: true, senderReview: senderReview }
         break
-      case HistoryCardType.InformationNotSent:
+      }
+      case HistoryCardType.InformationNotSent: {
         screen = BifoldScreens.ProofDetails
-        params = { recordId: historyRecord.id || '', isHistory: true }
+        const senderReview = await proofExistsAndCheckReview(historyRecord.correspondenceId || '')
+        params = { recordId: historyRecord.correspondenceId || '', isHistory: true, senderReview: senderReview }
         break
-
+      }
       case HistoryCardType.CardAccepted: {
         const exists = await credentialExists(historyRecord.correspondenceId || '')
         if (exists) {
@@ -355,33 +375,58 @@ const HistoryList: React.FC<{
   const handleMultipleDelete = () => {
     const selected = selectedHistory ?? []
     if (selected.length > 0) {
+      const ids = [...selected.map((s) => s.id)]
+      const payload = {} as ActivityState
+      const backupRecords = [...filteredRecords]
+      setFilteredRecords((prevRecords) => prevRecords.filter((record) => !ids.includes(record.content.id || '')))
+
       setToastOptions({
         type: ToastType.Info,
         text1: t('Activities.HistoryDeleted', { count: selected.length }),
+
         onShow: () => {
+          for (const key of ids) {
+            payload[key] = {
+              ...store.activities[key],
+              isTempDeleted: true,
+            }
+          }
           dispatch({
             type: BCDispatchAction.ACTIVITY_TEMPORARILY_DELETED_IDS,
-            payload: [...selected.map((s) => s.id)],
+            payload: [payload],
           })
         },
+
         onHide: async () => {
           if (!hasCanceledRef.current) {
-            deleteMultipleHistory()
+            await deleteMultipleHistory()
+          } else {
+            setFilteredRecords(backupRecords)
           }
           hasCanceledRef.current = false
           setToastEnabled(false)
         },
+
         props: {
           onCancel: () => {
             hasCanceledRef.current = true
+            setFilteredRecords(backupRecords)
+            for (const key of ids) {
+              payload[key] = {
+                ...store.activities[key],
+                isTempDeleted: false,
+              }
+            }
             dispatch({
               type: BCDispatchAction.ACTIVITY_TEMPORARILY_DELETED_IDS,
-              payload: [],
+              payload: [payload],
             })
           },
         },
+
         position: 'bottom',
       })
+
       setToastEnabled(true)
     }
     setSelectedHistory(null)

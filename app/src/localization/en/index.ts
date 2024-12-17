@@ -980,7 +980,7 @@ const translation = {
     PrivacyPolicy: 'Privacy Policy',
   },
   History: {
-    ConfirmDeleteEvent: 'Are you sure you want to delete this event?',
+    ConfirmDeleteHistory: 'Are you sure you want to delete this history?',
     Initial: {
       Description: {
         Header: 'This History section can list when:\n',
@@ -993,23 +993,18 @@ const translation = {
       },
     },
     Button: {
-      DeleteEvent: 'Delete Event',
+      DeleteHistory: 'Delete History',
     },
     CardTitle: {
-      CardAccepted: 'Authentication Attestation accepted',
-      CardDeclined: 'Authentication Attestation declined',
-      CardExpired: 'Authentication Attestation expired',
-      CardRevoked: 'Authentication Attestation revoked',
       CardChanged: 'Card {{operation}}',
       InformationSent: 'Information sent to:',
       WalletPinUpdated: 'Wallet PIN updated',
       BiometricUpdated: '{{operation}} of biometrics',
+      ConnectionEstablished: 'Connection established',
+      ConnectionRemoved: 'Connection removed',
+      Default: 'History Event',
     },
     CardDescription: {
-      CardExpired: '{{cardName}} expired',
-      CardRevoked: '{{cardName}} revoked',
-      CardAccepted: '{{cardName}} Accepted',
-      CardDeclined: 'Authentication Attestation {{cardName}} refused',
       CardChanged: 'Card {{cardName}} {{operation}}',
       WalletPinUpdated: 'New PIN set',
       BiometricUpdated: 'Biometrics has been {{operation}}',

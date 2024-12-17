@@ -1,15 +1,15 @@
-import { useAgent } from '@credo-ts/react-hooks'
-import { TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
+import { useTheme } from '@hyperledger/aries-bifold-core'
 import { HistoryRecord } from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import { formatTime } from '@hyperledger/aries-bifold-core/App/utils/helpers'
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native'
+import { RouteProp, useRoute } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
-import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native'
+import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import HeaderText from '../../components/HeaderText'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { ColorPallet } from '../../theme'
+import { handleDeleteEvent } from '../../utils/historyUtils'
 
 type CardChangedDetailsRouteProp = RouteProp<ActivitiesStackParams, Screens.CardChangedDetails>
 
@@ -109,44 +109,11 @@ const CardChangedDetails: React.FC = () => {
   const route = useRoute<CardChangedDetailsRouteProp>()
   const { item, operation } = route.params
   const itemContent = item.content as HistoryRecord
-  const navigation = useNavigation()
   const iconSize = 24
-
-  const { agent } = useAgent()
-  const [loadHistory] = useServices([TOKENS.FN_LOAD_HISTORY])
 
   const operationDate = itemContent?.createdAt
     ? formatTime(new Date(itemContent?.createdAt), { shortMonth: true, trim: true })
     : t('Record.InvalidDate')
-
-  const handleDeleteEvent = async () => {
-    Alert.alert(
-      t('History.Button.DeleteEvent'),
-      t('History.ConfirmDeleteEvent'),
-      [
-        { text: t('Global.Cancel'), style: 'cancel' },
-        {
-          text: t('Global.Confirm'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const historyManager = agent ? loadHistory(agent) : undefined
-              if (historyManager) {
-                const record = await historyManager.findGenericRecordById(item.content.id || '')
-                if (record) {
-                  await historyManager.removeGenericRecord(record)
-                  navigation.goBack()
-                }
-              }
-            } catch (error) {
-              //console.error('Failed to delete event:', error)
-            }
-          },
-        },
-      ],
-      { cancelable: true }
-    )
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -173,7 +140,7 @@ const CardChangedDetails: React.FC = () => {
 
       <View style={styles.lineSeparator} />
 
-      <TouchableOpacity style={styles.deleteContainer} onPress={handleDeleteEvent}>
+      <TouchableOpacity style={styles.deleteContainer} onPress={() => handleDeleteEvent(item.content.id || '')}>
         <MaterialCommunityIcon name={'trash-can-outline'} size={iconSize} style={styles.trashIcon} />
         <Text style={[TextTheme.normal, styles.deleteText]}>{t('History.Button.DeleteEvent')}</Text>
       </TouchableOpacity>

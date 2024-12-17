@@ -31,13 +31,9 @@ export enum Screens {
   HelpCenter = 'Help Center',
   HelpCenterPage = 'Help Center Page',
   About = 'About',
-  ProofDetails = 'ProofDetails',
   PinChangeDetails = 'PinChangeDetails',
   BiometricChangeDetails = 'BiometricChangeDetails',
-  CardAcceptedDetails = 'CardAcceptedDetails',
   CardChangedDetails = 'CardChangedDetails',
-  CardDeclinedDetails = 'CardDeclinedDetails',
-  CardExpiredDetails = 'CardExpiredDetails',
 }
 
 export enum Stacks {

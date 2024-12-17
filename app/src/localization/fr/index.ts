@@ -1013,7 +1013,7 @@ const translation = {
     PrivacyPolicy: 'Politique de confidentialité',
   },
   History: {
-    ConfirmDeleteEvent: 'Êtes-vous sûr de vouloir supprimer cet événement ?',
+    ConfirmDeleteHistory: 'Êtes-vous sûr de vouloir supprimer cet historique ?',
     Initial: {
       Description: {
         Header: 'Cette section Historique peut lister lorsque :\n',
@@ -1026,17 +1026,16 @@ const translation = {
       },
     },
     Button: {
-      DeleteEvent: "Supprimer l'événement",
+      DeleteHistory: "Supprimer l'Historique",
     },
     CardTitle: {
-      CardAccepted: 'Carte acceptée',
-      CardDeclined: 'Carte refusée',
       CardChanged: 'Attestation {{operation}}',
-      CardExpired: 'Carte expirée',
-      CardRevoked: 'Carte révoquée',
       InformationSent: 'Informations envoyées à :',
       WalletPinUpdated: 'Modification du NIP',
       BiometricUpdated: '{{operation}} de la biométrie',
+      ConnectionEstablished: 'Connexion établie',
+      ConnectionRemoved: 'Connexion supprimée',
+      Default: 'Événement historique',
     },
     CardDescription: {
       CardExpired: '{{cardName}} expirée',
