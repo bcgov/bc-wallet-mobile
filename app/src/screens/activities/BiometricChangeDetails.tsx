@@ -1,4 +1,5 @@
-import { useTheme } from '@hyperledger/aries-bifold-core'
+import { useAgent } from '@credo-ts/react-hooks'
+import { TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
 import { formatTime } from '@hyperledger/aries-bifold-core/App/utils/helpers'
 import { StackScreenProps } from '@react-navigation/stack'
 import React from 'react'
@@ -10,7 +11,7 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 import HeaderText from '../../components/HeaderText'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { ColorPallet } from '../../theme'
-import { handleDeleteEvent } from '../../utils/historyUtils'
+import { handleDeleteHistory } from '../../utils/historyUtils'
 
 type BiometricChangeDetailsProp = StackScreenProps<ActivitiesStackParams, Screens.BiometricChangeDetails>
 
@@ -55,10 +56,12 @@ const styles = StyleSheet.create({
   },
 })
 
-const BiometricChangeDetails: React.FC<BiometricChangeDetailsProp> = ({ route }) => {
+const BiometricChangeDetails: React.FC<BiometricChangeDetailsProp> = ({ route, navigation }) => {
   const { TextTheme } = useTheme()
   const { item, operation } = route.params
   const { t } = useTranslation()
+  const { agent } = useAgent()
+  const [loadHistory] = useServices([TOKENS.FN_LOAD_HISTORY])
 
   const modifiedDate = item?.content.createdAt
     ? formatTime(new Date(item.content.createdAt), { shortMonth: true, trim: true })
@@ -78,9 +81,12 @@ const BiometricChangeDetails: React.FC<BiometricChangeDetailsProp> = ({ route })
 
       <View style={styles.lineSeparator} />
 
-      <TouchableOpacity style={styles.deleteContainer} onPress={() => handleDeleteEvent(item.content.id || '')}>
+      <TouchableOpacity
+        style={styles.deleteContainer}
+        onPress={() => handleDeleteHistory(item.content.id || '', agent, loadHistory, navigation, t)}
+      >
         <MaterialCommunityIcon name={'trash-can-outline'} size={iconSize} style={styles.trashIcon} />
-        <Text style={[TextTheme.normal, styles.deleteText]}>{t('History.Button.DeleteEvent')}</Text>
+        <Text style={[TextTheme.normal, styles.deleteText]}>{t('History.Button.DeleteHistory')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   )

@@ -1,7 +1,8 @@
-import { useTheme } from '@hyperledger/aries-bifold-core'
+import { useAgent } from '@credo-ts/react-hooks'
+import { TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
 import { HistoryRecord } from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import { formatTime } from '@hyperledger/aries-bifold-core/App/utils/helpers'
-import { RouteProp, useRoute } from '@react-navigation/native'
+import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { SafeAreaView, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -9,9 +10,9 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 import HeaderText from '../../components/HeaderText'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { ColorPallet } from '../../theme'
-import { handleDeleteEvent } from '../../utils/historyUtils'
+import { handleDeleteHistory } from '../../utils/historyUtils'
 
-type CardChangedDetailsRouteProp = RouteProp<ActivitiesStackParams, Screens.CardChangedDetails>
+type CardChangedDetailsProp = StackScreenProps<ActivitiesStackParams, Screens.CardChangedDetails>
 
 const styles = StyleSheet.create({
   container: {
@@ -103,13 +104,14 @@ const styles = StyleSheet.create({
   },
 })
 
-const CardChangedDetails: React.FC = () => {
+const CardChangedDetails: React.FC<CardChangedDetailsProp> = ({ route, navigation }) => {
   const { TextTheme } = useTheme()
   const { t } = useTranslation()
-  const route = useRoute<CardChangedDetailsRouteProp>()
   const { item, operation } = route.params
   const itemContent = item.content as HistoryRecord
   const iconSize = 24
+  const { agent } = useAgent()
+  const [loadHistory] = useServices([TOKENS.FN_LOAD_HISTORY])
 
   const operationDate = itemContent?.createdAt
     ? formatTime(new Date(itemContent?.createdAt), { shortMonth: true, trim: true })
@@ -140,9 +142,12 @@ const CardChangedDetails: React.FC = () => {
 
       <View style={styles.lineSeparator} />
 
-      <TouchableOpacity style={styles.deleteContainer} onPress={() => handleDeleteEvent(item.content.id || '')}>
+      <TouchableOpacity
+        style={styles.deleteContainer}
+        onPress={() => handleDeleteHistory(item.content.id || '', agent, loadHistory, navigation, t)}
+      >
         <MaterialCommunityIcon name={'trash-can-outline'} size={iconSize} style={styles.trashIcon} />
-        <Text style={[TextTheme.normal, styles.deleteText]}>{t('History.Button.DeleteEvent')}</Text>
+        <Text style={[TextTheme.normal, styles.deleteText]}>{t('History.Button.DeleteHistory')}</Text>
       </TouchableOpacity>
     </SafeAreaView>
   )

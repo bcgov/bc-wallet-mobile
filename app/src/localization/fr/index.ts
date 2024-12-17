@@ -1029,13 +1029,13 @@ const translation = {
       },
     },
     Button: {
-      DeleteHistory: "Supprimer l'Historique",
+      DeleteHistory: "Supprimer l'historique",
     },
     CardTitle: {
       CardChanged: 'Attestation {{operation}}',
       InformationSent: 'Informations envoyées à :',
       WalletPinUpdated: 'Modification du NIP',
-      BiometricUpdated: '{{operation}} de la biométrie',
+      BiometricUpdated: 'La biométrie est {{operation}}',
       ConnectionEstablished: 'Connexion établie',
       ConnectionRemoved: 'Connexion supprimée',
       Default: 'Événement historique',

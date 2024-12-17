@@ -43,7 +43,9 @@ const ActivitiesStack: React.FC = () => {
       <StackActivities.Screen
         name={Screens.BiometricChangeDetails}
         component={BiometricChangeDetails}
-        options={{ title: t('History.CardTitle.BiometricUpdated') }}
+        options={({ route }) => ({
+          title: t('History.CardTitle.BiometricUpdated', { operation: route.params?.operation }),
+        })}
       />
       <StackActivities.Screen
         name={BifoldScreens.CredentialDetails}

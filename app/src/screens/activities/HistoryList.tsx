@@ -299,6 +299,11 @@ const HistoryList: React.FC<{
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Removed'), item }
         break
 
+      case HistoryCardType.CardRevoked:
+        screen = Screens.CardChangedDetails
+        params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Revoked'), item }
+        break
+
       case HistoryCardType.PinChanged:
         screen = Screens.PinChangeDetails
         params = { recordId: historyRecord.correspondenceId || '', item }

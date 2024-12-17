@@ -996,13 +996,13 @@ const translation = {
       },
     },
     Button: {
-      DeleteHistory: 'Delete History',
+      DeleteHistory: 'Delete history',
     },
     CardTitle: {
       CardChanged: 'Card {{operation}}',
       InformationSent: 'Information sent to:',
       WalletPinUpdated: 'Wallet PIN updated',
-      BiometricUpdated: '{{operation}} of biometrics',
+      BiometricUpdated: 'Biometrics is {{operation}}',
       ConnectionEstablished: 'Connection established',
       ConnectionRemoved: 'Connection removed',
       Default: 'History Event',

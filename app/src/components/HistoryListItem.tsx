@@ -74,6 +74,7 @@ const HistoryListItem: React.FC<Props> = ({
       case HistoryCardType.CardAccepted:
         return <CredentialAddedImg width={dimensions.width} height={dimensions.height} />
       case HistoryCardType.CardDeclined:
+      case HistoryCardType.CardRevoked:
         return <RevocationImg width={dimensions.width} height={dimensions.height} />
       case HistoryCardType.CardRemoved:
         return <CardRemovedImg width={dimensions.width} height={dimensions.height} />
@@ -84,6 +85,8 @@ const HistoryListItem: React.FC<Props> = ({
       case HistoryCardType.InformationSent:
         return <ProofRequestImg width={dimensions.width} height={dimensions.height} />
       case HistoryCardType.PinChanged:
+      case HistoryCardType.ActivateBiometry:
+      case HistoryCardType.DeactivateBiometry:
         return <ChangingSettingsImg width={dimensions.width} height={dimensions.height} />
       case HistoryCardType.Connection:
         return <MessageImg width={dimensions.width} height={dimensions.height} />
