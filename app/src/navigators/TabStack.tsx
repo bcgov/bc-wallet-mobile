@@ -1,3 +1,4 @@
+import { CredentialExchangeRecord as CredentialRecord } from '@credo-ts/core'
 import { useAgent } from '@credo-ts/react-hooks'
 import {
   AttachTourStep,
@@ -13,7 +14,15 @@ import {
   useStore,
   useTheme,
 } from '@hyperledger/aries-bifold-core'
+import {
+  CustomRecord,
+  HistoryCardType,
+  HistoryRecord,
+  RecordType,
+} from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import { TourID } from '@hyperledger/aries-bifold-core/App/types/tour'
+import { parseCredDefFromId } from '@hyperledger/aries-bifold-core/App/utils/cred-def'
+import { getCredentialIdentifiers } from '@hyperledger/aries-bifold-core/App/utils/credential'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -41,10 +50,18 @@ const TabStack: React.FC = () => {
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<TabStackParams>>()
 
-  const [{ useNotifications }, { enableImplicitInvitations, enableReuseConnections }, logger] = useServices([
+  const [
+    { useNotifications },
+    { enableImplicitInvitations, enableReuseConnections },
+    logger,
+    historyManagerCurried,
+    historyEnabled,
+  ] = useServices([
     TOKENS.NOTIFICATIONS,
     TOKENS.CONFIG,
     TOKENS.UTIL_LOGGER,
+    TOKENS.FN_LOAD_HISTORY,
+    TOKENS.HISTORY_ENABLED,
   ])
 
   const notifications = useNotifications({ isHome: false } as NotificationsInputProps)
@@ -57,6 +74,48 @@ const TabStack: React.FC = () => {
       flex: 1,
     },
   })
+
+  const logHistoryRecord = useCallback(
+    async (credential: CredentialRecord) => {
+      const connection = await agent?.connections.findById(credential?.connectionId ?? '')
+      const correspondenceName = connection?.alias || connection?.theirLabel || credential.connectionId
+      try {
+        if (!(agent && historyEnabled)) {
+          logger.trace(
+            `[${TabStack.name}]:[logHistoryRecord] Skipping history log, either history function disabled or agent undefined!`
+          )
+          return
+        }
+        const historyManager = historyManagerCurried(agent)
+
+        const type = HistoryCardType.CardRevoked
+
+        const events = await historyManager.getHistoryItems({ type: RecordType.HistoryRecord })
+        if (
+          events.some(
+            (event: CustomRecord) => event.content.type === type && event.content.correspondenceId === credential.id
+          )
+        ) {
+          return
+        }
+        const ids = getCredentialIdentifiers(credential)
+        const name = parseCredDefFromId(ids.credentialDefinitionId, ids.schemaId)
+
+        /** Save history record for card accepted */
+        const recordData: HistoryRecord = {
+          type: type,
+          message: name,
+          createdAt: new Date(),
+          correspondenceId: credential.id,
+          correspondenceName: correspondenceName,
+        }
+        await historyManager.saveHistory(recordData)
+      } catch (err: unknown) {
+        logger.error(`[${TabStack.name}]:[logHistoryRecord] Error saving history: ${err}`)
+      }
+    },
+    [agent, historyEnabled, logger, historyManagerCurried]
+  )
 
   const handleDeepLink = useCallback(
     async (deepLink: string) => {
@@ -157,6 +216,13 @@ const TabStack: React.FC = () => {
           isRead: false,
           isTempDeleted: false,
         }
+      }
+      if (
+        (n as CredentialRecord).type === 'CredentialRecord' &&
+        (n as CredentialRecord).state === 'done' &&
+        (n as CredentialRecord).revocationNotification
+      ) {
+        logHistoryRecord(n as CredentialRecord)
       }
     }
     if (Object.keys(notificationsToAdd).length > 0) {

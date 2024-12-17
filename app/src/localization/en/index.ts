@@ -420,6 +420,7 @@ const translation = {
     ProgressBarText: '2. Securing the wallet',
   },
   PINEnter: {
+    Title: 'Québec Wallet',
     IncorrectPin: 'Incorrect Pin',
     EnterPIN: 'Enter your wallet PIN',
     Unlock: 'Unlock',
@@ -431,6 +432,8 @@ const translation = {
     BiometricsNotProvided: 'Biometrics not provided, you may use PIN to load the wallet.',
     BiometricsError: 'Biometrics were not successful.',
     BiometricsErrorEnterPIN: 'Please enter your wallet PIN.',
+    LockedOut: 'You were locked out after {{ time }} minute(s) of inactivity.',
+    ReEnterPIN: 'Re-enter your wallet PIN',
     LoggedOut: "You're logged out",
     LoggedOutDescription:
       "To protect your information, you're logged out of your wallet if you have not used it for 5 minutes.",

@@ -14,7 +14,6 @@ export interface IASEnvironment {
   name: string
   iasAgentInviteUrl: string
   iasPortalUrl: string
-  attestationInviteUrl: string
 }
 export interface Developer {
   environment: IASEnvironment
@@ -84,13 +83,11 @@ export const iasEnvironments: Array<IASEnvironment> = [
     name: 'MCN',
     iasAgentInviteUrl: Config.MEDIATOR_URL ?? '',
     iasPortalUrl: '',
-    attestationInviteUrl: '',
   },
   {
     name: 'CQEN',
     iasAgentInviteUrl: Config.CQEN_MEDIATOR_URL ?? '',
     iasPortalUrl: '',
-    attestationInviteUrl: '',
   },
 ]
 

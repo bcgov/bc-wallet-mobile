@@ -359,7 +359,7 @@ const translation = {
       NoRepetitionOfTheTwoSameNumbersValidation:
         'Votre NIP contient une répétition de deux chiffres (p. ex.: 1212). Veuillez choisir un autre NIP.',
       NoRepetitionOfTheSameNumbersValidation:
-        'Votre NIP contient une répétition de deux (2) chiffres (p. ex.: 22). Veuillez choisir un autre NIP. ',
+        'Votre NIP contient une répétition de trois (3) chiffres (p. ex.: 222). Veuillez choisir un autre NIP. ',
       NoSeriesOfNumbersValidation: 'Une série de nombres consécutifs a été détectée dans votre NIP.',
       PINOnlyContainDigitsValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
       PINTooShortValidation: 'Votre NIP doit contenir six (6) chiffres. Veuillez choisir un nouveau NIP.',
@@ -918,6 +918,7 @@ const translation = {
     GiveFeedback: 'Donnez votre avis',
   },
   PINEnter: {
+    Title: 'Portefeuille numérique du Québec',
     EnterPIN: 'Veuiller saisir votre NIP',
     Unlock: 'Déverrouiller',
     Or: 'Ou',
@@ -931,6 +932,8 @@ const translation = {
     BiometricsNotProvided: 'La biométrie est indisponible. Veuillez saisir le NIP du portefeuille.',
     BiometricsError: 'Échec de la biométrie.',
     BiometricsErrorEnterPIN: 'Veuillez saisir le NIP du portefeuille.',
+    LockedOut: "Votre portefeuille a été verrouillé après {{ time }} minute(s) d'inactivité.",
+    ReEnterPIN: 'Saisissez à nouveau votre NIP.',
     BiometricsChangedEnterPIN: 'Veuillez saisir le NIP du portefeuille.',
     RepeatPIN: 'Essayez votre NIP à nouveau',
     LoggedOut: 'Vous avez été déconnecté du portefeuille.',

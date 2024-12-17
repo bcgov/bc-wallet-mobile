@@ -23,7 +23,9 @@ export const TermsVersion = '2'
 
 const Terms = () => {
   const [store, dispatch] = useStore()
-  const [checked, setChecked] = useState(false)
+  const agreedToPreviousTerms = store.onboarding.didAgreeToTerms
+  const agreesToCurrentTerms = store.onboarding.didAgreeToTerms === TermsVersion
+  const [checked, setChecked] = useState(agreedToPreviousTerms && agreesToCurrentTerms)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
   const { ColorPallet, TextTheme } = useTheme()
@@ -73,16 +75,13 @@ const Terms = () => {
     },
   })
 
-  const agreedToPreviousTerms = store.onboarding.didAgreeToTerms
-  const agreesToCurrentTerms = store.onboarding.didAgreeToTerms === TermsVersion
-
   const onSubmitPressed = useCallback(() => {
     dispatch({
       type: DispatchAction.DID_AGREE_TO_TERMS,
       payload: [{ DidAgreeToTerms: TermsVersion }],
     })
 
-    if (!agreedToPreviousTerms) {
+    if (!(agreedToPreviousTerms && store.onboarding.didCreatePIN)) {
       navigation.navigate(Screens.CreatePIN)
     } else if (store.onboarding.postAuthScreens.length) {
       const screens: string[] = store.onboarding.postAuthScreens
@@ -147,13 +146,13 @@ const Terms = () => {
         ></AccordionItem>
 
         <View style={[style.controlsContainer]}>
-          {!(agreesToCurrentTerms && agreedToPreviousTerms) && (
+          {!(agreesToCurrentTerms && agreedToPreviousTerms && store.authentication.didAuthenticate) && (
             <>
               <CheckBoxRow
                 title={t('Terms.Attestation')}
                 accessibilityLabel={t('Terms.IAgree')}
                 testID={testIdWithKey('IAgree')}
-                checked={checked}
+                checked={!!checked}
                 onPress={() => setChecked(!checked)}
               />
               <View style={[{ paddingTop: 10 }]}>

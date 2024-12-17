@@ -27,7 +27,13 @@ const SettingsStack: React.FC = () => {
           title: t('RootStack.Settings'),
         }}
       />
-      <StackSettings.Screen name={Screens.Language} component={Language} />
+      <StackSettings.Screen
+        name={Screens.Language}
+        component={Language}
+        options={{
+          title: t('Screens.Language'),
+        }}
+      />
       <StackSettings.Screen
         name={Screens.HistoryPage}
         component={HistoryPage}

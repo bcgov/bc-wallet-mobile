@@ -11,7 +11,11 @@ import {
 } from '@credo-ts/core'
 import { useAgent, useConnectionById } from '@credo-ts/react-hooks'
 import { BifoldError, EventTypes, Screens, Stacks, useStore } from '@hyperledger/aries-bifold-core'
-import { BasicMessageMetadata, basicMessageCustomMetadata } from '@hyperledger/aries-bifold-core/App/types/metadata'
+import {
+  BasicMessageMetadata,
+  CredentialMetadata,
+  basicMessageCustomMetadata,
+} from '@hyperledger/aries-bifold-core/App/types/metadata'
 import { HomeStackParams } from '@hyperledger/aries-bifold-core/App/types/navigators'
 import { CustomNotification, CustomNotificationRecord } from '@hyperledger/aries-bifold-core/App/types/notification'
 import { formatTime, getConnectionName } from '@hyperledger/aries-bifold-core/App/utils/helpers'
@@ -125,7 +129,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
     }
   }
 
-  const declineProofRequest = async () => {
+  const declineProofRequest = useCallback(async () => {
     try {
       const proofId = (notification as ProofExchangeRecord).id
       if (agent) {
@@ -135,19 +139,32 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       const error = new BifoldError(t('Error.Title1028'), t('Error.Message1028'), (err as Error)?.message ?? err, 1028)
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
     }
-  }
+  }, [agent, notification])
 
-  const dismissProofRequest = async () => {
+  const dismissProofRequest = useCallback(async () => {
     if (agent && notificationType === NotificationTypeEnum.ProofRequest) {
       await markProofAsViewed(agent, notification as ProofExchangeRecord)
     }
-  }
+  }, [agent, notificationType, notification])
 
-  const dismissBasicMessage = async () => {
+  const dismissBasicMessage = useCallback(async () => {
     if (agent && notificationType === NotificationTypeEnum.BasicMessage) {
       markMessageAsSeen(agent, notification as BasicMessageRecord)
     }
-  }
+  }, [agent, notificationType, notification])
+
+  const dismissRevocation = useCallback(async () => {
+    const notificationRecord = notification as CredentialExchangeRecord
+    if (notificationRecord?.revocationNotification) {
+      const metadatas = notificationRecord?.metadata?.get(CredentialMetadata.customMetadata)
+
+      notificationRecord.metadata.set(CredentialMetadata.customMetadata, {
+        ...metadatas,
+        revoked_seen: true,
+      })
+      agent?.credentials.update(notification as CredentialExchangeRecord)
+    }
+  }, [agent, notification])
 
   const declineCredentialOffer = async () => {
     try {
@@ -182,6 +199,8 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       await dismissBasicMessage()
     } else if (notificationType === NotificationTypeEnum.Custom) {
       await declineCustomNotification()
+    } else if (notificationType === NotificationTypeEnum.Revocation) {
+      await dismissRevocation()
     }
   }, [notificationType, notification])
 
@@ -307,7 +326,7 @@ const NotificationListItem: React.FC<NotificationListItemProps> = ({
       case NotificationTypeEnum.Revocation:
         navigation.getParent()?.navigate(Stacks.NotificationStack, {
           screen: Screens.CredentialDetails,
-          params: { credential: notification },
+          params: { credentialId: notification.id },
         })
         break
       case NotificationTypeEnum.Custom:

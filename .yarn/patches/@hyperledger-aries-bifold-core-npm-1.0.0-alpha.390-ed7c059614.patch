@@ -21,20 +21,19 @@ index 1c8a86091e207b58a620be00db905b4ba7d06539..b3b630f911d116a0f6ce441c0aae3abe
    const navigation = useNavigation<StackNavigationProp<HomeStackParams>>()
    const [store, dispatch] = useStore()
 diff --git a/App/screens/Home.tsx b/App/screens/Home.tsx
-index ad946ed3ee1af79bbdc90fa70e30eefd6782128c..ab5500bebf323cf187fc78080b131d154b9eb779 100644
+index ad946ed3ee1af79bbdc90fa70e30eefd6782128c..c6e493347c07bf806ba0615ae4d8be519b401129 100644
 --- a/App/screens/Home.tsx
 +++ b/App/screens/Home.tsx
-@@ -40,6 +40,9 @@ const Home: React.FC<HomeProps> = () => {
+@@ -40,6 +40,8 @@ const Home: React.FC<HomeProps> = () => {
    const [showTourPopup, setShowTourPopup] = useState(false)
    const screenIsFocused = useIsFocused()
  
 +  const [notificationItemId, setNotificationItemId] = useState<string | null>(null)
 +
-+
    const styles = StyleSheet.create({
      flatlist: {
        marginBottom: 35,
-@@ -49,26 +52,47 @@ const Home: React.FC<HomeProps> = () => {
+@@ -49,26 +51,47 @@ const Home: React.FC<HomeProps> = () => {
    const DisplayListItemType = useCallback((item: any): React.ReactNode => {
      let component: React.ReactNode
      if (item.type === 'BasicMessageRecord') {
