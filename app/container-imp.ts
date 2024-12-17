@@ -1,4 +1,4 @@
-import { Agent, BaseLogger } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
 import {
   Container,
   TOKENS,
@@ -23,6 +23,7 @@ import {
   PersistentState,
   defaultConfig,
   InlineErrorPosition,
+  BifoldLogger,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
@@ -78,7 +79,7 @@ export interface AppState {
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
-  private log?: BaseLogger
+  private log?: BifoldLogger
   private t: TFunction<'translation', undefined>
   private navigate: (stack: never, params: never) => void
   private setAppState: React.Dispatch<React.SetStateAction<AppState>>
@@ -90,7 +91,7 @@ export class AppContainer implements Container {
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
     useState: [AppState, React.Dispatch<React.SetStateAction<AppState>>],
-    log?: BaseLogger
+    log?: BifoldLogger
   ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.log = log
@@ -113,7 +114,6 @@ export class AppContainer implements Container {
       lokiUrl: Config.REMOTE_LOGGING_URL,
       lokiLabels: {
         application: getApplicationName().toLowerCase(),
-        job: 'react-native-logs',
         version: `${getVersion()}-${getBuildNumber()}`,
         system: `${getSystemName()} v${getSystemVersion()}`,
       },
