@@ -21,6 +21,10 @@ const translation = {
     "Message2028": "There was a problem receiving the attestation invitation to connect.",
     "Title2029": "Unable to handle attestation proof",
     "Message2029": "There was a problem while handling an attestation proof request.",
+    "Title2030": "Unable to complete app initialization",
+    "Message2030": "There was a problem while initializing the app.",
+    "Title2031": "Unable to complete agent initialization",
+    "Message2031": "There was a problem while initializing the agent.",
     "NoMessage": "No Message",
   },
   "CameraDisclosure": {

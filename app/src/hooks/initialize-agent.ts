@@ -190,7 +190,7 @@ const useInitializeBCAgent = () => {
     
     if (store.preferences.usePushNotifications) {
       logger.info('Activating push notifications...')
-      await activate(newAgent)
+      activate(newAgent)
     }
     
     // In case the old attestationMonitor is still active, stop it and start a new one
