@@ -1,4 +1,4 @@
-import { HelpContactUsProps } from '../src/components/HelpContactUs'
+import { HelpContactUsProps } from '../src/components/Help/HelpContactUs'
 
 export const contactMock: HelpContactUsProps = {
   itemContact: [

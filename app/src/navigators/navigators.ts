@@ -56,6 +56,7 @@ export type RootStackParams = {
   [BifoldStacks.ProofRequestsStack]: NavigatorScreenParams<ProofRequestsStackParams>
   [BifoldStacks.NotificationStack]: NavigatorScreenParams<NotificationStackParams>
   [BifoldStacks.HistoryStack]: NavigatorScreenParams<HistoryStackParams>
+  [Stacks.HelpCenterStack]: NavigatorScreenParams<HelpCenterStackParams>
 }
 
 export type TabStackParams = {
@@ -81,6 +82,7 @@ export type SettingStackParams = {
 type ContentType = {
   title?: string
   text?: string
+  screen: Array<string>
   visual?: ImageSourcePropType
   question?: string
   answer?: string
@@ -92,7 +94,7 @@ type ItemSection = {
 
 export type HelpCenterStackParams = {
   [Screens.HelpCenter]: undefined
-  [Screens.HelpCenterPage]: { selectedSection: ItemSection[]; sectionNo: number }
+  [Screens.HelpCenterPage]: { selectedSection: ItemSection[]; sectionNo: number; titleParam?: string }
 }
 export type AboutStackParams = {
   [Screens.About]: undefined

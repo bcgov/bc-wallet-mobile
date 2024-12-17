@@ -29,7 +29,7 @@ import ledgers from './config/ledgers'
 import AddCredentialButton from './src/components/AddCredentialButton'
 import AddCredentialSlider from './src/components/AddCredentialSlider'
 import EmptyList from './src/components/EmptyList'
-import HelpCenterButton from './src/components/HelpCenterButton'
+import HelpCenterButton from './src/components/Help/HelpCenterButton'
 import HomeEmptyList from './src/components/HomeEmptyList'
 import HomeFooter from './src/components/HomeFooter'
 import HomeHeader from './src/components/HomeHeader'
@@ -110,9 +110,34 @@ export class AppContainer implements Container {
       },
     }
 
-    defaultScreenOptionsDict[Screens.Terms] = {
-      ...defaultScreenOptionsDict[Screens.Terms],
-      ...onboardingScreenOptions,
+    defaultScreenOptionsDict[Screens.Home] = {
+      ...defaultScreenOptionsDict[Screens.Home],
+      headerLeft: undefined,
+      headerRight: HelpCenterButton,
+    }
+    defaultScreenOptionsDict[Screens.Connection] = {
+      ...defaultScreenOptionsDict[Screens.Connection],
+      headerLeft: undefined,
+      headerRight: HelpCenterButton,
+    }
+    defaultScreenOptionsDict[Screens.CredentialDetails] = {
+      ...defaultScreenOptionsDict[Screens.CredentialDetails],
+      headerLeft: undefined,
+      headerRight: HelpCenterButton,
+    }
+
+    defaultScreenOptionsDict[Screens.Credentials] = {
+      ...defaultScreenOptionsDict[Screens.Credentials],
+      headerLeft: undefined,
+      headerRight: HelpCenterButton,
+    }
+    defaultScreenOptionsDict[Screens.Language] = {
+      ...defaultScreenOptionsDict[Screens.Language],
+      headerRight: HelpCenterButton,
+    }
+    defaultScreenOptionsDict[Screens.Scan] = {
+      ...defaultScreenOptionsDict[Screens.Scan],
+      headerRight: HelpCenterButton,
     }
 
     defaultScreenOptionsDict[Screens.UseBiometry] = {
@@ -142,7 +167,6 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.CONFIG, defaultConfig)
     this._container.registerInstance(TOKENS.HISTORY_ENABLED, true)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_FOOTER, AddCredentialButton)
-    this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, HelpCenterButton)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_EMPTY_LIST, EmptyList)
     this._container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)

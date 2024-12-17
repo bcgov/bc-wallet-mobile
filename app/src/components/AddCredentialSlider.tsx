@@ -71,7 +71,7 @@ const AddCredentialSlider: React.FC = () => {
       marginVertical: 12,
     },
     drawerRowItem: {
-      color: ColorPallet.grayscale.black,
+      color: ColorPallet.brand.primary,
     },
   })
 
