@@ -1,10 +1,10 @@
 import { useTheme } from '@hyperledger/aries-bifold-core'
 import { i18n } from '@hyperledger/aries-bifold-core/App/localization'
-//
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect, useState, useCallback, useRef } from 'react'
-import { Animated, DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 import { itemsDataEn } from '../../assets/Index_en'
 import { itemsDataFr } from '../../assets/Index_fr'
@@ -15,14 +15,12 @@ import { RootStackParams, Screens, Stacks } from '../../navigators/navigators'
 const HelpListSlider: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParams>>()
   const { ColorPallet, TextTheme } = useTheme()
+  const { t } = useTranslation()
   const currentLanguage = i18n.language
   const helpIndex = currentLanguage === 'fr' ? itemsDataFr.centreAide.sommaire : itemsDataEn.centreAide.sommaire
   const [addHelpPressed, setAddHelpPressed] = useState<boolean>(false)
   const [localRouteName, setLocalRouteName] = useState<string>('Home')
   const [headerHeight, setHeaderHeight] = useState<number>(0)
-  // const headerHeight = useHeaderHeight() ?? '12%'
-
-  const dropdownOpacity = useRef(new Animated.Value(0)).current
 
   const styles = StyleSheet.create({
     centeredView: {
@@ -58,8 +56,6 @@ const HelpListSlider: React.FC = () => {
     },
     modalView: {
       backgroundColor: ColorPallet.grayscale.white,
-      borderBottomStartRadius: 20,
-      borderBottomEndRadius: 20,
       shadowColor: '#000',
       padding: 20,
       shadowOffset: {
@@ -88,6 +84,7 @@ const HelpListSlider: React.FC = () => {
       color: ColorPallet.brand.primary,
     },
   })
+
   const paramDataClose = {
     isActive: false,
   }
@@ -108,27 +105,12 @@ const HelpListSlider: React.FC = () => {
       handle.remove()
     }
   }, [])
-  useEffect(() => {
-    if (addHelpPressed) {
-      Animated.timing(dropdownOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start()
-    } else {
-      Animated.timing(dropdownOpacity, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start()
-    }
-  }, [addHelpPressed])
 
   function hasTitle(item: { title: string } | { question: string }): item is { title: string } {
     return (item as { title: string }).title !== undefined
   }
+
   function validateScreen(screen: Array<string>, routeName: string): boolean {
-    // On vérifie si routeName existe dans le tableau screen
     return screen.includes(routeName)
   }
 
@@ -136,7 +118,8 @@ const HelpListSlider: React.FC = () => {
     <Modal transparent={true} visible={addHelpPressed} onRequestClose={deactivateSlider}>
       <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} hitSlop={hitSlop} />
       <View style={styles.centeredView}>
-        <Animated.View style={[styles.modalView, { opacity: dropdownOpacity }]}>
+        {/* Suppression de l'animation d'opacité */}
+        <View style={styles.modalView}>
           <View>
             {helpIndex.map((sectionItem, index) => (
               <View key={index}>
@@ -172,7 +155,18 @@ const HelpListSlider: React.FC = () => {
               </View>
             ))}
           </View>
-        </Animated.View>
+          <TouchableOpacity
+            style={styles.drawerRow}
+            onPress={() => {
+              deactivateSlider()
+              navigation.navigate(Stacks.HelpCenterStack as never, { screen: Screens.HelpCenter } as never)
+            }}
+          >
+            <View>
+              <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>{t('HelpCenter.ConsultHelpCenter')}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
     </Modal>
   )

@@ -1,7 +1,7 @@
 const translation = {
   BCID: {
     GetID: 'Get BCID',
-    GetDigitalID: 'Get your QC Digital ID',
+    GetDigitalID: 'Add my Digital Government Authentication Certificate',
   },
   Onboarding: {
     SkipA11y: 'Skip',
@@ -966,10 +966,12 @@ const translation = {
   AddCredentialSlider: {
     Choose: 'Choose',
     ScanQRCode: 'Scan a QR code',
+    Title: 'Add a Credential',
   },
   HelpCenter: {
     Help: 'Help',
     ButtonHelpCenter: 'Return to Help Center',
+    ConsultHelpCenter: 'Consult the help center',
   },
   About: {
     Accessibility: 'Accessibility',
