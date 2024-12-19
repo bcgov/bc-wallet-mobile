@@ -260,8 +260,6 @@ const HistoryList: React.FC<{
         params = { connectionId: historyRecord.correspondenceId || '', item }
         break
 
-      // TODO Create InformationNotSent screen
-      // TODO Not tested
       case HistoryCardType.InformationSent: {
         screen = BifoldScreens.ProofDetails
         const senderReview = await proofExistsAndCheckReview(historyRecord.correspondenceId || '')
@@ -269,9 +267,8 @@ const HistoryList: React.FC<{
         break
       }
       case HistoryCardType.InformationNotSent: {
-        screen = BifoldScreens.ProofDetails
-        const senderReview = await proofExistsAndCheckReview(historyRecord.correspondenceId || '')
-        params = { recordId: historyRecord.correspondenceId || '', isHistory: true, senderReview: senderReview }
+        screen = Screens.ContactHistoryDetails
+        params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Accepted'), item }
         break
       }
       case HistoryCardType.CardAccepted: {
@@ -309,12 +306,11 @@ const HistoryList: React.FC<{
         params = { recordId: historyRecord.correspondenceId || '', item }
         break
 
-      // TODO: Not tested
       case HistoryCardType.ActivateBiometry:
         screen = Screens.BiometricChangeDetails
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Activated'), item }
         break
-      // TODO: Not tested
+
       case HistoryCardType.DeactivateBiometry:
         screen = Screens.BiometricChangeDetails
         params = {
@@ -325,13 +321,12 @@ const HistoryList: React.FC<{
         break
 
       default:
-        // TODO
-        screen = Screens.HistoryDetail
-        params = { recordId: historyRecord.correspondenceId || '', item }
-        break
+        throw new Error(`Unhandled historyRecord.type: ${historyRecord.type}`)
     }
 
-    navigation.navigate(screen, params)
+    if (screen && params) {
+      navigation.navigate(screen, params)
+    }
   }
 
   const handleDelete = async (id: string) => {

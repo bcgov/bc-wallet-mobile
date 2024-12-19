@@ -313,6 +313,8 @@ const translation = {
     Message1044: 'There was a problem while initializing onboarding.',
     Title1045: 'Unable to initialize agent.',
     Message1045: 'There was a problem while initializing agent.',
+    FailedToDelete: 'Failed to delete',
+    UnexpectedError: 'An unexpected error occurred',
   },
   StatusMessages: {
     InitAgent: 'Initializing agent ..',
@@ -1001,6 +1003,7 @@ const translation = {
     CardTitle: {
       CardChanged: 'Card {{operation}}',
       InformationSent: 'Information sent to:',
+      ContactUpdated: 'Contact {{operation}}',
       WalletPinUpdated: 'Wallet PIN updated',
       BiometricUpdated: 'Biometrics is {{operation}}',
       ConnectionEstablished: 'Connection established',
@@ -1009,6 +1012,7 @@ const translation = {
     },
     CardDescription: {
       CardChanged: 'Card {{cardName}} {{operation}}',
+      ContactUpdated: '{contactName} has been {{operation}}.',
       WalletPinUpdated: 'New PIN set',
       BiometricUpdated: 'Biometrics has been {{operation}}',
     },

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import ActivityNotifications from '../screens/activities/Activities'
 import BiometricChangeDetails from '../screens/activities/BiometricChangeDetails'
 import CardChangedDetails from '../screens/activities/CardChangedDetails'
+import ContactHistoryDetails from '../screens/activities/ContactHistoryDetails'
 import PinChangeDetails from '../screens/activities/PinChangeDetails'
 
 import { ActivitiesStackParams, Screens } from './navigators'
@@ -63,6 +64,11 @@ const ActivitiesStack: React.FC = () => {
         name={BifoldScreens.ContactDetails}
         component={ContactDetails}
         options={{ title: t('Screens.ContactDetails') }}
+      />
+      <StackActivities.Screen
+        name={Screens.ContactHistoryDetails}
+        component={ContactHistoryDetails}
+        options={{ title: t('Screens.ContactHistoryDetails') }}
       />
     </StackActivities.Navigator>
   )

@@ -204,6 +204,8 @@ const translation = {
     Message1044: "Un problème est survenu lors de l'initialisation de l'onboarding.",
     Title1045: "Impossible d'initialiser l'agent.",
     Message1045: "Un problème est survenu lors de l'initialisation de l'agent.",
+    FailedToDelete: 'Échec de la suppression',
+    UnexpectedError: 'Une erreur inattendue est survenue',
   },
   Credentials: {
     AddCredential: 'Ajouter une attestation',
@@ -1034,6 +1036,7 @@ const translation = {
     CardTitle: {
       CardChanged: 'Attestation {{operation}}',
       InformationSent: 'Informations envoyées à :',
+      ContactUpdated: 'Contact {{operation}}',
       WalletPinUpdated: 'Modification du NIP',
       BiometricUpdated: 'La biométrie est {{operation}}',
       ConnectionEstablished: 'Connexion établie',
@@ -1041,12 +1044,9 @@ const translation = {
       Default: 'Événement historique',
     },
     CardDescription: {
-      CardExpired: '{{cardName}} expirée',
-      CardRevoked: '{{cardName}} révoquée',
-      CardAccepted: 'Attestation {{cardName}} acceptée',
       CardChanged: 'Attestation {{cardName}} {{operation}}',
-      CardDeclined: 'Attestation {{cardName}} refusée',
-      WalletPinUpdated: 'Un nouveau NIP a été défini pour l’application',
+      ContactUpdated: '{contactName} a été {{operation}}.',
+      WalletPinUpdated: "Un nouveau NIP a été défini pour l'application",
       BiometricUpdated: 'La biométrie a été {{operation}}',
     },
     Detail: {

@@ -8,6 +8,7 @@ import {
 import { formatTime } from '@hyperledger/aries-bifold-core/App/utils/helpers'
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import Toast from 'react-native-toast-message'
 
 import ChangingSettingsImg from '../assets/img/ChangingSettings.svg'
 import CredentialAddedImg from '../assets/img/CredentialAdded.svg'
@@ -145,7 +146,11 @@ const HistoryListItem: React.FC<Props> = ({
         onDelete(item.content.id ?? '')
       }
     } catch (error) {
-      //console.error('Failed to remove history item:', error)
+      Toast.show({
+        type: 'error',
+        text1: t('Error.FailedToDelete'),
+        text2: t('Error.UnexpectedError'),
+      })
     }
   }
 

@@ -24,7 +24,6 @@ export enum Screens {
   Settings = 'Settings',
   Language = 'Language',
   HistoryPage = 'History',
-  HistoryDetail = 'HistoryDetail',
   Notification = 'Notifications',
   CreatePIN = 'Create a PIN',
   UseBiometry = 'Use Biometry',
@@ -34,6 +33,7 @@ export enum Screens {
   PinChangeDetails = 'PinChangeDetails',
   BiometricChangeDetails = 'BiometricChangeDetails',
   CardChangedDetails = 'CardChangedDetails',
+  ContactHistoryDetails = 'ContactHistoryDetails',
 }
 
 export enum Stacks {
@@ -105,13 +105,13 @@ export type AboutStackParams = {
 
 export type ActivitiesStackParams = {
   [Screens.Activities]: undefined
-  [Screens.HistoryDetail]: { item: CustomRecord }
   [BifoldScreens.ProofDetails]: { recordId: string; isHistory?: boolean }
   [BifoldScreens.ContactDetails]: { connectionId: string; item: CustomRecord }
   [Screens.PinChangeDetails]: { recordId: string; item: CustomRecord }
   [Screens.BiometricChangeDetails]: { recordId: string; operation: string; item: CustomRecord }
   [BifoldScreens.CredentialDetails]: { credentialId: string; item: CustomRecord }
   [Screens.CardChangedDetails]: { recordId: string; operation: string; item: CustomRecord }
+  [Screens.ContactHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }
 }
 
 export type OptionsPlusStackParams = {

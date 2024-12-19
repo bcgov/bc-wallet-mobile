@@ -2,6 +2,7 @@ import { Agent } from '@credo-ts/core'
 import { IHistoryManager } from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import { NavigationProp } from '@react-navigation/native'
 import { Alert } from 'react-native'
+import Toast from 'react-native-toast-message'
 
 import { ActivitiesStackParams } from '../navigators/navigators'
 
@@ -40,7 +41,11 @@ export const handleDeleteHistory = async (
               }
             }
           } catch (error) {
-            //console.warn('Failed to delete event:', error)
+            Toast.show({
+              type: 'error',
+              text1: t('Error.FailedToDelete'),
+              text2: t('Error.UnexpectedError'),
+            })
           }
         },
       },
