@@ -1,5 +1,4 @@
-import { useAgent } from '@credo-ts/react-hooks'
-import { useTheme, useStore, testIdWithKey, DispatchAction, Screens } from '@hyperledger/aries-bifold-core'
+import { useTheme, useStore, testIdWithKey, DispatchAction, Screens, useServices, TOKENS } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
@@ -14,11 +13,10 @@ import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
 
 const Settings: React.FC = () => {
-  const { agent } = useAgent()
-  const logger = agent?.config.logger as RemoteLogger
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
@@ -229,7 +227,10 @@ const Settings: React.FC = () => {
     setRemoteLoggingEnabled(remoteLoggingEnabled)
 
     setRemoteLoggingWarningModalVisible(false)
-    navigation.navigate(Screens.Home as never)
+
+    if (store.authentication.didAuthenticate) {
+      navigation.navigate(Screens.Home as never)
+    }
   }
 
   const onRemoteLoggingBackPressed = () => {
@@ -427,7 +428,6 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleRemoteLoggingSwitch}
             value={remoteLoggingEnabled}
-            disabled={!store.authentication.didAuthenticate}
           />
         </SectionRow>
 

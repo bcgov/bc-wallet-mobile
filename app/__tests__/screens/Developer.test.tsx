@@ -4,6 +4,7 @@ import React from 'react'
 
 import Developer from '../../src/screens/Developer'
 import { initialState, reducer } from '../../src/store'
+import { BasicAppContext } from '../../__mocks__/helpers/app'
 
 const mockNavigation = jest.fn()
 jest.mock('@react-navigation/native', () => ({
@@ -28,9 +29,11 @@ describe('Developer Screen', () => {
 
   test('screen renders correctly', () => {
     const tree = render(
-      <StoreProvider initialState={initialState} reducer={reducer}>
-        <Developer />
-      </StoreProvider>
+      <BasicAppContext>
+        <StoreProvider initialState={initialState} reducer={reducer}>
+          <Developer />
+        </StoreProvider>
+      </BasicAppContext>
     )
 
     expect(tree).toMatchSnapshot()
