@@ -1014,7 +1014,6 @@ exports[`Developer Screen screen renders correctly 1`] = `
           >
             <RCTSwitch
               accessibilityRole="switch"
-              disabled={true}
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
