@@ -203,86 +203,81 @@ const Splash = () => {
 
       if (store.onboarding.onboardingVersion !== OnboardingVersion) {
         dispatch({ type: DispatchAction.ONBOARDING_VERSION, payload: [OnboardingVersion] })
-        return
       }
 
       if (
-        !onboardingComplete(
+        onboardingComplete(
           store.onboarding.onboardingVersion,
           store.onboarding.didCompleteOnboarding,
           store.onboarding.didConsiderBiometry
         )
       ) {
-        // If onboarding was interrupted we need to pickup from where we left off.
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [
-              {
-                name: resumeOnboardingAt(
-                  store.onboarding.didSeePreface,
-                  store.onboarding.didCompleteTutorial,
-                  store.onboarding.didAgreeToTerms,
-                  store.onboarding.didCreatePIN,
-                  store.onboarding.didNameWallet,
-                  store.onboarding.didConsiderBiometry,
-                  store.onboarding.didConsiderPushNotifications,
-                  TermsVersion,
-                  store.preferences.enableWalletNaming,
-                  showPreface,
-                  !!enablePushNotifications
-                ),
-              },
-            ],
-          })
-        )
+        if (!store.onboarding.didCompleteOnboarding) {
+          dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING })
+        }
+        // if they previously completed onboarding before wallet naming was enabled, mark complete
+        if (!store.onboarding.didNameWallet) {
+          dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
+        }
+
+        // if they previously completed onboarding before preface was enabled, mark seen
+        if (!store.onboarding.didSeePreface) {
+          dispatch({ type: DispatchAction.DID_SEE_PREFACE })
+        }
+
+        // add post authentication screens
+        const postAuthScreens = []
+        if (store.onboarding.didAgreeToTerms !== TermsVersion) {
+          postAuthScreens.push(Screens.Terms)
+        }
+        if (!store.onboarding.didConsiderPushNotifications && enablePushNotifications) {
+          postAuthScreens.push(Screens.UsePushNotifications)
+        }
+        dispatch({ type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [postAuthScreens] })
+
+        if (!store.loginAttempt.lockoutDate) {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: Screens.EnterPIN }],
+            })
+          )
+        } else {
+          // return to lockout screen if lockout date is set
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: Screens.AttemptLockout }],
+            })
+          )
+        }
 
         return
       }
 
-      if (!store.onboarding.didCompleteOnboarding) {
-        dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING })
-        return
-      }
-
-      // if they previously completed onboarding before wallet naming was enabled, mark complete
-      if (!store.onboarding.didNameWallet) {
-        dispatch({ type: DispatchAction.DID_NAME_WALLET, payload: [true] })
-        return
-      }
-
-      // if they previously completed onboarding before preface was enabled, mark seen
-      if (!store.onboarding.didSeePreface) {
-        dispatch({ type: DispatchAction.DID_SEE_PREFACE })
-        return
-      }
-
-      // add post authentication screens
-      const postAuthScreens = []
-      if (store.onboarding.didAgreeToTerms !== TermsVersion) {
-        postAuthScreens.push(Screens.Terms)
-      }
-      if (!store.onboarding.didConsiderPushNotifications && enablePushNotifications) {
-        postAuthScreens.push(Screens.UsePushNotifications)
-      }
-      dispatch({ type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [postAuthScreens] })
-
-      if (!store.loginAttempt.lockoutDate) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: Screens.EnterPIN }],
-          })
-        )
-      } else {
-        // return to lockout screen if lockout date is set
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: Screens.AttemptLockout }],
-          })
-        )
-      }
+      // If onboarding was interrupted we need to pickup from where we left off.
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: resumeOnboardingAt(
+                store.onboarding.didSeePreface,
+                store.onboarding.didCompleteTutorial,
+                store.onboarding.didAgreeToTerms,
+                store.onboarding.didCreatePIN,
+                store.onboarding.didNameWallet,
+                store.onboarding.didConsiderBiometry,
+                store.onboarding.didConsiderPushNotifications,
+                TermsVersion,
+                store.preferences.enableWalletNaming,
+                showPreface,
+                !!enablePushNotifications
+              ),
+            },
+          ],
+        })
+      )
     } catch (e: unknown) {
       setInitErrorType(InitErrorTypes.Onboarding)
       setInitError(new BifoldError(t('Error.Title2030'), t('Error.Message2030'), (e as Error)?.message, 2030))
