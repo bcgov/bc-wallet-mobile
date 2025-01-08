@@ -357,10 +357,11 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
             >
               <View
                 accessibilityLabel="RemoteLogging.IAgree"
+                accessibilityRole="checkbox"
                 accessibilityState={
                   {
                     "busy": undefined,
-                    "checked": undefined,
+                    "checked": false,
                     "disabled": undefined,
                     "expanded": undefined,
                     "selected": undefined,

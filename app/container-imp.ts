@@ -218,6 +218,7 @@ export class AppContainer implements Container {
       enableTours: true,
       enableChat: true,
       enableReuseConnections: true,
+      enableHiddenDevModeTrigger: true,
       supportedLanguages: ['en'],
       showPreface: true,
       disableOnboardingSkip: true,
