@@ -180,7 +180,6 @@ const translation = {
     ANIGAcceptDescription:
       'From the account management, you will need to scan the QR code that will be presented to you.\r\n\r\nYou will then need to accept the certificate offer that will be proposed to you.',
     ButtonTitle: 'Receive my attestation',
-    ButtonHome: 'Return to home page',
   },
   OptionsPlus: {
     PageTitle: 'More options',

@@ -250,7 +250,6 @@ const translation = {
     ANIGAcceptDescription:
       'Depuis la gestion de compte, vous devrez balayer le code QR qui vous sera présenté.\r\n\r\nVous devrez ensuite accepter l’offre d’attestation qui vous sera proposée.',
     ButtonTitle: 'Recevoir mon attestation',
-    ButtonHome: 'Revenir à l’accueil',
   },
   OptionsPlus: {
     PageTitle: "Plus d'option",

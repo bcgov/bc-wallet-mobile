@@ -5,11 +5,8 @@ import {
   testIdWithKey,
   Screens,
   NotificationStackParams,
-  TabStacks,
 } from '@hyperledger/aries-bifold-core'
-import { HomeStackParams } from '@hyperledger/aries-bifold-core/App/types/navigators'
-import { useNavigation } from '@react-navigation/native'
-import { StackScreenProps, StackNavigationProp } from '@react-navigation/stack'
+import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -19,10 +16,9 @@ import { urlGestionDeCompteSag } from '../constants'
 
 type DefaultProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
-const DefaultNotification: React.FC<DefaultProps> = () => {
+const DefaultNotification: React.FC<DefaultProps> = ({ navigation }: DefaultProps) => {
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
-  const { navigate } = useNavigation<StackNavigationProp<HomeStackParams>>()
 
   const styles = StyleSheet.create({
     container: {
@@ -98,8 +94,8 @@ const DefaultNotification: React.FC<DefaultProps> = () => {
           buttonType={ButtonType.Secondary}
           testID={testIdWithKey('StartProcess')}
           accessibilityLabel={t('DefaultNotificationPage.ButtonHome')}
-          title={t('DefaultNotificationPage.ButtonHome')}
-          onPress={() => navigate(TabStacks.HomeStack as never, { screen: Screens.Home } as never)}
+          title={t('Global.GoBack')}
+          onPress={() => navigation.goBack()}
         ></Button>
       </View>
     </SafeAreaView>
