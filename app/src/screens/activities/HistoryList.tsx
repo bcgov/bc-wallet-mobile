@@ -217,16 +217,6 @@ const HistoryList: React.FC<{
     },
   })
 
-  const credentialExists = async (id: string): Promise<boolean> => {
-    try {
-      const credentialExchangeRecord = await agent?.credentials.getById(id)
-      return credentialExchangeRecord !== null
-    } catch (error) {
-      //console.error('Error checking if event exists:', error)
-      return false
-    }
-  }
-
   const proofExistsAndCheckReview = async (id: string): Promise<boolean> => {
     try {
       const proofRecord = await agent?.proofs.getById(id)
@@ -272,13 +262,6 @@ const HistoryList: React.FC<{
         break
       }
       case HistoryCardType.CardAccepted: {
-        const exists = await credentialExists(historyRecord.correspondenceId || '')
-        if (exists) {
-          screen = BifoldScreens.CredentialDetails
-          params = { credentialId: historyRecord.correspondenceId || '', item }
-          break
-        }
-        // If Card Accepted and removed
         screen = Screens.CardChangedDetails
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Accepted'), item }
         break

@@ -1044,15 +1044,20 @@ const translation = {
       Default: 'Événement historique',
     },
     CardDescription: {
+      Default: 'Attestation numérique d’identité gouvernementale',
       CardChanged: 'Attestation {{cardName}} {{operation}}',
       ContactUpdated: '{contactName} a été {{operation}}.',
       WalletPinUpdated: "Un nouveau NIP a été défini pour l'application",
       BiometricUpdated: 'La biométrie a été {{operation}}',
     },
-    Detail: {
-      InformationRequested: 'Les informations demandées',
-      Email: 'Adresse courriel',
-      Identifier: 'Identifiant unique',
+    Details: {
+      FirstName: 'Prénom',
+      LastName: 'Nom',
+      Birthday: 'Date de naissance',
+      Address: 'Adresse',
+      City: 'Ville',
+      Province: 'Province',
+      PostalCode: 'Code postal',
     },
     Date: {
       changedOn: '{{operation}} le',

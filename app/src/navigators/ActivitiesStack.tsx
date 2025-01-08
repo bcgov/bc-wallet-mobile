@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 
 import ActivityNotifications from '../screens/activities/Activities'
 import BiometricChangeDetails from '../screens/activities/BiometricChangeDetails'
-import CardChangedDetails from '../screens/activities/CardChangedDetails'
+import CardChangedDetails from '../screens/activities/CardHistoryDetails'
 import ContactHistoryDetails from '../screens/activities/ContactHistoryDetails'
 import PinChangeDetails from '../screens/activities/PinChangeDetails'
 

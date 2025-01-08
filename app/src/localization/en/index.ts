@@ -1011,15 +1011,20 @@ const translation = {
       Default: 'History Event',
     },
     CardDescription: {
+      Default: 'Government Digital Identity Attestation',
       CardChanged: 'Card {{cardName}} {{operation}}',
       ContactUpdated: '{contactName} has been {{operation}}.',
       WalletPinUpdated: 'New PIN set',
       BiometricUpdated: 'Biometrics has been {{operation}}',
     },
-    Detail: {
-      InformationRequested: 'The requested information',
-      Email: 'Email address',
-      Identifier: 'Unique identifier',
+    Details: {
+      FirstName: 'First Name',
+      LastName: 'Last Name',
+      Birthday: 'Birthday',
+      Address: 'Address',
+      City: 'City',
+      Province: 'Province',
+      PostalCode: 'Postal Code',
     },
     Date: {
       changedOn: '{{operation}} on',
