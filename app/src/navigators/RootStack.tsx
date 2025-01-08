@@ -6,7 +6,6 @@ import {
   ConnectStack,
   ContactStack,
   DeliveryStack,
-  DispatchAction,
   EventTypes,
   IconButton,
   NotificationStack,
@@ -67,14 +66,10 @@ const RootStack: React.FC = () => {
   const loadStateErrorDescription = t('Error.Message1044')
 
   useEffect(() => {
-    loadState(dispatch)
-      .then(() => {
-        dispatch({ type: DispatchAction.STATE_LOADED })
-      })
-      .catch((err: unknown) => {
-        const error = new BifoldError(loadStateErrorTitle, loadStateErrorDescription, (err as Error).message, 1001)
-        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
-      })
+    loadState(dispatch).catch((err: unknown) => {
+      const error = new BifoldError(loadStateErrorTitle, loadStateErrorDescription, (err as Error).message, 1001)
+      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
+    })
   }, [dispatch, loadState])
 
   const mainStack = () => {
