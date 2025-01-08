@@ -1013,7 +1013,7 @@ const translation = {
     CardDescription: {
       Default: 'Government Digital Identity Attestation',
       CardChanged: 'Card {{cardName}} {{operation}}',
-      ContactUpdated: '{contactName} has been {{operation}}.',
+      ContactUpdated: '{{contactName}} has been {{operation}}.',
       WalletPinUpdated: 'New PIN set',
       BiometricUpdated: 'Biometrics has been {{operation}}',
     },
@@ -1037,6 +1037,7 @@ const translation = {
       Revoked: 'revoked',
       Activated: 'activated',
       Deactivated: 'deactivated',
+      Added: 'added',
     },
   },
 }

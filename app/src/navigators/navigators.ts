@@ -32,7 +32,7 @@ export enum Screens {
   About = 'About',
   PinChangeDetails = 'PinChangeDetails',
   BiometricChangeDetails = 'BiometricChangeDetails',
-  CardChangedDetails = 'CardChangedDetails',
+  CardHistoryDetails = 'CardHistoryDetails',
   ContactHistoryDetails = 'ContactHistoryDetails',
 }
 
@@ -110,7 +110,7 @@ export type ActivitiesStackParams = {
   [Screens.PinChangeDetails]: { recordId: string; item: CustomRecord }
   [Screens.BiometricChangeDetails]: { recordId: string; operation: string; item: CustomRecord }
   [BifoldScreens.CredentialDetails]: { credentialId: string; item: CustomRecord }
-  [Screens.CardChangedDetails]: { recordId: string; operation: string; item: CustomRecord }
+  [Screens.CardHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }
   [Screens.ContactHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }
 }
 

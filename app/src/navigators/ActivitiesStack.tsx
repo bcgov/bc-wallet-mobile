@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 
 import ActivityNotifications from '../screens/activities/Activities'
 import BiometricChangeDetails from '../screens/activities/BiometricChangeDetails'
-import CardChangedDetails from '../screens/activities/CardHistoryDetails'
+import CardHistoryDetails from '../screens/activities/CardHistoryDetails'
 import ContactHistoryDetails from '../screens/activities/ContactHistoryDetails'
 import PinChangeDetails from '../screens/activities/PinChangeDetails'
 
@@ -54,8 +54,8 @@ const ActivitiesStack: React.FC = () => {
         options={{ title: t('History.CardTitle.CardAccepted') }}
       />
       <StackActivities.Screen
-        name={Screens.CardChangedDetails}
-        component={CardChangedDetails}
+        name={Screens.CardHistoryDetails}
+        component={CardHistoryDetails}
         options={({ route }) => ({
           title: t('History.CardTitle.CardChanged', { operation: route.params?.operation }),
         })}
@@ -68,7 +68,9 @@ const ActivitiesStack: React.FC = () => {
       <StackActivities.Screen
         name={Screens.ContactHistoryDetails}
         component={ContactHistoryDetails}
-        options={{ title: t('Screens.ContactHistoryDetails') }}
+        options={({ route }) => ({
+          title: t('History.CardTitle.ContactUpdated', { operation: route.params?.operation }),
+        })}
       />
     </StackActivities.Navigator>
   )

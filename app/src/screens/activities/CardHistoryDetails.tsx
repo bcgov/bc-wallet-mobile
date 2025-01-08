@@ -13,7 +13,7 @@ import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { ColorPallet } from '../../theme'
 import { handleDeleteHistory, renderCardIcon } from '../../utils/historyUtils'
 
-type CardChangedDetailsProp = StackScreenProps<ActivitiesStackParams, Screens.CardChangedDetails>
+type CardHistorydDetailsProp = StackScreenProps<ActivitiesStackParams, Screens.CardHistoryDetails>
 
 const styles = StyleSheet.create({
   container: {
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
   },
 })
 
-const CardChangedDetails: React.FC<CardChangedDetailsProp> = ({ route, navigation }) => {
+const CardHistorydDetails: React.FC<CardHistorydDetailsProp> = ({ route, navigation }) => {
   const { TextTheme } = useTheme()
   const { t } = useTranslation()
   const { recordId, item, operation } = route.params
@@ -270,4 +270,4 @@ const CardChangedDetails: React.FC<CardChangedDetailsProp> = ({ route, navigatio
   )
 }
 
-export default CardChangedDetails
+export default CardHistorydDetails

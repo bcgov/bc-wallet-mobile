@@ -1,5 +1,6 @@
 import { useAgent } from '@credo-ts/react-hooks'
 import { TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
+import { HistoryRecord } from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import { formatTime } from '@hyperledger/aries-bifold-core/App/utils/helpers'
 import { StackScreenProps } from '@react-navigation/stack'
 import React from 'react'
@@ -62,9 +63,10 @@ const ContactHistoryDetails: React.FC<ContactHistoryDetailsProp> = ({ route, nav
   const { t } = useTranslation()
   const { agent } = useAgent()
   const [loadHistory] = useServices([TOKENS.FN_LOAD_HISTORY])
+  const itemContent = item?.content as HistoryRecord
 
-  const modifiedDate = item?.content.createdAt
-    ? formatTime(new Date(item.content.createdAt), { shortMonth: true, trim: true })
+  const modifiedDate = itemContent.createdAt
+    ? formatTime(new Date(itemContent.createdAt), { shortMonth: true, trim: true })
     : t('Record.InvalidDate')
 
   const iconSize = 24
@@ -72,7 +74,13 @@ const ContactHistoryDetails: React.FC<ContactHistoryDetailsProp> = ({ route, nav
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        <HeaderText title={t('History.CardDescription.ContactUpdated', { operation })} />
+        <HeaderText
+          title={t('History.CardDescription.ContactUpdated', {
+            contactName: itemContent.correspondenceName,
+            operation: operation,
+          })}
+        />
+
         <View style={{ marginTop: 20 }} />
         <Text style={[TextTheme.normal, styles.subTitle]}>
           {t('History.Date.changedOn', { operation: operation })} {modifiedDate}
@@ -83,7 +91,7 @@ const ContactHistoryDetails: React.FC<ContactHistoryDetailsProp> = ({ route, nav
 
       <TouchableOpacity
         style={styles.deleteContainer}
-        onPress={() => handleDeleteHistory(item.content.id || '', agent, loadHistory, navigation, t)}
+        onPress={() => handleDeleteHistory(itemContent.id || '', agent, loadHistory, navigation, t)}
       >
         <MaterialCommunityIcon name={'trash-can-outline'} size={iconSize} style={styles.trashIcon} />
         <Text style={[TextTheme.normal, styles.deleteText]}>{t('History.Button.DeleteHistory')}</Text>

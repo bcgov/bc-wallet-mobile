@@ -1070,6 +1070,7 @@ const translation = {
       Revoked: 'révoquée',
       Activated: 'activée',
       Deactivated: 'désactivée',
+      Added: 'ajouté',
     },
   },
 }

@@ -246,10 +246,9 @@ const HistoryList: React.FC<{
 
     switch (historyRecord.type) {
       case HistoryCardType.Connection:
-        screen = BifoldScreens.ContactDetails
-        params = { connectionId: historyRecord.correspondenceId || '', item }
+        screen = Screens.ContactHistoryDetails
+        params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Added'), item }
         break
-
       case HistoryCardType.InformationSent: {
         screen = BifoldScreens.ProofDetails
         const senderReview = await proofExistsAndCheckReview(historyRecord.correspondenceId || '')
@@ -262,25 +261,25 @@ const HistoryList: React.FC<{
         break
       }
       case HistoryCardType.CardAccepted: {
-        screen = Screens.CardChangedDetails
+        screen = Screens.CardHistoryDetails
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Accepted'), item }
         break
       }
       case HistoryCardType.CardExpired:
-        screen = Screens.CardChangedDetails
+        screen = Screens.CardHistoryDetails
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Expired'), item }
         break
       case HistoryCardType.CardDeclined:
-        screen = Screens.CardChangedDetails
+        screen = Screens.CardHistoryDetails
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Declined'), item }
         break
       case HistoryCardType.CardRemoved:
-        screen = Screens.CardChangedDetails
+        screen = Screens.CardHistoryDetails
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Removed'), item }
         break
 
       case HistoryCardType.CardRevoked:
-        screen = Screens.CardChangedDetails
+        screen = Screens.CardHistoryDetails
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Revoked'), item }
         break
 
