@@ -34,7 +34,11 @@ const HelpCenterButton = () => {
     DeviceEventEmitter.emit(BCWalletEventTypes.ADD_HELP_PRESSED, paramData)
   }, [])
   return (
-    <TouchableOpacity style={styles.container} onPress={activateSlider}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={activateSlider}
+      accessibilityHint="Cliquez pour ouvrir la liste des options"
+    >
       <Text style={styles.text}>{t('HelpCenter.Help')}</Text>
     </TouchableOpacity>
   )

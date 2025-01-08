@@ -346,7 +346,7 @@ const UseBiometry: React.FC = () => {
             <Pressable
               testID={testIdWithKey('ToggleBiometrics')}
               accessible
-              accessibilityLabel={t('Biometry.Toggle')}
+              accessibilityLabel={biometryEnabled ? t('Biometry.On') : t('Biometry.Off')}
               accessibilityRole={'switch'}
             >
               <Switch

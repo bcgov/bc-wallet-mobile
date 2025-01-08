@@ -116,6 +116,8 @@ const translation = {
     OpenSettings: 'Ourvir Paramètres',
   },
   Biometry: {
+    On: 'Biométrie activée',
+    Off: 'Biométrie désactivée',
     Toggle: 'Activer la biométrie',
     EnabledText1:
       'Déverrouillez votre portefeuille avec la biométrie de votre appareil au lieu d’utiliser le NIP du portefeuille.',
@@ -997,13 +999,12 @@ const translation = {
   },
   AddCredentialSlider: {
     Choose: 'Choisir',
-    ScanQRCode: 'Balayer un code QR',
-    Title: 'Ajouter une attestation',
+    ScanQRCode: 'Lire un code QR',
   },
   HelpCenter: {
     Help: 'Aide',
     ButtonHelpCenter: "Revenir au centre d'aide",
-    ConsultHelpCenter: "Consulter le centre d'aide",
+    OptionsList: 'Cliquez pour ouvrir la liste des options',
   },
   About: {
     Accessibility: 'Accessibilité',
