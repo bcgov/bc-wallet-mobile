@@ -134,8 +134,6 @@ const EventItem = ({
 
   const body = (
     <Pressable
-      accessible={true}
-      accessibilityLabel={t('Global.View')}
       accessibilityRole={'button'}
       testID={testIdWithKey(`View${event.id}`)}
       onPress={pressAction}
