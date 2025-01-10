@@ -1,5 +1,6 @@
 import { useTheme } from '@hyperledger/aries-bifold-core'
 import { useDefaultStackOptions } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
+import ListContacts from '@hyperledger/aries-bifold-core/App/screens/ListContacts'
 import { createStackNavigator } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -24,6 +25,13 @@ const PlusStack: React.FC = () => {
         component={Plus}
         options={{
           title: t('Screens.OptionsPlus'),
+        }}
+      />
+      <StackPlus.Screen
+        name={Screens.Contacts}
+        component={ListContacts}
+        options={{
+          title: t('Screens.Contacts'),
         }}
       />
       <StackPlus.Screen

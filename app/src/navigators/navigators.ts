@@ -29,6 +29,7 @@ export enum Screens {
   HelpCenter = 'Help Center',
   HelpCenterPage = 'Help Center Page',
   About = 'About',
+  Contacts = 'Contacts',
 }
 
 export enum Stacks {
@@ -106,6 +107,7 @@ export type ActivitiesStackParams = {
 
 export type OptionsPlusStackParams = {
   [Screens.OptionsPlus]: undefined
+  [Screens.Contacts]: undefined
   [Stacks.SettingsStack]: NavigatorScreenParams<SettingStackParams>
   [Stacks.HelpCenterStack]: NavigatorScreenParams<HelpCenterStackParams>
   [Stacks.AboutStack]: NavigatorScreenParams<AboutStackParams>

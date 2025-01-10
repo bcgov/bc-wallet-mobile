@@ -187,6 +187,7 @@ const translation = {
     PageTitle: 'More options',
     ButtonParamsApp: 'Application Settings',
     ButtonHelpCenter: 'Help Center',
+    ButtonContacts: 'Contacts',
     ButtonAbout: 'About',
     TitleSupport: 'Customer Support',
     DetailSupport: 'You have a problem with the application or questions, you can contact the team.',

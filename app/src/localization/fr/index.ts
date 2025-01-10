@@ -258,6 +258,7 @@ const translation = {
     ButtonParamsApp: "Paramètres de l'application",
     ButtonHelpCenter: "Centre d'aide",
     ButtonAbout: 'À propos',
+    ButtonContacts: 'Contacts',
     TitleSupport: 'Soutien à la clientèle',
     DetailSupport: "Vous avez un problème avec l'application ou des questions, vous pouvez joundre l'équipe.",
     JoinUsTitle: 'Nous Joindre',
