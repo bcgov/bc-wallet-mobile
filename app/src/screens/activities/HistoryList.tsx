@@ -1,15 +1,5 @@
-import { ProofState } from '@credo-ts/core'
 import { useAgent } from '@credo-ts/react-hooks'
-import {
-  Button,
-  ButtonType,
-  ToastType,
-  TOKENS,
-  useServices,
-  useStore,
-  useTheme,
-  Screens as BifoldScreens,
-} from '@hyperledger/aries-bifold-core'
+import { Button, ButtonType, ToastType, TOKENS, useServices, useStore, useTheme } from '@hyperledger/aries-bifold-core'
 import {
   CustomRecord,
   HistoryCardType,
@@ -217,22 +207,6 @@ const HistoryList: React.FC<{
     },
   })
 
-  const proofExistsAndCheckReview = async (id: string): Promise<boolean> => {
-    try {
-      const proofRecord = await agent?.proofs.getById(id)
-      if (proofRecord) {
-        return (
-          proofRecord.state === ProofState.PresentationSent ||
-          (proofRecord.state === ProofState.Done && proofRecord.isVerified === undefined)
-        )
-      }
-    } catch (error) {
-      //console.error('Error checking proof record:', error)
-      return false
-    }
-    return false
-  }
-
   const handleViewDetails = async (item: CustomRecord) => {
     const historyRecord = item.content as HistoryRecord
 
@@ -249,15 +223,18 @@ const HistoryList: React.FC<{
         screen = Screens.ContactHistoryDetails
         params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Added'), item }
         break
+      case HistoryCardType.ConnectionRemoved:
+        screen = Screens.ContactHistoryDetails
+        params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Removed'), item }
+        break
       case HistoryCardType.InformationSent: {
-        screen = BifoldScreens.ProofDetails
-        const senderReview = await proofExistsAndCheckReview(historyRecord.correspondenceId || '')
-        params = { recordId: historyRecord.correspondenceId || '', isHistory: true, senderReview: senderReview }
+        screen = Screens.ProofHistoryDetails
+        params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Accepted'), item }
         break
       }
       case HistoryCardType.InformationNotSent: {
-        screen = Screens.ContactHistoryDetails
-        params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Accepted'), item }
+        screen = Screens.ProofHistoryDetails
+        params = { recordId: historyRecord.correspondenceId || '', operation: t('History.Operations.Declined'), item }
         break
       }
       case HistoryCardType.CardAccepted: {

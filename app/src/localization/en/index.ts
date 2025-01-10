@@ -1003,6 +1003,7 @@ const translation = {
     CardTitle: {
       CardChanged: 'Card {{operation}}',
       InformationSent: 'Information sent to:',
+      ProofReqUpdated: 'Information sharing {{operation}}',
       ContactUpdated: 'Contact {{operation}}',
       WalletPinUpdated: 'Wallet PIN updated',
       BiometricUpdated: 'Biometrics is {{operation}}',

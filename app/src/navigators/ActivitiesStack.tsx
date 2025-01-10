@@ -12,6 +12,7 @@ import BiometricChangeDetails from '../screens/activities/BiometricChangeDetails
 import CardHistoryDetails from '../screens/activities/CardHistoryDetails'
 import ContactHistoryDetails from '../screens/activities/ContactHistoryDetails'
 import PinChangeDetails from '../screens/activities/PinChangeDetails'
+import ProofHistoryDetails from '../screens/activities/ProofHistoryDetails'
 
 import { ActivitiesStackParams, Screens } from './navigators'
 
@@ -70,6 +71,13 @@ const ActivitiesStack: React.FC = () => {
         component={ContactHistoryDetails}
         options={({ route }) => ({
           title: t('History.CardTitle.ContactUpdated', { operation: route.params?.operation }),
+        })}
+      />
+      <StackActivities.Screen
+        name={Screens.ProofHistoryDetails}
+        component={ProofHistoryDetails}
+        options={({ route }) => ({
+          title: t('History.CardTitle.ProofReqUpdated', { operation: route.params?.operation }),
         })}
       />
     </StackActivities.Navigator>

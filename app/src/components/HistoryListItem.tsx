@@ -10,15 +10,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Toast from 'react-native-toast-message'
 
-import ChangingSettingsImg from '../assets/img/ChangingSettings.svg'
-import CredentialAddedImg from '../assets/img/CredentialAdded.svg'
-import CardRemovedImg from '../assets/img/DeleteIcon.svg'
-import InformationNotSentImg from '../assets/img/ErrorIcon.svg'
-import CardExpiredImg from '../assets/img/ExpiredIcon.svg'
-import FleurLysImg from '../assets/img/FleurLys.svg'
-import MessageImg from '../assets/img/Message.svg'
-import ProofRequestImg from '../assets/img/ProofRequest.svg'
-import RevocationImg from '../assets/img/RevokeIconCircle.svg'
+import { renderCardIcon } from '../utils/historyUtils'
 
 import CustomCheckBox from './CustomCheckBox'
 import EventItem from './EventItem'
@@ -69,35 +61,6 @@ const HistoryListItem: React.FC<Props> = ({
   const content = item.content as HistoryContent
   const { t } = useTranslation()
 
-  const renderCardIcon = (type: HistoryCardType) => {
-    const dimensions = { width: 24, height: 24 }
-    switch (type) {
-      case HistoryCardType.CardAccepted:
-        return <CredentialAddedImg width={dimensions.width} height={dimensions.height} />
-      case HistoryCardType.CardDeclined:
-      case HistoryCardType.CardRevoked:
-        return <RevocationImg width={dimensions.width} height={dimensions.height} />
-      case HistoryCardType.CardRemoved:
-        return <CardRemovedImg width={dimensions.width} height={dimensions.height} />
-      case HistoryCardType.CardExpired:
-        return <CardExpiredImg width={dimensions.width} height={dimensions.height} />
-      case HistoryCardType.InformationNotSent:
-        return <InformationNotSentImg width={dimensions.width} height={dimensions.height} />
-      case HistoryCardType.InformationSent:
-        return <ProofRequestImg width={dimensions.width} height={dimensions.height} />
-      case HistoryCardType.PinChanged:
-      case HistoryCardType.ActivateBiometry:
-      case HistoryCardType.DeactivateBiometry:
-        return <ChangingSettingsImg width={dimensions.width} height={dimensions.height} />
-      case HistoryCardType.Connection:
-        return <MessageImg width={dimensions.width} height={dimensions.height} />
-      case HistoryCardType.ConnectionRemoved:
-        return <CardRemovedImg width={dimensions.width} height={dimensions.height} />
-      default:
-        return <FleurLysImg width={dimensions.width} height={dimensions.height} />
-    }
-  }
-
   useEffect(() => {
     const getTitleByType = (type: HistoryCardType): string => {
       switch (type) {
@@ -107,10 +70,18 @@ const HistoryListItem: React.FC<Props> = ({
           return t('History.CardTitle.CardChanged', { operation: t('History.Operations.Declined') })
         case HistoryCardType.CardRemoved:
           return t('History.CardTitle.CardChanged', { operation: t('History.Operations.Removed') })
+        case HistoryCardType.CardExpired:
+          return t('History.CardTitle.CardChanged', { operation: t('History.Operations.Expired') })
+        case HistoryCardType.CardRevoked:
+          return t('History.CardTitle.CardChanged', { operation: t('History.Operations.Revoked') })
+        case HistoryCardType.CardUpdates:
+          return t('History.CardTitle.CardChanged', { operation: t('History.Operations.Updated') })
         case HistoryCardType.PinChanged:
           return t('History.CardTitle.WalletPinUpdated')
         case HistoryCardType.InformationSent:
           return t('History.CardTitle.InformationSent')
+        case HistoryCardType.InformationNotSent:
+          return t('History.CardTitle.InformationNotSent')
         case HistoryCardType.ActivateBiometry:
           return t('History.CardTitle.BiometricUpdated', { operation: t('History.Operations.Activated') })
         case HistoryCardType.DeactivateBiometry:

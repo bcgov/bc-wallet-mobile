@@ -34,6 +34,7 @@ export enum Screens {
   BiometricChangeDetails = 'BiometricChangeDetails',
   CardHistoryDetails = 'CardHistoryDetails',
   ContactHistoryDetails = 'ContactHistoryDetails',
+  ProofHistoryDetails = 'ProofHistoryDetails',
 }
 
 export enum Stacks {
@@ -112,6 +113,7 @@ export type ActivitiesStackParams = {
   [BifoldScreens.CredentialDetails]: { credentialId: string; item: CustomRecord }
   [Screens.CardHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }
   [Screens.ContactHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }
+  [Screens.ProofHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }
 }
 
 export type OptionsPlusStackParams = {

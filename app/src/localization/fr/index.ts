@@ -1036,6 +1036,7 @@ const translation = {
     CardTitle: {
       CardChanged: 'Attestation {{operation}}',
       InformationSent: 'Informations envoyées à :',
+      ProofReqUpdated: "Partage d'information {{operation}}",
       ContactUpdated: 'Contact {{operation}}',
       WalletPinUpdated: 'Modification du NIP',
       BiometricUpdated: 'La biométrie est {{operation}}',
