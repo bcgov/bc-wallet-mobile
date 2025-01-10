@@ -230,6 +230,7 @@ const UseBiometry: React.FC = () => {
       switch (permissionResult) {
         case RESULTS.GRANTED:
         case RESULTS.LIMITED:
+        case RESULTS.UNAVAILABLE:
           // Granted
           onSwitchToggleAllowed(newToggleValue)
           break
@@ -263,18 +264,19 @@ const UseBiometry: React.FC = () => {
 
     // If the user is turning it on, they need
     // to first authenticate the OS'es biometrics before this action is accepted
+    if (!biometryAvailable) {
+      setSettingsPopupConfig({
+        title: t('Biometry.SetupBiometricsTitle'),
+        description: t('Biometry.SetupBiometricsDesc'),
+      })
+      return
+    }
     const permissionResult: PermissionStatus = await onCheckSystemBiometrics()
     switch (permissionResult) {
       case RESULTS.GRANTED:
       case RESULTS.LIMITED:
         // Already granted
         onSwitchToggleAllowed(newValue)
-        break
-      case RESULTS.UNAVAILABLE:
-        setSettingsPopupConfig({
-          title: t('Biometry.SetupBiometricsTitle'),
-          description: t('Biometry.SetupBiometricsDesc'),
-        })
         break
       case RESULTS.BLOCKED:
         // Previously denied
@@ -284,6 +286,7 @@ const UseBiometry: React.FC = () => {
         })
         break
       case RESULTS.DENIED:
+      case RESULTS.UNAVAILABLE:
         // Has not been requested
         await onRequestSystemBiometrics(newValue)
         break
