@@ -21,7 +21,7 @@ index 1c8a86091e207b58a620be00db905b4ba7d06539..b3b630f911d116a0f6ce441c0aae3abe
    const navigation = useNavigation<StackNavigationProp<HomeStackParams>>()
    const [store, dispatch] = useStore()
 diff --git a/App/screens/Home.tsx b/App/screens/Home.tsx
-index ad946ed3ee1af79bbdc90fa70e30eefd6782128c..9ca4b9918f313a23cb3bb2682decd50cc44170a7 100644
+index ad946ed3ee1af79bbdc90fa70e30eefd6782128c..ffe133132fda99b32b2f7afe9da0bea5fd43cf2c 100644
 --- a/App/screens/Home.tsx
 +++ b/App/screens/Home.tsx
 @@ -40,6 +40,8 @@ const Home: React.FC<HomeProps> = () => {
@@ -51,36 +51,38 @@ index ad946ed3ee1af79bbdc90fa70e30eefd6782128c..9ca4b9918f313a23cb3bb2682decd50c
          notificationType = NotificationType.Revocation
        }
 -      component = <NotificationListItem notificationType={notificationType} notification={item} />
-+      component = (
-+        <NotificationListItem
+-    } else if (item.type === 'CustomNotification' && customNotification) {
+       component = (
+         <NotificationListItem
+-          notificationType={NotificationType.Custom}
+-          notification={item}
+-          customNotification={customNotification}
+-        />
 +          openSwipeableId={notificationItemId}
 +          onOpenSwipeable={setNotificationItemId}
 +          notificationType={notificationType}
 +          notification={item} />
-+      )
-     } else if (item.type === 'CustomNotification' && customNotification) {
+       )
++    } else if (item.type === 'CustomNotification' && customNotification) {
 +      component = (
 +         <NotificationListItem
-+          openSwipeableId={notificationItemId}
-+          onOpenSwipeable={setNotificationItemId}
++           openSwipeableId={notificationItemId}
++           onOpenSwipeable={setNotificationItemId}
 +           notificationType={NotificationType.Custom}
 +           notification={item}
 +           customNotification={customNotification}
 +         />
 +       )
-+    } else {
-       component = (
-         <NotificationListItem
--          notificationType={NotificationType.Custom}
-+          openSwipeableId={notificationItemId}
-+          onOpenSwipeable={setNotificationItemId}
-+          notificationType={NotificationType.ProofRequest}
-           notification={item}
--          customNotification={customNotification}
-         />
-       )
--    } else {
+     } else {
 -      component = <NotificationListItem notificationType={NotificationType.ProofRequest} notification={item} />
++      component = (
++         <NotificationListItem
++           openSwipeableId={notificationItemId}
++           onOpenSwipeable={setNotificationItemId}
++           notificationType={NotificationType.ProofRequest}
++           notification={item}
++         />
++       )
      }
      return component
 -  }, [customNotification, NotificationListItem])
