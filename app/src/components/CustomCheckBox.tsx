@@ -12,10 +12,11 @@ const CustomCheckBox = ({ selected, setSelected }: CustomCheckBoxProps) => {
     <CheckBox
       boxType={'square'}
       value={selected}
-      onValueChange={() => setSelected}
+      onValueChange={setSelected}
       onCheckColor={ColorPallet.grayscale.white}
       onFillColor={ColorPallet.brand.primary}
       onTintColor={ColorPallet.brand.primary}
+      tintColors={{ true: ColorPallet.brand.primary, false: ColorPallet.brand.primary }}
       animationDuration={0}
       style={{ width: 24, height: 24, borderRadius: 0, borderColor: ColorPallet.brand.primary }}
     />
