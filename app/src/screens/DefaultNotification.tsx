@@ -93,7 +93,7 @@ const DefaultNotification: React.FC<DefaultProps> = ({ navigation }: DefaultProp
         <Button
           buttonType={ButtonType.Secondary}
           testID={testIdWithKey('StartProcess')}
-          accessibilityLabel={t('DefaultNotificationPage.ButtonHome')}
+          accessibilityLabel={t('Global.GoBack')}
           title={t('Global.GoBack')}
           onPress={() => navigation.goBack()}
         ></Button>
