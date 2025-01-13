@@ -74,7 +74,7 @@ const translation = {
     MinutesAgo: 'Il y a quelques minutes',
     JustNow: 'À l’instant',
     ModifiedOn: 'Modifié le',
-    acceptedOn: 'Accepté le',
+    AcceptedOn: 'Accepté le',
     DeclinedOn: 'Refusé le',
     MonthLong: {
       January: 'janvier',
