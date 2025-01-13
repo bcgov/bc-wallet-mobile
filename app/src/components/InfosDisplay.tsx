@@ -4,6 +4,7 @@ import { Image, StyleSheet, Text, View, ImageSourcePropType } from 'react-native
 
 type InfosDisplayProps = {
   title?: string
+  screen?: Array<string>
   detail?: string
   visual?: ImageSourcePropType
   question?: string

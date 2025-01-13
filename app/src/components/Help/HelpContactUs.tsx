@@ -2,9 +2,9 @@ import { useTheme } from '@hyperledger/aries-bifold-core'
 import { StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import CalendarImg from '../assets/img/calendar-empty.svg'
-import ClockImg from '../assets/img/clock.svg'
-import PhoneImg from '../assets/img/telephone.svg'
+import CalendarImg from '../../assets/img/calendar-empty.svg'
+import ClockImg from '../../assets/img/clock.svg'
+import PhoneImg from '../../assets/img/telephone.svg'
 
 type DetailsType = {
   daysOpen: string

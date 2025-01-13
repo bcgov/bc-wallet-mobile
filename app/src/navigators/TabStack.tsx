@@ -23,14 +23,13 @@ import {
 import { TourID } from '@hyperledger/aries-bifold-core/App/types/tour'
 import { parseCredDefFromId } from '@hyperledger/aries-bifold-core/App/utils/cred-def'
 import { getCredentialIdentifiers } from '@hyperledger/aries-bifold-core/App/utils/credential'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { ReducerAction, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Text, useWindowDimensions, View, StyleSheet, ViewStyle, AppState, DeviceEventEmitter } from 'react-native'
+import { Text, useWindowDimensions, View, AppState, DeviceEventEmitter, TouchableWithoutFeedback } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { SvgProps } from 'react-native-svg'
 
 import AtestationTabIcon from '../assets/img/icons/atestation.svg'
 import HomeTabIcon from '../assets/img/icons/home.svg'
@@ -69,11 +68,6 @@ const TabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<TabStackParams>()
   const { ColorPallet, TabTheme, TextTheme } = useTheme()
   const showLabels = fontScale * TabTheme.tabBarTextStyle.fontSize < 18
-  const styles = StyleSheet.create({
-    tabBarIcon: {
-      flex: 1,
-    },
-  })
 
   const logHistoryRecord = useCallback(
     async (credential: CredentialRecord) => {
@@ -164,31 +158,6 @@ const TabStack: React.FC = () => {
     }
   }, [store.deepLink, agent, store.authentication.didAuthenticate, handleDeepLink])
 
-  const tabBarIconContainerStyles = (focused: boolean): ViewStyle => ({
-    ...TabTheme.tabBarContainerStyle,
-    borderTopWidth: 2,
-    borderTopColor: focused ? ColorPallet.brand.primary : 'transparent',
-    width: '100%',
-    justifyContent: 'center',
-  })
-
-  const tabs = [
-    { name: TabStacks.HomeStack, component: HomeStack, label: t('TabStack.Home'), icon: HomeTabIcon },
-    {
-      name: TabStacks.ActivitiesStack,
-      component: ActivitiesStack,
-      label: t('TabStack.Activities'),
-      icon: NotificationTabIcon,
-    },
-    {
-      name: TabStacks.CredentialStack,
-      component: CredentialStack,
-      label: t('TabStack.Credentials'),
-      icon: AtestationTabIcon,
-    },
-    { name: TabStacks.OptionsPlusStack, component: PlusStack, label: t('TabStack.OptionsPlus'), icon: PlusTabIcon },
-  ]
-
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: string) => {
       if (nextAppState === 'background' && agent) {
@@ -233,97 +202,200 @@ const TabStack: React.FC = () => {
     }
   }, [notifications])
 
-  const TabBarIcon = (props: {
-    focused: boolean
-    color: string
-    size: number
-    label: string
-    hasBadge: boolean
-    Icon: React.FC<SvgProps>
-  }) => {
+  const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
     return (
-      <AttachTourStep tourID={TourID.HomeTour} index={1}>
-        <View style={tabBarIconContainerStyles(props.focused)}>
-          <props.Icon
-            color={props.focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
-            height={24}
-          />
-          {showLabels && (
-            <Text
-              style={{
-                ...TabTheme.tabBarTextStyle,
-                color: props.focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-                fontWeight: props.focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
-              }}
+      <View style={{ flexDirection: 'row', ...TabTheme.tabBarStyle }} accessibilityRole="tablist">
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key]
+          const label = options.tabBarLabel ?? options.title !== undefined ? options.title : route.name
+
+          const isFocused = state.index === index
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            })
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name)
+            }
+          }
+
+          const onLongPress = () => {
+            navigation.emit({
+              type: 'tabLongPress',
+              target: route.key,
+            })
+          }
+
+          const Icon = options.tabBarIcon
+
+          return (
+            <TouchableWithoutFeedback
+              key={route.key}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isFocused }}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={options.tabBarTestID}
+              onPress={onPress}
+              onLongPress={onLongPress}
             >
-              {props.label}
-            </Text>
-          )}
-          {props.hasBadge && notifications.length > 0 && (
-            <View
-              style={{
-                position: 'absolute',
-                top: 2,
-                left: '55%',
-                width: 16,
-                height: 16,
-                borderRadius: 8,
-                backgroundColor: ColorPallet.brand.primary,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <Text
+              <View
                 style={{
-                  color: ColorPallet.brand.text,
-                  fontSize: 9,
-                  fontWeight: 'bold',
+                  flex: 1,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  ...TabTheme.tabBarContainerStyle,
+                  borderTopWidth: 4,
+                  borderTopColor: isFocused ? ColorPallet.brand.primary : 'transparent',
+                  width: '100%',
                 }}
               >
-                {notifications.length}
-              </Text>
-            </View>
-          )}
-        </View>
+                {Icon && (
+                  <Icon
+                    size={24}
+                    focused={isFocused}
+                    color={isFocused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
+                  />
+                )}
+                {showLabels && (
+                  <Text
+                    style={{
+                      ...TabTheme.tabBarTextStyle,
+                      color: isFocused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
+                      fontWeight: isFocused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
+                    }}
+                  >
+                    {label}
+                  </Text>
+                )}
+                {!!options.tabBarBadge && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 2,
+                      left: '55%',
+                      width: 16,
+                      height: 16,
+                      borderRadius: 8,
+                      backgroundColor: ColorPallet.brand.primary,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: ColorPallet.brand.text,
+                        fontSize: 9,
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      {notifications.length}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TouchableWithoutFeedback>
+          )
+        })}
+      </View>
+    )
+  }
+
+  const renderTabBar = (props: BottomTabBarProps) => <TabBar {...props} />
+
+  const renderTabBarIcon = (
+    IconComponent: React.ElementType,
+    color: string,
+    tourStep?: { tourID: TourID; index: number }
+  ) => {
+    const icon = <IconComponent height={24} color={color} />
+    return tourStep ? (
+      <AttachTourStep tourID={tourStep.tourID} index={tourStep.index}>
+        {icon}
       </AttachTourStep>
+    ) : (
+      icon
     )
   }
 
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: ColorPallet.brand.primary }}>
       <Tab.Navigator
+        tabBar={(props) => renderTabBar(props)}
         initialRouteName={TabStacks.HomeStack}
         screenOptions={{
           unmountOnBlur: true,
-          tabBarStyle: {
-            ...TabTheme.tabBarStyle,
-          },
-          tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
-          tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
           header: () => null,
         }}
       >
-        {tabs.map((item, index) => (
-          <Tab.Screen
-            key={index}
-            name={item.name}
-            component={item.component}
-            options={{
-              tabBarIconStyle: styles.tabBarIcon,
-              tabBarIcon: (props) => (
-                <TabBarIcon
-                  {...props}
-                  label={item.label}
-                  Icon={item.icon}
-                  hasBadge={item.name == TabStacks.ActivitiesStack}
-                />
+        <Tab.Screen
+          name={TabStacks.HomeStack}
+          component={HomeStack}
+          options={{
+            title: t('TabStack.Home'),
+            tabBarAccessibilityLabel: t('TabStack.Home'),
+            tabBarTestID: testIdWithKey(t('TabStack.Home')),
+            tabBarIcon: ({ focused }) =>
+              renderTabBarIcon(
+                HomeTabIcon,
+                focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
+                {
+                  tourID: TourID.HomeTour,
+                  index: 1,
+                }
               ),
-              tabBarShowLabel: false,
-              tabBarAccessibilityLabel: index != 1 ? item.label : `${item.label} (${notifications.length ?? 0})`,
-              tabBarTestID: testIdWithKey(item.label),
-            }}
-          />
-        ))}
+          }}
+        />
+        <Tab.Screen
+          name={TabStacks.ActivitiesStack}
+          component={ActivitiesStack}
+          options={{
+            title: t('TabStack.Activities'),
+            tabBarAccessibilityLabel: `${t('TabStack.Activities')} ${notifications.length ?? 0}`,
+            tabBarTestID: testIdWithKey(t('TabStack.Activities')),
+            tabBarBadge: notifications.length ?? undefined,
+            tabBarIcon: ({ focused }) =>
+              renderTabBarIcon(
+                NotificationTabIcon,
+                focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor
+              ),
+          }}
+        />
+        <Tab.Screen
+          name={TabStacks.CredentialStack}
+          component={CredentialStack}
+          options={{
+            title: t('TabStack.Credentials'),
+            tabBarAccessibilityLabel: t('TabStack.Credentials'),
+            tabBarTestID: testIdWithKey(t('TabStack.Credentials')),
+            tabBarIcon: ({ focused }) =>
+              renderTabBarIcon(
+                AtestationTabIcon,
+                focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
+                {
+                  tourID: TourID.HomeTour,
+                  index: 2,
+                }
+              ),
+          }}
+        />
+        <Tab.Screen
+          name={TabStacks.OptionsPlusStack}
+          component={PlusStack}
+          options={{
+            title: t('TabStack.OptionsPlus'),
+            tabBarAccessibilityLabel: t('TabStack.OptionsPlus'),
+            tabBarTestID: testIdWithKey(t('TabStack.OptionsPlus')),
+            tabBarIcon: ({ focused }) =>
+              renderTabBarIcon(
+                PlusTabIcon,
+                focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor
+              ),
+          }}
+        />
       </Tab.Navigator>
     </SafeAreaView>
   )

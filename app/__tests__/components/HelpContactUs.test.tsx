@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react-native'
-import HelpContactUs from '../../src/components/HelpContactUs'
+import HelpContactUs from '../../src/components/Help/HelpContactUs'
 import { contactMock } from '../../__mocks__/contact'
 
 describe('HelpContactUs Component', () => {

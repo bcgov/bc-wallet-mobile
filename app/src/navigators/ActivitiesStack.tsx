@@ -7,6 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
+import HelpCenterButton from '../components/Help/HelpCenterButton'
 import ActivityNotifications from '../screens/activities/Activities'
 import BiometricChangeDetails from '../screens/activities/BiometricChangeDetails'
 import CardHistoryDetails from '../screens/activities/CardHistoryDetails'
@@ -30,7 +31,10 @@ const ActivitiesStack: React.FC = () => {
       <StackActivities.Screen
         name={Screens.Activities}
         component={ActivityNotifications}
-        options={{ title: t('TabStack.Activities') }}
+        options={{
+          title: t('TabStack.Activities'),
+          headerRight: HelpCenterButton,
+        }}
       />
       <StackActivities.Screen
         name={BifoldScreens.ProofDetails}

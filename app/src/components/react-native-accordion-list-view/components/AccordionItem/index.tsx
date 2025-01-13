@@ -45,8 +45,14 @@ const AccordionItem = ({
   })
 
   return (
-    <View style={[styles.container, containerStyle]}>
-      <Pressable onPress={() => toggleListItem()} testID={testID}>
+    <View>
+      <Pressable
+        onPress={() => toggleListItem()}
+        testID={testID}
+        style={[styles.container, containerStyle]}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: showContent }}
+      >
         <View style={styles.titleContainer}>
           {(!isRTL || I18nManager.isRTL) && customTitle()}
           {!customIcon ? (

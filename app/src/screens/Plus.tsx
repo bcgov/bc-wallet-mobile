@@ -1,14 +1,15 @@
 import { useTheme, Button, ButtonType, testIdWithKey } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { StackNavigationProp, StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ContactUs from '../components/ContactUs'
-import { SettingStackParams, Stacks, Screens } from '../navigators/navigators'
+import { SettingStackParams, OptionsPlusStackParams, Stacks, Screens } from '../navigators/navigators'
+type OptionsPlusProps = StackScreenProps<OptionsPlusStackParams>
 
-const Plus: React.FC = () => {
+const Plus: React.FC<OptionsPlusProps> = ({ navigation }) => {
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
   const { navigate } = useNavigation<StackNavigationProp<SettingStackParams>>()
@@ -91,6 +92,15 @@ const Plus: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.innerContainer}>
           <View style={styles.mainSection}>
+            <View style={styles.button}>
+              <Button
+                buttonType={ButtonType.Secondary}
+                testID={testIdWithKey('AppContacts')}
+                accessibilityLabel={t('OptionsPlus.ButtonContacts')}
+                title={t('OptionsPlus.ButtonContacts')}
+                onPress={() => navigation.navigate(Screens.Contacts)}
+              />
+            </View>
             <View style={styles.button}>
               <Button
                 buttonType={ButtonType.Secondary}

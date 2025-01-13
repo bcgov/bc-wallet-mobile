@@ -6,13 +6,12 @@ import {
   ConnectStack,
   ContactStack,
   DeliveryStack,
-  DispatchAction,
   EventTypes,
   IconButton,
   NotificationStack,
   ProofRequestStack,
   Screens,
-  Stacks,
+  Stacks as Bifoldstacks,
   TOKENS,
   TabStacks,
   testIdWithKey,
@@ -32,8 +31,9 @@ import { DeviceEventEmitter } from 'react-native'
 
 import SettingStack from '../navigators/SettingStack'
 
+import HelpCenterStack from './HelpCenterStack'
 import TabStack from './TabStack'
-import { RootStackParams } from './navigators'
+import { RootStackParams, Stacks } from './navigators'
 
 const RootStack: React.FC = () => {
   const [store, dispatch] = useStore()
@@ -66,14 +66,10 @@ const RootStack: React.FC = () => {
   const loadStateErrorDescription = t('Error.Message1044')
 
   useEffect(() => {
-    loadState(dispatch)
-      .then(() => {
-        dispatch({ type: DispatchAction.STATE_LOADED })
-      })
-      .catch((err: unknown) => {
-        const error = new BifoldError(loadStateErrorTitle, loadStateErrorDescription, (err as Error).message, 1001)
-        DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
-      })
+    loadState(dispatch).catch((err: unknown) => {
+      const error = new BifoldError(loadStateErrorTitle, loadStateErrorDescription, (err as Error).message, 1001)
+      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
+    })
   }, [dispatch, loadState])
 
   const mainStack = () => {
@@ -89,7 +85,7 @@ const RootStack: React.FC = () => {
     return (
       <Stack.Navigator initialRouteName={Screens.Splash} screenOptions={{ ...defaultStackOptions, headerShown: false }}>
         <Stack.Screen name={Screens.Splash} component={splash} />
-        <Stack.Screen name={Stacks.TabStack} component={TabStack} />
+        <Stack.Screen name={Bifoldstacks.TabStack} component={TabStack} />
         <Stack.Screen
           name={Screens.Chat}
           component={Chat}
@@ -109,18 +105,18 @@ const RootStack: React.FC = () => {
             ),
           })}
         />
-        <Stack.Screen name={Stacks.ConnectStack} component={ConnectStack} />
+        <Stack.Screen name={Bifoldstacks.ConnectStack} component={ConnectStack} />
         <Stack.Screen
-          name={Stacks.SettingStack}
+          name={Bifoldstacks.SettingStack}
           component={SettingStack}
           options={{
             cardStyleInterpolator: forFade,
           }}
         />
-        <Stack.Screen name={Stacks.ContactStack} component={ContactStack} />
-        <Stack.Screen name={Stacks.NotificationStack} component={NotificationStack} />
+        <Stack.Screen name={Bifoldstacks.ContactStack} component={ContactStack} />
+        <Stack.Screen name={Bifoldstacks.NotificationStack} component={NotificationStack} />
         <Stack.Screen
-          name={Stacks.ConnectionStack}
+          name={Bifoldstacks.ConnectionStack}
           component={DeliveryStack}
           options={{
             gestureEnabled: false,
@@ -128,14 +124,15 @@ const RootStack: React.FC = () => {
             presentation: 'modal',
           }}
         />
-        <Stack.Screen name={Stacks.ProofRequestsStack} component={ProofRequestStack} />
+        <Stack.Screen name={Bifoldstacks.ProofRequestsStack} component={ProofRequestStack} />
         <Stack.Screen
-          name={Stacks.HistoryStack}
+          name={Bifoldstacks.HistoryStack}
           component={HistoryStack}
           options={{
             cardStyleInterpolator: forFade,
           }}
         />
+        <Stack.Screen name={Stacks.HelpCenterStack} component={HelpCenterStack} />
       </Stack.Navigator>
     )
   }

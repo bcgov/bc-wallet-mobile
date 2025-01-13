@@ -1,7 +1,7 @@
 const translation = {
   BCID: {
     GetID: 'Obtenir BCID',
-    GetDigitalID: 'Obtenez votre identité numérique QC.',
+    GetDigitalID: 'Ajouter mon Attestation numérique d’authentification gouvernementale',
   },
   Onboarding: {
     SkipA11y: 'Sauter',
@@ -120,6 +120,8 @@ const translation = {
     OpenSettings: 'Ourvir Paramètres',
   },
   Biometry: {
+    On: 'Biométrie activée',
+    Off: 'Biométrie désactivée',
     Toggle: 'Activer la biométrie',
     EnabledText1:
       'Déverrouillez votre portefeuille avec la biométrie de votre appareil au lieu d’utiliser le NIP du portefeuille.',
@@ -256,13 +258,13 @@ const translation = {
     ANIGAcceptDescription:
       'Depuis la gestion de compte, vous devrez balayer le code QR qui vous sera présenté.\r\n\r\nVous devrez ensuite accepter l’offre d’attestation qui vous sera proposée.',
     ButtonTitle: 'Recevoir mon attestation',
-    ButtonHome: 'Revenir à l’accueil',
   },
   OptionsPlus: {
     PageTitle: "Plus d'option",
     ButtonParamsApp: "Paramètres de l'application",
     ButtonHelpCenter: "Centre d'aide",
     ButtonAbout: 'À propos',
+    ButtonContacts: 'Contacts',
     TitleSupport: 'Soutien à la clientèle',
     DetailSupport: "Vous avez un problème avec l'application ou des questions, vous pouvez joundre l'équipe.",
     JoinUsTitle: 'Nous Joindre',
@@ -446,7 +448,7 @@ const translation = {
     Revoked: 'Révoqué',
     Choose: 'Choisir',
     GetPersonCred: "Obtenez votre attestation d'identité",
-    ScanQrCode: 'Lire un code QR',
+    ScanQrCode: 'Balayer un code QR',
     CredentialRevokedMessageTitle: 'Cette attestation est révoquée',
     CredentialRevokedMessageBody:
       "Cette attestation peut ne plus fonctionner pour certaines demandes de preuve. Le cas échéant, vous devrez mettre à jour l'attestation avec l'émetteur.",
@@ -1011,6 +1013,7 @@ const translation = {
   HelpCenter: {
     Help: 'Aide',
     ButtonHelpCenter: "Revenir au centre d'aide",
+    OptionsList: 'Cliquez pour ouvrir la liste des options',
   },
   About: {
     Accessibility: 'Accessibilité',

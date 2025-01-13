@@ -1,7 +1,7 @@
 const translation = {
   BCID: {
     GetID: 'Get BCID',
-    GetDigitalID: 'Get your QC Digital ID',
+    GetDigitalID: 'Add my Digital Government Authentication Certificate',
   },
   Onboarding: {
     SkipA11y: 'Skip',
@@ -119,6 +119,8 @@ const translation = {
     OpenSettings: 'Open settings',
   },
   Biometry: {
+    On: 'Biometrics unabled',
+    Off: 'Biometrics disabled',
     Toggle: 'Toggle Biometrics',
     EnabledText1: "  Log in with your phone's biometrics instead of your wallet PIN.",
     EnabledText1Bold:
@@ -184,12 +186,12 @@ const translation = {
     ANIGAcceptDescription:
       'From the account management, you will need to scan the QR code that will be presented to you.\r\n\r\nYou will then need to accept the certificate offer that will be proposed to you.',
     ButtonTitle: 'Receive my attestation',
-    ButtonHome: 'Return to home page',
   },
   OptionsPlus: {
     PageTitle: 'More options',
     ButtonParamsApp: 'Application Settings',
     ButtonHelpCenter: 'Help Center',
+    ButtonContacts: 'Contacts',
     ButtonAbout: 'About',
     TitleSupport: 'Customer Support',
     DetailSupport: 'You have a problem with the application or questions, you can contact the team.',
@@ -974,10 +976,13 @@ const translation = {
   AddCredentialSlider: {
     Choose: 'Choose',
     ScanQRCode: 'Scan a QR code',
+    Title: 'Add a Credential',
   },
   HelpCenter: {
     Help: 'Help',
     ButtonHelpCenter: 'Return to Help Center',
+    ConsultHelpCenter: 'Consult the help center',
+    OptionsList: 'Click to open the list of options',
   },
   About: {
     Accessibility: 'Accessibility',

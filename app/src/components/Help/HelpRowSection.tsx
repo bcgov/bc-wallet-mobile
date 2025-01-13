@@ -4,10 +4,11 @@ import React from 'react'
 import { StyleSheet, Text, View, Pressable, ImageSourcePropType } from 'react-native'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
 
-import { HelpCenterStackParams, Screens } from '../navigators/navigators'
+import { HelpCenterStackParams, Screens } from '../../navigators/navigators'
 
 type ItemSection = {
   title?: string
+  screen: Array<string>
   text?: string
   visual?: ImageSourcePropType
   question?: string
@@ -94,32 +95,30 @@ const HelpRowSection = ({
         </View>
       )}
       {itemSection.map((item, index) => (
-        <>
-          <View key={index}>
-            <View style={[styles.section]}>
-              <Pressable
-                onPress={() =>
-                  navigation.navigate(Screens.HelpCenterPage, { selectedSection: itemSection, sectionNo: index })
-                }
-                accessible={true}
-                accessibilityLabel={accessibilityLabel}
-                testID={testID}
-              >
-                <View style={styles.sectionRow}>
-                  <Text style={styles.rowTitle}>{item.title}</Text>
-                  <Text style={[TextTheme.headingFour, styles.sectionText]}>{children}</Text>
-                  {showArrowIcon && arrowIcon}
-                </View>
-              </Pressable>
-              {subContent}
-            </View>
-            {showRowSeparator && index < itemSection.length - 1 && (
-              <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-                <View style={[styles.rowSeparator]}></View>
+        <View key={index}>
+          <View style={[styles.section]}>
+            <Pressable
+              onPress={() =>
+                navigation.navigate(Screens.HelpCenterPage, { selectedSection: itemSection, sectionNo: index })
+              }
+              accessible={true}
+              accessibilityLabel={accessibilityLabel}
+              testID={testID}
+            >
+              <View style={styles.sectionRow}>
+                <Text style={styles.rowTitle}>{item.title}</Text>
+                <Text style={[TextTheme.headingFour, styles.sectionText]}>{children}</Text>
+                {showArrowIcon && arrowIcon}
               </View>
-            )}
+            </Pressable>
+            {subContent}
           </View>
-        </>
+          {showRowSeparator && index < itemSection.length - 1 && (
+            <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
+              <View style={[styles.rowSeparator]}></View>
+            </View>
+          )}
+        </View>
       ))}
       <View style={[styles.sectionSeparator]}></View>
     </>

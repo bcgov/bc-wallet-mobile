@@ -24,6 +24,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 
 import qcwallet from './src'
+import HelpListSlider from './src/components/Help/HelpListSlider'
 import ToastConfig from './src/components/toast/ToastConfig'
 import { credentialOfferTourSteps } from './src/components/tours/CredentialOfferTourSteps'
 import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
@@ -93,6 +94,7 @@ const App = (system: Container): React.FC => {
                           <RootStack />
                         </TourProvider>
                         <Toast topOffset={toastTopOffset} bottomOffset={toastBottomOffset} config={ToastConfig} />
+                        <HelpListSlider />
                       </ActivityProvider>
                     </NetworkProvider>
                   </AuthProvider>

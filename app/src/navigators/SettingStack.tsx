@@ -6,6 +6,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 
+import HelpCenterButton from '../components/Help/HelpCenterButton'
 import HistoryPage from '../screens/HistoryPage'
 import Settings from '../screens/Settings'
 
@@ -15,7 +16,7 @@ const SettingsStack: React.FC = () => {
   const StackSettings = createStackNavigator<SettingStackParams>()
   const theme = useTheme()
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const [UseBiometry] = useServices([TOKENS.SCREEN_USE_BIOMETRY])
+  const [UseBiometry, ScreenOptionsDictionary] = useServices([TOKENS.SCREEN_USE_BIOMETRY, TOKENS.OBJECT_SCREEN_CONFIG])
   const { t } = useTranslation()
 
   return (
@@ -32,6 +33,7 @@ const SettingsStack: React.FC = () => {
         component={Language}
         options={{
           title: t('Screens.Language'),
+          ...ScreenOptionsDictionary[Screens.Language],
         }}
       />
       <StackSettings.Screen
@@ -53,6 +55,8 @@ const SettingsStack: React.FC = () => {
         component={PINCreate}
         options={{
           title: t('Screens.ChangePIN'),
+          headerRight: HelpCenterButton,
+          gestureEnabled: true,
         }}
       />
       <StackSettings.Screen
@@ -60,6 +64,7 @@ const SettingsStack: React.FC = () => {
         component={UseBiometry}
         options={{
           title: t('Screens.Biometry'),
+          headerRight: HelpCenterButton,
         }}
       />
     </StackSettings.Navigator>
