@@ -14,7 +14,6 @@ import { useTranslation } from 'react-i18next'
 import { View, StyleSheet, SectionList, Text, ActivityIndicator, RefreshControl } from 'react-native'
 import Toast, { ToastShowParams } from 'react-native-toast-message'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { v4 as uuidv4 } from 'uuid'
 
 import HistoryListItem from '../../components/HistoryListItem'
 import { useToast } from '../../hooks/toast'
@@ -403,7 +402,7 @@ const HistoryList: React.FC<{
       <SectionList
         style={styles.sectionList}
         sections={sections}
-        keyExtractor={(item: CustomRecord) => (item.content as HistoryRecord).id || uuidv4()}
+        keyExtractor={(item: CustomRecord) => (item.content as HistoryRecord).id || ''}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         renderSectionHeader={renderSectionHeader}
