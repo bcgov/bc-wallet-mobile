@@ -78,8 +78,8 @@ const HistoryList: React.FC<{
 }> = ({ openSwipeableId, handleOpenSwipeable, navigation }) => {
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
-  const [historyRecords] = useState<CustomRecord[]>([])
-  const [filteredRecords, setFilteredRecords] = useState<CustomRecord[]>(historyRecords)
+  const [historyRecords, setHistoryRecords] = useState<CustomRecord[]>([])
+  const [filteredRecords, setFilteredRecords] = useState<CustomRecord[]>([])
   const [sections, setSections] = useState<{ title: string; data: CustomRecord[] }[]>([])
   const [selectedHistory, setSelectedHistory] = useState<SelectedHistoryType[] | null>(null)
 
@@ -94,18 +94,28 @@ const HistoryList: React.FC<{
   const [loadHistory] = useServices([TOKENS.FN_LOAD_HISTORY])
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchHistory = async () => {
-    setIsLoading(true)
-    setRefreshing(true)
+  useEffect(() => {
+    const updatedRecords = historyRecords.filter((record) => {
+      const id = record.content.id
+      return id && !store.activities[id]?.isTempDeleted
+    })
+    setFilteredRecords(updatedRecords)
+  }, [store.activities, historyRecords])
+
+  const fetchHistory = useCallback(async () => {
     if (!agent) return
+
+    setRefreshing(true)
+    setIsLoading(true)
 
     try {
       const historyManager = loadHistory(agent)
-      if (historyManager) {
-        const records = await historyManager.getHistoryItems({ type: RecordType.HistoryRecord })
-        records.sort((a, b) => Number(b.content.createdAt) - Number(a.content.createdAt))
-        setFilteredRecords(records)
-      }
+      if (!historyManager) throw new Error('History manager not found')
+
+      const records = await historyManager.getHistoryItems({ type: RecordType.HistoryRecord })
+      const sortedRecords = records.sort((a, b) => Number(b.content.createdAt) - Number(a.content.createdAt))
+
+      setHistoryRecords(sortedRecords)
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -113,10 +123,10 @@ const HistoryList: React.FC<{
         text2: t('Activities.FetchError'),
       })
     } finally {
-      setIsLoading(false)
       setRefreshing(false)
+      setIsLoading(false)
     }
-  }
+  }, [agent, loadHistory, store.activities])
 
   useFocusEffect(
     useCallback(() => {

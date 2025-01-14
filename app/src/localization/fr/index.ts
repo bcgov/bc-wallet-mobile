@@ -1050,7 +1050,7 @@ const translation = {
     CardDescription: {
       Default: 'Attestation numérique d’identité gouvernementale',
       CardChanged: 'Attestation {{cardName}} {{operation}}',
-      ContactUpdated: '{contactName} a été {{operation}}.',
+      ContactUpdated: '{{contactName}} a été {{operation}}.',
       WalletPinUpdated: "Un nouveau NIP a été défini pour l'application",
       BiometricUpdated: 'La biométrie a été {{operation}}',
     },
