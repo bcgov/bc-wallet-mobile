@@ -109,11 +109,8 @@ export type AboutStackParams = {
 
 export type ActivitiesStackParams = {
   [Screens.Activities]: undefined
-  [BifoldScreens.ProofDetails]: { recordId: string; isHistory?: boolean }
-  [BifoldScreens.ContactDetails]: { connectionId: string; item: CustomRecord }
   [Screens.PinChangeDetails]: { recordId: string; item: CustomRecord }
   [Screens.BiometricChangeDetails]: { recordId: string; operation: string; item: CustomRecord }
-  [BifoldScreens.CredentialDetails]: { credentialId: string; item: CustomRecord }
   [Screens.CardHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }
   [Screens.ContactHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }
   [Screens.ProofHistoryDetails]: { recordId: string; operation: string; item: CustomRecord }

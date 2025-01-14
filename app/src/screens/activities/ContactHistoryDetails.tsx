@@ -13,6 +13,7 @@ import HeaderText from '../../components/HeaderText'
 import useHistoryDetailPageStyles from '../../hooks/useHistoryDetailPageStyles'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { handleDeleteHistory } from '../../utils/historyUtils'
+import { startCaseUnicode } from '../../utils/stringUtils'
 
 type ContactHistoryDetailsProp = StackScreenProps<ActivitiesStackParams, Screens.ContactHistoryDetails>
 
@@ -35,7 +36,7 @@ const ContactHistoryDetails: React.FC<ContactHistoryDetailsProp> = ({ route, nav
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <HeaderText
           title={t('History.CardDescription.ContactUpdated', {
-            contactName: itemContent.correspondenceName,
+            contactName: itemContent.correspondenceName ? startCaseUnicode(itemContent.correspondenceName) : '',
             operation: operation,
           })}
         />

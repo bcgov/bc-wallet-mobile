@@ -54,7 +54,7 @@ const useHistoryDetailPageStyles = () => {
       backgroundColor: ColorPallet.grayscale.veryLightGrey,
       padding: 15,
       gap: 16,
-      alignItems: 'center',
+      justifyContent: 'flex-start',
       // Ombre portée équivalente à `box-shadow`
       shadowColor: 'rgba(34, 54, 84, 0.24)',
       shadowOffset: { width: 0, height: 2 },
@@ -72,27 +72,29 @@ const useHistoryDetailPageStyles = () => {
       top: 0,
       bottom: 0,
     },
-    cardTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      marginBottom: 5,
-    },
     cardSubtitle: {
       fontSize: 14,
       color: ColorPallet.grayscale.mediumGrey,
       textAlign: 'right',
       marginLeft: 8,
     },
-    cardSubtitleName: {
-      fontSize: 14,
-      color: ColorPallet.grayscale.mediumGrey,
-    },
     detailsContainer: {
       paddingBottom: 34,
     },
     cardContent: {
       marginLeft: 16,
+      paddingLeft: 16,
       textAlign: 'left',
+      justifyContent: 'flex-start',
+    },
+    cardTitle: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      marginBottom: 5,
+    },
+    cardSubtitleName: {
+      fontSize: 14,
+      color: ColorPallet.grayscale.mediumGrey,
     },
     cardSubtitleRow: {
       flexDirection: 'row',

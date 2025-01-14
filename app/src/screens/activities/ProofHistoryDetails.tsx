@@ -16,6 +16,7 @@ import useHistoryDetailPageStyles from '../../hooks/useHistoryDetailPageStyles'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { ColorPallet } from '../../theme'
 import { handleDeleteHistory } from '../../utils/historyUtils'
+import { startCaseUnicode } from '../../utils/stringUtils'
 
 type ProofHistoryDetailsProp = StackScreenProps<ActivitiesStackParams, Screens.ProofHistoryDetails>
 
@@ -61,7 +62,7 @@ const ProofHistoryDetails: React.FC<ProofHistoryDetailsProp> = ({ route, navigat
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        <HeaderText title={itemContent?.correspondenceName || ''} />
+        <HeaderText title={itemContent?.correspondenceName ? startCaseUnicode(itemContent.correspondenceName) : ''} />
         <View style={{ marginTop: 20 }} />
         <Text style={styles.subTitle}>{t('History.CardDescription.Default')}</Text>
         <Text style={styles.date}>

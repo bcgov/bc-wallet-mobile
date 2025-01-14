@@ -1,8 +1,5 @@
-import { useTheme, Screens as BifoldScreens } from '@hyperledger/aries-bifold-core'
+import { useTheme } from '@hyperledger/aries-bifold-core'
 import { useDefaultStackOptions } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
-import ContactDetails from '@hyperledger/aries-bifold-core/App/screens/ContactDetails'
-import CredentialDetails from '@hyperledger/aries-bifold-core/App/screens/CredentialDetails'
-import ProofDetails from '@hyperledger/aries-bifold-core/App/screens/ProofDetails'
 import { createStackNavigator } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -37,11 +34,6 @@ const ActivitiesStack: React.FC = () => {
         }}
       />
       <StackActivities.Screen
-        name={BifoldScreens.ProofDetails}
-        component={ProofDetails}
-        options={{ title: t('Screens.ProofDetails') }}
-      />
-      <StackActivities.Screen
         name={Screens.PinChangeDetails}
         component={PinChangeDetails}
         options={{ title: t('History.CardTitle.WalletPinUpdated') }}
@@ -54,21 +46,11 @@ const ActivitiesStack: React.FC = () => {
         })}
       />
       <StackActivities.Screen
-        name={BifoldScreens.CredentialDetails}
-        component={CredentialDetails}
-        options={{ title: t('History.CardTitle.CardAccepted') }}
-      />
-      <StackActivities.Screen
         name={Screens.CardHistoryDetails}
         component={CardHistoryDetails}
         options={({ route }) => ({
           title: t('History.CardTitle.CardChanged', { operation: route.params?.operation }),
         })}
-      />
-      <StackActivities.Screen
-        name={BifoldScreens.ContactDetails}
-        component={ContactDetails}
-        options={{ title: t('Screens.ContactDetails') }}
       />
       <StackActivities.Screen
         name={Screens.ContactHistoryDetails}

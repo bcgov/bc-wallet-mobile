@@ -13,6 +13,7 @@ import useHistoryDetailPageStyles from '../../hooks/useHistoryDetailPageStyles'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { ColorPallet } from '../../theme'
 import { handleDeleteHistory, renderCardIcon } from '../../utils/historyUtils'
+import { startCaseUnicode } from '../../utils/stringUtils'
 
 type CardHistorydDetailsProp = StackScreenProps<ActivitiesStackParams, Screens.CardHistoryDetails>
 
@@ -98,7 +99,7 @@ const CardHistorydDetails: React.FC<CardHistorydDetailsProp> = ({ route, navigat
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <HeaderText
           title={t('History.CardDescription.CardChanged', {
-            cardName: itemContent?.message || '',
+            cardName: itemContent?.message ? startCaseUnicode(itemContent?.message) : '',
             operation: operation,
           })}
         />
@@ -115,7 +116,7 @@ const CardHistorydDetails: React.FC<CardHistorydDetailsProp> = ({ route, navigat
             ]}
           />
           <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>{t('History.CardDescription.Default')}</Text>
+            <Text style={styles.cardTitle}>{itemContent?.message ? startCaseUnicode(itemContent?.message) : ''}</Text>
             {credentialExists && (
               <Text style={styles.cardSubtitleName}>
                 {`${
@@ -129,7 +130,9 @@ const CardHistorydDetails: React.FC<CardHistorydDetailsProp> = ({ route, navigat
             )}
             <View style={styles.cardSubtitleRow}>
               {renderCardIcon(itemContent?.type as HistoryCardType)}
-              <Text style={styles.cardSubtitle}>{itemContent?.correspondenceName}</Text>
+              <Text style={styles.cardSubtitle}>
+                {itemContent?.correspondenceName ? startCaseUnicode(itemContent?.correspondenceName) : ''}
+              </Text>
             </View>
           </View>
         </View>
