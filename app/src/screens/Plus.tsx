@@ -1,144 +1,109 @@
-import { useTheme, Button, ButtonType, testIdWithKey } from '@hyperledger/aries-bifold-core'
+import {
+  useTheme,
+  Button,
+  ButtonType,
+  testIdWithKey,
+  Stacks as BifoldStacks,
+  Screens as BifoldScreens,
+} from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp, StackScreenProps } from '@react-navigation/stack'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import ContactUs from '../components/ContactUs'
-import { SettingStackParams, OptionsPlusStackParams, Stacks, Screens } from '../navigators/navigators'
-type OptionsPlusProps = StackScreenProps<OptionsPlusStackParams>
+import { RootStackParams, Screens, Stacks } from '../navigators/navigators'
 
-const Plus: React.FC<OptionsPlusProps> = ({ navigation }) => {
-  const { ColorPallet, TextTheme } = useTheme()
+const Plus = () => {
+  const { TextTheme } = useTheme()
   const { t } = useTranslation()
-  const { navigate } = useNavigation<StackNavigationProp<SettingStackParams>>()
+  const navigation = useNavigation<StackNavigationProp<RootStackParams>>()
 
   const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      paddingHorizontal: 16,
     },
     innerContainer: {
-      flex: 1,
-    },
-    mainSection: {
-      flex: 5,
+      marginVertical: 24,
     },
     textHeaderTitle: {
       ...TextTheme.headingThree,
-      flexShrink: 1,
       color: TextTheme.headingThree.color,
-      paddingTop: 8,
-      paddingBottom: 8,
-    },
-    textSectionTitle: {
-      ...TextTheme.title,
-      flexShrink: 1,
-      color: TextTheme.bold.color,
-      paddingTop: 8,
-      paddingBottom: 8,
+      marginVertical: 8,
     },
     button: {
-      marginTop: 10,
-      marginBottom: 10,
+      paddingBottom: 24,
     },
     section: {
-      paddingVertical: 12,
-    },
-    scroll: {
-      flexGrow: 1,
-      paddingHorizontal: 16,
-      paddingVertical: 24,
-    },
-    sectionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    sectionDoubleRow: {
-      paddingTop: 10,
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      height: 100,
+      paddingBottom: 16,
     },
     sectionCopyright: {
       flex: 1,
-      justifyContent: 'flex-end',
       ...TextTheme.headingOne,
-      margin: 10,
-    },
-    phoneImage: {
-      width: 24,
-      height: 24,
+      marginVertical: 10,
     },
     sectionDescription: {
       ...TextTheme.normal,
       color: TextTheme.normal.color,
       textAlign: 'left',
-      textDecorationLine: 'none',
-      marginLeft: 10,
     },
     sectionCopyrightText: {
       ...TextTheme.caption,
       color: TextTheme.normal.color,
       textAlign: 'left',
-      textDecorationLine: 'none',
-      marginLeft: 10,
     },
   })
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+    <SafeAreaView edges={['left', 'right']}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.innerContainer}>
-          <View style={styles.mainSection}>
-            <View style={styles.button}>
-              <Button
-                buttonType={ButtonType.Secondary}
-                testID={testIdWithKey('AppContacts')}
-                accessibilityLabel={t('OptionsPlus.ButtonContacts')}
-                title={t('OptionsPlus.ButtonContacts')}
-                onPress={() => navigation.navigate(Screens.Contacts)}
-              />
-            </View>
-            <View style={styles.button}>
-              <Button
-                buttonType={ButtonType.Secondary}
-                testID={testIdWithKey('AppParams')}
-                accessibilityLabel={t('OptionsPlus.ButtonParamsApp')}
-                title={t('OptionsPlus.ButtonParamsApp')}
-                onPress={() => navigate(Stacks.SettingsStack as never, { screen: Screens.Settings } as never)}
-              />
-            </View>
-            <View style={styles.button}>
-              <Button
-                buttonType={ButtonType.Secondary}
-                testID={testIdWithKey('HelpCenter')}
-                accessibilityLabel={t('OptionsPlus.ButtonHelpCenter')}
-                title={t('OptionsPlus.ButtonHelpCenter')}
-                onPress={() => navigate(Stacks.HelpCenterStack as never, { screen: Screens.HelpCenter } as never)}
-              />
-            </View>
-            <View style={styles.button}>
-              <Button
-                buttonType={ButtonType.Secondary}
-                testID={testIdWithKey('About')}
-                accessibilityLabel={t('OptionsPlus.ButtonAbout')}
-                title={t('OptionsPlus.ButtonAbout')}
-                onPress={() => navigate(Stacks.AboutStack as never, { screen: Screens.About } as never)}
-              />
-            </View>
-            <View style={styles.section}>
-              <Text style={styles.textHeaderTitle} accessibilityRole="header">
-                {' '}
-                {t('OptionsPlus.TitleSupport')}
-              </Text>
-              <Text style={styles.sectionDescription}> {t('OptionsPlus.DetailSupport')}</Text>
-            </View>
-            <ContactUs />
+          <View style={styles.button}>
+            <Button
+              buttonType={ButtonType.Secondary}
+              testID={testIdWithKey('AppContacts')}
+              accessibilityLabel={t('OptionsPlus.ButtonContacts')}
+              title={t('OptionsPlus.ButtonContacts')}
+              onPress={() => navigation.navigate(BifoldStacks.ContactStack, { screen: BifoldScreens.Contacts })}
+            />
           </View>
+          <View style={styles.button}>
+            <Button
+              buttonType={ButtonType.Secondary}
+              testID={testIdWithKey('AppParams')}
+              accessibilityLabel={t('OptionsPlus.ButtonParamsApp')}
+              title={t('OptionsPlus.ButtonParamsApp')}
+              onPress={() => navigation.navigate(Stacks.SettingsStack, { screen: Screens.Settings })}
+            />
+          </View>
+          <View style={styles.button}>
+            <Button
+              buttonType={ButtonType.Secondary}
+              testID={testIdWithKey('HelpCenter')}
+              accessibilityLabel={t('OptionsPlus.ButtonHelpCenter')}
+              title={t('OptionsPlus.ButtonHelpCenter')}
+              onPress={() => navigation.navigate(Stacks.HelpCenterStack, { screen: Screens.HelpCenter })}
+            />
+          </View>
+          <View style={styles.button}>
+            <Button
+              buttonType={ButtonType.Secondary}
+              testID={testIdWithKey('About')}
+              accessibilityLabel={t('OptionsPlus.ButtonAbout')}
+              title={t('OptionsPlus.ButtonAbout')}
+              onPress={() => navigation.navigate(Stacks.AboutStack, { screen: Screens.About })}
+            />
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.textHeaderTitle} accessibilityRole="header">
+              {t('OptionsPlus.TitleSupport')}
+            </Text>
+            <Text style={styles.sectionDescription}>{t('OptionsPlus.DetailSupport')}</Text>
+          </View>
+          <ContactUs />
           <View style={[styles.sectionCopyright]}>
-            <Text style={styles.sectionCopyrightText}> {t('OptionsPlus.Copyright')}</Text>
+            <Text style={styles.sectionCopyrightText}>{t('OptionsPlus.Copyright')}</Text>
           </View>
         </View>
       </ScrollView>

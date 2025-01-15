@@ -29,9 +29,9 @@ import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter } from 'react-native'
 
-import SettingStack from '../navigators/SettingStack'
-
+import AboutStack from './AboutStack'
 import HelpCenterStack from './HelpCenterStack'
+import SettingStack from './SettingStack'
 import TabStack from './TabStack'
 import { RootStackParams, Stacks } from './navigators'
 
@@ -106,13 +106,6 @@ const RootStack: React.FC = () => {
           })}
         />
         <Stack.Screen name={Bifoldstacks.ConnectStack} component={ConnectStack} />
-        <Stack.Screen
-          name={Bifoldstacks.SettingStack}
-          component={SettingStack}
-          options={{
-            cardStyleInterpolator: forFade,
-          }}
-        />
         <Stack.Screen name={Bifoldstacks.ContactStack} component={ContactStack} />
         <Stack.Screen name={Bifoldstacks.NotificationStack} component={NotificationStack} />
         <Stack.Screen
@@ -132,7 +125,9 @@ const RootStack: React.FC = () => {
             cardStyleInterpolator: forFade,
           }}
         />
+        <Stack.Screen name={Stacks.SettingsStack} component={SettingStack} />
         <Stack.Screen name={Stacks.HelpCenterStack} component={HelpCenterStack} />
+        <Stack.Screen name={Stacks.AboutStack} component={AboutStack} />
       </Stack.Navigator>
     )
   }

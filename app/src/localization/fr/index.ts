@@ -266,7 +266,7 @@ const translation = {
     OpeningHours: 'De 8h à 18h',
     PhoneNumber: '1 877 644-4545',
     TollFreeNumber: '1 800 361-9596 (numéro ATS pour malentendants)',
-    Copyright: '@ Gouvernement du Québec',
+    Copyright: '© Gouvernement du Québec',
   },
   StatusMessages: {
     InitAgent: "Initialisation de l'agent ...",

@@ -26,7 +26,6 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
 
   const touchCountToEnableBiometrics = 9
   const iconSize = 30
-  const nbNotifDays = 30
 
   const shouldDismissModal = () => {
     setEnvironmentModalVisible(false)
@@ -170,22 +169,9 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
           accessibilityLabel={t('Settings.Language')}
           testID={testIdWithKey(t('Settings.Language').toLowerCase())}
           onPress={() => navigation.navigate(Screens.Language)}
-          showRowSeparator
           rowIcon={arrowIcon}
         >
           <Text style={[TextTheme.headingFour, { fontWeight: 'normal' }]}>{currentLanguage}</Text>
-        </SectionRow>
-        <View style={[styles.sectionSeparator]}></View>
-        <SectionRow
-          title={t('Settings.History')}
-          accessibilityLabel={t('Settings.History')}
-          testID={testIdWithKey(t('Settings.History').toLowerCase())}
-          onPress={() => navigation.navigate(Screens.HistoryPage)}
-          rowIcon={arrowIcon}
-        >
-          <Text style={[TextTheme.headingFour, { fontWeight: 'normal' }]}>
-            {` ${nbNotifDays} ${t('Settings.Days')}`}
-          </Text>
         </SectionRow>
         <SectionHeader title={t('Settings.Security')} />
         <SectionRow

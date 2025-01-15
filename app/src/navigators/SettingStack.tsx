@@ -7,7 +7,6 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 
 import HelpCenterButton from '../components/Help/HelpCenterButton'
-import HistoryPage from '../screens/HistoryPage'
 import Settings from '../screens/Settings'
 
 import { Screens, SettingStackParams } from './navigators'
@@ -34,20 +33,6 @@ const SettingsStack: React.FC = () => {
         options={{
           title: t('Screens.Language'),
           ...ScreenOptionsDictionary[Screens.Language],
-        }}
-      />
-      <StackSettings.Screen
-        name={Screens.HistoryPage}
-        component={HistoryPage}
-        options={{
-          title: t('Settings.History'),
-        }}
-      />
-      <StackSettings.Screen
-        name={Screens.Notification}
-        component={HistoryPage}
-        options={{
-          title: t('Settings.History'),
         }}
       />
       <StackSettings.Screen

@@ -77,7 +77,7 @@ const HelpListSlider: React.FC = () => {
       flexDirection: 'row',
       justifyContent: 'flex-start',
       alignItems: 'flex-start',
-      marginVertical: 12,
+      paddingVertical: 12,
       flexWrap: 'wrap',
     },
     drawerRowItem: {
@@ -160,7 +160,7 @@ const HelpListSlider: React.FC = () => {
             accessibilityRole="button"
             onPress={() => {
               deactivateSlider()
-              navigation.navigate(Stacks.HelpCenterStack as never, { screen: Screens.HelpCenter } as never)
+              navigation.navigate(Stacks.HelpCenterStack, { screen: Screens.HelpCenter })
             }}
           >
             <View>

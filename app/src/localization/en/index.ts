@@ -196,7 +196,7 @@ const translation = {
     OpeningHours: 'From 8 a.m. to 6 p.m.',
     PhoneNumber: '1 877 644-4545',
     TollFreeNumber: '1 800 361-9596 (ATS number for the hearing impaired)',
-    Copyright: '@ Government of Quebec',
+    Copyright: '© Government of Quebec',
   },
   Screens: {
     Splash: 'Splash',

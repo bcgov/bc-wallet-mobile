@@ -51,13 +51,14 @@ export type RootStackParams = {
   [BifoldStacks.TabStack]: NavigatorScreenParams<TabStackParams>
   [BifoldScreens.Chat]: { connectionId: string }
   [BifoldStacks.ConnectionStack]: NavigatorScreenParams<DeliveryStackParams>
-  [BifoldStacks.SettingStack]: NavigatorScreenParams<SettingStackParams>
   [BifoldStacks.ConnectStack]: NavigatorScreenParams<ConnectStackParams>
   [BifoldStacks.ContactStack]: NavigatorScreenParams<ContactStackParams>
   [BifoldStacks.ProofRequestsStack]: NavigatorScreenParams<ProofRequestsStackParams>
   [BifoldStacks.NotificationStack]: NavigatorScreenParams<NotificationStackParams>
   [BifoldStacks.HistoryStack]: NavigatorScreenParams<HistoryStackParams>
+  [Stacks.SettingsStack]: NavigatorScreenParams<SettingStackParams>
   [Stacks.HelpCenterStack]: NavigatorScreenParams<HelpCenterStackParams>
+  [Stacks.AboutStack]: NavigatorScreenParams<AboutStackParams>
 }
 
 export type TabStackParams = {
@@ -75,8 +76,6 @@ export type TermsStackParams = {
 export type SettingStackParams = {
   [Screens.Settings]: undefined
   [Screens.Language]: undefined
-  [Screens.HistoryPage]: undefined
-  [Screens.Notification]: undefined
   [Screens.CreatePIN]: { updatePIN?: boolean }
   [Screens.UseBiometry]: undefined
 }
@@ -104,11 +103,6 @@ export type AboutStackParams = {
 export type ActivitiesStackParams = {
   [Screens.Activities]: undefined
 }
-
 export type OptionsPlusStackParams = {
   [Screens.OptionsPlus]: undefined
-  [Screens.Contacts]: undefined
-  [Stacks.SettingsStack]: NavigatorScreenParams<SettingStackParams>
-  [Stacks.HelpCenterStack]: NavigatorScreenParams<HelpCenterStackParams>
-  [Stacks.AboutStack]: NavigatorScreenParams<AboutStackParams>
 }
