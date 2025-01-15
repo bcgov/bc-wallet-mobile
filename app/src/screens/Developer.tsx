@@ -1,21 +1,19 @@
 import { useTheme, useStore, testIdWithKey, DispatchAction } from '@hyperledger/aries-bifold-core'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
-import { getBuildNumber, getVersion } from 'react-native-device-info'
+import { StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { BCState, PreferencesQCDispatchAction } from '../store'
-
-import IASEnvironment from './IASEnvironment'
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
   const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
-  const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
   const [useAppForcedUpdate, setUseAppForcedUpdate] = useState<boolean>(!!store.preferences.useForcedAppUpdate)
+  const [useManageEnvironment, setUseManageEnvironment] = useState<boolean>(!!store.preferences.useManageEnvironment)
+
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
   const [useConnectionInviterCapability, setUseConnectionInviterCapability] = useState(
@@ -25,20 +23,17 @@ const Settings: React.FC = () => {
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
   const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
 
+  useEffect(() => {
+    setUseManageEnvironment(!!store.preferences.useManageEnvironment)
+  }, [store.preferences.useManageEnvironment])
+
   const styles = StyleSheet.create({
     container: {
+      flex: 1,
+    },
+    innerContainer: {
       backgroundColor: ColorPallet.brand.primaryBackground,
-      width: '100%',
     },
-    versionContainer: {
-      width: '100%',
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingTop: 24,
-      paddingBottom: 12,
-    },
-
     section: {
       backgroundColor: SettingsTheme.groupBackground,
       paddingTop: 24,
@@ -78,10 +73,6 @@ const Settings: React.FC = () => {
       alignItems: 'center',
     },
   })
-
-  const shouldDismissModal = () => {
-    setEnvironmentModalVisible(false)
-  }
 
   const SectionHeader = ({ title }: { title: string }): JSX.Element => (
     <View style={[styles.section, styles.sectionHeader]}>
@@ -215,19 +206,18 @@ const Settings: React.FC = () => {
     setUseAppForcedUpdate((previousState) => !previousState)
   }
 
+  const toggleManageEnvironmentSwitch = () => {
+    dispatch({
+      type: PreferencesQCDispatchAction.USE_MANAGE_ENVIRONMENT,
+      payload: [!useManageEnvironment],
+    })
+
+    setUseManageEnvironment((previousState) => !previousState)
+  }
+
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']}>
-      <Modal
-        visible={environmentModalVisible}
-        transparent={false}
-        animationType={'slide'}
-        onRequestClose={() => {
-          return
-        }}
-      >
-        <IASEnvironment shouldDismissModal={shouldDismissModal} />
-      </Modal>
-      <ScrollView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <ScrollView style={styles.innerContainer}>
         <SectionHeader title={t('Settings.Developer')} />
         <SectionRow
           title={t('Developer.DeveloperMode')}
@@ -243,22 +233,20 @@ const Settings: React.FC = () => {
             value={devMode}
           />
         </SectionRow>
-        <View style={[styles.sectionSeparator]}></View>
-
         <SectionRow
-          title={t('Developer.Environment')}
-          accessibilityLabel={t('Developer.Environment')}
-          testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
-          showRowSeparator={true}
-          onPress={() => {
-            setEnvironmentModalVisible(true)
-          }}
+          title={t('Settings.ManageEnvironment')}
+          accessibilityLabel={t('Settings.ToggleManageEnvironment')}
+          testID={testIdWithKey('ToggleManagedEnvironmentSwitch')}
+          showRowSeparator
         >
-          <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPallet.brand.link }]}>
-            {store.developer.environment.name}
-          </Text>
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={useManageEnvironment ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleManageEnvironmentSwitch}
+            value={useManageEnvironment}
+          />
         </SectionRow>
-        <View style={[styles.sectionSeparator]}></View>
         <SectionRow
           title={t('Verifier.UseVerifierCapability')}
           accessibilityLabel={t('Verifier.Toggle')}
@@ -358,11 +346,6 @@ const Settings: React.FC = () => {
             value={useAppForcedUpdate}
           />
         </SectionRow>
-        <View style={styles.versionContainer}>
-          <Text style={TextTheme.normal} testID={testIdWithKey('Version')}>
-            {`${t('Settings.Version')} ${getVersion()} ${t('Settings.Build')} (${getBuildNumber()})`}
-          </Text>
-        </View>
       </ScrollView>
     </SafeAreaView>
   )

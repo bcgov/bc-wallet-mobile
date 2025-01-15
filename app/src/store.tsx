@@ -10,12 +10,18 @@ import { Preferences } from '@hyperledger/aries-bifold-core/lib/typescript/App/t
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Config from 'react-native-config'
 
-export interface IASEnvironment {
-  name: string
+export type IASEnvironmentKeys = 'PRODUCTION' | 'INTEGRATION' | 'FORMATION' | 'ACCEPTATION'
+
+export type IASEnvironmentValue = {
   iasAgentInviteUrl: string
   iasPortalUrl: string
 }
-export interface Developer {
+
+export type IASEnvironment = {
+  [key in IASEnvironmentKeys]: { [K in key]: IASEnvironmentValue }
+}[IASEnvironmentKeys]
+
+export type Developer = {
   environment: IASEnvironment
   remoteLoggingEnabled: boolean
 }
@@ -37,6 +43,7 @@ export interface ActivityState {
 
 export interface QCPreferences extends Preferences {
   useForcedAppUpdate?: boolean
+  useManageEnvironment?: boolean
 }
 
 export interface BCState extends BifoldState {
@@ -63,6 +70,7 @@ enum ActivityDispatchAction {
 
 export enum PreferencesQCDispatchAction {
   USE_APP_FORCED_UPDATE = 'preferences/appForcedUpdate',
+  USE_MANAGE_ENVIRONMENT = 'preferences/manageEnvironment',
 }
 
 export type BCDispatchAction =
@@ -78,21 +86,33 @@ export const BCDispatchAction = {
   ...ActivityDispatchAction,
 }
 
-export const iasEnvironments: Array<IASEnvironment> = [
-  {
-    name: 'MCN',
+export const iasEnvironments = {
+  PRODUCTION: {
     iasAgentInviteUrl: Config.MEDIATOR_URL ?? '',
-    iasPortalUrl: '',
+    iasPortalUrl: 'https://authentification.quebec.ca/gestion-compte/',
   },
-  {
-    name: 'CQEN',
-    iasAgentInviteUrl: Config.CQEN_MEDIATOR_URL ?? '',
-    iasPortalUrl: '',
+  INTEGRATION: {
+    iasAgentInviteUrl: Config.MEDIATOR_URL_DEV ?? '',
+    iasPortalUrl:
+      'https://auth-dev-integration.dev.authentification.si.gouv.qc.ca/realms/sqin/login-actions/authenticate?execution=f8d8d4c1-b356-48bc-913c-2f1da9cf9055&client_id=account-console&tab_id=d5DvrMgftUo',
   },
-]
+  FORMATION: {
+    iasAgentInviteUrl: Config.MEDIATOR_URL_DEV ?? '',
+    iasPortalUrl:
+      'https://auth-formation.it.authentification.si.gouv.qc.ca/realms/sqin/protocol/openid-connect/auth?client_id=account-console&redirect_uri=https://auth-formation.it.authentification.si.gouv.qc.ca/gestion-compte',
+  },
+  ACCEPTATION: {
+    iasAgentInviteUrl: Config.MEDIATOR_URL_DEV ?? '',
+    iasPortalUrl: 'https://auth-acceptation.dev.authentification.si.gouv.qc.ca/gestion-compte/',
+  },
+}
+
+export const defaultEnv = (Config.ENVIRONMENT as IASEnvironmentKeys) ?? 'PRODUCTION'
 
 const developerState: Developer = {
-  environment: iasEnvironments[0],
+  environment: {
+    [defaultEnv]: iasEnvironments[defaultEnv],
+  } as IASEnvironment,
   remoteLoggingEnabled: false,
 }
 
@@ -144,6 +164,7 @@ export const getInitialState = async (): Promise<BCState> => {
     preferences: {
       ...defaultState.preferences,
       useForcedAppUpdate: false,
+      useManageEnvironment: defaultEnv !== 'PRODUCTION',
     },
     activities,
   }
@@ -152,8 +173,14 @@ export const getInitialState = async (): Promise<BCState> => {
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
     case DeveloperDispatchAction.UPDATE_ENVIRONMENT: {
-      const environment: IASEnvironment = (action?.payload || []).pop()
-      const developer = { ...state.developer, environment }
+      // fallback
+      const environment: IASEnvironmentKeys = (action?.payload || [defaultEnv]).pop()
+      const developer = {
+        ...state.developer,
+        environment: {
+          [environment]: iasEnvironments[environment],
+        } as IASEnvironment,
+      }
 
       // Persist IAS environment between app restarts
       AsyncStorage.setItem(BCLocalStorageKeys.Environment, JSON.stringify(developer.environment))
@@ -208,6 +235,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case PreferencesQCDispatchAction.USE_APP_FORCED_UPDATE: {
       const useForcedAppUpdate: boolean = (action?.payload || []).pop()
       const preferences = { ...state.preferences, useForcedAppUpdate: useForcedAppUpdate }
+
+      const newState = { ...state, preferences }
+      AsyncStorage.setItem(LocalStorageKeys.Preferences, JSON.stringify(preferences))
+      return newState
+    }
+    case PreferencesQCDispatchAction.USE_MANAGE_ENVIRONMENT: {
+      const useManageEnvironment: boolean = (action?.payload || []).pop()
+      const preferences = { ...state.preferences, useManageEnvironment: useManageEnvironment }
 
       const newState = { ...state, preferences }
       AsyncStorage.setItem(LocalStorageKeys.Preferences, JSON.stringify(preferences))

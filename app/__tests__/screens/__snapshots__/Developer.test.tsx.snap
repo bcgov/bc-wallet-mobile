@@ -9,19 +9,16 @@ exports[`Developer Screen screen renders correctly 1`] = `
       "right",
     ]
   }
+  style={
+    {
+      "flex": 1,
+    }
+  }
 >
-  <Modal
-    animationType="slide"
-    hardwareAccelerated={false}
-    onRequestClose={[Function]}
-    transparent={false}
-    visible={false}
-  />
   <RCTScrollView
     style={
       {
         "backgroundColor": "#000000",
-        "width": "100%",
       }
     }
   >
@@ -177,15 +174,6 @@ exports[`Developer Screen screen renders correctly 1`] = `
         style={
           [
             {
-              "marginBottom": 10,
-            },
-          ]
-        }
-      />
-      <View
-        style={
-          [
-            {
               "backgroundColor": "#313132",
               "paddingTop": 24,
             },
@@ -210,10 +198,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
               }
             }
           >
-            Developer.Environment
+            Settings.ManageEnvironment
           </Text>
           <View
-            accessibilityLabel="Developer.Environment"
+            accessibilityLabel="Settings.ToggleManageEnvironment"
             accessibilityState={
               {
                 "busy": undefined,
@@ -250,25 +238,30 @@ exports[`Developer Screen screen renders correctly 1`] = `
                 "justifyContent": "space-between",
               }
             }
-            testID="com.ariesbifold:id/developer.environment"
+            testID="com.ariesbifold:id/ToggleManagedEnvironmentSwitch"
           >
-            <Text
+            <RCTSwitch
+              accessibilityRole="switch"
+              onChange={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              onTintColor="rgba(53, 130, 63, 0.35)"
               style={
                 [
                   {
-                    "color": "#FFFFFF",
-                    "fontSize": 21,
-                    "fontWeight": "bold",
+                    "height": 31,
+                    "width": 51,
                   },
                   {
-                    "color": "#FFFFFF",
-                    "fontWeight": "normal",
+                    "backgroundColor": "#D3D3D3",
+                    "borderRadius": 16,
                   },
                 ]
               }
-            >
-              MCN
-            </Text>
+              thumbTintColor="#606060"
+              tintColor="#D3D3D3"
+              value={false}
+            />
           </View>
         </View>
       </View>
@@ -291,15 +284,6 @@ exports[`Developer Screen screen renders correctly 1`] = `
           }
         />
       </View>
-      <View
-        style={
-          [
-            {
-              "marginBottom": 10,
-            },
-          ]
-        }
-      />
       <View
         style={
           [
@@ -1078,31 +1062,6 @@ exports[`Developer Screen screen renders correctly 1`] = `
             />
           </View>
         </View>
-      </View>
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
-            "paddingBottom": 12,
-            "paddingTop": 24,
-            "width": "100%",
-          }
-        }
-      >
-        <Text
-          style={
-            {
-              "color": "#FFFFFF",
-              "fontSize": 18,
-              "fontWeight": "normal",
-            }
-          }
-          testID="com.ariesbifold:id/Version"
-        >
-          Settings.Version 1 Settings.Build (1)
-        </Text>
       </View>
     </View>
   </RCTScrollView>

@@ -43,7 +43,15 @@ import LogoQuebecBlanc from '../assets/img/LogoQuebecBlanc.svg'
 import Progress from '../components/Progress'
 import TipCarousel from '../components/TipCarousel'
 import { SplashSmallScreenWidthPercentage } from '../constants'
-import { BCState, BCDispatchAction, BCLocalStorageKeys } from '../store'
+import {
+  BCState,
+  BCDispatchAction,
+  BCLocalStorageKeys,
+  IASEnvironment,
+  IASEnvironmentKeys,
+  iasEnvironments,
+  defaultEnv,
+} from '../store'
 
 import { TermsVersion } from './Terms'
 
@@ -278,14 +286,15 @@ const Splash = () => {
   }
 
   const loadIASEnvironment = async (): Promise<string> => {
-    const environment = await loadObjectFromStorage(BCLocalStorageKeys.Environment)
+    const environment: IASEnvironment = await loadObjectFromStorage(BCLocalStorageKeys.Environment)
     if (environment) {
       dispatch({
         type: BCDispatchAction.UPDATE_ENVIRONMENT,
-        payload: [environment],
+        payload: [Object.keys(environment)[0] as IASEnvironmentKeys],
       })
+      return iasEnvironments[Object.keys(environment)[0] as IASEnvironmentKeys]?.iasAgentInviteUrl
     }
-    return environment?.iasAgentInviteUrl ?? Config.MEDIATOR_URL
+    return iasEnvironments[defaultEnv]?.iasAgentInviteUrl ?? Config.MEDIATOR_URL
   }
 
   const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {

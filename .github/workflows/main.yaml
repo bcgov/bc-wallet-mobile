@@ -155,13 +155,15 @@ jobs:
         working-directory: app
         env:
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
-          CQEN_MEDIATOR_URL: ${{ secrets.CQEN_MEDIATOR_URL }}
-          MEDIATOR_URL: ${{ secrets.MCN_MEDIATOR_URL }}
+          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          MEDIATOR_URL_DEV: ${{ secrets.MEDIATOR_URL_DEV }}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
           OCA_URL: ${{ vars.OCA_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
-          echo "CQEN_MEDIATOR_URL=${CQEN_MEDIATOR_URL}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
+          echo "MEDIATOR_URL_DEV=${MEDIATOR_URL_DEV}" >>.env
+          echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
 
       - name: Update APS environment
@@ -252,13 +254,15 @@ jobs:
         working-directory: app
         env:
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
-          CQEN_MEDIATOR_URL: ${{ secrets.CQEN_MEDIATOR_URL }}
-          MEDIATOR_URL: ${{ secrets.MCN_MEDIATOR_URL }}
+          MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
+          MEDIATOR_URL_DEV: ${{ secrets.MEDIATOR_URL_DEV }}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
           OCA_URL: ${{ vars.OCA_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
-          echo "CQEN_MEDIATOR_URL=${CQEN_MEDIATOR_URL}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
+          echo "MEDIATOR_URL_DEV=${MEDIATOR_URL_DEV}" >>.env
+          echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
 
       - name: Create release keystore
@@ -312,7 +316,7 @@ jobs:
             app/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload Android artifact
-        if: github.ref_name == 'main' 
+        if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
           name: android-artifact
@@ -336,10 +340,10 @@ jobs:
           # when we updated to yarn we started getting an error with paths
           # and had to add `/android` to the path.
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS} && \
-          node ./deploy-to-playstore.js 
+          node ./deploy-to-playstore.js
 
   release:
-    if: github.ref_name == 'main' 
+    if: github.ref_name == 'main'
     needs: [build-ios, build-android]
     runs-on: ubuntu-latest
     steps:
@@ -356,7 +360,7 @@ jobs:
             Dev Release.
 
   ship-to-lambdatest:
-    if: github.ref_name == 'main' 
+    if: github.ref_name == 'main'
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     outputs:
@@ -400,7 +404,7 @@ jobs:
           echo "ANDROID_APP_URL=lt://$(jq -r '.app_id' $HOME/lt_android_resp.json)" >> "$GITHUB_OUTPUT"
 
   run-on-device-tests:
-    if: github.ref_name == 'main' 
+    if: github.ref_name == 'main'
     needs: [ship-to-lambdatest]
     runs-on: ubuntu-22.04
     strategy:

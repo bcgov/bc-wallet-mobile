@@ -5,6 +5,7 @@ import {
   testIdWithKey,
   Screens,
   NotificationStackParams,
+  useStore,
 } from '@hyperledger/aries-bifold-core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -12,13 +13,17 @@ import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import HeaderText from '../components/HeaderText'
-import { urlGestionDeCompteSag } from '../constants'
+import { BCState, IASEnvironmentKeys, iasEnvironments } from '../store'
 
 type DefaultProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
 const DefaultNotification: React.FC<DefaultProps> = ({ navigation }: DefaultProps) => {
   const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
+  const [store] = useStore<BCState>()
+
+  const urlGestionDeCompteSag =
+    iasEnvironments[Object.keys(store.developer.environment)[0] as IASEnvironmentKeys].iasPortalUrl
 
   const styles = StyleSheet.create({
     safeArea: {

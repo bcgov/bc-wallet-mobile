@@ -6,7 +6,7 @@ import BouncyCheckbox from 'react-native-bouncy-checkbox'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import { BCDispatchAction, BCState, IASEnvironment, iasEnvironments } from '../store'
+import { BCDispatchAction, BCState, IASEnvironmentKeys, iasEnvironments } from '../store'
 
 interface IASEnvironmentProps {
   shouldDismissModal: () => void
@@ -17,7 +17,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
   const { ColorPallet, TextTheme, SettingsTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
 
-  const environments = iasEnvironments
+  const environments = Object.keys(iasEnvironments) as IASEnvironmentKeys[]
 
   const styles = StyleSheet.create({
     container: {
@@ -41,12 +41,18 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
     },
   })
 
-  const handleEnvironmentChange = (environment: IASEnvironment) => {
+  const handleEnvironmentChange = (environment: IASEnvironmentKeys) => {
     dispatch({
       type: BCDispatchAction.UPDATE_ENVIRONMENT,
       payload: [environment],
     })
 
+    if (environment === 'PRODUCTION') {
+      dispatch({
+        type: BCDispatchAction.USE_MANAGE_ENVIRONMENT,
+        payload: [false],
+      })
+    }
     shouldDismissModal()
   }
 
@@ -54,13 +60,12 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
     <SafeAreaView style={[styles.container]}>
       <FlatList
         data={environments}
-        renderItem={({ item: environment }) => {
-          const { name }: IASEnvironment = environment
+        renderItem={({ item }) => {
           return (
             <View style={[styles.section, styles.sectionRow]}>
-              <Text style={[TextTheme.title]}>{t(`Developer.${name}`)}</Text>
+              <Text style={[TextTheme.title]}>{item}</Text>
               <BouncyCheckbox
-                accessibilityLabel={name}
+                accessibilityLabel={item}
                 disableText
                 fillColor="#FFFFFFFF"
                 unfillColor="#FFFFFFFF"
@@ -68,11 +73,11 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
                 innerIconStyle={{ borderColor: ColorPallet.brand.primary, borderWidth: 2 }}
                 ImageComponent={() => <Icon name="circle" size={18} color={ColorPallet.brand.primary}></Icon>}
                 onPress={() => {
-                  handleEnvironmentChange(environment)
+                  handleEnvironmentChange(item)
                 }}
-                isChecked={name === store.developer.environment.name}
+                isChecked={item === Object.keys(store.developer.environment)[0]}
                 disableBuiltInState
-                testID={testIdWithKey(name.toLocaleLowerCase())}
+                testID={testIdWithKey(item.toLocaleLowerCase())}
               />
             </View>
           )

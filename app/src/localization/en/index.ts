@@ -815,6 +815,8 @@ const translation = {
     PlayWithBCWallet: 'Play with QC Wallet',
     ForcedUpdates: 'Use app forced updates',
     ToggleForcedUpdates: 'Toggle app forced updates',
+    ManageEnvironment: 'Manage Environment',
+    ToggleManageEnvironment: 'Toggle manage environment',
   },
   Tour: {
     GuideTitle: 'Welcome to QC Wallet',
