@@ -3,9 +3,10 @@ import { StyleSheet, Text, View } from 'react-native'
 
 type Props = {
   title: string
+  isHeader?: boolean
 }
 
-const HeaderText = ({ title }: Props) => {
+const HeaderText = ({ title, isHeader = true }: Props) => {
   const { ColorPallet, TextTheme } = useTheme()
   const style = StyleSheet.create({
     headerText: {
@@ -21,7 +22,9 @@ const HeaderText = ({ title }: Props) => {
   })
   return (
     <View>
-      <Text style={[style.headerText]}>{title}</Text>
+      <Text style={[style.headerText]} accessibilityRole={`${isHeader ? 'header' : 'text'}`}>
+        {title}
+      </Text>
       <View style={style.headerBottomLine} />
     </View>
   )

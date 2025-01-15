@@ -65,8 +65,10 @@ const Activities: React.FC<ActivitiesProps> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Tab-like Header */}
-      <View style={styles.tabHeader}>
+      <View style={styles.tabHeader} accessibilityRole="tabbar">
         <TouchableOpacity
+          accessibilityState={{ selected: activeTab === NotificationTab }}
+          accessibilityRole="tab"
           style={[styles.tab, activeTab === NotificationTab && styles.activeTab]}
           onPress={() => setActiveTab(NotificationTab)}
         >
@@ -78,6 +80,8 @@ const Activities: React.FC<ActivitiesProps> = ({ navigation }) => {
         </TouchableOpacity>
 
         <TouchableOpacity
+          accessibilityState={{ selected: activeTab === HistoryTab }}
+          accessibilityRole="tab"
           style={[styles.tab, activeTab === HistoryTab && styles.activeTab]}
           onPress={() => setActiveTab(HistoryTab)}
         >

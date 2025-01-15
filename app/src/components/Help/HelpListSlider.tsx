@@ -141,7 +141,7 @@ const HelpListSlider: React.FC = () => {
                                 },
                               })
                             }}
-                            accessible={true}
+                            accessibilityRole="button"
                           >
                             <Text style={{ ...styles.drawerRowItem, marginLeft: 5 }}>
                               {hasTitle(contentItem) && contentItem.title}
@@ -157,6 +157,7 @@ const HelpListSlider: React.FC = () => {
           </View>
           <TouchableOpacity
             style={styles.drawerRow}
+            accessibilityRole="button"
             onPress={() => {
               deactivateSlider()
               navigation.navigate(Stacks.HelpCenterStack as never, { screen: Screens.HelpCenter } as never)

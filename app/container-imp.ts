@@ -69,6 +69,7 @@ const defaultConfig: BifoldConfig = {
   showPINExplainer: false,
   enableReuseConnections: true,
   disableOnboardingSkip: true,
+  enableHiddenDevModeTrigger: false,
   showScanHelp: true,
   showScanButton: true,
   showDetailsInfo: true,
@@ -149,6 +150,10 @@ export class AppContainer implements Container {
       ...defaultScreenOptionsDict[Screens.CreatePIN],
       ...onboardingScreenOptions,
       gestureEnabled: true,
+    }
+    defaultScreenOptionsDict[Screens.Terms] = {
+      ...defaultScreenOptionsDict[Screens.Terms],
+      ...onboardingScreenOptions,
     }
 
     // Here you can register any component to override components in core package

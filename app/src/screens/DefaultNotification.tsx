@@ -81,11 +81,15 @@ const DefaultNotification: React.FC<DefaultProps> = ({ navigation }: DefaultProp
           <Text style={styles.sectionDescriptionTitle}> {t('DefaultNotificationPage.Description')}</Text>
         </View>
         <View style={styles.section}>
-          <Text style={styles.textSectionTitle}>{t('DefaultNotificationPage.SAGConnexion')}</Text>
+          <Text style={styles.textSectionTitle} accessibilityRole="header">
+            {t('DefaultNotificationPage.SAGConnexion')}
+          </Text>
           <Text style={styles.sectionDescription}> {t('DefaultNotificationPage.SAGConnexionDescription')}</Text>
         </View>
         <View style={[styles.sectionBottom, styles.section]}>
-          <Text style={styles.textSectionTitle}>{t('DefaultNotificationPage.ANIGRequest')}</Text>
+          <Text style={styles.textSectionTitle} accessibilityRole="header">
+            {t('DefaultNotificationPage.ANIGRequest')}
+          </Text>
           <Text style={styles.sectionDescription}> {t('DefaultNotificationPage.ANIGAcceptDescription')}</Text>
         </View>
         <View style={styles.buttonContainer}>

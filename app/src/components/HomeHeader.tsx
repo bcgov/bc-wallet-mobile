@@ -80,9 +80,9 @@ const HomeHeader = () => {
 
   return (
     <View style={styles.container}>
-      <HeaderText title={t('Home.Welcome')} />
+      <HeaderText title={t('Home.Welcome')} isHeader={false} />
       <View style={styles.ScanQrCodeContainer}>
-        <TouchableWithoutFeedback onPress={handleNavigation}>
+        <TouchableWithoutFeedback onPress={handleNavigation} accessibilityRole="button">
           <View style={styles.ScanQrCodeInnerContainer}>
             <View style={styles.imgContainer}>
               <HomeImg />
@@ -94,7 +94,9 @@ const HomeHeader = () => {
         </TouchableWithoutFeedback>
       </View>
       <View style={styles.activiteTitleContainer}>
-        <Text style={styles.activiteTitle}>{t('Home.NotificationTitle')}</Text>
+        <Text style={styles.activiteTitle} accessibilityRole="header">
+          {t('Home.NotificationTitle')}
+        </Text>
       </View>
     </View>
   )

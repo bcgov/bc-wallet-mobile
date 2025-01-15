@@ -11,13 +11,12 @@ import {
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import HeaderText from '../components/HeaderText'
 import Progress from '../components/Progress'
-import { AccordionItem } from '../components/react-native-accordion-list-view'
 
 export const TermsVersion = '2'
 
@@ -26,6 +25,7 @@ const Terms = () => {
   const agreedToPreviousTerms = store.onboarding.didAgreeToTerms
   const agreesToCurrentTerms = store.onboarding.didAgreeToTerms === TermsVersion
   const [checked, setChecked] = useState(agreedToPreviousTerms && agreesToCurrentTerms)
+  const [didAuthenticate, setDidAuthenticate] = useState(store.authentication.didAuthenticate)
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
   const { ColorPallet, TextTheme } = useTheme()
@@ -75,6 +75,10 @@ const Terms = () => {
     },
   })
 
+  useEffect(() => {
+    setDidAuthenticate(store.authentication.didAuthenticate)
+  }, [store.authentication.didAuthenticate])
+
   const onSubmitPressed = useCallback(() => {
     dispatch({
       type: DispatchAction.DID_AGREE_TO_TERMS,
@@ -97,7 +101,7 @@ const Terms = () => {
 
   return (
     <View style={[style.container]}>
-      {!agreedToPreviousTerms && !agreesToCurrentTerms && (
+      {((!agreedToPreviousTerms && !agreesToCurrentTerms) || !didAuthenticate) && (
         <View style={style.progressContainer}>
           <View style={{ marginHorizontal: 50 }}>
             <Progress progressPercent={33.3333} progressText={t('TermsV2.ProgressBarText')} progressFill="primary" />
@@ -105,45 +109,45 @@ const Terms = () => {
         </View>
       )}
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ marginTop: agreedToPreviousTerms ? 20 : 0 }}>
+        <View style={{ marginTop: agreedToPreviousTerms ? 20 : 0, marginBottom: 20 }}>
           <HeaderText title={t('Screens.Terms')} />
         </View>
-        <Text style={[style.title, { marginTop: 20 }]}>{t('TermsV2.Consent.title')}</Text>
+        <Text style={[style.title]} accessibilityRole="header">
+          {t('TermsV2.Consent.title')}
+        </Text>
         <Text style={[style.bodyText, { marginTop: 20 }]}>{t('TermsV2.Consent.body')}</Text>
 
-        <Text style={[style.title, { marginTop: 20 }]}>{t('TermsV2.Consent.PersonalUse.title')}</Text>
-        <Text style={[style.bodyText, { marginTop: 20, marginBottom: 20 }]}>
-          {t('TermsV2.Consent.PersonalUse.body')}
+        <Text style={[style.title, { marginTop: 20 }]} accessibilityRole="header">
+          {t('TermsV2.Consent.PersonalUse.title')}
         </Text>
-        <AccordionItem
-          customTitle={() => <Text style={[style.title]}>{t('TermsV2.Consent.PersonalUse.subsection.title')}</Text>}
-          customBody={() => (
-            <Text style={[style.bodyText, { margin: 20 }]}>{t('TermsV2.Consent.PersonalUse.subsection.body')}</Text>
-          )}
-        ></AccordionItem>
+        <Text style={[style.bodyText, { marginVertical: 20 }]}>{t('TermsV2.Consent.PersonalUse.body')}</Text>
 
-        <Text style={[style.title, { marginTop: 20 }]}>{t('TermsV2.Consent.IdentityTheft.title')}</Text>
-        <Text style={[style.bodyText, { marginTop: 20, marginBottom: 20 }]}>
-          {t('TermsV2.Consent.IdentityTheft.body')}
+        <Text style={[style.title]} accessibilityRole="header">
+          {t('TermsV2.Consent.PersonalUse.subsection.title')}
         </Text>
-        <AccordionItem
-          customTitle={() => <Text style={[style.title]}>{t('TermsV2.Consent.IdentityTheft.subsection.title')}</Text>}
-          customBody={() => (
-            <Text style={[style.bodyText, { margin: 20 }]}>{t('TermsV2.Consent.IdentityTheft.subsection.body')}</Text>
-          )}
-        ></AccordionItem>
+        <Text style={[style.bodyText, { marginVertical: 20 }]}>{t('TermsV2.Consent.PersonalUse.subsection.body')}</Text>
 
-        <Text style={[style.title, { marginTop: 20 }]}>{t('TermsV2.Consent.Privacy.title')}</Text>
-        <Text style={[style.bodyText, { marginTop: 20, marginBottom: 20, marginVertical: 20 }]}>
-          {t('TermsV2.Consent.Privacy.body')}
+        <Text style={[style.title]} accessibilityRole="header">
+          {t('TermsV2.Consent.IdentityTheft.title')}
         </Text>
-        <AccordionItem
-          containerStyle={{ marginBottom: 20 }}
-          customTitle={() => <Text style={[style.title]}>{t('TermsV2.Consent.Privacy.subsection.title')}</Text>}
-          customBody={() => (
-            <Text style={[style.bodyText, { margin: 20 }]}>{t('TermsV2.Consent.Privacy.subsection.body')}</Text>
-          )}
-        ></AccordionItem>
+        <Text style={[style.bodyText, { marginVertical: 20 }]}>{t('TermsV2.Consent.IdentityTheft.body')}</Text>
+
+        <Text style={[style.title]} accessibilityRole="header">
+          {t('TermsV2.Consent.IdentityTheft.subsection.title')}
+        </Text>
+        <Text style={[style.bodyText, { marginVertical: 20 }]}>
+          {t('TermsV2.Consent.IdentityTheft.subsection.body')}
+        </Text>
+
+        <Text style={[style.title]} accessibilityRole="header">
+          {t('TermsV2.Consent.Privacy.title')}
+        </Text>
+        <Text style={[style.bodyText, { marginVertical: 20 }]}>{t('TermsV2.Consent.Privacy.body')}</Text>
+
+        <Text style={[style.title]} accessibilityRole="header">
+          {t('TermsV2.Consent.Privacy.subsection.title')}
+        </Text>
+        <Text style={[style.bodyText, { marginVertical: 20 }]}>{t('TermsV2.Consent.Privacy.subsection.body')}</Text>
 
         <View style={[style.controlsContainer]}>
           {!(agreesToCurrentTerms && agreedToPreviousTerms && store.authentication.didAuthenticate) && (

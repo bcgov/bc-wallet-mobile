@@ -70,7 +70,9 @@ const InfosDisplay: React.FC<InfosDisplayProps> = ({ title, detail, visual, ques
   return (
     <View style={[styles.section]}>
       <View>
-        <Text style={[TextTheme.headingThree, styles.sectionHeaderText]}>{title ? title : question}</Text>
+        <Text style={[TextTheme.headingThree, styles.sectionHeaderText]} accessibilityRole="header">
+          {title ? title : question}
+        </Text>
         <Text style={[TextTheme.headingFour, styles.sectionText]}>{detail ? detail : answer}</Text>
       </View>
       {visual && (

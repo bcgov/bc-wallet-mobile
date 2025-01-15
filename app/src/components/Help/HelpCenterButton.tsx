@@ -37,7 +37,8 @@ const HelpCenterButton = () => {
     <TouchableOpacity
       style={styles.container}
       onPress={activateSlider}
-      accessibilityHint="Cliquez pour ouvrir la liste des options"
+      accessibilityHint={t('HelpCenter.OptionsList')}
+      accessibilityRole="button"
     >
       <Text style={styles.text}>{t('HelpCenter.Help')}</Text>
     </TouchableOpacity>

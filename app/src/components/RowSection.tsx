@@ -78,7 +78,7 @@ const RowSection = ({
         </View>
       )}
       <View style={[styles.section]}>
-        <Pressable onPress={onPress} accessible={true} accessibilityLabel={accessibilityLabel} testID={testID}>
+        <Pressable onPress={onPress} accessibilityLabel={accessibilityLabel} testID={testID} accessibilityRole="button">
           <View style={styles.sectionRow}>
             <Text style={styles.rowTitle}>{title}</Text>
             <Text style={[TextTheme.headingFour, styles.sectionText]}>{children}</Text>

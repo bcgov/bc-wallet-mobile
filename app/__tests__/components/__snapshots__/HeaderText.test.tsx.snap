@@ -3,6 +3,7 @@
 exports[`HeaderText Component Renders correctly 1`] = `
 <View>
   <Text
+    accessibilityRole="header"
     style={
       [
         {

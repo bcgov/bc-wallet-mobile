@@ -129,7 +129,10 @@ const Plus: React.FC<OptionsPlusProps> = ({ navigation }) => {
               />
             </View>
             <View style={styles.section}>
-              <Text style={styles.textHeaderTitle}> {t('OptionsPlus.TitleSupport')}</Text>
+              <Text style={styles.textHeaderTitle} accessibilityRole="header">
+                {' '}
+                {t('OptionsPlus.TitleSupport')}
+              </Text>
               <Text style={styles.sectionDescription}> {t('OptionsPlus.DetailSupport')}</Text>
             </View>
             <ContactUs />

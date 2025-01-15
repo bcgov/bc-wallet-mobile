@@ -1,4 +1,4 @@
-import { useTheme, testIdWithKey } from '@hyperledger/aries-bifold-core'
+import { useTheme } from '@hyperledger/aries-bifold-core'
 import { i18n } from '@hyperledger/aries-bifold-core/App/localization'
 import { StackScreenProps } from '@react-navigation/stack'
 import React from 'react'
@@ -52,8 +52,6 @@ const HelpCenter: React.FC<HelpCenterProps> = ({ navigation }) => {
               showSectionTitle
               sectionTitle={item.title}
               itemSection={item.sections ? item.sections : []}
-              accessibilityLabel={t('About.Accessibility')}
-              testID={testIdWithKey(t('About.Accessibility').toLowerCase())}
               showRowSeparator
               showArrowIcon={true}
               navigation={navigation}

@@ -35,6 +35,7 @@ const HomeFooter = () => {
     <View style={styles.footerContainer}>
       {notifications?.length > 0 && (
         <TouchableOpacity
+          accessibilityRole="button"
           style={styles.footerLinkContainer}
           onPress={() => navigate(TabStacks.ActivitiesStack as never, { screen: Screens.Activities } as never)}
         >

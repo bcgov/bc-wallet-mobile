@@ -1,4 +1,4 @@
-import { useTheme } from '@hyperledger/aries-bifold-core'
+import { testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
 import { NavigationProp } from '@react-navigation/native'
 import React from 'react'
 import { StyleSheet, Text, View, Pressable, ImageSourcePropType } from 'react-native'
@@ -38,8 +38,6 @@ const HelpRowSection = ({
   showSectionTitle,
   sectionTitle,
   itemSection = [],
-  accessibilityLabel,
-  testID,
   children,
   showRowSeparator,
   subContent,
@@ -91,7 +89,9 @@ const HelpRowSection = ({
     <>
       {showSectionTitle && (
         <View style={[styles.section, styles.sectionHeader]}>
-          <Text style={[TextTheme.headingThree, styles.sectionHeaderText]}>{sectionTitle}</Text>
+          <Text style={[TextTheme.headingThree, styles.sectionHeaderText]} accessibilityRole="header">
+            {sectionTitle}
+          </Text>
         </View>
       )}
       {itemSection.map((item, index) => (
@@ -101,9 +101,9 @@ const HelpRowSection = ({
               onPress={() =>
                 navigation.navigate(Screens.HelpCenterPage, { selectedSection: itemSection, sectionNo: index })
               }
-              accessible={true}
-              accessibilityLabel={accessibilityLabel}
-              testID={testID}
+              accessibilityRole="button"
+              accessibilityLabel={item.title}
+              testID={testIdWithKey(item.title)}
             >
               <View style={styles.sectionRow}>
                 <Text style={styles.rowTitle}>{item.title}</Text>
