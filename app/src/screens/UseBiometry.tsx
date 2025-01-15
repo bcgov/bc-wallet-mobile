@@ -386,7 +386,11 @@ const UseBiometry: React.FC = () => {
         presentationStyle="pageSheet"
       >
         <SafeAreaView style={{ flex: 1 }}>
-          <PINEnter usage={PINEntryUsage.PINCheck} setAuthenticated={onAuthenticationComplete} />
+          <PINEnter
+            usage={PINEntryUsage.PINCheck}
+            setAuthenticated={onAuthenticationComplete}
+            onCancelAuth={setCanSeeCheckPIN}
+          />
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
