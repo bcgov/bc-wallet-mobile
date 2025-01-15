@@ -71,6 +71,7 @@ const defaultConfig: BifoldConfig = {
   disableOnboardingSkip: true,
   showScanHelp: true,
   showScanButton: true,
+  showScanErrorButton: false,
   showDetailsInfo: true,
   contactDetailsOptions: {
     showConnectedTime: false,
