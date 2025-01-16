@@ -3,7 +3,7 @@ import { i18n, Locales } from '@hyperledger/aries-bifold-core/App/localization'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Pressable, Modal } from 'react-native'
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Modal, AccessibilityRole } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons'
@@ -75,12 +75,6 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
       flexGrow: 1,
       paddingHorizontal: 20,
     },
-    sectionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: 8,
-    },
     rowTitle: {
       ...TextTheme.headingFour,
       flex: 1,
@@ -97,15 +91,15 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
     },
   })
   const SectionHeader = ({ title }: { title: string }): JSX.Element => (
-    <>
-      <View style={[styles.section, styles.sectionHeader]}>
-        <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
-      </View>
-    </>
+    <View style={[styles.section, styles.sectionHeader]}>
+      <Text style={[TextTheme.headingThree, { flexShrink: 1 }]} accessibilityRole="header">
+        {title}
+      </Text>
+    </View>
   )
   interface SectionRowProps {
     title: string
-    accessibilityLabel?: string
+    accessibilityRole?: AccessibilityRole
     testID?: string
     children: JSX.Element
     showRowSeparator?: boolean
@@ -115,7 +109,7 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
   }
   const SectionRow = ({
     title,
-    accessibilityLabel,
+    accessibilityRole = undefined,
     testID,
     onPress,
     children,
@@ -123,23 +117,15 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
     subContent,
     rowIcon,
   }: SectionRowProps) => (
-    <TouchableOpacity accessibilityLabel={accessibilityLabel} testID={testID} onPress={onPress}>
+    <TouchableOpacity testID={testID} onPress={onPress} accessibilityRole={accessibilityRole}>
       <View style={[styles.section]}>
-        <Pressable
-          onPress={onPress}
-          accessible={true}
-          accessibilityLabel={accessibilityLabel}
-          testID={testID}
-          style={styles.sectionRow}
-        >
-          <View style={{ flexDirection: 'row' }}>
-            <Text style={styles.rowTitle}>{title}</Text>
+        <View style={{ flexDirection: 'row' }}>
+          <Text style={styles.rowTitle}>{title}</Text>
 
-            {children}
+          {children}
 
-            {rowIcon}
-          </View>
-        </Pressable>
+          {rowIcon}
+        </View>
         {subContent}
       </View>
       {showRowSeparator && (
@@ -149,7 +135,9 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
       )}
     </TouchableOpacity>
   )
-  const arrowIcon = <MaterialIcon name={'keyboard-arrow-right'} size={iconSize} />
+  const arrowIcon = (
+    <MaterialIcon name={'keyboard-arrow-right'} size={iconSize} accessible={false} accessibilityLabel="" />
+  )
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <Modal
@@ -166,8 +154,8 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
         <SectionHeader title={t('Settings.Preference')} />
         <SectionRow
           title={t('Settings.Language')}
-          accessibilityLabel={t('Settings.Language')}
-          testID={testIdWithKey(t('Settings.Language').toLowerCase())}
+          accessibilityRole="button"
+          testID={testIdWithKey('Language')}
           onPress={() => navigation.navigate(Screens.Language)}
           rowIcon={arrowIcon}
         >
@@ -176,8 +164,8 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
         <SectionHeader title={t('Settings.Security')} />
         <SectionRow
           title={t('Settings.MyPin')}
-          accessibilityLabel={t('Settings.MyPin')}
-          testID={testIdWithKey(t('Settings.MyPin').toLowerCase())}
+          accessibilityRole="button"
+          testID={testIdWithKey('MyPin')}
           onPress={() =>
             navigation
               .getParent()
@@ -191,8 +179,8 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
         <View style={[styles.sectionSeparator]}></View>
         <SectionRow
           title={t('Settings.Biometrics')}
-          accessibilityLabel={t('Settings.Biometrics')}
-          testID={testIdWithKey(t('Settings.Biometrics').toLowerCase())}
+          accessibilityRole="button"
+          testID={testIdWithKey('Biometrics')}
           onPress={() => navigation.navigate(Screens.UseBiometry)}
           showRowSeparator
           rowIcon={arrowIcon}
@@ -206,8 +194,8 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
             <View style={[styles.sectionSeparator]}></View>
             <SectionRow
               title={t('Developer.Environment')}
-              accessibilityLabel={t('Developer.Environment')}
-              testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
+              accessibilityRole="button"
+              testID={testIdWithKey('Environment')}
               showRowSeparator={true}
               onPress={() => {
                 setEnvironmentModalVisible(true)
@@ -224,8 +212,7 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
         <View style={[styles.sectionSeparator]}></View>
         <SectionRow
           title={t('Settings.Version')}
-          accessibilityLabel={t('Settings.Version')}
-          testID={testIdWithKey(t('Settings.Version').toLowerCase())}
+          testID={testIdWithKey('Version')}
           onPress={() => {
             incrementDeveloperMenuCounter()
           }}

@@ -20,14 +20,13 @@ const HelpCenter: React.FC = () => {
       flex: 1,
       justifyContent: 'flex-end',
       ...TextTheme.headingOne,
-      margin: 10,
+      paddingBottom: 20,
     },
     sectionCopyrightText: {
       ...TextTheme.caption,
       color: TextTheme.normal.color,
       textAlign: 'left',
       textDecorationLine: 'none',
-      marginLeft: 10,
     },
   })
   return (

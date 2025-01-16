@@ -111,7 +111,7 @@ const DismissiblePopupModal: React.FC<DismissiblePopupModalProps> = ({
             <View style={styles.container}>
               <View style={styles.headerContainer}>
                 <View style={styles.infoIcon}>
-                  <Icon name={infoIconName} size={iconSize} color={iconColor} />
+                  <Icon name={infoIconName} size={iconSize} color={iconColor} accessible={false} />
                 </View>
                 <View style={styles.headerTextContainer}>
                   <Text style={styles.headerText} testID={testIdWithKey('HeaderText')}>
@@ -121,8 +121,8 @@ const DismissiblePopupModal: React.FC<DismissiblePopupModalProps> = ({
                 <View style={styles.dismissIcon}>
                   <TouchableOpacity
                     onPress={onDismissPressed}
-                    testID={testIdWithKey('Dismiss')}
-                    accessibilityLabel={t('Global.Dismiss')}
+                    testID={testIdWithKey('Close')}
+                    accessibilityLabel={t('Global.Close')}
                     accessibilityRole={'button'}
                     hitSlop={hitSlop}
                   >

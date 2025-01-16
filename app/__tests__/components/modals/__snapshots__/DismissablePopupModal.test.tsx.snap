@@ -104,6 +104,7 @@ exports[`DismissiblePopupModal Component Renders correctly with call to action 1
             }
           >
             <Text
+              accessible={false}
               allowFontScaling={false}
               selectable={false}
               style={
@@ -154,7 +155,7 @@ exports[`DismissiblePopupModal Component Renders correctly with call to action 1
             }
           >
             <View
-              accessibilityLabel="Global.Dismiss"
+              accessibilityLabel="Global.Close"
               accessibilityRole="button"
               accessibilityState={
                 {
@@ -196,7 +197,7 @@ exports[`DismissiblePopupModal Component Renders correctly with call to action 1
                   "opacity": 1,
                 }
               }
-              testID="com.ariesbifold:id/Dismiss"
+              testID="com.ariesbifold:id/Close"
             >
               <Text
                 allowFontScaling={false}
@@ -454,6 +455,7 @@ exports[`DismissiblePopupModal Component Renders correctly without call to actio
             }
           >
             <Text
+              accessible={false}
               allowFontScaling={false}
               selectable={false}
               style={
@@ -504,7 +506,7 @@ exports[`DismissiblePopupModal Component Renders correctly without call to actio
             }
           >
             <View
-              accessibilityLabel="Global.Dismiss"
+              accessibilityLabel="Global.Close"
               accessibilityRole="button"
               accessibilityState={
                 {
@@ -546,7 +548,7 @@ exports[`DismissiblePopupModal Component Renders correctly without call to actio
                   "opacity": 1,
                 }
               }
-              testID="com.ariesbifold:id/Dismiss"
+              testID="com.ariesbifold:id/Close"
             >
               <Text
                 allowFontScaling={false}

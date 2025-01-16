@@ -82,6 +82,9 @@ const UseBiometry: React.FC = () => {
       marginRight: 10,
       justifyContent: 'center',
     },
+    biometryAvailableGap: {
+      rowGap: 16,
+    },
   })
 
   useEffect(() => {
@@ -320,20 +323,18 @@ const UseBiometry: React.FC = () => {
         <HeaderText title={!inBiometryScreenFromSettings ? t('Screens.Biometry') : t('Screens.UseBiometry')} />
         <View style={{ marginTop: 20 }}>
           {biometryAvailable ? (
-            <>
+            <View style={styles.biometryAvailableGap}>
               <Text style={TextTheme.normal}>{t('Biometry.EnabledText1')}</Text>
-              <Text></Text>
               <Text style={TextTheme.normal}>
                 {t('Biometry.EnabledText2')}
                 <Text style={TextTheme.bold}> {t('Biometry.Warning')}</Text>
               </Text>
-            </>
+            </View>
           ) : (
-            <>
+            <View style={styles.biometryAvailableGap}>
               <Text style={TextTheme.normal}>{t('Biometry.NotEnabledText1')}</Text>
-              <Text></Text>
               <Text style={TextTheme.normal}>{t('Biometry.NotEnabledText2')}</Text>
-            </>
+            </View>
           )}
         </View>
         <View

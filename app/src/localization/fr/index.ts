@@ -39,7 +39,7 @@ const translation = {
     Dismiss: 'Rejeter',
     On: 'Activé',
     Off: 'Fermer',
-    Close: 'Retirer',
+    Close: 'Fermer',
     Save: 'Enregistrer',
     ShowDetails: 'Afficher les détails',
     Biometrics: 'Biométrie',

@@ -123,7 +123,7 @@ const AddCredentialSlider: React.FC = () => {
 
   return (
     <Modal animationType="slide" transparent={true} visible={addCredentialPressed} onRequestClose={deactivateSlider}>
-      <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />
+      <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} accessible={false} />
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <TouchableOpacity

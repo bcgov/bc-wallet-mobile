@@ -60,8 +60,8 @@ describe('DismissiblePopupModal Component', () => {
         onCallToActionPressed={onCallToActionPressed}
       />
     )
-    const dismissButton = getByTestId(testIdWithKey('Dismiss'))
-    fireEvent(dismissButton, 'press')
+    const closeButton = getByTestId(testIdWithKey('Close'))
+    fireEvent(closeButton, 'press')
 
     expect(onDismissPressed).toBeCalledTimes(1)
   })
