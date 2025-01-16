@@ -65,7 +65,7 @@ const Activities: React.FC<ActivitiesProps> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       {/* Tab-like Header */}
-      <View style={styles.tabHeader} accessibilityRole="tabbar">
+      <View style={styles.tabHeader} accessibilityRole="tablist">
         <TouchableOpacity
           accessibilityState={{ selected: activeTab === NotificationTab }}
           accessibilityRole="tab"
