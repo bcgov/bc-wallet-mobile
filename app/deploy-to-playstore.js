@@ -100,7 +100,7 @@ const main = async () => {
       track = 'internal' // TODO: set to production
     } else if (branchName === 'acceptation') {
       track = 'Acceptation'
-    } else if (branchName === 'acceptation') {
+    } else if (branchName === 'integration') {
       track = 'Integration'
     }
 
