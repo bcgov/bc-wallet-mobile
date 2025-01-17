@@ -1,4 +1,5 @@
 <!-- ENTETE -->
+
 ![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
@@ -11,18 +12,19 @@
 </div>
 <!-- FIN ENTETE -->
 
-
 ![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)
 [![Native Build & Test](https://github.com/bcgov/bc-wallet-mobile/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/bcgov/bc-wallet-mobile/actions/workflows/main.yaml)
 
-
 # Table of Contents
+
 <!-- TOC -->
-* [Prerequisite](#prerequisite)
-* [Overall Architecture](#overall-architecture)
+
+- [Prerequisite](#prerequisite)
+- [Overall Architecture](#overall-architecture)
 <!-- TOC -->
 
 # Prerequisite
+
 Before running the mobile app it is expected to the following services up and running. (Either locally or hosted
 somewhere on the internet.)
 
@@ -33,9 +35,7 @@ somewhere on the internet.)
 5. Follow the steps in the [Developer Guide](DEVELOPER.md)
 
 # Overall Architecture
+
 How BC Wallet Mobile App fits in a larger picture?
 
-![](<./docs/BCWallet_Architecture.png>)
-
-
-
+![](./docs/BCWallet_Architecture.png)
