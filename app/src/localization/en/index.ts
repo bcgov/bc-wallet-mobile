@@ -817,6 +817,8 @@ const translation = {
     ToggleForcedUpdates: 'Toggle app forced updates',
     ManageEnvironment: 'Manage Environment',
     ToggleManageEnvironment: 'Toggle manage environment',
+    IASEnvironmentWarning:
+      'The application is currently in the "{{ environment }}" environment. The option below only modifies the access link to the SAG of the governmental authentication notification.',
   },
   Tour: {
     GuideTitle: 'Welcome to QC Wallet',
