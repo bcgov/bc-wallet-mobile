@@ -826,7 +826,7 @@ const translation = {
     ManageEnvironment: "Gérer l'environnement",
     ToggleManageEnvironment: "Basculer la gestion de l'environnement",
     IASEnvironmentWarning:
-      "L'application est présentement dans l'environnement \"{{ environment }}\". L'option ci-dessous modifie seulement le lien d'accès au SAG de la notification d'attestation d'authentification gouvernemantale.",
+      "L'application est présentement dans l'environnement \"{{ environment }}\".  L'option ci-dessous modifie uniquement le lien d'accès à la gestion de compte du SAG pour la notification d'attestation d'authentification gouvernementale.",
   },
   Tour: {
     GuideTitle: 'Bienvenue au Portefeuille numérique',
