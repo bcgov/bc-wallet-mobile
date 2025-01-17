@@ -54,6 +54,7 @@ const main = async () => {
   const keyFile = process.env.GOOGLE_API_CREDENTIALS
   const packageName = process.env.ANDROID_PACKAGE_NAME
   const bundlePath = process.env.ANDROID_BUNDLE_PATH
+  const branchName = process.env.BRANCHE_NAME
 
   console.log(`Google Publish v${pjson.version}`)
 
@@ -94,11 +95,20 @@ const main = async () => {
       },
     })
 
+    let track = 'internal'
+    if (branchName === 'main') {
+      track = 'internal' // TODO: set to production
+    } else if (branchName === 'acceptation') {
+      track = 'Acceptation'
+    } else {
+      track = 'Integration'
+    }
+
     console.log('Updating internal track.')
     await play.edits.tracks.update({
       editId: edit.data.id,
       packageName,
-      track: 'internal',
+      track: track,
       requestBody: {
         releases: [
           {

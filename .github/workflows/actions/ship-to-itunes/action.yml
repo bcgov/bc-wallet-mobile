@@ -45,13 +45,11 @@ runs:
         BRANCH_NAME: ${{ inputs.branch_name }}
       run: |
         if [[ "$BRANCH_NAME" == "main" ]]; then
-          BETA_GROUP="" 
+          BETA_GROUP=""
         elif [[ "$BRANCH_NAME" == "acceptation" ]]; then
           BETA_GROUP="Acceptation"
-        elif [[ "$BRANCH_NAME" == "integration" ]]; then
-          BETA_GROUP="Integration"
         else
-          BETA_GROUP=""
+          BETA_GROUP="Integration"
         fi
 
         export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin

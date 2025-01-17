@@ -171,8 +171,9 @@ jobs:
             echo "ENVIRONMENT=ACCEPTATION" >>.env
           elif [[ "$BRANCH_NAME" == "integration" ]]; then
             echo "ENVIRONMENT=INTEGRATION" >>.env
+          else
+            echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
           fi
-          echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
 
       - name: Update APS environment
         working-directory: app/ios/AriesBifold
@@ -265,14 +266,22 @@ jobs:
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           MEDIATOR_URL_DEV: ${{ secrets.MEDIATOR_URL_DEV }}
-          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
           OCA_URL: ${{ vars.OCA_URL }}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
           echo "MEDIATOR_URL_DEV=${MEDIATOR_URL_DEV}" >>.env
-          echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "ENVIRONMENT=PRODUCTION" >>.env
+          elif [[ "$BRANCH_NAME" == "acceptation" ]]; then
+            echo "ENVIRONMENT=ACCEPTATION" >>.env
+          elif [[ "$BRANCH_NAME" == "integration" ]]; then
+            echo "ENVIRONMENT=INTEGRATION" >>.env
+          else
+            echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
+          fi
 
       - name: Create release keystore
         working-directory: app/android/app
@@ -325,7 +334,7 @@ jobs:
             app/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload Android artifact
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration'
         uses: actions/upload-artifact@v4
         with:
           name: android-artifact
@@ -334,7 +343,7 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration'
         working-directory: app/
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -343,6 +352,7 @@ jobs:
           ANDROID_PACKAGE_NAME: "ca.qc.gouv.portefeuillemobileqc"
           VERSION_CODE: ${{ env.appBuildNumber }}
           VERSION_NAME: ${{ env.appBuildVersion }}
+          BRANCHE_NAME: ${{ github.ref_name }}
         run: |
           # when we updated to yarn we started getting an error with paths
           # and had to add `/android` to the path.
