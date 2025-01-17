@@ -158,16 +158,18 @@ jobs:
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           MEDIATOR_URL_DEV: ${{ secrets.MEDIATOR_URL_DEV }}
           OCA_URL: ${{ vars.OCA_URL }}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
         run: |
+          BRANCH_NAME="${{ github.ref_name }}"
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
           echo "MEDIATOR_URL_DEV=${MEDIATOR_URL_DEV}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
-          if [github.ref_name == 'main']; then
+          if [[ "$BRANCH_NAME" == "main" ]]; then
             echo "ENVIRONMENT=PRODUCTION" >>.env
-          elif [github.ref_name == 'acceptation']; then
+          elif [[ "$BRANCH_NAME" == "acceptation" ]]; then
             echo "ENVIRONMENT=ACCEPTATION" >>.env
-          elif [github.ref_name == 'integration']; then
+          elif [[ "$BRANCH_NAME" == "integration" ]]; then
             echo "ENVIRONMENT=INTEGRATION" >>.env
           fi
           echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
