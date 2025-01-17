@@ -19,7 +19,11 @@ inputs:
   version_name:
     description: |
       The version name for the release notes. i.e 1.0.1
-    requred: true
+    required: true
+  branch_name:
+    description: |
+      The branch name to use for the release groups. i.e main
+    required: true
 
 runs:
   using: composite
@@ -38,11 +42,22 @@ runs:
         APP_STORE_CONNECT_PRIVATE_KEY: ${{ inputs.app_store_connect_private_key }}
         VERSION_CODE: ${{ inputs.version_code }}
         VERSION_NAME: ${{ inputs.version_name }}
+        BRANCH_NAME: ${{ inputs.branch_name }}
       run: |
+        if [[ "$BRANCH_NAME" == "main" ]]; then
+          BETA_GROUP="" 
+        elif [[ "$BRANCH_NAME" == "acceptation" ]]; then
+          BETA_GROUP="acceptation"
+        elif [[ "$BRANCH_NAME" == "integration" ]]; then
+          BETA_GROUP="integration"
+        else
+          BETA_GROUP=""
+        fi
+
         export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
         app-store-connect publish \
         --enable-package-validation \
         --max-build-processing-wait 10 \
         --testflight \
-        --beta-group "The Team" "MCN Team" \
+        --beta-group "$BETA_GROUP" \
         --whats-new "Release ${VERSION_NAME}-${GITHUB_RUN_NUMBER}"

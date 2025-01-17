@@ -224,6 +224,7 @@ jobs:
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
           version_code: ${{ env.appBuildNumber }}
           version_name: ${{ env.appBuildVersion }}
+          branch_name: ${{ github.ref_name }}
 
   build-android:
     needs: [check-secrets, check-vars]
