@@ -47,9 +47,9 @@ runs:
         if [[ "$BRANCH_NAME" == "main" ]]; then
           BETA_GROUP="" 
         elif [[ "$BRANCH_NAME" == "acceptation" ]]; then
-          BETA_GROUP="acceptation"
+          BETA_GROUP="Acceptation"
         elif [[ "$BRANCH_NAME" == "integration" ]]; then
-          BETA_GROUP="integration"
+          BETA_GROUP="Integration"
         else
           BETA_GROUP=""
         fi
