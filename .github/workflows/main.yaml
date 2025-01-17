@@ -8,7 +8,7 @@ env:
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, acceptation, integration]
     paths:
       - app/**
       - .yarn/**
@@ -157,14 +157,20 @@ jobs:
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           MEDIATOR_URL_DEV: ${{ secrets.MEDIATOR_URL_DEV }}
-          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
           OCA_URL: ${{ vars.OCA_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
           echo "MEDIATOR_URL_DEV=${MEDIATOR_URL_DEV}" >>.env
-          echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
           echo "OCA_URL=${OCA_URL}" >>.env
+          if [github.ref_name == 'main']; then
+            echo "ENVIRONMENT=PRODUCTION" >>.env
+          elif [github.ref_name == 'acceptation']; then
+            echo "ENVIRONMENT=ACCEPTATION" >>.env
+          elif [github.ref_name == 'integration']; then
+            echo "ENVIRONMENT=INTEGRATION" >>.env
+          fi
+          echo "ENVIRONMENT=${ENVIRONMENT}" >>.env
 
       - name: Update APS environment
         working-directory: app/ios/AriesBifold
@@ -208,7 +214,7 @@ jobs:
           ouput_artifact_ref: ios-artifact
 
       - name: Ship to iTunes
-        if: github.ref_name == 'main'
+        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
