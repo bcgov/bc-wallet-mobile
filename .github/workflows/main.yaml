@@ -217,7 +217,7 @@ jobs:
           ouput_artifact_ref: ios-artifact
 
       - name: Ship to iTunes
-        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration'
+        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration' || github.ref_name == 'develop'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -334,7 +334,7 @@ jobs:
             app/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload Android artifact
-        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration'
+        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration' || github.ref_name == 'develop'
         uses: actions/upload-artifact@v4
         with:
           name: android-artifact
@@ -343,7 +343,7 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration'
+        if: github.ref_name == 'main' || github.ref_name == 'acceptation' || github.ref_name == 'integration' || github.ref_name == 'develop'
         working-directory: app/
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}

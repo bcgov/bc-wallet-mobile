@@ -48,8 +48,10 @@ runs:
           BETA_GROUP=""
         elif [[ "$BRANCH_NAME" == "acceptation" ]]; then
           BETA_GROUP="Acceptation"
-        else
+        elif [[ "$BRANCH_NAME" == "integration" ]]; then
           BETA_GROUP="Integration"
+        else
+          BETA_GROUP=""
         fi
 
         export PATH=$PATH:/Library/Frameworks/Python.framework/Versions/3.11/bin
