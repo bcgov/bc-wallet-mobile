@@ -104,7 +104,7 @@ const CardHistorydDetails: React.FC<CardHistorydDetailsProp> = ({ route, navigat
           })}
         />
         <View style={{ marginTop: 20 }} />
-        <Text style={styles.subTitle}>{itemContent?.correspondenceName}</Text>
+        <Text style={styles.subTitle}>{itemContent?.correspondenceName ? startCaseUnicode(itemContent?.correspondenceName) : ''}</Text>
         <Text style={styles.date}>
           {t('History.Date.changedOn', { operation: operation })} {operationDate}
         </Text>
