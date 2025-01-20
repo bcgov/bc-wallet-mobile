@@ -8,7 +8,7 @@ env:
 on:
   workflow_dispatch:
   push:
-    branches: [main, acceptation, integration]
+    branches: [main, acceptation, integration, develop]
     paths:
       - app/**
       - .yarn/**
