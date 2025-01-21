@@ -60,6 +60,7 @@ const translation = {
       ErrorTitle: 'Mise à jour indisponible',
       ErrorMsg: "Impossible de mettre à jour l'application.",
     },
+    Loading: 'Chargement en cours',
   },
   Language: {
     code_en: 'Anglais',
@@ -72,6 +73,9 @@ const translation = {
     MinuteAgo: 'Il y a une minute',
     MinutesAgo: 'Il y a quelques minutes',
     JustNow: 'À l’instant',
+    ModifiedOn: 'Modifié le',
+    AcceptedOn: 'Accepté le',
+    DeclinedOn: 'Refusé le',
     MonthLong: {
       January: 'janvier',
       February: 'février',
@@ -202,6 +206,8 @@ const translation = {
     Message1044: "Un problème est survenu lors de l'initialisation de l'onboarding.",
     Title1045: "Impossible d'initialiser l'agent.",
     Message1045: "Un problème est survenu lors de l'initialisation de l'agent.",
+    FailedToDelete: 'Échec de la suppression',
+    UnexpectedError: 'Une erreur inattendue est survenue',
   },
   Credentials: {
     AddCredential: 'Ajouter une attestation',
@@ -495,6 +501,8 @@ const translation = {
     FooterNothingElse: "Il n'y a rien d'autre",
     NotificationsDeleted_one: '{{ count }} notification supprimée.',
     NotificationsDeleted_other: '{{ count }} notifications supprimées.',
+    HistoryDeleted_one: '{{ count }} historique supprimé.',
+    HistoryDeleted_other: '{{ count }} historiques supprimés.',
   },
   PrivacyPolicy: {
     Title: 'Politique de confidentialité',
@@ -1016,6 +1024,63 @@ const translation = {
     Accessibility: 'Accessibilité',
     TermsOfUse: "Conditions d'utilisation",
     PrivacyPolicy: 'Politique de confidentialité',
+  },
+  History: {
+    ConfirmDeleteHistory: 'Êtes-vous sûr de vouloir supprimer cet historique ?',
+    Initial: {
+      Description: {
+        Header: 'Cette section Historique peut lister lorsque :\n',
+        PointA: 'Vous avez <b>partagé des informations</b> avec un vérificateur',
+        PointAAxs: 'Vous avez partagé des informations avec un vérificateur',
+        PointB: 'Une carte est <b>acceptée, révoquée ou expirée</b>',
+        PointBAxs: 'Une carte est acceptée, révoquée ou expirée',
+        PointC: 'Vous avez mis à jour votre <b>NIP</b>',
+        PointCAxs: 'Vous avez mis à jour votre NIP',
+      },
+    },
+    Button: {
+      DeleteHistory: "Supprimer l'historique",
+    },
+    CardTitle: {
+      CardChanged: 'Attestation {{operation}}',
+      InformationSent: 'Informations envoyées à :',
+      ProofReqUpdated: "Partage d'information {{operation}}",
+      ContactUpdated: 'Contact {{operation}}',
+      WalletPinUpdated: 'Modification du NIP',
+      BiometricUpdated: 'La biométrie est {{operation}}',
+      ConnectionEstablished: 'Connexion établie',
+      ConnectionRemoved: 'Connexion supprimée',
+      Default: 'Événement historique',
+    },
+    CardDescription: {
+      Default: 'Attestation numérique d’identité gouvernementale',
+      CardChanged: 'Attestation {{cardName}} {{operation}}',
+      ContactUpdated: '{{contactName}} a été {{operation}}.',
+      WalletPinUpdated: "Un nouveau NIP a été défini pour l'application",
+      BiometricUpdated: 'La biométrie a été {{operation}}',
+    },
+    Details: {
+      FirstName: 'Prénom',
+      LastName: 'Nom',
+      Birthday: 'Date de naissance',
+      Address: 'Adresse',
+      City: 'Ville',
+      Province: 'Province',
+      PostalCode: 'Code postal',
+    },
+    Date: {
+      changedOn: '{{operation}} le',
+    },
+    Operations: {
+      Accepted: 'acceptée',
+      Declined: 'refusée',
+      Removed: 'supprimée',
+      Expired: 'expirée',
+      Revoked: 'révoquée',
+      Activated: 'activée',
+      Deactivated: 'désactivée',
+      Added: 'ajouté',
+    },
   },
 }
 

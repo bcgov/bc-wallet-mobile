@@ -29,6 +29,7 @@ interface EventItemProps {
   onOpenSwipeable: (id: string | null) => void
   activateSelection?: boolean
   setSelected?: ({ id, deleteAction }: { id: string; deleteAction?: () => Promise<void> }) => void
+  deleteMessage: 'Activities.NotificationsDeleted' | 'Activities.HistoryDeleted'
 }
 
 const EventItem = ({
@@ -41,6 +42,7 @@ const EventItem = ({
   setSelected,
   isRead = true,
   isHome,
+  deleteMessage,
 }: EventItemProps): React.JSX.Element => {
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
@@ -167,7 +169,7 @@ const EventItem = ({
       handleSwipeClose()
       setToastOptions({
         type: ToastType.Info,
-        text1: t('Activities.NotificationsDeleted', { count: 1 }),
+        text1: t(deleteMessage, { count: 1 }),
         onShow() {
           dispatch({
             type: BCDispatchAction.ACTIVITY_TEMPORARILY_DELETED_IDS,
