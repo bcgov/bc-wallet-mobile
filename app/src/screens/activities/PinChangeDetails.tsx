@@ -31,7 +31,7 @@ const PinChangeDetails: React.FC<PinChangeDetailsProp> = ({ route, navigation })
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView contentContainerStyle={[styles.contentContainer, styles.headerStyle]}>
         <HeaderText title={t('History.CardDescription.WalletPinUpdated')} />
         <View style={{ marginTop: 20 }} />
         <Text style={[TextTheme.normal, styles.subTitle]}>

@@ -33,7 +33,7 @@ const ContactHistoryDetails: React.FC<ContactHistoryDetailsProp> = ({ route, nav
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView contentContainerStyle={[styles.contentContainer, styles.headerStyle]}>
         <HeaderText
           title={t('History.CardDescription.ContactUpdated', {
             contactName: itemContent.correspondenceName ? startCaseUnicode(itemContent.correspondenceName) : '',

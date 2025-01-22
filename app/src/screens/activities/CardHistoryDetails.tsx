@@ -1,45 +1,81 @@
+import { CredentialExchangeRecord } from '@credo-ts/core'
 import { useAgent } from '@credo-ts/react-hooks'
-import { TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
-import { HistoryCardType, HistoryRecord } from '@hyperledger/aries-bifold-core/App/modules/history/types'
-import { formatTime } from '@hyperledger/aries-bifold-core/App/utils/helpers'
+import { CredentialCard, Record, TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
+import { HistoryRecord } from '@hyperledger/aries-bifold-core/App/modules/history/types'
+import {
+  getCredentialIdentifiers,
+  isValidAnonCredsCredential,
+} from '@hyperledger/aries-bifold-core/App/utils/credential'
+import { formatTime, useCredentialConnectionLabel } from '@hyperledger/aries-bifold-core/App/utils/helpers'
+import { buildFieldsFromAnonCredsCredential } from '@hyperledger/aries-bifold-core/App/utils/oca'
+import { BrandingOverlay } from '@hyperledger/aries-oca'
+import { Attribute, CredentialOverlay } from '@hyperledger/aries-oca/build/legacy'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
+import { SafeAreaView, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native'
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import HeaderText from '../../components/HeaderText'
 import useHistoryDetailPageStyles from '../../hooks/useHistoryDetailPageStyles'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { ColorPallet } from '../../theme'
-import { handleDeleteHistory, renderCardIcon } from '../../utils/historyUtils'
+import { handleDeleteHistory } from '../../utils/historyUtils'
 import { startCaseUnicode } from '../../utils/stringUtils'
 
 type CardHistorydDetailsProp = StackScreenProps<ActivitiesStackParams, Screens.CardHistoryDetails>
 
 const CardHistorydDetails: React.FC<CardHistorydDetailsProp> = ({ route, navigation }) => {
   const { TextTheme } = useTheme()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { recordId, item, operation } = route.params
   const itemContent = item.content as HistoryRecord
   const iconSize = 24
   const { agent } = useAgent()
-  const [loadHistory] = useServices([TOKENS.FN_LOAD_HISTORY])
+  const [bundleResolver, loadHistory] = useServices([TOKENS.UTIL_OCA_RESOLVER, TOKENS.FN_LOAD_HISTORY])
   const [credentialExists, setCredentialExists] = useState<boolean | null>(null)
   const styles = useHistoryDetailPageStyles()
 
-  interface CredentialDetails {
-    credentialAttributes: { name: string; value: string }[]
-  }
-
-  const [credentialDetails, setCredentialDetails] = useState<CredentialDetails | null>(null)
+  const [credentialDetails, setCredentialDetails] = useState<CredentialExchangeRecord | undefined>()
   const [isLoading, setIsLoading] = useState(true)
+  const [overlay, setOverlay] = useState<CredentialOverlay<BrandingOverlay>>({
+    bundle: undefined,
+    presentationFields: [],
+    metaOverlay: undefined,
+    brandingOverlay: undefined,
+  })
+
+  const credentialConnectionLabel = useCredentialConnectionLabel(credentialDetails ?? undefined)
+
+  useEffect(() => {
+    if (!(credentialDetails && isValidAnonCredsCredential(credentialDetails))) {
+      return
+    }
+
+    const params = {
+      identifiers: getCredentialIdentifiers(credentialDetails),
+      meta: {
+        alias: credentialConnectionLabel,
+        credConnectionId: credentialDetails.connectionId,
+      },
+      attributes: buildFieldsFromAnonCredsCredential(credentialDetails),
+      language: i18n.language,
+    }
+
+    bundleResolver.resolveAllBundles(params).then((bundle) => {
+      setOverlay((o) => ({
+        ...o,
+        ...(bundle as CredentialOverlay<BrandingOverlay>),
+        presentationFields: bundle.presentationFields?.filter((field) => (field as Attribute).value),
+      }))
+    })
+  }, [credentialDetails, credentialConnectionLabel, bundleResolver, i18n.language])
 
   const checkCredentialExists = async (id: string): Promise<void> => {
     try {
       const credentialExchangeRecord = await agent?.credentials.getById(id)
       setCredentialExists(credentialExchangeRecord !== null)
-      setCredentialDetails(credentialExchangeRecord ? JSON.parse(JSON.stringify(credentialExchangeRecord)) : null)
+      setCredentialDetails(credentialExchangeRecord)
     } catch (error) {
       setCredentialExists(false)
     } finally {
@@ -56,31 +92,6 @@ const CardHistorydDetails: React.FC<CardHistorydDetailsProp> = ({ route, navigat
     }
   }, [recordId])
 
-  const renderDetails = () => {
-    if (!credentialDetails || !Array.isArray(credentialDetails.credentialAttributes)) return null
-
-    // Map the attribute names to the desired labels
-    const attributeMap = {
-      student_first_name: t('History.Details.FirstName'),
-      student_last_name: t('History.Details.LastName'),
-      birthday: t('History.Details.Birthday'),
-      address: t('History.Details.Address'),
-      city: t('History.Details.City'),
-      province: t('History.Details.Province'),
-      postal_code: t('History.Details.PostalCode'),
-    }
-
-    return Object.entries(attributeMap).map(([attributeName, label]) => {
-      const attribute = credentialDetails.credentialAttributes.find((attr) => attr.name === attributeName)
-      return attribute ? (
-        <View key={attributeName} style={styles.detailRow}>
-          <Text style={styles.detailLabel}>{label}</Text>
-          <Text style={styles.detailValue}>{attribute.value}</Text>
-        </View>
-      ) : null
-    })
-  }
-
   const operationDate = itemContent?.createdAt
     ? formatTime(itemContent?.createdAt, { shortMonth: true, trim: true })
     : t('Record.InvalidDate')
@@ -96,49 +107,31 @@ const CardHistorydDetails: React.FC<CardHistorydDetailsProp> = ({ route, navigat
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        <HeaderText
-          title={t('History.CardDescription.CardChanged', {
-            cardName: itemContent?.message ? startCaseUnicode(itemContent?.message) : '',
-            operation: operation,
-          })}
-        />
-        <View style={{ marginTop: 20 }} />
-        <Text style={styles.subTitle}>{itemContent?.correspondenceName ? startCaseUnicode(itemContent?.correspondenceName) : ''}</Text>
-        <Text style={styles.date}>
-          {t('History.Date.changedOn', { operation: operation })} {operationDate}
-        </Text>
-        <View style={styles.card}>
-          <View
-            style={[
-              styles.verticalBar,
-              { backgroundColor: credentialExists ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey },
-            ]}
-          />
-          <View style={styles.cardContent}>
-            <Text style={styles.cardTitle}>{itemContent?.message ? startCaseUnicode(itemContent?.message) : ''}</Text>
-            {credentialExists && (
-              <Text style={styles.cardSubtitleName}>
-                {`${
-                  credentialDetails?.credentialAttributes?.find((attr) => attr.name === 'student_first_name')?.value ||
-                  ''
-                } ${
-                  credentialDetails?.credentialAttributes?.find((attr) => attr.name === 'student_last_name')?.value ||
-                  ''
-                }`}
-              </Text>
-            )}
-            <View style={styles.cardSubtitleRow}>
-              {renderCardIcon(itemContent?.type as HistoryCardType)}
-              <Text style={styles.cardSubtitle}>
+      <View style={styles.contentContainer}>
+        <Record
+          fields={overlay.presentationFields || []}
+          header={() => (
+            <View style={styles.headerStyle}>
+              <HeaderText
+                title={t('History.CardDescription.CardChanged', {
+                  cardName: itemContent?.message ? startCaseUnicode(itemContent.message) : '',
+                  operation: operation,
+                  interpolation: { escapeValue: false },
+                })}
+              />
+
+              <View style={{ marginTop: 20 }} />
+              <Text style={styles.subTitle}>
                 {itemContent?.correspondenceName ? startCaseUnicode(itemContent?.correspondenceName) : ''}
               </Text>
+              <Text style={styles.date}>
+                {t('History.Date.changedOn', { operation: operation })} {operationDate}
+              </Text>
+              {credentialExists && <CredentialCard credential={credentialDetails as CredentialExchangeRecord} />}
             </View>
-          </View>
-        </View>
-        {credentialExists && <View style={styles.detailsContainer}>{renderDetails()}</View>}
-      </ScrollView>
-
+          )}
+        />
+      </View>
       <View style={styles.lineSeparator} />
 
       <TouchableOpacity

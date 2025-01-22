@@ -31,7 +31,7 @@ const BiometricChangeDetails: React.FC<BiometricChangeDetailsProp> = ({ route, n
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView contentContainerStyle={[styles.contentContainer, styles.headerStyle]}>
         <HeaderText title={t('History.CardDescription.BiometricUpdated', { operation })} />
         <View style={{ marginTop: 20 }} />
         <Text style={[TextTheme.normal, styles.subTitle]}>
