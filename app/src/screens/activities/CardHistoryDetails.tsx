@@ -1,13 +1,18 @@
 import { CredentialExchangeRecord } from '@credo-ts/core'
 import { useAgent } from '@credo-ts/react-hooks'
-import { CredentialCard, Record, TOKENS, useServices, useTheme } from '@hyperledger/aries-bifold-core'
-import { HistoryRecord } from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import {
+  CredentialCard,
+  Record,
+  TOKENS,
+  useServices,
+  useTheme,
+  formatTime,
+  useCredentialConnectionLabel,
   getCredentialIdentifiers,
   isValidAnonCredsCredential,
-} from '@hyperledger/aries-bifold-core/App/utils/credential'
-import { formatTime, useCredentialConnectionLabel } from '@hyperledger/aries-bifold-core/App/utils/helpers'
-import { buildFieldsFromAnonCredsCredential } from '@hyperledger/aries-bifold-core/App/utils/oca'
+  buildFieldsFromAnonCredsCredential,
+} from '@hyperledger/aries-bifold-core'
+import { HistoryRecord } from '@hyperledger/aries-bifold-core/App/modules/history/types'
 import { BrandingOverlay } from '@hyperledger/aries-oca'
 import { Attribute, CredentialOverlay } from '@hyperledger/aries-oca/build/legacy'
 import { StackScreenProps } from '@react-navigation/stack'

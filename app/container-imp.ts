@@ -12,6 +12,7 @@ import {
   OnboardingState,
   DispatchAction,
   Screens,
+  defaultConfig as bifoldDefaultConfig,
 } from '@hyperledger/aries-bifold-core'
 import { Locales } from '@hyperledger/aries-bifold-core/App/localization'
 import { DefaultScreenOptionsDictionary } from '@hyperledger/aries-bifold-core/App/navigators/defaultStackOptions'
@@ -60,13 +61,15 @@ export interface AppState {
 }
 
 const defaultConfig: BifoldConfig = {
+  ...bifoldDefaultConfig,
   PINSecurity: { rules: PINValidationRules, displayHelper: true },
-  settings: [],
-  enableTours: true,
   enableChat: false,
+  enableTours: true,
   supportedLanguages: [Locales.en, Locales.fr],
   showPreface: false,
   showPINExplainer: false,
+  showScanErrorButton: false,
+  whereToUseWalletUrl: undefined,
   enableReuseConnections: true,
   disableOnboardingSkip: true,
   enableHiddenDevModeTrigger: false,

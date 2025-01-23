@@ -1,5 +1,5 @@
 diff --git a/App/components/listItems/NotificationListItem.tsx b/App/components/listItems/NotificationListItem.tsx
-index 1c8a86091e207b58a620be00db905b4ba7d06539..b3b630f911d116a0f6ce441c0aae3abe770f2075 100644
+index ce791235318e3b773a7f97580f9e205ad9995ded..1bc8109123f4e793dd994dccaa84e3cf7845dc01 100644
 --- a/App/components/listItems/NotificationListItem.tsx
 +++ b/App/components/listItems/NotificationListItem.tsx
 @@ -49,6 +49,8 @@ export interface NotificationListItemProps {
@@ -89,16 +89,3 @@ index ad946ed3ee1af79bbdc90fa70e30eefd6782128c..7e10dc7df06c559ae379e4f5bbf3f53f
  
    useEffect(() => {
      const shouldShowTour = enableToursConfig && store.tours.enableTours && !store.tours.seenHomeTour
-diff --git a/App/types/proof-items.ts b/App/types/proof-items.ts
-index fc4db0531ba9274f65b5ff1563c7c7f18c20a840..cfc9d66233935fa186772fc729f01244f0f64abe 100644
---- a/App/types/proof-items.ts
-+++ b/App/types/proof-items.ts
-@@ -1,7 +1,7 @@
- import { AnonCredsCredentialsForProofRequest } from '@credo-ts/anoncreds'
- import { CredentialExchangeRecord } from '@credo-ts/core'
- import { Attribute, Predicate } from '@hyperledger/aries-oca/build/legacy'
--import { DescriptorMetadata } from 'utils/anonCredsProofRequestMapper'
-+import { DescriptorMetadata } from '../utils/anonCredsProofRequestMapper'
- 
- export type CredentialDataForProof = {
-   groupedProof: (ProofCredentialPredicates & ProofCredentialAttributes)[],
