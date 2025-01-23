@@ -1044,7 +1044,7 @@ const translation = {
     CardTitle: {
       CardChanged: 'Attestation {{operation}}',
       InformationSent: 'Informations envoyées à :',
-      ProofReqUpdated: "Partage d'information {{operation}}",
+      ProofReqUpdated: "Demande d'information",
       ContactUpdated: 'Contact {{operation}}',
       WalletPinUpdated: 'Modification du NIP',
       BiometricUpdated: 'La biométrie est {{operation}}',
@@ -1053,7 +1053,7 @@ const translation = {
       Default: 'Événement historique',
     },
     CardDescription: {
-      Default: 'Attestation numérique d’identité gouvernementale',
+      Proof: "Demande d'information {{operation}}",
       CardChanged: 'Attestation {{cardName}} {{operation}}',
       ContactUpdated: '{{contactName}} a été {{operation}}.',
       WalletPinUpdated: "Un nouveau NIP a été défini pour l'application",

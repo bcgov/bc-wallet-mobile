@@ -34,7 +34,7 @@ const PinChangeDetails: React.FC<PinChangeDetailsProp> = ({ route, navigation })
       <ScrollView contentContainerStyle={[styles.contentContainer, styles.headerStyle]}>
         <HeaderText title={t('History.CardDescription.WalletPinUpdated')} />
         <View style={{ marginTop: 20 }} />
-        <Text style={[TextTheme.normal, styles.subTitle]}>
+        <Text style={styles.date}>
           {t('Date.ModifiedOn')} {modifiedDate}
         </Text>
       </ScrollView>

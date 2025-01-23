@@ -62,9 +62,9 @@ const ActivitiesStack: React.FC = () => {
       <StackActivities.Screen
         name={Screens.ProofHistoryDetails}
         component={ProofHistoryDetails}
-        options={({ route }) => ({
-          title: t('History.CardTitle.ProofReqUpdated', { operation: route.params?.operation }),
-        })}
+        options={{
+          title: t('History.CardTitle.ProofReqUpdated'),
+        }}
       />
     </StackActivities.Navigator>
   )

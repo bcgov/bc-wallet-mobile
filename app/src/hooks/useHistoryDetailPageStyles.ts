@@ -21,6 +21,7 @@ const useHistoryDetailPageStyles = () => {
     subTitle: {
       marginBottom: 20,
       color: ColorPallet.grayscale.mediumGrey,
+      fontWeight: 'bold',
     },
     lineSeparator: {
       borderBottomWidth: 1,

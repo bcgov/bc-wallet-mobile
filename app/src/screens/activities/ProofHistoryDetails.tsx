@@ -62,9 +62,11 @@ const ProofHistoryDetails: React.FC<ProofHistoryDetailsProp> = ({ route, navigat
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={[styles.contentContainer, styles.headerStyle]}>
-        <HeaderText title={itemContent?.correspondenceName ? startCaseUnicode(itemContent.correspondenceName) : ''} />
+        <HeaderText title={t('History.CardDescription.Proof', { operation })} />
         <View style={{ marginTop: 20 }} />
-        <Text style={styles.subTitle}>{t('History.CardDescription.Default')}</Text>
+        <Text style={styles.subTitle}>
+          {itemContent?.correspondenceName ? startCaseUnicode(itemContent.correspondenceName) : ''}
+        </Text>
         <Text style={styles.date}>
           {t('History.Date.changedOn', { operation: operation })} {operationDate}
         </Text>
