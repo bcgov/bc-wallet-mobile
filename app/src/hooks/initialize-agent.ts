@@ -31,7 +31,7 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
 }
 
 const useInitializeBCAgent = () => {
-  const { setAgent } = useAgent()
+  const { agent, setAgent } = useAgent()
   const [store, dispatch] = useStore<BCState>()
   const { walletSecret } = useAuth()
   const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
@@ -41,6 +41,30 @@ const useInitializeBCAgent = () => {
     TOKENS.CACHE_CRED_DEFS,
     TOKENS.CACHE_SCHEMAS,
   ])
+
+  const restartExistingAgent = useCallback(async () => {
+    // if the agent is initialized, it was not a clean shutdown and should be replaced, not restarted
+    if (!walletSecret?.id || !walletSecret.key || !agent || agent.isInitialized) {
+      return
+    }
+
+    logger.info('Agent already created, restarting...')
+    try {
+      await agent.wallet.open({
+        id: walletSecret.id,
+        key: walletSecret.key,
+      })
+      await agent.initialize()
+    } catch {
+      // if the existing agents wallet cannot be opened or initialize() fails it was
+      // again not a clean shutdown and the agent should be replaced, not restarted
+      logger.warn('Failed to restart existing agent, skipping agent restart')
+      return
+    }
+
+    logger.info('Successfully restarted existing agent')
+    return agent
+  }, [walletSecret, agent, logger])
 
   const createNewAgent = useCallback(
     async (ledgers: IndyVdrPoolConfig[]): Promise<Agent | undefined> => {
@@ -168,6 +192,12 @@ const useInitializeBCAgent = () => {
       return
     }
 
+    const existingAgent = await restartExistingAgent()
+    if (existingAgent) {
+      setAgent(existingAgent)
+      return existingAgent
+    }
+
     const cachedLedgers = await loadCachedLedgers()
     const ledgers = cachedLedgers ?? indyLedgers
 
@@ -187,12 +217,12 @@ const useInitializeBCAgent = () => {
 
     logger.info('Creating link secret if required...')
     await createLinkSecretIfRequired(newAgent)
-    
+
     if (store.preferences.usePushNotifications) {
       logger.info('Activating push notifications...')
       activate(newAgent)
     }
-    
+
     // In case the old attestationMonitor is still active, stop it and start a new one
     logger.info('Starting attestation monitor...')
     attestationMonitor?.stop()
@@ -203,14 +233,15 @@ const useInitializeBCAgent = () => {
 
     return newAgent
   }, [
+    walletSecret,
+    restartExistingAgent,
     setAgent,
+    indyLedgers,
     createNewAgent,
+    logger,
     migrateIfRequired,
     warmUpCache,
     store.preferences.usePushNotifications,
-    walletSecret,
-    logger,
-    indyLedgers,
     attestationMonitor,
   ])
 

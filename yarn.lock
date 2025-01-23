@@ -2364,7 +2364,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@credo-ts/core@npm:0.5.11, @credo-ts/core@npm:^0.5.11":
+"@credo-ts/core@npm:0.5.11":
   version: 0.5.11
   resolution: "@credo-ts/core@npm:0.5.11"
   dependencies:
@@ -2409,6 +2409,54 @@ __metadata:
     web-did-resolver: "npm:^2.0.21"
     webcrypto-core: "npm:^1.8.0"
   checksum: 15a38da04d01b495b456df5a92132f282ca816837c36064be77636c356cb52a9469121f56f3bd7f5322a6d11608a98ec08c844ca209266082b824e5d28eccc67
+  languageName: node
+  linkType: hard
+
+"@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.11#~/.yarn/patches/@credo-ts-core-npm-0.5.11-9122d8c9b8.patch":
+  version: 0.5.11
+  resolution: "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.11#~/.yarn/patches/@credo-ts-core-npm-0.5.11-9122d8c9b8.patch::version=0.5.11&hash=a9d8aa"
+  dependencies:
+    "@digitalcredentials/jsonld": "npm:^6.0.0"
+    "@digitalcredentials/jsonld-signatures": "npm:^9.4.0"
+    "@digitalcredentials/vc": "npm:^6.0.1"
+    "@multiformats/base-x": "npm:^4.0.1"
+    "@noble/hashes": "npm:^1.4.0"
+    "@peculiar/asn1-ecc": "npm:^2.3.8"
+    "@peculiar/asn1-schema": "npm:^2.3.8"
+    "@peculiar/asn1-x509": "npm:^2.3.8"
+    "@peculiar/x509": "npm:^1.11.0"
+    "@sd-jwt/core": "npm:^0.7.0"
+    "@sd-jwt/decode": "npm:^0.7.0"
+    "@sd-jwt/jwt-status-list": "npm:^0.7.0"
+    "@sd-jwt/sd-jwt-vc": "npm:^0.7.0"
+    "@sd-jwt/types": "npm:^0.7.0"
+    "@sd-jwt/utils": "npm:^0.7.0"
+    "@sphereon/pex": "npm:^3.3.2"
+    "@sphereon/pex-models": "npm:^2.2.4"
+    "@sphereon/ssi-types": "npm:^0.28.0"
+    "@stablelib/ed25519": "npm:^1.0.2"
+    "@types/ws": "npm:^8.5.4"
+    abort-controller: "npm:^3.0.0"
+    big-integer: "npm:^1.6.51"
+    borc: "npm:^3.0.0"
+    buffer: "npm:^6.0.3"
+    class-transformer: "npm:0.5.1"
+    class-validator: "npm:0.14.1"
+    did-resolver: "npm:^4.1.0"
+    jsonpath: "npm:^1.1.1"
+    lru_map: "npm:^0.4.1"
+    luxon: "npm:^3.3.0"
+    make-error: "npm:^1.3.6"
+    object-inspect: "npm:^1.10.3"
+    query-string: "npm:^7.0.1"
+    reflect-metadata: "npm:^0.1.13"
+    rxjs: "npm:^7.8.0"
+    tsyringe: "npm:^4.8.0"
+    uuid: "npm:^9.0.0"
+    varint: "npm:^6.0.0"
+    web-did-resolver: "npm:^2.0.21"
+    webcrypto-core: "npm:^1.8.0"
+  checksum: 6f276e608334048c4fd5cc57558ac16acfc7dee6fba727286808a7695a973ac9b1284b7c43a120679857827c5c783e02428c07a7ba7b499be6eefca4722b646a
   languageName: node
   linkType: hard
 
