@@ -2497,6 +2497,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@credo-ts/indy-vdr@patch:@credo-ts/indy-vdr@npm%3A0.5.11#~/.yarn/patches/@credo-ts-indy-vdr-npm-0.5.11-ced84362c9.patch":
+  version: 0.5.11
+  resolution: "@credo-ts/indy-vdr@patch:@credo-ts/indy-vdr@npm%3A0.5.11#~/.yarn/patches/@credo-ts-indy-vdr-npm-0.5.11-ced84362c9.patch::version=0.5.11&hash=c42b94"
+  dependencies:
+    "@credo-ts/anoncreds": "npm:0.5.11"
+    "@credo-ts/core": "npm:0.5.11"
+  peerDependencies:
+    "@hyperledger/indy-vdr-shared": ^0.2.2
+  checksum: 769af09f707e7a7e076a3c5d928b697bff29b26a62d4b763f1a96f4133aff06e16288bcb1832a55fe6e18902ccbee630980f89d1ef39cc2b595f4104f184e6d1
+  languageName: node
+  linkType: hard
+
 "@credo-ts/node@npm:0.5.11":
   version: 0.5.11
   resolution: "@credo-ts/node@npm:0.5.11"
