@@ -42,6 +42,11 @@ const useInitializeBCAgent = () => {
     TOKENS.CACHE_SCHEMAS,
   ])
 
+  const refreshAttestationMonitor = useCallback((agent: Agent) => {
+    attestationMonitor?.stop()
+    attestationMonitor?.start(agent)
+  }, [attestationMonitor])
+
   const restartExistingAgent = useCallback(async () => {
     // if the agent is initialized, it was not a clean shutdown and should be replaced, not restarted
     if (!walletSecret?.id || !walletSecret.key || !agent || agent.isInitialized) {
@@ -194,6 +199,7 @@ const useInitializeBCAgent = () => {
 
     const existingAgent = await restartExistingAgent()
     if (existingAgent) {
+      refreshAttestationMonitor(existingAgent)
       setAgent(existingAgent)
       return existingAgent
     }
@@ -226,8 +232,7 @@ const useInitializeBCAgent = () => {
 
     // In case the old attestationMonitor is still active, stop it and start a new one
     logger.info('Starting attestation monitor...')
-    attestationMonitor?.stop()
-    attestationMonitor?.start(newAgent)
+    refreshAttestationMonitor(newAgent)
 
     logger.info('Setting new agent...')
     setAgent(newAgent)
@@ -243,7 +248,7 @@ const useInitializeBCAgent = () => {
     migrateIfRequired,
     warmUpCache,
     store.preferences.usePushNotifications,
-    attestationMonitor,
+    refreshAttestationMonitor,
   ])
 
   return { initializeAgent }
