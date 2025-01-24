@@ -721,6 +721,7 @@ const translation = {
     EnterPin: 'Saisir le NIP',
     Home: 'Accueil',
     Scan: 'Lire un code QR',
+    ScanHelp: 'Aide à la numérisation',
     Credentials: 'Attestations',
     OptionsPlus: "Plus d'options",
     HelpCenter: "Centre d'aide",
@@ -738,7 +739,7 @@ const translation = {
     ContactDetails: 'Informations du contact',
     ProofRequestDetails: 'Informations de la demande de preuve',
     ProofDetails: 'Informations de la preuve',
-    Tours: "Guides d'application",
+    Tours: "Conseils d'utilisation",
     Decline: 'Refuser',
     Biometry: 'Biométrie',
     Developer: 'Options de développeur',
@@ -808,6 +809,9 @@ const translation = {
     Biometrics: 'Biométrie',
     BiometricActive: 'Activé',
     BiometricDisabled: 'Désactivé',
+    Tours: 'Tour guidé',
+    ToursActive: 'Activé',
+    ToursDisabled: 'Désactivé',
     Notification: 'Notifications',
     AppTheme: "Thème de l'application",
     MoreInformation: "Plus d'information",
@@ -842,6 +846,17 @@ const translation = {
     ToggleManageEnvironment: "Basculer la gestion de l'environnement",
     IASEnvironmentWarning:
       "L'application est présentement dans l'environnement \"{{ environment }}\".  L'option ci-dessous modifie uniquement le lien d'accès à la gestion de compte du SAG pour la notification d'attestation d'authentification gouvernementale.",
+  },
+  TourScreen: {
+    Title: 'Utiliser les conseils',
+    Text1:
+      "Le tour guidé vous donne un aperçu des possibilité qui vous sont disponible lorsque vous accéder à une interface de l'application pour la première fois.",
+    Text2:
+      "Le tour guidé est utile lorsque c'est une première utilisation de l'application, ou pour se rafraîchir la mémoire.",
+    SwitchText: 'Utiliser les conseils d’utilisation',
+    On: 'Tour guidé activé',
+    Off: 'Tour guidé désactivé',
+    TourActivateButton: 'Relancer les conseils',
   },
   Tour: {
     GuideTitle: 'Bienvenue au Portefeuille numérique',

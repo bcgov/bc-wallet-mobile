@@ -189,6 +189,18 @@ const Settings: React.FC<SettingsProps> = ({ navigation }) => {
             {store.preferences.useBiometry ? t('Settings.BiometricActive') : t('Settings.BiometricDisabled')}
           </Text>
         </SectionRow>
+        <SectionRow
+          title={t('Settings.Tours')}
+          accessibilityRole="button"
+          testID={testIdWithKey('Tours')}
+          onPress={() => navigation.navigate(Screens.Tours)}
+          showRowSeparator
+          rowIcon={arrowIcon}
+        >
+          <Text style={[TextTheme.headingFour, { fontWeight: 'normal' }]}>
+            {store.tours.enableTours ? t('Settings.ToursActive') : t('Settings.ToursDisabled')}
+          </Text>
+        </SectionRow>
         {store.preferences.useManageEnvironment && (
           <>
             <View style={[styles.sectionSeparator]}></View>

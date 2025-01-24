@@ -36,6 +36,7 @@ export enum Screens {
   CardHistoryDetails = 'CardHistoryDetails',
   ContactHistoryDetails = 'ContactHistoryDetails',
   ProofHistoryDetails = 'ProofHistoryDetails',
+  Tours = 'Tours',
 }
 
 export enum Stacks {
@@ -82,6 +83,7 @@ export type TermsStackParams = {
 export type SettingStackParams = {
   [Screens.Settings]: undefined
   [Screens.Language]: undefined
+  [Screens.Tours]: undefined
   [Screens.CreatePIN]: { updatePIN?: boolean }
   [Screens.UseBiometry]: undefined
 }

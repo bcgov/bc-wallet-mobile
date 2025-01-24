@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 
 import HelpCenterButton from '../components/Help/HelpCenterButton'
 import Settings from '../screens/Settings'
+import Tours from '../screens/Tours'
 
 import { Screens, SettingStackParams } from './navigators'
 
@@ -50,6 +51,13 @@ const SettingsStack: React.FC = () => {
         options={{
           title: t('Screens.Biometry'),
           headerRight: HelpCenterButton,
+        }}
+      />
+      <StackSettings.Screen
+        name={Screens.Tours}
+        component={Tours}
+        options={{
+          title: t('Screens.Tours'),
         }}
       />
     </StackSettings.Navigator>

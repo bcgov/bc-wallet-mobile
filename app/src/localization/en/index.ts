@@ -218,6 +218,7 @@ const translation = {
     EnterPin: 'Enter Pin',
     Home: 'Home',
     Scan: 'Scan',
+    ScanHelp: 'Scan Help',
     OptionsPlus: 'More Options',
     HelpCenter: 'Help Center',
     About: 'About',
@@ -235,7 +236,7 @@ const translation = {
     ContactDetails: 'Contact Details',
     ProofRequestDetails: 'Proof Request Details',
     ProofDetails: 'Proof Details',
-    Tours: 'App guides',
+    Tours: 'Directions for use',
     Decline: 'Decline',
     Biometry: 'Biometrics',
     Developer: 'Developer options',
@@ -800,6 +801,9 @@ const translation = {
     Biometrics: 'Biometrics',
     BiometricActive: 'Active',
     BiometricDisabled: 'Disabled',
+    Tours: 'Guided tour',
+    ToursActive: 'Active',
+    ToursDisabled: 'Disabled',
     Notification: 'Notifications',
     AppTheme: 'Application Theme',
     MoreInformation: 'More Information',
@@ -834,6 +838,16 @@ const translation = {
     ToggleManageEnvironment: 'Toggle manage environment',
     IASEnvironmentWarning:
       'The application is currently in the "{{ environment }}" environment. The option below only modifies the link to access the account management of the SAG for the government authentication certificate notification.',
+  },
+  TourScreen: {
+    Title: 'Use the advice',
+    Text1:
+      'The guided tour gives you an overview of the possibilities available to you when you access an application interface for the first time.',
+    Text2: 'The guided tour is useful when it is a first use of the application, or to refresh your memory.',
+    SwitchText: 'Use the instructions for use',
+    On: 'Guided tour enabled',
+    Off: 'Guided tour disabled',
+    TourActivateButton: 'Relaunch the advice',
   },
   Tour: {
     GuideTitle: 'Welcome to QC Wallet',
