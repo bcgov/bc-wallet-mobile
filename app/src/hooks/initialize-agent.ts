@@ -203,6 +203,7 @@ const useInitializeBCAgent = () => {
 
     const newAgent = await createNewAgent(ledgers)
     if (!newAgent) {
+      logger.error('Failed to create a new agent')
       return
     }
 
