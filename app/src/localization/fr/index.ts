@@ -61,6 +61,7 @@ const translation = {
       ErrorMsg: "Impossible de mettre à jour l'application.",
     },
     Loading: 'Chargement en cours',
+    GoToSettings: 'Aller aux paramètres',
   },
   Language: {
     code_en: 'Anglais',
@@ -120,6 +121,12 @@ const translation = {
     OpenSettings: 'Ourvir Paramètres',
   },
   Biometry: {
+    BiometryDisabled: 'Biométrie non activée',
+    SetupBiometricsDesc:
+      'Pour utiliser la biométrie, vous devez configurez vos empreintes digitales ou la reconnaissance faciale.\n\nVeuillez suivre les instructions fournies par le fabricant de votre appareil pour les configurer.',
+    BiometryBlocked: 'Autorisation de partage biométrique nécessaire',
+    BiometryBlockedDesc:
+      "Pour utiliser la biométrie, vous devez partager les données biométriques de votre appareil à l'application.\n\nVeuillez autoriser le partage des données à partir des paramètres d'application de votre appareil.",
     On: 'Biométrie activée',
     Off: 'Biométrie désactivée',
     Toggle: 'Activer la biométrie',

@@ -37,12 +37,14 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import HeaderText from '../components/HeaderText'
 import Progress from '../components/Progress'
-import DismissiblePopupModal from '../components/modals/DismissablePopupModal'
+import { CustomModal, CustomModalProps } from '../components/modals/CustomModal'
 
 enum UseBiometryUsage {
   InitialSetup,
   ToggleOnOff,
 }
+
+type SettingsPopup = Pick<CustomModalProps, 'title' | 'description' | 'primary' | 'secondary' | 'onDismissPressed'>
 
 const UseBiometry: React.FC = () => {
   const [store, dispatch] = useStore()
@@ -55,7 +57,7 @@ const UseBiometry: React.FC = () => {
   const [biometryAvailable, setBiometryAvailable] = useState(false)
   const [biometryEnabled, setBiometryEnabled] = useState(store.preferences.useBiometry)
   const [continueEnabled, setContinueEnabled] = useState(true)
-  const [settingsPopupConfig, setSettingsPopupConfig] = useState<null | { title: string; description: string }>(null)
+  const [settingsPopupConfig, setSettingsPopupConfig] = useState<null | SettingsPopup>(null)
   const [canSeeCheckPIN, setCanSeeCheckPIN] = useState<boolean>(false)
   const { ColorPallet, TextTheme } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
@@ -170,6 +172,15 @@ const UseBiometry: React.FC = () => {
     onOpenSettingsDismissed()
   }
 
+  const onOpenRootSettingsTouch = async () => {
+    if (Platform.OS === 'ios') {
+      await Linking.openURL('App-Prefs:')
+    } else if (Platform.OS === 'android') {
+      await Linking.sendIntent('android.settings.SETTINGS')
+    }
+    onOpenSettingsDismissed()
+  }
+
   const logBiometryChange = useCallback(
     (enabled: boolean) => {
       if (
@@ -267,13 +278,6 @@ const UseBiometry: React.FC = () => {
 
     // If the user is turning it on, they need
     // to first authenticate the OS'es biometrics before this action is accepted
-    if (!biometryAvailable) {
-      setSettingsPopupConfig({
-        title: t('Biometry.SetupBiometricsTitle'),
-        description: t('Biometry.SetupBiometricsDesc'),
-      })
-      return
-    }
     const permissionResult: PermissionStatus = await onCheckSystemBiometrics()
     switch (permissionResult) {
       case RESULTS.GRANTED:
@@ -284,13 +288,27 @@ const UseBiometry: React.FC = () => {
       case RESULTS.BLOCKED:
         // Previously denied
         setSettingsPopupConfig({
-          title: t('Biometry.AllowBiometricsTitle'),
-          description: t('Biometry.AllowBiometricsDesc'),
+          title: t('Biometry.BiometryBlocked'),
+          description: t('Biometry.BiometryBlockedDesc'),
+          primary:
+            Platform.OS === 'ios' ? { label: t('Global.GoToSettings'), action: onOpenSettingsTouched } : undefined,
+          secondary: { label: t('Global.Close'), action: onOpenSettingsDismissed },
+          onDismissPressed: onOpenSettingsDismissed,
         })
         break
       case RESULTS.DENIED:
       case RESULTS.UNAVAILABLE:
         // Has not been requested
+        if (!biometryAvailable) {
+          setSettingsPopupConfig({
+            title: t('Biometry.BiometryDisabled'),
+            description: t('Biometry.SetupBiometricsDesc'),
+            primary: { label: t('Global.GoToSettings'), action: onOpenRootSettingsTouch },
+            secondary: { label: t('Global.Close'), action: onOpenSettingsDismissed },
+            onDismissPressed: onOpenSettingsDismissed,
+          })
+          return
+        }
         await onRequestSystemBiometrics(newValue)
         break
       default:
@@ -304,11 +322,21 @@ const UseBiometry: React.FC = () => {
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']}>
       {settingsPopupConfig && (
-        <DismissiblePopupModal
+        <CustomModal
           title={settingsPopupConfig.title}
           description={settingsPopupConfig.description}
-          onCallToActionLabel={t('Biometry.OpenSettings')}
-          onCallToActionPressed={onOpenSettingsTouched}
+          primary={
+            settingsPopupConfig.primary && {
+              label: settingsPopupConfig.primary.label,
+              action: settingsPopupConfig.primary.action,
+            }
+          }
+          secondary={
+            settingsPopupConfig.secondary && {
+              label: settingsPopupConfig.secondary.label,
+              action: settingsPopupConfig.secondary.action,
+            }
+          }
           onDismissPressed={onOpenSettingsDismissed}
         />
       )}

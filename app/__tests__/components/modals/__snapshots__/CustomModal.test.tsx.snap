@@ -1,0 +1,617 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DismissibleCustomModal Component Renders correctly with primary call to action 1`] = `
+<Modal
+  accessibilityViewIsModal={true}
+  hardwareAccelerated={false}
+  transparent={true}
+  visible={true}
+>
+  <View
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={false}
+    collapsable={false}
+    focusable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "opacity": 1,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(0, 0, 0, 0.5)",
+          "flex": 1,
+          "justifyContent": "center",
+          "minHeight": 1334,
+          "minWidth": 750,
+          "padding": 20,
+        }
+      }
+    >
+      <View
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessible={false}
+        focusable={false}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#000000",
+            "elevation": 5,
+            "flex": 1,
+            "maxHeight": "50%",
+            "minWidth": 700,
+            "padding": 20,
+            "shadowColor": "#313132",
+            "shadowOffset": {
+              "height": 3,
+              "width": 3,
+            },
+            "shadowOpacity": 0.6,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <View>
+            <Text
+              accessibilityRole="header"
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 32,
+                    "fontWeight": "bold",
+                    "lineHeight": 32,
+                  },
+                ]
+              }
+            >
+              Test Title
+            </Text>
+            <View
+              style={
+                {
+                  "backgroundColor": "#FCBA19",
+                  "height": 4,
+                  "width": 48,
+                }
+              }
+            />
+          </View>
+          <View
+            accessibilityLabel="Global.Close"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 44,
+                "left": 44,
+                "right": 44,
+                "top": 44,
+              }
+            }
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "opacity": 1,
+              }
+            }
+            testID="com.ariesbifold:id/Close"
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#0099FF",
+                    "fontSize": 30,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              
+            </Text>
+          </View>
+        </View>
+        <RCTScrollView
+          contentContainerStyle={
+            {
+              "flexGrow": 1,
+            }
+          }
+          showsVerticalScrollIndicator={false}
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View>
+            <View
+              onStartShouldSetResponder={[Function]}
+            >
+              <Text
+                selectable={true}
+                style={
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                    "paddingVertical": 16,
+                  }
+                }
+                testID="com.ariesbifold:id/BodyText"
+              >
+                Lorem ipsum sit dolar amet
+              </Text>
+            </View>
+          </View>
+        </RCTScrollView>
+        <View
+          style={
+            {
+              "paddingTop": 10,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="Okay"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#42803E",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ModalPrimaryAction"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                    false,
+                  ]
+                }
+              >
+                Okay
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </View>
+</Modal>
+`;
+
+exports[`DismissibleCustomModal Component Renders correctly without call to action 1`] = `
+<Modal
+  accessibilityViewIsModal={true}
+  hardwareAccelerated={false}
+  transparent={true}
+  visible={true}
+>
+  <View
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={false}
+    collapsable={false}
+    focusable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "opacity": 1,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(0, 0, 0, 0.5)",
+          "flex": 1,
+          "justifyContent": "center",
+          "minHeight": 1334,
+          "minWidth": 750,
+          "padding": 20,
+        }
+      }
+    >
+      <View
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessible={false}
+        focusable={false}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#000000",
+            "elevation": 5,
+            "flex": 1,
+            "maxHeight": "50%",
+            "minWidth": 700,
+            "padding": 20,
+            "shadowColor": "#313132",
+            "shadowOffset": {
+              "height": 3,
+              "width": 3,
+            },
+            "shadowOpacity": 0.6,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "flexDirection": "row",
+              "justifyContent": "space-between",
+            }
+          }
+        >
+          <View>
+            <Text
+              accessibilityRole="header"
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 32,
+                    "fontWeight": "bold",
+                    "lineHeight": 32,
+                  },
+                ]
+              }
+            >
+              Test Title
+            </Text>
+            <View
+              style={
+                {
+                  "backgroundColor": "#FCBA19",
+                  "height": 4,
+                  "width": 48,
+                }
+              }
+            />
+          </View>
+          <View
+            accessibilityLabel="Global.Close"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": undefined,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            hitSlop={
+              {
+                "bottom": 44,
+                "left": 44,
+                "right": 44,
+                "top": 44,
+              }
+            }
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "opacity": 1,
+              }
+            }
+            testID="com.ariesbifold:id/Close"
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#0099FF",
+                    "fontSize": 30,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              
+            </Text>
+          </View>
+        </View>
+        <RCTScrollView
+          contentContainerStyle={
+            {
+              "flexGrow": 1,
+            }
+          }
+          showsVerticalScrollIndicator={false}
+          style={
+            {
+              "flex": 1,
+            }
+          }
+        >
+          <View>
+            <View
+              onStartShouldSetResponder={[Function]}
+            >
+              <Text
+                selectable={true}
+                style={
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                    "paddingVertical": 16,
+                  }
+                }
+                testID="com.ariesbifold:id/BodyText"
+              >
+                Lorem ipsum sit dolar amet
+              </Text>
+            </View>
+          </View>
+        </RCTScrollView>
+        <View
+          style={
+            {
+              "paddingTop": 10,
+            }
+          }
+        >
+          <View
+            accessibilityLabel="Global.Close"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#42803E",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/ModalPrimaryAction"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                style={
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                    false,
+                  ]
+                }
+              >
+                Global.Close
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </View>
+</Modal>
+`;
