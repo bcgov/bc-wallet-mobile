@@ -63,7 +63,7 @@ const useInitializeBCAgent = () => {
     } catch {
       // if the existing agents wallet cannot be opened or initialize() fails it was
       // again not a clean shutdown and the agent should be replaced, not restarted
-      logger.warn('Failed to restart existing agent, skipping agent restart')
+      logger.error('Failed to restart existing agent, skipping agent restart')
       return
     }
 
@@ -210,7 +210,7 @@ const useInitializeBCAgent = () => {
     const newAgent = await createNewAgent(ledgers)
     if (!newAgent) {
       logger.error('Failed to create a new agent')
-      return
+      throw new Error('Failed to create a a new agent')
     }
 
     logger.info('Migrating agent if required...')
