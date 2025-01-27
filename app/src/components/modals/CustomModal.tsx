@@ -39,16 +39,16 @@ export const CustomModal = ({ title, description, primary, secondary, onDismissP
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      padding: 20,
+      paddingHorizontal: 20,
+      paddingVertical: 100,
       backgroundColor: ColorPallet.notification.popupOverlay,
       minHeight: height,
+      maxHeight: height,
       minWidth: width,
     },
     container: {
-      flex: 1,
       padding: 20,
       minWidth: width - 2 * 25,
-      maxHeight: '50%',
       backgroundColor: ColorPallet.brand.primaryBackground,
       shadowColor: ColorPallet.grayscale.darkGrey,
       shadowOffset: {
@@ -58,15 +58,12 @@ export const CustomModal = ({ title, description, primary, secondary, onDismissP
       shadowOpacity: 0.6,
       elevation: 5,
     },
+    scrollViewStyle: {
+      flexGrow: 0,
+    },
     titleContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-    },
-    scrollViewContentContainer: {
-      flexGrow: 1,
-    },
-    scrollViewStyle: {
-      flex: 1,
     },
     bodyText: {
       ...TextTheme.normal,
@@ -96,13 +93,9 @@ export const CustomModal = ({ title, description, primary, secondary, onDismissP
                   <Icon name={'clear'} size={30} color={ColorPallet.notification.infoIcon} />
                 </TouchableOpacity>
               </View>
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.scrollViewContentContainer}
-                style={styles.scrollViewStyle}
-              >
+              <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollViewStyle}>
                 <View onStartShouldSetResponder={() => true}>
-                  <Text selectable={true} style={styles.bodyText} testID={testIdWithKey('BodyText')}>
+                  <Text style={styles.bodyText} testID={testIdWithKey('BodyText')}>
                     {description}
                   </Text>
                 </View>

@@ -48,9 +48,11 @@ exports[`DismissibleCustomModal Component Renders correctly with primary call to
           "backgroundColor": "rgba(0, 0, 0, 0.5)",
           "flex": 1,
           "justifyContent": "center",
+          "maxHeight": 1334,
           "minHeight": 1334,
           "minWidth": 750,
-          "padding": 20,
+          "paddingHorizontal": 20,
+          "paddingVertical": 100,
         }
       }
     >
@@ -77,8 +79,6 @@ exports[`DismissibleCustomModal Component Renders correctly with primary call to
           {
             "backgroundColor": "#000000",
             "elevation": 5,
-            "flex": 1,
-            "maxHeight": "50%",
             "minWidth": 700,
             "padding": 20,
             "shadowColor": "#313132",
@@ -193,15 +193,10 @@ exports[`DismissibleCustomModal Component Renders correctly with primary call to
           </View>
         </View>
         <RCTScrollView
-          contentContainerStyle={
-            {
-              "flexGrow": 1,
-            }
-          }
           showsVerticalScrollIndicator={false}
           style={
             {
-              "flex": 1,
+              "flexGrow": 0,
             }
           }
         >
@@ -210,7 +205,6 @@ exports[`DismissibleCustomModal Component Renders correctly with primary call to
               onStartShouldSetResponder={[Function]}
             >
               <Text
-                selectable={true}
                 style={
                   {
                     "color": "#FFFFFF",
@@ -356,9 +350,11 @@ exports[`DismissibleCustomModal Component Renders correctly without call to acti
           "backgroundColor": "rgba(0, 0, 0, 0.5)",
           "flex": 1,
           "justifyContent": "center",
+          "maxHeight": 1334,
           "minHeight": 1334,
           "minWidth": 750,
-          "padding": 20,
+          "paddingHorizontal": 20,
+          "paddingVertical": 100,
         }
       }
     >
@@ -385,8 +381,6 @@ exports[`DismissibleCustomModal Component Renders correctly without call to acti
           {
             "backgroundColor": "#000000",
             "elevation": 5,
-            "flex": 1,
-            "maxHeight": "50%",
             "minWidth": 700,
             "padding": 20,
             "shadowColor": "#313132",
@@ -501,15 +495,10 @@ exports[`DismissibleCustomModal Component Renders correctly without call to acti
           </View>
         </View>
         <RCTScrollView
-          contentContainerStyle={
-            {
-              "flexGrow": 1,
-            }
-          }
           showsVerticalScrollIndicator={false}
           style={
             {
-              "flex": 1,
+              "flexGrow": 0,
             }
           }
         >
@@ -518,7 +507,6 @@ exports[`DismissibleCustomModal Component Renders correctly without call to acti
               onStartShouldSetResponder={[Function]}
             >
               <Text
-                selectable={true}
                 style={
                   {
                     "color": "#FFFFFF",
