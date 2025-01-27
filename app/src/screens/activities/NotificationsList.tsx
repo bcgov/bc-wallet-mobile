@@ -1,5 +1,4 @@
 import { Button, ButtonType, ToastType, TOKENS, useServices, useStore, useTheme } from '@hyperledger/aries-bifold-core'
-import { StackNavigationProp } from '@react-navigation/stack'
 import moment from 'moment'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { TFunction, useTranslation } from 'react-i18next'
@@ -10,11 +9,9 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 import NotificationListItem, { NotificationTypeEnum } from '../../components/NotificationListItem'
 import { NotificationReturnType, NotificationsInputProps, NotificationType } from '../../hooks/notifications'
 import { useToast } from '../../hooks/toast'
-import { ActivitiesStackParams } from '../../navigators/navigators'
+import useMultiSelectActive from '../../hooks/useMultiSelectActive'
 import { BCDispatchAction, BCState, ActivityState } from '../../store'
-import { TabTheme } from '../../theme'
-
-export type SelectedNotificationType = { id: string; deleteAction?: () => Promise<void> }
+import { SelectedNotificationType } from '../../types/activities'
 
 const isHome = false
 const iconSize = 24
@@ -65,8 +62,7 @@ type SectionType = { title: string; data: NotificationReturnType }
 const NotificationsList: React.FC<{
   openSwipeableId: string | null
   handleOpenSwipeable: (id: string | null) => void
-  navigation: StackNavigationProp<ActivitiesStackParams>
-}> = ({ openSwipeableId, handleOpenSwipeable, navigation }) => {
+}> = ({ openSwipeableId, handleOpenSwipeable }) => {
   const [{ customNotificationConfig: customNotification, useNotifications }] = useServices([TOKENS.NOTIFICATIONS])
   const notifications = useNotifications({ isHome } as NotificationsInputProps)
   const [store, dispatch] = useStore<BCState>()
@@ -86,19 +82,12 @@ const NotificationsList: React.FC<{
   const { ColorPallet, TextTheme } = useTheme()
 
   const [selectedNotification, setSelectedNotification] = useState<SelectedNotificationType[] | null>(null)
+  useMultiSelectActive(selectedNotification)
   const hasCanceledRef = useRef(false)
 
   useEffect(() => {
     setSections(groupNotificationsByDate(notifications as NotificationReturnType, t))
   }, [notifications])
-
-  useEffect(() => {
-    if (selectedNotification != null) {
-      navigation?.getParent()?.setOptions({ tabBarStyle: { display: 'none' } })
-    } else {
-      navigation?.getParent()?.setOptions({ tabBarStyle: { display: 'flex', ...TabTheme.tabBarStyle } })
-    }
-  }, [selectedNotification])
 
   const removeTempNot = () => {
     const ids = (selectedNotification ?? []).map((s) => s.id)

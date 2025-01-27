@@ -26,7 +26,7 @@ import { getCredentialIdentifiers } from '@hyperledger/aries-bifold-core/App/uti
 import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { ReducerAction, useCallback, useEffect } from 'react'
+import React, { ReducerAction, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Text, useWindowDimensions, View, AppState, DeviceEventEmitter, TouchableWithoutFeedback } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -35,6 +35,7 @@ import AtestationTabIcon from '../assets/img/icons/atestation.svg'
 import HomeTabIcon from '../assets/img/icons/home.svg'
 import NotificationTabIcon from '../assets/img/icons/notification.svg'
 import PlusTabIcon from '../assets/img/icons/plus.svg'
+import { BCWalletEventTypes } from '../events/eventTypes'
 import { NotificationReturnType, NotificationsInputProps, NotificationType } from '../hooks/notifications'
 import { BCDispatchAction, BCState, ActivityState } from '../store'
 import { notificationsSeenOnHome } from '../utils/notificationsSeenOnHome'
@@ -48,6 +49,7 @@ const TabStack: React.FC = () => {
   const { agent } = useAgent()
   const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<TabStackParams>>()
+  const [isMultiSelectActive, setIsMultiSelectActive] = useState(false)
 
   const [
     { useNotifications },
@@ -202,9 +204,18 @@ const TabStack: React.FC = () => {
     }
   }, [notifications])
 
+  useEffect(() => {
+    DeviceEventEmitter.addListener(BCWalletEventTypes.ADD_MULTI_SELECT_PRESSED, (value: boolean) => {
+      setIsMultiSelectActive(value)
+    })
+  }, [])
+
   const TabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
     return (
-      <View style={{ flexDirection: 'row', ...TabTheme.tabBarStyle }} accessibilityRole="tablist">
+      <View
+        style={{ flexDirection: 'row', ...TabTheme.tabBarStyle, display: isMultiSelectActive ? 'none' : 'flex' }}
+        accessibilityRole="tablist"
+      >
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key]
           const label = options.tabBarLabel ?? options.title !== undefined ? options.title : route.name

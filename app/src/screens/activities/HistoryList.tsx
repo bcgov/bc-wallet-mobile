@@ -17,11 +17,10 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 
 import HistoryListItem from '../../components/HistoryListItem'
 import { useToast } from '../../hooks/toast'
+import useMultiSelectActive from '../../hooks/useMultiSelectActive'
 import { ActivitiesStackParams, Screens } from '../../navigators/navigators'
 import { ActivityState, BCDispatchAction, BCState } from '../../store'
-import { TabTheme } from '../../theme'
-
-export type SelectedHistoryType = { id: string; deleteAction?: () => void }
+import { SelectedHistoryType } from '../../types/activities'
 
 const iconSize = 24
 
@@ -83,6 +82,8 @@ const HistoryList: React.FC<{
   const [sections, setSections] = useState<{ title: string; data: CustomRecord[] }[]>([])
   const [selectedHistory, setSelectedHistory] = useState<SelectedHistoryType[] | null>(null)
 
+  useMultiSelectActive(selectedHistory)
+
   const [toastEnabled, setToastEnabled] = useState(false)
   const [toastOptions, setToastOptions] = useState<ToastShowParams>({})
   useToast({ enabled: toastEnabled, options: toastOptions })
@@ -141,14 +142,6 @@ const HistoryList: React.FC<{
   useEffect(() => {
     setSections(groupHistoryByDate(filteredRecords, t))
   }, [filteredRecords])
-
-  useEffect(() => {
-    if (selectedHistory != null) {
-      navigation?.getParent()?.setOptions({ tabBarStyle: { display: 'none' } })
-    } else {
-      navigation?.getParent()?.setOptions({ tabBarStyle: { display: 'flex', ...TabTheme.tabBarStyle } })
-    }
-  }, [selectedHistory])
 
   const styles = StyleSheet.create({
     container: {

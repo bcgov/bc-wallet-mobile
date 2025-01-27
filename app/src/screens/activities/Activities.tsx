@@ -90,11 +90,7 @@ const Activities: React.FC<ActivitiesProps> = ({ navigation }) => {
       </View>
 
       {activeTab === NotificationTab ? (
-        <NotificationsList
-          openSwipeableId={openSwipeableId}
-          handleOpenSwipeable={setOpenSwipeableId}
-          navigation={navigation}
-        />
+        <NotificationsList openSwipeableId={openSwipeableId} handleOpenSwipeable={setOpenSwipeableId} />
       ) : (
         <HistoryList
           openSwipeableId={openSwipeableId}
