@@ -18,7 +18,7 @@ import HeaderText from '../HeaderText'
 export interface CustomModalProps {
   title: string
   onDismissPressed: () => void
-  description?: string
+  description?: string | React.ReactNode
   primary?: {
     label: string
     action: () => void

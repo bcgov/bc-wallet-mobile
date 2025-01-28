@@ -36,6 +36,7 @@ import HomeFooter from './src/components/HomeFooter'
 import HomeHeader from './src/components/HomeHeader'
 import NotificationListItem from './src/components/NotificationListItem'
 import PINCreateHeader from './src/components/PINCreateHeader'
+import ConnectionAlert from './src/components/modals/ConnectionAlert'
 import { PINValidationRules } from './src/constants'
 import { useNotifications } from './src/hooks/notifications'
 import TermsStack from './src/navigators/TermsStack'
@@ -168,6 +169,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.COMPONENT_PIN_CREATE_HEADER, PINCreateHeader)
     this._container.registerInstance(TOKENS.SCREEN_USE_BIOMETRY, UseBiometry)
     this._container.registerInstance(TOKENS.SCREEN_SPLASH, Splash)
+    this._container.registerInstance(TOKENS.COMPONENT_CONNECTION_ALERT, ConnectionAlert)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeader)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_FOOTER, HomeFooter)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_NOTIFICATIONS_EMPTY_LIST, HomeEmptyList)
