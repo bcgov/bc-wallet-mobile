@@ -8,6 +8,10 @@ jobs:
   prune:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
+    permissions:
+      # contents: write # only for delete-branch option
+      issues: write
+      pull-requests: write
     name: Issue and PR maintenance
     steps:
       - name: Prune stale issues
