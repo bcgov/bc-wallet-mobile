@@ -18,6 +18,7 @@ jobs:
           days-before-close: 30
           stale-issue-label: stale
           exempt-issue-labels: bug,help wanted
+          exempt-pr-labels: external-dependency
           stale-issue-message: |
             This issue has been automatically closed because it has been
             inactive for a while. Feel free to reopen it if you still have
