@@ -1,4 +1,4 @@
-name: Maintenance
+name: Backlog Maintenance
 
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ jobs:
       # contents: write # only for delete-branch option
       issues: write
       pull-requests: write
-    name: Issue and PR maintenance
+    name: Issue and PR
     steps:
       - name: Prune stale issues
         uses: actions/stale@v5
@@ -21,13 +21,24 @@ jobs:
           days-before-stale: 270 # 9 months
           days-before-close: 30 # 1 month
           stale-issue-label: stale
-          exempt-issue-labels: bug,help wanted
+          exempt-issue-labels: help wanted
           exempt-pr-labels: external-dependency
           stale-issue-message: |
-            This issue has been automatically closed because it has been
-            inactive for a while. Feel free to reopen it if you still have
-            this problem.
+            This issue has been inactive for a while, so it's
+            been marked as "stale." If you're still working on
+            it or it's still important, please leave a comment
+            to keep it open and remove the "stale" label. Thanks!
           stale-pr-message: |
-            This pull request has been automatically closed because it has been
-            inactive for a while. Feel free to reopen it if you still want
-            to continue with this work.
+            This pull request hasn't had any recent activity,
+            so it's been marked as "stale."  If you're still
+            working on it or if it's still important, just keep
+            making commits (code changes) and remove the "stale"
+            label. Thanks!
+          close-issue-message: |
+            This issue has been automatically closed because
+            there hasn't been any recent activity. If it's
+            still relevant, please feel free to reopen it.
+          close-pr-message: |
+            This pull request has been automatically closed due
+            to inactivity. If it's still relevant, please
+            feel free to reopen it.
