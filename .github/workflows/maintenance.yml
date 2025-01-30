@@ -1,28 +1,27 @@
 name: Maintenance
 
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, labeled]
-
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * *" # Runs every day at 12 PM (noon) UTC, which is 4 AM PST
 jobs:
   lint:
     runs-on: ubuntu-22.04
-    name: Issue and PR maintenance
+    name: Issue Mgmt.
     steps:
-      - name: Close stale issues
+      - name: Prune stale issues
         uses: actions/stale@v5
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           days-before-stale: 90
           days-before-close: 14
-          stale-issue-label: "stale"
+          stale-issue-label: stale
           exempt-issue-labels: bug,help wanted
-          stale-issue-message:
+          stale-issue-message: |
             This issue has been automatically closed because it has been
             inactive for a while. Feel free to reopen it if you still have
             this problem.
-          stale-pr-message:
+          stale-pr-message: |
             This pull request has been automatically closed because it has been
             inactive for a while. Feel free to reopen it if you still want
             to continue with this work.
