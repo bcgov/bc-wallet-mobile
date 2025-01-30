@@ -5,9 +5,10 @@ on:
   schedule:
     - cron: "0 12 * * *" # Runs every day at 12 PM (noon) UTC, which is 4 AM PST
 jobs:
-  lint:
+  prune:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-22.04
-    name: Issue Mgmt.
+    name: Issue and PR maintenance
     steps:
       - name: Prune stale issues
         uses: actions/stale@v5
