@@ -69,6 +69,13 @@
                      ],
                      "restrictions": [
                         {
+                           "schema_id": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
+                           "issuer_did": "QzLYGuAebsy3MXQ6b1sFiT"
+                        },
+                        {
+                           "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
+                        },
+                        {
                            "schema_id": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
                            "issuer_did": "4xE68b6S5VRFrKMMG1U95M"
                         },
@@ -77,6 +84,10 @@
                         }
                      ],
                      "devRestrictions": [
+                        {
+                           "schema_id": "MLvtJW6pFuYu4NnMB14d29:2:legal-professional:1.0",
+                           "issuer_did": "MLvtJW6pFuYu4NnMB14d29"
+                        },
                         {
                            "schema_id": "AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1",
                            "issuer_did": "AuJrigKQGRLJajKAebTgWu"
@@ -347,6 +358,13 @@
                      ],
                      "restrictions": [
                         {
+                           "schema_id": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
+                           "issuer_did": "QzLYGuAebsy3MXQ6b1sFiT"
+                        },
+                        {
+                           "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
+                        },
+                        {
                            "schema_id": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
                            "issuer_did": "4xE68b6S5VRFrKMMG1U95M"
                         },
@@ -355,6 +373,10 @@
                         }
                      ],
                      "devRestrictions": [
+                        {
+                           "schema_id": "MLvtJW6pFuYu4NnMB14d29:2:legal-professional:1.0",
+                           "issuer_did": "MLvtJW6pFuYu4NnMB14d29"
+                        },
                         {
                            "schema_id": "AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1",
                            "issuer_did": "AuJrigKQGRLJajKAebTgWu"
@@ -459,6 +481,13 @@
                      ],
                      "restrictions": [
                         {
+                           "schema_id": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
+                           "issuer_did": "QzLYGuAebsy3MXQ6b1sFiT"
+                        },
+                        {
+                           "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
+                        },
+                        {
                            "schema_id": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
                            "issuer_did": "4xE68b6S5VRFrKMMG1U95M"
                         },
@@ -467,6 +496,10 @@
                         }
                      ],
                      "devRestrictions": [
+                        {
+                           "schema_id": "MLvtJW6pFuYu4NnMB14d29:2:legal-professional:1.0",
+                           "issuer_did": "MLvtJW6pFuYu4NnMB14d29"
+                        },
                         {
                            "schema_id": "AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1",
                            "issuer_did": "AuJrigKQGRLJajKAebTgWu"
