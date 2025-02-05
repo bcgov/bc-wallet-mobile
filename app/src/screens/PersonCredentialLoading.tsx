@@ -72,7 +72,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       try {
         const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl, t)
         setRemoteAgentDetails(remoteAgentDetails)
-        logger.error(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
+        logger.info(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
       } catch (err) {
         logger.error(`Failed to connect to IAS agent, error: ${(err as BifoldError).message}`)
       }

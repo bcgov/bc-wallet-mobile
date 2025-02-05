@@ -2414,7 +2414,7 @@ __metadata:
 
 "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.11#~/.yarn/patches/@credo-ts-core-npm-0.5.11-9122d8c9b8.patch":
   version: 0.5.11
-  resolution: "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.11#~/.yarn/patches/@credo-ts-core-npm-0.5.11-9122d8c9b8.patch::version=0.5.11&hash=a9d8aa"
+  resolution: "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.11#~/.yarn/patches/@credo-ts-core-npm-0.5.11-9122d8c9b8.patch::version=0.5.11&hash=391f79"
   dependencies:
     "@digitalcredentials/jsonld": "npm:^6.0.0"
     "@digitalcredentials/jsonld-signatures": "npm:^9.4.0"
@@ -2456,7 +2456,7 @@ __metadata:
     varint: "npm:^6.0.0"
     web-did-resolver: "npm:^2.0.21"
     webcrypto-core: "npm:^1.8.0"
-  checksum: 6f276e608334048c4fd5cc57558ac16acfc7dee6fba727286808a7695a973ac9b1284b7c43a120679857827c5c783e02428c07a7ba7b499be6eefca4722b646a
+  checksum: f2863f4d5ec60cd01bc445fa41869446a2f5149af0611793a0e59bc85c0669ea4b92198cb680174217c98959223c5fd5c69292d6862b7657b75b56c8152d448e
   languageName: node
   linkType: hard
 
@@ -2580,14 +2580,14 @@ __metadata:
 
 "@credo-ts/react-hooks@patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch::locator=bc-wallet-mobile%40workspace%3A.":
   version: 0.6.0
-  resolution: "@credo-ts/react-hooks@patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch::version=0.6.0&hash=74f443&locator=bc-wallet-mobile%40workspace%3A."
+  resolution: "@credo-ts/react-hooks@patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch::version=0.6.0&hash=fb715c&locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     rxjs: "npm:^7.2.0"
   peerDependencies:
     "@credo-ts/core": ^0.5.0
     "@credo-ts/question-answer": ^0.5.0
     react: ">=17.0.0 <19.0.0"
-  checksum: 2bc5be055b4246b231c1ff648e7e8801b54e9c340417be243d544951fdb1ece32a73c30d29890d2add630a39f4d338aa5a41564e7302d00a486259d509b79271
+  checksum: d6f326460b335f9b91ef0f73ac0edff1e66d94caafb581930cfdfeeab288f6d319da51a8f4334cbb971bfdaa8ab4b80a90976138bdcbbd9210bda25b55168985
   languageName: node
   linkType: hard
 
