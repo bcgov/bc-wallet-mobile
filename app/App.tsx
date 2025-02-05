@@ -1,5 +1,5 @@
+import AgentProvider from '@credo-ts/react-hooks'
 import {
-  AgentProvider,
   AnimatedComponentsProvider,
   animatedComponents,
   TourProvider,
@@ -63,9 +63,9 @@ const App = () => {
   }, [])
 
   return (
-    <ContainerProvider value={bcwContainer}>
-      <StoreProvider initialState={initialState} reducer={reducer}>
-        <AgentProvider agent={undefined}>
+    <AgentProvider agent={undefined}>
+      <ContainerProvider value={bcwContainer}>
+        <StoreProvider initialState={initialState} reducer={reducer}>
           <OpenIDCredentialRecordProvider>
             <ThemeProvider value={theme}>
               <AnimatedComponentsProvider value={animatedComponents}>
@@ -79,7 +79,7 @@ const App = () => {
                         translucent={false}
                       />
                       <NetInfo />
-                      <ErrorModal enableReport/>
+                      <ErrorModal enableReport />
                       <WebDisplay
                         destinationUrl={surveyMonkeyUrl}
                         exitUrl={surveyMonkeyExitUrl}
@@ -103,9 +103,9 @@ const App = () => {
               </AnimatedComponentsProvider>
             </ThemeProvider>
           </OpenIDCredentialRecordProvider>
-        </AgentProvider>
-      </StoreProvider>
-    </ContainerProvider>
+        </StoreProvider>
+      </ContainerProvider>
+    </AgentProvider>
   )
 }
 
