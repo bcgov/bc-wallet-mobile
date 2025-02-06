@@ -101,5 +101,5 @@ Get and updated timestamp:
 Send a sample log with the updated timestamp:
 
 ```bash
-curl -v -H "Content-Type: application/json" -H "Authorization: Basic Base64-Encoded-USERNAME:PASSWORD" -X POST "https://bcwallet-logstack-proxy-caZZZZ-dev.apps.silver.devops.gov.bc.ca/loki/api/v1/push" --data-raw '{"streams":[{"stream":{"job":"react-native-logs","level":"debug","application":"bc wallet","version":"1.0.1-444","system":"iOS v16.7.4","session_id":"463217"},"values":[["1734028898448000000","{\"message\":\"Successfully connected to WebSocket wss://aries-mediator-agent.blah.gov.bc.ca\"}"]]}]}'
+curl -v -H "Content-Type: application/json" -u $PROXY_USER_NAME:$PROXY_PASSWORD -X POST "https://bcwallet-logstack-proxy-caZZZZ-dev.apps.silver.devops.gov.bc.ca/loki/api/v1/push" --data-raw '{"streams":[{"stream":{"job":"react-native-logs","level":"debug","application":"bc wallet","version":"1.0.1-444","system":"iOS v16.7.4","session_id":"463217"},"values":[["1734028898448000000","{\"message\":\"Successfully connected to WebSocket wss://aries-mediator-agent.blah.gov.bc.ca\"}"]]}]}'
 ```
