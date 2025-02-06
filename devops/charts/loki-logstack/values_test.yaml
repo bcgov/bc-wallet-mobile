@@ -42,17 +42,14 @@ resources:
       cpu: 10m
     limits:
       memory: 256Mi
-      cpu: 400m
   proxy:
     requests:
       memory: 64Mi
       cpu: 10m
     limits:
       memory: 92Mi
-      cpu: 60m
   memcached:
     limits:
-      cpu: 50m
       memory: 32Mi
     requests:
       cpu: 10m
@@ -63,7 +60,6 @@ resources:
       cpu: 20m
     limits:
       memory: 192Mi
-      cpu: 80m
 
 services:
   loki:
