@@ -58,7 +58,7 @@
                ]
             },
             {
-               "schema": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
+               "schema": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -74,35 +74,12 @@
                         },
                         {
                            "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
-                        },
-                        {
-                           "schema_id": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
-                           "issuer_did": "4xE68b6S5VRFrKMMG1U95M"
-                        },
-                        {
-                           "cred_def_id": "4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default"
                         }
                      ],
                      "devRestrictions": [
                         {
                            "schema_id": "MLvtJW6pFuYu4NnMB14d29:2:legal-professional:1.0",
                            "issuer_did": "MLvtJW6pFuYu4NnMB14d29"
-                        },
-                        {
-                           "schema_id": "AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1",
-                           "issuer_did": "AuJrigKQGRLJajKAebTgWu"
-                        },
-                        {
-                           "schema_id": "QEquAHkM35w4XVT3Ku5yat:2:member_card:1.54",
-                           "issuer_did": "QEquAHkM35w4XVT3Ku5yat"
-                        },
-                        {
-                           "schema_id": "M6dhuFj5UwbhWkSLmvYSPc:2:member_card:1.54",
-                           "issuer_did": "M6dhuFj5UwbhWkSLmvYSPc"
-                        },
-                        {
-                           "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.53",
-                           "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
                         }
                      ],
                      "nonRevoked": {
@@ -347,7 +324,7 @@
          "type": "anoncreds",
          "data": [
             {
-               "schema": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
+               "schema": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -363,35 +340,12 @@
                         },
                         {
                            "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
-                        },
-                        {
-                           "schema_id": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
-                           "issuer_did": "4xE68b6S5VRFrKMMG1U95M"
-                        },
-                        {
-                           "cred_def_id": "4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default"
                         }
                      ],
                      "devRestrictions": [
                         {
                            "schema_id": "MLvtJW6pFuYu4NnMB14d29:2:legal-professional:1.0",
                            "issuer_did": "MLvtJW6pFuYu4NnMB14d29"
-                        },
-                        {
-                           "schema_id": "AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1",
-                           "issuer_did": "AuJrigKQGRLJajKAebTgWu"
-                        },
-                        {
-                           "schema_id": "QEquAHkM35w4XVT3Ku5yat:2:member_card:1.54",
-                           "issuer_did": "QEquAHkM35w4XVT3Ku5yat"
-                        },
-                        {
-                           "schema_id": "M6dhuFj5UwbhWkSLmvYSPc:2:member_card:1.54",
-                           "issuer_did": "M6dhuFj5UwbhWkSLmvYSPc"
-                        },
-                        {
-                           "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.53",
-                           "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
                         }
                      ],
                      "nonRevoked": {
@@ -470,7 +424,7 @@
                ]
             },
             {
-               "schema": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
+               "schema": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
                "requestedAttributes": [
                   {
                      "names": [
@@ -486,35 +440,12 @@
                         },
                         {
                            "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
-                        },
-                        {
-                           "schema_id": "4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1",
-                           "issuer_did": "4xE68b6S5VRFrKMMG1U95M"
-                        },
-                        {
-                           "cred_def_id": "4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default"
                         }
                      ],
                      "devRestrictions": [
                         {
                            "schema_id": "MLvtJW6pFuYu4NnMB14d29:2:legal-professional:1.0",
                            "issuer_did": "MLvtJW6pFuYu4NnMB14d29"
-                        },
-                        {
-                           "schema_id": "AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1",
-                           "issuer_did": "AuJrigKQGRLJajKAebTgWu"
-                        },
-                        {
-                           "schema_id": "QEquAHkM35w4XVT3Ku5yat:2:member_card:1.54",
-                           "issuer_did": "QEquAHkM35w4XVT3Ku5yat"
-                        },
-                        {
-                           "schema_id": "M6dhuFj5UwbhWkSLmvYSPc:2:member_card:1.54",
-                           "issuer_did": "M6dhuFj5UwbhWkSLmvYSPc"
-                        },
-                        {
-                           "schema_id": "L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.53",
-                           "issuer_did": "L6ASjmDDbDH7yPL1t2yFj9"
                         }
                      ],
                      "nonRevoked": {
