@@ -69,7 +69,6 @@
                      ],
                      "restrictions": [
                         {
-                           "schema_id": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
                            "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
                         }
                      ],
@@ -328,7 +327,6 @@
                      ],
                      "restrictions": [
                         {
-                           "schema_id": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
                            "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
                         }
                      ],
@@ -425,7 +423,6 @@
                      ],
                      "restrictions": [
                         {
-                           "schema_id": "QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0",
                            "cred_def_id": "QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer"
                         }
                      ],
