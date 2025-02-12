@@ -107,8 +107,7 @@
                      ],
                      "restrictions": [
                         {
-                           "cred_def_id": "RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person",
-                           "issuer_did": "RGjWbW1eycP7FrMf4QJvX8"
+                           "cred_def_id": "RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person"
                         }
                      ],
                      "devRestrictions": [
