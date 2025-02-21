@@ -11,7 +11,7 @@ exports[`InstructionsContent Component renders correctly 1`] = `
   }
   style={
     {
-      "backgroundColor": "#313132",
+      "backgroundColor": "#FFFFFF",
       "height": "100%",
       "justifyContent": "space-between",
     }
@@ -44,7 +44,8 @@ exports[`InstructionsContent Component renders correctly 1`] = `
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
             "fontSize": 26,
             "fontWeight": "bold",
             "marginBottom": 16,
@@ -56,7 +57,8 @@ exports[`InstructionsContent Component renders correctly 1`] = `
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
             "fontSize": 18,
             "fontWeight": "normal",
             "marginBottom": 8,
@@ -109,7 +111,7 @@ exports[`InstructionsContent Component renders correctly 1`] = `
       onStartShouldSetResponder={[Function]}
       style={
         {
-          "backgroundColor": "#42803E",
+          "backgroundColor": "#003366",
           "borderRadius": 4,
           "opacity": 1,
           "padding": 16,
@@ -131,6 +133,7 @@ exports[`InstructionsContent Component renders correctly 1`] = `
             [
               {
                 "color": "#FFFFFF",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "bold",
                 "textAlign": "center",
@@ -184,7 +187,7 @@ exports[`InstructionsContent Component renders correctly 1`] = `
         onStartShouldSetResponder={[Function]}
         style={
           {
-            "borderColor": "#42803E",
+            "borderColor": "#003366",
             "borderRadius": 4,
             "borderWidth": 2,
             "opacity": 1,
@@ -206,7 +209,8 @@ exports[`InstructionsContent Component renders correctly 1`] = `
             style={
               [
                 {
-                  "color": "#42803E",
+                  "color": "#003366",
+                  "fontFamily": "BCSans-Regular",
                   "fontSize": 18,
                   "fontWeight": "bold",
                   "textAlign": "center",

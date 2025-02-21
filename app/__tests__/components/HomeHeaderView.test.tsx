@@ -2,6 +2,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import HomeHeaderView from '../../src/components/HomeHeaderView'
+import { BasicAppContext } from '../../__mocks__/helpers/app'
 
 const mockNavigation = jest.fn()
 jest.mock('@react-navigation/native', () => ({
@@ -13,7 +14,11 @@ jest.mock('@react-navigation/native', () => ({
 
 describe('HomeHeaderView Component', () => {
   test('renders correctly', () => {
-    const tree = render(<HomeHeaderView />)
+    const tree = render(
+      <BasicAppContext>
+        <HomeHeaderView />
+      </BasicAppContext>
+    )
     expect(tree).toMatchSnapshot()
   })
 })

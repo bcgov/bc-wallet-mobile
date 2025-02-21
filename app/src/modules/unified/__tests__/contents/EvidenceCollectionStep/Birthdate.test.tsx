@@ -4,6 +4,7 @@ import React from 'react'
 
 import { initialState, reducer } from '../../../../../store'
 import BirthdateContent from '../../../contents/EvidenceCollectionStep/Birthdate'
+import { BasicAppContext } from '../../../../../../__mocks__/helpers/app'
 
 describe('BirthdateContent Component', () => {
   const onComplete = jest.fn()
@@ -20,18 +21,22 @@ describe('BirthdateContent Component', () => {
 
   test('renders correctly', () => {
     const tree = render(
-      <StoreProvider initialState={initialState} reducer={reducer}>
-        <BirthdateContent onComplete={onComplete} />
-      </StoreProvider>
+      <BasicAppContext>
+        <StoreProvider initialState={initialState} reducer={reducer}>
+          <BirthdateContent onComplete={onComplete} />
+        </StoreProvider>
+      </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()
   })
 
   test('Done test ID is present and press handler works', () => {
     const { getByTestId } = render(
-      <StoreProvider initialState={initialState} reducer={reducer}>
-        <BirthdateContent onComplete={onComplete} />
-      </StoreProvider>
+      <BasicAppContext>
+        <StoreProvider initialState={initialState} reducer={reducer}>
+          <BirthdateContent onComplete={onComplete} />
+        </StoreProvider>
+      </BasicAppContext>
     )
 
     const doneButton = getByTestId(testIdWithKey('Done'))

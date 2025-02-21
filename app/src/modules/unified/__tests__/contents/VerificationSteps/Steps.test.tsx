@@ -3,6 +3,7 @@ import React from 'react'
 
 import VerificationStepsContent from '../../../contents/VerificationSteps/Steps'
 import { testIdWithKey } from '@hyperledger/aries-bifold-core'
+import { BasicAppContext } from '../../../../../../__mocks__/helpers/app'
 
 describe('VerificationStepsContent Component', () => {
   const goToEvidenceCollectionStep = jest.fn()
@@ -16,24 +17,28 @@ describe('VerificationStepsContent Component', () => {
 
   test('renders correctly', () => {
     const tree = render(
-      <VerificationStepsContent
-        goToEvidenceCollectionStep={goToEvidenceCollectionStep}
-        goToResidentialAddressStep={goToResidentialAddressStep}
-        goToEmailStep={goToEmailStep}
-        goToVerifyIdentityStep={goToVerifyIdentityStep}
-      />
+      <BasicAppContext>
+        <VerificationStepsContent
+          goToEvidenceCollectionStep={goToEvidenceCollectionStep}
+          goToResidentialAddressStep={goToResidentialAddressStep}
+          goToEmailStep={goToEmailStep}
+          goToVerifyIdentityStep={goToVerifyIdentityStep}
+        />
+      </BasicAppContext>
     )
     expect(tree).toMatchSnapshot()
   })
 
   test('Step1 test ID is present and press handler works', () => {
     const { getByTestId } = render(
-      <VerificationStepsContent
-        goToEvidenceCollectionStep={goToEvidenceCollectionStep}
-        goToResidentialAddressStep={goToResidentialAddressStep}
-        goToEmailStep={goToEmailStep}
-        goToVerifyIdentityStep={goToVerifyIdentityStep}
-      />
+      <BasicAppContext>
+        <VerificationStepsContent
+          goToEvidenceCollectionStep={goToEvidenceCollectionStep}
+          goToResidentialAddressStep={goToResidentialAddressStep}
+          goToEmailStep={goToEmailStep}
+          goToVerifyIdentityStep={goToVerifyIdentityStep}
+        />
+      </BasicAppContext>
     )
 
     const step1Button = getByTestId(testIdWithKey('Step1'))
