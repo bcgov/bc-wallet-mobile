@@ -1,7 +1,12 @@
 import { DidRepository } from '@credo-ts/core'
-import { BifoldError, Agent, EventTypes as BifoldEventTypes } from '@hyperledger/aries-bifold-core'
+import {
+  BifoldError,
+  Agent,
+  EventTypes as BifoldEventTypes,
+  removeExistingInvitationsById,
+} from '@hyperledger/aries-bifold-core'
 import { TFunction } from 'react-i18next'
-import { Linking, Platform, DeviceEventEmitter } from 'react-native'
+import { Linking, DeviceEventEmitter } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
@@ -24,8 +29,6 @@ enum ErrorCodes {
   ServiceCardError = 2025,
 }
 
-export const connectionDelayInMs = Platform.OS === 'android' ? 5000 : 3000
-
 export interface WellKnownAgentDetails {
   connectionId?: string
   legacyConnectionDid?: string
@@ -35,23 +38,6 @@ export interface WellKnownAgentDetails {
 export const showPersonCredentialSelector = (credentialDefinitionIDs: string[]): boolean => {
   // If we already have a trusted person credential do not show
   return !credentialDefinitionIDs.some((i) => trustedPersonCredentialIssuerRe.test(i))
-}
-
-export const removeExistingInvitationIfRequired = async (
-  agent: Agent | undefined,
-  invitationId: string
-): Promise<void> => {
-  try {
-    // If something fails before we get the credential we need to
-    // cleanup the old invitation before it can be used again.
-    const oobRecord = await agent?.oob.findByReceivedInvitationId(invitationId)
-    if (oobRecord) {
-      await agent?.oob.deleteById(oobRecord.id)
-    }
-  } catch (error) {
-    // findByInvitationId with throw if unsuccessful but that's not a problem.
-    // It just means there is nothing to delete.
-  }
 }
 
 export const connectToIASAgent = async (
@@ -67,7 +53,7 @@ export const connectToIASAgent = async (
     throw new BifoldError(t('Error.Title2020'), t('Error.Message2020'), t('Error.NoMessage'), ErrorCodes.BadInvitation)
   }
 
-  await removeExistingInvitationIfRequired(agent, invite.id)
+  await removeExistingInvitationsById(agent, invite.id)
 
   const record = await agent.oob.receiveInvitation(invite)
 

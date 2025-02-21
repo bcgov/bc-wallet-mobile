@@ -18,7 +18,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
   <RCTScrollView
     style={
       {
-        "backgroundColor": "#313132",
+        "backgroundColor": "#FFFFFF",
         "flex": 1,
         "paddingHorizontal": 24,
       }
@@ -28,7 +28,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
             "fontSize": 26,
             "fontWeight": "bold",
             "marginBottom": 16,
@@ -41,7 +42,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
             "fontSize": 18,
             "fontWeight": "normal",
             "marginBottom": 16,
@@ -91,7 +93,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#313132",
+              "backgroundColor": "#D9EAF7",
               "borderRadius": 4,
               "elevation": 2,
               "padding": 24,
@@ -108,7 +110,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#42803E",
+                "color": "#003366",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "bold",
               }
@@ -121,7 +124,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
               style={
                 [
                   {
-                    "color": "#42803E",
+                    "color": "#003366",
                     "fontSize": 20,
                   },
                   undefined,
@@ -140,7 +143,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "normal",
                 "marginTop": 16,
@@ -208,7 +212,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#313132",
+              "backgroundColor": "#D9EAF7",
               "borderRadius": 4,
               "elevation": 2,
               "padding": 24,
@@ -225,7 +229,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#42803E",
+                "color": "#003366",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "bold",
               }
@@ -238,7 +243,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
               style={
                 [
                   {
-                    "color": "#42803E",
+                    "color": "#003366",
                     "fontSize": 20,
                   },
                   undefined,
@@ -257,7 +262,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "normal",
                 "marginTop": 16,
@@ -325,7 +331,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#313132",
+              "backgroundColor": "#D9EAF7",
               "borderRadius": 4,
               "elevation": 2,
               "padding": 24,
@@ -342,7 +348,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#42803E",
+                "color": "#003366",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "bold",
               }
@@ -355,7 +362,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
               style={
                 [
                   {
-                    "color": "#42803E",
+                    "color": "#003366",
                     "fontSize": 20,
                   },
                   undefined,
@@ -374,7 +381,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "normal",
                 "marginTop": 16,
@@ -426,7 +434,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
             "fontSize": 26,
             "fontWeight": "bold",
             "marginBottom": 16,
@@ -439,7 +448,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
       <Text
         style={
           {
-            "color": "#FFFFFF",
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
             "fontSize": 18,
             "fontWeight": "normal",
             "marginBottom": 16,
@@ -491,7 +501,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
         <Text
           style={
             {
-              "color": "#42803E",
+              "color": "#003366",
+              "fontFamily": "BCSans-Regular",
               "fontSize": 18,
               "fontWeight": "bold",
             }
@@ -504,7 +515,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
             style={
               [
                 {
-                  "color": "#42803E",
+                  "color": "#003366",
                   "fontSize": 20,
                 },
                 undefined,
@@ -562,7 +573,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#313132",
+              "backgroundColor": "#D9EAF7",
               "borderRadius": 4,
               "elevation": 2,
               "padding": 24,
@@ -579,7 +590,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#42803E",
+                "color": "#003366",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "bold",
               }
@@ -592,7 +604,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
               style={
                 [
                   {
-                    "color": "#42803E",
+                    "color": "#003366",
                     "fontSize": 20,
                   },
                   undefined,
@@ -611,7 +623,8 @@ exports[`ChooseContent Component renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 18,
                 "fontWeight": "normal",
                 "marginTop": 16,

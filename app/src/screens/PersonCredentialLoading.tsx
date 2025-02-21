@@ -145,7 +145,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
 
     authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
       .then(() => {
-        logger.error('Completed service card authentication successfully')
+        logger.info('Completed service card authentication successfully')
       })
       .catch((error) => {
         logger.error('Completed service card authentication with error, error: ', error.message)

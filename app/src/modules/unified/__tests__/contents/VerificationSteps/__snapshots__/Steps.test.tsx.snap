@@ -4,7 +4,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
 <View
   style={
     {
-      "backgroundColor": "#000000",
+      "backgroundColor": "#F2F2F2",
       "flex": 1,
     }
   }
@@ -195,7 +195,8 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                 style={
                   [
                     {
-                      "color": "#FFFFFF",
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
                       "fontSize": 21,
                       "fontWeight": "bold",
                     },
@@ -233,7 +234,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#000000",
+              "backgroundColor": "#F2F2F2",
               "height": 8,
               "width": "100%",
             }
@@ -287,7 +288,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                   "paddingVertical": 24,
                 },
                 {
-                  "backgroundColor": "#313132",
+                  "backgroundColor": "#FFFFFF",
                 },
               ]
             }
@@ -304,7 +305,8 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                 style={
                   [
                     {
-                      "color": "#FFFFFF",
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
                       "fontSize": 21,
                       "fontWeight": "bold",
                     },
@@ -363,7 +365,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#000000",
+              "backgroundColor": "#F2F2F2",
               "height": 8,
               "width": "100%",
             }
@@ -417,7 +419,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                   "paddingVertical": 24,
                 },
                 {
-                  "backgroundColor": "#313132",
+                  "backgroundColor": "#FFFFFF",
                 },
               ]
             }
@@ -434,7 +436,8 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                 style={
                   [
                     {
-                      "color": "#FFFFFF",
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
                       "fontSize": 21,
                       "fontWeight": "bold",
                     },
@@ -512,7 +515,8 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                       [
                         {
                           "alignSelf": "flex-start",
-                          "color": "#FFFFFF",
+                          "color": "#1A5A96",
+                          "fontFamily": "BCSans-Regular",
                           "fontSize": 18,
                           "fontWeight": "normal",
                           "textDecorationLine": "underline",
@@ -534,7 +538,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#000000",
+              "backgroundColor": "#F2F2F2",
               "height": 8,
               "width": "100%",
             }
@@ -588,7 +592,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                   "paddingVertical": 24,
                 },
                 {
-                  "backgroundColor": "#313132",
+                  "backgroundColor": "#FFFFFF",
                 },
               ]
             }
@@ -605,7 +609,8 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                 style={
                   [
                     {
-                      "color": "#FFFFFF",
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
                       "fontSize": 21,
                       "fontWeight": "bold",
                     },
