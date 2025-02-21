@@ -27,7 +27,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
   <RCTScrollView
     style={
       {
-        "backgroundColor": "#000000",
+        "backgroundColor": "#F2F2F2",
         "width": "100%",
       }
     }
@@ -36,7 +36,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -51,9 +51,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -106,7 +107,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -119,7 +120,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
                   },
                 ]
               }
-              thumbTintColor="#42803E"
+              thumbTintColor="#003366"
               tintColor="#D3D3D3"
               value={true}
             />
@@ -137,7 +138,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
         style={
           [
             {
-              "backgroundColor": "#313132",
+              "backgroundColor": "#FFFFFF",
               "padding": 24,
             },
             {
@@ -158,7 +159,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
                 "fontSize": 24,
               },
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "marginRight": 10,
               },
               {
@@ -176,7 +177,8 @@ exports[`Developer Screen screen renders correctly 1`] = `
           style={
             [
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 26,
                 "fontWeight": "bold",
               },
@@ -192,7 +194,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -207,9 +209,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -261,12 +264,13 @@ exports[`Developer Screen screen renders correctly 1`] = `
               style={
                 [
                   {
-                    "color": "#FFFFFF",
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
                     "fontSize": 21,
                     "fontWeight": "bold",
                   },
                   {
-                    "color": "#FFFFFF",
+                    "color": "#1A5A96",
                     "fontWeight": "normal",
                   },
                 ]
@@ -287,7 +291,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -302,9 +306,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -357,7 +362,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -380,14 +385,14 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
           }
         }
       >
         <View
           style={
             {
-              "borderBottomColor": "#000000",
+              "borderBottomColor": "#F2F2F2",
               "borderBottomWidth": 1,
               "marginHorizontal": 24,
             }
@@ -397,7 +402,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -412,9 +417,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -467,7 +473,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -490,14 +496,14 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
           }
         }
       >
         <View
           style={
             {
-              "borderBottomColor": "#000000",
+              "borderBottomColor": "#F2F2F2",
               "borderBottomWidth": 1,
               "marginHorizontal": 24,
             }
@@ -507,7 +513,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -522,9 +528,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -577,7 +584,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -600,14 +607,14 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
           }
         }
       >
         <View
           style={
             {
-              "borderBottomColor": "#000000",
+              "borderBottomColor": "#F2F2F2",
               "borderBottomWidth": 1,
               "marginHorizontal": 24,
             }
@@ -617,7 +624,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -632,9 +639,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -687,7 +695,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -710,14 +718,14 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
           }
         }
       >
         <View
           style={
             {
-              "borderBottomColor": "#000000",
+              "borderBottomColor": "#F2F2F2",
               "borderBottomWidth": 1,
               "marginHorizontal": 24,
             }
@@ -727,7 +735,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -742,9 +750,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -797,7 +806,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -820,14 +829,14 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
           }
         }
       >
         <View
           style={
             {
-              "borderBottomColor": "#000000",
+              "borderBottomColor": "#F2F2F2",
               "borderBottomWidth": 1,
               "marginHorizontal": 24,
             }
@@ -837,7 +846,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -852,9 +861,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -907,7 +917,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -930,14 +940,14 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
           }
         }
       >
         <View
           style={
             {
-              "borderBottomColor": "#000000",
+              "borderBottomColor": "#F2F2F2",
               "borderBottomWidth": 1,
               "marginHorizontal": 24,
             }
@@ -947,7 +957,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -962,9 +972,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -1017,7 +1028,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -1040,7 +1051,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -1055,9 +1066,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -1111,7 +1123,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -1134,7 +1146,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -1149,9 +1161,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -1204,7 +1217,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {
@@ -1227,7 +1240,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
       <View
         style={
           {
-            "backgroundColor": "#313132",
+            "backgroundColor": "#FFFFFF",
             "padding": 24,
           }
         }
@@ -1242,9 +1255,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
           <Text
             style={
               {
-                "color": "#FFFFFF",
+                "color": "#313132",
                 "flex": 1,
                 "flexWrap": "wrap",
+                "fontFamily": "BCSans-Regular",
                 "fontSize": 21,
                 "fontWeight": "normal",
               }
@@ -1297,7 +1311,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
               onChange={[Function]}
               onResponderTerminationRequest={[Function]}
               onStartShouldSetResponder={[Function]}
-              onTintColor="rgba(53, 130, 63, 0.35)"
+              onTintColor="#757575"
               style={
                 [
                   {

@@ -16,6 +16,7 @@ import {
   BifoldLogger,
   AttestationEventTypes,
   AttestationMonitor as AttestationMonitorI,
+  removeExistingInvitationsById,
 } from '@hyperledger/aries-bifold-core'
 import {
   generateKey,
@@ -28,7 +29,6 @@ import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'rea
 import { Subscription } from 'rxjs'
 
 import { AttestationRestrictions } from '../constants'
-import { removeExistingInvitationIfRequired } from '../helpers/BCIDHelper'
 import { credentialsMatchForProof } from '../helpers/credentials'
 import { AttestationRequestParams, AttestationResult, requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
 
@@ -439,8 +439,8 @@ export class AttestationMonitor implements AttestationMonitorI {
       )
     }
 
-    this.log?.info('Removing existing invitation if required')
-    await removeExistingInvitationIfRequired(this.agent, invite.id)
+    this.log?.info('Removing any existing duplicate invitations if they exist')
+    await removeExistingInvitationsById(this.agent, invite.id)
 
     this.log?.info('Receiving invitation')
     const { connectionRecord } = await this.agent.oob.receiveInvitation(invite)
@@ -454,7 +454,7 @@ export class AttestationMonitor implements AttestationMonitorI {
     }
 
     // this step will fail if there is more than one active connection record between a given wallet and
-    // the traction instance which is why we need to `removeExistingInvitationIfRequired` above
+    // the traction instance which is why we need to `removeExistingInvitationsById` above
     return await this.agent.connections.returnWhenIsConnected(connectionRecord.id)
   }
 

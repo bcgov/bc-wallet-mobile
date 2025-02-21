@@ -3,6 +3,7 @@ import React from 'react'
 
 import InstructionsContent from '../../../contents/EvidenceCollectionStep/Instructions'
 import { testIdWithKey } from '@hyperledger/aries-bifold-core'
+import { BasicAppContext } from '../../../../../../__mocks__/helpers/app'
 
 describe('InstructionsContent Component', () => {
   const goToScan = jest.fn()
@@ -13,13 +14,20 @@ describe('InstructionsContent Component', () => {
   })
 
   test('renders correctly', () => {
-    const tree = render(<InstructionsContent goToScan={goToScan} goToManualSerial={goToManualSerial} />)
+    const tree = render(
+      <BasicAppContext>
+        <InstructionsContent goToScan={goToScan} goToManualSerial={goToManualSerial} />
+      </BasicAppContext>
+    )
     expect(tree).toMatchSnapshot()
   })
 
   test('ScanBarcode test ID is present and press handler works', () => {
-    const { getByTestId } = render(<InstructionsContent goToScan={goToScan} goToManualSerial={goToManualSerial} />)
-
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <InstructionsContent goToScan={goToScan} goToManualSerial={goToManualSerial} />
+      </BasicAppContext>
+    )
     const continueButton = getByTestId(testIdWithKey('ScanBarcode'))
     expect(continueButton).toBeDefined()
     fireEvent(continueButton, 'press')
@@ -27,8 +35,11 @@ describe('InstructionsContent Component', () => {
   })
 
   test('EnterManually test ID is present and press handler works', () => {
-    const { getByTestId } = render(<InstructionsContent goToScan={goToScan} goToManualSerial={goToManualSerial} />)
-
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <InstructionsContent goToScan={goToScan} goToManualSerial={goToManualSerial} />
+      </BasicAppContext>
+    )
     const continueButton = getByTestId(testIdWithKey('EnterManually'))
     expect(continueButton).toBeDefined()
     fireEvent(continueButton, 'press')

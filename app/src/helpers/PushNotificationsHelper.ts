@@ -14,22 +14,6 @@ const enum NotificationPermissionStatus {
 }
 
 /**
- * Handler Section
- */
-
-const backgroundHandler = (): void => {
-  return messaging().setBackgroundMessageHandler(async () => {
-    // Do nothing with background messages. Defaults to login and home screen flow
-  })
-}
-
-const foregroundHandler = (): (() => void) => {
-  return messaging().onMessage(async () => {
-    // Ignore foreground messages
-  })
-}
-
-/**
  * Permissions Section
  */
 
@@ -231,15 +215,7 @@ const status = async (): Promise<NotificationPermissionStatus> => {
   return NotificationPermissionStatus.UNKNOWN
 }
 
-/**
- * Attempts to send the device token to the mediator agent, register handlers and requests permissions
- * @param agent - The active aries agent
- * @prarm blankDeviceToken - If true, will setup the device token as blank (disabled)
- * @returns {Promise<void>}
- */
 const setup = async (): Promise<NotificationPermissionStatus> => {
-  backgroundHandler()
-  foregroundHandler()
   return await requestPermission()
 }
 

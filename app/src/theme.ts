@@ -11,7 +11,7 @@ import {
   IAssets,
 } from '@hyperledger/aries-bifold-core'
 import React from 'react'
-import { StyleSheet } from 'react-native'
+import { StyleSheet, ViewStyle } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
 import { IInlineInputMessage } from '@hyperledger/aries-bifold-core/lib/typescript/App/theme'
@@ -742,6 +742,21 @@ const InputInlineMessage: IInlineInputMessage = {
   InlineWarningIcon: Assets.svg.iconWarning,
 }
 
+const CredentialCardShadowTheme: ViewStyle = {
+  shadowColor: ColorPallet.grayscale.black,
+  shadowOffset: {
+    width: 1,
+    height: 1,
+  },
+  shadowOpacity: 0.3,
+}
+
+const SelectedCredTheme: ViewStyle = {
+  borderWidth: 5,
+  borderRadius: 15,
+  borderColor: ColorPallet.semantic.focus,
+}
+
 export const defaultTheme: ITheme = {
   ColorPallet,
   TextTheme,
@@ -763,4 +778,6 @@ export const defaultTheme: ITheme = {
   PINInputTheme,
   Assets,
   InputInlineMessage,
+  CredentialCardShadowTheme,
+  SelectedCredTheme,
 }

@@ -4,8 +4,8 @@ exports[`ErrorTextBox Component renders correctly 1`] = `
 <View
   style={
     {
-      "backgroundColor": "#313132",
-      "borderColor": "#D8292F",
+      "backgroundColor": "#F2DEDE",
+      "borderColor": "#EBCCD1",
       "borderRadius": 5,
       "borderWidth": 1,
       "paddingHorizontal": 10,
@@ -35,7 +35,7 @@ exports[`ErrorTextBox Component renders correctly 1`] = `
         style={
           [
             {
-              "color": "#D8292F",
+              "color": "#A12622",
               "fontSize": 30,
             },
             undefined,
@@ -55,8 +55,9 @@ exports[`ErrorTextBox Component renders correctly 1`] = `
       style={
         {
           "alignSelf": "center",
-          "color": "#FFFFFF",
+          "color": "#A12622",
           "flexShrink": 1,
+          "fontFamily": "BCSans-Regular",
           "fontSize": 18,
           "fontWeight": "normal",
         }

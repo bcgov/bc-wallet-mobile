@@ -18,7 +18,9 @@ import {
   ActivityProvider,
   OpenIDCredentialRecordProvider,
 } from '@hyperledger/aries-bifold-core'
+import messaging from '@react-native-firebase/messaging'
 import { useNavigation } from '@react-navigation/native'
+import GlobalNetInfo from '@react-native-community/netinfo'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StatusBar } from 'react-native'
@@ -30,17 +32,23 @@ import { container } from 'tsyringe'
 
 import { AppContainer, AppState } from './container-imp'
 import bcwallet from './src'
-import { credentialOfferTourSteps } from './src/components/tours/CredentialOfferTourSteps'
-import { credentialsTourSteps } from './src/components/tours/CredentialsTourSteps'
-import { homeTourSteps } from './src/components/tours/HomeTourSteps'
-import { proofRequestTourSteps } from './src/components/tours/ProofRequestTourSteps'
+import tours from './src/components/tours'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
 import WebDisplay from './src/screens/WebDisplay'
 import { initialState, reducer } from './src/store'
+import { netInfoConfig } from './src/helpers/net-info-config'
 
 const { theme, localization } = bcwallet
 
 initLanguages(localization)
+
+// Do nothing with push notifications received while the app is in the background
+messaging().setBackgroundMessageHandler(async () => {})
+
+// Do nothing with push notifications received while the app is in the foreground
+messaging().onMessage(async () => {})
+
+GlobalNetInfo.configure(netInfoConfig)
 
 const App = () => {
   useMemo(() => {
@@ -86,14 +94,7 @@ const App = () => {
                         visible={appState.showSurvey}
                         onClose={() => setAppState({ showSurvey: false })}
                       />
-                      <TourProvider
-                        homeTourSteps={homeTourSteps}
-                        credentialsTourSteps={credentialsTourSteps}
-                        credentialOfferTourSteps={credentialOfferTourSteps}
-                        proofRequestTourSteps={proofRequestTourSteps}
-                        overlayColor={'black'}
-                        overlayOpacity={0.7}
-                      >
+                      <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
                         <RootStack />
                       </TourProvider>
                       <Toast topOffset={15} config={toastConfig} />
