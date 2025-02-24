@@ -20,7 +20,6 @@ import {
 } from '@hyperledger/aries-bifold-core'
 import messaging from '@react-native-firebase/messaging'
 import { useNavigation } from '@react-navigation/native'
-import GlobalNetInfo from '@react-native-community/netinfo'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StatusBar } from 'react-native'
@@ -36,7 +35,6 @@ import tours from './src/components/tours'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
 import WebDisplay from './src/screens/WebDisplay'
 import { initialState, reducer } from './src/store'
-import { netInfoConfig } from './src/helpers/net-info-config'
 
 const { theme, localization } = bcwallet
 
@@ -47,8 +45,6 @@ messaging().setBackgroundMessageHandler(async () => {})
 
 // Do nothing with push notifications received while the app is in the foreground
 messaging().onMessage(async () => {})
-
-GlobalNetInfo.configure(netInfoConfig)
 
 const App = () => {
   useMemo(() => {
