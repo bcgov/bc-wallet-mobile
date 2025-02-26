@@ -20,6 +20,7 @@ import { BCState, BCDispatchAction } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
+import UpdateModal from './Update'
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
@@ -281,6 +282,8 @@ const Settings: React.FC = () => {
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
+      {/* <UpdateModal /> */}
+
       <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
