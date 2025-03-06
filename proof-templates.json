@@ -646,10 +646,10 @@
       }
    },
    {
-      "id": "BC:5:PersonSellingItRight:0.0.2:indy",
-      "name": "Selling it Right",
+      "id": "BC:5:PersonSellingItRight:0.0.3:indy",
+      "name": "Sell Cannabis",
       "description": "Verify an individual has the identity and qualifications to be involved in the sale of non-medical cannabis in British Columbia.",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "payload": {
          "type": "anoncreds",
          "data": [
@@ -660,7 +660,8 @@
                      "names": [
                         "given_names",
                         "family_name",
-                        "picture"
+                        "picture",
+                        "birthdate_dateint"
                      ],
                      "restrictions": [
                         {
@@ -728,10 +729,10 @@
       }
    },
    {
-      "id": "BC:5:PersonServingItRight:0.0.2:indy",
-      "name": "Serving it Right",
+      "id": "BC:5:PersonServingItRight:0.0.3:indy",
+      "name": "Serve Alcohol at Licensed Establishment",
       "description": "Verify an individual has the identity and qualifications to be working in liquor sales and services in British Columbia.",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "payload": {
          "type": "anoncreds",
          "data": [
@@ -742,7 +743,8 @@
                      "names": [
                         "given_names",
                         "family_name",
-                        "picture"
+                        "picture",
+                        "birthdate_dateint"
                      ],
                      "restrictions": [
                         {
@@ -810,10 +812,10 @@
       }
    },
    {
-      "id": "BC:5:PersonSpecialEventServer:0.0.2:indy",
-      "name": "Special Event Server",
+      "id": "BC:5:PersonSpecialEventServer:0.0.3:indy",
+      "name": "Serve Alcohol at Special Event",
       "description": "Verify an individual has the identity and qualifications to be serving alcohol at special events in British Columbia.",
-      "version": "0.0.2",
+      "version": "0.0.3",
       "payload": {
          "type": "anoncreds",
          "data": [
@@ -824,7 +826,8 @@
                      "names": [
                         "given_names",
                         "family_name",
-                        "picture"
+                        "picture",
+                        "birthdate_dateint"
                      ],
                      "restrictions": [
                         {
@@ -880,6 +883,9 @@
                      "restrictions": [
                         {
                            "cred_def_id": "4WW6792ksq62UroZyfd6nQ:3:CL:1098:SpecialEventServer"
+                        },
+                        {
+                           "cred_def_id": "4WW6792ksq62UroZyfd6nQ:3:CL:1098:ServingItRight"
                         }
                      ],
                      "nonRevoked": {
