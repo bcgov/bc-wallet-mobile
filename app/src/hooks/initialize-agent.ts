@@ -42,10 +42,13 @@ const useInitializeBCAgent = () => {
     TOKENS.CACHE_SCHEMAS,
   ])
 
-  const refreshAttestationMonitor = useCallback((agent: Agent) => {
-    attestationMonitor?.stop()
-    attestationMonitor?.start(agent)
-  }, [attestationMonitor])
+  const refreshAttestationMonitor = useCallback(
+    (agent: Agent) => {
+      attestationMonitor?.stop()
+      attestationMonitor?.start(agent)
+    },
+    [attestationMonitor]
+  )
 
   const restartExistingAgent = useCallback(async () => {
     // if the agent is initialized, it was not a clean shutdown and should be replaced, not restarted
@@ -219,8 +222,12 @@ const useInitializeBCAgent = () => {
     logger.info('Initializing new agent...')
     await newAgent.initialize()
 
-    logger.info('Warming up cache...')
-    await warmUpCache(newAgent, cachedLedgers)
+    // try {
+    //   logger.info('Warming up cache...')
+    //   await warmUpCache(newAgent, cachedLedgers)
+    // } catch (error) {
+    //   console.log('***** ERROR FOUND error')
+    // }
 
     logger.info('Creating link secret if required...')
     await createLinkSecretIfRequired(newAgent)
