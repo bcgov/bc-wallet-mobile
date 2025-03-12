@@ -9,12 +9,13 @@ import {
   testIdWithKey,
   useTheme,
   useStore,
+  EventTypes as BifoldEventTypes,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { DeviceEventEmitter, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { openLink } from '../helpers/utils'
@@ -27,7 +28,11 @@ const digitalWalletPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/governments/
 
 export const TermsVersion = '2'
 
-const Terms = () => {
+interface IOnboardingTask {
+  onTaskComplete: () => void
+}
+
+const Terms: React.FC<IOnboardingTask> = ({ onTaskComplete }) => {
   const [store, dispatch] = useStore()
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
@@ -74,19 +79,6 @@ const Terms = () => {
       type: DispatchAction.DID_AGREE_TO_TERMS,
       payload: [{ DidAgreeToTerms: TermsVersion }],
     })
-
-    if (!agreedToPreviousTerms) {
-      navigation.navigate(Screens.CreatePIN)
-    } else if (store.onboarding.postAuthScreens.length) {
-      const screens: string[] = store.onboarding.postAuthScreens
-      screens.shift()
-      dispatch({ type: DispatchAction.SET_POST_AUTH_SCREENS, payload: [screens] })
-      if (screens.length) {
-        navigation.navigate(screens[0] as never)
-      } else {
-        dispatch({ type: DispatchAction.DID_COMPLETE_ONBOARDING, payload: [true] })
-      }
-    }
   }, [dispatch, agreedToPreviousTerms, navigation, store.onboarding.postAuthScreens])
 
   return (

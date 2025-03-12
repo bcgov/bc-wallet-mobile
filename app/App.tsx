@@ -17,6 +17,7 @@ import {
   MainContainer,
   ActivityProvider,
   OpenIDCredentialRecordProvider,
+  PersistentStorage,
 } from '@hyperledger/aries-bifold-core'
 import messaging from '@react-native-firebase/messaging'
 import { useNavigation } from '@react-navigation/native'
@@ -29,6 +30,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
+// TODO:(JL) Cleanup AppState since it is not really used?
 import { AppContainer, AppState } from './container-imp'
 import bcwallet from './src'
 import tours from './src/components/tours'
@@ -47,22 +49,21 @@ messaging().setBackgroundMessageHandler(async () => {})
 messaging().onMessage(async () => {})
 
 const App = () => {
-  useMemo(() => {
-    initStoredLanguage().then()
-  }, [])
   const { t } = useTranslation()
   const { navigate } = useNavigation()
-  const [appState, setAppState] = useState<AppState>({ showSurvey: false })
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
-  const bcwContainer = new AppContainer(bifoldContainer, t, navigate, [appState, setAppState]).init()
+  const storage = new PersistentStorage()
+  const bcwContainer = new AppContainer(bifoldContainer, t, navigate, storage).init()
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
   }
 
+  useMemo(() => {
+    initStoredLanguage().then()
+  }, [])
+
   useEffect(() => {
-    // Hide the native splash / loading screen so that our
-    // RN version can be displayed.
     SplashScreen.hide()
   }, [])
 
@@ -87,8 +88,10 @@ const App = () => {
                       <WebDisplay
                         destinationUrl={surveyMonkeyUrl}
                         exitUrl={surveyMonkeyExitUrl}
-                        visible={appState.showSurvey}
-                        onClose={() => setAppState({ showSurvey: false })}
+                        visible={{ showSurvey: true }}
+                        onClose={() => {
+                          showSurvey: false
+                        }}
                       />
                       <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
                         <RootStack />
