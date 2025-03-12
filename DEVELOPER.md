@@ -22,6 +22,7 @@ Before you can proceed with building and testing the BC Wallet app, you must ins
 - A [JDK](https://openjdk.org/) and [Gradle](https://gradle.org) - Make sure you install compatible versions, see [here](https://docs.gradle.org/current/userguide/compatibility.html) for more information.
 - [Ruby](https://www.ruby-lang.org/en/documentation/installation/) version 2.x.x. You may want/need to use [rbenv](https://github.com/rbenv/rbenv) on MacOS.
 - [Bundler](https://bundler.io) version 2 or newer: `sudo gem install bundler:2.1.4`.
+- [Python](https://www.python.org/downloads/) version 3.11.x
 
 ## Prerequisite services
 
