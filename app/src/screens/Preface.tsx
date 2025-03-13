@@ -9,13 +9,12 @@ import {
   ButtonType,
   Link,
   OnboardingStackParams,
-  EventTypes as BifoldEventTypes,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Preface: React.FC = () => {
