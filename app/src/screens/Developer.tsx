@@ -20,7 +20,6 @@ import { BCState, BCDispatchAction } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
-import UpdateModal from './Update'
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
