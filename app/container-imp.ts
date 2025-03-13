@@ -80,7 +80,7 @@ export class AppContainer implements Container {
   private t: TFunction<'translation', undefined>
   private navigate: (stack: never, params: never) => void
   private storage: PersistentStorage<PersistentState>
-  private setSurveyVisible: (visible: boolean) => void
+  readonly setSurveyVisible: (visible: boolean) => void
 
   public constructor(
     bifoldContainer: Container,
