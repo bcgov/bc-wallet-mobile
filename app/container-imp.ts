@@ -80,18 +80,21 @@ export class AppContainer implements Container {
   private t: TFunction<'translation', undefined>
   private navigate: (stack: never, params: never) => void
   private storage: PersistentStorage<PersistentState>
+  private setSurveyVisible: (visible: boolean) => void
 
   public constructor(
     bifoldContainer: Container,
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
+    setSurveyVisible: (visible: boolean) => void,
     log?: BifoldLogger
   ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.log = log
     this.t = t
     this.navigate = navigate
-    this.storage = storage
+    this.setSurveyVisible = setSurveyVisible
+    this.storage = new PersistentStorage(log)
   }
 
   public get container(): DependencyContainer {
@@ -169,13 +172,13 @@ export class AppContainer implements Container {
               title: this.t('Settings.GiveFeedback'),
               accessibilityLabel: this.t('Settings.GiveFeedback'),
               testID: testIdWithKey('GiveFeedback'),
-              onPress: () => this.setAppState({ showSurvey: true }),
+              onPress: () => this.setSurveyVisible(true),
             },
             {
               title: this.t('Settings.ReportAProblem'),
               accessibilityLabel: this.t('Settings.ReportAProblem'),
               testID: testIdWithKey('ReportAProblem'),
-              onPress: () => this.setAppState({ showSurvey: true }),
+              onPress: () => this.setSurveyVisible(true),
             },
           ],
         },
