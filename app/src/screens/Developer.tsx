@@ -1,12 +1,4 @@
-import {
-  useTheme,
-  useStore,
-  testIdWithKey,
-  DispatchAction,
-  Screens,
-  useServices,
-  TOKENS,
-} from '@hyperledger/aries-bifold-core'
+import { useTheme, useStore, testIdWithKey, DispatchAction, Screens, useServices, TOKENS } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
@@ -19,7 +11,6 @@ import { BCState, BCDispatchAction } from '../store'
 
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
-import UpdateModal from './Update'
 
 const Settings: React.FC = () => {
   const { t } = useTranslation()
@@ -281,8 +272,6 @@ const Settings: React.FC = () => {
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
-      {/* <UpdateModal /> */}
-
       <Modal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
