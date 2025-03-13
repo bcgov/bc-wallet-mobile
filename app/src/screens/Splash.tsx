@@ -35,10 +35,9 @@ enum InitErrorTypes {
 const Splash = () => {
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const navigation = useNavigation()
   const { ColorPallet, Assets } = useTheme()
-  const [mounted, setMounted] = useState(false)
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
@@ -48,12 +47,8 @@ const Splash = () => {
   const [reported, setReported] = useState(false)
   const initializing = useRef(false)
   const { initializeAgent } = useInitializeBCAgent()
-  const [logger, ocaBundleResolver, { showPreface, enablePushNotifications }] = useServices([
-    TOKENS.UTIL_LOGGER,
-    TOKENS.UTIL_OCA_RESOLVER,
-    TOKENS.CONFIG,
-  ])
-  const [onboardingComplete, setOnboardingComplete] = useState(false)
+  const [logger, ocaBundleResolver] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_OCA_RESOLVER, TOKENS.CONFIG])
+  const [onboardingComplete] = useState(false)
   const report = useCallback(() => {
     if (initError) {
       logger.report(initError)
@@ -131,7 +126,6 @@ const Splash = () => {
         const agent = await initializeAgent()
 
         if (!agent) {
-          initializing.current = false
           return
         }
 
@@ -152,7 +146,6 @@ const Splash = () => {
     initAgentAsyncEffect()
   }, [
     initializeAgent,
-    mounted,
     setStep,
     ocaBundleResolver,
     store.stateLoaded,
@@ -164,6 +157,33 @@ const Splash = () => {
     t,
     onboardingComplete,
   ])
+
+  useEffect(() => {
+    const initAgentAsyncEffect = async (): Promise<void> => {
+      try {
+        await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
+
+        const agent = await initializeAgent()
+
+        if (!agent) {
+          initializing.current = false
+          return
+        }
+
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: Stacks.TabStack }],
+          })
+        )
+      } catch (err: unknown) {
+        setInitErrorType(InitErrorTypes.Agent)
+        setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), (e as Error)?.message, 2031))
+      }
+    }
+
+    initAgentAsyncEffect()
+  }, [initializeAgent, ocaBundleResolver, logger, navigation, t])
 
   const handleErrorCallToActionPressed = () => {
     setInitError(null)
