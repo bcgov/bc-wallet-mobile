@@ -17,7 +17,6 @@ import {
   MainContainer,
   ActivityProvider,
   OpenIDCredentialRecordProvider,
-  PersistentStorage,
 } from '@hyperledger/aries-bifold-core'
 import messaging from '@react-native-firebase/messaging'
 import { useNavigation } from '@react-navigation/native'
@@ -30,8 +29,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
-// TODO:(JL) Cleanup AppState since it is not really used?
-import { AppContainer, AppState } from './container-imp'
+import { AppContainer } from './container-imp'
 import bcwallet from './src'
 import tours from './src/components/tours'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
@@ -52,8 +50,7 @@ const App = () => {
   const { t } = useTranslation()
   const { navigate } = useNavigation()
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
-  const storage = new PersistentStorage()
-  const bcwContainer = new AppContainer(bifoldContainer, t, navigate, storage).init()
+  const bcwContainer = new AppContainer(bifoldContainer, t, navigate).init()
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
@@ -64,6 +61,8 @@ const App = () => {
   }, [])
 
   useEffect(() => {
+    // Hide the native splash / loading screen so
+    // that our RN version can be displayed.
     SplashScreen.hide()
   }, [])
 

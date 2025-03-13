@@ -74,24 +74,17 @@ import { generateOnboardingWorkflowSteps } from './src/onboarding'
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
 
-export interface AppState {
-  showSurvey: boolean
-}
-
 export class AppContainer implements Container {
   private _container: DependencyContainer
   private log?: BifoldLogger
   private t: TFunction<'translation', undefined>
   private navigate: (stack: never, params: never) => void
-  // private setAppState: React.Dispatch<React.SetStateAction<AppState>>
-  // private appState: AppState
   private storage: PersistentStorage<PersistentState>
 
   public constructor(
     bifoldContainer: Container,
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
-    storage: PersistentStorage<PersistentState>,
     log?: BifoldLogger
   ) {
     this._container = bifoldContainer.container.createChildContainer()
