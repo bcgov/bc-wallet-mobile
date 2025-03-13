@@ -5,17 +5,15 @@ import {
   InfoBoxType,
   DispatchAction,
   AuthenticateStackParams,
-  Screens,
   testIdWithKey,
   useTheme,
   useStore,
-  EventTypes as BifoldEventTypes,
 } from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { openLink } from '../helpers/utils'
@@ -28,11 +26,7 @@ const digitalWalletPrivacyUrl = 'https://www2.gov.bc.ca/gov/content/governments/
 
 export const TermsVersion = '2'
 
-interface IOnboardingTask {
-  onTaskComplete: () => void
-}
-
-const Terms: React.FC<IOnboardingTask> = ({ onTaskComplete }) => {
+const Terms: React.FC = () => {
   const [store, dispatch] = useStore()
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
