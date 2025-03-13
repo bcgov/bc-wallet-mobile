@@ -50,7 +50,8 @@ const App = () => {
   const { t } = useTranslation()
   const { navigate } = useNavigation()
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
-  const bcwContainer = new AppContainer(bifoldContainer, t, navigate).init()
+  const [surveyVisible, setSurveyVisible] = useState(false)
+  const bcwContainer = new AppContainer(bifoldContainer, t, navigate, setSurveyVisible).init()
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
@@ -87,10 +88,8 @@ const App = () => {
                       <WebDisplay
                         destinationUrl={surveyMonkeyUrl}
                         exitUrl={surveyMonkeyExitUrl}
-                        visible={{ showSurvey: true }}
-                        onClose={() => {
-                          showSurvey: false
-                        }}
+                        visible={surveyVisible}
+                        onClose={() => setSurveyVisible(false)}
                       />
                       <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
                         <RootStack />
