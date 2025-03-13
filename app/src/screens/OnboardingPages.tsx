@@ -131,6 +131,7 @@ const CreatePageWith = (image: React.FC<SvgProps>, title: string, body: string, 
       marginBottom: 10,
     },
   })
+
   return (
     <ScrollView style={{ padding: 20 }}>
       <View style={styles.imageContainer}>{image(imageDisplayOptions)}</View>

@@ -68,3 +68,4 @@ app/vendor/bundle/**
 bifold/
 aries-oca-bundles/
 credo-ts/
+app/vendor/
