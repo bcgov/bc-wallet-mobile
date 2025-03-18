@@ -113,6 +113,9 @@ jobs:
   build-ios:
     needs: [check-secrets, check-vars, early-exit-check]
     if: ${{ needs.early-exit-check.outputs.should_skip_build != 'true' }}
+    env:
+      REACT_NATIVE_NODE_BINARY: $(which node)
+      NODE_BINARY: $(which node)
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
@@ -169,10 +172,16 @@ jobs:
           yarn install --immutable && \
           git status
 
+      - name: Create .xcode.env.local file
+        working-directory: app/ios
+        run: |
+          echo "export NODE_BINARY=$(which node)" > .xcode.env.local
+
       - name: Install iOS dependencies
         # if: steps.pod-cache.outputs.cache-hit != 'true' || steps.npm-cache.outputs.cache-hit != 'true'
         working-directory: app
         run: |
+          export USE_HERMES=true
           yarn run ios:setup && \
           git status && \
           git diff ios/Podfile.lock
@@ -289,7 +298,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: "zulu"
-          java-version: 11
+          java-version: 17
           cache: "gradle"
           server-id: github
           settings-path: ${{ github.workspace }}

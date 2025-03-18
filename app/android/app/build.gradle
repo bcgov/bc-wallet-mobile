@@ -1,4 +1,5 @@
 apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 
@@ -79,6 +80,7 @@ def jscFlavor = 'org.webkit:android-jsc:+'
 def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitectures")
 
 android {
+    namespace 'ca.bc.gov.BCWallet'
     ndkVersion rootProject.ext.ndkVersion
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
