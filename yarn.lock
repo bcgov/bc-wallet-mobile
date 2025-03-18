@@ -8960,10 +8960,10 @@ __metadata:
     pod-install: "npm:0.1.38"
     prettier: "npm:^2.8.8"
     query-string: "npm:7.1.3"
-    react: "npm:*"
+    react: "npm:^18.2.0"
     react-dom: "npm:18.2.0"
     react-i18next: "npm:11.13.0"
-    react-native: "npm:*"
+    react-native: "npm:~0.73.6"
     react-native-animated-pagination-dots: "npm:0.1.73"
     react-native-argon2: "npm:2.0.1"
     react-native-bouncy-checkbox: "npm:3.0.7"
@@ -21691,13 +21691,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:*":
-  version: 19.0.0
-  resolution: "react@npm:19.0.0"
-  checksum: 2490969c503f644703c88990d20e4011fa6119ddeca451e9de48f6d7ab058d670d2852a5fcd3aa3cd90a923ab2815d532637bd4a814add402ae5c0d4f129ee71
-  languageName: node
-  linkType: hard
-
 "react@npm:18.2.0":
   version: 18.2.0
   resolution: "react@npm:18.2.0"
@@ -21715,6 +21708,15 @@ __metadata:
     object-assign: "npm:^4.1.1"
     prop-types: "npm:^15.6.2"
   checksum: ee04c82f5ecb70fe15a48d8cfc3fb20ce2f7e65277d4adcb56a0ac2b82c54550d4c65eabce0d5dc0cc90d053831b9586d72ee515b11cdf0c5436c7f95aafdcda
+  languageName: node
+  linkType: hard
+
+"react@npm:^18.2.0":
+  version: 18.3.1
+  resolution: "react@npm:18.3.1"
+  dependencies:
+    loose-envify: "npm:^1.1.0"
+  checksum: 261137d3f3993eaa2368a83110466fc0e558bc2c7f7ae7ca52d94f03aac945f45146bd85e5f481044db1758a1dbb57879e2fcdd33924e2dde1bdc550ce73f7bf
   languageName: node
   linkType: hard
 

@@ -3,11 +3,12 @@
 exports[`ChooseContent Component renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
-    [
-      "bottom",
-      "left",
-      "right",
-    ]
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
   }
   style={
     {
