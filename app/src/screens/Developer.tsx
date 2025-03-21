@@ -1,9 +1,18 @@
-import { useTheme, useStore, testIdWithKey, DispatchAction, Screens, useServices, TOKENS } from '@hyperledger/aries-bifold-core'
+import {
+  useTheme,
+  useStore,
+  testIdWithKey,
+  DispatchAction,
+  SafeAreaModal,
+  Screens,
+  useServices,
+  TOKENS,
+} from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, Modal, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
+import { DeviceEventEmitter, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -272,7 +281,7 @@ const Settings: React.FC = () => {
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
-      <Modal
+      <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
         animationType={'fade'}
@@ -281,8 +290,8 @@ const Settings: React.FC = () => {
         }}
       >
         <RemoteLogWarning onBackPressed={onRemoteLoggingBackPressed} onEnablePressed={onEnableRemoteLoggingPressed} />
-      </Modal>
-      <Modal
+      </SafeAreaModal>
+      <SafeAreaModal
         visible={environmentModalVisible}
         transparent={false}
         animationType={'slide'}
@@ -291,7 +300,7 @@ const Settings: React.FC = () => {
         }}
       >
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
-      </Modal>
+      </SafeAreaModal>
       <ScrollView style={styles.container}>
         <SectionRow
           title={t('Developer.DeveloperMode')}

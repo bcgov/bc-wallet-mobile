@@ -1,5 +1,6 @@
+import { SafeAreaModal } from '@hyperledger/aries-bifold-core'
 import React from 'react'
-import { StyleSheet, Modal } from 'react-native'
+import { StyleSheet } from 'react-native'
 import { WebView, WebViewNavigation } from 'react-native-webview'
 
 interface WebDisplayProps {
@@ -20,7 +21,7 @@ const WebDisplay = ({ destinationUrl, exitUrl, visible, onClose }: WebDisplayPro
   })
 
   return (
-    <Modal animationType="slide" transparent={false} visible={visible}>
+    <SafeAreaModal animationType="slide" transparent={false} visible={visible}>
       <WebView
         style={styles.container}
         source={{ uri: destinationUrl }}
@@ -32,7 +33,7 @@ const WebDisplay = ({ destinationUrl, exitUrl, visible, onClose }: WebDisplayPro
           }
         }}
       />
-    </Modal>
+    </SafeAreaModal>
   )
 }
 
