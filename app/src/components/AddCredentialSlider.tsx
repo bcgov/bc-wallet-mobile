@@ -1,11 +1,18 @@
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import { CredentialState } from '@credo-ts/core'
 import { useCredentialByState } from '@credo-ts/react-hooks'
-import { useTheme, Screens, Stacks, testIdWithKey, testIdForAccessabilityLabel } from '@hyperledger/aries-bifold-core'
+import {
+  useTheme,
+  SafeAreaModal,
+  Screens,
+  Stacks,
+  testIdWithKey,
+  testIdForAccessabilityLabel,
+} from '@hyperledger/aries-bifold-core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { DeviceEventEmitter, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { hitSlop } from '../constants'
@@ -104,7 +111,12 @@ export default function AddCredentialSlider() {
   }, [addCredentialPressed])
 
   return (
-    <Modal animationType="slide" transparent={true} visible={addCredentialPressed} onRequestClose={deactivateSlider}>
+    <SafeAreaModal
+      animationType="slide"
+      transparent={true}
+      visible={addCredentialPressed}
+      onRequestClose={deactivateSlider}
+    >
       <TouchableOpacity style={styles.outsideListener} onPress={deactivateSlider} />
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
@@ -141,6 +153,6 @@ export default function AddCredentialSlider() {
           </TouchableOpacity>
         </View>
       </View>
-    </Modal>
+    </SafeAreaModal>
   )
 }

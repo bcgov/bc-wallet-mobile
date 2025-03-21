@@ -3,11 +3,12 @@
 exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
-    [
-      "top",
-      "right",
-      "left",
-    ]
+    {
+      "bottom": "off",
+      "left": "additive",
+      "right": "additive",
+      "top": "additive",
+    }
   }
   style={
     {
@@ -18,9 +19,12 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
 >
   <RNCSafeAreaView
     edges={
-      [
-        "bottom",
-      ]
+      {
+        "bottom": "additive",
+        "left": "off",
+        "right": "off",
+        "top": "off",
+      }
     }
     style={
       {
