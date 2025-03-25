@@ -1,0 +1,75 @@
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "0 12 * * 1"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["typescript", "kotlin"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      # Set up environment based on language
+      - name: Set up Node.js
+        if: matrix.language == 'typescript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install TypeScript dependencies
+        if: matrix.language == 'typescript'
+        run: |
+          npm ci || yarn install
+          # Ensure TypeScript is available for the build
+          npm list typescript || npm install --no-save typescript
+        continue-on-error: true
+
+      # Optional TypeScript build step
+      - name: Build TypeScript
+        if: matrix.language == 'typescript'
+        run: |
+          npm run tsc || npm run build || echo "No TypeScript build script found"
+        continue-on-error: true
+
+      - name: Set up JDK
+        if: matrix.language == 'kotlin'
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Build Android (Kotlin)
+        if: matrix.language == 'kotlin'
+        run: |
+          cd android
+          ./gradlew assembleDebug
+        continue-on-error: true
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
