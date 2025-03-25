@@ -14,7 +14,6 @@ import React from 'react'
 import { StyleSheet, ViewStyle } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
-import Update from './assets/img/update.svg'
 
 import { IInlineInputMessage } from '@hyperledger/aries-bifold-core/lib/typescript/App/theme'
 
@@ -720,7 +719,7 @@ const PINInputTheme = {
 
 export const Assets: IAssets = {
   ...BifoldImageAssets,
-  svg: { ...BifoldImageAssets.svg, logo: Logo as React.FC, glorb: Update as React.FC },
+  svg: { ...BifoldImageAssets.svg, logo: Logo as React.FC },
   img: {
     logoSecondary: {
       src: require('./assets/img/logo-large.png'),
