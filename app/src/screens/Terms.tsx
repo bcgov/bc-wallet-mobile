@@ -4,13 +4,10 @@ import {
   InfoBox,
   InfoBoxType,
   DispatchAction,
-  AuthenticateStackParams,
   testIdWithKey,
   useTheme,
   useStore,
 } from '@hyperledger/aries-bifold-core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
@@ -29,7 +26,6 @@ export const TermsVersion = '2'
 const Terms: React.FC = () => {
   const [store, dispatch] = useStore()
   const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<AuthenticateStackParams>>()
   const { ColorPallet, TextTheme } = useTheme()
   const agreedToPreviousTerms = store.onboarding.didAgreeToTerms && store.onboarding.didAgreeToTerms !== TermsVersion
   const style = StyleSheet.create({
@@ -73,7 +69,7 @@ const Terms: React.FC = () => {
       type: DispatchAction.DID_AGREE_TO_TERMS,
       payload: [{ DidAgreeToTerms: TermsVersion }],
     })
-  }, [dispatch, agreedToPreviousTerms, navigation, store.onboarding.postAuthScreens])
+  }, [dispatch])
 
   return (
     <SafeAreaView edges={['left', 'right', 'bottom']} style={style.safeAreaView}>
