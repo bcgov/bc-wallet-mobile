@@ -51,6 +51,7 @@ import {
   autoDisableRemoteLoggingIntervalInMinutes,
   appleAppStoreUrl,
   googlePlayStoreUrl,
+  appHelpUrl,
 } from './src/constants'
 import { activate, deactivate, setup, status } from './src/helpers/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from './src/helpers/utils'
@@ -78,7 +79,6 @@ import {
 import { generateOnboardingWorkflowSteps } from './src/onboarding'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
-const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
@@ -173,7 +173,7 @@ export class AppContainer implements Container {
               title: this.t('Settings.HelpUsingBCWallet'),
               accessibilityLabel: this.t('Settings.HelpUsingBCWallet'),
               testID: testIdWithKey('HelpUsingBCWallet'),
-              onPress: () => Linking.openURL(helpLink),
+              onPress: () => Linking.openURL(appHelpUrl),
             },
             {
               title: this.t('Settings.GiveFeedback'),

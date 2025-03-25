@@ -27,3 +27,4 @@ export const AttestationRestrictions: { [key: string]: AttestationRestrictionEnv
 
 export const appleAppStoreUrl = 'https://apps.apple.com/ca/app/bc-wallet/id1587380443'
 export const googlePlayStoreUrl = 'https://play.google.com/store/apps/details?id=ca.bc.gov.BCWallet&hl=en-CA'
+export const appHelpUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
