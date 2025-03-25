@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   analyze:
-    name: Analyze
+    name: AnalyzeX
     runs-on: ubuntu-latest
 
     strategy:
@@ -32,6 +32,8 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
+          # Explicitly set build mode for Kotlin
+          build-mode: ${{ matrix.language == 'kotlin' && 'autobuild' || 'none' }}
 
       # Set up environment based on language
       - name: Set up Node.js
@@ -62,12 +64,22 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
+      # For Kotlin, we need to ensure the Gradle wrapper is executable
+      - name: Make Gradle wrapper executable
+        if: matrix.language == 'kotlin'
+        run: |
+          cd android
+          chmod +x ./gradlew
+        continue-on-error: false
+
       - name: Build Android (Kotlin)
         if: matrix.language == 'kotlin'
         run: |
           cd android
-          ./gradlew assembleDebug
-        continue-on-error: true
+          # Export CODEQL_EXTRACTOR_JAVA_BUILD_COMMAND to tell CodeQL to use our build command
+          export CODEQL_EXTRACTOR_JAVA_BUILD_COMMAND="./gradlew assembleDebug"
+          ./gradlew assembleDebug --no-daemon
+        continue-on-error: false
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
