@@ -9,8 +9,8 @@ export const isOnboardingTutorialComplete = (didCompleteTutorial: boolean): Onbo
   return { name: Screens.Onboarding, completed: didCompleteTutorial }
 }
 
-export const isUpdateCheckComplete = (needsUpdate: boolean): OnboardingTask => {
-  return { name: Screens.UpdateAvailable, completed: !needsUpdate }
+export const isUpdateCheckComplete = (needsUpdate: boolean, dismissed: boolean): OnboardingTask => {
+  return { name: Screens.UpdateAvailable, completed: dismissed || (!dismissed && !needsUpdate) }
 }
 
 export const isTermsComplete = (didAgreeToTerms: number, termsVersion: number): OnboardingTask => {
@@ -65,13 +65,13 @@ export const generateOnboardingWorkflowSteps = (
   const { servedPenalty } = state.loginAttempt
   const { enableWalletNaming } = state.preferences
   const { showPreface, enablePushNotifications } = config
-  const { needsUpdate } = state.versionInfo
+  const { needsUpdate, dismissed = false } = state.versionInfo
 
   console.log('***** state.versionInfo', needsUpdate)
 
   return [
     isPrefaceComplete(didSeePreface, showPreface ?? false),
-    isUpdateCheckComplete(needsUpdate),
+    isUpdateCheckComplete(needsUpdate, dismissed),
     isOnboardingTutorialComplete(didCompleteTutorial),
     isTermsComplete(Number(didAgreeToTerms), termsVersion),
     isPINCreationComplete(didCreatePIN),
