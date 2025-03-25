@@ -21,7 +21,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["typescript", "kotlin"]
+        include:
+          - language: javascript
+            build-mode: autobuild
+            name: TypeScript/JavaScript
+          - language: java
+            build-mode: manual
+            name: Java/Kotlin
 
     steps:
       - name: Checkout repository
@@ -32,33 +38,15 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-extended
-          # Explicitly set build mode for Kotlin
-          build-mode: ${{ matrix.language == 'kotlin' && 'autobuild' || 'none' }}
-
-      # Set up environment based on language
-      - name: Set up Node.js
-        if: matrix.language == 'typescript'
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-
-      - name: Install TypeScript dependencies
-        if: matrix.language == 'typescript'
-        run: |
-          npm ci || yarn install
-          # Ensure TypeScript is available for the build
-          npm list typescript || npm install --no-save typescript
-        continue-on-error: true
-
-      # Optional TypeScript build step
-      - name: Build TypeScript
-        if: matrix.language == 'typescript'
-        run: |
-          npm run tsc || npm run build || echo "No TypeScript build script found"
-        continue-on-error: true
+          build-mode: ${{ matrix.build-mode }}
 
       - name: Set up JDK
-        if: matrix.language == 'kotlin'
+        if: matrix.language == 'java' && ${{ matrix.build-mode == 'manual' }}
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: "temurin"
@@ -66,14 +54,14 @@ jobs:
 
       # For Kotlin, we need to ensure the Gradle wrapper is executable
       - name: Make Gradle wrapper executable
-        if: matrix.language == 'kotlin'
+        if: matrix.language == 'java' && ${{ matrix.build-mode == 'manual' }}
         run: |
           cd app/android
           chmod +x ./gradlew
         continue-on-error: false
 
-      - name: Build Android (Kotlin)
-        if: matrix.language == 'kotlin'
+      - name: Build Android (Java/Kotlin)
+        if: matrix.language == 'java' && ${{ matrix.build-mode == 'manual' }}
         run: |
           cd app/android
           # Export CODEQL_EXTRACTOR_JAVA_BUILD_COMMAND to tell CodeQL to use our build command
