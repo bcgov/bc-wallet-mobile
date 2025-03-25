@@ -68,14 +68,14 @@ jobs:
       - name: Make Gradle wrapper executable
         if: matrix.language == 'kotlin'
         run: |
-          cd android
+          cd app/android
           chmod +x ./gradlew
         continue-on-error: false
 
       - name: Build Android (Kotlin)
         if: matrix.language == 'kotlin'
         run: |
-          cd android
+          cd app/android
           # Export CODEQL_EXTRACTOR_JAVA_BUILD_COMMAND to tell CodeQL to use our build command
           export CODEQL_EXTRACTOR_JAVA_BUILD_COMMAND="./gradlew assembleDebug"
           ./gradlew assembleDebug --no-daemon
