@@ -46,7 +46,12 @@ import AddCredentialSlider from './src/components/AddCredentialSlider'
 import EmptyList from './src/components/EmptyList'
 import HomeFooterView from './src/components/HomeFooterView'
 import HomeHeaderView from './src/components/HomeHeaderView'
-import { AttestationRestrictions, autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
+import {
+  AttestationRestrictions,
+  autoDisableRemoteLoggingIntervalInMinutes,
+  appleAppStoreUrl,
+  googlePlayStoreUrl,
+} from './src/constants'
 import { activate, deactivate, setup, status } from './src/helpers/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from './src/helpers/utils'
 import { useNotifications } from './src/hooks/notifications'
@@ -59,6 +64,7 @@ import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
+import { VersionCheckService } from './src/services/version'
 import {
   BCDispatchAction,
   BCLocalStorageKeys,
@@ -122,6 +128,7 @@ export class AppContainer implements Container {
     }
 
     this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(logger, options))
+    this._container.registerInstance(TOKENS.UTIL_APP_VERSION_MONITOR, new VersionCheckService(logger))
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
@@ -234,6 +241,10 @@ export class AppContainer implements Container {
             await deactivate(agent)
           }
         },
+      },
+      appUpdateConfig: {
+        appleAppStoreUrl,
+        googlePlayStoreUrl,
       },
     })
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, AddCredentialButton)

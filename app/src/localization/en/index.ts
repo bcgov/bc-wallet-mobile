@@ -256,6 +256,10 @@ const translation = {
     "SessionID": "Session ID",
     "Banner": "Remote Troubleshoot on. ID: {{ sessionId }}"
   },
+  "AppUpdate": {
+    "Heading": "Update BC Wallet to the latest version",
+    "Body": "BC Wallet was updated with new improvements. Update your app now to enjoy the latest features and enhancements."
+  },
 }
 
 export default translation
