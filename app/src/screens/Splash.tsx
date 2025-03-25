@@ -1,7 +1,6 @@
 import {
   Stacks,
   useTheme,
-  useStore,
   InfoBox,
   InfoBoxType,
   testIdWithKey,
@@ -20,7 +19,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import useInitializeBCAgent from '../hooks/initialize-agent'
-import { BCState } from '../store'
 
 enum InitErrorTypes {
   Onboarding,
@@ -35,7 +33,6 @@ enum InitErrorTypes {
 const Splash = () => {
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
-  const [store] = useStore<BCState>()
   const navigation = useNavigation()
   const { ColorPallet, Assets } = useTheme()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
@@ -48,7 +45,6 @@ const Splash = () => {
   const initializing = useRef(false)
   const { initializeAgent } = useInitializeBCAgent()
   const [logger, ocaBundleResolver] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_OCA_RESOLVER, TOKENS.CONFIG])
-  const [onboardingComplete] = useState(false)
   const report = useCallback(() => {
     if (initError) {
       logger.report(initError)
@@ -114,6 +110,10 @@ const Splash = () => {
   })
 
   useEffect(() => {
+    if (initializing.current) {
+      return
+    }
+
     setStep(1)
     setStep(2)
 
@@ -124,6 +124,7 @@ const Splash = () => {
 
         setStep(4)
         const agent = await initializeAgent()
+        initializing.current = true
 
         if (!agent) {
           return
@@ -144,46 +145,7 @@ const Splash = () => {
     }
 
     initAgentAsyncEffect()
-  }, [
-    initializeAgent,
-    setStep,
-    ocaBundleResolver,
-    store.stateLoaded,
-    store.authentication.didAuthenticate,
-    store.onboarding.postAuthScreens.length,
-    store.onboarding.didConsiderBiometry,
-    navigation,
-    initAgentCount,
-    t,
-    onboardingComplete,
-  ])
-
-  useEffect(() => {
-    const initAgentAsyncEffect = async (): Promise<void> => {
-      try {
-        await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
-
-        const agent = await initializeAgent()
-
-        if (!agent) {
-          initializing.current = false
-          return
-        }
-
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: Stacks.TabStack }],
-          })
-        )
-      } catch (err: unknown) {
-        setInitErrorType(InitErrorTypes.Agent)
-        setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), (e as Error)?.message, 2031))
-      }
-    }
-
-    initAgentAsyncEffect()
-  }, [initializeAgent, ocaBundleResolver, logger, navigation, t])
+  }, [initializeAgent, setStep, ocaBundleResolver, navigation, initAgentCount, t])
 
   const handleErrorCallToActionPressed = () => {
     setInitError(null)
