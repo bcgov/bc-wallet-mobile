@@ -281,8 +281,6 @@ const Settings: React.FC = () => {
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
-      {/* <UpdateModal /> */}
-
       <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
