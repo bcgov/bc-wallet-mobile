@@ -67,8 +67,6 @@ export const generateOnboardingWorkflowSteps = (
   const { showPreface, enablePushNotifications } = config
   const { needsUpdate, dismissed = false } = state.versionInfo
 
-  console.log('***** state.versionInfo', needsUpdate)
-
   return [
     isPrefaceComplete(didSeePreface, showPreface ?? false),
     isUpdateCheckComplete(needsUpdate, dismissed),

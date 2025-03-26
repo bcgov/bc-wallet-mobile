@@ -7,6 +7,7 @@ import {
   TOKENS,
   useServices,
   BifoldError,
+  useStore,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { CommonActions, useNavigation } from '@react-navigation/native'
@@ -19,6 +20,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import ProgressBar from '../components/ProgressBar'
 import TipCarousel from '../components/TipCarousel'
 import useInitializeBCAgent from '../hooks/initialize-agent'
+import { BCState } from '../store'
 
 enum InitErrorTypes {
   Onboarding,
@@ -36,6 +38,7 @@ const Splash = () => {
   const navigation = useNavigation()
   const { ColorPallet, Assets } = useTheme()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
+  const [store] = useStore<BCState>()
   const [progressPercent, setProgressPercent] = useState(0)
   const [initOnboardingCount, setInitOnboardingCount] = useState(0)
   const [initAgentCount, setInitAgentCount] = useState(0)
@@ -45,35 +48,6 @@ const Splash = () => {
   const initializing = useRef(false)
   const { initializeAgent } = useInitializeBCAgent()
   const [logger, ocaBundleResolver] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_OCA_RESOLVER, TOKENS.CONFIG])
-  const report = useCallback(() => {
-    if (initError) {
-      logger.report(initError)
-    }
-
-    setReported(true)
-  }, [logger, initError])
-
-  const steps: string[] = useMemo(
-    () => [
-      t('Init.Starting'),
-      t('Init.FetchingPreferences'),
-      t('Init.VerifyingOnboarding'),
-      t('Init.CheckingOCA'),
-      t('Init.InitializingAgent'),
-      t('Init.Finishing'),
-    ],
-    [t]
-  )
-
-  const setStep = useCallback(
-    (stepIdx: number) => {
-      setStepText(steps[stepIdx])
-      const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
-      setProgressPercent(percent)
-    },
-    [steps]
-  )
-
   const styles = StyleSheet.create({
     screenContainer: {
       backgroundColor: ColorPallet.brand.primary,
@@ -109,8 +83,37 @@ const Splash = () => {
     },
   })
 
+  const report = useCallback(() => {
+    if (initError) {
+      logger.report(initError)
+    }
+
+    setReported(true)
+  }, [logger, initError])
+
+  const steps: string[] = useMemo(
+    () => [
+      t('Init.Starting'),
+      t('Init.FetchingPreferences'),
+      t('Init.VerifyingOnboarding'),
+      t('Init.CheckingOCA'),
+      t('Init.InitializingAgent'),
+      t('Init.Finishing'),
+    ],
+    [t]
+  )
+
+  const setStep = useCallback(
+    (stepIdx: number) => {
+      setStepText(steps[stepIdx])
+      const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
+      setProgressPercent(percent)
+    },
+    [steps]
+  )
+
   useEffect(() => {
-    if (initializing.current) {
+    if (initializing.current || !store.authentication.didAuthenticate) {
       return
     }
 
@@ -119,14 +122,16 @@ const Splash = () => {
 
     const initAgentAsyncEffect = async (): Promise<void> => {
       try {
+        initializing.current = true
+
         setStep(3)
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
         setStep(4)
         const agent = await initializeAgent()
-        initializing.current = true
 
         if (!agent) {
+          initializing.current = false
           return
         }
 
@@ -139,22 +144,25 @@ const Splash = () => {
           })
         )
       } catch (e: unknown) {
+        initializing.current = false
+
         setInitErrorType(InitErrorTypes.Agent)
         setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), (e as Error)?.message, 2031))
       }
     }
 
     initAgentAsyncEffect()
-  }, [initializeAgent, setStep, ocaBundleResolver, navigation, initAgentCount, t])
+  }, [initializeAgent, setStep, ocaBundleResolver, navigation, initAgentCount, t, store])
 
-  const handleErrorCallToActionPressed = () => {
+  const handleErrorCallToActionPressed = useCallback(() => {
     setInitError(null)
+
     if (initErrorType === InitErrorTypes.Agent) {
       setInitAgentCount(initAgentCount + 1)
     } else {
       setInitOnboardingCount(initOnboardingCount + 1)
     }
-  }
+  }, [initErrorType, initAgentCount, setInitAgentCount, initOnboardingCount, setInitOnboardingCount])
 
   const secondaryCallToActionIcon = useMemo(
     () =>
