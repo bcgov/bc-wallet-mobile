@@ -32,8 +32,8 @@ export class VersionCheckService implements IVersionCheckService {
         this.log.error('Failed to check for updates:', error as Error)
         return undefined
       }
-    } else {
-      return this._cachedVersionInfo
     }
+
+    return this._cachedVersionInfo
   }
 }
