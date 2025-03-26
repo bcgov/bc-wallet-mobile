@@ -57,10 +57,17 @@ jobs:
         run: |
           yarn test
 
-  code-ql:
-    name: CodeQL
+  analyze:
+    name: CodeQL (${{ matrix.language }})
     runs-on: ubuntu-22.04
+    permissions:
+      # required for all workflows
+      security-events: write
+      # required to fetch internal or private CodeQL packs
+      packages: read
+
     strategy:
+      fail-fast: false
       matrix:
         include:
           - language: javascript-typescript
@@ -78,3 +85,9 @@ jobs:
       uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
+        build-mode: ${{ matrix.build-mode }}
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
