@@ -46,7 +46,13 @@ import AddCredentialSlider from './src/components/AddCredentialSlider'
 import EmptyList from './src/components/EmptyList'
 import HomeFooterView from './src/components/HomeFooterView'
 import HomeHeaderView from './src/components/HomeHeaderView'
-import { AttestationRestrictions, autoDisableRemoteLoggingIntervalInMinutes } from './src/constants'
+import {
+  AttestationRestrictions,
+  autoDisableRemoteLoggingIntervalInMinutes,
+  appleAppStoreUrl,
+  googlePlayStoreUrl,
+  appHelpUrl,
+} from './src/constants'
 import { activate, deactivate, setup, status } from './src/helpers/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from './src/helpers/utils'
 import { useNotifications } from './src/hooks/notifications'
@@ -59,6 +65,7 @@ import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
 import { AttestationMonitor, allCredDefIds } from './src/services/attestation'
+import { VersionCheckService } from './src/services/version'
 import {
   BCDispatchAction,
   BCLocalStorageKeys,
@@ -69,37 +76,30 @@ import {
   Unified,
   initialState,
 } from './src/store'
+import { generateOnboardingWorkflowSteps } from './src/onboarding'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
-const helpLink = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
-
-export interface AppState {
-  showSurvey: boolean
-}
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
   private log?: BifoldLogger
   private t: TFunction<'translation', undefined>
   private navigate: (stack: never, params: never) => void
-  private setAppState: React.Dispatch<React.SetStateAction<AppState>>
-  private appState: AppState
   private storage: PersistentStorage<PersistentState>
+  readonly setSurveyVisible: (visible: boolean) => void
 
   public constructor(
     bifoldContainer: Container,
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
-    useState: [AppState, React.Dispatch<React.SetStateAction<AppState>>],
+    setSurveyVisible: (visible: boolean) => void,
     log?: BifoldLogger
   ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.log = log
     this.t = t
     this.navigate = navigate
-    const [appState, setAppState] = useState
-    this.setAppState = setAppState
-    this.appState = appState
+    this.setSurveyVisible = setSurveyVisible
     this.storage = new PersistentStorage(log)
   }
 
@@ -128,6 +128,7 @@ export class AppContainer implements Container {
     }
 
     this._container.registerInstance(TOKENS.UTIL_ATTESTATION_MONITOR, new AttestationMonitor(logger, options))
+    this._container.registerInstance(TOKENS.UTIL_APP_VERSION_MONITOR, new VersionCheckService(logger))
     // Here you can register any component to override components in core package
     // Example: Replacing button in core with custom button
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
@@ -172,19 +173,19 @@ export class AppContainer implements Container {
               title: this.t('Settings.HelpUsingBCWallet'),
               accessibilityLabel: this.t('Settings.HelpUsingBCWallet'),
               testID: testIdWithKey('HelpUsingBCWallet'),
-              onPress: () => Linking.openURL(helpLink),
+              onPress: () => Linking.openURL(appHelpUrl),
             },
             {
               title: this.t('Settings.GiveFeedback'),
               accessibilityLabel: this.t('Settings.GiveFeedback'),
               testID: testIdWithKey('GiveFeedback'),
-              onPress: () => this.setAppState({ ...this.appState, showSurvey: true }),
+              onPress: () => this.setSurveyVisible(true),
             },
             {
               title: this.t('Settings.ReportAProblem'),
               accessibilityLabel: this.t('Settings.ReportAProblem'),
               testID: testIdWithKey('ReportAProblem'),
-              onPress: () => this.setAppState({ ...this.appState, showSurvey: true }),
+              onPress: () => this.setSurveyVisible(true),
             },
           ],
         },
@@ -240,6 +241,10 @@ export class AppContainer implements Container {
             await deactivate(agent)
           }
         },
+      },
+      appUpdateConfig: {
+        appleAppStoreUrl,
+        googlePlayStoreUrl,
       },
     })
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, AddCredentialButton)
@@ -310,7 +315,6 @@ export class AppContainer implements Container {
     })
     resolver.log = logger
     this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
-
     this._container.registerInstance(TOKENS.NOTIFICATIONS, {
       useNotifications,
       customNotificationConfig: {
@@ -421,6 +425,8 @@ export class AppContainer implements Container {
       dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
     })
 
+    this._container.registerInstance(TOKENS.ONBOARDING, generateOnboardingWorkflowSteps)
+
     this._container.registerInstance(TOKENS.UTIL_LOGGER, logger)
 
     return this
@@ -429,6 +435,7 @@ export class AppContainer implements Container {
   public resolve<K extends keyof TokenMapping>(token: K): TokenMapping[K] {
     return this._container.resolve(token) as TokenMapping[K]
   }
+
   public resolveAll<K extends keyof TokenMapping, T extends K[]>(
     tokens: [...T]
   ): { [I in keyof T]: TokenMapping[T[I]] } {

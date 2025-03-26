@@ -14,6 +14,7 @@ import React from 'react'
 import { StyleSheet, ViewStyle } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
+
 import { IInlineInputMessage } from '@hyperledger/aries-bifold-core/lib/typescript/App/theme'
 
 export const borderRadius = 4
@@ -63,14 +64,19 @@ const BrandColors: IBrandColors = {
   primaryDisabled: `#757575`,
   secondary: '#FFFFFFFF',
   secondaryDisabled: `#757575`,
+  tertiary: '#FFFFFFFF',
+  tertiaryDisabled: '#757575',
   primaryLight: '#D9EAF7',
   highlight: '#FCBA19',
   primaryBackground: '#F2F2F2',
   secondaryBackground: '#FFFFFF',
+  tertiaryBackground: '#FFFFFF',
   modalPrimary: '#003366',
   modalSecondary: '#FFFFFFFF',
+  modalTertiary: '#FFFFFF',
   modalPrimaryBackground: '#FFFFFF',
   modalSecondaryBackground: '#F2F2F2',
+  modalTertiaryBackground: '#FFFFFF',
   modalIcon: GrayscaleColors.darkGrey,
   link: '#1A5A96',
   unorderedList: GrayscaleColors.darkGrey,

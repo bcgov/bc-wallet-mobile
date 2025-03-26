@@ -29,7 +29,7 @@ import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
-import { AppContainer, AppState } from './container-imp'
+import { AppContainer } from './container-imp'
 import bcwallet from './src'
 import tours from './src/components/tours'
 import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
@@ -47,22 +47,23 @@ messaging().setBackgroundMessageHandler(async () => {})
 messaging().onMessage(async () => {})
 
 const App = () => {
-  useMemo(() => {
-    initStoredLanguage().then()
-  }, [])
   const { t } = useTranslation()
   const { navigate } = useNavigation()
-  const [appState, setAppState] = useState<AppState>({ showSurvey: false })
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
-  const bcwContainer = new AppContainer(bifoldContainer, t, navigate, [appState, setAppState]).init()
+  const [surveyVisible, setSurveyVisible] = useState(false)
+  const bcwContainer = new AppContainer(bifoldContainer, t, navigate, setSurveyVisible).init()
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
   }
 
+  useMemo(() => {
+    initStoredLanguage().then()
+  }, [])
+
   useEffect(() => {
-    // Hide the native splash / loading screen so that our
-    // RN version can be displayed.
+    // Hide the native splash / loading screen so
+    // that our RN version can be displayed.
     SplashScreen.hide()
   }, [])
 
@@ -87,8 +88,8 @@ const App = () => {
                       <WebDisplay
                         destinationUrl={surveyMonkeyUrl}
                         exitUrl={surveyMonkeyExitUrl}
-                        visible={appState.showSurvey}
-                        onClose={() => setAppState({ showSurvey: false })}
+                        visible={surveyVisible}
+                        onClose={() => setSurveyVisible(false)}
                       />
                       <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
                         <RootStack />
