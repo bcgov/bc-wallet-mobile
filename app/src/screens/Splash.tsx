@@ -8,6 +8,7 @@ import {
   useServices,
   BifoldError,
   useStore,
+  useAuth,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
 import { CommonActions, useNavigation } from '@react-navigation/native'
@@ -35,6 +36,7 @@ enum InitErrorTypes {
 const Splash = () => {
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
+  const { walletSecret } = useAuth()
   const navigation = useNavigation()
   const { ColorPallet, Assets } = useTheme()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
@@ -117,6 +119,12 @@ const Splash = () => {
       return
     }
 
+    if (!walletSecret) {
+      setInitErrorType(InitErrorTypes.Agent)
+      setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), 'Wallet secret is not found', 2031))
+      return
+    }
+
     setStep(1)
     setStep(2)
 
@@ -128,7 +136,7 @@ const Splash = () => {
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
         setStep(4)
-        const agent = await initializeAgent()
+        const agent = await initializeAgent(walletSecret)
 
         if (!agent) {
           initializing.current = false
@@ -152,7 +160,7 @@ const Splash = () => {
     }
 
     initAgentAsyncEffect()
-  }, [initializeAgent, setStep, ocaBundleResolver, navigation, initAgentCount, t, store])
+  }, [initializeAgent, setStep, ocaBundleResolver, navigation, initAgentCount, t, store, walletSecret])
 
   const handleErrorCallToActionPressed = useCallback(() => {
     setInitError(null)

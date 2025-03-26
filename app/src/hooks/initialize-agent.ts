@@ -4,13 +4,13 @@ import { useAgent } from '@credo-ts/react-hooks'
 import { agentDependencies } from '@credo-ts/react-native'
 import {
   DispatchAction,
-  useAuth,
   useStore,
   migrateToAskar,
   createLinkSecretIfRequired,
   TOKENS,
   useServices,
   PersistentStorage,
+  WalletSecret,
 } from '@hyperledger/aries-bifold-core'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import moment from 'moment'
@@ -33,7 +33,6 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
 const useInitializeBCAgent = () => {
   const { agent, setAgent } = useAgent()
   const [store, dispatch] = useStore<BCState>()
-  const { walletSecret } = useAuth()
   const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
     TOKENS.UTIL_LEDGERS,
@@ -42,41 +41,43 @@ const useInitializeBCAgent = () => {
     TOKENS.CACHE_SCHEMAS,
   ])
 
-  const refreshAttestationMonitor = useCallback((agent: Agent) => {
-    attestationMonitor?.stop()
-    attestationMonitor?.start(agent)
-  }, [attestationMonitor])
+  const refreshAttestationMonitor = useCallback(
+    (agent: Agent) => {
+      attestationMonitor?.stop()
+      attestationMonitor?.start(agent)
+    },
+    [attestationMonitor]
+  )
 
-  const restartExistingAgent = useCallback(async () => {
-    // if the agent is initialized, it was not a clean shutdown and should be replaced, not restarted
-    if (!walletSecret?.id || !walletSecret.key || !agent || agent.isInitialized) {
-      return
-    }
-
-    logger.info('Agent already created, restarting...')
-    try {
-      await agent.wallet.open({
-        id: walletSecret.id,
-        key: walletSecret.key,
-      })
-      await agent.initialize()
-    } catch {
-      // if the existing agents wallet cannot be opened or initialize() fails it was
-      // again not a clean shutdown and the agent should be replaced, not restarted
-      logger.error('Failed to restart existing agent, skipping agent restart')
-      return
-    }
-
-    logger.info('Successfully restarted existing agent')
-    return agent
-  }, [walletSecret, agent, logger])
-
-  const createNewAgent = useCallback(
-    async (ledgers: IndyVdrPoolConfig[]): Promise<Agent | undefined> => {
-      if (!walletSecret?.id || !walletSecret.key) {
+  const restartExistingAgent = useCallback(
+    async (walletSecret: WalletSecret) => {
+      // if the agent is initialized, it was not a clean shutdown and should be replaced, not restarted
+      if (!agent || agent.isInitialized) {
         return
       }
 
+      logger.info('Agent already created, restarting...')
+      try {
+        await agent.wallet.open({
+          id: walletSecret.id,
+          key: walletSecret.key,
+        })
+        await agent.initialize()
+      } catch {
+        // if the existing agents wallet cannot be opened or initialize() fails it was
+        // again not a clean shutdown and the agent should be replaced, not restarted
+        logger.error('Failed to restart existing agent, skipping agent restart')
+        return
+      }
+
+      logger.info('Successfully restarted existing agent')
+      return agent
+    },
+    [agent, logger]
+  )
+
+  const createNewAgent = useCallback(
+    async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret): Promise<Agent | undefined> => {
       logger.info('No agent initialized, creating a new one')
 
       const options = {
@@ -120,15 +121,11 @@ const useInitializeBCAgent = () => {
 
       return newAgent
     },
-    [walletSecret, store.preferences.walletName, logger, store.developer.enableProxy]
+    [store.preferences.walletName, logger, store.developer.enableProxy]
   )
 
   const migrateIfRequired = useCallback(
-    async (newAgent: Agent) => {
-      if (!walletSecret?.id || !walletSecret.key) {
-        return
-      }
-
+    async (newAgent: Agent, walletSecret: WalletSecret) => {
       // If we haven't migrated to Aries Askar yet, we need to do this before we initialize the agent.
       if (!store.migration.didMigrateToAskar) {
         logger.debug('Agent not updated to Aries Askar, updating...')
@@ -142,7 +139,7 @@ const useInitializeBCAgent = () => {
         })
       }
     },
-    [walletSecret, store.migration.didMigrateToAskar, dispatch, logger]
+    [store.migration.didMigrateToAskar, dispatch, logger]
   )
 
   const warmUpCache = useCallback(
@@ -192,64 +189,62 @@ const useInitializeBCAgent = () => {
     [credDefs, schemas]
   )
 
-  const initializeAgent = useCallback(async (): Promise<Agent | undefined> => {
-    if (!walletSecret?.id || !walletSecret.key) {
-      return
-    }
+  const initializeAgent = useCallback(
+    async (walletSecret: WalletSecret): Promise<Agent | undefined> => {
+      const existingAgent = await restartExistingAgent(walletSecret)
+      if (existingAgent) {
+        refreshAttestationMonitor(existingAgent)
+        setAgent(existingAgent)
+        return existingAgent
+      }
 
-    const existingAgent = await restartExistingAgent()
-    if (existingAgent) {
-      refreshAttestationMonitor(existingAgent)
-      setAgent(existingAgent)
-      return existingAgent
-    }
+      const cachedLedgers = await loadCachedLedgers()
+      const ledgers = cachedLedgers ?? indyLedgers
 
-    const cachedLedgers = await loadCachedLedgers()
-    const ledgers = cachedLedgers ?? indyLedgers
+      const newAgent = await createNewAgent(ledgers, walletSecret)
+      if (!newAgent) {
+        logger.error('Failed to create a new agent')
+        throw new Error('Failed to create a a new agent')
+      }
 
-    const newAgent = await createNewAgent(ledgers)
-    if (!newAgent) {
-      logger.error('Failed to create a new agent')
-      throw new Error('Failed to create a a new agent')
-    }
+      logger.info('Migrating agent if required...')
+      await migrateIfRequired(newAgent, walletSecret)
 
-    logger.info('Migrating agent if required...')
-    await migrateIfRequired(newAgent)
+      logger.info('Initializing new agent...')
+      await newAgent.initialize()
 
-    logger.info('Initializing new agent...')
-    await newAgent.initialize()
+      logger.info('Warming up cache...')
+      await warmUpCache(newAgent, cachedLedgers)
 
-    logger.info('Warming up cache...')
-    await warmUpCache(newAgent, cachedLedgers)
+      logger.info('Creating link secret if required...')
+      await createLinkSecretIfRequired(newAgent)
 
-    logger.info('Creating link secret if required...')
-    await createLinkSecretIfRequired(newAgent)
+      if (store.preferences.usePushNotifications) {
+        logger.info('Activating push notifications...')
+        activate(newAgent)
+      }
 
-    if (store.preferences.usePushNotifications) {
-      logger.info('Activating push notifications...')
-      activate(newAgent)
-    }
+      // In case the old attestationMonitor is still active, stop it and start a new one
+      logger.info('Starting attestation monitor...')
+      refreshAttestationMonitor(newAgent)
 
-    // In case the old attestationMonitor is still active, stop it and start a new one
-    logger.info('Starting attestation monitor...')
-    refreshAttestationMonitor(newAgent)
+      logger.info('Setting new agent...')
+      setAgent(newAgent)
 
-    logger.info('Setting new agent...')
-    setAgent(newAgent)
-
-    return newAgent
-  }, [
-    walletSecret,
-    restartExistingAgent,
-    setAgent,
-    indyLedgers,
-    createNewAgent,
-    logger,
-    migrateIfRequired,
-    warmUpCache,
-    store.preferences.usePushNotifications,
-    refreshAttestationMonitor,
-  ])
+      return newAgent
+    },
+    [
+      restartExistingAgent,
+      setAgent,
+      indyLedgers,
+      createNewAgent,
+      logger,
+      migrateIfRequired,
+      warmUpCache,
+      store.preferences.usePushNotifications,
+      refreshAttestationMonitor,
+    ]
+  )
 
   return { initializeAgent }
 }
