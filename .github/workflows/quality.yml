@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-22.04
-    name: Linting
+    name: Linting and formatting
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
@@ -26,12 +26,13 @@ jobs:
       - name: Switch to app folder
         run: |
           cd app
-      - name: Check style
+      - name: Run formatter
         run: |
           yarn prettier
-      - name: LINTing
+      - name: Run linter
         run: |
           yarn lint
+
   test:
     runs-on: ubuntu-22.04
     name: Testing
@@ -55,3 +56,25 @@ jobs:
       - name: Automated testing
         run: |
           yarn test
+
+  code-ql:
+    name: CodeQL
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - language: javascript-typescript
+            build-mode: none
+          - language: ruby
+            build-mode: none
+          - language: java-kotlin
+            build-mode: autobuild
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
