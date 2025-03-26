@@ -1027,7 +1027,7 @@ PODS:
   - React-Mapbuffer (0.73.6):
     - glog
     - React-debug
-  - "react-native-attestation (1.0.0-alpha.475+e52ec7bf)":
+  - "react-native-attestation (1.0.0-alpha.482+3035438d)":
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1586,7 +1586,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 85583ef014ce53d731a98c66a0e24496f7a83066
   React-logger: 55764cd993880c6f887505854581c9faf68feff2
   React-Mapbuffer: 15dfcfeb4428d8799cce75e7fe85b18b706029e0
-  react-native-attestation: be834a4a71bfc21b7ca7c12b3ff5e1bec074dd08
+  react-native-attestation: 27f12d8371c4da22d937331d31798771b3d23d2e
   react-native-config: ea73937aecb26d8eb4642ecdb2b2e83d0be59656
   react-native-date-picker: 585252087d4820b4cd8f2cf80068f6e8f5b72413
   react-native-encrypted-storage: 569d114e329b1c2c2d9f8c84bcdbe4478dda2258
