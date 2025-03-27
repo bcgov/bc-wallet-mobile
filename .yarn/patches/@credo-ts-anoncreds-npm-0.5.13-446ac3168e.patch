@@ -1,0 +1,41 @@
+diff --git a/build/anoncreds-rs/AnonCredsRsHolderService.js b/build/anoncreds-rs/AnonCredsRsHolderService.js
+index c1eeeca1c9c254f47880909391b22f66598f42fd..779b88d59841070a5e298e0544908a7521bc1cf2 100644
+--- a/build/anoncreds-rs/AnonCredsRsHolderService.js
++++ b/build/anoncreds-rs/AnonCredsRsHolderService.js
+@@ -82,7 +82,8 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+                         ].join('\n'));
+                     }
+                 }
+-                const { linkSecretId, revocationRegistryId, credentialRevocationId } = (0, w3cAnonCredsUtils_1.getAnoncredsCredentialInfoFromRecord)(credentialRecord, (0, proofRequest_1.proofRequestUsesUnqualifiedIdentifiers)(proofRequest));
++                const proofUsesUnqualifiedIdentifiers = (0, proofRequest_1.proofRequestUsesUnqualifiedIdentifiers)(proofRequest);
++                const { linkSecretId, schemaId, credentialDefinitionId, revocationRegistryId, credentialRevocationId } = (0, w3cAnonCredsUtils_1.getAnoncredsCredentialInfoFromRecord)(credentialRecord, (0, proofRequest_1.proofRequestUsesUnqualifiedIdentifiers)(proofRequest));
+                 // TODO: Check if credential has a revocation registry id (check response from anoncreds-rs API, as it is
+                 // sending back a mandatory string in Credential.revocationRegistryId)
+                 const timestamp = attribute.timestamp;
+@@ -112,6 +113,13 @@ let AnonCredsRsHolderService = class AnonCredsRsHolderService {
+                             credential: credentialRecord.credential,
+                         })
+                         : credentialRecord.credential;
++
++                    if (proofUsesUnqualifiedIdentifiers) {
++                        credential.schema_id = schemaId;
++                        credential.cred_def_id = credentialDefinitionId;
++                        credential.rev_reg_id = credentialRevocationId != null ? credentialRevocationId : undefined;
++                    }
++
+                     return {
+                         linkSecretId,
+                         credentialId: attribute.credentialId,
+diff --git a/build/formats/AnonCredsProofFormatService.js b/build/formats/AnonCredsProofFormatService.js
+index 4c0f7f413a802e459491161d7a913b26d1b3b8a3..2ba3fdd557bd9e7a52893a21e92a698f16cfeee3 100644
+--- a/build/formats/AnonCredsProofFormatService.js
++++ b/build/formats/AnonCredsProofFormatService.js
+@@ -253,7 +253,7 @@ class AnonCredsProofFormatService {
+      */
+     async createProof(agentContext, proofRequest, selectedCredentials) {
+         const holderService = agentContext.dependencyManager.resolve(services_1.AnonCredsHolderServiceSymbol);
+-        const credentialObjects = await Promise.all([...Object.values(selectedCredentials.attributes), ...Object.values(selectedCredentials.predicates)].map(async (c) => { var _a; return (_a = c.credentialInfo) !== null && _a !== void 0 ? _a : holderService.getCredential(agentContext, { id: c.credentialId }); }));
++        const credentialObjects = await Promise.all([...Object.values(selectedCredentials.attributes), ...Object.values(selectedCredentials.predicates)].map(async (c) => { return holderService.getCredential(agentContext, { id: c.credentialId, useUnqualifiedIdentifiersIfPresent: (0, utils_1.proofRequestUsesUnqualifiedIdentifiers)(proofRequest) }); }));
+         const schemas = await this.getSchemas(agentContext, new Set(credentialObjects.map((c) => c.schemaId)));
+         const credentialDefinitions = await this.getCredentialDefinitions(agentContext, new Set(credentialObjects.map((c) => c.credentialDefinitionId)));
+         // selectedCredentials are overridden with specified timestamps of the revocation status list that
