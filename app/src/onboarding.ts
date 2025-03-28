@@ -36,7 +36,7 @@ export const isPushNotificationComplete = (
 }
 
 export const isNameWalletComplete = (didNameWallet: boolean, enableWalletNaming: boolean): OnboardingTask => {
-  return { name: Screens.NameWallet, completed: !enableWalletNaming && !didNameWallet }
+  return { name: Screens.NameWallet, completed: !enableWalletNaming || didNameWallet }
 }
 
 export const isAttemptLockoutComplete = (servedPenalty: boolean | undefined): OnboardingTask => {
