@@ -2140,7 +2140,7 @@ __metadata:
 
 "@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.5.13#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.13-446ac3168e.patch":
   version: 0.5.13
-  resolution: "@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.5.13#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.13-446ac3168e.patch::version=0.5.13&hash=0a678d"
+  resolution: "@credo-ts/anoncreds@patch:@credo-ts/anoncreds@npm%3A0.5.13#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.13-446ac3168e.patch::version=0.5.13&hash=424996"
   dependencies:
     "@astronautlabs/jsonpath": "npm:^1.1.2"
     "@credo-ts/core": "npm:0.5.13"
@@ -2152,7 +2152,7 @@ __metadata:
     reflect-metadata: "npm:^0.1.13"
   peerDependencies:
     "@hyperledger/anoncreds-shared": ^0.2.2
-  checksum: 40dbfd37abd3041be1339620d1ce89e8bc07ae6a24133e69272efb343d7647ea41d44fce4b4c4cfceb92ba4626d214ba6fa7e884d59dc6e2aa656050688575f1
+  checksum: b9970ed0edcba0581e3f798927580886d77a5d8b7dd69955d339ce311f505342b14a00e0eff6453a8c909943e8cba63852a22b6d76125dd96bb04138accf8318
   languageName: node
   linkType: hard
 
@@ -2228,7 +2228,7 @@ __metadata:
 
 "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.13#~/.yarn/patches/@credo-ts-core-npm-0.5.13-725ab940d0.patch":
   version: 0.5.13
-  resolution: "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.13#~/.yarn/patches/@credo-ts-core-npm-0.5.13-725ab940d0.patch::version=0.5.13&hash=7eff54"
+  resolution: "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.13#~/.yarn/patches/@credo-ts-core-npm-0.5.13-725ab940d0.patch::version=0.5.13&hash=680100"
   dependencies:
     "@digitalcredentials/jsonld": "npm:^6.0.0"
     "@digitalcredentials/jsonld-signatures": "npm:^9.4.0"
@@ -2272,7 +2272,7 @@ __metadata:
     varint: "npm:^6.0.0"
     web-did-resolver: "npm:^2.0.21"
     webcrypto-core: "npm:^1.8.0"
-  checksum: 226294883431da24fd82704f07f6d754a389a0080d665265095d6fa17ae7aefd2a155b5c90d5a1f9f6598f7f6d22a5e3ad2cb44a0461be4680a1cf71e6c91bdc
+  checksum: 886858fa0165690801a2e0d6c9c330e2a4ad766b0f7df477ab28643fca4ec9de8d2a8c0ff05fdd6106b35e6eeffe775715b4c7da46c90a7fc17b838ade7d7679
   languageName: node
   linkType: hard
 
@@ -3269,7 +3269,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.485, @hyperledger/aries-bifold-core@npm:^1.0.0-alpha.485+b28947c4":
+"@hyperledger/aries-bifold-core@npm:1.0.0-alpha.485":
   version: 1.0.0-alpha.485
   resolution: "@hyperledger/aries-bifold-core@npm:1.0.0-alpha.485"
   peerDependencies:
