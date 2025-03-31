@@ -265,20 +265,26 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
               accessibilityLabel="RemoteLogging.CollectionNoticeLink"
               accessibilityRole="link"
               accessible={true}
+              maxFontSizeMultiplier={2}
               onPress={[Function]}
               style={
                 [
                   {
-                    "alignSelf": "flex-start",
-                    "color": "#1A5A96",
+                    "color": "#313132",
                     "fontFamily": "BCSans-Regular",
                     "fontSize": 18,
                     "fontWeight": "normal",
-                    "textDecorationLine": "underline",
                   },
-                  {
-                    "marginBottom": 20,
-                  },
+                  [
+                    {
+                      "alignSelf": "flex-start",
+                      "color": "#1A5A96",
+                      "textDecorationLine": "underline",
+                    },
+                    {
+                      "marginBottom": 20,
+                    },
+                  ],
                 ]
               }
               testID="com.ariesbifold:id/RemoteLogging.CollectionNoticeLink"
@@ -433,20 +439,29 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
                 </Text>
               </View>
               <Text
+                maxFontSizeMultiplier={2}
                 style={
                   [
                     {
                       "color": "#313132",
-                      "flexShrink": 1,
                       "fontFamily": "BCSans-Regular",
                       "fontSize": 18,
                       "fontWeight": "normal",
-                      "marginLeft": 0,
-                      "marginRight": 10,
                     },
-                    {
-                      "textAlign": "right",
-                    },
+                    [
+                      {
+                        "color": "#313132",
+                        "flexShrink": 1,
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 18,
+                        "fontWeight": "normal",
+                        "marginLeft": 0,
+                        "marginRight": 10,
+                      },
+                      {
+                        "textAlign": "right",
+                      },
+                    ],
                   ]
                 }
               >
@@ -510,24 +525,33 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
                   }
                 >
                   <Text
+                    maxFontSizeMultiplier={2}
                     style={
                       [
                         {
-                          "color": "#FFFFFF",
+                          "color": "#313132",
                           "fontFamily": "BCSans-Regular",
                           "fontSize": 18,
-                          "fontWeight": "bold",
-                          "textAlign": "center",
+                          "fontWeight": "normal",
                         },
-                        {
-                          "color": "#FFFFFF",
-                          "fontFamily": "BCSans-Regular",
-                          "fontSize": 18,
-                          "fontWeight": "bold",
-                          "textAlign": "center",
-                        },
-                        false,
-                        false,
+                        [
+                          {
+                            "color": "#FFFFFF",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                            "textAlign": "center",
+                          },
+                          {
+                            "color": "#FFFFFF",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                            "textAlign": "center",
+                          },
+                          false,
+                          false,
+                        ],
                       ]
                     }
                   >

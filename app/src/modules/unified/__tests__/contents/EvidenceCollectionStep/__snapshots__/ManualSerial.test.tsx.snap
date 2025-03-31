@@ -80,14 +80,19 @@ exports[`ManualSerialContent Component renders correctly 1`] = `
               }
             >
               <Text
+                maxFontSizeMultiplier={2}
                 style={
-                  {
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 18,
-                    "fontWeight": "normal",
-                    "marginBottom": 5,
-                  }
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "marginBottom": 5,
+                    },
+                  ]
                 }
               >
                 Unified.ManualSerial.InputLabel
@@ -95,6 +100,7 @@ exports[`ManualSerialContent Component renders correctly 1`] = `
               <TextInput
                 accessibilityLabel="Unified.ManualSerial.InputLabel"
                 defaultValue=""
+                maxFontSizeMultiplier={2}
                 onBlur={[Function]}
                 onChangeText={[Function]}
                 onFocus={[Function]}
@@ -117,11 +123,20 @@ exports[`ManualSerialContent Component renders correctly 1`] = `
                 testID="com.ariesbifold:id/SerialInput"
               />
               <Text
+                maxFontSizeMultiplier={2}
                 style={
-                  {
-                    "alignSelf": "flex-end",
-                    "color": "#313132",
-                  }
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "alignSelf": "flex-end",
+                      "color": "#313132",
+                    },
+                  ]
                 }
               >
                 0
@@ -203,18 +218,27 @@ exports[`ManualSerialContent Component renders correctly 1`] = `
                   }
                 >
                   <Text
+                    maxFontSizeMultiplier={2}
                     style={
                       [
                         {
-                          "color": "#FFFFFF",
+                          "color": "#313132",
                           "fontFamily": "BCSans-Regular",
                           "fontSize": 18,
-                          "fontWeight": "bold",
-                          "textAlign": "center",
+                          "fontWeight": "normal",
                         },
-                        false,
-                        false,
-                        false,
+                        [
+                          {
+                            "color": "#FFFFFF",
+                            "fontFamily": "BCSans-Regular",
+                            "fontSize": 18,
+                            "fontWeight": "bold",
+                            "textAlign": "center",
+                          },
+                          false,
+                          false,
+                          false,
+                        ],
                       ]
                     }
                   >

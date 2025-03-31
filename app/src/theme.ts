@@ -1,5 +1,6 @@
 import {
   ImageAssets as BifoldImageAssets,
+  ISpacing,
   IInputs,
   ITextTheme,
   IBrandColors,
@@ -17,12 +18,22 @@ import Logo from './assets/img/logo-with-text.svg'
 
 import { IInlineInputMessage } from '@hyperledger/aries-bifold-core/lib/typescript/App/theme'
 
+export const maxFontSizeMultiplier = 2
 export const borderRadius = 4
 export const heavyOpacity = 0.7
 export const mediumOpacity = 0.5
 export const lightOpacity = 0.35
 export const zeroOpacity = 0.0
 export const borderWidth = 2
+
+const Spacing: ISpacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 40,
+}
 
 const SemanticColors: ISemanticColors = {
   error: '#D8292F',
@@ -764,6 +775,7 @@ const SelectedCredTheme: ViewStyle = {
 }
 
 export const defaultTheme: ITheme = {
+  Spacing,
   ColorPallet,
   TextTheme,
   Buttons,
@@ -786,4 +798,5 @@ export const defaultTheme: ITheme = {
   InputInlineMessage,
   CredentialCardShadowTheme,
   SelectedCredTheme,
+  maxFontSizeMultiplier,
 }
