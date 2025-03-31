@@ -61,11 +61,6 @@
     "@credo-ts/react-hooks": "patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch",
     "@hyperledger/indy-vdr-shared@npm:0.2.2": "patch:@hyperledger/indy-vdr-shared@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-shared-npm-0.2.2-b989282fc6.patch",
     "@hyperledger/indy-vdr-react-native": "patch:@hyperledger/indy-vdr-react-native@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.2.2-627d424b96.patch",
-    "@sphereon/pex": "patch:@sphereon/pex@npm%3A3.3.3#./.yarn/patches/@sphereon-pex-npm-3.3.3-144d9252ec.patch",
-    "@hyperledger/aries-bifold-core": "1.0.0-alpha.485",
-    "@hyperledger/aries-bifold-remote-logs": "1.0.0-alpha.485",
-    "@hyperledger/aries-bifold-verifier": "1.0.0-alpha.485",
-    "@hyperledger/aries-oca": "1.0.0-alpha.485",
-    "@hyperledger/aries-react-native-attestation": "1.0.0-alpha.485"
+    "@sphereon/pex": "patch:@sphereon/pex@npm%3A3.3.3#./.yarn/patches/@sphereon-pex-npm-3.3.3-144d9252ec.patch"
   }
 }

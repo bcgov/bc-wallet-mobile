@@ -20,7 +20,7 @@ index c1eeeca1c9c254f47880909391b22f66598f42fd..b1e0b7913615b2e0b03b8c206ba1f1f0
 +                    if (proofUsesUnqualifiedIdentifiers) {
 +                        credential.schema_id = schemaId;
 +                        credential.cred_def_id = credentialDefinitionId;
-+                        credential.rev_reg_id = credentialRevocationId != null ? credentialRevocationId : undefined;
++                        credential.rev_reg_id = revocationRegistryId != null ? revocationRegistryId : undefined;
 +                    }
 +
                      return {

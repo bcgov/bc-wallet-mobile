@@ -510,20 +510,26 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                     accessibilityLabel="Edit"
                     accessibilityRole="link"
                     accessible={true}
+                    maxFontSizeMultiplier={2}
                     onPress={[Function]}
                     style={
                       [
                         {
-                          "alignSelf": "flex-start",
-                          "color": "#1A5A96",
+                          "color": "#313132",
                           "fontFamily": "BCSans-Regular",
                           "fontSize": 18,
                           "fontWeight": "normal",
-                          "textDecorationLine": "underline",
                         },
-                        {
-                          "textDecorationLine": "none",
-                        },
+                        [
+                          {
+                            "alignSelf": "flex-start",
+                            "color": "#1A5A96",
+                            "textDecorationLine": "underline",
+                          },
+                          {
+                            "textDecorationLine": "none",
+                          },
+                        ],
                       ]
                     }
                     testID="com.ariesbifold:id/Edit"
