@@ -7,13 +7,14 @@ import {
   ProofState,
 } from '@credo-ts/core'
 import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@credo-ts/react-hooks'
-import { BifoldAgent, useStore } from '@hyperledger/aries-bifold-core'
 import {
+  BifoldAgent,
+  useStore,
   BasicMessageMetadata,
   CredentialMetadata,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
-} from '@hyperledger/aries-bifold-core/App/types/metadata'
+} from '@hyperledger/aries-bifold-core'
 import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
 import { useEffect, useState } from 'react'
 
@@ -83,7 +84,14 @@ export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord 
 
     const notificationsWithCustom = [...custom, ...notif]
     setNotifications(notificationsWithCustom as never[])
-  }, [offers, credsReceived, credsDone, basicMessages, nonAttestationProofs, store.dismissPersonCredentialOffer.personCredentialOfferDismissed])
+  }, [
+    offers,
+    credsReceived,
+    credsDone,
+    basicMessages,
+    nonAttestationProofs,
+    store.dismissPersonCredentialOffer.personCredentialOfferDismissed,
+  ])
 
   useEffect(() => {
     Promise.all(

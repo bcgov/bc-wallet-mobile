@@ -2,6 +2,7 @@ import {
   ImageAssets as BifoldImageAssets,
   ISpacing,
   IInputs,
+  IInlineInputMessage,
   ITextTheme,
   IBrandColors,
   ISemanticColors,
@@ -15,8 +16,6 @@ import React from 'react'
 import { StyleSheet, ViewStyle } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
-
-import { IInlineInputMessage } from '@hyperledger/aries-bifold-core/lib/typescript/App/theme'
 
 export const maxFontSizeMultiplier = 2
 export const borderRadius = 4
