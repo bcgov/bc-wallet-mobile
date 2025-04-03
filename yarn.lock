@@ -8967,6 +8967,7 @@ __metadata:
     react-native-animated-pagination-dots: "npm:0.1.73"
     react-native-argon2: "npm:2.0.1"
     react-native-bouncy-checkbox: "npm:3.0.7"
+    react-native-capture-protection: "npm:^1.9.20"
     react-native-check-version: "npm:^1.3.0"
     react-native-collapsible: "npm:1.6.1"
     react-native-config: "npm:1.5.0"
@@ -21032,6 +21033,16 @@ __metadata:
     react: ">= 16.x.x"
     react-native: ">= 0.55.x"
   checksum: 056c847d5c334516ff54d1afe6a3695ce207685edad5d768c5245b9f11d515353ebd45c13da8978613fce20b8c32b6253191235a65e6ab51adb8a4d60b8a688a
+  languageName: node
+  linkType: hard
+
+"react-native-capture-protection@npm:^1.9.20":
+  version: 1.9.20
+  resolution: "react-native-capture-protection@npm:1.9.20"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 8d4969c3b5d43108109f8a8bae023720f4199a315c422268002fb3c661d950a597249e184a248e6b3e1e56d02acb3b649ffac882e891e7fd4395b4e3a991f675
   languageName: node
   linkType: hard
 
