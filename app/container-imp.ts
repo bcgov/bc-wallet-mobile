@@ -24,7 +24,6 @@ import {
   defaultConfig,
   InlineErrorPosition,
   BifoldLogger,
-  defaultHistoryEventsLogger,
 } from '@hyperledger/aries-bifold-core'
 import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
 import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
@@ -426,9 +425,6 @@ export class AppContainer implements Container {
 
       dispatch({ type: DispatchAction.STATE_DISPATCH, payload: [state] })
     })
-
-    this._container.registerInstance(TOKENS.HISTORY_ENABLED, true)
-    this._container.registerInstance(TOKENS.HISTORY_EVENTS_LOGGER, defaultHistoryEventsLogger)
 
     this._container.registerInstance(TOKENS.ONBOARDING, generateOnboardingWorkflowSteps)
 
