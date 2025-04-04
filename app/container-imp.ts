@@ -268,11 +268,10 @@ export class AppContainer implements Container {
       { did: 'TeT8SJGHruVL9up3Erp4o', id: 'TeT8SJGHruVL9up3Erp4o:3:CL:400095:SpecialEventServer' },
       { did: 'Ttmj1pEotg8FbKZZD81S7i', id: 'Ttmj1pEotg8FbKZZD81S7i:3:CL:184:SpecialEventServer' },
 
-      { did: '4xE68b6S5VRFrKMMG1U95M', id: '4xE68b6S5VRFrKMMG1U95M:3:CL:59232:default' },
+      { did: 'QzLYGuAebsy3MXQ6b1sFiT', id: 'QzLYGuAebsy3MXQ6b1sFiT:3:CL:2351:lawyer' }, // prod lawyer credential
       { did: 'L6ASjmDDbDH7yPL1t2yFj9', id: 'L6ASjmDDbDH7yPL1t2yFj9:3:CL:7162:member_card' },
       { did: 'M6dhuFj5UwbhWkSLmvYSPc', id: 'M6dhuFj5UwbhWkSLmvYSPc:3:CL:834686:member_card' },
       { did: 'QEquAHkM35w4XVT3Ku5yat', id: 'QEquAHkM35w4XVT3Ku5yat:3:CL:834674:member_card' },
-      { did: 'AuJrigKQGRLJajKAebTgWu', id: 'AuJrigKQGRLJajKAebTgWu:3:CL:209526:default' },
 
       { did: 'RGjWbW1eycP7FrMf4QJvX8', id: 'RGjWbW1eycP7FrMf4QJvX8:3:CL:13:Person' },
       { did: 'L6ASjmDDbDH7yPL1t2yFj9', id: 'L6ASjmDDbDH7yPL1t2yFj9:3:CL:257:Person' },
@@ -290,11 +289,10 @@ export class AppContainer implements Container {
       { did: 'TeT8SJGHruVL9up3Erp4o', id: 'TeT8SJGHruVL9up3Erp4o:2:LCRBSirSes:1.0.0' },
       { did: 'Ttmj1pEotg8FbKZZD81S7i', id: 'Ttmj1pEotg8FbKZZD81S7i:2:LCRBSirSes:1.0.0' },
 
-      { did: '4xE68b6S5VRFrKMMG1U95M', id: '4xE68b6S5VRFrKMMG1U95M:2:Member Card:1.5.1' },
+      { did: 'QzLYGuAebsy3MXQ6b1sFiT', id: 'QzLYGuAebsy3MXQ6b1sFiT:2:legal-professional:1.0' }, // schema used for prod lawyer credential
       { did: 'L6ASjmDDbDH7yPL1t2yFj9', id: 'L6ASjmDDbDH7yPL1t2yFj9:2:member_card:1.53' },
       { did: 'M6dhuFj5UwbhWkSLmvYSPc', id: 'M6dhuFj5UwbhWkSLmvYSPc:2:member_card:1.54' },
       { did: 'QEquAHkM35w4XVT3Ku5yat', id: 'QEquAHkM35w4XVT3Ku5yat:2:member_card:1.54' },
-      { did: 'AuJrigKQGRLJajKAebTgWu', id: 'AuJrigKQGRLJajKAebTgWu:2:Member Card:1.5.1' },
 
       { did: 'RGjWbW1eycP7FrMf4QJvX8', id: 'RGjWbW1eycP7FrMf4QJvX8:2:Person:1.0' },
       { did: 'L6ASjmDDbDH7yPL1t2yFj9', id: 'L6ASjmDDbDH7yPL1t2yFj9:2:Person:1.2' },
