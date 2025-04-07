@@ -135,7 +135,7 @@ jobs:
       - name: What XCode are we using?
         run: |
           find /Applications -type d -maxdepth 1 -iname 'xcode*.app'
-          sudo xcode-select --switch /Applications/Xcode_15.2.app
+          sudo xcode-select --switch /Applications/Xcode_16.2.app
           sudo xcode-select -p
 
       - name: Cached pip dependencies
