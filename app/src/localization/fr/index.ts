@@ -87,6 +87,13 @@ const translation = {
       "Stage1": "TODO",
     },
   },
+  "PINCreate": {
+    "Explainer": {
+      "PrimaryHeading": "Create a PIN that is: (FR)",
+      "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again. (FR)",
+      "Bullet2": "<b>Unique.</b> Your PIN prevents people from accessing your digital credentials. Do not share it with anyone. (FR)",
+    }
+  },
   "PersonCredentialNotification": {
     "Title": "Obtener votre carte d'identité",
     "Description": "Ajouter votre carte d'identité à votre portefeuille et utilisez-la pour accéder aux services en ligne."

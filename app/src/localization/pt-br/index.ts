@@ -87,6 +87,13 @@ const translation = {
       "Stage1": "TODO",
     },
   },
+  "PINCreate": {
+    "Explainer": {
+      "PrimaryHeading": "Create a PIN that is: (PT-BR)",
+      "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again. (PT-BR)",
+      "Bullet2": "<b>Unique.</b> Your PIN prevents people from accessing your digital credentials. Do not share it with anyone. (PT-BR)",
+    }
+  },
   "PersonCredentialNotification": {
     "Title": "Get your Person credential (PT-BR)",
     "Description": "Add your Person credential to your wallet and use it to get access to services online. (PT-BR)"
