@@ -41,6 +41,7 @@ const Settings: React.FC = () => {
   const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
   const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
   const [enableAltPersonFlow, setEnableAltPersonFlow] = useState(!!store.developer.enableAltPersonFlow)
+  const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
   const navigation = useNavigation()
 
   const styles = StyleSheet.create({
@@ -279,6 +280,14 @@ const Settings: React.FC = () => {
     setEnableAltPersonFlow((previousState) => !previousState)
   }
 
+  const toggleEnableAppToAppPersonFlowSwitch = () => {
+    dispatch({
+      type: BCDispatchAction.TOGGLE_APP_TO_APP_PERSON_FLOW,
+      payload: [!enableAppToAppPersonFlow],
+    })
+    setEnableAppToAppPersonFlow((previousState) => !previousState)
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <SafeAreaModal
@@ -480,6 +489,20 @@ const Settings: React.FC = () => {
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleEnableAltPersonFlowSwitch}
             value={enableAltPersonFlow}
+          />
+        </SectionRow>
+
+        <SectionRow
+          title={t('Developer.EnableAppToAppPersonFlow')}
+          accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
+          testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={enableAppToAppPersonFlow ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleEnableAppToAppPersonFlowSwitch}
+            value={enableAppToAppPersonFlow}
           />
         </SectionRow>
       </ScrollView>

@@ -21,7 +21,12 @@ import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, EmitterSubscription, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
 
 import PersonCredentialSpinner from '../components/PersonCredentialSpinner'
-import { connectToIASAgent, authenticateWithServiceCard, WellKnownAgentDetails } from '../helpers/BCIDHelper'
+import {
+  connectToIASAgent,
+  authenticateWithServiceCard,
+  WellKnownAgentDetails,
+  initiateAppToAppFlow,
+} from '../helpers/BCIDHelper'
 import { BCState } from '../store'
 type PersonProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
@@ -143,19 +148,37 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
 
     const iasPortalUrl = store.developer.environment.iasPortalUrl
 
-    authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
-      .then(() => {
-        logger.info('Completed service card authentication successfully')
-      })
-      .catch((error) => {
-        logger.error('Completed service card authentication with error, error: ', error.message)
-      })
+    // only use app to app if in dev or test and feature is specifically enabled
+    if (
+      store.developer.enableAppToAppPersonFlow &&
+      ['Development', 'Test'].includes(store.developer.environment.name)
+    ) {
+      console.log('PERU')
+      initiateAppToAppFlow(store.developer.environment.appToAppUrl)
+        .then(() => {
+          logger.info('Initiated app-to-app flow')
+        })
+        .catch((error) => {
+          logger.error('Failed to initiate app-to-app flow with error: ', error.message)
+        })
+    } else {
+      authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
+        .then(() => {
+          logger.info('Completed service card authentication successfully')
+        })
+        .catch((error) => {
+          logger.error('Completed service card authentication with error, error: ', error.message)
+        })
+    }
   }, [
     remoteAgentDetails,
     didCompleteAttestationProofRequest,
     logger,
     navigation,
     store.developer.environment.iasPortalUrl,
+    store.developer.environment.name,
+    store.developer.environment.appToAppUrl,
+    store.developer.enableAppToAppPersonFlow,
   ])
 
   useEffect(() => {

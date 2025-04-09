@@ -359,7 +359,8 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let { environment, remoteDebugging, enableProxy, enableAltPersonFlow } = initialState.developer
+      let { environment, remoteDebugging, enableProxy, enableAltPersonFlow, enableAppToAppPersonFlow } =
+        initialState.developer
       let unified = initialState.unified
 
       await Promise.all([
@@ -380,6 +381,7 @@ export class AppContainer implements Container {
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
+        loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
         loadState<Unified>(BCLocalStorageKeys.Unified, (val) => (unified = val)),
       ])
 
@@ -404,6 +406,7 @@ export class AppContainer implements Container {
           },
           enableProxy,
           enableAltPersonFlow,
+          enableAppToAppPersonFlow,
         },
         unified: { ...initialState.unified, ...unified },
       } as BCState
