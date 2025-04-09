@@ -16,6 +16,7 @@ import React from 'react'
 import { StyleSheet, ViewStyle } from 'react-native'
 
 import Logo from './assets/img/logo-with-text.svg'
+import SecurePIN from './assets/img/secure-pin.svg'
 
 export const maxFontSizeMultiplier = 2
 export const borderRadius = 4
@@ -734,7 +735,11 @@ const PINInputTheme = {
 
 export const Assets: IAssets = {
   ...BifoldImageAssets,
-  svg: { ...BifoldImageAssets.svg, logo: Logo as React.FC },
+  svg: {
+    ...BifoldImageAssets.svg,
+    logo: Logo as React.FC,
+    secureCheck: SecurePIN as React.FC,
+  },
   img: {
     logoSecondary: {
       src: require('./assets/img/logo-large.png'),

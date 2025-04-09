@@ -120,6 +120,19 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
   }
 }
 
+export const initiateAppToAppFlow = async (url: string) => {
+  try {
+    if (await Linking.canOpenURL(url)) {
+      await Linking.openURL(url)
+    } else {
+      throw new Error()
+    }
+  } catch {
+    const error = new BifoldError('Error.Title2032', 'Error.Message2032', 'Error.NoMessage', 2032)
+    DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
+  }
+}
+
 export const authenticateWithServiceCard = async (
   legacyConnectionDid: string,
   iasPortalUrl: string,

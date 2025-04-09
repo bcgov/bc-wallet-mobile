@@ -25,6 +25,8 @@ const translation = {
     "Message2030": "There was a problem while initializing the app.",
     "Title2031": "Unable to complete agent initialization",
     "Message2031": "There was a problem while initializing the agent.",
+    "Title2032": "Unable to open app-to-app URL",
+    "Message2032": "There was a problem while opening the app-to-app URL.",
     "NoMessage": "No Message",
   },
   "CameraDisclosure": {
@@ -86,6 +88,13 @@ const translation = {
     "VerifyIdentityStep": {
       "Stage1": "TODO",
     },
+  },
+  "PINCreate": {
+    "Explainer": {
+      "PrimaryHeading": "Create a PIN that is:",
+      "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again.",
+      "Bullet2": "<b>Unique.</b> Your PIN prevents people from accessing your digital credentials. Do not share it with anyone.",
+    }
   },
   "PersonCredentialNotification": {
     "Title": "Get your Person credential",
@@ -154,6 +163,7 @@ const translation = {
     "AttestationSupport": "Attestation support",
     "EnableProxy": "Enable proxy",
     "EnableAltPersonFlow": "Alt Person flow",
+    "EnableAppToAppPersonFlow": "App-to-app Person flow",
   },
   "Tips": {
     "Header": "Tips",

@@ -61,6 +61,7 @@ import Developer from './src/screens/Developer'
 import { pages } from './src/screens/OnboardingPages'
 import PersonCredential from './src/screens/PersonCredential'
 import PersonCredentialLoading from './src/screens/PersonCredentialLoading'
+import PINExplainer from './src/screens/PINExplainer'
 import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
 import Terms, { TermsVersion } from './src/screens/Terms'
@@ -306,6 +307,7 @@ export class AppContainer implements Container {
     ])
     this._container.registerInstance(TOKENS.INLINE_ERRORS, { enabled: true, position: InlineErrorPosition.Below })
     this._container.registerInstance(TOKENS.SCREEN_TERMS, { screen: Terms, version: TermsVersion })
+    this._container.registerInstance(TOKENS.SCREEN_PIN_EXPLAINER, PINExplainer)
     this._container.registerInstance(TOKENS.SCREEN_DEVELOPER, Developer)
 
     const resolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
@@ -357,7 +359,8 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let { environment, remoteDebugging, enableProxy, enableAltPersonFlow } = initialState.developer
+      let { environment, remoteDebugging, enableProxy, enableAltPersonFlow, enableAppToAppPersonFlow } =
+        initialState.developer
       let unified = initialState.unified
 
       await Promise.all([
@@ -378,6 +381,7 @@ export class AppContainer implements Container {
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
+        loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
         loadState<Unified>(BCLocalStorageKeys.Unified, (val) => (unified = val)),
       ])
 
@@ -402,6 +406,7 @@ export class AppContainer implements Container {
           },
           enableProxy,
           enableAltPersonFlow,
+          enableAppToAppPersonFlow,
         },
         unified: { ...initialState.unified, ...unified },
       } as BCState
