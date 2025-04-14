@@ -1,5 +1,5 @@
 import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
-import { PersistentStorage } from '@hyperledger/aries-bifold-core'
+import { PersistentStorage } from '@bifold/core'
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'

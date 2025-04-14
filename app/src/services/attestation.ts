@@ -17,13 +17,13 @@ import {
   AttestationEventTypes,
   AttestationMonitor as AttestationMonitorI,
   removeExistingInvitationsById,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 import {
   generateKey,
   appleAttestation,
   googleAttestation,
   isPlayIntegrityAvailable,
-} from '@hyperledger/aries-react-native-attestation'
+} from '@bifold/react-native-attestation'
 import { DeviceEventEmitter, Platform } from 'react-native'
 import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
 import { Subscription } from 'rxjs'

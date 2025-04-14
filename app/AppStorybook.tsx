@@ -1,4 +1,4 @@
-// import { initLanguages } from '@hyperledger/aries-bifold-core'
+// import { initLanguages } from '@bifold/core'
 import React from 'react'
 import { LogBox } from 'react-native'
 

@@ -1,4 +1,4 @@
-import { testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
+import { testIdWithKey, useTheme } from '@bifold/core'
 import { Text, View, Image, StyleSheet, Pressable, ImageSourcePropType, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 

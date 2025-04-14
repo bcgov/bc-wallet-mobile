@@ -1,4 +1,4 @@
-import { BaseTourID, TourStep } from '@hyperledger/aries-bifold-core'
+import { BaseTourID, TourStep } from '@bifold/core'
 
 import { credentialOfferTourSteps } from './CredentialOfferTourSteps'
 import { credentialsTourSteps } from './CredentialsTourSteps'

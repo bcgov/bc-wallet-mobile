@@ -9,7 +9,7 @@ import {
   ButtonType,
   Link,
   OnboardingStackParams,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useRef, useState } from 'react'

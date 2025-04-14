@@ -7,8 +7,8 @@ import {
   Screens,
   useServices,
   TOKENS,
-} from '@hyperledger/aries-bifold-core'
-import { RemoteLogger, RemoteLoggerEventTypes } from '@hyperledger/aries-bifold-remote-logs'
+} from '@bifold/core'
+import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'

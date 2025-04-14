@@ -1,4 +1,4 @@
-import { translationResources } from '@hyperledger/aries-bifold-core'
+import { translationResources } from '@bifold/core'
 import merge from 'lodash.merge'
 
 import en from './localization/en'

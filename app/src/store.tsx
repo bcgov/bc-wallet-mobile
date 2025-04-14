@@ -5,7 +5,7 @@ import {
   defaultState,
   ReducerAction,
   PersistentStorage,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 
 import { UnifiedCardType } from './modules/unified/types'
 

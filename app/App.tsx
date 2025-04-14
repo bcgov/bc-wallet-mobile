@@ -17,7 +17,7 @@ import {
   MainContainer,
   ActivityProvider,
   OpenIDCredentialRecordProvider,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useMemo } from 'react'

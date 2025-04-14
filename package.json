@@ -6,7 +6,7 @@
   "private": true,
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=18.18.2 <20.0.0",
+    "node": ">=18.20.6 <20.0.0",
     "yarn": "^4.0.0"
   },
   "packageManager": "yarn@4.0.2",

@@ -1,4 +1,4 @@
-import { Link, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
+import { Link, testIdWithKey, useTheme } from '@bifold/core'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Text, View, StyleSheet, FlatList, Pressable } from 'react-native'

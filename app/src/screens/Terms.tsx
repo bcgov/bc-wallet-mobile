@@ -7,7 +7,7 @@ import {
   testIdWithKey,
   useTheme,
   useStore,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'

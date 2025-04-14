@@ -24,10 +24,10 @@ import {
   defaultConfig,
   InlineErrorPosition,
   BifoldLogger,
-} from '@hyperledger/aries-bifold-core'
-import { RemoteLogger, RemoteLoggerOptions } from '@hyperledger/aries-bifold-remote-logs'
-import { getProofRequestTemplates } from '@hyperledger/aries-bifold-verifier'
-import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+} from '@bifold/core'
+import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
+import { getProofRequestTemplates } from '@bifold/verifier'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { NavigationProp } from '@react-navigation/native'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'

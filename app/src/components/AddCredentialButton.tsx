@@ -1,4 +1,4 @@
-import { testIdWithKey, IconButton, ButtonLocation } from '@hyperledger/aries-bifold-core'
+import { testIdWithKey, IconButton, ButtonLocation } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter } from 'react-native'

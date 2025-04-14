@@ -14,7 +14,7 @@ import {
   AttestationEventTypes,
   useServices,
   Stacks,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'

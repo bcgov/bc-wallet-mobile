@@ -11,7 +11,7 @@ import {
   useServices,
   PersistentStorage,
   WalletSecret,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import moment from 'moment'
 import { useCallback } from 'react'

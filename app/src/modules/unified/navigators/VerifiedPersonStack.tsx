@@ -1,10 +1,4 @@
-import {
-  ButtonLocation,
-  IconButton,
-  testIdWithKey,
-  useDefaultStackOptions,
-  useTheme,
-} from '@hyperledger/aries-bifold-core'
+import { ButtonLocation, IconButton, testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 

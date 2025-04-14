@@ -1,5 +1,5 @@
 import { checkVersion } from 'react-native-check-version'
-import { VersionInfo, IVersionCheckService, BifoldLogger } from '@hyperledger/aries-bifold-core'
+import { VersionInfo, IVersionCheckService, BifoldLogger } from '@bifold/core'
 
 export class VersionCheckService implements IVersionCheckService {
   private _cachedVersionInfo: VersionInfo | undefined

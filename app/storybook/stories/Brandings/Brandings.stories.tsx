@@ -15,8 +15,8 @@ import {
   TOKENS,
   MainContainer,
   ContainerProvider,
-} from '@hyperledger/aries-bifold-core'
-import { BrandingOverlayType, RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+} from '@bifold/core'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { select } from '@storybook/addon-knobs'
 import { storiesOf } from '@storybook/react-native'
 import React, { Dispatch, PropsWithChildren, useEffect, useMemo, useState } from 'react'

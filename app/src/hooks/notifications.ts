@@ -14,8 +14,8 @@ import {
   CredentialMetadata,
   basicMessageCustomMetadata,
   credentialCustomMetadata,
-} from '@hyperledger/aries-bifold-core'
-import { ProofCustomMetadata, ProofMetadata } from '@hyperledger/aries-bifold-verifier'
+} from '@bifold/core'
+import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import { useEffect, useState } from 'react'
 
 import { AttestationRestrictions } from '../constants'
