@@ -1,4 +1,4 @@
-import { useTheme, testIdWithKey, CheckBoxRow, Button, ButtonType, Link } from '@hyperledger/aries-bifold-core'
+import { useTheme, testIdWithKey, CheckBoxRow, Button, ButtonType, Link } from '@bifold/core'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native'

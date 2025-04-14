@@ -1,14 +1,7 @@
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import { CredentialState } from '@credo-ts/core'
 import { useCredentialByState } from '@credo-ts/react-hooks'
-import {
-  useTheme,
-  SafeAreaModal,
-  Screens,
-  Stacks,
-  testIdWithKey,
-  testIdForAccessabilityLabel,
-} from '@hyperledger/aries-bifold-core'
+import { useTheme, SafeAreaModal, Screens, Stacks, testIdWithKey, testIdForAccessabilityLabel } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import React, { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

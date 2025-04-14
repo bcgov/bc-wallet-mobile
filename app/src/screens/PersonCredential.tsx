@@ -9,7 +9,7 @@ import {
   Screens,
   NotificationStackParams,
   Stacks,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'

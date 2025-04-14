@@ -91,7 +91,7 @@ Once you are happy with your changes to Bifold and have made the relevant PR the
 yarn unlink --all
 ```
 
-Then once your PR is merged and the packages have been published, make a PR in bc-wallet-mobile with the relevant updated packages installed. The current packages published from Bifold are `@hyperledger/aries-bifold-core`, `@hyperledger/aries-bifold-verifier`, `@hyperledger/aries-oca`, `@hyperledger/aries-bifold-remote-logs`, and `@hyperledger/aries-react-native-attestation`. They are all consumed by bc-wallet-mobile and other projects like it.
+Then once your PR is merged and the packages have been published, make a PR in bc-wallet-mobile with the relevant updated packages installed. The current packages published from Bifold are `@bifold/core`, `@bifold/verifier`, `@bifold/oca`, `@bifold/remote-logs`, and `@bifold/react-native-attestation`. They are all consumed by bc-wallet-mobile and other projects like it.
 
 ## Configuration
 
@@ -111,7 +111,7 @@ Push notifications can be used locally if the mediator service has the firebase 
 
 ### Adding ledger configurations
 
-To use your locally running instance of `von-network` (or any other Indy ledger that is not pre-configured), you will need to add the appropriate configuration to the `bifold-core/configs/ledgers/indy/ledgers.json` file: add a new block following the pattern used in the file.
+To use your locally running instance of `von-network` (or any other Indy ledger that is not pre-configured), you will need to add the appropriate configuration to the `bifold/packages/core/configs/ledgers/indy/ledgers.json` file: add a new block following the pattern used in the file.
 
 For a locally running instance of `von-network`, the genesis transaction list can be obtained by opening a browser at `http://localhost:9000/genesis`.
 

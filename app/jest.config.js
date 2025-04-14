@@ -13,7 +13,7 @@ module.exports = {
     '^uuid$': require.resolve('uuid'),
     '@credo-ts/core': require.resolve('@credo-ts/core'),
     '@credo-ts/anoncreds': require.resolve('@credo-ts/anoncreds'),
-    '@hyperledger/aries-bifold-core': require.resolve('@hyperledger/aries-bifold-core'),
+    '@bifold/core': require.resolve('@bifold/core'),
     '@hyperledger/aries-askar-react-native': require.resolve('@hyperledger/aries-askar-react-native'),
   },
   transform: {

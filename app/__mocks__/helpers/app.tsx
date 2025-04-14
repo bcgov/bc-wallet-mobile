@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import React, { PropsWithChildren, useMemo } from 'react'
 import { container } from 'tsyringe'
-import { MainContainer, ContainerProvider, ThemeProvider } from '@hyperledger/aries-bifold-core'
+import { MainContainer, ContainerProvider, ThemeProvider } from '@bifold/core'
 
 import { defaultTheme as theme } from '../../src/theme'
 

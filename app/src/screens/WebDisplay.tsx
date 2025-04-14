@@ -1,4 +1,4 @@
-import { SafeAreaModal } from '@hyperledger/aries-bifold-core'
+import { SafeAreaModal } from '@bifold/core'
 import React from 'react'
 import { StyleSheet } from 'react-native'
 import { WebView, WebViewNavigation } from 'react-native-webview'

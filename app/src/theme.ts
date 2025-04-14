@@ -11,7 +11,7 @@ import {
   IColorPallet,
   ITheme,
   IAssets,
-} from '@hyperledger/aries-bifold-core'
+} from '@bifold/core'
 import React from 'react'
 import { StyleSheet, ViewStyle } from 'react-native'
 

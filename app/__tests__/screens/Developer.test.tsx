@@ -1,4 +1,4 @@
-import { StoreProvider } from '@hyperledger/aries-bifold-core'
+import { StoreProvider } from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 

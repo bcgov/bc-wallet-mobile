@@ -1,5 +1,5 @@
 import { BCState } from './store'
-import { Config, OnboardingTask, Screens } from '@hyperledger/aries-bifold-core'
+import { Config, OnboardingTask, Screens } from '@bifold/core'
 
 export const isPrefaceComplete = (didSeePreface: boolean, showPreface: boolean): OnboardingTask => {
   return { name: Screens.Preface, completed: (didSeePreface && showPreface) || !showPreface }

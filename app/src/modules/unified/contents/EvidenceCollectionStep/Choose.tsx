@@ -1,4 +1,4 @@
-import { useStore, useTheme } from '@hyperledger/aries-bifold-core'
+import { useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Text, StyleSheet, ScrollView, Pressable, View, useWindowDimensions } from 'react-native'

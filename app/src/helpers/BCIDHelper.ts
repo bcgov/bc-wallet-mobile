@@ -1,10 +1,5 @@
 import { DidRepository } from '@credo-ts/core'
-import {
-  BifoldError,
-  Agent,
-  EventTypes as BifoldEventTypes,
-  removeExistingInvitationsById,
-} from '@hyperledger/aries-bifold-core'
+import { BifoldError, Agent, EventTypes as BifoldEventTypes, removeExistingInvitationsById } from '@bifold/core'
 import { TFunction } from 'react-i18next'
 import { Linking, DeviceEventEmitter } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'

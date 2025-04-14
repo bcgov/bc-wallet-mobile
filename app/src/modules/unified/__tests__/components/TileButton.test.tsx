@@ -1,4 +1,4 @@
-import { testIdWithKey } from '@hyperledger/aries-bifold-core'
+import { testIdWithKey } from '@bifold/core'
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 

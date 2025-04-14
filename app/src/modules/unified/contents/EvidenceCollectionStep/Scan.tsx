@@ -1,4 +1,4 @@
-import { useTheme } from '@hyperledger/aries-bifold-core'
+import { useTheme } from '@bifold/core'
 import { Text, StyleSheet, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 

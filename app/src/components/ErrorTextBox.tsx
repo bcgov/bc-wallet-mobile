@@ -1,4 +1,4 @@
-import { useTheme } from '@hyperledger/aries-bifold-core'
+import { useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'

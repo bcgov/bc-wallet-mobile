@@ -9,8 +9,8 @@ import {
   BifoldError,
   useStore,
   useAuth,
-} from '@hyperledger/aries-bifold-core'
-import { RemoteOCABundleResolver } from '@hyperledger/aries-oca/build/legacy'
+} from '@bifold/core'
+import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'

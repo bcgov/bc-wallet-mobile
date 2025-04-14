@@ -1,4 +1,4 @@
-import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
+import { ButtonLocation, IconButton, testIdWithKey, useTheme } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { View, Text, StyleSheet, Platform } from 'react-native'

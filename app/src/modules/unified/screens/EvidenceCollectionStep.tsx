@@ -1,4 +1,4 @@
-import { ButtonLocation, IconButton, testIdWithKey } from '@hyperledger/aries-bifold-core'
+import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { HeaderBackButton, HeaderBackButtonProps } from '@react-navigation/elements'
 import { useCallback, useMemo, useState } from 'react'

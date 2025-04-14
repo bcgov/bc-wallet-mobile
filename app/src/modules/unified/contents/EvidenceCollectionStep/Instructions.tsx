@@ -1,4 +1,4 @@
-import { Button, ButtonType, testIdWithKey, useTheme } from '@hyperledger/aries-bifold-core'
+import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Text, StyleSheet, ScrollView, Image, View, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'

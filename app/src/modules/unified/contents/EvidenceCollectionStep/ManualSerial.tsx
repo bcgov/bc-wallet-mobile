@@ -1,12 +1,4 @@
-import {
-  useStore,
-  LimitedTextInput,
-  KeyboardView,
-  useTheme,
-  testIdWithKey,
-  Button,
-  ButtonType,
-} from '@hyperledger/aries-bifold-core'
+import { useStore, LimitedTextInput, KeyboardView, useTheme, testIdWithKey, Button, ButtonType } from '@bifold/core'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
