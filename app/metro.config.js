@@ -6,11 +6,12 @@ const exclusionList = require('metro-config/src/defaults/exclusionList')
 require('dotenv').config()
 
 const packageDirs = [
-  fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/oca')),
-  fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/remote-logs')),
-  fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/core')),
-  fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/verifier')),
-  fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/react-native-attestation')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-oca')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-bifold-remote-logs')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-bifold-core')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-bifold-verifier')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@hyperledger/aries-react-native-attestation')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', 'react-native-bcsc-core')),
 ]
 
 const watchFolders = [...packageDirs]
