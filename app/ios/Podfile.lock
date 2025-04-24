@@ -7,6 +7,10 @@ PODS:
     - React
     - React-callinvoker
     - React-Core
+  - BcscCore (0.1.0):
+    - glog
+    - RCT-Folly (= 2022.05.16.00)
+    - React-Core
   - boost (1.83.0)
   - CatCrypto (0.3.2)
   - CocoaAsyncSocket (7.6.5)
@@ -1254,7 +1258,9 @@ PODS:
     - React-Core
   - RNInAppBrowser (3.7.0):
     - React-Core
-  - RNKeychain (8.2.0):
+  - RNKeychain (10.0.0):
+    - glog
+    - RCT-Folly (= 2022.05.16.00)
     - React-Core
   - RNLocalize (2.2.6):
     - React-Core
@@ -1284,6 +1290,7 @@ PODS:
 DEPENDENCIES:
   - "anoncreds (from `../node_modules/@hyperledger/anoncreds-react-native`)"
   - "aries-askar (from `../node_modules/@hyperledger/aries-askar-react-native`)"
+  - BcscCore (from `../node_modules/react-native-bcsc-core`)
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -1395,6 +1402,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@hyperledger/anoncreds-react-native"
   aries-askar:
     :path: "../node_modules/@hyperledger/aries-askar-react-native"
+  BcscCore:
+    :path: "../node_modules/react-native-bcsc-core"
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DoubleConversion:
@@ -1554,6 +1563,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   anoncreds: 4b29b0ef841fc1a96910aab8f047c090ee6acb89
   aries-askar: 6fce8d0405b8c84e654a694be1954649cf7955a3
+  BcscCore: 4bf25512917190459329d025b9a0a1ad8dc0665b
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
   CatCrypto: a477899b6be4954e75be4897e732da098cc0a5a8
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
@@ -1639,7 +1649,7 @@ SPEC CHECKSUMS:
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: 47da1222b52f679105bfaab61556e599277869c1
   RNInAppBrowser: 6d3eb68d471b9834335c664704719b8be1bfdb20
-  RNKeychain: bbe2f6d5cc008920324acb49ef86ccc03d3b38e4
+  RNKeychain: 1fe24953a2c0b762e73925946667ec37122197c8
   RNLocalize: 8bf466de4c92d4721b254aabe1ff0a1456e7b9f4
   RNPermissions: f66cd055689ea84a93713c87f92e600f534e607e
   RNScreens: e0f79783ce405f4362c29d098b19fe7e241f11a9
