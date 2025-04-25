@@ -2,13 +2,10 @@
 
 @interface RCT_EXTERN_MODULE(BcscCore, NSObject)
 
-RCT_EXTERN_METHOD(multiply:(double)a
-                  b:(double)b
-                  withResolver:(RCTPromiseResolveBlock)resolve
-                  withRejecter:(RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(findAllPrivateKeys:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(multiply2:(double)a
-                  b:(double)b
+RCT_EXTERN_METHOD(getKeyPair:(NSString *)label
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
