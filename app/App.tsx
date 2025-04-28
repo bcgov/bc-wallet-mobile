@@ -36,7 +36,7 @@ import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
 import WebDisplay from './src/screens/WebDisplay'
 import { initialState, reducer } from './src/store'
 
-const { theme, localization } = bcwallet
+const { theme, localization, bcscTheme } = bcwallet
 
 initLanguages(localization)
 
@@ -72,7 +72,7 @@ const App = () => {
       <ContainerProvider value={bcwContainer}>
         <StoreProvider initialState={initialState} reducer={reducer}>
           <OpenIDCredentialRecordProvider>
-            <ThemeProvider value={theme}>
+            <ThemeProvider value={bcscTheme}>
               <AnimatedComponentsProvider value={animatedComponents}>
                 <AuthProvider>
                   <NetworkProvider>

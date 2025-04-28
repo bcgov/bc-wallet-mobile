@@ -5,6 +5,7 @@ import en from './localization/en'
 import fr from './localization/fr'
 import ptBr from './localization/pt-br'
 import { defaultTheme as theme } from './theme'
+import { bcscTheme } from './modules/bcsc/bcscTheme'
 
 const localization = merge({}, translationResources, {
   en: { translation: en },
@@ -12,4 +13,4 @@ const localization = merge({}, translationResources, {
   'pt-BR': { translation: ptBr },
 })
 
-export default { theme, localization }
+export default { theme, localization, bcscTheme }

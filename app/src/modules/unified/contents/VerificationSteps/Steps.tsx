@@ -129,7 +129,7 @@ export const VerificationStepsContent: React.FC<VerificationStepsContentProps> =
             <View
               style={[
                 styles.step,
-                { backgroundColor: item.active ? '#f2f8ff' : ColorPallet.brand.secondaryBackground },
+                { backgroundColor: item.active ? ColorPallet.brand.highlight : ColorPallet.brand.secondaryBackground },
               ]}
             >
               <View style={styles.titleRow}>

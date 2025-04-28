@@ -25,7 +25,7 @@ const TileButton: React.FC<TileButtonProps> = ({
   const styles = StyleSheet.create({
     tile: {
       borderRadius: 4,
-      backgroundColor: ColorPallet.notification.info,
+      backgroundColor: ColorPallet.brand.secondaryBackground,
       padding: 24,
       shadowOffset: { width: 0, height: 4 },
       shadowRadius: 4,
@@ -35,10 +35,11 @@ const TileButton: React.FC<TileButtonProps> = ({
     },
     actionText: {
       ...TextTheme.bold,
-      color: ColorPallet.brand.primary,
+      color: ColorPallet.brand.highlight,
     },
     description: {
       ...TextTheme.normal,
+      color: ColorPallet.grayscale.white,
       marginTop: 16,
     },
   })

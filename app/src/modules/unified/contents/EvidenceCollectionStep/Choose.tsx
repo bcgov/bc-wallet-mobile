@@ -25,12 +25,13 @@ const ChooseContent: React.FC<ChooseContentProps> = ({ goToInstructions }: Choos
     scrollView: {
       flex: 1,
       paddingHorizontal: pagePadding,
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPallet.brand.primaryBackground,
     },
     heading: {
       ...TextTheme.headingThree,
       marginTop: 24,
       marginBottom: 16,
+      color: ColorPallet.grayscale.white,
     },
     description: {
       ...TextTheme.normal,
