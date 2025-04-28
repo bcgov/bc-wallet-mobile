@@ -39,7 +39,6 @@ const TileButton: React.FC<TileButtonProps> = ({
     },
     description: {
       ...TextTheme.normal,
-      color: ColorPallet.grayscale.white,
       marginTop: 16,
     },
   })
@@ -54,7 +53,7 @@ const TileButton: React.FC<TileButtonProps> = ({
       <View style={styles.tile}>
         <Text style={styles.actionText}>
           {actionText}
-          <Icon size={20} color={ColorPallet.brand.primary} name={'arrow-right-thin'} />
+          <Icon size={20} color={ColorPallet.brand.highlight} name={'arrow-right-thin'} />
         </Text>
         <Text style={styles.description}>{description}</Text>
         {imgSrc ? (

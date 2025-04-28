@@ -29,12 +29,14 @@ export const VerificationStepsContent: React.FC<VerificationStepsContentProps> =
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPallet.grayscale.white,
     },
     itemSeparator: {
-      width: '100%',
-      height: 8,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      width: '85%',
+      alignSelf: 'center',
+      height: 2,
+      backgroundColor: ColorPallet.grayscale.lightGrey,
+      margin: 'auto',
     },
     step: {
       paddingVertical: 24,
@@ -129,11 +131,13 @@ export const VerificationStepsContent: React.FC<VerificationStepsContentProps> =
             <View
               style={[
                 styles.step,
-                { backgroundColor: item.active ? ColorPallet.brand.highlight : ColorPallet.brand.secondaryBackground },
+                { backgroundColor: item.active ? ColorPallet.brand.highlight : ColorPallet.brand.secondary },
               ]}
             >
               <View style={styles.titleRow}>
-                <Text style={[TextTheme.headingFour, { marginRight: 16 }]}>{item.title}</Text>
+                <Text style={[TextTheme.headingFour, { marginRight: 16, color: ColorPallet.grayscale.black }]}>
+                  {item.title}
+                </Text>
                 {item.complete ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
               </View>
               <View style={styles.contentContainer}>{item.content}</View>

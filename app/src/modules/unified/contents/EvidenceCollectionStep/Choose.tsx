@@ -1,7 +1,7 @@
 import { useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Text, StyleSheet, ScrollView, Pressable, View, useWindowDimensions } from 'react-native'
+import { Text, StyleSheet, ScrollView, Pressable, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -57,7 +57,7 @@ const ChooseContent: React.FC<ChooseContentProps> = ({ goToInstructions }: Choos
     },
     checkButtonText: {
       ...TextTheme.bold,
-      color: ColorPallet.brand.primary,
+      color: ColorPallet.brand.highlight,
     },
   })
 
@@ -122,9 +122,6 @@ const ChooseContent: React.FC<ChooseContentProps> = ({ goToInstructions }: Choos
         <Text style={styles.heading}>{t('Unified.ChooseYourID.WhatCardDoYou')}</Text>
         <Text style={styles.description}>{t('Unified.ChooseYourID.SomePeopleStillCallIt')}</Text>
         {cardButtons}
-        <View style={styles.pageBreakSlot}>
-          <View style={styles.pageBreak} />
-        </View>
         <Text style={styles.heading}>{t('Unified.ChooseYourID.DontHaveOne')}</Text>
         <Text style={styles.description}>{t('Unified.ChooseYourID.CheckBefore')}</Text>
         <Pressable
@@ -135,7 +132,7 @@ const ChooseContent: React.FC<ChooseContentProps> = ({ goToInstructions }: Choos
         >
           <Text style={styles.checkButtonText}>
             {t('Unified.ChooseYourID.CheckIfIHave') + ' '}
-            <Icon size={20} color={ColorPallet.brand.primary} name={'help-circle-outline'} />
+            <Icon size={20} color={ColorPallet.brand.highlight} name={'help-circle-outline'} />
           </Text>
         </Pressable>
         <TileButton

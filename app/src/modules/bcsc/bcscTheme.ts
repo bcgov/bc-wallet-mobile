@@ -71,7 +71,7 @@ const GrayscaleColors: IGrayscaleColors = {
 }
 
 const BrandColors: IBrandColors = {
-  primary: '#003366',
+  primary: '#FCBA19',
   primaryDisabled: `#757575`,
   secondary: '#FFFFFFFF',
   secondaryDisabled: `#757575`,
@@ -92,7 +92,7 @@ const BrandColors: IBrandColors = {
   link: '#1A5A96',
   unorderedList: GrayscaleColors.darkGrey,
   unorderedListModal: GrayscaleColors.darkGrey,
-  text: GrayscaleColors.white,
+  text: GrayscaleColors.black,
   icon: GrayscaleColors.white,
   headerIcon: GrayscaleColors.white,
   headerText: GrayscaleColors.white,
