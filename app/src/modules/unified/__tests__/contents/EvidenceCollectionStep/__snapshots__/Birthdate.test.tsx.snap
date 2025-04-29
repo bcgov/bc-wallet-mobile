@@ -80,7 +80,7 @@ exports[`BirthdateContent Component renders correctly 1`] = `
         cancelText="Cancel"
         confirmText="Confirm"
         date={1729383120000}
-        dividerColor="#000000"
+        dividerColor="#ffffff"
         maximumDate={1729383120000}
         minuteInterval={1}
         mode="date"
@@ -97,8 +97,8 @@ exports[`BirthdateContent Component renders correctly 1`] = `
             undefined,
           ]
         }
-        textColor="#000000"
-        theme="light"
+        textColor="#ffffff"
+        theme="dark"
         timeZoneOffsetInMinutes=""
         title="Select date"
       />

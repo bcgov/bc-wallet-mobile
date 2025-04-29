@@ -37,7 +37,7 @@ exports[`TileButton Component renders correctly 1`] = `
   <View
     style={
       {
-        "backgroundColor": "#D9EAF7",
+        "backgroundColor": "#FFFFFF",
         "borderRadius": 4,
         "elevation": 2,
         "padding": 24,
@@ -54,7 +54,7 @@ exports[`TileButton Component renders correctly 1`] = `
     <Text
       style={
         {
-          "color": "#003366",
+          "color": "#FCBA19",
           "fontFamily": "BCSans-Regular",
           "fontSize": 18,
           "fontWeight": "bold",
@@ -68,7 +68,7 @@ exports[`TileButton Component renders correctly 1`] = `
         style={
           [
             {
-              "color": "#003366",
+              "color": "#FCBA19",
               "fontSize": 20,
             },
             undefined,

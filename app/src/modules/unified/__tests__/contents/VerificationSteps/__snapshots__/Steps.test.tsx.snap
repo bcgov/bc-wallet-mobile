@@ -4,7 +4,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
 <View
   style={
     {
-      "backgroundColor": "#F2F2F2",
+      "backgroundColor": "#FFFFFF",
       "flex": 1,
     }
   }
@@ -178,7 +178,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                   "paddingVertical": 24,
                 },
                 {
-                  "backgroundColor": "#f2f8ff",
+                  "backgroundColor": "#FCBA19",
                 },
               ]
             }
@@ -201,6 +201,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                       "fontWeight": "bold",
                     },
                     {
+                      "color": "#000000",
                       "marginRight": 16,
                     },
                   ]
@@ -234,9 +235,11 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#F2F2F2",
-              "height": 8,
-              "width": "100%",
+              "alignSelf": "center",
+              "backgroundColor": "#D3D3D3",
+              "height": 2,
+              "margin": "auto",
+              "width": "85%",
             }
           }
         />
@@ -288,7 +291,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                   "paddingVertical": 24,
                 },
                 {
-                  "backgroundColor": "#FFFFFF",
+                  "backgroundColor": "#FFFFFFFF",
                 },
               ]
             }
@@ -311,6 +314,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                       "fontWeight": "bold",
                     },
                     {
+                      "color": "#000000",
                       "marginRight": 16,
                     },
                   ]
@@ -365,9 +369,11 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#F2F2F2",
-              "height": 8,
-              "width": "100%",
+              "alignSelf": "center",
+              "backgroundColor": "#D3D3D3",
+              "height": 2,
+              "margin": "auto",
+              "width": "85%",
             }
           }
         />
@@ -419,7 +425,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                   "paddingVertical": 24,
                 },
                 {
-                  "backgroundColor": "#FFFFFF",
+                  "backgroundColor": "#FFFFFFFF",
                 },
               ]
             }
@@ -442,6 +448,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                       "fontWeight": "bold",
                     },
                     {
+                      "color": "#000000",
                       "marginRight": 16,
                     },
                   ]
@@ -544,9 +551,11 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
         <View
           style={
             {
-              "backgroundColor": "#F2F2F2",
-              "height": 8,
-              "width": "100%",
+              "alignSelf": "center",
+              "backgroundColor": "#D3D3D3",
+              "height": 2,
+              "margin": "auto",
+              "width": "85%",
             }
           }
         />
@@ -598,7 +607,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                   "paddingVertical": 24,
                 },
                 {
-                  "backgroundColor": "#FFFFFF",
+                  "backgroundColor": "#FFFFFFFF",
                 },
               ]
             }
@@ -621,6 +630,7 @@ exports[`VerificationStepsContent Component renders correctly 1`] = `
                       "fontWeight": "bold",
                     },
                     {
+                      "color": "#000000",
                       "marginRight": 16,
                     },
                   ]
