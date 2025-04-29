@@ -5,19 +5,19 @@ import com.facebook.react.module.annotations.ReactModule
 
 @ReactModule(name = BcscCoreModule.NAME)
 class BcscCoreModule(reactContext: ReactApplicationContext) :
-  NativeBcscCoreSpec(reactContext) {
+  BcscCoreSpec(reactContext) {
 
   override fun getName(): String {
     return NAME
+  }
+
+  companion object {
+    const val NAME = "BcscCore"
   }
 
   // Example method
   // See https://reactnative.dev/docs/native-modules-android
   override fun multiply(a: Double, b: Double): Double {
     return a * b
-  }
-
-  companion object {
-    const val NAME = "BcscCore"
   }
 }
