@@ -64,7 +64,7 @@ const BirthdateContent: React.FC<BirthdateContentProps> = ({ onComplete }: Birth
         <View style={styles.lineBreak} />
         <Text style={styles.heading}>{t('Unified.Birthdate.Heading')}</Text>
         <Text style={styles.paragraph}>{t('Unified.Birthdate.Paragraph')}</Text>
-        <DatePicker mode={'date'} date={date} onDateChange={setDate} maximumDate={today} />
+        <DatePicker theme="dark" mode={'date'} date={date} onDateChange={setDate} maximumDate={today} />
       </ScrollView>
       <View style={styles.controlsContainer}>
         <Button
