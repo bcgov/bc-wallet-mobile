@@ -57,6 +57,7 @@ const ChooseContent: React.FC<ChooseContentProps> = ({ goToInstructions }: Choos
     },
     checkButtonText: {
       ...TextTheme.bold,
+      fontSize: 16,
       color: ColorPallet.brand.highlight,
     },
   })

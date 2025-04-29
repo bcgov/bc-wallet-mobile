@@ -240,10 +240,10 @@ export const Inputs: IInputs = StyleSheet.create({
     borderRadius,
     fontFamily: TextTheme.normal.fontFamily,
     fontSize: 16,
-    backgroundColor: ColorPallet.grayscale.lightGrey,
-    color: TextTheme.normal.color,
+    backgroundColor: ColorPallet.grayscale.white,
+    color: ColorPallet.grayscale.black,
     borderWidth: 1,
-    borderColor: ColorPallet.grayscale.lightGrey,
+    borderColor: ColorPallet.grayscale.black,
   },
   inputSelected: {
     borderColor: TextTheme.normal.color,

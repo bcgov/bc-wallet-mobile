@@ -482,7 +482,7 @@ exports[`ChooseContent Component renders correctly 1`] = `
             {
               "color": "#FCBA19",
               "fontFamily": "BCSans-Regular",
-              "fontSize": 18,
+              "fontSize": 16,
               "fontWeight": "bold",
             }
           }
