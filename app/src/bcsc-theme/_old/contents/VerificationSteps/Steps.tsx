@@ -23,7 +23,7 @@ type VerificationStepsContentProps = {
 export const VerificationStepsContent: React.FC<VerificationStepsContentProps> = ({
   goToEvidenceCollectionStep,
 }: VerificationStepsContentProps) => {
-  const { ColorPallet } = useTheme()
+  const { ColorPallet, TextTheme } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
@@ -139,7 +139,7 @@ export const VerificationStepsContent: React.FC<VerificationStepsContentProps> =
               <View style={styles.titleRow}>
                 <ThemedText
                   variant={'headingFour'}
-                  style={{ marginRight: 16, color: item.active ? ColorPallet.brand.text : undefined }}
+                  style={{ marginRight: 16, color: item.active ? ColorPallet.brand.text : TextTheme.headingFour.color }}
                 >
                   {item.title}
                 </ThemedText>

@@ -91,7 +91,7 @@ const getMediatorConnection = async (agent: Agent): Promise<ConnectionRecord | u
     } else {
       return acc.updatedAt > cur.updatedAt ? acc : cur
     }
-  })
+  }, mediators[0])
 
   return latestMediator
 }
