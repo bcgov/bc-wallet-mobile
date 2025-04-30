@@ -9,5 +9,5 @@ abstract class BcscCoreSpec internal constructor(context: ReactApplicationContex
 
   abstract fun multiply(a: Double, b: Double): Double
   abstract fun getKeyPair(keyAlias: String, promise: Promise)
-  abstract fun findAllPrivateKeys(promise: Promise)
+  abstract fun getAllKeys(promise: Promise)
 }

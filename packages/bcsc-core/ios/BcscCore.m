@@ -2,7 +2,7 @@
 
 @interface RCT_EXTERN_MODULE(BcscCore, NSObject)
 
-RCT_EXTERN_METHOD(findAllPrivateKeys:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(getAllKeys:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getKeyPair:(NSString *)label

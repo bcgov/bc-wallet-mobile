@@ -90,23 +90,73 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
   
   @ReactMethod
-  override fun findAllPrivateKeys(promise: Promise) {
-    val privateKeys: WritableArray = Arguments.createArray()
-
-    val keyInfo1: WritableMap = Arguments.createMap()
-    keyInfo1.putString("keyType", "RSA")
-    keyInfo1.putInt("keySize", 2048)
-    keyInfo1.putString("tag", "mockTag1")
-    keyInfo1.putDouble("created", System.currentTimeMillis().toDouble())
-    privateKeys.pushMap(keyInfo1)
-
-    val keyInfo2: WritableMap = Arguments.createMap()
-    keyInfo2.putString("keyType", "EC")
-    keyInfo2.putInt("keySize", 256)
-    keyInfo2.putString("tag", "mockTag2")
-    keyInfo2.putDouble("created", (System.currentTimeMillis() - 86400000).toDouble()) // Yesterday
-    privateKeys.pushMap(keyInfo2)
-
-    promise.resolve(privateKeys)
+  override fun getAllKeys(promise: Promise) {
+    try {
+      val keyStore = KeyStore.getInstance("AndroidKeyStore")
+      keyStore.load(null)
+      
+      val privateKeys: WritableArray = Arguments.createArray()
+      val aliases = keyStore.aliases()
+      
+      while (aliases.hasMoreElements()) {
+        val alias = aliases.nextElement()
+        val keyInfo: WritableMap = Arguments.createMap()
+        
+        // The key identifier is the only guaranteed property
+        keyInfo.putString("id", alias)
+        
+        try {
+          // Try to get additional information if available
+          // Note: Some of this information might not be accessible in Android KeyStore
+          // depending on API version and security constraints
+          if (keyStore.isKeyEntry(alias)) {
+            val cert = keyStore.getCertificate(alias)
+            if (cert != null) {
+              val publicKey = cert.publicKey
+              
+              // Get key type if available
+              val algorithm = publicKey.algorithm
+              if (algorithm != null) {
+                keyInfo.putString("keyType", algorithm)
+              }
+              
+              // For key size, we can estimate from the encoded length for some key types
+              // This is a rough estimate and might not be accurate for all key types
+              if (algorithm == "RSA" || algorithm == "EC") {
+                val keySize = when (algorithm) {
+                  "RSA" -> publicKey.encoded.size * 8 / 9 // Approximate for RSA
+                  "EC" -> when (publicKey.encoded.size) {
+                    in 91..100 -> 256
+                    in 120..130 -> 384
+                    in 158..168 -> 521
+                    else -> null
+                  }
+                  else -> null
+                }
+                if (keySize != null) {
+                  keyInfo.putInt("keySize", keySize)
+                }
+              }
+              
+              // Get creation time if possible
+              // Note: Android KeyStore doesn't provide direct access to creation time
+              // We're using certificate's not before date as an approximation
+              if (cert is java.security.cert.X509Certificate) {
+                keyInfo.putDouble("created", cert.notBefore.time.toDouble())
+              }
+            }
+          }
+        } catch (e: Exception) {
+          // If we can't get additional info, just continue with the alias only
+          // We don't want to fail the whole operation if one key's details can't be fetched
+        }
+        
+        privateKeys.pushMap(keyInfo)
+      }
+      
+      promise.resolve(privateKeys)
+    } catch (e: Exception) {
+      promise.reject("E_KEYSTORE_ERROR", "Error accessing keystore: ${e.message}", e)
+    }
   }
 }
