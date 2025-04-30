@@ -1,11 +1,9 @@
-import { StoreProvider } from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
-import PersonCredential from '../../src/screens/PersonCredential'
-import { initialState, reducer } from '../../src/store'
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
+import PersonCredential from '../../src/bcwallet-theme/features/person-flow/screens/PersonCredential'
 
 const mockNavigation = jest.fn()
 jest.mock('@react-navigation/native', () => ({
@@ -32,9 +30,7 @@ describe('Person Credential Screen', () => {
     const navigation = useNavigation()
     const tree = render(
       <BasicAppContext>
-        <StoreProvider initialState={initialState} reducer={reducer}>
-          <PersonCredential navigation={navigation as never} route={{} as never} />
-        </StoreProvider>
+        <PersonCredential navigation={navigation as never} route={{} as never} />
       </BasicAppContext>
     )
 

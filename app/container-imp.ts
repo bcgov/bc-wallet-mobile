@@ -13,7 +13,7 @@ import {
   DispatchAction,
   Stacks,
   Screens,
-  UseBiometry,
+  Biometry,
   Record,
   Scan,
   Onboarding,
@@ -41,11 +41,11 @@ import {
 } from 'react-native-device-info'
 import { DependencyContainer } from 'tsyringe'
 
-import AddCredentialButton from './src/components/AddCredentialButton'
-import AddCredentialSlider from './src/components/AddCredentialSlider'
-import EmptyList from './src/components/EmptyList'
-import HomeFooterView from './src/components/HomeFooterView'
-import HomeHeaderView from './src/components/HomeHeaderView'
+import AddCredentialButton from './src/bcwallet-theme/components/AddCredentialButton'
+import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
+import EmptyList from './src/bcwallet-theme/components/EmptyList'
+import HomeFooterView from './src/bcwallet-theme/components/HomeFooterView'
+import HomeHeaderView from './src/bcwallet-theme/components/HomeHeaderView'
 import {
   AttestationRestrictions,
   autoDisableRemoteLoggingIntervalInMinutes,
@@ -53,14 +53,14 @@ import {
   googlePlayStoreUrl,
   appHelpUrl,
 } from './src/constants'
-import { activate, deactivate, setup, status } from './src/helpers/PushNotificationsHelper'
-import { expirationOverrideInMinutes } from './src/helpers/utils'
+import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
+import { expirationOverrideInMinutes } from '@utils/expiration'
 import { useNotifications } from './src/hooks/notifications'
-import VerifiedPersonStack from './src/modules/unified/navigators/VerifiedPersonStack'
+import VerifiedPersonStack from './src/bcsc-theme/_old/navigators/VerifiedPersonStack'
 import Developer from './src/screens/Developer'
-import { pages } from './src/screens/OnboardingPages'
-import PersonCredential from './src/screens/PersonCredential'
-import PersonCredentialLoading from './src/screens/PersonCredentialLoading'
+import { pages } from './src/components/OnboardingPages'
+import PersonCredential from './src/bcwallet-theme/features/person-flow/screens/PersonCredential'
+import PersonCredentialLoading from './src/bcwallet-theme/features/person-flow/screens/PersonCredentialLoading'
 import PINExplainer from './src/screens/PINExplainer'
 import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
@@ -74,6 +74,7 @@ import {
   DismissPersonCredentialOffer,
   IASEnvironment,
   RemoteDebuggingState,
+  Mode,
   Unified,
   initialState,
 } from './src/store'
@@ -135,7 +136,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
     this._container.registerInstance(TOKENS.SCREEN_SPLASH, Splash)
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_PAGES, pages)
-    this._container.registerInstance(TOKENS.SCREEN_USE_BIOMETRY, UseBiometry)
+    this._container.registerInstance(TOKENS.SCREEN_BIOMETRY, Biometry)
     this._container.registerInstance(TOKENS.SCREEN_SCAN, Scan)
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_ITEM, Onboarding)
 
@@ -362,6 +363,7 @@ export class AppContainer implements Container {
       let { environment, remoteDebugging, enableProxy, enableAltPersonFlow, enableAppToAppPersonFlow } =
         initialState.developer
       let unified = initialState.unified
+      let mode = initialState.mode
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -383,6 +385,7 @@ export class AppContainer implements Container {
         loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
         loadState<Unified>(BCLocalStorageKeys.Unified, (val) => (unified = val)),
+        loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
       ])
 
       // Convert date string to Date object (async-storage converts Dates to strings)
@@ -409,6 +412,7 @@ export class AppContainer implements Container {
           enableAppToAppPersonFlow,
         },
         unified: { ...initialState.unified, ...unified },
+        mode,
       } as BCState
 
       const { enabledAt, sessionId } = state.developer.remoteDebugging

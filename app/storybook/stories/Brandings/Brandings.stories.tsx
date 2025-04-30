@@ -1,3 +1,13 @@
+import {
+  components,
+  ContainerProvider,
+  contexts,
+  MainContainer,
+  StoreContext,
+  ThemeProvider,
+  TOKENS,
+} from '@bifold/core'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   CredentialExchangeRecord,
@@ -7,16 +17,6 @@ import {
   CredentialState,
   RevocationNotification,
 } from '@credo-ts/core'
-import {
-  components,
-  StoreContext,
-  contexts,
-  ThemeProvider,
-  TOKENS,
-  MainContainer,
-  ContainerProvider,
-} from '@bifold/core'
-import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { select } from '@storybook/addon-knobs'
 import { storiesOf } from '@storybook/react-native'
 import React, { Dispatch, PropsWithChildren, useEffect, useMemo, useState } from 'react'
@@ -25,9 +25,9 @@ import { FlatList, ListRenderItem, View } from 'react-native'
 import { Config } from 'react-native-config'
 import { container } from 'tsyringe'
 
-import bcwallet from '../../../src'
+import { BCThemeNames } from '@/constants'
+import { themes } from '@/theme'
 
-const { theme } = bcwallet
 const OCABundleResolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
   brandingOverlayType: BrandingOverlayType.Branding10,
 })
@@ -240,7 +240,7 @@ storiesOf('Brandings', module)
     return (
       <BasicAppContext>
         <StoreContext.Provider value={[state, dispatch]}>
-          <ThemeProvider value={theme}>
+          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
             <Credentials items={list} />
           </ThemeProvider>
         </StoreContext.Provider>
@@ -264,7 +264,7 @@ storiesOf('Brandings', module)
       <>
         <BasicAppContext>
           <StoreContext.Provider value={[state, dispatch]}>
-            <ThemeProvider value={theme}>
+            <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
               <Credentials items={list} />
             </ThemeProvider>
           </StoreContext.Provider>

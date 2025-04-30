@@ -164,6 +164,8 @@ const translation = {
     "EnableProxy": "Enable proxy",
     "EnableAltPersonFlow": "Alt Person flow",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
+    "SwitchMode": "Switch mode",
+    "SwitchTheme": "Switch theme",
   },
   "Tips": {
     "Header": "Tips",
