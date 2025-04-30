@@ -2,10 +2,10 @@ import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec from './NativeBcscCore';
 
 export interface PrivateKeyInfo {
-  keyType: string;
-  keySize: number;
-  tag: string;
-  created: number; // Timestamp
+  id: string; // 'id' for platform neutrality
+  keyType?: string;
+  keySize?: number;
+  created?: number; // Timestamp
 }
 
 export interface KeyPair {
@@ -41,8 +41,8 @@ export const multiply = (a: number, b: number): number => {
   return BcscCore.multiply(a, b);
 };
 
-export const findAllPrivateKeys = (): Promise<PrivateKeyInfo[]> => {
-  return BcscCore.findAllPrivateKeys();
+export const getAllKeys = (): Promise<PrivateKeyInfo[]> => {
+  return BcscCore.getAllKeys();
 };
 
 export const getKeyPair = (label: string): Promise<KeyPair> => {
