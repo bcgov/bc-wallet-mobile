@@ -525,7 +525,11 @@ const Developer: React.FC = () => {
           />
         </SectionRow>
 
-        <SectionRow title={'Switch Theme'} accessibilityLabel={'Switch Theme'} testID={testIdWithKey('ToggleTheme')}>
+        <SectionRow
+          title={t('Developer.SwitchTheme')}
+          accessibilityLabel={t('Developer.SwitchTheme')}
+          testID={testIdWithKey('ToggleTheme')}
+        >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
             thumbColor={themeName === BCThemeNames.BCSC ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}

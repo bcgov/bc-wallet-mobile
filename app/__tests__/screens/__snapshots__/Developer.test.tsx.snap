@@ -1439,10 +1439,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
               }
             }
           >
-            Switch Theme
+            Developer.SwitchTheme
           </Text>
           <View
-            accessibilityLabel="Switch Theme"
+            accessibilityLabel="Developer.SwitchTheme"
             accessibilityState={
               {
                 "busy": undefined,
@@ -1533,10 +1533,10 @@ exports[`Developer Screen screen renders correctly 1`] = `
               }
             }
           >
-            Switch Mode
+            Developer.SwitchMode
           </Text>
           <View
-            accessibilityLabel="Switch Mode"
+            accessibilityLabel="Developer.SwitchMode"
             accessibilityState={
               {
                 "busy": undefined,
