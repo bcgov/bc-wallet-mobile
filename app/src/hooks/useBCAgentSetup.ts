@@ -199,12 +199,12 @@ const useBCAgentSetup = () => {
     ]
   )
 
-  const eraseAgent = useCallback(async () => {
+  const shutdownAndClearAgentIfExists = useCallback(async () => {
     if (agent) {
       try {
         await agent.shutdown()
       } catch (error) {
-        logger.error(`Error shutting down agent with eraseAgent: ${error}`)
+        logger.error(`Error shutting down agent with shutdownAndClearAgentIfExists: ${error}`)
       }
     } else {
       logger.warn('No agent to erase')
@@ -213,7 +213,7 @@ const useBCAgentSetup = () => {
     setAgent(null)
   }, [agent, logger])
 
-  return { agent, initializeAgent, eraseAgent }
+  return { agent, initializeAgent, shutdownAndClearAgentIfExists }
 }
 
 export default useBCAgentSetup
