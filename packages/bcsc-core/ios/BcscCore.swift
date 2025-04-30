@@ -17,7 +17,7 @@ class BcscCore: NSObject {
   }
     
   @objc
-  func findAllPrivateKeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func getAllKeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
     
@@ -25,7 +25,7 @@ class BcscCore: NSObject {
       return [
         "keyType": keyInfo.keyType.name,
         "keySize": keyInfo.keySize,
-        "tag": keyInfo.tag,
+        "id": keyInfo.tag,
         "created": keyInfo.created.timeIntervalSince1970 // Convert Date to timestamp
       ]
     }
