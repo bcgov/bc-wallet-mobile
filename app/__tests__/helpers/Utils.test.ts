@@ -1,4 +1,4 @@
-import { expirationOverrideInMinutes } from '../../src/helpers/utils'
+import { expirationOverrideInMinutes } from '@utils/expiration'
 
 import MockDate from 'mockdate'
 

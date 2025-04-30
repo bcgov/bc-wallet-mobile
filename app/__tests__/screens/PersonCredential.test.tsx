@@ -2,7 +2,7 @@ import { StoreProvider } from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
-import PersonCredential from '../../src/screens/PersonCredential'
+import PersonCredential from '../../src/bcwallet-theme/features/person-flow/screens/PersonCredential'
 import { initialState, reducer } from '../../src/store'
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'

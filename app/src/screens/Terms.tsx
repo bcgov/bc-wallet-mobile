@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { openLink } from '../helpers/utils'
+import { openLink } from '@utils/links'
 
 const appleTermsUrl = 'https://www.apple.com/legal/internet-services/itunes/us/terms.html'
 const bcWalletHomeUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet'

@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
-import HomeHeaderView from '../../src/components/HomeHeaderView'
+import HomeHeaderView from '@bcwallet-theme/components/HomeHeaderView'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 
 const mockNavigation = jest.fn()

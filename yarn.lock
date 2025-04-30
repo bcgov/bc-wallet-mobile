@@ -1771,9 +1771,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@bifold/core@npm:1.0.0"
+"@bifold/core@portal:bifold/packages/core::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@bifold/core@portal:bifold/packages/core::locator=bc-wallet-mobile%40workspace%3A."
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.13
     "@credo-ts/askar": 0.5.13
@@ -1783,7 +1783,7 @@ __metadata:
     "@credo-ts/openid4vc": 0.5.13
     "@credo-ts/push-notifications": ^0.7.0
     "@credo-ts/question-answer": 0.5.13
-    "@credo-ts/react-hooks": ^0.6.0
+    "@credo-ts/react-hooks": 0.6.0
     "@credo-ts/react-native": 0.5.13
     "@formatjs/intl-datetimeformat": 4.2.4
     "@formatjs/intl-displaynames": 5.2.4
@@ -1847,36 +1847,33 @@ __metadata:
     uuid: ^9.0.0
   bin:
     bifold: bin/bifold
-  checksum: 43a0dbc2cb94c04b5f71d80b66c8aa8e23612685a83a81df051994edba98135f6cf18d35746587c3cdf9138333169fa911a42dba3d941f0267e6ef9cdebc1c10
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@bifold/oca@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@bifold/oca@npm:1.0.0"
+"@bifold/oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@bifold/oca@portal:bifold/packages/oca::locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@credo-ts/anoncreds": "npm:0.5.13"
     "@credo-ts/core": "npm:0.5.13"
     axios: "npm:^1.4.0"
     lodash.startcase: "npm:^4.4.0"
     react-native-fs: "npm:^2.16.6"
-  checksum: b4e4ba103830ece574320e7660c6a6c93dd39729ecbc9a14be90df0172e886409ad0652be1767449d4127d4d7ae586fbcfa9eb0dc7bf75c26fa7a8cb88140c9a
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@bifold/react-native-attestation@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@bifold/react-native-attestation@npm:1.0.0"
+"@bifold/react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@bifold/react-native-attestation@portal:bifold/packages/react-native-attestation::locator=bc-wallet-mobile%40workspace%3A."
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: d22d05e8ae1238504d147b8acd00b4eda524280745414a0ebe1a437faa8a4d231b21800be57d02a777fcca91b78d84ab7923cca0b1e125818f1e49a2e94cf88d
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@bifold/remote-logs@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@bifold/remote-logs@npm:1.0.0"
+"@bifold/remote-logs@portal:bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@bifold/remote-logs@portal:bifold/packages/remote-logs::locator=bc-wallet-mobile%40workspace%3A."
   dependencies:
     "@bifold/core": "npm:1.0.0"
     "@credo-ts/core": "npm:0.5.13"
@@ -1892,22 +1889,20 @@ __metadata:
     react: ^18.2.0
     react-native: ^0.73.6
     react-native-logs: ^5.1.0
-  checksum: f6b8be4e29ffcc37c85890b3155eac1981e948cd140a32c940efbeb4c352d602293036984b0d97c00671d0cf0250f960ed6f49de2243ab4515c610eb4b30ceef
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@bifold/verifier@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@bifold/verifier@npm:1.0.0"
+"@bifold/verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@bifold/verifier@portal:bifold/packages/verifier::locator=bc-wallet-mobile%40workspace%3A."
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.13
     "@credo-ts/core": 0.5.13
-    "@credo-ts/react-hooks": ^0.6.0
+    "@credo-ts/react-hooks": 0.6.0
     "@hyperledger/anoncreds-shared": 0.2.4
     react: ^18.2.0
-  checksum: 1dd905a9f227e37143c80bee5ff6dc5d7f254e30a3aa00697372b02ff4d5b49d9abbeae0611cb75b06a3a492f20ce6cabff8fa2efefe1010a36898c92d0574ca
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "@commitlint/cli@npm:11.0.0, @commitlint/cli@npm:^11.0.0":
   version: 11.0.0
@@ -2366,7 +2361,7 @@ __metadata:
 
 "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.13#~/.yarn/patches/@credo-ts-core-npm-0.5.13-725ab940d0.patch":
   version: 0.5.13
-  resolution: "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.13#~/.yarn/patches/@credo-ts-core-npm-0.5.13-725ab940d0.patch::version=0.5.13&hash=680100"
+  resolution: "@credo-ts/core@patch:@credo-ts/core@npm%3A0.5.13#~/.yarn/patches/@credo-ts-core-npm-0.5.13-725ab940d0.patch::version=0.5.13&hash=520200"
   dependencies:
     "@digitalcredentials/jsonld": "npm:^6.0.0"
     "@digitalcredentials/jsonld-signatures": "npm:^9.4.0"
@@ -2410,7 +2405,7 @@ __metadata:
     varint: "npm:^6.0.0"
     web-did-resolver: "npm:^2.0.21"
     webcrypto-core: "npm:^1.8.0"
-  checksum: 886858fa0165690801a2e0d6c9c330e2a4ad766b0f7df477ab28643fca4ec9de8d2a8c0ff05fdd6106b35e6eeffe775715b4c7da46c90a7fc17b838ade7d7679
+  checksum: f944fc79d0e864238e42def0be6176ef1d701673652660777006ed047f61e46d03f3c2296d105d7b113726955c41f068b536c88cdf2d30594dcb1941d2c71b80
   languageName: node
   linkType: hard
 
@@ -2530,19 +2525,6 @@ __metadata:
     "@credo-ts/question-answer": ^0.5.0
     react: ">=17.0.0 <19.0.0"
   checksum: e948fa29cc121e895b8b9c14e65f5444bd431794381a557103644191ae90ed5390b57feaa33686bc96680e0f0f9c43d58d266dd4fdd79d73b5d7c90832d0949e
-  languageName: node
-  linkType: hard
-
-"@credo-ts/react-hooks@patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch::locator=bc-wallet-mobile%40workspace%3A.":
-  version: 0.6.0
-  resolution: "@credo-ts/react-hooks@patch:@credo-ts/react-hooks@npm%3A0.6.0#./.yarn/patches/@credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch::version=0.6.0&hash=fb715c&locator=bc-wallet-mobile%40workspace%3A."
-  dependencies:
-    rxjs: "npm:^7.2.0"
-  peerDependencies:
-    "@credo-ts/core": ^0.5.0
-    "@credo-ts/question-answer": ^0.5.0
-    react: ">=17.0.0 <19.0.0"
-  checksum: d6f326460b335f9b91ef0f73ac0edff1e66d94caafb581930cfdfeeab288f6d319da51a8f4334cbb971bfdaa8ab4b80a90976138bdcbbd9210bda25b55168985
   languageName: node
   linkType: hard
 

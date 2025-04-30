@@ -18,10 +18,10 @@ import {
 import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import { useEffect, useState } from 'react'
 
-import { AttestationRestrictions } from '../constants'
-import { showPersonCredentialSelector } from '../helpers/BCIDHelper'
-import { isProofRequestingAttestation } from '../services/attestation'
-import { BCState } from '../store'
+import { AttestationRestrictions } from '@/constants'
+import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
+import { isProofRequestingAttestation } from '@services/attestation'
+import { BCState } from '@/store'
 
 export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord> => {
   const { agent } = useAgent()

@@ -25,9 +25,8 @@ import { FlatList, ListRenderItem, View } from 'react-native'
 import { Config } from 'react-native-config'
 import { container } from 'tsyringe'
 
-import bcwallet from '../../../src'
+import { BCThemeNames, themes } from '@/theme'
 
-const { theme } = bcwallet
 const OCABundleResolver = new RemoteOCABundleResolver(Config.OCA_URL ?? '', {
   brandingOverlayType: BrandingOverlayType.Branding10,
 })
@@ -240,7 +239,7 @@ storiesOf('Brandings', module)
     return (
       <BasicAppContext>
         <StoreContext.Provider value={[state, dispatch]}>
-          <ThemeProvider value={theme}>
+          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
             <Credentials items={list} />
           </ThemeProvider>
         </StoreContext.Provider>
@@ -264,7 +263,7 @@ storiesOf('Brandings', module)
       <>
         <BasicAppContext>
           <StoreContext.Provider value={[state, dispatch]}>
-            <ThemeProvider value={theme}>
+            <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
               <Credentials items={list} />
             </ThemeProvider>
           </StoreContext.Provider>

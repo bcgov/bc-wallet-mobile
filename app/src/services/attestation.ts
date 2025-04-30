@@ -1,36 +1,36 @@
+import {
+  AttestationEventTypes,
+  AttestationMonitor as AttestationMonitorI,
+  BifoldAgent,
+  BifoldError,
+  BifoldLogger,
+  removeExistingInvitationsById,
+} from '@bifold/core'
+import {
+  appleAttestation,
+  generateKey,
+  googleAttestation,
+  isPlayIntegrityAvailable,
+} from '@bifold/react-native-attestation'
 import { AnonCredsCredentialOffer } from '@credo-ts/anoncreds'
 import {
   Agent,
   BaseEvent,
-  CredentialState,
+  ConnectionRecord,
   CredentialEventTypes,
   CredentialExchangeRecord,
-  ProofState,
+  CredentialState,
   ProofEventTypes,
   ProofExchangeRecord,
-  ConnectionRecord,
+  ProofState,
 } from '@credo-ts/core'
-import {
-  BifoldError,
-  BifoldAgent,
-  BifoldLogger,
-  AttestationEventTypes,
-  AttestationMonitor as AttestationMonitorI,
-  removeExistingInvitationsById,
-} from '@bifold/core'
-import {
-  generateKey,
-  appleAttestation,
-  googleAttestation,
-  isPlayIntegrityAvailable,
-} from '@bifold/react-native-attestation'
 import { DeviceEventEmitter, Platform } from 'react-native'
-import { getVersion, getBuildNumber, getSystemName, getSystemVersion } from 'react-native-device-info'
+import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 import { Subscription } from 'rxjs'
 
-import { AttestationRestrictions } from '../constants'
-import { credentialsMatchForProof } from '../helpers/credentials'
-import { AttestationRequestParams, AttestationResult, requestNonceDrpc, requestAttestationDrpc } from '../helpers/drpc'
+import { AttestationRestrictions } from '@/constants'
+import { credentialsMatchForProof } from '@utils/credentials'
+import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
 

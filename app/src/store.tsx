@@ -7,7 +7,7 @@ import {
   PersistentStorage,
 } from '@bifold/core'
 
-import { UnifiedCardType } from './modules/unified/types'
+import { UnifiedCardType } from '@bcsc-theme/_old/types'
 
 export interface IASEnvironment {
   name: string
@@ -39,10 +39,16 @@ export interface Unified {
   birthdate?: Date
 }
 
+export enum Skin {
+  BCWallet = 'bcwallet',
+  BCSC = 'bcsc',
+}
+
 export interface BCState extends BifoldState {
   developer: Developer
   dismissPersonCredentialOffer: DismissPersonCredentialOffer
   unified: Unified
+  skin: Skin
 }
 
 enum DeveloperDispatchAction {
@@ -66,17 +72,23 @@ enum UnifiedDispatchAction {
   UPDATE_BIRTHDATE = 'unified/updateBirthdate',
 }
 
+enum SkinDispatchAction {
+  UPDATE_SKIN = 'skin/updateSkin',
+}
+
 export type BCDispatchAction =
   | DeveloperDispatchAction
   | DismissPersonCredentialOfferDispatchAction
   | RemoteDebuggingDispatchAction
   | UnifiedDispatchAction
+  | SkinDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...DismissPersonCredentialOfferDispatchAction,
   ...RemoteDebuggingDispatchAction,
   ...UnifiedDispatchAction,
+  ...SkinDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -137,6 +149,7 @@ export enum BCLocalStorageKeys {
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
   Unified = 'Unified',
+  Skin = 'Skin',
 }
 
 export const initialState: BCState = {
@@ -145,10 +158,25 @@ export const initialState: BCState = {
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
   unified: unifiedState,
+  skin: Skin.BCWallet,
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
+    case SkinDispatchAction.UPDATE_SKIN: {
+      const payload = action?.payload?.[0]
+      console.log('payload', payload)
+      const skin: Skin = (action?.payload || []).pop() || Skin.BCWallet
+      console.log('skin', skin)
+      // Log user out when any time skin changes
+      const authentication = { ...state.authentication, didAuthenticate: false }
+      const newState = { ...state, skin, authentication }
+      PersistentStorage.storeValueForKey<Skin>(BCLocalStorageKeys.Skin, skin)
+      setTimeout(() => {
+        // The new component will load with the correct skin
+      }, 0);
+      return newState
+    }
     case RemoteDebuggingDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE: {
       const { enabledAt, sessionId } = (action.payload || []).pop()
       const developer = { ...state.developer, remoteDebugging: { enabledAt, sessionId } }
