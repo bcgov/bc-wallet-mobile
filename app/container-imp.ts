@@ -1,66 +1,68 @@
-import { Agent } from '@credo-ts/core'
 import {
+  BifoldLogger,
+  Biometry,
   Container,
+  DispatchAction,
+  InlineErrorPosition,
+  LocalStorageKeys,
+  MigrationState,
+  Onboarding,
+  OnboardingState,
+  PINRules,
+  PersistentState,
+  PersistentStorage,
+  PreferencesState,
+  Record,
+  ReducerAction,
+  Scan,
+  Screens,
+  Stacks,
   TOKENS,
   TokenMapping,
-  ReducerAction,
-  loadLoginAttempt,
-  LocalStorageKeys,
-  PreferencesState,
-  MigrationState,
   ToursState,
-  OnboardingState,
-  DispatchAction,
-  Stacks,
-  Screens,
-  UseBiometry,
-  Record,
-  Scan,
-  Onboarding,
-  PINRules,
-  testIdWithKey,
-  PersistentStorage,
-  PersistentState,
   defaultConfig,
-  InlineErrorPosition,
-  BifoldLogger,
+  loadLoginAttempt,
+  testIdWithKey,
 } from '@bifold/core'
+import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
 import { getProofRequestTemplates } from '@bifold/verifier'
-import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
+import { Agent } from '@credo-ts/core'
 import { NavigationProp } from '@react-navigation/native'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import {
-  getVersion,
-  getBuildNumber,
   getApplicationName,
+  getBuildNumber,
   getSystemName,
   getSystemVersion,
+  getVersion,
 } from 'react-native-device-info'
 import { DependencyContainer } from 'tsyringe'
 
-import AddCredentialButton from './src/components/AddCredentialButton'
-import AddCredentialSlider from './src/components/AddCredentialSlider'
-import EmptyList from './src/components/EmptyList'
-import HomeFooterView from './src/components/HomeFooterView'
-import HomeHeaderView from './src/components/HomeHeaderView'
+import useBCAgentSetup from '@/hooks/useBCAgentSetup'
+import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
+import { expirationOverrideInMinutes } from '@utils/expiration'
+import VerifiedPersonStack from './src/bcsc-theme/_old/navigators/VerifiedPersonStack'
+import AddCredentialButton from './src/bcwallet-theme/components/AddCredentialButton'
+import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
+import EmptyList from './src/bcwallet-theme/components/EmptyList'
+import HomeFooterView from './src/bcwallet-theme/components/HomeFooterView'
+import HomeHeaderView from './src/bcwallet-theme/components/HomeHeaderView'
+import PersonCredential from './src/bcwallet-theme/features/person-flow/screens/PersonCredential'
+import PersonCredentialLoading from './src/bcwallet-theme/features/person-flow/screens/PersonCredentialLoading'
+import { pages } from './src/components/OnboardingPages'
 import {
   AttestationRestrictions,
-  autoDisableRemoteLoggingIntervalInMinutes,
-  appleAppStoreUrl,
-  googlePlayStoreUrl,
   appHelpUrl,
+  appleAppStoreUrl,
+  autoDisableRemoteLoggingIntervalInMinutes,
+  googlePlayStoreUrl,
 } from './src/constants'
-import { activate, deactivate, setup, status } from './src/helpers/PushNotificationsHelper'
-import { expirationOverrideInMinutes } from './src/helpers/utils'
 import { useNotifications } from './src/hooks/notifications'
-import VerifiedPersonStack from './src/modules/unified/navigators/VerifiedPersonStack'
+import { generateOnboardingWorkflowSteps } from './src/onboarding'
 import Developer from './src/screens/Developer'
-import { pages } from './src/screens/OnboardingPages'
-import PersonCredential from './src/screens/PersonCredential'
-import PersonCredentialLoading from './src/screens/PersonCredentialLoading'
 import PINExplainer from './src/screens/PINExplainer'
 import Preface from './src/screens/Preface'
 import Splash from './src/screens/Splash'
@@ -73,11 +75,11 @@ import {
   BCState,
   DismissPersonCredentialOffer,
   IASEnvironment,
+  Mode,
   RemoteDebuggingState,
   Unified,
   initialState,
 } from './src/store'
-import { generateOnboardingWorkflowSteps } from './src/onboarding'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
@@ -135,7 +137,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.SCREEN_PREFACE, Preface)
     this._container.registerInstance(TOKENS.SCREEN_SPLASH, Splash)
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_PAGES, pages)
-    this._container.registerInstance(TOKENS.SCREEN_USE_BIOMETRY, UseBiometry)
+    this._container.registerInstance(TOKENS.SCREEN_BIOMETRY, Biometry)
     this._container.registerInstance(TOKENS.SCREEN_SCAN, Scan)
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_ITEM, Onboarding)
 
@@ -249,6 +251,7 @@ export class AppContainer implements Container {
         googlePlayStoreUrl,
       },
     })
+    this._container.registerInstance(TOKENS.HOOK_USE_AGENT_SETUP, useBCAgentSetup)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_HEADER_RIGHT, AddCredentialButton)
     this._container.registerInstance(TOKENS.COMPONENT_CRED_LIST_OPTIONS, AddCredentialSlider)
     this._container.registerInstance(TOKENS.COMPONENT_HOME_HEADER, HomeHeaderView)
@@ -362,6 +365,7 @@ export class AppContainer implements Container {
       let { environment, remoteDebugging, enableProxy, enableAltPersonFlow, enableAppToAppPersonFlow } =
         initialState.developer
       let unified = initialState.unified
+      let mode = initialState.mode
 
       await Promise.all([
         loadLoginAttempt().then((data) => {
@@ -383,6 +387,7 @@ export class AppContainer implements Container {
         loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
         loadState<Unified>(BCLocalStorageKeys.Unified, (val) => (unified = val)),
+        loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
       ])
 
       // Convert date string to Date object (async-storage converts Dates to strings)
@@ -409,6 +414,7 @@ export class AppContainer implements Container {
           enableAppToAppPersonFlow,
         },
         unified: { ...initialState.unified, ...unified },
+        mode,
       } as BCState
 
       const { enabledAt, sessionId } = state.developer.remoteDebugging

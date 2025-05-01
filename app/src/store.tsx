@@ -7,7 +7,7 @@ import {
   PersistentStorage,
 } from '@bifold/core'
 
-import { UnifiedCardType } from './modules/unified/types'
+import { UnifiedCardType } from '@bcsc-theme/_old/types'
 
 export interface IASEnvironment {
   name: string
@@ -39,10 +39,16 @@ export interface Unified {
   birthdate?: Date
 }
 
+export enum Mode {
+  BCWallet = 'bcwallet',
+  BCSC = 'bcsc',
+}
+
 export interface BCState extends BifoldState {
   developer: Developer
   dismissPersonCredentialOffer: DismissPersonCredentialOffer
   unified: Unified
+  mode: Mode
 }
 
 enum DeveloperDispatchAction {
@@ -66,17 +72,23 @@ enum UnifiedDispatchAction {
   UPDATE_BIRTHDATE = 'unified/updateBirthdate',
 }
 
+enum ModeDispatchAction {
+  UPDATE_MODE = 'mode/updateMode',
+}
+
 export type BCDispatchAction =
   | DeveloperDispatchAction
   | DismissPersonCredentialOfferDispatchAction
   | RemoteDebuggingDispatchAction
   | UnifiedDispatchAction
+  | ModeDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...DismissPersonCredentialOfferDispatchAction,
   ...RemoteDebuggingDispatchAction,
   ...UnifiedDispatchAction,
+  ...ModeDispatchAction,
 }
 
 export const iasEnvironments: Array<IASEnvironment> = [
@@ -137,6 +149,7 @@ export enum BCLocalStorageKeys {
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
   Unified = 'Unified',
+  Mode = 'Mode',
 }
 
 export const initialState: BCState = {
@@ -145,10 +158,19 @@ export const initialState: BCState = {
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
   unified: unifiedState,
+  mode: Mode.BCWallet,
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
   switch (action.type) {
+    case ModeDispatchAction.UPDATE_MODE: {
+      const mode: Mode = (action?.payload || []).pop() || Mode.BCWallet
+      // If the mode isn't actually changing, do nothing
+      if (state.mode === mode) return state
+      const newState = { ...state, mode }
+      PersistentStorage.storeValueForKey<Mode>(BCLocalStorageKeys.Mode, mode)
+      return newState
+    }
     case RemoteDebuggingDispatchAction.REMOTE_DEBUGGING_STATUS_UPDATE: {
       const { enabledAt, sessionId } = (action.payload || []).pop()
       const developer = { ...state.developer, remoteDebugging: { enabledAt, sessionId } }

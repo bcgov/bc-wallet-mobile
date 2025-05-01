@@ -1,42 +1,38 @@
-import AgentProvider from '@credo-ts/react-hooks'
 import {
-  AnimatedComponentsProvider,
   animatedComponents,
-  TourProvider,
+  AnimatedComponentsProvider,
   AuthProvider,
-  toastConfig,
+  ContainerProvider,
+  ErrorModal,
+  initLanguages,
   initStoredLanguage,
-  RootStack,
+  MainContainer,
+  NavContainer,
   NetInfo,
   NetworkProvider,
-  ErrorModal,
   StoreProvider,
   ThemeProvider,
-  initLanguages,
-  ContainerProvider,
-  MainContainer,
-  ActivityProvider,
-  OpenIDCredentialRecordProvider,
+  toastConfig,
+  TourProvider,
 } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
-import { useNavigation } from '@react-navigation/native'
-import React, { useEffect, useState, useMemo } from 'react'
+import { useNavigationContainerRef } from '@react-navigation/native'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StatusBar } from 'react-native'
 import { isTablet } from 'react-native-device-info'
 import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
+import Root from '@/Root'
+import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
+import { localization } from '@/localization'
+import { initialState, reducer } from '@/store'
+import { themes } from '@/theme'
+import tours from '@bcwallet-theme/features/tours'
+import WebDisplay from '@screens/WebDisplay'
 import { AppContainer } from './container-imp'
-import bcwallet from './src'
-import tours from './src/components/tours'
-import { surveyMonkeyUrl, surveyMonkeyExitUrl } from './src/constants'
-import WebDisplay from './src/screens/WebDisplay'
-import { initialState, reducer } from './src/store'
-
-const { theme, localization } = bcwallet
 
 initLanguages(localization)
 
@@ -48,10 +44,10 @@ messaging().onMessage(async () => {})
 
 const App = () => {
   const { t } = useTranslation()
-  const { navigate } = useNavigation()
+  const navigationRef = useNavigationContainerRef()
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
   const [surveyVisible, setSurveyVisible] = useState(false)
-  const bcwContainer = new AppContainer(bifoldContainer, t, navigate, setSurveyVisible).init()
+  const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
@@ -68,42 +64,32 @@ const App = () => {
   }, [])
 
   return (
-    <AgentProvider agent={undefined}>
-      <ContainerProvider value={bcwContainer}>
-        <StoreProvider initialState={initialState} reducer={reducer}>
-          <OpenIDCredentialRecordProvider>
-            <ThemeProvider value={theme}>
-              <AnimatedComponentsProvider value={animatedComponents}>
-                <AuthProvider>
-                  <NetworkProvider>
-                    <ActivityProvider>
-                      <StatusBar
-                        barStyle="light-content"
-                        hidden={false}
-                        backgroundColor={theme.ColorPallet.brand.primary}
-                        translucent={false}
-                      />
-                      <NetInfo />
-                      <ErrorModal enableReport />
-                      <WebDisplay
-                        destinationUrl={surveyMonkeyUrl}
-                        exitUrl={surveyMonkeyExitUrl}
-                        visible={surveyVisible}
-                        onClose={() => setSurveyVisible(false)}
-                      />
-                      <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                        <RootStack />
-                      </TourProvider>
-                      <Toast topOffset={15} config={toastConfig} />
-                    </ActivityProvider>
-                  </NetworkProvider>
-                </AuthProvider>
-              </AnimatedComponentsProvider>
-            </ThemeProvider>
-          </OpenIDCredentialRecordProvider>
-        </StoreProvider>
-      </ContainerProvider>
-    </AgentProvider>
+    <ContainerProvider value={bcwContainer}>
+      <StoreProvider initialState={initialState} reducer={reducer}>
+        <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
+          <NavContainer navigationRef={navigationRef}>
+            <AnimatedComponentsProvider value={animatedComponents}>
+              <AuthProvider>
+                <NetworkProvider>
+                  <NetInfo />
+                  <ErrorModal enableReport />
+                  <WebDisplay
+                    destinationUrl={surveyMonkeyUrl}
+                    exitUrl={surveyMonkeyExitUrl}
+                    visible={surveyVisible}
+                    onClose={() => setSurveyVisible(false)}
+                  />
+                  <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                    <Root />
+                  </TourProvider>
+                  <Toast topOffset={15} config={toastConfig} />
+                </NetworkProvider>
+              </AuthProvider>
+            </AnimatedComponentsProvider>
+          </NavContainer>
+        </ThemeProvider>
+      </StoreProvider>
+    </ContainerProvider>
   )
 }
 

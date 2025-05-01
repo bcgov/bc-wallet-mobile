@@ -1,5 +1,4 @@
 import {
-  Stacks,
   useTheme,
   InfoBox,
   InfoBoxType,
@@ -9,50 +8,40 @@ import {
   BifoldError,
   useStore,
   useAuth,
+  SplashProps,
 } from '@bifold/core'
 import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
-import { CommonActions, useNavigation } from '@react-navigation/native'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import ProgressBar from '../components/ProgressBar'
-import TipCarousel from '../components/TipCarousel'
-import useInitializeBCAgent from '../hooks/initialize-agent'
-import { BCState } from '../store'
-
-enum InitErrorTypes {
-  Onboarding,
-  Agent,
-}
+import ProgressBar from '@components/ProgressBar'
+import TipCarousel from '@components/TipCarousel'
+import { BCState } from '@/store'
 
 /*
   To customize this splash screen set the background color of the
   iOS and Android launch screen to match the background color of
   of this view.
 */
-const Splash = () => {
+const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
   const { walletSecret } = useAuth()
-  const navigation = useNavigation()
   const { ColorPallet, Assets } = useTheme()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [store] = useStore<BCState>()
   const [progressPercent, setProgressPercent] = useState(0)
-  const [initOnboardingCount, setInitOnboardingCount] = useState(0)
   const [initAgentCount, setInitAgentCount] = useState(0)
-  const [initErrorType, setInitErrorType] = useState<InitErrorTypes>(InitErrorTypes.Onboarding)
   const [initError, setInitError] = useState<BifoldError | null>(null)
   const [reported, setReported] = useState(false)
   const initializing = useRef(false)
-  const { initializeAgent } = useInitializeBCAgent()
   const [logger, ocaBundleResolver] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_OCA_RESOLVER, TOKENS.CONFIG])
   const styles = StyleSheet.create({
     screenContainer: {
-      backgroundColor: ColorPallet.brand.primary,
+      backgroundColor: ColorPallet.brand.tertiaryBackground,
       flex: 1,
     },
     scrollContentContainer: {
@@ -97,7 +86,6 @@ const Splash = () => {
     () => [
       t('Init.Starting'),
       t('Init.FetchingPreferences'),
-      t('Init.VerifyingOnboarding'),
       t('Init.CheckingOCA'),
       t('Init.InitializingAgent'),
       t('Init.Finishing'),
@@ -115,62 +103,50 @@ const Splash = () => {
   )
 
   useEffect(() => {
+    setStep(1)
     if (initializing.current || !store.authentication.didAuthenticate) {
       return
     }
 
     if (!walletSecret) {
-      setInitErrorType(InitErrorTypes.Agent)
       setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), 'Wallet secret is not found', 2031))
       return
     }
-
-    setStep(1)
-    setStep(2)
 
     const initAgentAsyncEffect = async (): Promise<void> => {
       try {
         initializing.current = true
 
-        setStep(3)
+        setStep(2)
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
+        setStep(3)
+        await initializeAgent(walletSecret)
+
         setStep(4)
-        const agent = await initializeAgent(walletSecret)
-
-        if (!agent) {
-          initializing.current = false
-          return
-        }
-
-        setStep(5)
-
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: Stacks.TabStack }],
-          })
-        )
       } catch (e: unknown) {
         initializing.current = false
 
-        setInitErrorType(InitErrorTypes.Agent)
         setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), (e as Error)?.message, 2031))
       }
     }
 
     initAgentAsyncEffect()
-  }, [initializeAgent, setStep, ocaBundleResolver, navigation, initAgentCount, t, store, walletSecret])
+  }, [
+    initializeAgent,
+    setStep,
+    ocaBundleResolver,
+    initAgentCount,
+    t,
+    store.authentication.didAuthenticate,
+    walletSecret,
+  ])
 
   const handleErrorCallToActionPressed = useCallback(() => {
     setInitError(null)
 
-    if (initErrorType === InitErrorTypes.Agent) {
-      setInitAgentCount(initAgentCount + 1)
-    } else {
-      setInitOnboardingCount(initOnboardingCount + 1)
-    }
-  }, [initErrorType, initAgentCount, setInitAgentCount, initOnboardingCount, setInitOnboardingCount])
+    setInitAgentCount(initAgentCount + 1)
+  }, [initAgentCount, setInitAgentCount])
 
   const secondaryCallToActionIcon = useMemo(
     () =>

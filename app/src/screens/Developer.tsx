@@ -1,30 +1,32 @@
 import {
-  useTheme,
-  useStore,
-  testIdWithKey,
   DispatchAction,
   SafeAreaModal,
   Screens,
-  useServices,
+  testIdWithKey,
   TOKENS,
+  useAuth,
+  useServices,
+  useStore,
+  useTheme,
 } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter, StyleSheet, Switch, Text, Pressable, View, ScrollView } from 'react-native'
+import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import { BCState, BCDispatchAction } from '../store'
-
+import { BCDispatchAction, BCState, Mode } from '@/store'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
+import { BCThemeNames } from '@/constants'
 
-const Settings: React.FC = () => {
+const Developer: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
-  const { SettingsTheme, TextTheme, ColorPallet } = useTheme()
+  const { lockOutUser } = useAuth()
+  const { SettingsTheme, TextTheme, ColorPallet, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
@@ -288,6 +290,23 @@ const Settings: React.FC = () => {
     setEnableAppToAppPersonFlow((previousState) => !previousState)
   }
 
+  const toggleTheme = () => {
+    if (themeName === BCThemeNames.BCSC) {
+      setTheme(BCThemeNames.BCWallet)
+    } else {
+      setTheme(BCThemeNames.BCSC)
+    }
+  }
+
+  const toggleMode = () => {
+    lockOutUser()
+    setTheme(BCThemeNames.BCSC)
+    dispatch({
+      type: BCDispatchAction.UPDATE_MODE,
+      payload: [Mode.BCSC],
+    })
+  }
+
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']}>
       <SafeAreaModal
@@ -505,9 +524,37 @@ const Settings: React.FC = () => {
             value={enableAppToAppPersonFlow}
           />
         </SectionRow>
+
+        <SectionRow
+          title={t('Developer.SwitchTheme')}
+          accessibilityLabel={t('Developer.SwitchTheme')}
+          testID={testIdWithKey('ToggleTheme')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={themeName === BCThemeNames.BCSC ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleTheme}
+            value={themeName === BCThemeNames.BCSC}
+          />
+        </SectionRow>
+
+        <SectionRow
+          title={t('Developer.SwitchMode')}
+          accessibilityLabel={t('Developer.SwitchMode')}
+          testID={testIdWithKey('ToggleMode')}
+        >
+          <Switch
+            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
+            thumbColor={ColorPallet.grayscale.mediumGrey}
+            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
+            onValueChange={toggleMode}
+            value={false}
+          />
+        </SectionRow>
       </ScrollView>
     </SafeAreaView>
   )
 }
 
-export default Settings
+export default Developer
