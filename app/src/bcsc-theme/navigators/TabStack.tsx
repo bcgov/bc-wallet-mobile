@@ -11,11 +11,48 @@ import Services from '../features/services/Services'
 import Settings from '../features/settings/Settings'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 
+type TabBarIconProps = {
+  focused: boolean
+  color: string
+  size: number
+}
+
+const createTabBarIcon = (label: string, iconName: string): React.FC<TabBarIconProps> => {
+  const TabBarIconComponent: React.FC<TabBarIconProps> = ({ focused }) => {
+    const { TabTheme, TextTheme, Spacing } = useTheme()
+    const { fontScale } = useWindowDimensions()
+    const showLabels = fontScale * TabTheme.tabBarTextStyle.fontSize < 18
+
+    return (
+      <View style={{ ...TabTheme.tabBarContainerStyle, justifyContent: showLabels ? 'flex-end' : 'center' }}>
+        <Icon
+          name={iconName}
+          size={Spacing.lg}
+          color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
+        />
+        {showLabels && (
+          <Text
+            style={{
+              ...TabTheme.tabBarTextStyle,
+              color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
+              fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
+            }}
+          >
+            {label}
+          </Text>
+        )}
+      </View>
+    )
+  }
+
+  return TabBarIconComponent
+}
+
 const BCSCTabStack: React.FC = () => {
-  const { fontScale } = useWindowDimensions()
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
-  const { TabTheme, TextTheme, Spacing } = useTheme()
-  const showLabels = fontScale * TabTheme.tabBarTextStyle.fontSize < 18
+  const { TabTheme } = useTheme()
+
+  // this style should be moved to the theme file here and in Bifold
   const styles = StyleSheet.create({
     tabBarIcon: {
       flex: 1,
@@ -39,26 +76,7 @@ const BCSCTabStack: React.FC = () => {
           component={Home}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: ({ focused }) => (
-              <View style={{ ...TabTheme.tabBarContainerStyle, justifyContent: showLabels ? 'flex-end' : 'center' }}>
-                <Icon
-                  name={'home'}
-                  size={Spacing.lg}
-                  color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
-                />
-                {showLabels && (
-                  <Text
-                    style={{
-                      ...TabTheme.tabBarTextStyle,
-                      color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-                      fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
-                    }}
-                  >
-                    {'Home'}
-                  </Text>
-                )}
-              </View>
-            ),
+            tabBarIcon: createTabBarIcon('Home', 'home'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Home',
             tabBarTestID: testIdWithKey('Home'),
@@ -69,26 +87,7 @@ const BCSCTabStack: React.FC = () => {
           component={Services}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: ({ focused }) => (
-              <View style={{ ...TabTheme.tabBarContainerStyle, justifyContent: showLabels ? 'flex-end' : 'center' }}>
-                <Icon
-                  name={'view-list-outline'}
-                  size={Spacing.lg}
-                  color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
-                />
-                {showLabels && (
-                  <Text
-                    style={{
-                      ...TabTheme.tabBarTextStyle,
-                      color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-                      fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
-                    }}
-                  >
-                    {'Services'}
-                  </Text>
-                )}
-              </View>
-            ),
+            tabBarIcon: createTabBarIcon('Services', 'view-list-outline'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Services',
             tabBarTestID: testIdWithKey('Services'),
@@ -99,26 +98,7 @@ const BCSCTabStack: React.FC = () => {
           component={Account}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: ({ focused }) => (
-              <View style={{ ...TabTheme.tabBarContainerStyle, justifyContent: showLabels ? 'flex-end' : 'center' }}>
-                <Icon
-                  name={'account'}
-                  size={Spacing.lg}
-                  color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
-                />
-                {showLabels && (
-                  <Text
-                    style={{
-                      ...TabTheme.tabBarTextStyle,
-                      color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-                      fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
-                    }}
-                  >
-                    {'Account'}
-                  </Text>
-                )}
-              </View>
-            ),
+            tabBarIcon: createTabBarIcon('Account', 'account'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Account',
             tabBarTestID: testIdWithKey('Account'),
@@ -129,26 +109,7 @@ const BCSCTabStack: React.FC = () => {
           component={Settings}
           options={{
             tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: ({ focused }) => (
-              <View style={{ ...TabTheme.tabBarContainerStyle, justifyContent: showLabels ? 'flex-end' : 'center' }}>
-                <Icon
-                  name={'cog'}
-                  size={Spacing.lg}
-                  color={focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor}
-                />
-                {showLabels && (
-                  <Text
-                    style={{
-                      ...TabTheme.tabBarTextStyle,
-                      color: focused ? TabTheme.tabBarActiveTintColor : TabTheme.tabBarInactiveTintColor,
-                      fontWeight: focused ? TextTheme.bold.fontWeight : TextTheme.normal.fontWeight,
-                    }}
-                  >
-                    {'Settings'}
-                  </Text>
-                )}
-              </View>
-            ),
+            tabBarIcon: createTabBarIcon('Settings', 'cog'),
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Settings',
             tabBarTestID: testIdWithKey('Settings'),
