@@ -11111,6 +11111,7 @@ __metadata:
     husky: "npm:7.0.4"
     i18next: "npm:21.10.0"
     jest: "npm:29.6.4"
+    jose: "npm:^6.0.10"
     lint-staged: "npm:11.2.6"
     lodash.flatten: "npm:4.4.0"
     lodash.merge: "npm:4.6.2"
@@ -20305,6 +20306,13 @@ __metadata:
     "@sideway/formula": "npm:^3.0.1"
     "@sideway/pinpoint": "npm:^2.0.0"
   checksum: c6c679643195c7c7eaada2ac51bef84032d4de8f9ebf3ead66079d07eccae6639b658f336358d5b9c70537cc7f3669ae8ac2a290ba832f944e4f85264c38d9e6
+  languageName: node
+  linkType: hard
+
+"jose@npm:^6.0.10":
+  version: 6.0.10
+  resolution: "jose@npm:6.0.10"
+  checksum: 8ba0d1aca94bdf780247c737328114fab3e394e1531e881dfe3fdd1d4a293b08cf7c0242769e72c8c8eee15c95761b542cf10730c3dfbb108084762df7d25cec
   languageName: node
   linkType: hard
 
