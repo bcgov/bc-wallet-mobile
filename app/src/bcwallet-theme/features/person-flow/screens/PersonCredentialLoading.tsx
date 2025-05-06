@@ -16,7 +16,7 @@ import {
   Stacks,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, EmitterSubscription, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
 
@@ -28,6 +28,7 @@ import {
   initiateAppToAppFlow,
 } from '../utils/BCIDHelper'
 import { BCState } from '../../../../store'
+import ProgressBar from '@/components/ProgressBar'
 type PersonProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
 const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
@@ -37,12 +38,35 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const timer = useRef<NodeJS.Timeout>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
+  const [stepText, setStepText] = useState<string>('Starting process...')
+  const [progressPercent, setProgressPercent] = useState(0)
   const { agent } = useAgent()
   if (!agent) {
     throw new Error('Unable to fetch agent from Credo')
   }
   const { t } = useTranslation()
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
+
+  const steps: string[] = useMemo(
+    () => [
+      t('PersonCredential.EstablishingConnection'),
+      t('PersonCredential.ConnectedToAgent'),
+      t('PersonCredential.WaitingForAppAttestation'),
+      t('PersonCredential.AppAttested'),
+      t('PersonCredential.OfferingCredential'),
+      t('PersonCredential.InitiatingAppToAppFlow'),
+    ],
+    [t]
+  )
+
+  const setStep = useCallback(
+    (stepIdx: number) => {
+      setStepText(steps[stepIdx])
+      const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
+      setProgressPercent(percent)
+    },
+    [steps]
+  )
 
   const styles = StyleSheet.create({
     container: {
@@ -77,6 +101,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       try {
         const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl, t)
         setRemoteAgentDetails(remoteAgentDetails)
+        setStep(1)
         logger.info(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
       } catch (err) {
         logger.error(`Failed to connect to IAS agent, error: ${(err as BifoldError).message}`)
@@ -84,7 +109,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     }
 
     connect()
-  }, [agent, store.developer.environment.iasAgentInviteUrl, logger, t])
+  }, [agent, store.developer.environment.iasAgentInviteUrl, logger, t, setStep])
 
   // when a person credential offer is received, show the
   // offer screen to the user.
@@ -105,10 +130,12 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     }
 
     const handleStartedAttestation = () => {
+      setStep(2)
       logger.info('Attestation proof request started')
     }
 
     const handleStartedCompleted = () => {
+      setStep(3)
       logger.info('Attestation proof request completed')
 
       timer.current && clearTimeout(timer.current)
@@ -127,7 +154,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     return () => {
       subscriptions.forEach((subscription) => subscription.remove())
     }
-  }, [navigation, logger])
+  }, [navigation, logger, setStep])
 
   useEffect(() => {
     const legacyConnectionDid = remoteAgentDetails?.legacyConnectionDid
@@ -155,6 +182,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     ) {
       initiateAppToAppFlow(store.developer.environment.appToAppUrl)
         .then(() => {
+          setStep(5)
           logger.info('Initiated app-to-app flow')
         })
         .catch((error) => {
@@ -163,6 +191,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     } else {
       authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
         .then(() => {
+          setStep(4)
           logger.info('Completed service card authentication successfully')
         })
         .catch((error) => {
@@ -178,6 +207,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     store.developer.environment.name,
     store.developer.environment.appToAppUrl,
     store.developer.enableAppToAppPersonFlow,
+    setStep,
   ])
 
   useEffect(() => {
@@ -196,14 +226,14 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   }, [navigation])
 
   return (
-    <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground }}>
+    <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground, flex: 1 }}>
+      <ProgressBar progressPercent={progressPercent} />
       <ScrollView style={styles.container}>
         <View style={styles.messageContainer}>
           <Text style={[TextTheme.modalHeadingThree, styles.messageText]} testID={testIdWithKey('RequestProcessing')}>
-            {t('ProofRequest.RequestProcessing')}
+            {stepText}
           </Text>
         </View>
-
         <View style={styles.image}>
           <PersonCredentialSpinner />
         </View>

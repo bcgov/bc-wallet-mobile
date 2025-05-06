@@ -112,6 +112,12 @@ const translation = {
     "WhatIsPersonCredentialLink": "What is a Person credential (PT-BR)",
     "WhereToUseLink": "Where to use (PT-BR)",
     "HelpLink": "Help (PT-BR)",
+    "EstablishingConnection": "Establishing connection... (PT-BR)",
+    "ConnectedToAgent": "Connected to agent... (PT-BR)",
+    "WaitingForAppAttestation": "Waiting for app attestation... (PT-BR)",
+    "AppAttested": "App attested... (PT-BR)",
+    "OfferingCredential": "Offering credential... (PT-BR)",
+    "InitiatingAppToAppFlow": "Initiating app-to-app flow... (PT-BR)",
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "No internet connection (PT-BR)",

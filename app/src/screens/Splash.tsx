@@ -160,7 +160,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
     <SafeAreaView style={styles.screenContainer}>
       <ScrollView contentContainerStyle={styles.scrollContentContainer}>
         <View style={styles.progressContainer} testID={testIdWithKey('LoadingActivityIndicator')}>
-          <ProgressBar progressPercent={progressPercent} />
+          <ProgressBar progressPercent={progressPercent} dark />
           <View style={styles.stepTextContainer}>
             <Text style={styles.stepText}>{stepText}</Text>
           </View>

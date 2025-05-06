@@ -1,18 +1,16 @@
 import {
-  useTheme,
-  useStore,
-  testIdWithKey,
-  DispatchAction,
-  Screens,
-  CheckBoxRow,
   Button,
   ButtonType,
+  CheckBoxRow,
+  DispatchAction,
   Link,
-  OnboardingStackParams,
+  testIdWithKey,
+  useDeveloperMode,
+  DeveloperModal,
+  useStore,
+  useTheme,
 } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -20,10 +18,11 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 const Preface: React.FC = () => {
   const [, dispatch] = useStore()
   const [checked, setChecked] = useState(false)
+  const [devModalVisible, setDevModalVisible] = useState(false)
+  const onBackPressed = () => setDevModalVisible(false)
+  const onDevModeTriggered = () => setDevModalVisible(true)
+  const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
   const { t } = useTranslation()
-  const developerOptionCount = useRef(0)
-  const touchCountToEnableBiometrics = 9
-  const navigation = useNavigation<StackNavigationProp<OnboardingStackParams>>()
   const { Assets, OnboardingTheme, TextTheme } = useTheme()
 
   const onSubmitPressed = () => {
@@ -38,20 +37,6 @@ const Preface: React.FC = () => {
 
   const onPressShowcaseLink = () => {
     Linking.openURL('https://digital.gov.bc.ca/digital-trust/showcase/')
-  }
-
-  const incrementDeveloperMenuCounter = () => {
-    if (developerOptionCount.current >= touchCountToEnableBiometrics) {
-      developerOptionCount.current = 0
-      dispatch({
-        type: DispatchAction.ENABLE_DEVELOPER_MODE,
-        payload: [true],
-      })
-      navigation.navigate(Screens.Developer)
-      return
-    }
-
-    developerOptionCount.current = developerOptionCount.current + 1
   }
 
   const style = StyleSheet.create({
@@ -104,6 +89,7 @@ const Preface: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+      {devModalVisible ? <DeveloperModal onBackPressed={onBackPressed} /> : null}
     </SafeAreaView>
   )
 }

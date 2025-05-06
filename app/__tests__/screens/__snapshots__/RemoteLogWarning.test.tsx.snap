@@ -38,9 +38,8 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
         {
           "alignItems": "stretch",
           "backgroundColor": "#003366",
-          "borderBottomWidth": 0,
+          "borderWidth": 0,
           "elevation": 0,
-          "flex": 1,
           "flexDirection": "row",
           "minHeight": 44,
           "shadowColor": "#000000",
@@ -50,6 +49,7 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
           },
           "shadowOpacity": 0.15,
           "shadowRadius": 6,
+          "zIndex": 2,
         }
       }
     >
@@ -153,14 +153,19 @@ exports[`RemoteLogWarning Screen screen renders correctly 1`] = `
       >
         <Text
           ellipsizeMode="tail"
+          maxFontSizeMultiplier={2}
           numberOfLines={1}
           style={
-            {
-              "color": "#FFFFFF",
-              "fontSize": 20,
-              "fontWeight": "bold",
-              "textAlign": "center",
-            }
+            [
+              {
+                "color": "#FFFFFF",
+                "fontSize": 20,
+                "fontWeight": "bold",
+              },
+              {
+                "textAlign": "center",
+              },
+            ]
           }
         >
           RemoteLogging.ScreenTitle
