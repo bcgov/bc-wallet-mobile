@@ -1,11 +1,13 @@
+import { BifoldError, BifoldLogger } from '@bifold/core'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import Config from 'react-native-config'
 
 class ApiClient {
-  private client: AxiosInstance
-  private authToken: string | null = null
+  readonly client: AxiosInstance
+  readonly logger: BifoldLogger
 
   constructor(baseURL: string = String(Config.IAS_URL)) {
+    this.logger = new BifoldLogger()
     this.client = axios.create({
       baseURL,
       headers: {
@@ -15,31 +17,27 @@ class ApiClient {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
+    this.client.interceptors.response.use(undefined, (error: BifoldError) => {
+      this.logger.error(error.message, { message: 'IAS API Error' })
+    })
   }
 
-  // Set the authentication token
-  setAuthToken(token: string) {
-    this.authToken = token
-  }
-
-  buildToken() {
+  buildToken(): string | null {
     // getKeys (jason module)
     // fetch latest ID from keys
     // jose.generateKeyPair
     // sign the token
     // return the token
-  }
-
-  // Clear the authentication token
-  clearAuthToken() {
-    this.authToken = null
+    return null
   }
 
   // Handle request interception
   private handleRequest(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
-    if (this.authToken) {
-      config.headers.set('Authorization', `Bearer ${this.authToken}`)
+    const token = this.buildToken()
+    if (token) {
+      config.headers.set('Authorization', `Bearer ${token}`)
     }
+    this.logger.debug(`${String(config.method)}: ${String(config.url)}`, { message: 'Buttons' })
     return config
   }
 
