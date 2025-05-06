@@ -9,8 +9,10 @@ export interface PrivateKeyInfo {
 }
 
 export interface KeyPair {
+  id: string; // 'id' for platform neutrality
   public: string;
-  private: string;
+  private?: string; // may not be available in secure hardware
+  privateKeyAvailable: string; // Indicates if the private key exists, even if not extractable
 }
 
 const LINKING_ERROR =

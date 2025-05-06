@@ -17,6 +17,9 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.UnrecoverableEntryException
 import java.security.cert.Certificate
+import javax.crypto.SecretKey
+import java.util.Base64
+import android.util.Log;
 
 @ReactModule(name = BcscCoreModule.NAME)
 class BcscCoreModule(reactContext: ReactApplicationContext) :
@@ -36,6 +39,18 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     return a * b
   }
 
+  @Throws(UnrecoverableEntryException::class, NoSuchAlgorithmException::class, KeyStoreException::class)
+  private fun getSecretKey(kid: String): SecretKey {
+    try {
+      val keyStore = KeyStore.getInstance("AndroidKeyStore")
+      keyStore.load(null)
+
+      return keyStore.getKey(kid, null) as SecretKey
+    } catch (e: Exception) {
+      throw KeyStoreException("Failed to get secret key: ${e.message}")
+    }
+  }
+
   /**
    * Retrieves a keypair from the KeyStore based on a provided key ID
    * @param keyStore The KeyStore instance to retrieve the keys from
@@ -45,11 +60,15 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   @Throws(UnrecoverableEntryException::class, NoSuchAlgorithmException::class, KeyStoreException::class)
   private fun retrieveKeyPairFromKeyStore(keyStore: KeyStore, kid: String): KeyPair {
     return if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O_MR1) {
+      // For older Android versions, get the PrivateKey directly
       val privateKey = keyStore.getKey(kid, null) as PrivateKey
       val publicKey = keyStore.getCertificate(kid).publicKey
+      
       KeyPair(publicKey, privateKey)
     } else {
+      // For newer Android versions, use PrivateKeyEntry
       val privateKeyEntry = keyStore.getEntry(kid, null) as KeyStore.PrivateKeyEntry
+      
       KeyPair(
         privateKeyEntry.certificate.publicKey,
         privateKeyEntry.privateKey
@@ -78,10 +97,26 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       // Convert keys to base64 strings for JS
       val keyPair: WritableMap = Arguments.createMap()
       
-      // This is a simplified example - in a real implementation you would properly
-      // encode the public and private keys
-      keyPair.putString("public", pair.public.encoded.toBase64String())
-      keyPair.putString("private", pair.private.encoded.toBase64String())
+      // For public key (typically available)
+      pair.public.encoded?.let { publicEncoded ->
+        keyPair.putString("public", publicEncoded.toBase64String())
+      }
+      
+      // For private key, check if available, but don't fail if we can't extract it
+      if (pair.private != null) {
+        // Mark that the private key exists even if its material isn't extractable
+        keyPair.putString("privateKeyAvailable", "true")
+        
+        // Try to get encoded form if available (might be null in secure hardware)
+        pair.private.encoded?.let { privateEncoded ->
+          keyPair.putString("private", privateEncoded.toBase64String())
+        }
+      } else {
+        keyPair.putString("privateKeyAvailable", "false")
+      }
+      
+      // Include key alias for reference
+      keyPair.putString("id", keyAlias)
       
       promise.resolve(keyPair)
     } catch (e: Exception) {
