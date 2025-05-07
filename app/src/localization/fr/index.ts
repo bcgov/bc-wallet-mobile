@@ -112,6 +112,12 @@ const translation = {
     "WhatIsPersonCredentialLink": "Qu'est-ce qu'un justificatif personnel",
     "WhereToUseLink": "Où l'utiliser",
     "HelpLink": "Aide",
+    "EstablishingConnection": "Establishing connection... (FR)",
+    "ConnectedToAgent": "Connected to agent... (FR)",
+    "WaitingForAppAttestation": "Waiting for app attestation... (FR)",
+    "AppAttested": "App attested... (FR)",
+    "OfferingCredential": "Offering credential... (FR)",
+    "InitiatingAppToAppFlow": "Initiating app-to-app flow... (FR)",
   },
   "NetInfo": {
     "NoInternetConnectionTitle": "Aucune connection internet",

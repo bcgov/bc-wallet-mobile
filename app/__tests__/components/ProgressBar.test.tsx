@@ -13,4 +13,13 @@ describe('ProgressBar Component', () => {
     )
     expect(tree).toMatchSnapshot()
   })
+
+  test('renders correctly in dark mode', () => {
+    const tree = render(
+      <BasicAppContext>
+        <ProgressBar progressPercent={0} dark />
+      </BasicAppContext>
+    )
+    expect(tree).toMatchSnapshot()
+  })
 })
