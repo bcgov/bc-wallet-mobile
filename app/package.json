@@ -83,6 +83,7 @@
     "credo-ts-indy-vdr-proxy-client": "0.2.3",
     "fast-text-encoding": "^1.0.6",
     "i18next": "21.10.0",
+    "jose": "^6.0.10",
     "lodash.flatten": "4.4.0",
     "lodash.merge": "4.6.2",
     "lodash.startcase": "4.4.0",
