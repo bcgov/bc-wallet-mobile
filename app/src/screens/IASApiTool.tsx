@@ -46,7 +46,7 @@ export const IASApiTool: React.FC<IIASApiTool> = ({ shouldDismissModal }) => {
         <Button
           title="Server Status"
           onPress={() => {
-            getServerStatus('ios').then((res) => {
+            getServerStatus().then((res) => {
               setResponse(JSON.stringify(res.data, null, 2))
             })
           }}

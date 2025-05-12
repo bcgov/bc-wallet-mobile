@@ -1,7 +1,12 @@
+import { Platform } from 'react-native'
 import apiClient from '../client'
 
-export async function getServerStatus(device: 'ios' | 'android') {
-  // these services should transform the data slightly before pushing it to the front end
+export async function getServerStatus() {
+  let device = 'android'
+  if (Platform.OS === 'ios') {
+    device = 'ios'
+  }
+
   return apiClient.get(`/cardtap/v3/status/${device}/mobile_card`)
 }
 
