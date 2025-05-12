@@ -12,7 +12,7 @@ import {
 } from '@bifold/core'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
+import { Linking, Pressable, ScrollView, StyleSheet, Text, Vibration, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Preface: React.FC = () => {
@@ -20,7 +20,10 @@ const Preface: React.FC = () => {
   const [checked, setChecked] = useState(false)
   const [devModalVisible, setDevModalVisible] = useState(false)
   const onBackPressed = () => setDevModalVisible(false)
-  const onDevModeTriggered = () => setDevModalVisible(true)
+  const onDevModeTriggered = () => {
+    Vibration.vibrate()
+    setDevModalVisible(true)
+  }
   const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
   const { t } = useTranslation()
   const { Assets, OnboardingTheme, TextTheme } = useTheme()
