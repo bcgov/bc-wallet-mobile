@@ -42,6 +42,8 @@ class ApiClient {
   }
 
   // Handle errors globally
+  // this will probably need to be handled within the context of react for dispatching error events or updating UI
+  // doesn't make sense to keep this here
   private handleError(error: Error): Promise<any> {
     // Log or handle errors here
     return Promise.reject(error)
