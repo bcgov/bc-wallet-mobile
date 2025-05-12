@@ -1,38 +1,40 @@
-import { CredentialState } from '@credo-ts/core'
-import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import {
+  AttestationEventTypes,
+  BifoldError,
+  EventTypes as BifoldEventTypes,
   Button,
   ButtonType,
-  Screens,
   NotificationStackParams,
+  Screens,
+  Stacks,
   TOKENS,
+  ThemedText,
   testIdWithKey,
+  useServices,
   useStore,
   useTheme,
-  EventTypes as BifoldEventTypes,
-  BifoldError,
-  AttestationEventTypes,
-  useServices,
-  Stacks,
 } from '@bifold/core'
+import { CredentialState } from '@credo-ts/core'
+import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, EmitterSubscription, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import PersonCredentialSpinner from '../../../../components/PersonCredentialSpinner'
+import { BCState } from '@/store'
+import PersonCredentialSpinner from '@components/PersonCredentialSpinner'
+import ProgressBar from '@components/ProgressBar'
 import {
-  connectToIASAgent,
-  authenticateWithServiceCard,
   WellKnownAgentDetails,
+  authenticateWithServiceCard,
+  connectToIASAgent,
   initiateAppToAppFlow,
 } from '../utils/BCIDHelper'
-import { BCState } from '../../../../store'
-import ProgressBar from '@/components/ProgressBar'
+
 type PersonProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
 const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
-  const { ColorPallet, TextTheme } = useTheme()
+  const { ColorPallet, TextTheme, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
   const timer = useRef<NodeJS.Timeout>()
@@ -73,6 +75,10 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       height: '100%',
       backgroundColor: ColorPallet.brand.modalPrimaryBackground,
       padding: 20,
+    },
+    progressStep: {
+      textAlign: 'center',
+      marginTop: Spacing.xs,
     },
     image: {
       marginTop: 80,
@@ -170,6 +176,8 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       if (!status) {
         setDidCompleteAttestationProofRequest(false)
         navigation.goBack()
+      } else {
+        setStep(4)
       }
     }
 
@@ -191,7 +199,6 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     } else {
       authenticateWithServiceCard(legacyConnectionDid, iasPortalUrl, cb)
         .then(() => {
-          setStep(4)
           logger.info('Completed service card authentication successfully')
         })
         .catch((error) => {
@@ -228,10 +235,13 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground, flex: 1 }}>
       <ProgressBar progressPercent={progressPercent} />
+      <ThemedText variant={'caption'} style={styles.progressStep}>
+        {stepText}
+      </ThemedText>
       <ScrollView style={styles.container}>
         <View style={styles.messageContainer}>
           <Text style={[TextTheme.modalHeadingThree, styles.messageText]} testID={testIdWithKey('RequestProcessing')}>
-            {stepText}
+            {t('ProofRequest.RequestProcessing')}
           </Text>
         </View>
         <View style={styles.image}>
