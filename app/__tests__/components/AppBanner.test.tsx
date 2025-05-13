@@ -52,7 +52,6 @@ describe('AppBannerSection', () => {
     )
 
     expect(getByText('Success Message')).toBeTruthy()
-    testIdWithKey
     expect(getByTestId(testIdWithKey('icon-success'))).toBeTruthy()
   })
 
