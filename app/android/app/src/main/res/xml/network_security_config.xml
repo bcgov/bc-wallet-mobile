@@ -3,7 +3,7 @@
     <domain-config>
         <domain includeSubdomains="false">bcgov.github.io</domain>
         <domain includeSubdomains="false">raw.githubusercontent.com</domain>
-        <domain includeSubdomains="true">gov.bc.ca</domain>
+        <domain includeSubdomains="true">*.gov.bc.ca</domain>
         <trust-anchors>
             <!-- Root CA for SSL/TLS RSA certificates, required for compatibility with older Android versions -->
             <certificates src="@raw/ssl_tls_rsa_root_ca_2022"/>
