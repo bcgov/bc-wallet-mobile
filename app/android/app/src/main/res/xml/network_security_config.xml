@@ -3,7 +3,7 @@
     <domain-config>
         <domain includeSubdomains="true">bcgov.github.io</domain>
         <domain includeSubdomains="true">raw.githubusercontent.com</domain>
-        <domain includeSubdomains="true">*.devops.gov.bc.ca</domain>
+        <domain includeSubdomains="true">devops.gov.bc.ca</domain>
         <domain includeSubdomains="true">id.gov.bc.ca</domain>
         <domain includeSubdomains="true">idtest.gov.bc.ca</domain>
         <domain includeSubdomains="true">idsit.gov.bc.ca</domain>
