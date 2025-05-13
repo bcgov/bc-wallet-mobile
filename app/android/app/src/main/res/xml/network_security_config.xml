@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config xmlns:android="http://schemas.android.com/apk/res/android">
     <domain-config>
-        <domain includeSubdomains="false">bcgov.github.io</domain>
-        <domain includeSubdomains="false">raw.githubusercontent.com</domain>
-        <domain includeSubdomains="true">*.gov.bc.ca</domain>
+        <domain includeSubdomains="true">bcgov.github.io</domain>
+        <domain includeSubdomains="true">raw.githubusercontent.com</domain>
+        <domain includeSubdomains="true">*.devops.gov.bc.ca</domain>
+        <domain includeSubdomains="true">iddev.gov.bc.ca</domain>
+        <domain includeSubdomains="true">id.gov.bc.ca</domain>
+        <domain includeSubdomains="true">idsit.gov.bc.ca</domain>
         <trust-anchors>
             <!-- Root CA for SSL/TLS RSA certificates, required for compatibility with older Android versions -->
             <certificates src="@raw/ssl_tls_rsa_root_ca_2022"/>
