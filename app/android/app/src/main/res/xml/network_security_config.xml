@@ -5,10 +5,15 @@
         <domain includeSubdomains="false">raw.githubusercontent.com</domain>
         <domain includeSubdomains="true">gov.bc.ca</domain>
         <trust-anchors>
+            <!-- Root CA for SSL/TLS RSA certificates, required for compatibility with older Android versions -->
             <certificates src="@raw/ssl_tls_rsa_root_ca_2022"/>
+            <!-- Entrust Root Certificate R2, used for specific government services -->
             <certificates src="@raw/entrust_r2"/>
+            <!-- Entrust Root Certificate G2, required for compatibility with modern Entrust services -->
             <certificates src="@raw/entrust_g2"/>
+            <!-- System certificates, included to trust default Android system CAs -->
             <certificates src="system"/>
+            <!-- User certificates, included to allow user-installed CAs -->
             <certificates src="user"/>
         </trust-anchors>
     </domain-config>
