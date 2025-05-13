@@ -29,9 +29,8 @@ const MainStack: React.FC = () => {
       } catch (error) {
         setMessages([
           {
-            title: 'IAS Server is unreachable',
+            title: `IAS Server is unreachable: ${(error as Error).message}`,
             type: 'error',
-            details: 'Please try again later.',
             dismissible: false,
           },
         ])

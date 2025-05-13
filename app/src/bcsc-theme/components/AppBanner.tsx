@@ -5,7 +5,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 export interface AppBannerSectionProps {
   title: string
   type: 'error' | 'warning' | 'info' | 'success'
-  details?: string
   dismissible?: boolean
   onDismiss?: () => void
 }
