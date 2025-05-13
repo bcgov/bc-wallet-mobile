@@ -9,6 +9,7 @@ import {
   INotificationColors,
   IGrayscaleColors,
   IColorPallet,
+  ITabTheme,
   ITheme,
   IAssets,
 } from '@bifold/core'
@@ -462,7 +463,7 @@ export const ListItems = StyleSheet.create({
   },
 })
 
-export const TabTheme = {
+export const TabTheme: ITabTheme = {
   tabBarStyle: {
     height: 60,
     backgroundColor: ColorPallet.brand.secondaryBackground,
@@ -499,6 +500,7 @@ export const TabTheme = {
   focusTabActiveTintColor: {
     backgroundColor: ColorPallet.brand.secondary,
   },
+  tabBarSecondaryBackgroundColor: ColorPallet.brand.secondaryBackground,
 }
 
 export const NavigationTheme = {

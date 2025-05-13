@@ -60,7 +60,7 @@ const BCSCTabStack: React.FC = () => {
   })
 
   return (
-    <SafeAreaView edges={['bottom']} style={{ flex: 1, backgroundColor: TabTheme.tabBarStyle.backgroundColor }}>
+    <>
       <Tab.Navigator
         initialRouteName={BCSCScreens.Home}
         screenOptions={{
@@ -116,7 +116,8 @@ const BCSCTabStack: React.FC = () => {
           }}
         />
       </Tab.Navigator>
-    </SafeAreaView>
+      <SafeAreaView edges={['bottom']} style={{ backgroundColor: TabTheme.tabBarSecondaryBackgroundColor }} />
+    </>
   )
 }
 

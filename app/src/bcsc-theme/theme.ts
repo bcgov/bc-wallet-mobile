@@ -1,16 +1,18 @@
-import { ColorPallet, IColorPallet, IInputs, INotificationColors, ITextTheme, ITheme } from '@bifold/core'
+import { ColorPallet, IColorPallet, IInputs, INotificationColors, ITabTheme, ITextTheme, ITheme } from '@bifold/core'
 import { StyleSheet } from 'react-native'
 
+import Logo from '@assets/img/logo-with-text-dark.svg'
 import { BCThemeNames } from '@/constants'
 import {
+  Assets,
   BCWalletTheme,
   Buttons,
   ChatTheme,
   GrayscaleColors,
-  NotificationColors,
   HomeTheme,
   Inputs,
   ListItems,
+  NotificationColors,
   PINInputTheme,
   SettingsTheme,
   TabTheme,
@@ -35,7 +37,7 @@ export const BCSCColorPallet: IColorPallet = {
     secondaryDisabled: `#757575`,
     tertiary: GrayscaleColors.lightGrey,
     tertiaryDisabled: '#757575',
-    primaryLight: '#D9EAF7',
+    primaryLight: '#3470B1',
     highlight: '#FCBA19',
     primaryBackground: '#013366',
     secondaryBackground: '#01264C',
@@ -466,7 +468,7 @@ export const BCSCListItems = StyleSheet.create({
   },
 })
 
-export const BCSCTabTheme = {
+export const BCSCTabTheme: ITabTheme = {
   ...TabTheme,
   tabBarStyle: {
     justifyContent: 'space-around',
@@ -500,6 +502,7 @@ export const BCSCTabTheme = {
   focusTabActiveTintColor: {
     backgroundColor: BCSCColorPallet.brand.secondary,
   },
+  tabBarSecondaryBackgroundColor: '#252423',
 }
 
 export const BCSCHomeTheme = StyleSheet.create({
@@ -583,7 +586,7 @@ export const BCSCChatTheme = {
     lineHeight: undefined,
     fontWeight: '500',
     fontSize: BCSCTextTheme.normal.fontSize,
-    color: BCSCColorPallet.brand.primary,
+    color: BCSCInputs.textInput.color,
   },
   placeholderText: BCSCColorPallet.grayscale.lightGrey,
   sendEnabled: BCSCColorPallet.brand.primary,
@@ -600,7 +603,7 @@ export const BCSCChatTheme = {
     marginTop: 16,
   },
   openButtonTextStyle: {
-    color: BCSCColorPallet.brand.secondary,
+    color: BCSCButtons.primaryText.color,
     fontSize: BCSCTextTheme.normal.fontSize,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -617,8 +620,17 @@ export const BCSCChatTheme = {
   },
 }
 
+export const BCSCAssets = {
+  ...Assets,
+  svg: {
+    ...Assets.svg,
+    logo: Logo as React.FC,
+  },
+}
+
 export const BCSCTheme: ITheme = {
   ...BCWalletTheme,
+  Assets: BCSCAssets,
   themeName: BCThemeNames.BCSC,
   ColorPallet: BCSCColorPallet,
   TextTheme: BCSCTextTheme,
