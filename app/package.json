@@ -41,11 +41,11 @@
     "gradle:write-locks": "cd android && ./gradlew app:dependencies --write-locks"
   },
   "dependencies": {
-    "@bifold/core": "2.1.0",
-    "@bifold/oca": "2.1.0",
-    "@bifold/react-native-attestation": "2.1.0",
-    "@bifold/remote-logs": "2.1.0",
-    "@bifold/verifier": "2.1.0",
+    "@bifold/core": "2.1.2",
+    "@bifold/oca": "2.1.2",
+    "@bifold/react-native-attestation": "2.1.2",
+    "@bifold/remote-logs": "2.1.2",
+    "@bifold/verifier": "2.1.2",
     "@credo-ts/anoncreds": "0.5.13",
     "@credo-ts/askar": "0.5.13",
     "@credo-ts/core": "0.5.13",
