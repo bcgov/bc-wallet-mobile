@@ -1,8 +1,7 @@
 import { View, StyleSheet, TouchableOpacity } from 'react-native'
-import { useTheme, ThemedText } from '@bifold/core'
+import { useTheme, ThemedText, testIdWithKey } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { uuid } from '@credo-ts/core/build/utils/uuid'
 export interface AppBannerSectionProps {
   title: string
   type: 'error' | 'warning' | 'info' | 'success'
@@ -37,7 +36,7 @@ export const AppBanner: React.FC<AppBannerProps> = ({ messages }) => {
           title={message.title}
           type={message.type}
           onDismiss={() => dismissBanner(index)}
-          key={uuid()}
+          key={`${message.title}-${message.type}`}
           dismissible={message.dismissible}
         />
       ))}
@@ -93,6 +92,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
   return (
     <TouchableOpacity
       style={{ ...styles.container, backgroundColor: bannerColor(type) }}
+      testID={testIdWithKey(`button-${type}`)}
       onPress={() => {
         if (dismissible && onDismiss) {
           onDismiss()
@@ -104,10 +104,12 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
         size={24}
         color={type === 'warning' ? ColorPallet.brand.secondaryBackground : ColorPallet.grayscale.white}
         style={styles.icon}
+        testID={testIdWithKey(`icon-${type}`)}
       />
       <ThemedText
         variant={'bold'}
         style={{ color: type === 'warning' ? ColorPallet.brand.secondaryBackground : ColorPallet.grayscale.white }}
+        testID={testIdWithKey(`text-${type}`)}
       >
         {title}
       </ThemedText>
