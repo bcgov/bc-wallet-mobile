@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <domain-config>
+        <domain includeSubdomains="true">zzz.gov.bc.ca</domain>
+        <domain includeSubdomains="true">zz1.gov.bc.ca</domain>
+        <domain includeSubdomains="true">z22.gov.bc.ca</domain>
+        <domain includeSubdomains="true">ff2.gov.bc.ca</domain>
+        <domain includeSubdomains="true">xx3.gov.bc.ca</domain>
+        <trust-anchors>
+            <certificates src="@raw/ssl_tls_rsa_root_ca_2022"/>
+            <certificates src="@raw/entrust_r2"/>
+            <certificates src="@raw/entrust_g2"/>
+            <certificates src="system"/>
+            <certificates src="user"/>
+        </trust-anchors>
+    </domain-config>
+</network-security-config>
