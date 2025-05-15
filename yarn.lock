@@ -2499,13 +2499,13 @@ __metadata:
 
 "@credo-ts/indy-vdr@patch:@credo-ts/indy-vdr@npm%3A0.5.11#~/.yarn/patches/@credo-ts-indy-vdr-npm-0.5.11-ced84362c9.patch":
   version: 0.5.11
-  resolution: "@credo-ts/indy-vdr@patch:@credo-ts/indy-vdr@npm%3A0.5.11#~/.yarn/patches/@credo-ts-indy-vdr-npm-0.5.11-ced84362c9.patch::version=0.5.11&hash=c42b94"
+  resolution: "@credo-ts/indy-vdr@patch:@credo-ts/indy-vdr@npm%3A0.5.11#~/.yarn/patches/@credo-ts-indy-vdr-npm-0.5.11-ced84362c9.patch::version=0.5.11&hash=90a927"
   dependencies:
     "@credo-ts/anoncreds": "npm:0.5.11"
     "@credo-ts/core": "npm:0.5.11"
   peerDependencies:
     "@hyperledger/indy-vdr-shared": ^0.2.2
-  checksum: 769af09f707e7a7e076a3c5d928b697bff29b26a62d4b763f1a96f4133aff06e16288bcb1832a55fe6e18902ccbee630980f89d1ef39cc2b595f4104f184e6d1
+  checksum: 8bf37225dd3bac3c9c245a94c5c7dbcde7fd8114e1c67ce3543e005ac409ea9ddf1857934b2068f2607036aafc711fc1eb75812657aed53d4b71d1750348c44c
   languageName: node
   linkType: hard
 
