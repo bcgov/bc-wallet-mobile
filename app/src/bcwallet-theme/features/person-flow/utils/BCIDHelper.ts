@@ -115,7 +115,7 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
   }
 }
 
-export const initiateAppToAppFlow = async (url: string) => {
+export const initiateAppToAppFlow = async (url: string, t: TFunction<'translation', undefined>) => {
   try {
     if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url)
@@ -123,7 +123,7 @@ export const initiateAppToAppFlow = async (url: string) => {
       throw new Error()
     }
   } catch {
-    const error = new BifoldError('Error.Title2032', 'Error.Message2032', 'Error.NoMessage', 2032)
+    const error = new BifoldError(t('Error.Title2032'), t('Error.Message2032'), t('Error.NoMessage'), 2032)
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
 }
