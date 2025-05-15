@@ -183,7 +183,7 @@ jobs:
           version_name: ${{ env.appBuildVersion }}
 
       - name: Send notification for iOS failure
-        if: failure() && github.ref_name == 'v1.0.23-hotfix
+        if: failure() && github.ref_name == 'v1.0.23-hotfix'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
           job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
