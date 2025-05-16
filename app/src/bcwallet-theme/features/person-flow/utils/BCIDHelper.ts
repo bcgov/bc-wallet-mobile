@@ -1,8 +1,15 @@
 import { DidRepository } from '@credo-ts/core'
-import { BifoldError, Agent, EventTypes as BifoldEventTypes, removeExistingInvitationsById } from '@bifold/core'
+import {
+  BifoldError,
+  Agent,
+  EventTypes as BifoldEventTypes,
+  removeExistingInvitationsById,
+  BifoldLogger,
+} from '@bifold/core'
 import { TFunction } from 'react-i18next'
 import { Linking, DeviceEventEmitter } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
+import { logger } from 'react-native-logs'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
@@ -115,14 +122,20 @@ export const cleanupAfterServiceCardAuthentication = (status: AuthenticationResu
   }
 }
 
-export const initiateAppToAppFlow = async (url: string, t: TFunction<'translation', undefined>) => {
+export const initiateAppToAppFlow = async (
+  url: string,
+  t: TFunction<'translation', undefined>,
+  logger?: BifoldLogger
+) => {
   try {
     if (await Linking.canOpenURL(url)) {
       await Linking.openURL(url)
     } else {
       throw new Error()
     }
-  } catch {
+  } catch (err: unknown) {
+    logger?.error(`Error opening URL ${(err as Error).message}`)
+
     const error = new BifoldError(t('Error.Title2032'), t('Error.Message2032'), t('Error.NoMessage'), 2032)
     DeviceEventEmitter.emit(BifoldEventTypes.ERROR_ADDED, error)
   }
