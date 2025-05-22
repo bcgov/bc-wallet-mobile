@@ -215,6 +215,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     store.developer.environment.appToAppUrl,
     store.developer.enableAppToAppPersonFlow,
     setStep,
+    t,
   ])
 
   useEffect(() => {
