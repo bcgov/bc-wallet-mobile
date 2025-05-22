@@ -9,7 +9,6 @@ import {
 import { TFunction } from 'react-i18next'
 import { Linking, DeviceEventEmitter } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
-import { logger } from 'react-native-logs'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.
 const redirectUrlTemplate = 'bcwallet://bcsc/v1/dids/<did>'
