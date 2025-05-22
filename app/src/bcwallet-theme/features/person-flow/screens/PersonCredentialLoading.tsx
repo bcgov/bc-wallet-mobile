@@ -1,42 +1,47 @@
-import { CredentialState } from '@credo-ts/core'
-import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import {
+  AttestationEventTypes,
+  BifoldError,
+  EventTypes as BifoldEventTypes,
   Button,
   ButtonType,
-  Screens,
   NotificationStackParams,
+  Screens,
+  Stacks,
   TOKENS,
+  ThemedText,
   testIdWithKey,
+  useServices,
   useStore,
   useTheme,
-  EventTypes as BifoldEventTypes,
-  BifoldError,
-  AttestationEventTypes,
-  useServices,
-  Stacks,
 } from '@bifold/core'
+import { CredentialState } from '@credo-ts/core'
+import { useAgent, useCredentialByState } from '@credo-ts/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, EmitterSubscription, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
 
-import PersonCredentialSpinner from '../../../../components/PersonCredentialSpinner'
+import { BCState } from '@/store'
+import PersonCredentialSpinner from '@components/PersonCredentialSpinner'
+import ProgressBar from '@components/ProgressBar'
 import {
-  connectToIASAgent,
-  authenticateWithServiceCard,
   WellKnownAgentDetails,
+  authenticateWithServiceCard,
+  connectToIASAgent,
   initiateAppToAppFlow,
 } from '../utils/BCIDHelper'
-import { BCState } from '../../../../store'
+
 type PersonProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
 const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
-  const { ColorPallet, TextTheme } = useTheme()
+  const { ColorPallet, TextTheme, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
   const timer = useRef<NodeJS.Timeout>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const receivedCredentialOffers = useCredentialByState(CredentialState.OfferReceived)
+  const [stepText, setStepText] = useState<string>('Starting process...')
+  const [progressPercent, setProgressPercent] = useState(0)
   const { agent } = useAgent()
   if (!agent) {
     throw new Error('Unable to fetch agent from Credo')
@@ -44,11 +49,36 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const [didCompleteAttestationProofRequest, setDidCompleteAttestationProofRequest] = useState<boolean>(false)
 
+  const steps: string[] = useMemo(
+    () => [
+      t('PersonCredential.EstablishingConnection'),
+      t('PersonCredential.ConnectedToAgent'),
+      t('PersonCredential.WaitingForAppAttestation'),
+      t('PersonCredential.AppAttested'),
+      t('PersonCredential.OfferingCredential'),
+      t('PersonCredential.InitiatingAppToAppFlow'),
+    ],
+    [t]
+  )
+
+  const setStep = useCallback(
+    (stepIdx: number) => {
+      setStepText(steps[stepIdx])
+      const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
+      setProgressPercent(percent)
+    },
+    [steps]
+  )
+
   const styles = StyleSheet.create({
     container: {
       height: '100%',
       backgroundColor: ColorPallet.brand.modalPrimaryBackground,
       padding: 20,
+    },
+    progressStep: {
+      textAlign: 'center',
+      marginTop: Spacing.xs,
     },
     image: {
       marginTop: 80,
@@ -77,6 +107,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       try {
         const remoteAgentDetails = await connectToIASAgent(agent, store.developer.environment.iasAgentInviteUrl, t)
         setRemoteAgentDetails(remoteAgentDetails)
+        setStep(1)
         logger.info(`Connected to IAS agent, connectionId: ${remoteAgentDetails.connectionId}`)
       } catch (err) {
         logger.error(`Failed to connect to IAS agent, error: ${(err as BifoldError).message}`)
@@ -84,7 +115,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     }
 
     connect()
-  }, [agent, store.developer.environment.iasAgentInviteUrl, logger, t])
+  }, [agent, store.developer.environment.iasAgentInviteUrl, logger, t, setStep])
 
   // when a person credential offer is received, show the
   // offer screen to the user.
@@ -105,10 +136,12 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     }
 
     const handleStartedAttestation = () => {
+      setStep(2)
       logger.info('Attestation proof request started')
     }
 
     const handleStartedCompleted = () => {
+      setStep(3)
       logger.info('Attestation proof request completed')
 
       timer.current && clearTimeout(timer.current)
@@ -127,7 +160,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     return () => {
       subscriptions.forEach((subscription) => subscription.remove())
     }
-  }, [navigation, logger])
+  }, [navigation, logger, setStep])
 
   useEffect(() => {
     const legacyConnectionDid = remoteAgentDetails?.legacyConnectionDid
@@ -143,6 +176,8 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       if (!status) {
         setDidCompleteAttestationProofRequest(false)
         navigation.goBack()
+      } else {
+        setStep(4)
       }
     }
 
@@ -155,6 +190,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     ) {
       initiateAppToAppFlow(store.developer.environment.appToAppUrl, t, logger)
         .then(() => {
+          setStep(5)
           logger.info('Initiated app-to-app flow')
         })
         .catch((error) => {
@@ -178,6 +214,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     store.developer.environment.name,
     store.developer.environment.appToAppUrl,
     store.developer.enableAppToAppPersonFlow,
+    setStep,
   ])
 
   useEffect(() => {
@@ -196,14 +233,17 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   }, [navigation])
 
   return (
-    <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground }}>
+    <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground, flex: 1 }}>
+      <ProgressBar progressPercent={progressPercent} />
+      <ThemedText variant={'caption'} style={styles.progressStep}>
+        {stepText}
+      </ThemedText>
       <ScrollView style={styles.container}>
         <View style={styles.messageContainer}>
           <Text style={[TextTheme.modalHeadingThree, styles.messageText]} testID={testIdWithKey('RequestProcessing')}>
             {t('ProofRequest.RequestProcessing')}
           </Text>
         </View>
-
         <View style={styles.image}>
           <PersonCredentialSpinner />
         </View>
