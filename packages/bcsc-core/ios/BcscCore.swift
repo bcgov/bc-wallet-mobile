@@ -72,38 +72,41 @@ class BcscCore: NSObject {
 
   @objc
   func getToken(_ tokenTypeNumber: Int, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    // let tokenStorageService = KeychainTokenStorageService()
+    let tokenStorageService = KeychainTokenStorageService()
+    let s = Storable()
+    let account: Account? = s.readData(pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
+
+    guard let currentAccount = account, let clientID = currentAccount.clientID else {
+        reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
+        return
+    }
+
+    guard let tokenType = TokenType(rawValue: tokenTypeNumber) else {
+        reject("E_INVALID_TOKEN_TYPE", "Invalid token type number: \(tokenTypeNumber)", nil)
+        return
+    }
+
+    let id = "\(clientID)/tokens/\(tokenType.rawValue)/1"
+    print("***** getToken id: \(id)")
     
-    // let s = Storable()
-    // let d: Account? = s.readData(pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
-    // print ("***** account: \(d)")
-    resolve(nil)
+    if let token = tokenStorageService.get(id: id) {
+      var tokenDict: [String: Any?] = [
+        "id": token.id,
+        "type": token.type.rawValue,
+        "token": token.token,
+        "created": token.created.timeIntervalSince1970
+      ]
 
-    // guard let tokenType = TokenType(rawValue: tokenTypeNumber) else {
-    //     reject("E_INVALID_TOKEN_TYPE", "Invalid token type number: \(tokenTypeNumber)", nil)
-    //     return
-    // }
-
-    // let id = "111d5dd6-a619-4ed3-88f7-a164089a160e/tokens/\(tokenType)/1"
-
-    // if let token = tokenStorageService.get(id: id) {
-    //   var tokenDict: [String: Any?] = [
-    //     "id": token.id,
-    //     "type": token.type.rawValue,
-    //     "token": token.token,
-    //     "created": token.created.timeIntervalSince1970
-    //   ]
-
-    //   if let expiry = token.expiry {
-    //     tokenDict["expiry"] = expiry.timeIntervalSince1970
-    //   } else {
-    //     tokenDict["expiry"] = nil
-    //   }
+      if let expiry = token.expiry {
+        tokenDict["expiry"] = expiry.timeIntervalSince1970
+      } else {
+        tokenDict["expiry"] = nil
+      }
       
-    //   resolve(tokenDict)
-    // } else {
-    //   resolve(nil)
-    // }
+      resolve(tokenDict)
+    } else {
+      resolve(nil)
+    }
   }
 
   @objc

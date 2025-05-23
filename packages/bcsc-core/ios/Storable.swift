@@ -33,9 +33,15 @@ class Storable {
         return Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard"
     }
     var currentEnvName: String {
-      // TODO(JL): Update this to use the current environment
-      // based on the bundle ID.
-      return "SIT"
+        switch currentBundleID {
+        case "ca.bc.gov.id.servicescard":
+            return "PROD"
+        case "ca.bc.gov.iddev.servicescard":
+            return "SIT"
+        default:
+            // Fallback to SIT or handle as an error/unknown state
+            return "SIT" 
+        }
     }
     var currentAccountID: String {
         return "095E1E9A-A286-486E-A9B9-58B6E411BD0E"
@@ -44,23 +50,6 @@ class Storable {
         return "\(currentBundleID)/data/accounts_dir/\(currentEnvName)"
     }
     var provider = "https://idsit.gov.bc.ca/device/"
-    
-//    func decodeArchivedObject1<T: NSObject & NSSecureCoding>(
-//        from data: Data,
-//        moduleName: String = "bc_services_card_dev"
-//    ) throws -> T? {
-//        let className = String(describing: T.self)
-//        let archivedClassName = "\(moduleName).\(className)"
-//
-//        // Register the Swift class for the archived class name
-//        NSKeyedUnarchiver.setClass(T.self, forClassName: archivedClassName)
-//
-//        let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
-//        unarchiver.requiresSecureCoding = false
-//
-//        let decoded = try? unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
-//        return decoded as? T
-//    }
     
     func decodeArchivedObject<T: NSObject & NSSecureCoding>(
         from data: Data,
@@ -87,18 +76,14 @@ class Storable {
                  .appendingPathComponent(self.currentAccountID)
                  .appendingPathComponent(self.accountMetadataFileName)
           
-             print("***** file URL: \(fileUrl)")
-             print("***** A")
+  
              guard (FileManager.default.fileExists(atPath: fileUrl.path)) else {
-                 print("***** B")
 
                  return nil
              }
-             print("***** C")
 
              let accessGranted = fileUrl.startAccessingSecurityScopedResource()
             
-             print("***** D")
 
              defer {
                  if accessGranted {
@@ -106,9 +91,7 @@ class Storable {
                  }
              }
             
-             let data = try Data(contentsOf: fileUrl)
-             print("***** Data count: \(data.count)") // Add this to check data size
-             
+             let data = try Data(contentsOf: fileUrl)  
              if let obj: [String: T] = try? decodeArchivedObject(from: data) {
                  return obj[provider]
              }

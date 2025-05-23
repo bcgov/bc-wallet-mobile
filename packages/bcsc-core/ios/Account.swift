@@ -15,10 +15,10 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     // User full name
     var displayName: String?
     
-    /// Indicate if app has posted initial nickname
-    /// to server after existing user
-    /// has upgraded to v3.6.0 and did not
-    /// set their nickname
+    // Indicate if app has posted initial nickname
+    // to server after existing user
+    // has upgraded to v3.6.0 and did not
+    // set their nickname
     var didPostNicknameToServer: Bool = false
     
     private(set) var nickname: String?
