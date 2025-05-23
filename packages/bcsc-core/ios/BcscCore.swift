@@ -70,6 +70,67 @@ class BcscCore: NSObject {
     }
   }
 
+  @objc
+  func getToken(_ tokenTypeNumber: Int, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // let tokenStorageService = KeychainTokenStorageService()
+    
+    // let s = Storable()
+    // let d: Account? = s.readData(pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
+    // print ("***** account: \(d)")
+    resolve(nil)
+
+    // guard let tokenType = TokenType(rawValue: tokenTypeNumber) else {
+    //     reject("E_INVALID_TOKEN_TYPE", "Invalid token type number: \(tokenTypeNumber)", nil)
+    //     return
+    // }
+
+    // let id = "111d5dd6-a619-4ed3-88f7-a164089a160e/tokens/\(tokenType)/1"
+
+    // if let token = tokenStorageService.get(id: id) {
+    //   var tokenDict: [String: Any?] = [
+    //     "id": token.id,
+    //     "type": token.type.rawValue,
+    //     "token": token.token,
+    //     "created": token.created.timeIntervalSince1970
+    //   ]
+
+    //   if let expiry = token.expiry {
+    //     tokenDict["expiry"] = expiry.timeIntervalSince1970
+    //   } else {
+    //     tokenDict["expiry"] = nil
+    //   }
+      
+    //   resolve(tokenDict)
+    // } else {
+    //   resolve(nil)
+    // }
+  }
+
+  @objc
+  func getAccount(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let s = Storable()
+    let account: Account? = s.readData(pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
+    
+    if let acc = account {
+        let result: [String: Any?] = [
+            "id": acc.id,
+            "issuer": acc.issuer,
+            "clientID": acc.clientID,
+//            "_securityMethod": acc._securityMethod,
+            "displayName": acc.displayName,
+            "didPostNicknameToServer": acc.didPostNicknameToServer,
+            "nickname": acc.nickname,
+            "failedAttemptCount": acc.failedAttemptCount,
+//            "lastAttemptDate": acc.lastAttemptDate?.timeIntervalSince1970, // Convert Date to timestamp or nil
+            // penalties is a computed property and might not be directly encodable or needed.
+            // If it's needed, it requires specific handling to convert to a plist-compatible format.
+        ]
+        resolve(result)
+    } else {
+        resolve(nil)
+    }
+  }
+
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED
   @objc
