@@ -61,6 +61,7 @@ class KeychainTokenStorageService: TokenStorageServiceProtocol {
         // Migrate before fetching
         migrateLegacyItem(id)
         
+        NSKeyedUnarchiver.setClass(Token.self, forClassName: "bc_services_card_dev.Token")
         let query: NSDictionary = [kSecClass: kSecClassKey,
                                    kSecAttrApplicationTag: id.data(using: .utf8)!,
                                    kSecMatchLimit: kSecMatchLimitOne,
