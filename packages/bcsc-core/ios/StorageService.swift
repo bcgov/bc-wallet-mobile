@@ -10,37 +10,33 @@ let testSearchPathDirectory = FileManager.SearchPathDirectory.cachesDirectory
 
 // Available files in the `basePath` directory:
 // account_list
-// Available files in the `accountID` directory:
-// provider
-// account_flag
-// account_metadata
-// authorization_request
-// client_metadata
-// client_registration
-// device_info
-// documents
-// evidence_metadata
-// provider
 
-class Storable {
-    var accountListFileName: String {
-        return "account_list"
-    }
-    var accountMetadataFileName: String {
-        return "account_metadata"
-    }
+enum AccountFiles: String {
+    case provider
+    case accountFlag = "account_flag"
+    case accountMetadata = "account_metadata"
+    case authorizationRequest = "authorization_request"
+    case clientMetadata = "client_metadata"
+    case clientRegistration = "client_registration"
+    case deviceInfo = "device_info"
+    case documents
+    case evidenceMetadata = "evidence_metadata"
+}
+
+class StorageService { 
     var currentBundleID: String {
         return Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard"
     }
     var currentEnvName: String {
         switch currentBundleID {
         case "ca.bc.gov.id.servicescard":
-            return "PROD"
+          return "PROD"
         case "ca.bc.gov.iddev.servicescard":
-            return "SIT"
+          return "SIT"
         default:
-            // Fallback to SIT or handle as an error/unknown state
-            return "SIT" 
+          // Fallback to SIT or handle as an 
+          // error/unknown state
+          return "SIT" 
         }
     }
     var currentAccountID: String {
@@ -68,13 +64,13 @@ class Storable {
         return decoded as? [String: T]
     }
     
-    func readData<T: NSObject & NSCoding & NSSecureCoding>(pathDirectory: FileManager.SearchPathDirectory) -> T? {
+    func readData<T: NSObject & NSCoding & NSSecureCoding>(file: AccountFiles, pathDirectory: FileManager.SearchPathDirectory) -> T? { // Added file parameter
          do {
              let rootDirectoryURL = try FileManager.default.url(for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
              let fileUrl = rootDirectoryURL
                  .appendingPathComponent(self.basePath)
                  .appendingPathComponent(self.currentAccountID)
-                 .appendingPathComponent(self.accountMetadataFileName)
+                 .appendingPathComponent(file.rawValue)
           
   
              guard (FileManager.default.fileExists(atPath: fileUrl.path)) else {

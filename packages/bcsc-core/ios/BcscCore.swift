@@ -73,8 +73,8 @@ class BcscCore: NSObject {
   @objc
   func getToken(_ tokenTypeNumber: Int, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let tokenStorageService = KeychainTokenStorageService()
-    let s = Storable()
-    let account: Account? = s.readData(pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
+    let storage = StorageService() // Changed from Storable and s to storage
+    let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
 
     guard let currentAccount = account, let clientID = currentAccount.clientID else {
         reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
@@ -111,8 +111,8 @@ class BcscCore: NSObject {
 
   @objc
   func getAccount(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    let s = Storable()
-    let account: Account? = s.readData(pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
+    let storage = StorageService() // Changed from PersistentStorage
+    let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
     
     if let acc = account {
         let result: [String: Any?] = [
