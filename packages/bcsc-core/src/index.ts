@@ -1,6 +1,16 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec from './NativeBcscCore';
 
+export const providerId = '111d5dd6-a619-4ed3-88f7-a164089a160e';
+
+export interface ReturnedToken {
+  id: string;
+  type: TokenType;
+  token: string;
+  created: number; // Timestamp
+  expiry?: number | null; // Timestamp or null
+}
+
 export interface PrivateKeyInfo {
   id: string; // 'id' for platform neutrality
   keyType?: string;
@@ -8,11 +18,30 @@ export interface PrivateKeyInfo {
   created?: number; // Timestamp
 }
 
+export enum TokenType {
+  accessToken = 0,
+  refreshToken = 1,
+  registrationAccessToken = 2,
+}
+
 export interface KeyPair {
   id: string; // 'id' for platform neutrality
   public: string;
   private?: string; // may not be available in secure hardware
   privateKeyAvailable: string; // Indicates if the private key exists, even if not extractable
+}
+
+export interface Account {
+  id: string;
+  issuer: string;
+  clientID?: string;
+  _securityMethod: string; // Consider if this should be exposed or mapped to a more friendly type
+  displayName?: string;
+  didPostNicknameToServer: boolean;
+  nickname?: string;
+  failedAttemptCount: number;
+  lastAttemptDate?: number; // Timestamp
+  // Penalties are not directly included as it's a computed property with complex structure
 }
 
 const LINKING_ERROR =
@@ -49,4 +78,24 @@ export const getAllKeys = (): Promise<PrivateKeyInfo[]> => {
 
 export const getKeyPair = (label: string): Promise<KeyPair> => {
   return BcscCore.getKeyPair(label);
+};
+
+export const getToken = async (
+  tokenType: TokenType
+): Promise<ReturnedToken | null> => {
+  // Pass the raw numeric value of the enum to the native side
+  const nativeToken = await BcscCore.getToken(tokenType as number);
+  if (!nativeToken) {
+    return null;
+  }
+  // The native side returns 'type' as a number (rawValue of TokenType).
+  // We cast it back to the TokenType enum on the JS side.
+  return {
+    ...nativeToken,
+    type: nativeToken.type as TokenType, // Ensure this aligns with what native returns
+  };
+};
+
+export const getAccount = async (): Promise<Account | null> => {
+  return BcscCore.getAccount();
 };
