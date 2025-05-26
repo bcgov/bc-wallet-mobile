@@ -9,9 +9,9 @@
 import UIKit
 
 enum TokenType: Int {
-    case accessToken = 0
-    case refreshToken
-    case registrationAccessToken
+    case Access = 0
+    case Refresh
+    case Registration
 }
 
 class Token: NSObject, NSCoding {
