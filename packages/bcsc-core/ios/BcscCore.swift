@@ -9,13 +9,7 @@ class BcscCore: NSObject {
   static func requiresMainQueueSetup() -> Bool {
     return false
   }
-  
-  @objc
-  func multiply(_ a: Double, b: Double, withResolver resolve: @escaping RCTPromiseResolveBlock, withRejecter reject: @escaping RCTPromiseRejectBlock) {
-    let result = NSNumber(value: a * b)
-    resolve(result)
-  }
-    
+      
   @objc
   func getAllKeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let keyPairManager = KeyPairManager()
