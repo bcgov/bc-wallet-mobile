@@ -3,7 +3,7 @@ import NativeBcscCoreSpec from './NativeBcscCore';
 
 export const providerId = '111d5dd6-a619-4ed3-88f7-a164089a160e';
 
-export interface ReturnedToken {
+export interface TokenInfo {
   id: string;
   type: TokenType;
   token: string;
@@ -70,17 +70,32 @@ const BcscCore = BcscCoreModule
       }
     );
 
+/**
+ * Retrieves information for all available private keys.
+ * @returns A promise that resolves to an array of PrivateKeyInfo objects.
+ */
 export const getAllKeys = (): Promise<PrivateKeyInfo[]> => {
   return BcscCore.getAllKeys();
 };
 
+/**
+ * Retrieves a key pair (public and optionally private) for a given label.
+ * @param label The identifier for the key pair.
+ * @returns A promise that resolves to a KeyPair object.
+ */
 export const getKeyPair = (label: string): Promise<KeyPair> => {
   return BcscCore.getKeyPair(label);
 };
 
+/**
+ * Retrieves a token of a specified type.
+ * @param tokenType The type of token to retrieve (e.g., AccessToken, RefreshToken).
+ * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
+ */
 export const getToken = async (
   tokenType: TokenType
-): Promise<ReturnedToken | null> => {
+): Promise<TokenInfo | null> => {
+  // Updated return type
   // Pass the raw numeric value of the enum to the native side
   const nativeToken = await BcscCore.getToken(tokenType as number);
   if (!nativeToken) {
@@ -94,6 +109,10 @@ export const getToken = async (
   };
 };
 
+/**
+ * Retrieves the current account information.
+ * @returns A promise that resolves to an Account object if an account exists, otherwise null.
+ */
 export const getAccount = async (): Promise<Account | null> => {
   return BcscCore.getAccount();
 };
