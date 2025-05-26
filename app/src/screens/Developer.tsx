@@ -8,6 +8,7 @@ import {
   useServices,
   useStore,
   useTheme,
+  LockoutReason,
 } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
@@ -299,7 +300,7 @@ const Developer: React.FC = () => {
   }
 
   const toggleMode = () => {
-    lockOutUser()
+    lockOutUser(LockoutReason.Timeout)
     setTheme(BCThemeNames.BCSC)
     dispatch({
       type: BCDispatchAction.UPDATE_MODE,
