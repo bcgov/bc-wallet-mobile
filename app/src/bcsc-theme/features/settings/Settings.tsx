@@ -1,7 +1,6 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
-// Import LockoutReason from the correct path as a value (not just a type)
 import { Button, ButtonType, useAuth, useStore, useTheme, LockoutReason } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
