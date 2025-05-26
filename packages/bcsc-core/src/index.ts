@@ -18,10 +18,12 @@ export interface PrivateKeyInfo {
   created?: number; // Timestamp
 }
 
+// This enum must match the native equivalent. See Token.swift for iOS
+// and Token.kt for Android.
 export enum TokenType {
-  AccessToken = 0,
-  RefreshToken = 1,
-  RegistrationAccessToken = 2,
+  Access = 0,
+  Refresh = 1,
+  Registration = 2,
 }
 
 export interface KeyPair {
@@ -29,7 +31,7 @@ export interface KeyPair {
   public: string;
   private?: string; // may not be available in secure hardware
   privateKeyAvailable: string; // Indicates if the private key exists,
-  //even if not extractable
+  // even if not extractable
 }
 
 export interface Account {
@@ -89,7 +91,7 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 
 /**
  * Retrieves a token of a specified type.
- * @param tokenType The type of token to retrieve (e.g., AccessToken, RefreshToken).
+ * @param tokenType The type of token to retrieve (e.g., Access, Refresh).
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
  */
 export const getToken = async (
