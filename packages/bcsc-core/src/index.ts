@@ -28,20 +28,22 @@ export interface KeyPair {
   id: string; // 'id' for platform neutrality
   public: string;
   private?: string; // may not be available in secure hardware
-  privateKeyAvailable: string; // Indicates if the private key exists, even if not extractable
+  privateKeyAvailable: string; // Indicates if the private key exists,
+  //even if not extractable
 }
 
 export interface Account {
   id: string;
   issuer: string;
   clientID?: string;
-  _securityMethod: string; // Consider if this should be exposed or mapped to a more friendly type
+  // _securityMethod: string; // Consider if this should be exposed or mapped to a more friendly type
   displayName?: string;
   didPostNicknameToServer: boolean;
   nickname?: string;
   failedAttemptCount: number;
-  lastAttemptDate?: number; // Timestamp
-  // Penalties are not directly included as it's a computed property with complex structure
+  // lastAttemptDate?: number; // Timestamp
+  // Penalties are not directly included as it's a computed property
+  // with complex structure
 }
 
 const LINKING_ERROR =
@@ -67,10 +69,6 @@ const BcscCore = BcscCoreModule
         },
       }
     );
-
-export const multiply = (a: number, b: number): number => {
-  return BcscCore.multiply(a, b);
-};
 
 export const getAllKeys = (): Promise<PrivateKeyInfo[]> => {
   return BcscCore.getAllKeys();
