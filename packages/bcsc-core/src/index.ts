@@ -19,9 +19,9 @@ export interface PrivateKeyInfo {
 }
 
 export enum TokenType {
-  accessToken = 0,
-  refreshToken = 1,
-  registrationAccessToken = 2,
+  AccessToken = 0,
+  RefreshToken = 1,
+  RegistrationAccessToken = 2,
 }
 
 export interface KeyPair {

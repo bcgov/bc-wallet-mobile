@@ -71,9 +71,10 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func getToken(_ tokenTypeNumber: Int, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func getToken(_ tokenTypeNumber: NSNumber, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) { // Changed parameter to NSNumber
+    let tokenTypeAsInt = tokenTypeNumber.intValue
     let tokenStorageService = KeychainTokenStorageService()
-    let storage = StorageService() // Changed from Storable and s to storage
+    let storage = StorageService()
     let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
 
     guard let currentAccount = account, let clientID = currentAccount.clientID else {
@@ -81,13 +82,12 @@ class BcscCore: NSObject {
         return
     }
 
-    guard let tokenType = TokenType(rawValue: tokenTypeNumber) else {
-        reject("E_INVALID_TOKEN_TYPE", "Invalid token type number: \(tokenTypeNumber)", nil)
+    guard let tokenType = TokenType(rawValue: tokenTypeAsInt) else {
+        reject("E_INVALID_TOKEN_TYPE", "Invalid token type number: \(tokenTypeAsInt)", nil)
         return
     }
 
     let id = "\(clientID)/tokens/\(tokenType.rawValue)/1"
-    print("***** getToken id: \(id)")
     
     if let token = tokenStorageService.get(id: id) {
       var tokenDict: [String: Any?] = [
