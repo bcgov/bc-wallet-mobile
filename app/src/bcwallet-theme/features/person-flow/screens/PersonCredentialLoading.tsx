@@ -188,7 +188,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
       store.developer.enableAppToAppPersonFlow &&
       ['Development', 'Test'].includes(store.developer.environment.name)
     ) {
-      initiateAppToAppFlow(store.developer.environment.appToAppUrl)
+      initiateAppToAppFlow(store.developer.environment.appToAppUrl, t, logger)
         .then(() => {
           setStep(5)
           logger.info('Initiated app-to-app flow')
@@ -215,6 +215,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
     store.developer.environment.appToAppUrl,
     store.developer.enableAppToAppPersonFlow,
     setStep,
+    t,
   ])
 
   useEffect(() => {

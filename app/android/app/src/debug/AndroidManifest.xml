@@ -5,6 +5,7 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="28"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:usesCleartextTraffic">
+        tools:replace="android:usesCleartextTraffic"
+        android:networkSecurityConfig="@xml/network_security_config">
     </application>
 </manifest>

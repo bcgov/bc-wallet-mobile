@@ -1,24 +1,24 @@
+import {
+  createLinkSecretIfRequired,
+  DispatchAction,
+  migrateToAskar,
+  PersistentStorage,
+  TOKENS,
+  useServices,
+  useStore,
+  WalletSecret,
+} from '@bifold/core'
 import { Agent, HttpOutboundTransport, MediatorPickupStrategy, WsOutboundTransport } from '@credo-ts/core'
 import { IndyVdrPoolConfig, IndyVdrPoolService } from '@credo-ts/indy-vdr/build/pool'
 import { agentDependencies } from '@credo-ts/react-native'
-import {
-  DispatchAction,
-  useStore,
-  migrateToAskar,
-  createLinkSecretIfRequired,
-  TOKENS,
-  useServices,
-  PersistentStorage,
-  WalletSecret,
-} from '@bifold/core'
 import { GetCredentialDefinitionRequest, GetSchemaRequest } from '@hyperledger/indy-vdr-shared'
 import moment from 'moment'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 import { CachesDirectoryPath } from 'react-native-fs'
 import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
-import { BCState, BCLocalStorageKeys } from '../store'
+import { BCState, BCLocalStorageKeys } from '@/store'
 
 const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -31,6 +31,7 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
 
 const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
+  const agentInstanceRef = useRef<Agent | null>(null)
   const [store, dispatch] = useStore<BCState>()
   const [logger, indyLedgers, attestationMonitor, credDefs, schemas] = useServices([
     TOKENS.UTIL_LOGGER,
@@ -46,6 +47,26 @@ const useBCAgentSetup = () => {
       attestationMonitor?.start(agent)
     },
     [attestationMonitor]
+  )
+
+  const restartExistingAgent = useCallback(
+    async (agent: Agent, walletSecret: WalletSecret): Promise<Agent | undefined> => {
+      try {
+        await agent.wallet.open({
+          id: walletSecret.id,
+          key: walletSecret.key,
+        })
+        await agent.initialize()
+      } catch (error) {
+        logger.warn(`Agent restart failed with error ${error}`)
+        // if the existing agents wallet cannot be opened or initialize() fails it was
+        // again not a clean shutdown and the agent should be replaced, not restarted
+        return
+      }
+
+      return agent
+    },
+    [logger]
   )
 
   const createNewAgent = useCallback(
@@ -156,6 +177,18 @@ const useBCAgentSetup = () => {
 
   const initializeAgent = useCallback(
     async (walletSecret: WalletSecret): Promise<void> => {
+      logger.info('Checking for existing agent...')
+      if (agentInstanceRef.current) {
+        const restartedAgent = await restartExistingAgent(agentInstanceRef.current, walletSecret)
+        if (restartedAgent) {
+          logger.info('Successfully restarted existing agent...')
+          refreshAttestationMonitor(restartedAgent)
+          agentInstanceRef.current = restartedAgent
+          setAgent(restartedAgent)
+          return
+        }
+      }
+
       logger.info('Checking for cached ledgers...')
       const cachedLedgers = await loadCachedLedgers()
       const ledgers = cachedLedgers ?? indyLedgers
@@ -185,10 +218,11 @@ const useBCAgentSetup = () => {
       refreshAttestationMonitor(newAgent)
 
       logger.info('Setting new agent...')
+      agentInstanceRef.current = newAgent
       setAgent(newAgent)
     },
     [
-      setAgent,
+      restartExistingAgent,
       indyLedgers,
       createNewAgent,
       logger,
@@ -205,12 +239,10 @@ const useBCAgentSetup = () => {
         await agent.shutdown()
       } catch (error) {
         logger.error(`Error shutting down agent with shutdownAndClearAgentIfExists: ${error}`)
+      } finally {
+        setAgent(null)
       }
-    } else {
-      logger.warn('No agent to erase')
     }
-
-    setAgent(null)
   }, [agent, logger])
 
   return { agent, initializeAgent, shutdownAndClearAgentIfExists }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Allow development/debug connections to localhost (Metro bundler) -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+    
+    <domain-config>
+        <domain includeSubdomains="true">bcgov.github.io</domain>
+        <domain includeSubdomains="true">raw.githubusercontent.com</domain>
+        <domain includeSubdomains="true">devops.gov.bc.ca</domain>
+        <domain includeSubdomains="true">id.gov.bc.ca</domain>
+        <domain includeSubdomains="true">idtest.gov.bc.ca</domain>
+        <domain includeSubdomains="true">idsit.gov.bc.ca</domain>
+        <domain includeSubdomains="true">iddev.gov.bc.ca</domain>
+        <domain includeSubdomains="true">idqa.gov.bc.ca</domain>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>

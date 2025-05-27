@@ -46,6 +46,7 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>ca.bc.gov.id.servicescard</string>
+		<string>ca.bc.gov.iddev.servicescard.v2</string>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
