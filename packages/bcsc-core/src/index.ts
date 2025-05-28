@@ -137,6 +137,14 @@ export const getAccount = async (): Promise<Account | null> => {
   return BcscCore.getAccount();
 };
 
-export const getRefreshTokenBody = async (): Promise<String | null> => {
+/**
+ * Constructs the body for a refresh token request.
+ * This involves creating a JWT, signing it with the latest private key,
+ * and then formatting it along with the existing refresh token and other
+ * necessary OAuth parameters.
+ * @returns A promise that resolves to a string containing the full
+ *          refresh token request body, or null if an error occurs.
+ */
+export const getRefreshTokenBody = async (): Promise<string | null> => {
   return BcscCore.getRefreshTokenBody();
 };
