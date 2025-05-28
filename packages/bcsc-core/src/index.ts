@@ -48,6 +48,24 @@ export interface Account {
   // with complex structure
 }
 
+export interface ProviderInfo {
+  // Assuming Provider can be represented like this
+  issuer: string;
+  // Add other relevant provider properties
+}
+
+export interface ClientRegistrationInfo {
+  provider: ProviderInfo;
+  clientID: string;
+  redirectURI: string;
+  registrationClientURI: string;
+  created: number; // Timestamp
+  updated: number; // Timestamp
+  keyIDs: string[];
+  accessTokenIDs: string[];
+  // Add other fields from ClientRegistration as needed, e.g., for authorizationRequest, credential
+}
+
 const LINKING_ERROR =
   `The package 'react-native-attestation' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
@@ -117,4 +135,8 @@ export const getToken = async (
  */
 export const getAccount = async (): Promise<Account | null> => {
   return BcscCore.getAccount();
+};
+
+export const getRefreshTokenBody = async (): Promise<String | null> => {
+  return BcscCore.getRefreshTokenBody();
 };

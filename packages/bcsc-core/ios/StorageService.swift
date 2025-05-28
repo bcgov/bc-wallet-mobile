@@ -56,11 +56,13 @@ class StorageService {
 
         // Register the dynamic class name
         NSKeyedUnarchiver.setClass(T.self, forClassName: archivedClassName)
-
+        print("Decoding class: \(archivedClassName)")
+        
         let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
         unarchiver.requiresSecureCoding = false
 
         let decoded = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
+        
         return decoded as? [String: T]
     }
     
@@ -88,9 +90,14 @@ class StorageService {
              }
             
              let data = try Data(contentsOf: fileUrl)  
+             print("Data read from file: \(data)")
+
              if let obj: [String: T] = try? decodeArchivedObject(from: data) {
-                 return obj[provider]
+                print("Decoded object: \(obj)")
+                return obj[provider]
              }
+             
+             print("Failed to decode object from data.")
              
              return nil
          } catch {
