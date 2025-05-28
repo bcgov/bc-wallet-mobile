@@ -20,6 +20,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import ProgressBar from '@components/ProgressBar'
 import TipCarousel from '@components/TipCarousel'
 import { BCState } from '@/store'
+// import { getAllKeys } from 'react-native-bcsc-core'
 
 /*
   To customize this splash screen set the background color of the
@@ -90,7 +91,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       t('Init.InitializingAgent'),
       t('Init.Finishing'),
     ],
-    [t]
+    [t],
   )
 
   const setStep = useCallback(
@@ -99,8 +100,16 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
       setProgressPercent(percent)
     },
-    [steps]
+    [steps],
   )
+
+  useEffect(() => {
+    const fetchData = async (): Promise<void> => {
+      // const keyResponse = await getAllKeys()
+      // console.log('Fetched keys:', keyResponse)
+    }
+    fetchData()
+  }, [])
 
   useEffect(() => {
     setStep(1)
@@ -153,7 +162,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       reported ? (
         <Icon style={{ marginRight: 8 }} name={'check-circle'} size={18} color={ColorPallet.semantic.success} />
       ) : undefined,
-    [reported, ColorPallet.semantic.success]
+    [reported, ColorPallet.semantic.success],
   )
 
   return (
