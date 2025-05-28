@@ -145,6 +145,6 @@ export const getAccount = async (): Promise<Account | null> => {
  * @returns A promise that resolves to a string containing the full
  *          refresh token request body, or null if an error occurs.
  */
-export const getRefreshTokenBody = async (): Promise<string | null> => {
-  return BcscCore.getRefreshTokenBody();
+export const getRefreshTokenRequestBody = async (): Promise<string | null> => {
+  return BcscCore.getRefreshTokenRequestBody();
 };

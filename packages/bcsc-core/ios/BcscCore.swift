@@ -129,7 +129,7 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func getRefreshTokenBody(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func getRefreshTokenRequestBody(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
     let grantType = "refresh_token"
     let storage = StorageService()
@@ -211,7 +211,7 @@ class BcscCore: NSObject {
 
         // Construct the body for the refresh token request
         let body = "grant_type=\(grantType)&client_id=\(account.clientID!)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(tokenValue)"
-        
+
         resolve(body)
 
     }, reject: reject) // Pass the outer reject handler
