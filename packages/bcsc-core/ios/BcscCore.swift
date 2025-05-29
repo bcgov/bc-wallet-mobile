@@ -128,6 +128,7 @@ class BcscCore: NSObject {
     }
   }
 
+
   @objc
   func getRefreshTokenRequestBody(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
@@ -215,6 +216,14 @@ class BcscCore: NSObject {
         resolve(body)
 
     }, reject: reject) // Pass the outer reject handler
+  }
+
+  @objc
+  func signPairingCode(_ code: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // For now, resolve with a mocked signature string
+    let mockedSignature = "mocked_signature_for_\(code)"
+    print("Signing pairing code: \(code), returning mocked signature: \(mockedSignature)")
+    resolve(mockedSignature)
   }
 
   // Support for the new architecture (Fabric)

@@ -148,3 +148,13 @@ export const getAccount = async (): Promise<Account | null> => {
 export const getRefreshTokenRequestBody = async (): Promise<string | null> => {
   return BcscCore.getRefreshTokenRequestBody();
 };
+
+/**
+ * Signs a given pairing code.
+ * @param code The pairing code string to sign.
+ * @returns A promise that resolves to a string containing the signature,
+ *          or null if an error occurs. (Currently returns a mocked signature).
+ */
+export const signPairingCode = async (code: string): Promise<string | null> => {
+  return BcscCore.signPairingCode(code);
+};
