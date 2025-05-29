@@ -1,7 +1,7 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
-import { Button, ButtonType, useAuth, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, useAuth, useStore, useTheme, LockoutReason } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
@@ -20,7 +20,7 @@ const Settings: React.FC = () => {
   })
 
   const onPressMode = () => {
-    lockOutUser()
+    lockOutUser(LockoutReason.Logout)
     setTheme(BCThemeNames.BCWallet)
     dispatch({ type: BCDispatchAction.UPDATE_MODE, payload: [Mode.BCWallet] })
   }

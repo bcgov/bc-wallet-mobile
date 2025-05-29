@@ -56,8 +56,7 @@ class Token: NSObject, NSCoding {
     }
 }
 
-
-//MARK: - Token Keys
+// MARK: - Token Keys
 extension String {
     fileprivate static let id = "id"
     fileprivate static let type = "subject"

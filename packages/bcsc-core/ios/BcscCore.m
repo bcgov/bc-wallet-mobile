@@ -16,4 +16,7 @@ RCT_EXTERN_METHOD(getToken:(nonnull NSNumber *)tokenTypeNumber
 RCT_EXTERN_METHOD(getAccount:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(getRefreshTokenRequestBody:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
 @end

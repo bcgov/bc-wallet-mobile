@@ -48,6 +48,24 @@ export interface Account {
   // with complex structure
 }
 
+export interface ProviderInfo {
+  // Assuming Provider can be represented like this
+  issuer: string;
+  // Add other relevant provider properties
+}
+
+export interface ClientRegistrationInfo {
+  provider: ProviderInfo;
+  clientID: string;
+  redirectURI: string;
+  registrationClientURI: string;
+  created: number; // Timestamp
+  updated: number; // Timestamp
+  keyIDs: string[];
+  accessTokenIDs: string[];
+  // Add other fields from ClientRegistration as needed, e.g., for authorizationRequest, credential
+}
+
 const LINKING_ERROR =
   `The package 'react-native-attestation' doesn't seem to be linked. Make sure: \n\n` +
   Platform.select({ ios: "- You have run 'pod install'\n", default: '' }) +
@@ -64,13 +82,13 @@ const BcscCoreModule = isTurboModuleEnabled
 const BcscCore = BcscCoreModule
   ? BcscCoreModule
   : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
+    {},
+    {
+      get() {
+        throw new Error(LINKING_ERROR);
+      },
+    }
+  );
 
 /**
  * Retrieves information for all available private keys.
@@ -117,4 +135,16 @@ export const getToken = async (
  */
 export const getAccount = async (): Promise<Account | null> => {
   return BcscCore.getAccount();
+};
+
+/**
+ * Constructs the body for a refresh token request.
+ * This involves creating a JWT, signing it with the latest private key,
+ * and then formatting it along with the existing refresh token and other
+ * necessary OAuth parameters.
+ * @returns A promise that resolves to a string containing the full
+ *          refresh token request body, or null if an error occurs.
+ */
+export const getRefreshTokenRequestBody = async (): Promise<string | null> => {
+  return BcscCore.getRefreshTokenRequestBody();
 };

@@ -8,6 +8,7 @@ import {
   useServices,
   useStore,
   useTheme,
+  LockoutReason,
 } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
@@ -35,7 +36,7 @@ const Developer: React.FC = () => {
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
-    !!store.preferences.useConnectionInviterCapability
+    !!store.preferences.useConnectionInviterCapability,
   )
   const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
@@ -299,7 +300,7 @@ const Developer: React.FC = () => {
   }
 
   const toggleMode = () => {
-    lockOutUser()
+    lockOutUser(LockoutReason.Timeout)
     setTheme(BCThemeNames.BCSC)
     dispatch({
       type: BCDispatchAction.UPDATE_MODE,
