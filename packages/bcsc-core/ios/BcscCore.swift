@@ -1,10 +1,40 @@
 import Foundation
 import React
 
+enum AccountSecurityMethod: String {
+    case pinNoDeviceAuth = "app_pin_no_device_authn"
+    case pinWithDeviceAuth = "app_pin_has_device_authn"
+    case deviceAuth = "device_authentication"
+}
+
+enum ChallengeSource: String {
+    case local_app_switch,
+    push_notification,
+    remote_pairing_code,
+    notValid
+}
+
+enum DeviceInfoKeys {
+    static let systemName = "system_name"
+    static let deviceName = "device_name"
+    static let deviceID = "device_id"
+    static let deviceModel = "device_model"
+    static let systemVersion = "system_version"
+    static let deviceToken = "device_token"
+    static let fcmDeviceToken = "fcm_device_token"
+    static let appVersion = "mobile_id_version"
+    static let appBuild = "mobile_id_build"
+    static let appSetID = "app_set_id"
+    static let appSecurityOption = "app_security_option"
+    static let hasOtherAccounts = "has_other_accounts"
+}
+
 @objcMembers
 @objc(BcscCore)
 class BcscCore: NSObject {
-  
+    static let generalizedOsName = "iOS"
+    
+
   @objc
   static func requiresMainQueueSetup() -> Bool {
     return false
@@ -128,6 +158,7 @@ class BcscCore: NSObject {
     }
   }
 
+
   @objc
   func getRefreshTokenRequestBody(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
@@ -160,8 +191,8 @@ class BcscCore: NSObject {
     let expireSeconds = Int(Date().addingTimeInterval(3600).timeIntervalSince1970)
     let claims = JWTClaimsSet.builder()
         .claim(name: "aud", value: account.issuer)
-        .claim(name: "iss", value: account.clientID) // was from reg
-        .claim(name: "sub", value: account.clientID) // was from reg
+        .claim(name: "iss", value: account.clientID) // was from registration
+        .claim(name: "sub", value: account.clientID) // was from registration
         .claim(name: "iat", value: seconds)
         .claim(name: "jti", value: uuid)
         .claim(name: "exp", value: expireSeconds)
@@ -215,6 +246,91 @@ class BcscCore: NSObject {
         resolve(body)
 
     }, reject: reject) // Pass the outer reject handler
+  }
+
+  @objc
+  func signPairingCode(_ code: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let storage = StorageService()
+    let keyPairManager = KeyPairManager()
+    
+    let deviceToken = "f0de..." // TODO: Replace with actual APNS token
+    let fcmDeviceToken = "cmpZ..." // TODO: Replace with actual FCM token
+    
+    let hasOtherAccounts = false
+    let accountSecurityMethod: AccountSecurityMethod? = nil
+    
+    guard let clientRegistration: ClientRegistration = storage.readData(file: AccountFiles.clientRegistration, pathDirectory: .applicationSupportDirectory) else {
+      reject("E_CLIENT_REGISTRATION_NOT_FOUND", "Client registration not found.", nil)
+      return
+    }
+    
+    guard let account: Account = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: .applicationSupportDirectory) else {
+      reject("E_ACCOUNT_NOT_FOUND", "Account not found.", nil)
+      return
+    }
+    
+    guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+          let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String else { // Ensure build is also a String
+      reject("E_VERSION_INFO_NOT_FOUND", "Client app version or build number not found.", nil)
+      return
+    }
+    
+    let seconds = Int(Date().timeIntervalSince1970)
+    let builder = JWTClaimsSet.builder()
+    
+    builder
+      .claim(name: "aud", value: account.issuer)
+      .claim(name: "iss", value: account.clientID)
+      .claim(name: "iat", value: seconds)
+      .claim(name: "challenge", value: code)
+      .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)
+      .claim(name: "apns_token", value: deviceToken)
+      .claim(name: "fcm_device_token", value: fcmDeviceToken)
+      .claim(name: DeviceInfoKeys.systemName, value: BcscCore.generalizedOsName)
+      .claim(name: DeviceInfoKeys.systemVersion, value: UIDevice.current.systemVersion)
+      .claim(name: DeviceInfoKeys.deviceName, value: UIDevice.current.name)
+      .claim(name: DeviceInfoKeys.deviceID, value: UIDevice.current.identifierForVendor?.uuidString ?? "")
+      .claim(name: DeviceInfoKeys.deviceModel, value: UIDevice.current.model)
+      .claim(name: DeviceInfoKeys.deviceToken, value: deviceToken) // Duplicate of apns_token?
+      .claim(name: DeviceInfoKeys.fcmDeviceToken, value: fcmDeviceToken) // Duplicate of fcm_device_token?
+      .claim(name: DeviceInfoKeys.appVersion, value: version)
+      .claim(name: DeviceInfoKeys.appBuild, value: build)
+      .claim(name: DeviceInfoKeys.appSetID, value: UIDevice.current.identifierForVendor?.uuidString ?? "") // Same as deviceID?
+      .claim(name: DeviceInfoKeys.hasOtherAccounts, value: hasOtherAccounts)
+    
+    if let securityMethod = accountSecurityMethod {
+      builder.claim(name: DeviceInfoKeys.appSecurityOption, value: securityMethod.rawValue)
+    }
+    
+    let payload = builder.build()
+    
+    let keys = keyPairManager.findAllPrivateKeys()
+    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+      reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
+      return
+    }
+    
+    let signer: RSASigner
+    do {
+      let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+      signer = RSASigner(privateKey: keyPair.private)
+    } catch {
+      reject("E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \\(error.localizedDescription)", error)
+      return
+    }
+    
+    let header = JWSHeader(alg: .RS512, kid: latestKeyInfo.tag)
+    let jwt = JWS(header: header, payload: payload)
+    
+    do {
+      try jwt.sign(signer: signer)
+      let serializedJWT = try jwt.serialize()
+      
+      resolve(serializedJWT)
+    } catch {
+      reject("E_JWT_SIGN_SERIALIZE_FAILED", "Failed to sign or serialize JWT: \\(error.localizedDescription)", error)
+      return
+    }
   }
 
   // Support for the new architecture (Fabric)
