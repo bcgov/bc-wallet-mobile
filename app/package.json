@@ -93,6 +93,7 @@
     "react-native": "~0.73.6",
     "react-native-animated-pagination-dots": "0.1.73",
     "react-native-argon2": "2.0.1",
+    "react-native-bcsc-core": "workspace:*",
     "react-native-bouncy-checkbox": "3.0.7",
     "react-native-check-version": "^1.3.0",
     "react-native-collapsible": "1.6.1",
