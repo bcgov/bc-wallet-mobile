@@ -39,6 +39,10 @@ class StorageService {
             return "SIT"
         }
     }
+    // NOTE: While the system reads an 'accounts' array from the account_list file,
+    // and could theoretically support multiple accounts, the current implementation
+    // only uses the *first* account ID found. For current practical purposes,
+    // there should only be one account ID present in the 'accounts' array.
     var currentAccountID: String? {
         let pathDirectory = defaultSearchPathDirectory
         
