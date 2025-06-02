@@ -1,7 +1,10 @@
 import { BifoldError, BifoldLogger } from '@bifold/core'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import Config from 'react-native-config'
-import { getAllKeys, getAccount, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { jwtDecode } from 'jwt-decode'
+import { decode } from "base-64"; // atob is not available in (react-native < 0.74) so this polyfill is needed
+global.atob = decode;
 
 interface BCSCEndpoints {
   // METADATA
@@ -26,11 +29,20 @@ interface BCSCEndpoints {
   credential: string
 }
 
+interface AccessToken {
+  access_token: string;
+  expires_in: number
+  id_token: string
+  refresh_token: string
+  scope: string
+  token_type: string
+}
+
 class BCSCService {
   readonly client: AxiosInstance
   readonly logger: BifoldLogger
-  endpoints?: BCSCEndpoints
-  accessToken?: string // this token will be used to interact with IAS servers
+  endpoints?: BCSCEndpoints // this will probably need to be stored 
+  accessToken?: AccessToken // this token will be used to interact with IAS servers
   refreshToken?: string // this is used to refresh access tokens, is long lived and should be
 
   // https://iddev.gov.bc.ca/device/.well-known/openid-configuration
@@ -52,7 +64,7 @@ class BCSCService {
     })
 
     // fetch endpoints
-    this.fetchEndpoints()
+    // this.fetchEndpoints()
   }
 
   async fetchEndpoints() {
@@ -79,30 +91,39 @@ class BCSCService {
     }
   }
 
-  async fetchAccessToken(): Promise<void> {
-    console.log("FETCH ACCESS TOKEN")
-    // REFRESH TOKEN
+  async fetchAccessToken(): Promise<AccessToken> {
     const tokenBody = await getRefreshTokenRequestBody()
-    console.log(tokenBody)
-    const tokenResponse = await this.post('/token', tokenBody, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
-    console.log('__--__--__--__')
-    console.log(tokenResponse.status)
-    console.log(tokenResponse.statusText)
-    console.log(tokenResponse.data)
-    const temp = await this.client.postForm('/token', tokenBody, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
-    console.log(temp)
-    if (this.endpoints) {
-      // we've got endpoints, post token endpoint for data
+    const tokenResponse = await this.post<AccessToken>('/device/token', tokenBody, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+
+    return tokenResponse.data
+  }
+
+  private isTokenExpired(token?: string): boolean {
+    let isExpired = true
+    // if no token is present, return that token is "expired" and fetch a new one
+    if (token) {
+      const decodedToken = jwtDecode(token)
+      const exp = decodedToken.exp || 0;
+      isExpired = (Date.now() >= exp * 1000)
     }
+    return true
   }
 
   // Handle request interception
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    // await this.fetchAccessToken()
-    if (this.accessToken) {
-      config.headers.set('Authorization', `Bearer ${this.accessToken}`)
+    // skip adding header if this is the token endpoint
+    if (config.url?.endsWith('/device/token')) {
+      return config
     }
-    this.logger.debug(`${String(config.method)}: ${String(config.url)}`, { message: 'Buttons' })
+
+    if (!this.accessToken || this.isTokenExpired(this.accessToken.access_token)) {
+      this.accessToken = await this.fetchAccessToken()
+    }
+
+    if (this.accessToken) {
+      config.headers.set('Authorization', `Bearer ${this.accessToken.access_token}`)
+    }
+    this.logger.debug(`${String(config.method)}: ${String(config.url)}`, {})
     return config
   }
 

@@ -22,6 +22,7 @@ import TipCarousel from '@components/TipCarousel'
 import { BCState } from '@/store'
 import { getAllKeys, getAccount, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import apiClient from '../api/client'
+import { loginByPairingCode } from '@/api/services/utility.service'
 
 /*
   To customize this splash screen set the background color of the
@@ -126,11 +127,12 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
         // const refreshTokenResponse = await getToken(TokenType.Refresh)
         // const registrationTokenResponse = await getToken(TokenType.Registration)
 
-        const refreshTokenBody = await getRefreshTokenRequestBody()
         console.log('____________-')
         console.log('____________-')
         console.log('____________-')
-        const temp = await apiClient.fetchAccessToken()
+        await loginByPairingCode('SWEET PAIRING CODE')
+        await loginByPairingCode('SWEET PAIRING CODE')
+        console.log('I DONT THINK WE MAKE IT HERE')
 
         // await apiClient.fetchEndpoints()
         // console.log(JSON.stringify(apiClient.endpoints, null, 2))
