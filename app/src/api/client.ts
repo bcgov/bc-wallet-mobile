@@ -1,10 +1,8 @@
 import { BifoldError, BifoldLogger } from '@bifold/core'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import Config from 'react-native-config'
-import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import { jwtDecode } from 'jwt-decode'
-import { decode } from "base-64"; // atob is not available in (react-native < 0.74) so this polyfill is needed
-global.atob = decode;
+import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import Config from 'react-native-config'
 
 interface BCSCEndpoints {
   // METADATA
@@ -30,7 +28,7 @@ interface BCSCEndpoints {
 }
 
 interface AccessToken {
-  access_token: string;
+  access_token: string
   expires_in: number
   id_token: string
   refresh_token: string
@@ -41,7 +39,7 @@ interface AccessToken {
 class BCSCService {
   readonly client: AxiosInstance
   readonly logger: BifoldLogger
-  endpoints?: BCSCEndpoints // this will probably need to be stored 
+  endpoints?: BCSCEndpoints // this will probably need to be stored
   accessToken?: AccessToken // this token will be used to interact with IAS servers
   refreshToken?: string // this is used to refresh access tokens, is long lived and should be
 
@@ -93,7 +91,9 @@ class BCSCService {
 
   async fetchAccessToken(): Promise<AccessToken> {
     const tokenBody = await getRefreshTokenRequestBody()
-    const tokenResponse = await this.post<AccessToken>('/device/token', tokenBody, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+    const tokenResponse = await this.post<AccessToken>('/device/token', tokenBody, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    })
 
     return tokenResponse.data
   }
@@ -103,8 +103,8 @@ class BCSCService {
     // if no token is present, return that token is "expired" and fetch a new one
     if (token) {
       const decodedToken = jwtDecode(token)
-      const exp = decodedToken.exp || 0;
-      isExpired = (Date.now() >= exp * 1000)
+      const exp = decodedToken.exp || 0
+      isExpired = Date.now() >= exp * 1000
     }
     return true
   }

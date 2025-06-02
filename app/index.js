@@ -17,6 +17,16 @@ import '@formatjs/intl-datetimeformat/locale-data/en' // locale-data for en
 import '@formatjs/intl-datetimeformat/add-all-tz' // Add ALL tz data
 import 'reflect-metadata'
 
+import { decode, encode } from 'base-64'
+
+if (!global.btoa) {
+  global.btoa = encode
+}
+
+if (!global.atob) {
+  global.atob = decode
+}
+
 import { AppRegistry } from 'react-native'
 
 import App from './App'

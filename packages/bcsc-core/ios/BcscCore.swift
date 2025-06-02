@@ -253,8 +253,8 @@ class BcscCore: NSObject {
     let storage = StorageService()
     let keyPairManager = KeyPairManager()
     
-    let deviceToken = "f0de..." // TODO: Replace with actual APNS token
-    let fcmDeviceToken = "cmpZ..." // TODO: Replace with actual FCM token
+    let deviceToken = "1f388407a36ce9f24d66b440da6e668e51ecb756237f7007362685af90becaae" // TODO: Replace with actual APNS token
+    let fcmDeviceToken = "fUyYdXn9a08SrmJs33KYBP:APA91bEHrv_-sXol_VWHpPbjapsWGW-WcntfxcMWdSLuyjE35arg-74HOgrhq1LdV3fsj-GJjecwstAJJMENV_qNcGjDRuf_d9nLGZPmUFsNkwIiAlq9S-E" // TODO: Replace with actual FCM token
     
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil

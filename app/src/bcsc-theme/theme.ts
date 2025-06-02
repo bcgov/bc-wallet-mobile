@@ -152,11 +152,11 @@ export const BCSCTextTheme: ITextTheme = {
 export const BCSCNavigationTheme = {
   dark: true,
   colors: {
-    primary: BCSCColorPallet.brand.primaryBackground,
+    primary: BCSCColorPallet.brand.headerText,
     background: BCSCColorPallet.brand.primaryBackground,
     card: BCSCColorPallet.brand.primaryBackground,
     text: BCSCColorPallet.brand.text,
-    border: BCSCColorPallet.grayscale.white,
+    border: BCSCColorPallet.grayscale.darkGrey,
     notification: BCSCColorPallet.grayscale.white,
   },
 }

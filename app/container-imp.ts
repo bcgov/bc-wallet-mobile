@@ -72,12 +72,12 @@ import { VersionCheckService } from './src/services/version'
 import {
   BCDispatchAction,
   BCLocalStorageKeys,
+  BCSCState,
   BCState,
   DismissPersonCredentialOffer,
   IASEnvironment,
   Mode,
   RemoteDebuggingState,
-  Unified,
   initialState,
 } from './src/store'
 
@@ -223,7 +223,7 @@ export class AppContainer implements Container {
       enableChat: true,
       enableReuseConnections: true,
       enableHiddenDevModeTrigger: true,
-      preventScreenCapture: true,
+      preventScreenCapture: false,
       supportedLanguages: ['en'],
       showPreface: true,
       disableOnboardingSkip: true,
@@ -364,7 +364,7 @@ export class AppContainer implements Container {
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
       let { environment, remoteDebugging, enableProxy, enableAltPersonFlow, enableAppToAppPersonFlow } =
         initialState.developer
-      let unified = initialState.unified
+      let bcsc = initialState.bcsc
       let mode = initialState.mode
 
       await Promise.all([
@@ -386,13 +386,13 @@ export class AppContainer implements Container {
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
-        loadState<Unified>(BCLocalStorageKeys.Unified, (val) => (unified = val)),
+        loadState<BCSCState>(BCLocalStorageKeys.BCSC, (val) => (bcsc = val)),
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
       ])
 
       // Convert date string to Date object (async-storage converts Dates to strings)
-      if (typeof unified.birthdate === 'string') {
-        unified.birthdate = new Date(Date.parse(unified.birthdate))
+      if (typeof bcsc.birthdate === 'string') {
+        bcsc.birthdate = new Date(Date.parse(bcsc.birthdate))
       }
 
       const state = {
@@ -413,7 +413,7 @@ export class AppContainer implements Container {
           enableAltPersonFlow,
           enableAppToAppPersonFlow,
         },
-        unified: { ...initialState.unified, ...unified },
+        bcsc: { ...initialState.bcsc, ...bcsc },
         mode,
       } as BCState
 
