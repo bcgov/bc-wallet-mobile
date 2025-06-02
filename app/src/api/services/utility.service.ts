@@ -13,3 +13,11 @@ export async function getServerStatus() {
 export async function getTermsOfUse() {
   return apiClient.get('/cardtap/v3/terms')
 }
+
+export async function loginByPairingCode(code: string) {
+  /*
+    code needs to be signed and will come from the bcsc core package
+    access token will be added on to teh request pre flight
+  */
+  return apiClient.post('/cardtap/v3/mobile/assertion', { assertion: code }, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+}

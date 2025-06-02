@@ -1,6 +1,7 @@
 import { BifoldError, BifoldLogger } from '@bifold/core'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import Config from 'react-native-config'
+import { getAllKeys, getAccount, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 
 interface BCSCEndpoints {
   // METADATA
@@ -78,23 +79,28 @@ class BCSCService {
     }
   }
 
-  buildToken(): string | null {
+  async fetchAccessToken(): Promise<void> {
+    console.log("FETCH ACCESS TOKEN")
     // REFRESH TOKEN
-    // This will need to be persisted in the store to allow users roll back
-    // getKeys (jason module)
-    // fetch latest ID from keys
-    // jose.generateKeyPair
-    // sign the token
-    // return the token
-
-    return null
+    const tokenBody = await getRefreshTokenRequestBody()
+    console.log(tokenBody)
+    const tokenResponse = await this.post('/token', tokenBody, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+    console.log('__--__--__--__')
+    console.log(tokenResponse.status)
+    console.log(tokenResponse.statusText)
+    console.log(tokenResponse.data)
+    const temp = await this.client.postForm('/token', tokenBody, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+    console.log(temp)
+    if (this.endpoints) {
+      // we've got endpoints, post token endpoint for data
+    }
   }
 
   // Handle request interception
-  private handleRequest(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
-    const token = this.buildToken()
-    if (token) {
-      config.headers.set('Authorization', `Bearer ${token}`)
+  private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
+    // await this.fetchAccessToken()
+    if (this.accessToken) {
+      config.headers.set('Authorization', `Bearer ${this.accessToken}`)
     }
     this.logger.debug(`${String(config.method)}: ${String(config.url)}`, { message: 'Buttons' })
     return config

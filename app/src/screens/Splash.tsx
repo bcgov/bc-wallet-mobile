@@ -20,7 +20,8 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import ProgressBar from '@components/ProgressBar'
 import TipCarousel from '@components/TipCarousel'
 import { BCState } from '@/store'
-// import { getAllKeys } from 'react-native-bcsc-core'
+import { getAllKeys, getAccount, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import apiClient from '../api/client'
 
 /*
   To customize this splash screen set the background color of the
@@ -91,7 +92,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       t('Init.InitializingAgent'),
       t('Init.Finishing'),
     ],
-    [t],
+    [t]
   )
 
   const setStep = useCallback(
@@ -100,16 +101,48 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
       setProgressPercent(percent)
     },
-    [steps],
+    [steps]
   )
 
   useEffect(() => {
+    console.log('FETCH ME TOKENS!')
+    console.log('FETCH ME TOKENS!')
+    console.log('FETCH ME TOKENS!')
     const fetchData = async (): Promise<void> => {
-      // const keyResponse = await getAllKeys()
-      // console.log('Fetched keys:', keyResponse)
+      try {
+        console.log('We are getting here!!!1')
+        const keyResponse = await getAllKeys()
+        console.log('Fetched keys:', JSON.stringify(keyResponse, null, 2))
+
+        // returns undefined
+        console.log('__________________')
+        console.log('__________________')
+        console.log('__________________')
+        console.log('__________________')
+        const accountResponse = await getAccount()
+        console.log('Fetched account:', JSON.stringify(accountResponse, null, 2))
+        // errors out because there is no account
+        // const accessTokenResponse = await getToken(TokenType.Access)
+        // const refreshTokenResponse = await getToken(TokenType.Refresh)
+        // const registrationTokenResponse = await getToken(TokenType.Registration)
+
+        const refreshTokenBody = await getRefreshTokenRequestBody()
+        console.log('____________-')
+        console.log('____________-')
+        console.log('____________-')
+        const temp = await apiClient.fetchAccessToken()
+
+        // await apiClient.fetchEndpoints()
+        // console.log(JSON.stringify(apiClient.endpoints, null, 2))
+        // console.log('Fetched accessToken:', JSON.stringify(accessTokenResponse, null, 2))
+        // console.log('Fetched refreshToken:', JSON.stringify(refreshTokenResponse, null, 2))
+        // console.log('Fetched registrationToken:', JSON.stringify(registrationTokenResponse, null, 2))
+      } catch (error) {
+        console.log(error)
+      }
     }
     fetchData()
-  }, [])
+  }, [apiClient])
 
   useEffect(() => {
     setStep(1)
@@ -162,7 +195,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       reported ? (
         <Icon style={{ marginRight: 8 }} name={'check-circle'} size={18} color={ColorPallet.semantic.success} />
       ) : undefined,
-    [reported, ColorPallet.semantic.success],
+    [reported, ColorPallet.semantic.success]
   )
 
   return (
