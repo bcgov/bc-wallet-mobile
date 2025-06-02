@@ -1,5 +1,6 @@
 import { Platform } from 'react-native'
 import apiClient from '../client'
+import { signPairingCode } from 'react-native-bcsc-core'
 
 export async function getServerStatus() {
   let device = 'android'
@@ -15,9 +16,14 @@ export async function getTermsOfUse() {
 }
 
 export async function loginByPairingCode(code: string) {
-  /*
-    code needs to be signed and will come from the bcsc core package
-    access token will be added on to teh request pre flight
-  */
-  return apiClient.post('/cardtap/v3/mobile/assertion', { assertion: code }, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+  // bcsc-core sign pairing code
+  // verify it is 6 characters, no space
+
+  const signedCode = await signPairingCode(code)
+  try {
+    const response = await apiClient.post('/cardtap/v3/mobile/assertion', { assertion: signedCode }, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+    return { success: true, status: response.status }
+  } catch (error: any) {
+    return { success: false, status: error.response?.status ?? 500 }
+  }
 }
