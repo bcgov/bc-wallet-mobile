@@ -84,7 +84,6 @@
     "credo-ts-indy-vdr-proxy-client": "0.2.3",
     "fast-text-encoding": "^1.0.6",
     "i18next": "21.10.0",
-    "jose": "^6.0.10",
     "jsrsasign": "^11.1.0",
     "jsrsasign-util": "^1.0.5",
     "jwt-decode": "^4.0.0",
