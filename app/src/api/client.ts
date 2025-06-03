@@ -3,6 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosR
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
+import { setEmitFlags } from 'typescript'
 
 interface BCSCEndpoints {
   // METADATA
@@ -10,7 +11,7 @@ interface BCSCEndpoints {
   maximumAccountsPerDevice: number
   allowedIdentificationProcesses: string[]
   credentialFlowsSupported: string
-  multipleAccountsSupported: number
+  multipleAccountsSupported: false
   attestationTimeToLive: number
 
   // ENDPOINTS
@@ -39,34 +40,58 @@ interface AccessToken {
 class BCSCService {
   readonly client: AxiosInstance
   readonly logger: BifoldLogger
-  endpoints?: BCSCEndpoints // this will probably need to be stored
-  accessToken?: AccessToken // this token will be used to interact with IAS servers
-  refreshToken?: string // this is used to refresh access tokens, is long lived and should be
+  endpoints: BCSCEndpoints
+  baseURL: string
+  accessToken?: AccessToken // this token will be used to interact and access data from IAS servers
+  refreshToken?: string // this is used to refresh access tokens, it is long lived, it might be worth putting in storage
 
-  // https://iddev.gov.bc.ca/device/.well-known/openid-configuration
   constructor(baseURL: string = String(Config.IAS_URL)) {
-    // this might need to fetch the endpoints from a service to feed into each function?
-    // similar to bcsc, it fetches all endpoints from another services and each function knows the key they need to access the endpoint it's hitting
+    this.baseURL = baseURL
     this.logger = new BifoldLogger()
     this.client = axios.create({
-      baseURL,
       headers: {
         'Content-Type': 'application/json',
       },
     })
 
+    // Default test environment for endpoints
+    this.endpoints = {
+      pairDeviceWithQRCodeSupported: true,
+      maximumAccountsPerDevice: 0,
+      allowedIdentificationProcesses: [
+        "IDIM L3 Remote BCSC Photo Identity Verification",
+        "IDIM L3 Remote BCSC Non-Photo Identity Verification",
+        "IDIM L3 Remote Non-BCSC Identity Verification"
+      ],
+      credentialFlowsSupported: "default_web_flow, bcwallet_initiated, bcsc_initiated",
+      multipleAccountsSupported: false,
+      attestationTimeToLive: 60,
+      attestation: "https://idsit.gov.bc.ca/device/attestations",
+      issuer: "https://idsit.gov.bc.ca/device/",
+      authorization: "https://idsit.gov.bc.ca/device/authorize",
+      userInfo: "https://idsit.gov.bc.ca/device/userinfo",
+      deviceAuthorization: "https://idsit.gov.bc.ca/device/devicecode",
+      jwksURI: "https://idsit.gov.bc.ca/device/jwk",
+      registration: "https://idsit.gov.bc.ca/device/register",
+      clientMetadata: "https://idsit.gov.bc.ca/device/clients/metadata",
+      savedServices: "https://idsit.gov.bc.ca/device/services",
+      token: "https://idsit.gov.bc.ca/device/token",
+      credential: "https://idsit.gov.bc.ca/credentials/v1/person"
+    }
+
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    // this.client.interceptors.response.use(undefined, (error: BifoldError) => {
-    //   this.logger.error(`${error.code} ${error.message}`, { message: `IAS API Error: ${error.description}` })
-    // })
+    this.client.interceptors.response.use(undefined, (error: any) => {
+      this.logger.error(`${error.name}: ${error.code}`, { message: `IAS API Error: ${error.message}` })
+      return Promise.reject(error)
+    })
 
     // fetch endpoints
-    // this.fetchEndpoints()
+    this.fetchEndpoints(baseURL)
   }
 
-  async fetchEndpoints() {
-    const response = await this.get<any>('/device/.well-known/openid-configuration')
+  async fetchEndpoints(url: string) {
+    const response = await this.get<any>(`${url}/device/.well-known/openid-configuration`)
     this.endpoints = {
       pairDeviceWithQRCodeSupported: response.data['pair_device_with_qrcode_supported'],
       maximumAccountsPerDevice: response.data['maximum_accounts_per_device'],
@@ -91,7 +116,7 @@ class BCSCService {
 
   async fetchAccessToken(): Promise<AccessToken> {
     const tokenBody = await getRefreshTokenRequestBody()
-    const tokenResponse = await this.post<AccessToken>('/device/token', tokenBody, {
+    const tokenResponse = await this.post<AccessToken>(this.endpoints.token, tokenBody, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
 
@@ -111,8 +136,8 @@ class BCSCService {
 
   // Handle request interception
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    // skip adding header if this is the token endpoint
-    if (config.url?.endsWith('/device/token')) {
+    // skip processing if request is made to token or endpoint URL
+    if (config.url?.endsWith('/device/.well-known/openid-configuration') || config.url?.endsWith('/device/token')) {
       return config
     }
 
@@ -125,14 +150,6 @@ class BCSCService {
     }
     this.logger.debug(`${String(config.method)}: ${String(config.url)}`, {})
     return config
-  }
-
-  // Handle errors globally
-  // this will probably need to be handled within the context of react for dispatching error events or updating UI
-  // doesn't make sense to keep this here
-  private handleError(error: Error): Promise<any> {
-    // Log or handle errors here
-    return Promise.reject(error)
   }
 
   // Example methods for API calls
