@@ -84,20 +84,31 @@ class StorageService {
     func decodeArchivedObject<T: NSObject & NSSecureCoding>(
         from data: Data,
         moduleName: String = "bc_services_card_dev"
-    ) throws -> [String: T]? {
+    ) throws -> T? {
         let className = String(describing: T.self)
-        let archivedClassName = "\(moduleName).\(className)"
         
-        // Register the dynamic class name
-        NSKeyedUnarchiver.setClass(T.self, forClassName: archivedClassName)
-        print("Decoding class: \(archivedClassName)")
+        // Skip class registration if the expected type is NSDictionary
+        if T.self != NSDictionary.self {
+            let archivedClassName = "\(moduleName).\(className)"
+            NSKeyedUnarchiver.setClass(T.self, forClassName: archivedClassName)
+            print("Decoding classx: \(archivedClassName)")
+        } else {
+            print("Skipping class registration for NSDictionary")
+        }
         
         let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
         unarchiver.requiresSecureCoding = false
-        
+    
         let decoded = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
-        
-        return decoded as? [String: T]
+
+        if T.self != NSDictionary.self {
+            if let decodedDict = decoded as? [String: T] {
+                return decodedDict[provider]
+            }
+            return nil
+        } else {
+            return decoded as? T
+        }
     }
     
     func readData<T: NSObject & NSCoding & NSSecureCoding>(file: AccountFiles, pathDirectory: FileManager.SearchPathDirectory) -> T? { // Added file parameter
@@ -114,7 +125,6 @@ class StorageService {
             
             
             guard (FileManager.default.fileExists(atPath: fileUrl.path)) else {
-                
                 return nil
             }
             
@@ -129,9 +139,9 @@ class StorageService {
             let data = try Data(contentsOf: fileUrl)
             print("Data read from file: \(data)")
             
-            if let obj: [String: T] = try? decodeArchivedObject(from: data) {
+            if let obj: T = try? decodeArchivedObject(from: data) {
                 print("Decoded object: \(obj)")
-                return obj[provider]
+                return obj
             }
             
             print("Failed to decode object from data.")
