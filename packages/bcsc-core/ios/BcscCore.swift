@@ -39,6 +39,38 @@ class BcscCore: NSObject {
   static func requiresMainQueueSetup() -> Bool {
     return false
   }
+  
+  // MARK: - Private Helper Methods
+  
+  private func signJWT(payload: JWTClaimsSet, reject: @escaping RCTPromiseRejectBlock) -> String? {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+    let signer: RSASigner
+
+    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+      reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
+      return nil
+    }
+    
+    do {
+      let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+      signer = RSASigner(privateKey: keyPair.private)
+    } catch {
+      reject("E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error)
+      return nil
+    }
+    
+    let header = JWSHeader(alg: .RS512, kid: latestKeyInfo.tag)
+    var jwt = JWS(header: header, payload: payload)
+    
+    do {
+      try jwt.sign(signer: signer)
+      return try jwt.serialize()
+    } catch {
+      reject("E_JWT_SIGN_SERIALIZE_FAILED", "Failed to sign or serialize JWT: \(error.localizedDescription)", error)
+      return nil
+    }
+  }
       
   @objc
   func getAllKeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
@@ -143,12 +175,12 @@ class BcscCore: NSObject {
             "id": acc.id,
             "issuer": acc.issuer,
             "clientID": acc.clientID,
-//            "_securityMethod": acc._securityMethod,
+            // "_securityMethod": acc._securityMethod,
             "displayName": acc.displayName,
             "didPostNicknameToServer": acc.didPostNicknameToServer,
             "nickname": acc.nickname,
             "failedAttemptCount": acc.failedAttemptCount,
-//            "lastAttemptDate": acc.lastAttemptDate?.timeIntervalSince1970, // Convert Date to timestamp or nil
+            // "lastAttemptDate": acc.lastAttemptDate?.timeIntervalSince1970, // Convert Date to timestamp or nil
             // penalties is a computed property and might not be directly encodable or needed.
             // If it's needed, it requires specific handling to convert to a plist-compatible format.
         ]
@@ -163,18 +195,9 @@ class BcscCore: NSObject {
   func getRefreshTokenRequestBody(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
     let grantType = "refresh_token"
+    let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
     let storage = StorageService()
-    let clientRegistration: ClientRegistration? = storage.readData(file: AccountFiles.clientRegistration, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
     let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
-    let keyPairManager = KeyPairManager()
-    let privateKey: SecKey
-    let signer: RSASigner
-    let serializedJWT: String
-
-    guard let clientReg = clientRegistration else {
-        reject("E_CLIENT_REGISTRATION_NOT_FOUND", "Client registration not found.", nil)
-        return
-    }
 
     guard let account = account else {
         reject("E_ACCOUNT_NOT_FOUND", "Account not found.", nil)
@@ -187,49 +210,22 @@ class BcscCore: NSObject {
         return
     }
 
+    let builder = JWTClaimsSet.builder()
     let seconds = Int(Date().timeIntervalSince1970)
-    let expireSeconds = Int(Date().addingTimeInterval(3600).timeIntervalSince1970)
-    let claims = JWTClaimsSet.builder()
+    let expireSeconds = Int(Date().addingTimeInterval(TimeInterval(clientAssertionJwtExpirationSeconds)).timeIntervalSince1970)
+    
+    builder
         .claim(name: "aud", value: account.issuer)
         .claim(name: "iss", value: account.clientID) // was from registration
         .claim(name: "sub", value: account.clientID) // was from registration
         .claim(name: "iat", value: seconds)
         .claim(name: "jti", value: uuid)
         .claim(name: "exp", value: expireSeconds)
-        .build()
-   
-    let keys = keyPairManager.findAllPrivateKeys()
 
-    // Sort the keys by creation date in descending order and get
-    // the latest one
-    let latestKey = keys.sorted { $0.created > $1.created }.first
+    let payload = builder.build()
 
-    guard let lastKey = latestKey else {
-        reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
-        return
-    }
-
-    do {
-        let keyPair = try keyPairManager.getKeyPair(with: lastKey.tag)
-        // At this point, privateKey is guaranteed to be non-nil if no error was thrown.
-        // You can proceed to use privateKey for signing.
-        signer = RSASigner(privateKey: keyPair.private)
-    } catch {
-        // Handle error from getKeyPair, e.g., key not found or other keychain issues
-        reject("E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error)
-        return
-    }
-    
-    let header = JWSHeader(alg: .RS512, kid: lastKey.tag)
-    var jwt = JWS(header: header, payload: claims) // Made jwt a var to allow signing
-
-    do {
-        try jwt.sign(signer: signer)
-        serializedJWT = try jwt.serialize()
-        // Successfully signed and serialized
-    } catch {
-        reject("E_JWT_SIGN_SERIALIZE_FAILED", "Failed to sign or serialize JWT: \(error.localizedDescription)", error)
-        return
+    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+        return // Error already handled by signJWT
     }
 
     self.getToken(NSNumber(value: TokenType.Refresh.rawValue), resolve: { tokenData in
@@ -251,15 +247,9 @@ class BcscCore: NSObject {
   @objc
   func signPairingCode(_ code: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let storage = StorageService()
-    let keyPairManager = KeyPairManager()
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
-    
-    guard let clientRegistration: ClientRegistration = storage.readData(file: AccountFiles.clientRegistration, pathDirectory: .applicationSupportDirectory) else {
-      reject("E_CLIENT_REGISTRATION_NOT_FOUND", "Client registration not found.", nil)
-      return
-    }
-    
+
     guard let account: Account = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: .applicationSupportDirectory) else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found.", nil)
       return
@@ -310,32 +300,8 @@ class BcscCore: NSObject {
     
     let payload = builder.build()
     
-    let keys = keyPairManager.findAllPrivateKeys()
-    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
-      reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
-      return
-    }
-    
-    let signer: RSASigner
-    do {
-      let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
-      signer = RSASigner(privateKey: keyPair.private)
-    } catch {
-      reject("E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \\(error.localizedDescription)", error)
-      return
-    }
-    
-    let header = JWSHeader(alg: .RS512, kid: latestKeyInfo.tag)
-    let jwt = JWS(header: header, payload: payload)
-    
-    do {
-      try jwt.sign(signer: signer)
-      let serializedJWT = try jwt.serialize()
-      
-      resolve(serializedJWT)
-    } catch {
-      reject("E_JWT_SIGN_SERIALIZE_FAILED", "Failed to sign or serialize JWT: \\(error.localizedDescription)", error)
-      return
+    if let signedJWT = signJWT(payload: payload, reject: reject) {
+      resolve(signedJWT)
     }
   }
 
