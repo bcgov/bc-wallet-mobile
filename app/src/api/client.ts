@@ -1,9 +1,8 @@
-import { BifoldError, BifoldLogger } from '@bifold/core'
+import { BifoldLogger } from '@bifold/core'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
-import { setEmitFlags } from 'typescript'
 
 interface BCSCEndpoints {
   // METADATA
@@ -131,7 +130,7 @@ class BCSCService {
       const exp = decodedToken.exp || 0
       isExpired = Date.now() >= exp * 1000
     }
-    return true
+    return isExpired
   }
 
   // Handle request interception
