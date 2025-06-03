@@ -16,14 +16,11 @@ export async function getTermsOfUse() {
 }
 
 export async function loginByPairingCode(code: string) {
-  // bcsc-core sign pairing code
-  // verify it is 6 characters, no space
-
   const signedCode = await signPairingCode(code)
   try {
-    const response = await apiClient.post('/cardtap/v3/mobile/assertion', { assertion: signedCode }, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
-    return { success: true, status: response.status }
-  } catch (error: any) {
-    return { success: false, status: error.response?.status ?? 500 }
+    await apiClient.post('/cardtap/v3/mobile/assertion', { assertion: signedCode }, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+    return { success: true }
+  } catch (error) {
+    return { success: false }
   }
-}
+} 

@@ -57,9 +57,9 @@ class BCSCService {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, (error: BifoldError) => {
-      this.logger.error(error.message, { message: 'IAS API Error' })
-    })
+    // this.client.interceptors.response.use(undefined, (error: BifoldError) => {
+    //   this.logger.error(`${error.code} ${error.message}`, { message: `IAS API Error: ${error.description}` })
+    // })
 
     // fetch endpoints
     // this.fetchEndpoints()
