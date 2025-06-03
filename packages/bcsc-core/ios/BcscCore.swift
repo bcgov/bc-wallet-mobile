@@ -252,10 +252,6 @@ class BcscCore: NSObject {
   func signPairingCode(_ code: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let storage = StorageService()
     let keyPairManager = KeyPairManager()
-    
-    let deviceToken = "1f388407a36ce9f24d66b440da6e668e51ecb756237f7007362685af90becaae" // TODO: Replace with actual APNS token
-    let fcmDeviceToken = "fUyYdXn9a08SrmJs33KYBP:APA91bEHrv_-sXol_VWHpPbjapsWGW-WcntfxcMWdSLuyjE35arg-74HOgrhq1LdV3fsj-GJjecwstAJJMENV_qNcGjDRuf_d9nLGZPmUFsNkwIiAlq9S-E" // TODO: Replace with actual FCM token
-    
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
     
@@ -269,6 +265,11 @@ class BcscCore: NSObject {
       return
     }
     
+    guard let deviceinfo: NSDictionary = storage.readData(file: AccountFiles.deviceInfo, pathDirectory: .applicationSupportDirectory) else {
+      reject("E_DEVICE_INFO_NOT_FOUND", "Device info not found.", nil)
+      return
+    }
+      
     guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
           let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String else { // Ensure build is also a String
       reject("E_VERSION_INFO_NOT_FOUND", "Client app version or build number not found.", nil)
@@ -277,6 +278,11 @@ class BcscCore: NSObject {
     
     let seconds = Int(Date().timeIntervalSince1970)
     let builder = JWTClaimsSet.builder()
+    
+    // Make sure deviceToken and fcmDeviceToken have values
+    // (empty string if missing)
+    let deviceToken = deviceinfo["device_token"] as? String ?? ""
+    let fcmDeviceToken = deviceinfo["fcm_device_token"] as? String ?? ""
     
     builder
       .claim(name: "aud", value: account.issuer)
