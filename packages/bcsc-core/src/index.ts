@@ -1,8 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec from './NativeBcscCore';
 
-export const providerId = '111d5dd6-a619-4ed3-88f7-a164089a160e';
-
 export interface TokenInfo {
   id: string;
   type: TokenType;
@@ -79,16 +77,16 @@ const BcscCoreModule = isTurboModuleEnabled
   ? NativeBcscCoreSpec
   : NativeModules.BcscCore;
 
-const BcscCore = BcscCoreModule
-  ? BcscCoreModule
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
+const BcscCore =
+  BcscCoreModule ??
+  new Proxy(
+    {},
+    {
+      get() {
+        throw new Error(LINKING_ERROR);
+      },
+    }
+  );
 
 /**
  * Retrieves information for all available private keys.
