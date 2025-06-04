@@ -1,0 +1,11 @@
+HTTP/1.1 401 
+Date: Mon, 02 Jun 2025 23:52:00 GMT
+Server: Apache
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Access-Control-Allow-Methods: GET,POST,PUT,DELETE,OPTIONS
+Access-Control-Allow-Headers: X-ACCESS_TOKEN, Access-Control-Allow-Origin, Authorization, Origin,       x-requested-with, Content-Type, Content-Range, Content-Disposition, Content-Description
+Content-Type: application/json
+Transfer-Encoding: chunked
+
