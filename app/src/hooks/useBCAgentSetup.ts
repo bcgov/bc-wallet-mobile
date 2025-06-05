@@ -46,7 +46,7 @@ const useBCAgentSetup = () => {
       attestationMonitor?.stop()
       attestationMonitor?.start(agent)
     },
-    [attestationMonitor]
+    [attestationMonitor],
   )
 
   const restartExistingAgent = useCallback(
@@ -57,6 +57,7 @@ const useBCAgentSetup = () => {
           key: walletSecret.key,
         })
         await agent.initialize()
+        agent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
       } catch (error) {
         logger.warn(`Agent restart failed with error ${error}`)
         // if the existing agents wallet cannot be opened or initialize() fails it was
@@ -66,7 +67,7 @@ const useBCAgentSetup = () => {
 
       return agent
     },
-    [logger]
+    [logger],
   )
 
   const createNewAgent = useCallback(
@@ -112,7 +113,7 @@ const useBCAgentSetup = () => {
 
       return newAgent
     },
-    [store.preferences.walletName, logger, store.developer.enableProxy]
+    [store.preferences.walletName, logger, store.developer.enableProxy],
   )
 
   const migrateIfRequired = useCallback(
@@ -125,7 +126,7 @@ const useBCAgentSetup = () => {
         })
       }
     },
-    [store.migration.didMigrateToAskar, dispatch]
+    [store.migration.didMigrateToAskar, dispatch],
   )
 
   const warmUpCache = useCallback(
@@ -172,7 +173,7 @@ const useBCAgentSetup = () => {
         await pool.pool.submitRequest(schemaRequest)
       })
     },
-    [credDefs, schemas]
+    [credDefs, schemas],
   )
 
   const initializeAgent = useCallback(
@@ -202,6 +203,9 @@ const useBCAgentSetup = () => {
       logger.info('Initializing agent...')
       await newAgent.initialize()
 
+      logger.info('Updating Pick type...')
+      newAgent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+
       logger.info('Warming up cache...')
       await warmUpCache(newAgent, cachedLedgers)
 
@@ -230,7 +234,7 @@ const useBCAgentSetup = () => {
       warmUpCache,
       store.preferences.usePushNotifications,
       refreshAttestationMonitor,
-    ]
+    ],
   )
 
   const shutdownAndClearAgentIfExists = useCallback(async () => {
