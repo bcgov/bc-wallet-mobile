@@ -127,7 +127,7 @@ class BCSCService {
     // if no token is present, return that token is "expired" and fetch a new one
     if (token) {
       const decodedToken = jwtDecode(token)
-      const exp = decodedToken.exp || 0
+      const exp = decodedToken.exp ?? 0
       isExpired = Date.now() >= exp * 1000
     }
     return isExpired

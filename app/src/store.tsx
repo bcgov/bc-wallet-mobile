@@ -241,7 +241,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.UPDATE_CARD_TYPE: {
-      const cardType = (action?.payload || []).pop() ?? BCSCCardType.None
+      const cardType = (action?.payload ?? []).pop() ?? BCSCCardType.None
       const bcsc = { ...state.bcsc, cardType }
       const newState = { ...state, bcsc }
 
@@ -268,7 +268,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.ADD_BOOKMARK: {
-      const bookmark = (action.payload || []).pop()
+      const bookmark = (action.payload ?? []).pop()
       const bcsc = { ...state.bcsc, bookmarks: [...new Set([...state.bcsc.bookmarks, bookmark])] }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
@@ -276,7 +276,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.REMOVE_BOOKMARK: {
-      const bookmark = (action.payload || []).pop()
+      const bookmark = (action.payload ?? []).pop()
       const bookmarks = state.bcsc.bookmarks.filter((b) => b !== bookmark)
       const bcsc = { ...state.bcsc, bookmarks }
       const newState = { ...state, bcsc }

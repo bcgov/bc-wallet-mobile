@@ -44,12 +44,23 @@ const MainStack: React.FC = () => {
     fetchMessages()
   }, [])
 
+  const iconButton = () => (
+    <IconButton
+      buttonLocation={ButtonLocation.Right}
+      accessibilityLabel={t('Global.Help')}
+      testID={testIdWithKey('Help')}
+      onPress={() => {
+        // TODO: Implement help functionality
+      }}
+      icon={'help-circle-outline'}
+    />
+  )
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <AppBanner messages={messages} />
       <Stack.Navigator initialRouteName={BCSCStacks.TabStack} screenOptions={{ headerShown: false }}>
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
-        <Stack.Screen 
+        <Stack.Screen
           name={BCSCScreens.ManualPairingCode}
           component={ManualPairingCode}
           options={() => ({
@@ -57,18 +68,9 @@ const MainStack: React.FC = () => {
             title: '',
             headerBackTitleVisible: false,
             headerBackTestID: testIdWithKey('Back'),
-            headerRight: () => (
-              <IconButton
-                buttonLocation={ButtonLocation.Right}
-                accessibilityLabel={t('Global.Help')}
-                testID={testIdWithKey('Help')}
-                onPress={() => {
-                  // TODO: Implement help functionality
-                }}
-                icon={'help-circle-outline'}
-              />
-            ),
-        })}/>
+            headerRight: iconButton,
+          })}
+        />
         <Stack.Screen
           name={BCSCScreens.PairingConfirmation}
           component={PairingConfirmation}
