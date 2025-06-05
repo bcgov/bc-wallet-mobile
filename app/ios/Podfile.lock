@@ -7,6 +7,10 @@ PODS:
     - React
     - React-callinvoker
     - React-Core
+  - BcscCore (0.1.0):
+    - glog
+    - RCT-Folly (= 2022.05.16.00)
+    - React-Core
   - boost (1.83.0)
   - CatCrypto (0.3.2)
   - CocoaAsyncSocket (7.6.5)
@@ -1027,7 +1031,7 @@ PODS:
   - React-Mapbuffer (0.73.6):
     - glog
     - React-debug
-  - react-native-attestation (2.1.4):
+  - react-native-attestation (2.1.2):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1284,6 +1288,7 @@ PODS:
 DEPENDENCIES:
   - "anoncreds (from `../node_modules/@hyperledger/anoncreds-react-native`)"
   - "aries-askar (from `../node_modules/@hyperledger/aries-askar-react-native`)"
+  - BcscCore (from `../node_modules/react-native-bcsc-core`)
   - boost (from `../node_modules/react-native/third-party-podspecs/boost.podspec`)
   - DoubleConversion (from `../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec`)
   - FBLazyVector (from `../node_modules/react-native/Libraries/FBLazyVector`)
@@ -1395,6 +1400,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@hyperledger/anoncreds-react-native"
   aries-askar:
     :path: "../node_modules/@hyperledger/aries-askar-react-native"
+  BcscCore:
+    :path: "../node_modules/react-native-bcsc-core"
   boost:
     :podspec: "../node_modules/react-native/third-party-podspecs/boost.podspec"
   DoubleConversion:
@@ -1554,6 +1561,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   anoncreds: 4b29b0ef841fc1a96910aab8f047c090ee6acb89
   aries-askar: 6fce8d0405b8c84e654a694be1954649cf7955a3
+  BcscCore: 200b2e282037d5e9d2696573f132f5f2d8822bd6
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
   CatCrypto: a477899b6be4954e75be4897e732da098cc0a5a8
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
@@ -1598,7 +1606,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 85583ef014ce53d731a98c66a0e24496f7a83066
   React-logger: 55764cd993880c6f887505854581c9faf68feff2
   React-Mapbuffer: 15dfcfeb4428d8799cce75e7fe85b18b706029e0
-  react-native-attestation: f2ff4a3e70eaa2ce656a10e83d2e926ab7b65a39
+  react-native-attestation: 0adb1afcdf1753f44ff84104d7ccd2a8e9cfc89c
   react-native-config: ea73937aecb26d8eb4642ecdb2b2e83d0be59656
   react-native-date-picker: 585252087d4820b4cd8f2cf80068f6e8f5b72413
   react-native-encrypted-storage: 569d114e329b1c2c2d9f8c84bcdbe4478dda2258

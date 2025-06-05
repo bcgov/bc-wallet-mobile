@@ -11,6 +11,7 @@ const packageDirs = [
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/core')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/verifier')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/react-native-attestation')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', 'react-native-bcsc-core')),
 ]
 
 const watchFolders = [...packageDirs]

@@ -12,7 +12,8 @@
   "packageManager": "yarn@4.0.2",
   "workspaces": {
     "packages": [
-      "app"
+      "app",
+      "packages/*"
     ]
   },
   "repository": {
@@ -61,5 +62,8 @@
     "@hyperledger/indy-vdr-shared@npm:0.2.2": "patch:@hyperledger/indy-vdr-shared@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-shared-npm-0.2.2-b989282fc6.patch",
     "@hyperledger/indy-vdr-react-native": "patch:@hyperledger/indy-vdr-react-native@npm%3A0.2.2#~/.yarn/patches/@hyperledger-indy-vdr-react-native-npm-0.2.2-627d424b96.patch",
     "@sphereon/pex": "patch:@sphereon/pex@npm%3A3.3.3#./.yarn/patches/@sphereon-pex-npm-3.3.3-144d9252ec.patch"
+  },
+  "dependencies": {
+    "react-native-bcsc-core": "workspace:*"
   }
 }
