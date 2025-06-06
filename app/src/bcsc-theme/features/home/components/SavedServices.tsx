@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 interface SavedServiceProps {
   title: string
-  onPress: () => void;
+  onPress: () => void
 }
 
 const SavedService: React.FC<SavedServiceProps> = ({ title, onPress }) => {
@@ -24,9 +24,7 @@ const SavedService: React.FC<SavedServiceProps> = ({ title, onPress }) => {
 
   return (
     <TouchableOpacity onPress={onPress} style={styles.serviceContainer}>
-      <ThemedText>
-        {title}
-      </ThemedText>
+      <ThemedText>{title}</ThemedText>
     </TouchableOpacity>
   )
 }
@@ -66,11 +64,14 @@ const SavedServices: React.FC<SavedServicesProps> = ({ services = [] }) => {
       </View>
 
       {services.length === 0 ? (
-        <ThemedText variant={'headingFour'} style={{ color: ColorPallet.brand.tertiary, fontWeight: 'normal', paddingHorizontal: Spacing.md }}>
+        <ThemedText
+          variant={'headingFour'}
+          style={{ color: ColorPallet.brand.tertiary, fontWeight: 'normal', paddingHorizontal: Spacing.md }}
+        >
           {mockNoServicesMessage}
         </ThemedText>
       ) : (
-        services.map((service) => <SavedService key={service.id} title={service.title} onPress={service.onPress}/>)
+        services.map((service) => <SavedService key={service.id} title={service.title} onPress={service.onPress} />)
       )}
     </View>
   )

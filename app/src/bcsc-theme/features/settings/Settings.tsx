@@ -1,19 +1,19 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { ServerStatusResponseData, TermsOfUseResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
+import useApi from '@bcsc-theme/api/hooks/useApi'
+import { ServerStatusResponseData, TermsOfUseResponseData } from '@bcsc-theme/api/hooks/useConfigApi'
+import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
+import useDataLoader from '@bcsc-theme/hooks/useDataLoader'
 import {
   Button,
   ButtonType,
-  useAuth,
-  useStore,
-  useTheme,
   LockoutReason,
   ThemedText,
-  useServices,
   TOKENS,
+  useAuth,
+  useServices,
+  useStore,
+  useTheme,
 } from '@bifold/core'
 import React from 'react'
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
@@ -47,19 +47,21 @@ const Settings: React.FC = () => {
     logger.error(`Error loading server status: ${error}`)
   }
 
-  const termsOfUseDataLoader = useDataLoader<TermsOfUseResponseData>(
-    () => {
-      return config.getTermsOfUse()
-    },
-    { onError: onTermsOfUseError }
-  )
+  const {
+    load: loadTerms,
+    isLoading: termsLoading,
+    data: termsData,
+    isReady: termsReady,
+    error: termsError,
+  } = useDataLoader<TermsOfUseResponseData>(() => config.getTermsOfUse(), { onError: onTermsOfUseError })
 
-  const serverStatusDataLoader = useDataLoader<ServerStatusResponseData>(
-    () => {
-      return config.getServerStatus()
-    },
-    { onError: onServerStatusError }
-  )
+  const {
+    load: loadStatus,
+    isLoading: statusLoading,
+    data: statusData,
+    isReady: statusReady,
+    error: statusError,
+  } = useDataLoader<ServerStatusResponseData>(() => config.getServerStatus(), { onError: onServerStatusError })
 
   const onPressMode = () => {
     lockOutUser(LockoutReason.Logout)
@@ -79,20 +81,20 @@ const Settings: React.FC = () => {
     <TabScreenWrapper>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.contentContainer}>
-          <ThemedText variant={'headingThree'} style={{ marginVertical: 16 }}>
+          <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md }}>
             Server Status
           </ThemedText>
-          {serverStatusDataLoader.isLoading ? (
+          {statusLoading ? (
             <ActivityIndicator size={'small'} />
-          ) : serverStatusDataLoader.error ? (
+          ) : statusError ? (
             <ThemedText variant={'caption'} style={{ color: 'red' }}>
-              {`Error loading server status: ${serverStatusDataLoader.error}`}
+              {`Error loading server status: ${statusError}`}
             </ThemedText>
-          ) : serverStatusDataLoader.isReady ? (
+          ) : statusReady ? (
             <>
-              {serverStatusDataLoader.data &&
-                Object.entries(serverStatusDataLoader.data).map(([key, value]) => (
-                  <View key={key} style={{ marginBottom: 8 }}>
+              {statusData &&
+                Object.entries(statusData).map(([key, value]) => (
+                  <View key={key} style={{ marginBottom: Spacing.sm }}>
                     <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
                       {key}
                     </ThemedText>
@@ -107,38 +109,38 @@ const Settings: React.FC = () => {
               title={'Load Server Status'}
               accessibilityLabel={'Load Server Status'}
               buttonType={ButtonType.Secondary}
-              onPress={serverStatusDataLoader.load}
+              onPress={loadStatus}
             />
           )}
-          <ThemedText variant={'headingThree'} style={{ marginVertical: 16 }}>
+          <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md }}>
             Terms
           </ThemedText>
-          {termsOfUseDataLoader.isLoading ? (
+          {termsLoading ? (
             <ActivityIndicator size={'small'} />
-          ) : termsOfUseDataLoader.error ? (
+          ) : termsError ? (
             <ThemedText variant={'caption'} style={{ color: 'red' }}>
-              {`Error loading terms of use: ${termsOfUseDataLoader.error}`}
+              {`Error loading terms of use: ${termsError}`}
             </ThemedText>
-          ) : termsOfUseDataLoader.isReady ? (
+          ) : termsReady ? (
             <>
-              <View style={{ marginBottom: 8 }}>
+              <View style={{ marginBottom: Spacing.sm }}>
                 <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
                   Version
                 </ThemedText>
-                <ThemedText variant={'caption'}>{termsOfUseDataLoader.data?.version}</ThemedText>
+                <ThemedText variant={'caption'}>{termsData?.version}</ThemedText>
               </View>
-              <View style={{ marginBottom: 8 }}>
+              <View style={{ marginBottom: Spacing.sm }}>
                 <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
                   Date
                 </ThemedText>
-                <ThemedText variant={'caption'}>{termsOfUseDataLoader.data?.date}</ThemedText>
+                <ThemedText variant={'caption'}>{termsData?.date}</ThemedText>
               </View>
-              <View style={{ marginBottom: 8 }}>
+              <View style={{ marginBottom: Spacing.sm }}>
                 <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
                   HTML
                 </ThemedText>
                 <ThemedText variant={'caption'} style={{ flexShrink: 1, flexWrap: 'wrap' }}>
-                  {termsOfUseDataLoader.data?.html}
+                  {termsData?.html}
                 </ThemedText>
               </View>
             </>
@@ -147,7 +149,7 @@ const Settings: React.FC = () => {
               title={'Load Terms of Use'}
               accessibilityLabel={'Load Terms of Use'}
               buttonType={ButtonType.Secondary}
-              onPress={termsOfUseDataLoader.load}
+              onPress={loadTerms}
             />
           )}
         </ScrollView>

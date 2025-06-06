@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 export type RetryConfig = {
-   /**
+  /**
    * Interval in milliseconds to poll the data.
    * If set, the `fetchData` function will be called at backed off multiples of this interval.
    * Example: If set to 1000, the `fetchData` function will be called at 1000ms, 2000ms, 4000ms, etc.
@@ -23,7 +23,7 @@ export type DataLoaderOptions = {
    * NOT OPTIONAL so we are forced to handle errors
    */
   onError: (error: unknown) => void
-};
+}
 
 export type DataLoader<ResponseType> = {
   /**
@@ -46,27 +46,27 @@ export type DataLoader<ResponseType> = {
   isLoading: boolean
   /**
    * `true` if data has been loaded at least once
-   * 
+   *
    * @type {boolean}
    */
   isReady: boolean
   /**
    * Executes the `fetchData` function once, only if it has never been called before. Does nothing if called again
    */
-  load: () => void;
+  load: () => void
   /**
    * Executes the `fetchData` function again
    */
-  refresh: () => void;
+  refresh: () => void
   /**
    * Clears any errors caught from a failed `fetchData` call
    */
-  clear: () => void;
+  clear: () => void
   /**
    * Setter for manually handling data. Useful for sorting
    */
-  setData: (data: ResponseType) => void;
-};
+  setData: (data: ResponseType) => void
+}
 
 /**
  * A custom hook that provides a data loader for fetching data
@@ -105,11 +105,11 @@ export default function useDataLoader<ResponseType>(
       setIsLoading(true)
 
       let lastError: unknown
-      
+
       if (interval && timeout) {
         let retryCount = 0
         const startTime = Date.now()
-        
+
         // Keep retrying until timeout is reached
         while (Date.now() - startTime < timeout) {
           try {
@@ -118,25 +118,23 @@ export default function useDataLoader<ResponseType>(
             return
           } catch (err) {
             lastError = err
-            
-            retryCount++;
+
+            retryCount++
             const backoffMs = Math.min(
               interval * Math.pow(2, retryCount - 1),
               // don't wait longer than remaining timeout
               timeout - (Date.now() - startTime)
             )
-            
+
             // if no time left for retries, break
-            if (backoffMs <= 0) break;
-            await new Promise(resolve => setTimeout(resolve, backoffMs));
+            if (backoffMs <= 0) break
+            await new Promise((resolve) => setTimeout(resolve, backoffMs))
           }
         }
-        
-        throw new Error(`Operation timed out after ${timeout}ms${
-          lastError ? `: ${lastError}` : ''
-        }`);
+
+        throw new Error(`Operation timed out after ${timeout}ms${lastError ? `: ${lastError}` : ''}`)
       } else {
-        const response = await fetchData();
+        const response = await fetchData()
         setDataWithReady(response)
       }
     } catch (error) {
@@ -145,36 +143,35 @@ export default function useDataLoader<ResponseType>(
     } finally {
       setIsLoading(false)
     }
-  };
+  }
 
   // Function to trigger load once
   const load = () => {
     if (!isLoading && !isOneTimeLoad) {
-      loadData();
+      loadData()
     }
   }
 
   // Function to refresh data
   const refresh = () => {
-    setError(undefined);
-    setOneTimeLoad(false); // Reset one-time load so we can fetch again
-    loadData();
-  };
+    setError(undefined)
+    setOneTimeLoad(false) // Reset one-time load so we can fetch again
+    loadData()
+  }
 
   // Function to clear errors
   const clear = () => {
     setError(undefined)
   }
 
-
-  return { 
-    data, 
-    error, 
-    isLoading, 
-    isReady, 
-    load, 
-    refresh, 
-    clear, 
-    setData: setDataWithReady 
-  };
+  return {
+    data,
+    error,
+    isLoading,
+    isReady,
+    load,
+    refresh,
+    clear,
+    setData: setDataWithReady,
+  }
 }

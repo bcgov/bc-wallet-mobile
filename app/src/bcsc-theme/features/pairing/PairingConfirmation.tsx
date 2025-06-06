@@ -30,17 +30,21 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   })
 
   const onClose = () => {
-    navigation.dispatch(CommonActions.reset({
-      index: 0,
-      routes: [{ name: BCSCStacks.TabStack }],
-    }))
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCStacks.TabStack }],
+      })
+    )
   }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'}>{'You\'re done in this app'}</ThemedText>
-        <ThemedText style={{ marginVertical: Spacing.md }}>Go back to the device you started on to continue logging in to {serviceName}.</ThemedText>
+        <ThemedText variant={'headingThree'}>{"You're done in this app"}</ThemedText>
+        <ThemedText style={{ marginVertical: Spacing.md }}>
+          Go back to the device you started on to continue logging in to {serviceName}.
+        </ThemedText>
         <ServiceBookmarkButton serviceId={serviceId} serviceName={serviceName} />
       </View>
       <View style={styles.controlsContainer}>

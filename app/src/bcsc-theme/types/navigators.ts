@@ -1,4 +1,4 @@
-import { NavigatorScreenParams } from "@react-navigation/native"
+import { NavigatorScreenParams } from '@react-navigation/native'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',

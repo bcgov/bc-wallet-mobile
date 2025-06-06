@@ -1,5 +1,5 @@
-import usePairingApi from "./usePairingApi"
-import useConfigApi from "./useConfigApi"
+import usePairingApi from './usePairingApi'
+import useConfigApi from './useConfigApi'
 
 const useApi = () => {
   const config = useConfigApi()

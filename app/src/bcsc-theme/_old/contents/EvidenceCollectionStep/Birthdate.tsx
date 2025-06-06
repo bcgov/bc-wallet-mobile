@@ -59,9 +59,7 @@ const BirthdateContent: React.FC<BirthdateContentProps> = ({ onComplete }: Birth
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <Text style={styles.paragraph}>
-          {t('Unified.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
-        </Text>
+        <Text style={styles.paragraph}>{t('Unified.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}</Text>
         <View style={styles.lineBreak} />
         <Text style={styles.heading}>{t('Unified.Birthdate.Heading')}</Text>
         <Text style={styles.paragraph}>{t('Unified.Birthdate.Paragraph')}</Text>

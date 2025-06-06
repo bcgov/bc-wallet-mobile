@@ -1,4 +1,13 @@
-import { Button, ButtonType, KeyboardView, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  KeyboardView,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useTheme,
+} from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -83,7 +92,9 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
             onPress={onSubmit}
             disabled={loading}
           >
-            {loading && <ActivityIndicator style={{ marginRight: Spacing.sm }} size={20} color={ColorPallet.brand.icon} />}
+            {loading && (
+              <ActivityIndicator style={{ marginRight: Spacing.sm }} size={20} color={ColorPallet.brand.icon} />
+            )}
           </Button>
         </View>
       </View>

@@ -86,7 +86,7 @@ export class AppContainer implements Container {
     bifoldContainer: Container,
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
-    setSurveyVisible: (visible: boolean) => void,
+    setSurveyVisible: (visible: boolean) => void
   ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.t = t
@@ -200,7 +200,7 @@ export class AppContainer implements Container {
       enableChat: true,
       enableReuseConnections: true,
       enableHiddenDevModeTrigger: true,
-      preventScreenCapture: false,
+      preventScreenCapture: true,
       supportedLanguages: ['en'],
       showPreface: true,
       disableOnboardingSkip: true,

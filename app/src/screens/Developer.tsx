@@ -34,7 +34,7 @@ const Developer: React.FC = () => {
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
-    !!store.preferences.useConnectionInviterCapability,
+    !!store.preferences.useConnectionInviterCapability
   )
   const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)

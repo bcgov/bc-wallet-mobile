@@ -50,7 +50,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         />
         <SectionButton title={mockLogInTitle} description={mockLogInDescription} onPress={handlePairingCodePress} />
       </View>
-      <SavedServices services={savedServices}/>
+      <SavedServices services={savedServices} />
     </TabScreenWrapper>
   )
 }

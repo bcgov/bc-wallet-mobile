@@ -1,4 +1,13 @@
-import React, { FunctionComponent, PropsWithChildren, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  FunctionComponent,
+  PropsWithChildren,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View, Text, useWindowDimensions, FlatList, ListRenderItem, AccessibilityInfo } from 'react-native'
 
@@ -86,20 +95,23 @@ const TipCarousel = () => {
   const { width } = useWindowDimensions()
   const [currentPosition, setCurrentPosition] = useState(0)
   const { t } = useTranslation()
-  const tips = useMemo(() => [
-    {
-      id: '0',
-      showHeader: false,
-      text: t('Tips.GettingReady'),
-    },
-    ...tipOrder.map((num, index) => {
-      return {
-        id: `${index + 1}`,
-        showHeader: true,
-        text: t(`Tips.Tip${num}`),
-      }
-    }),
-  ], [t])
+  const tips = useMemo(
+    () => [
+      {
+        id: '0',
+        showHeader: false,
+        text: t('Tips.GettingReady'),
+      },
+      ...tipOrder.map((num, index) => {
+        return {
+          id: `${index + 1}`,
+          showHeader: true,
+          text: t(`Tips.Tip${num}`),
+        }
+      }),
+    ],
+    [t]
+  )
 
   const scrolling = useCallback(() => {
     if (flatListRef.current) {
