@@ -4,19 +4,10 @@ import useApi from '@bcsc-theme/api/hooks/useApi'
 import { ServerStatusResponseData, TermsOfUseResponseData } from '@bcsc-theme/api/hooks/useConfigApi'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import useDataLoader from '@bcsc-theme/hooks/useDataLoader'
-import {
-  Button,
-  ButtonType,
-  LockoutReason,
-  ThemedText,
-  TOKENS,
-  useAuth,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { Button, ButtonType, LockoutReason, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
 import React from 'react'
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import SampleApiDisplay from './components/SampleApiDisplay'
 
 // Placeholder for now, not sure if we want to reuse our
 // existing settings screen or create a new one, prob create new
@@ -25,6 +16,7 @@ const Settings: React.FC = () => {
   const [, dispatch] = useStore<BCState>()
   const { lockOutUser } = useAuth()
   const { config } = useApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -37,31 +29,18 @@ const Settings: React.FC = () => {
     controlsContainer: {},
   })
 
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
-  const onTermsOfUseError = (error: unknown) => {
-    logger.error(`Error loading terms of use: ${error}`)
-  }
-
   const onServerStatusError = (error: unknown) => {
     logger.error(`Error loading server status: ${error}`)
   }
-
-  const {
-    load: loadTerms,
-    isLoading: termsLoading,
-    data: termsData,
-    isReady: termsReady,
-    error: termsError,
-  } = useDataLoader<TermsOfUseResponseData>(() => config.getTermsOfUse(), { onError: onTermsOfUseError })
-
-  const {
-    load: loadStatus,
-    isLoading: statusLoading,
-    data: statusData,
-    isReady: statusReady,
-    error: statusError,
-  } = useDataLoader<ServerStatusResponseData>(() => config.getServerStatus(), { onError: onServerStatusError })
+  const onTermsOfUseError = (error: unknown) => {
+    logger.error(`Error loading terms of use: ${error}`)
+  }
+  const serverStatusDataLoader = useDataLoader<ServerStatusResponseData>(() => config.getServerStatus(), {
+    onError: onServerStatusError,
+  })
+  const termsDataLoader = useDataLoader<TermsOfUseResponseData>(() => config.getTermsOfUse(), {
+    onError: onTermsOfUseError,
+  })
 
   const onPressMode = () => {
     lockOutUser(LockoutReason.Logout)
@@ -81,77 +60,8 @@ const Settings: React.FC = () => {
     <TabScreenWrapper>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.contentContainer}>
-          <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md }}>
-            Server Status
-          </ThemedText>
-          {statusLoading ? (
-            <ActivityIndicator size={'small'} />
-          ) : statusError ? (
-            <ThemedText variant={'caption'} style={{ color: 'red' }}>
-              {`Error loading server status: ${statusError}`}
-            </ThemedText>
-          ) : statusReady ? (
-            <>
-              {statusData &&
-                Object.entries(statusData).map(([key, value]) => (
-                  <View key={key} style={{ marginBottom: Spacing.sm }}>
-                    <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
-                      {key}
-                    </ThemedText>
-                    <ThemedText variant={'caption'}>
-                      {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                    </ThemedText>
-                  </View>
-                ))}
-            </>
-          ) : (
-            <Button
-              title={'Load Server Status'}
-              accessibilityLabel={'Load Server Status'}
-              buttonType={ButtonType.Secondary}
-              onPress={loadStatus}
-            />
-          )}
-          <ThemedText variant={'headingThree'} style={{ marginVertical: Spacing.md }}>
-            Terms
-          </ThemedText>
-          {termsLoading ? (
-            <ActivityIndicator size={'small'} />
-          ) : termsError ? (
-            <ThemedText variant={'caption'} style={{ color: 'red' }}>
-              {`Error loading terms of use: ${termsError}`}
-            </ThemedText>
-          ) : termsReady ? (
-            <>
-              <View style={{ marginBottom: Spacing.sm }}>
-                <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
-                  Version
-                </ThemedText>
-                <ThemedText variant={'caption'}>{termsData?.version}</ThemedText>
-              </View>
-              <View style={{ marginBottom: Spacing.sm }}>
-                <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
-                  Date
-                </ThemedText>
-                <ThemedText variant={'caption'}>{termsData?.date}</ThemedText>
-              </View>
-              <View style={{ marginBottom: Spacing.sm }}>
-                <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
-                  HTML
-                </ThemedText>
-                <ThemedText variant={'caption'} style={{ flexShrink: 1, flexWrap: 'wrap' }}>
-                  {termsData?.html}
-                </ThemedText>
-              </View>
-            </>
-          ) : (
-            <Button
-              title={'Load Terms of Use'}
-              accessibilityLabel={'Load Terms of Use'}
-              buttonType={ButtonType.Secondary}
-              onPress={loadTerms}
-            />
-          )}
+          <SampleApiDisplay<TermsOfUseResponseData> dataLoader={termsDataLoader} title={'Terms of Use'} />
+          <SampleApiDisplay<ServerStatusResponseData> dataLoader={serverStatusDataLoader} title={'Server Status'} />
         </ScrollView>
         <View style={styles.controlsContainer}>
           <View style={{ marginVertical: Spacing.md }}>

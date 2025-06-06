@@ -84,7 +84,7 @@ export default function useDataLoader<ResponseType>(
   const [data, setData] = useState<ResponseType>()
   const [error, setError] = useState<unknown>()
   const [isLoading, setIsLoading] = useState(false)
-  const [isOneTimeLoad, setOneTimeLoad] = useState(false)
+  const [isOneTimeLoad, setIsOneTimeLoad] = useState(false)
   const [isReady, setIsReady] = useState(false)
   const { onError, retryConfig } = options
   const { interval, timeout } = retryConfig ?? {}
@@ -96,17 +96,16 @@ export default function useDataLoader<ResponseType>(
   }
 
   const loadData = async () => {
-    try {
-      if (isOneTimeLoad) {
-        return
-      }
+    if (isOneTimeLoad) {
+      return
+    }
 
-      setOneTimeLoad(true)
+    try {
+      setIsOneTimeLoad(true)
       setIsLoading(true)
 
-      let lastError: unknown
-
-      if (interval && timeout) {
+      if (timeout && interval) {
+        let lastError: unknown
         let retryCount = 0
         const startTime = Date.now()
 
@@ -132,11 +131,12 @@ export default function useDataLoader<ResponseType>(
           }
         }
 
-        throw new Error(`Operation timed out after ${timeout}ms${lastError ? `: ${lastError}` : ''}`)
-      } else {
-        const response = await fetchData()
-        setDataWithReady(response)
+        throw new Error(lastError ? `Operation timed out after ${timeout}ms${lastError}` : `Operation timed out after ${timeout}ms`)
       }
+      
+      // If retry config not provided, just fetch the data once
+      const response = await fetchData()
+      setDataWithReady(response)
     } catch (error) {
       setError(error)
       onError(error)
@@ -155,7 +155,7 @@ export default function useDataLoader<ResponseType>(
   // Function to refresh data
   const refresh = () => {
     setError(undefined)
-    setOneTimeLoad(false) // Reset one-time load so we can fetch again
+    setIsOneTimeLoad(false) // Reset one-time load so we can fetch again
     loadData()
   }
 

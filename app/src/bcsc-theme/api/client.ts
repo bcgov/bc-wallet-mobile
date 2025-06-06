@@ -1,6 +1,6 @@
 import BCLogger from '@/utils/logger'
 import { RemoteLogger } from '@bifold/remote-logs'
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
@@ -81,13 +81,10 @@ class BCSCService {
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
-    this.client.interceptors.response.use(undefined, (error: any) => {
+    this.client.interceptors.response.use(undefined, (error: AxiosError) => {
       this.logger.error(`${error.name}: ${error.code}`, { message: `IAS API Error: ${error.message}` })
       return Promise.reject(error)
     })
-
-    // fetch endpoints
-    this.fetchEndpoints(baseURL)
   }
 
   async fetchEndpoints(url: string) {
@@ -168,4 +165,7 @@ class BCSCService {
   }
 }
 
-export default new BCSCService()
+const client = new BCSCService()
+client.fetchEndpoints(client.baseURL)
+
+export default client
