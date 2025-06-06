@@ -18,7 +18,7 @@ export interface TermsOfUseResponseData {
   "html": string
 }
 
-const usePairingApi = () => {
+const useConfigApi = () => {
   const getServerStatus = async () => {
     // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
     const { data } = await apiClient.get<ServerStatusResponseData>(`${apiClient.baseURL}/cardtap/v3/status/${Platform.OS}/mobile_card`)
@@ -37,4 +37,4 @@ const usePairingApi = () => {
   }
 }
 
-export default usePairingApi
+export default useConfigApi
