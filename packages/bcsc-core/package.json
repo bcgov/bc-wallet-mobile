@@ -2,9 +2,9 @@
   "name": "react-native-bcsc-core",
   "version": "0.1.0",
   "description": "Functionality and data access for legacy bcsc application.",
-  "main": "build/commonjs/index.js",
-  "module": "build/module/index.js",
-  "types": "build/typescript/index.d.ts",
+  "main": "lib/module/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/src/index.d.ts",
   "source": "src/index.ts",
   "react-native": "src/index.ts",
   "exports": {
@@ -93,7 +93,7 @@
   "workspaces": [
     "example"
   ],
-  "packageManager": "yarn@3.6.1",
+  "packageManager": "yarn@4.0.2",
   "jest": {
     "preset": "react-native",
     "modulePathIgnorePatterns": [
@@ -136,7 +136,6 @@
     "source": "src",
     "output": "lib",
     "targets": [
-      "codegen",
       [
         "module",
         {

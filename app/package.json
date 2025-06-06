@@ -6,8 +6,8 @@
   "main": "index.js",
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=18.20.6 <20.0.0",
-    "yarn": "^3.3.1"
+    "node": ">=20.19.2 <21.0.0",
+    "yarn": "^4.0.2"
   },
   "installConfig": {
     "hoistingLimits": "workspaces"

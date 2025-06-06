@@ -4,7 +4,17 @@ import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
-import { Button, ButtonType, useAuth, useStore, useTheme, LockoutReason, ThemedText, useServices, TOKENS } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  useAuth,
+  useStore,
+  useTheme,
+  LockoutReason,
+  ThemedText,
+  useServices,
+  TOKENS,
+} from '@bifold/core'
 import React from 'react'
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
 
@@ -37,13 +47,19 @@ const Settings: React.FC = () => {
     logger.error(`Error loading server status: ${error}`)
   }
 
-  const termsOfUseDataLoader = useDataLoader<TermsOfUseResponseData>(() => {
-    return config.getTermsOfUse()
-  }, { onError: onTermsOfUseError })
-  
-  const serverStatusDataLoader = useDataLoader<ServerStatusResponseData>(() => {
-    return config.getServerStatus()
-  }, { onError: onServerStatusError })
+  const termsOfUseDataLoader = useDataLoader<TermsOfUseResponseData>(
+    () => {
+      return config.getTermsOfUse()
+    },
+    { onError: onTermsOfUseError }
+  )
+
+  const serverStatusDataLoader = useDataLoader<ServerStatusResponseData>(
+    () => {
+      return config.getServerStatus()
+    },
+    { onError: onServerStatusError }
+  )
 
   const onPressMode = () => {
     lockOutUser(LockoutReason.Logout)
@@ -63,46 +79,68 @@ const Settings: React.FC = () => {
     <TabScreenWrapper>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.contentContainer}>
-          <ThemedText variant={'headingThree'} style={{ marginVertical: 16 }}>Server Status</ThemedText>
-            {serverStatusDataLoader.isLoading ? (
-            <ActivityIndicator size={'small'}/>
-            ) : serverStatusDataLoader.error ? (
+          <ThemedText variant={'headingThree'} style={{ marginVertical: 16 }}>
+            Server Status
+          </ThemedText>
+          {serverStatusDataLoader.isLoading ? (
+            <ActivityIndicator size={'small'} />
+          ) : serverStatusDataLoader.error ? (
             <ThemedText variant={'caption'} style={{ color: 'red' }}>
               {`Error loading server status: ${serverStatusDataLoader.error}`}
             </ThemedText>
-            ) : serverStatusDataLoader.isReady ? (
+          ) : serverStatusDataLoader.isReady ? (
             <>
               {serverStatusDataLoader.data &&
-              Object.entries(serverStatusDataLoader.data).map(([key, value]) => (
-                <View key={key} style={{ marginBottom: 8 }}>
-                <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
-                  {key}
-                </ThemedText>
-                <ThemedText variant={'caption'}>
-                  {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                </ThemedText>
-                </View>
-              ))}
+                Object.entries(serverStatusDataLoader.data).map(([key, value]) => (
+                  <View key={key} style={{ marginBottom: 8 }}>
+                    <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
+                      {key}
+                    </ThemedText>
+                    <ThemedText variant={'caption'}>
+                      {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                    </ThemedText>
+                  </View>
+                ))}
             </>
-            ) : (
+          ) : (
             <Button
               title={'Load Server Status'}
               accessibilityLabel={'Load Server Status'}
               buttonType={ButtonType.Secondary}
               onPress={serverStatusDataLoader.load}
             />
-            )}
-          <ThemedText variant={'headingThree'} style={{ marginVertical: 16 }}>Terms</ThemedText>
+          )}
+          <ThemedText variant={'headingThree'} style={{ marginVertical: 16 }}>
+            Terms
+          </ThemedText>
           {termsOfUseDataLoader.isLoading ? (
-            <ActivityIndicator size={'small'}/>
+            <ActivityIndicator size={'small'} />
           ) : termsOfUseDataLoader.error ? (
             <ThemedText variant={'caption'} style={{ color: 'red' }}>
               {`Error loading terms of use: ${termsOfUseDataLoader.error}`}
             </ThemedText>
           ) : termsOfUseDataLoader.isReady ? (
             <>
-              <ThemedText variant={'caption'}>{termsOfUseDataLoader.data?.version}</ThemedText>
-              <ThemedText variant={'caption'}>{termsOfUseDataLoader.data?.date}</ThemedText>
+              <View style={{ marginBottom: 8 }}>
+                <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
+                  Version
+                </ThemedText>
+                <ThemedText variant={'caption'}>{termsOfUseDataLoader.data?.version}</ThemedText>
+              </View>
+              <View style={{ marginBottom: 8 }}>
+                <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
+                  Date
+                </ThemedText>
+                <ThemedText variant={'caption'}>{termsOfUseDataLoader.data?.date}</ThemedText>
+              </View>
+              <View style={{ marginBottom: 8 }}>
+                <ThemedText variant={'caption'} style={{ fontWeight: 'bold' }}>
+                  HTML
+                </ThemedText>
+                <ThemedText variant={'caption'} style={{ flexShrink: 1, flexWrap: 'wrap' }}>
+                  {termsOfUseDataLoader.data?.html}
+                </ThemedText>
+              </View>
             </>
           ) : (
             <Button
