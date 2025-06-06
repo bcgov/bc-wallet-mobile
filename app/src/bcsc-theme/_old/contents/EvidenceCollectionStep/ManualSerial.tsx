@@ -22,7 +22,7 @@ const ManualSerialContent: React.FC<ManualSerialContentProps> = ({ goToBirthdate
   const { t } = useTranslation()
   const { ColorPallet, TextTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-  const [serial, setSerial] = useState(store.unified.serial ?? '')
+  const [serial, setSerial] = useState(store.bcsc.serial ?? '')
   const { width } = useWindowDimensions()
   const [errorState, setErrorState] = useState<ErrorState>({
     visible: false,

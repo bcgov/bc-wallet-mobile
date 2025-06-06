@@ -17,7 +17,7 @@ const BirthdateContent: React.FC<BirthdateContentProps> = ({ onComplete }: Birth
   const { t } = useTranslation()
   const { ColorPallet, TextTheme, themeName } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-  const [date, setDate] = useState(store.unified.birthdate ?? today)
+  const [date, setDate] = useState(store.bcsc.birthdate ?? today)
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -59,9 +59,7 @@ const BirthdateContent: React.FC<BirthdateContentProps> = ({ onComplete }: Birth
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <Text style={styles.paragraph}>
-          {t('Unified.Birthdate.CardSerialNumber', { serial: store.unified.serial })}
-        </Text>
+        <Text style={styles.paragraph}>{t('Unified.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}</Text>
         <View style={styles.lineBreak} />
         <Text style={styles.heading}>{t('Unified.Birthdate.Heading')}</Text>
         <Text style={styles.paragraph}>{t('Unified.Birthdate.Paragraph')}</Text>

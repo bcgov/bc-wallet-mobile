@@ -1,5 +1,4 @@
 import {
-  BifoldLogger,
   Biometry,
   Container,
   DispatchAction,
@@ -25,20 +24,12 @@ import {
   testIdWithKey,
 } from '@bifold/core'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
-import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
 import { getProofRequestTemplates } from '@bifold/verifier'
 import { Agent } from '@credo-ts/core'
 import { NavigationProp } from '@react-navigation/native'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
-import {
-  getApplicationName,
-  getBuildNumber,
-  getSystemName,
-  getSystemVersion,
-  getVersion,
-} from 'react-native-device-info'
 import { DependencyContainer } from 'tsyringe'
 
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
@@ -72,20 +63,20 @@ import { VersionCheckService } from './src/services/version'
 import {
   BCDispatchAction,
   BCLocalStorageKeys,
+  BCSCState,
   BCState,
   DismissPersonCredentialOffer,
   IASEnvironment,
   Mode,
   RemoteDebuggingState,
-  Unified,
   initialState,
 } from './src/store'
+import BCLogger from '@/utils/logger'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
-  private log?: BifoldLogger
   private t: TFunction<'translation', undefined>
   private navigate: (stack: never, params: never) => void
   private storage: PersistentStorage<PersistentState>
@@ -95,15 +86,13 @@ export class AppContainer implements Container {
     bifoldContainer: Container,
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
-    setSurveyVisible: (visible: boolean) => void,
-    log?: BifoldLogger
+    setSurveyVisible: (visible: boolean) => void
   ) {
     this._container = bifoldContainer.container.createChildContainer()
-    this.log = log
     this.t = t
     this.navigate = navigate
     this.setSurveyVisible = setSurveyVisible
-    this.storage = new PersistentStorage(log)
+    this.storage = new PersistentStorage(BCLogger)
   }
 
   public get container(): DependencyContainer {
@@ -111,19 +100,7 @@ export class AppContainer implements Container {
   }
 
   public init(): Container {
-    this.log?.info(`Initializing BC Wallet App container`)
-
-    const logOptions: RemoteLoggerOptions = {
-      lokiUrl: Config.REMOTE_LOGGING_URL,
-      lokiLabels: {
-        application: getApplicationName().toLowerCase(),
-        version: `${getVersion()}-${getBuildNumber()}`,
-        system: `${getSystemName()} v${getSystemVersion()}`,
-      },
-      autoDisableRemoteLoggingIntervalInMinutes,
-    }
-
-    const logger = new RemoteLogger(logOptions)
+    const logger = BCLogger
     logger.startEventListeners()
 
     const options = {
@@ -364,7 +341,7 @@ export class AppContainer implements Container {
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
       let { environment, remoteDebugging, enableProxy, enableAltPersonFlow, enableAppToAppPersonFlow } =
         initialState.developer
-      let unified = initialState.unified
+      let bcsc = initialState.bcsc
       let mode = initialState.mode
 
       await Promise.all([
@@ -386,13 +363,13 @@ export class AppContainer implements Container {
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
-        loadState<Unified>(BCLocalStorageKeys.Unified, (val) => (unified = val)),
+        loadState<BCSCState>(BCLocalStorageKeys.BCSC, (val) => (bcsc = val)),
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
       ])
 
       // Convert date string to Date object (async-storage converts Dates to strings)
-      if (typeof unified.birthdate === 'string') {
-        unified.birthdate = new Date(Date.parse(unified.birthdate))
+      if (typeof bcsc.birthdate === 'string') {
+        bcsc.birthdate = new Date(Date.parse(bcsc.birthdate))
       }
 
       const state = {
@@ -413,7 +390,7 @@ export class AppContainer implements Container {
           enableAltPersonFlow,
           enableAppToAppPersonFlow,
         },
-        unified: { ...initialState.unified, ...unified },
+        bcsc: { ...initialState.bcsc, ...bcsc },
         mode,
       } as BCState
 

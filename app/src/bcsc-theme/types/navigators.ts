@@ -1,12 +1,16 @@
-export const BCSCStacks = {
-  TabStack: 'BCSCTabStack',
+import { NavigatorScreenParams } from '@react-navigation/native'
+
+export enum BCSCStacks {
+  TabStack = 'BCSCTabStack',
 }
 
-export const BCSCScreens = {
-  Home: 'BCSCHome',
-  Services: 'BCSCServices',
-  Account: 'BCSCAccount',
-  Settings: 'BCSCSettings',
+export enum BCSCScreens {
+  Home = 'BCSCHome',
+  Services = 'BCSCServices',
+  Account = 'BCSCAccount',
+  Settings = 'BCSCSettings',
+  ManualPairingCode = 'BCSCManualPairingCode',
+  PairingConfirmation = 'BCSCPairingConfirmation',
 }
 
 export type BCSCTabStackParams = {
@@ -14,4 +18,10 @@ export type BCSCTabStackParams = {
   [BCSCScreens.Services]: undefined
   [BCSCScreens.Account]: undefined
   [BCSCScreens.Settings]: undefined
+}
+
+export type BCSCRootStackParams = {
+  [BCSCStacks.TabStack]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCScreens.ManualPairingCode]: undefined
+  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
 }
