@@ -1,11 +1,9 @@
 import { ButtonLocation, IconButton, testIdWithKey, useTour } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
-import { getServerStatus } from '@/api/services/utility.service'
-import { AppBanner, AppBannerSectionProps } from '../components/AppBanner'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { BCSCScreens, BCSCStacks } from '../types/navigators'
@@ -14,37 +12,10 @@ import BCSCTabStack from './TabStack'
 const MainStack: React.FC = () => {
   const { t } = useTranslation()
   const { currentStep } = useTour()
-  const [messages, setMessages] = useState<AppBannerSectionProps[]>([])
   const Stack = createStackNavigator()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const response = await getServerStatus()
-        if ((response?.data as any).status === 'ok') {
-          setMessages([
-            {
-              title: 'IAS Server is reachable',
-              type: 'success',
-            },
-          ])
-        }
-      } catch (error) {
-        setMessages([
-          {
-            title: `IAS Server is unreachable: ${(error as Error).message}`,
-            type: 'error',
-            dismissible: false,
-          },
-        ])
-      }
-    }
-
-    fetchMessages()
-  }, [])
-
-  const iconButton = () => (
+  const headerRight = () => (
     <IconButton
       buttonLocation={ButtonLocation.Right}
       accessibilityLabel={t('Global.Help')}
@@ -55,9 +26,9 @@ const MainStack: React.FC = () => {
       icon={'help-circle-outline'}
     />
   )
+
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
-      <AppBanner messages={messages} />
       <Stack.Navigator initialRouteName={BCSCStacks.TabStack} screenOptions={{ headerShown: false }}>
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
         <Stack.Screen
@@ -68,7 +39,7 @@ const MainStack: React.FC = () => {
             title: '',
             headerBackTitleVisible: false,
             headerBackTestID: testIdWithKey('Back'),
-            headerRight: iconButton,
+            headerRight,
           })}
         />
         <Stack.Screen

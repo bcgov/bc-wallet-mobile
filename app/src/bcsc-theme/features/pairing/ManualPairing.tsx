@@ -4,9 +4,10 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 
+import { mockServices } from '@/bcsc-theme/fixtures/services'
 import { BCSCRootStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
-import { loginByPairingCode } from '@/api/services/utility.service'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 
 type ManualPairingProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ManualPairingCode>
 
@@ -17,6 +18,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const [message, setMessage] = useState<string | undefined>(undefined)
   const { Spacing, ColorPallet } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { pairing } = useApi()
 
   const styles = StyleSheet.create({
     container: {
@@ -44,16 +46,15 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
       try {
         setLoading(true)
         logger.info(`Submitting pairing code: ${code}`)
-        const result = await loginByPairingCode(code)
-        if (result.success) {
+        const { success } = await pairing.loginByPairingCode(code)
+        if (success) {
           logger.info('Pairing code submitted successfully.')
           navigation.navigate(BCSCScreens.PairingConfirmation, {
-            serviceId: '1',
-            serviceName: 'BC Parks Discover Camping',
+            serviceId: mockServices[0].id,
+            serviceName: mockServices[0].title,
           })
         } else {
-          logger.error(`Failed to submit pairing code with status: ${result.status}`)
-          throw new Error('Failed to submit pairing code.')
+          throw new Error('unsuccessful response from pairing API')
         }
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)

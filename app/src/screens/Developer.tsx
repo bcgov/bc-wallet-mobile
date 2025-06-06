@@ -22,7 +22,6 @@ import { BCDispatchAction, BCState, Mode } from '@/store'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
 import { BCThemeNames } from '@/constants'
-import { IASApiTool } from './IASApiTool'
 
 const Developer: React.FC = () => {
   const { t } = useTranslation()
@@ -31,7 +30,6 @@ const Developer: React.FC = () => {
   const { SettingsTheme, TextTheme, ColorPallet, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
-  const [isaApiToolsVisible, setIsaApiToolsVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
@@ -330,16 +328,6 @@ const Developer: React.FC = () => {
       >
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </SafeAreaModal>
-      <SafeAreaModal
-        visible={isaApiToolsVisible}
-        transparent={false}
-        animationType={'slide'}
-        onRequestClose={() => {
-          return
-        }}
-      >
-        <IASApiTool shouldDismissModal={() => setIsaApiToolsVisible(false)} />
-      </SafeAreaModal>
       <ScrollView style={styles.container}>
         <SectionRow
           title={t('Developer.DeveloperMode')}
@@ -562,19 +550,6 @@ const Developer: React.FC = () => {
             onValueChange={toggleMode}
             value={false}
           />
-        </SectionRow>
-        <SectionRow title={'IAS API'} accessibilityLabel={'IAS API Tool'} testID={testIdWithKey('IasApiTool')}>
-          <Pressable
-            onPress={() => {
-              setIsaApiToolsVisible(true)
-            }}
-            accessible={true}
-            accessibilityLabel={'IAS API Tool'}
-            testID={testIdWithKey('IasApiTool')}
-            style={styles.sectionRow}
-          >
-            <Text>IAS API TOOL</Text>
-          </Pressable>
         </SectionRow>
       </ScrollView>
     </SafeAreaView>

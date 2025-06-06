@@ -48,6 +48,9 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, ...textInputP
     <View style={styles.container}>
       <TextInput
         maxLength={7}
+        autoCapitalize={'characters'}
+        autoComplete={'off'}
+        autoCorrect={false}
         maxFontSizeMultiplier={maxFontSizeMultiplier}
         style={[Inputs.textInput, focused && Inputs.inputSelected, { textAlign: 'center' }]}
         selectionColor={Inputs.inputSelected.borderColor}

@@ -1,6 +1,6 @@
 import { Platform } from 'react-native'
-import apiClient from '../../src/api/client'
-import { getServerStatus, getTermsOfUse } from '../../src/api/services/utility.service'
+import apiClient from '../../src/bcsc-theme/api/client'
+import { getServerStatus, getTermsOfUse } from '../../src/bcsc-theme/api/services/utility.service'
 
 jest.mock('../../src/api/client', () => ({
   get: jest.fn(),

@@ -1,4 +1,5 @@
-import { BifoldLogger } from '@bifold/core'
+import BCLogger from '@/utils/logger'
+import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
@@ -38,7 +39,7 @@ interface AccessToken {
 
 class BCSCService {
   readonly client: AxiosInstance
-  readonly logger: BifoldLogger
+  readonly logger: RemoteLogger
   endpoints: BCSCEndpoints
   baseURL: string
   accessToken?: AccessToken // this token will be used to interact and access data from IAS servers
@@ -46,7 +47,7 @@ class BCSCService {
 
   constructor(baseURL: string = String(Config.IAS_URL)) {
     this.baseURL = baseURL
-    this.logger = new BifoldLogger()
+    this.logger = BCLogger
     this.client = axios.create({
       headers: {
         'Content-Type': 'application/json',
@@ -58,24 +59,24 @@ class BCSCService {
       pairDeviceWithQRCodeSupported: true,
       maximumAccountsPerDevice: 0,
       allowedIdentificationProcesses: [
-        "IDIM L3 Remote BCSC Photo Identity Verification",
-        "IDIM L3 Remote BCSC Non-Photo Identity Verification",
-        "IDIM L3 Remote Non-BCSC Identity Verification"
+        'IDIM L3 Remote BCSC Photo Identity Verification',
+        'IDIM L3 Remote BCSC Non-Photo Identity Verification',
+        'IDIM L3 Remote Non-BCSC Identity Verification',
       ],
-      credentialFlowsSupported: "default_web_flow, bcwallet_initiated, bcsc_initiated",
+      credentialFlowsSupported: 'default_web_flow, bcwallet_initiated, bcsc_initiated',
       multipleAccountsSupported: false,
       attestationTimeToLive: 60,
-      attestation: "https://idsit.gov.bc.ca/device/attestations",
-      issuer: "https://idsit.gov.bc.ca/device/",
-      authorization: "https://idsit.gov.bc.ca/device/authorize",
-      userInfo: "https://idsit.gov.bc.ca/device/userinfo",
-      deviceAuthorization: "https://idsit.gov.bc.ca/device/devicecode",
-      jwksURI: "https://idsit.gov.bc.ca/device/jwk",
-      registration: "https://idsit.gov.bc.ca/device/register",
-      clientMetadata: "https://idsit.gov.bc.ca/device/clients/metadata",
-      savedServices: "https://idsit.gov.bc.ca/device/services",
-      token: "https://idsit.gov.bc.ca/device/token",
-      credential: "https://idsit.gov.bc.ca/credentials/v1/person"
+      attestation: 'https://idsit.gov.bc.ca/device/attestations',
+      issuer: 'https://idsit.gov.bc.ca/device/',
+      authorization: 'https://idsit.gov.bc.ca/device/authorize',
+      userInfo: 'https://idsit.gov.bc.ca/device/userinfo',
+      deviceAuthorization: 'https://idsit.gov.bc.ca/device/devicecode',
+      jwksURI: 'https://idsit.gov.bc.ca/device/jwk',
+      registration: 'https://idsit.gov.bc.ca/device/register',
+      clientMetadata: 'https://idsit.gov.bc.ca/device/clients/metadata',
+      savedServices: 'https://idsit.gov.bc.ca/device/services',
+      token: 'https://idsit.gov.bc.ca/device/token',
+      credential: 'https://idsit.gov.bc.ca/credentials/v1/person',
     }
 
     // Add interceptors
@@ -133,7 +134,6 @@ class BCSCService {
     return isExpired
   }
 
-  // Handle request interception
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
     // skip processing if request is made to token or endpoint URL
     if (config.url?.endsWith('/device/.well-known/openid-configuration') || config.url?.endsWith('/device/token')) {
@@ -151,7 +151,6 @@ class BCSCService {
     return config
   }
 
-  // Example methods for API calls
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
     return this.client.get<T>(url, config)
   }
