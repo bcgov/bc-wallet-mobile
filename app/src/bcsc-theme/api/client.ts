@@ -166,6 +166,10 @@ class BCSCService {
 }
 
 const client = new BCSCService()
-client.fetchEndpoints(client.baseURL)
+client.fetchEndpoints(client.baseURL).catch(error => {
+  client.logger.error('Failed to fetch BCSC endpoints', {
+    message: error instanceof Error ? error.message : String(error),
+  })
+})
 
 export default client
