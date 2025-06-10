@@ -7,10 +7,8 @@ import com.facebook.react.bridge.Promise
 abstract class BcscCoreSpec internal constructor(context: ReactApplicationContext) :
   ReactContextBaseJavaModule(context) {
 
+  abstract fun multiply(a: Double, b: Double): Double
   abstract fun getKeyPair(keyAlias: String, promise: Promise)
   abstract fun getAllKeys(promise: Promise)
-  abstract fun getToken(tokenType: Int, promise: Promise)
-  abstract fun getAccount(promise: Promise)
-  abstract fun getRefreshTokenRequestBody(promise: Promise)
-  abstract fun signPairingCode(code: String, promise: Promise)
+  abstract fun getDynamicClientRegistrationBody(promise: Promise)
 }
