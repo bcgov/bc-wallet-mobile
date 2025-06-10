@@ -5,22 +5,11 @@ import IdentitySelectionScreen from './IdentitySelectionScreen'
 import { BCScreens } from '@/bcsc-theme/_old/types/navigators'
 import { Text } from 'react-native'
 import { LoadingScreen } from '../loading/LoadingScreen'
-
-/*
-
-  ID selection
-  ID description
-  Scan or Enter Manually (skip a step)
-  Scan page
-  Enter manually page
-  Enter Birthdate
-  Error page
-  Make call to fetch address 
-  Make call to fetch email
-  Select Verification options
-  See code screen
-  
-*/
+import IdentityDescriptionScreen from './IdentityDescriptionScreen'
+import EnterEvidenceScreen from './EnterEvidenceScreen'
+import EnterBirthdateScreen from './EnterBirthdateScreen'
+import VerifyCodeScreen from './VerifyCodeScreen'
+import SelectVerificationTypeScreen from './SelectVerificationTypeScreen'
 
 // This stack will be in charge of all steps taken for verifying a person's identity
 const workflowSteps: WorkflowStep[] = [
@@ -31,27 +20,27 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     name: BCSCScreens.IdentityDescription,
-    component: IdentitySelectionScreen,
+    component: IdentityDescriptionScreen,
     weight: 1.1,
   },
   {
     name: BCSCScreens.EnterEvidence,
-    component: IdentitySelectionScreen,
+    component: EnterEvidenceScreen,
     weight: 1.2,
   },
   {
     name: BCSCScreens.EnterBirthdate,
-    component: IdentitySelectionScreen,
+    component: EnterBirthdateScreen,
     weight: 1.3,
   },
   {
     name: BCSCScreens.SelectVerificationMethod,
-    component: IdentitySelectionScreen,
+    component: SelectVerificationTypeScreen,
     weight: 1.4,
   },
   {
     name: BCSCScreens.VerifyInPersonCode,
-    component: IdentitySelectionScreen,
+    component: VerifyCodeScreen,
     weight: 1.4,
   },
 ]

@@ -3,19 +3,19 @@ import { BCSCScreens, BCSCVerifyIdentityStackParamList } from '@/bcsc-theme/type
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useWorkflow } from '@/contexts/WorkFlowContext'
 
-type IdentityDescriptionScreenProps = {
-  navigation: NativeStackNavigationProp<BCSCVerifyIdentityStackParamList, BCSCScreens.IdentityDescription>
+type VerifyCodeScreenProps = {
+  navigation: NativeStackNavigationProp<BCSCVerifyIdentityStackParamList, BCSCScreens.IdentitySelection>
   route: { params: { stepIndex: number } }
 }
-const IdentityDescriptionScreen: React.FC<IdentityDescriptionScreenProps> = ({ navigation, route }) => {
-  console.log('IDENTITY SELECTION COMPONENT RENDERED')
+const VerifyCodeScreen: React.FC<VerifyCodeScreenProps> = ({ navigation, route }) => {
+  console.log('Verify Code COMPONENT RENDERED')
   const { nextStep } = useWorkflow()
   const { stepIndex } = route.params
   return (
     <View>
-      <Text>ID DESCRIPTION</Text>
+      <Text>Verify Code at local place please...</Text>
       <Button title="Accept" onPress={() => nextStep(navigation, stepIndex)} />
     </View>
   )
 }
-export default IdentityDescriptionScreen
+export default VerifyCodeScreen

@@ -7,15 +7,15 @@ type IdentityDescriptionScreenProps = {
   navigation: NativeStackNavigationProp<BCSCVerifyIdentityStackParamList, BCSCScreens.IdentityDescription>
   route: { params: { stepIndex: number } }
 }
-const IdentityDescriptionScreen: React.FC<IdentityDescriptionScreenProps> = ({ navigation, route }) => {
-  console.log('IDENTITY SELECTION COMPONENT RENDERED')
+const SelectVerificationTypeScreen: React.FC<IdentityDescriptionScreenProps> = ({ navigation, route }) => {
+  console.log('SHOW VERIFY IN PERSON CODE COMPONENT RENDERED')
   const { nextStep } = useWorkflow()
   const { stepIndex } = route.params
   return (
     <View>
-      <Text>ID DESCRIPTION</Text>
+      <Text>SHOW A CODE FOR THIS THING PLS</Text>
       <Button title="Accept" onPress={() => nextStep(navigation, stepIndex)} />
     </View>
   )
 }
-export default IdentityDescriptionScreen
+export default SelectVerificationTypeScreen
