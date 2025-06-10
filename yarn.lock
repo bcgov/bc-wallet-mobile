@@ -6713,6 +6713,40 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@react-navigation/elements@npm:^2.3.8":
+  version: 2.4.3
+  resolution: "@react-navigation/elements@npm:2.4.3"
+  dependencies:
+    color: "npm:^4.2.3"
+  peerDependencies:
+    "@react-native-masked-view/masked-view": ">= 0.2.0"
+    "@react-navigation/native": ^7.1.10
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-safe-area-context: ">= 4.0.0"
+  peerDependenciesMeta:
+    "@react-native-masked-view/masked-view":
+      optional: true
+  checksum: 495a1b27e715c9ff9160f587341f993eff324c4e30cbee2598a5910162f58280cb08e1dda6d34bc0a5019357a180a0040350c1d63421658214927666e64071a4
+  languageName: node
+  linkType: hard
+
+"@react-navigation/native-stack@npm:7.3.10":
+  version: 7.3.10
+  resolution: "@react-navigation/native-stack@npm:7.3.10"
+  dependencies:
+    "@react-navigation/elements": "npm:^2.3.8"
+    warn-once: "npm:^0.1.1"
+  peerDependencies:
+    "@react-navigation/native": ^7.1.6
+    react: ">= 18.2.0"
+    react-native: "*"
+    react-native-safe-area-context: ">= 4.0.0"
+    react-native-screens: ">= 4.0.0"
+  checksum: 25c1dcad003183e491a7e34d11913ba73ba9557accb41a57082fbb525dafdeae64bf2d7c4c5a0478db6e3d9346edf1385a0432c188c78106f24df5fa77a900b2
+  languageName: node
+  linkType: hard
+
 "@react-navigation/native@npm:6.0.6":
   version: 6.0.6
   resolution: "@react-navigation/native@npm:6.0.6"
@@ -11079,6 +11113,7 @@ __metadata:
     "@react-navigation/bottom-tabs": "npm:6.0.9"
     "@react-navigation/devtools": "npm:6.0.18"
     "@react-navigation/native": "npm:^6.0.8"
+    "@react-navigation/native-stack": "npm:7.3.10"
     "@react-navigation/stack": "npm:^6.3.21"
     "@storybook/addon-actions": "npm:5.3.21"
     "@storybook/addon-knobs": "npm:5.3.21"
@@ -12492,7 +12527,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"color-string@npm:^1.6.0":
+"color-string@npm:^1.6.0, color-string@npm:^1.9.0":
   version: 1.9.1
   resolution: "color-string@npm:1.9.1"
   dependencies:
@@ -12518,6 +12553,16 @@ __metadata:
     color-convert: "npm:^1.9.3"
     color-string: "npm:^1.6.0"
   checksum: bf70438e0192f4f62f4bfbb303e7231289e8cc0d15ff6b6cbdb722d51f680049f38d4fdfc057a99cb641895cf5e350478c61d98586400b060043afc44285e7ae
+  languageName: node
+  linkType: hard
+
+"color@npm:^4.2.3":
+  version: 4.2.3
+  resolution: "color@npm:4.2.3"
+  dependencies:
+    color-convert: "npm:^2.0.1"
+    color-string: "npm:^1.9.0"
+  checksum: b23f5e500a79ea22428db43d1a70642d983405c0dd1f95ef59dbdb9ba66afbb4773b334fa0b75bb10b0552fd7534c6b28d4db0a8b528f91975976e70973c0152
   languageName: node
   linkType: hard
 
@@ -29917,7 +29962,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"warn-once@npm:0.1.1, warn-once@npm:^0.1.0":
+"warn-once@npm:0.1.1, warn-once@npm:^0.1.0, warn-once@npm:^0.1.1":
   version: 0.1.1
   resolution: "warn-once@npm:0.1.1"
   checksum: e6a5a1f5a8dba7744399743d3cfb571db4c3947897875d4962a7c5b1bf2195ab4518c838cb4cea652e71729f21bba2e98dc75686f5fccde0fabbd894e2ed0c0d
