@@ -6,7 +6,7 @@ export type WorkflowStepHandlerArgs = {
 }
 export interface WorkflowStep {
   name: string // Unique identifier for the step
-  component?: React.ComponentType<any> // Optional UI component for the step
+  component?: React.ComponentType<any> // Optional UI component for the step, no component means it will run the handler method
   handler?: (args: WorkflowStepHandlerArgs) => Promise<void> // Logic for non-UI steps
   condition?: (context: WorkflowContext) => boolean // Determines if the step should execute
   weight?: number // Determines the order of steps
@@ -93,3 +93,10 @@ export const useWorkflow = (): WorkflowContextValue => {
   }
   return context
 }
+
+/*
+
+  Improvements:
+  - end of workflow action?
+  - screen or component for providing progress for the workflow, takes the steps and builds out a button tile for jumping back to an index or "complete" the workflow
+*/

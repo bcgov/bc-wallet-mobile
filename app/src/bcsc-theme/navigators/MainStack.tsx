@@ -30,7 +30,7 @@ const MainStack: React.FC = () => {
   )
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
-      <AppBanner messages={messages} />
+      <AppBanner messages={[]} />
       <Stack.Navigator initialRouteName={BCSCStacks.TabStack} screenOptions={{ headerShown: false }}>
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
         <Stack.Screen

@@ -2,8 +2,6 @@ import { BCSCScreens, BCSCVerifyIdentityStackParamList } from '@/bcsc-theme/type
 import { WorkflowProvider, WorkflowStep } from '@/contexts/WorkFlowContext'
 import { createStackNavigator } from '@react-navigation/stack'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
-import { BCScreens } from '@/bcsc-theme/_old/types/navigators'
-import { Text } from 'react-native'
 import { LoadingScreen } from '../loading/LoadingScreen'
 import IdentityDescriptionScreen from './IdentityDescriptionScreen'
 import EnterEvidenceScreen from './EnterEvidenceScreen'

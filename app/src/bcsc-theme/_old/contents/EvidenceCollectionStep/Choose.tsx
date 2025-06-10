@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { BCDispatchAction, BCState } from '@/store'
-import TileButton, { TileButtonProps } from '../../components/TileButton'
+import TileButton, { TileButtonProps } from '../../../components/TileButton'
 import { BCSCCardType } from '../../types'
 
 const pagePadding = 24
