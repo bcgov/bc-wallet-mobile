@@ -33,7 +33,8 @@ enum DeviceInfoKeys {
 @objc(BcscCore)
 class BcscCore: NSObject {
     static let generalizedOsName = "iOS"
-    
+    static let provider = "https://idsit.gov.bc.ca/device/"
+
 
   @objc
   static func requiresMainQueueSetup() -> Bool {
@@ -123,6 +124,63 @@ class BcscCore: NSObject {
       reject("E_KEY_NOT_FOUND", "Key pair with label '\(label)' not found.", nil)
     } catch {
       reject("E_UNKNOWN", "An unexpected error occurred: \(error.localizedDescription)", error)
+    }
+  }
+
+  private func generateKeyPair() -> String? {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+    let initialKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1" // Use BcscCore.provider
+
+    if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
+      let existingTag = latestKeyInfo.tag
+      var components = existingTag.split(separator: "/").map(String.init)
+      
+      // Check if the tag has at least one component (the numeric suffix)
+      // and if that last component can be parsed as an Int.
+      if let lastNumericString = components.last, var numericSuffix = Int(lastNumericString) {
+        numericSuffix += 1
+        components.removeLast() // Remove the old numeric suffix string
+        let baseId = components.joined(separator: "/") // Reconstruct the base part of the ID
+        let newKeyId = "\(baseId)/\(numericSuffix)"
+        
+        print("BcscCore: generateKeyPair (private) - Latest key found: \(existingTag). Attempting to generate new incremented key with ID: \(newKeyId)")
+        do {
+          // Assuming default keyType and keySize are handled by KeyPairManager.generateKeyPair or are acceptable.
+          _ = try keyPairManager.generateKeyPair(withLabel: newKeyId)
+          print("BcscCore: generateKeyPair (private) - Successfully generated new incremented key with ID: \(newKeyId)")
+          return newKeyId
+        } catch {
+          print("BcscCore: generateKeyPair (private) - Failed to generate new incremented key with ID \(newKeyId): \(error.localizedDescription).")
+          return nil // Failed to generate the specifically requested incremented key.
+        }
+      } else {
+        // Parsing the existing tag failed (e.g., not in expected format or last part not a number).
+        // Fallback: generate a completely new key using a fresh initial ID pattern.
+        print("BcscCore: generateKeyPair (private) - Could not parse or increment existing key tag: \(existingTag). Attempting to generate a new key with a fresh initial ID pattern.")
+        // Use the same pattern for the new key ID as in the 'no keys found' case for consistency, but with a new UUID.
+        let freshGeneratedKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1"
+        print("BcscCore: generateKeyPair (private) - Attempting to generate a new key with ID: \(freshGeneratedKeyId) due to parsing failure of existing key.")
+        do {
+            _ = try keyPairManager.generateKeyPair(withLabel: freshGeneratedKeyId)
+            print("BcscCore: generateKeyPair (private) - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure.")
+            return freshGeneratedKeyId
+        } catch {
+            print("BcscCore: generateKeyPair (private) - Failed to generate new key with ID \(freshGeneratedKeyId) after parsing failure: \(error.localizedDescription)")
+            return nil
+        }
+      }
+    } else {
+      // No keys found, attempt to generate a new one
+      print("BcscCore: generateKeyPair (private) - No keys found. Attempting to generate a new key with ID: \(initialKeyId)")
+      do {
+        _ = try keyPairManager.generateKeyPair(withLabel: initialKeyId) // Assuming default keyType and keySize are handled by this method or are acceptable.
+        print("BcscCore: generateKeyPair (private) - Successfully generated new key with ID: \(initialKeyId)")
+        return initialKeyId
+      } catch {
+        print("BcscCore: generateKeyPair (private) - Failed to generate new key with ID \(initialKeyId): \(error.localizedDescription)")
+        return nil
+      }
     }
   }
 
@@ -302,6 +360,122 @@ class BcscCore: NSObject {
     
     if let signedJWT = signJWT(payload: payload, reject: reject) {
       resolve(signedJWT)
+    }
+  }
+  
+  @objc
+  func getDynamicClientRegistrationBody(_ fcmDeviceToken: NSString, deviceToken: NSString?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+    let hasOtherAccounts = false
+    let accountSecurityMethod: AccountSecurityMethod? = nil
+    let keyPair: (public: SecKey, private: SecKey)
+    let keyId: String
+    
+    if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
+      // Use existing latest key
+      do {
+        keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+        keyId = latestKeyInfo.tag
+      } catch {
+        reject("E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)", error)
+        return
+      }
+    } else {
+      // No keys found, generate a new one
+      guard let newKeyId = generateKeyPair() else {
+        reject("E_KEY_GENERATION_FAILED", "Failed to generate or retrieve key pair for client registration", nil)
+        return
+      }
+      
+      do {
+        keyPair = try keyPairManager.getKeyPair(with: newKeyId)
+        keyId = newKeyId
+      } catch {
+        reject("E_GET_KEYPAIR_FAILED", "Failed to retrieve newly generated key pair: \(error.localizedDescription)", error)
+        return
+      }
+    }
+
+    // Extract RSA components using RSAUtil
+    guard let keyData = RSAUtil.secKeyRefToData(inputKey: keyPair.public) else {
+      reject("E_KEY_DATA_EXTRACTION_FAILED", "Failed to extract key data from public key", nil)
+      return
+    }
+    
+    guard let (modulus, exponent) = RSAUtil.splitIntoComponents(keyData: keyData) else {
+      reject("E_KEY_COMPONENT_PARSING_FAILED", "Failed to parse RSA components from key data", nil)
+      return
+    }
+
+    guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+          let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String else { // Ensure build is also a String
+      reject("E_VERSION_INFO_NOT_FOUND", "Client app version or build number not found.", nil)
+      return
+    }
+
+    // Device info JWT
+
+    let builder = JWTClaimsSet.builder()
+        
+    builder
+      .claim(name: DeviceInfoKeys.systemName, value: BcscCore.generalizedOsName)
+      .claim(name: DeviceInfoKeys.systemVersion, value: UIDevice.current.systemVersion)
+      .claim(name: DeviceInfoKeys.deviceName, value: UIDevice.current.name)
+      .claim(name: DeviceInfoKeys.deviceID, value: UIDevice.current.identifierForVendor?.uuidString ?? "")
+      .claim(name: DeviceInfoKeys.deviceModel, value: UIDevice.current.model)
+      .claim(name: DeviceInfoKeys.deviceToken, value: deviceToken) // Duplicate of apns_token?
+      .claim(name: DeviceInfoKeys.appVersion, value: version)
+      .claim(name: DeviceInfoKeys.appBuild, value: build)
+      .claim(name: DeviceInfoKeys.hasOtherAccounts, value: hasOtherAccounts)
+      .claim(name: DeviceInfoKeys.appSetID, value: UIDevice.current.identifierForVendor?.uuidString ?? "") // Same as deviceID?
+      .claim(name: DeviceInfoKeys.fcmDeviceToken, value: fcmDeviceToken) // Duplicate of fcm_device_token?
+
+   if let securityMethod = accountSecurityMethod {
+      builder.claim(name: DeviceInfoKeys.appSecurityOption, value: securityMethod.rawValue)
+    }
+
+    let deviceInfoJWT = builder.build()
+
+    // Convert device info JWT to JSON string
+    guard let deviceInfoJWTAsString = try? deviceInfoJWT.toJSONString() else {
+      reject("E_DEVICE_INFO_JWT_CONVERSION_FAILED", "Failed to convert device info JWT to JSON string", nil)
+      return
+    }
+
+    // Create client registration data with real values
+    let clientRegistrationData: [String: Any] = [
+      "client_name": "BC Services Card Mobile App",
+      "device_info": deviceInfoJWTAsString,
+      "token_endpoint_auth_method": "private_key_jwt",
+      "jwks": [
+        "keys": [
+          [
+            "n": modulus.base64EncodedString(),
+            "kid": keyId,
+            "alg": "RS512", 
+            "kty": "RSA",
+            "e": exponent.base64EncodedString()
+          ]
+        ]
+      ],
+      "grant_types": [
+        "authorization_code"
+      ],
+      "application_type": "native",
+      "redirect_uris": [
+        "http://localhost:8080/"
+      ]
+    ]
+    
+    do {
+      // print("BcscCore: getDynamicClientRegistrationBody - Client Registration Data: \(clientRegistrationData)")      
+      let jsonData = try JSONSerialization.data(withJSONObject: clientRegistrationData, options: [])
+      let jsonString = String(data: jsonData, encoding: .utf8) ?? "{}"
+      
+      resolve(jsonString)
+    } catch {
+      reject("E_JSON_SERIALIZATION_FAILED", "Failed to serialize client registration data: \(error.localizedDescription)", error)
     }
   }
 

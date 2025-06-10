@@ -223,8 +223,6 @@ class KeyPairManager: KeyPairManagerProtocol {
         
         //FileStorageService().saveDateForPrivateKey(with: label, date: Date())
         return (publicKey!, privateKey!)
-
-
     }
     /**
      Delete the key with the given `label` if it exists.
