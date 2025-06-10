@@ -7,7 +7,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { BCDispatchAction, BCState } from '@/store'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
-import { UnifiedCardType } from '../../types'
+import { BCSCCardType } from '../../types'
 
 const pagePadding = 24
 
@@ -61,7 +61,7 @@ const ChooseContent: React.FC<ChooseContentProps> = ({ goToInstructions }: Choos
   })
 
   const onPressCombinedCard = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [UnifiedCardType.Combined] })
+    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Combined] })
     goToInstructions()
   }, [dispatch, goToInstructions])
 

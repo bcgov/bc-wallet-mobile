@@ -1,5 +1,4 @@
 import {
-  BifoldLogger,
   Biometry,
   Container,
   DispatchAction,
@@ -25,20 +24,12 @@ import {
   testIdWithKey,
 } from '@bifold/core'
 import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
-import { RemoteLogger, RemoteLoggerOptions } from '@bifold/remote-logs'
 import { getProofRequestTemplates } from '@bifold/verifier'
 import { Agent } from '@credo-ts/core'
 import { NavigationProp } from '@react-navigation/native'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
-import {
-  getApplicationName,
-  getBuildNumber,
-  getSystemName,
-  getSystemVersion,
-  getVersion,
-} from 'react-native-device-info'
 import { DependencyContainer } from 'tsyringe'
 
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
@@ -80,12 +71,12 @@ import {
   RemoteDebuggingState,
   initialState,
 } from './src/store'
+import BCLogger from '@/utils/logger'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
-  private log?: BifoldLogger
   private t: TFunction<'translation', undefined>
   private navigate: (stack: never, params: never) => void
   private storage: PersistentStorage<PersistentState>
@@ -95,15 +86,13 @@ export class AppContainer implements Container {
     bifoldContainer: Container,
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
-    setSurveyVisible: (visible: boolean) => void,
-    log?: BifoldLogger
+    setSurveyVisible: (visible: boolean) => void
   ) {
     this._container = bifoldContainer.container.createChildContainer()
-    this.log = log
     this.t = t
     this.navigate = navigate
     this.setSurveyVisible = setSurveyVisible
-    this.storage = new PersistentStorage(log)
+    this.storage = new PersistentStorage(BCLogger)
   }
 
   public get container(): DependencyContainer {
@@ -111,19 +100,7 @@ export class AppContainer implements Container {
   }
 
   public init(): Container {
-    this.log?.info(`Initializing BC Wallet App container`)
-
-    const logOptions: RemoteLoggerOptions = {
-      lokiUrl: Config.REMOTE_LOGGING_URL,
-      lokiLabels: {
-        application: getApplicationName().toLowerCase(),
-        version: `${getVersion()}-${getBuildNumber()}`,
-        system: `${getSystemName()} v${getSystemVersion()}`,
-      },
-      autoDisableRemoteLoggingIntervalInMinutes,
-    }
-
-    const logger = new RemoteLogger(logOptions)
+    const logger = BCLogger
     logger.startEventListeners()
 
     const options = {

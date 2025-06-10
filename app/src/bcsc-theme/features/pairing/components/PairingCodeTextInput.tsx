@@ -23,31 +23,34 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, ...textInputP
   // Capitalize and add a separator midway through the input
   const onChangeText = (text: string) => {
     // Clean and normalize the input (uppercase and remove spaces)
-    const normalized = text.toUpperCase().replace(/\s/g, "");
-    
+    const normalized = text.toUpperCase().replace(/\s/g, '')
+
     // Check if user is deleting characters by comparing length with previous value
-    const isDeleting = normalized.length < value.replace(/\s/g, "").length;
-    
+    const isDeleting = normalized.length < value.replace(/\s/g, '').length
+
     // Format the display value (add space after first 3 characters for readability)
     // Only format when not deleting or when we still have 4 or more characters
-    let formatted = normalized;
+    let formatted = normalized
     if (!isDeleting || normalized.length >= 4) {
       if (normalized.length >= 3) {
-        formatted = splitSplice(normalized, 3, 0, ' ');
+        formatted = splitSplice(normalized, 3, 0, ' ')
       }
     }
-    
+
     // Update the displayed value
-    setValue(formatted);
-    
+    setValue(formatted)
+
     // Always pass the clean version (without spaces) to the parent
-    handleChangeCode(normalized);
+    handleChangeCode(normalized)
   }
 
   return (
     <View style={styles.container}>
       <TextInput
         maxLength={7}
+        autoCapitalize={'characters'}
+        autoComplete={'off'}
+        autoCorrect={false}
         maxFontSizeMultiplier={maxFontSizeMultiplier}
         style={[Inputs.textInput, focused && Inputs.inputSelected, { textAlign: 'center' }]}
         selectionColor={Inputs.inputSelected.borderColor}

@@ -1,4 +1,12 @@
-import { OpenIDCredentialRecordProvider, EventTypes, TOKENS, useServices, ActivityProvider, useStore, BifoldError } from '@bifold/core'
+import {
+  OpenIDCredentialRecordProvider,
+  EventTypes,
+  TOKENS,
+  useServices,
+  ActivityProvider,
+  useStore,
+  BifoldError,
+} from '@bifold/core'
 import AgentProvider from '@credo-ts/react-hooks'
 import React, { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
