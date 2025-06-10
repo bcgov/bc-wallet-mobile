@@ -1,4 +1,4 @@
-export enum UnifiedCardType {
+export enum BCSCCardType {
   None = 0,
   Combined = 1,
   Photo = 2,

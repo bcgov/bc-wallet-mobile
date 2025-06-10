@@ -96,12 +96,10 @@ const Developer: React.FC = () => {
   }
 
   const SectionHeader = ({ icon, title }: { icon: string; title: string }): JSX.Element => (
-    <>
-      <View style={[styles.section, styles.sectionHeader]}>
-        <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
-        <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
-      </View>
-    </>
+    <View style={[styles.section, styles.sectionHeader]}>
+      <Icon name={icon} size={24} style={{ marginRight: 10, color: TextTheme.normal.color }} />
+      <Text style={[TextTheme.headingThree, { flexShrink: 1 }]}>{title}</Text>
+    </View>
   )
 
   interface SectionRowProps {

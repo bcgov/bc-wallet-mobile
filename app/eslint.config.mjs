@@ -2,17 +2,17 @@ import globals from 'globals'
 import pluginJs from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import reactPlugin from 'eslint-plugin-react'
-import importPlugin from 'eslint-plugin-import';
-import reactHooks from 'eslint-plugin-react-hooks';
+import importPlugin from 'eslint-plugin-import'
+import reactHooks from 'eslint-plugin-react-hooks'
 import jestPlugin from 'eslint-plugin-jest'
 
 export default [
   {
     settings: {
-      "react": {
-        "version": "detect"
-      }
-    }
+      react: {
+        version: 'detect',
+      },
+    },
   },
   { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
   { files: ['**/*.js'], languageOptions: { sourceType: 'commonjs' } },

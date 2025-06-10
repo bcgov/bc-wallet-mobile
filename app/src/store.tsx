@@ -7,7 +7,7 @@ import {
   PersistentStorage,
 } from '@bifold/core'
 
-import { UnifiedCardType } from '@bcsc-theme/_old/types'
+import { BCSCCardType } from '@bcsc-theme/_old/types'
 
 export interface IASEnvironment {
   name: string
@@ -33,10 +33,11 @@ export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
-export interface Unified {
-  cardType: UnifiedCardType
+export interface BCSCState {
+  cardType: BCSCCardType
   serial: string
   birthdate?: Date
+  bookmarks: string[]
 }
 
 export enum Mode {
@@ -47,7 +48,7 @@ export enum Mode {
 export interface BCState extends BifoldState {
   developer: Developer
   dismissPersonCredentialOffer: DismissPersonCredentialOffer
-  unified: Unified
+  bcsc: BCSCState
   mode: Mode
 }
 
@@ -66,10 +67,12 @@ enum RemoteDebuggingDispatchAction {
   REMOTE_DEBUGGING_STATUS_UPDATE = 'remoteDebugging/enable',
 }
 
-enum UnifiedDispatchAction {
-  UPDATE_CARD_TYPE = 'unified/updateCardType',
-  UPDATE_SERIAL = 'unified/updateSerial',
-  UPDATE_BIRTHDATE = 'unified/updateBirthdate',
+enum BCSCDispatchAction {
+  UPDATE_CARD_TYPE = 'bcsc/updateCardType',
+  UPDATE_SERIAL = 'bcsc/updateSerial',
+  UPDATE_BIRTHDATE = 'bcsc/updateBirthdate',
+  ADD_BOOKMARK = 'bcsc/addBookmark',
+  REMOVE_BOOKMARK = 'bcsc/removeBookmark',
 }
 
 enum ModeDispatchAction {
@@ -80,14 +83,14 @@ export type BCDispatchAction =
   | DeveloperDispatchAction
   | DismissPersonCredentialOfferDispatchAction
   | RemoteDebuggingDispatchAction
-  | UnifiedDispatchAction
+  | BCSCDispatchAction
   | ModeDispatchAction
 
 export const BCDispatchAction = {
   ...DeveloperDispatchAction,
   ...DismissPersonCredentialOfferDispatchAction,
   ...RemoteDebuggingDispatchAction,
-  ...UnifiedDispatchAction,
+  ...BCSCDispatchAction,
   ...ModeDispatchAction,
 }
 
@@ -132,10 +135,11 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
   personCredentialOfferDismissed: false,
 }
 
-const unifiedState: Unified = {
-  cardType: UnifiedCardType.None,
+const bcscState: BCSCState = {
+  cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
+  bookmarks: [],
 }
 
 export enum BCLocalStorageKeys {
@@ -148,7 +152,7 @@ export enum BCLocalStorageKeys {
   EnableAppToAppPersonFlow = 'EnableAppToAppPersonFlow',
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
-  Unified = 'Unified',
+  BCSC = 'BCSC',
   Mode = 'Mode',
 }
 
@@ -157,7 +161,7 @@ export const initialState: BCState = {
   preferences: { ...defaultState.preferences, useDataRetention: false, disableDataRetentionOption: true },
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
-  unified: unifiedState,
+  bcsc: bcscState,
   mode: Mode.BCWallet,
 }
 
@@ -236,31 +240,47 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
-    case UnifiedDispatchAction.UPDATE_CARD_TYPE: {
-      const cardType = (action?.payload || []).pop() ?? UnifiedCardType.None
-      const unified = { ...state.unified, cardType }
-      const newState = { ...state, unified }
+    case BCSCDispatchAction.UPDATE_CARD_TYPE: {
+      const cardType = (action?.payload ?? []).pop() ?? BCSCCardType.None
+      const bcsc = { ...state.bcsc, cardType }
+      const newState = { ...state, bcsc }
 
-      PersistentStorage.storeValueForKey<Unified>(BCLocalStorageKeys.Unified, unified)
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
 
       return newState
     }
-    case UnifiedDispatchAction.UPDATE_SERIAL: {
+    case BCSCDispatchAction.UPDATE_SERIAL: {
       const serial = (action?.payload || []).pop() ?? ''
-      const unified = { ...state.unified, serial }
-      const newState = { ...state, unified }
+      const bcsc = { ...state.bcsc, serial }
+      const newState = { ...state, bcsc }
 
-      PersistentStorage.storeValueForKey<Unified>(BCLocalStorageKeys.Unified, unified)
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
 
       return newState
     }
-    case UnifiedDispatchAction.UPDATE_BIRTHDATE: {
+    case BCSCDispatchAction.UPDATE_BIRTHDATE: {
       const birthdate = (action?.payload || []).pop() ?? undefined
-      const unified = { ...state.unified, birthdate }
-      const newState = { ...state, unified }
+      const bcsc = { ...state.bcsc, birthdate }
+      const newState = { ...state, bcsc }
 
-      PersistentStorage.storeValueForKey<Unified>(BCLocalStorageKeys.Unified, unified)
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
 
+      return newState
+    }
+    case BCSCDispatchAction.ADD_BOOKMARK: {
+      const bookmark = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, bookmarks: [...new Set([...state.bcsc.bookmarks, bookmark])] }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.REMOVE_BOOKMARK: {
+      const bookmark = (action.payload ?? []).pop()
+      const bookmarks = state.bcsc.bookmarks.filter((b) => b !== bookmark)
+      const bcsc = { ...state.bcsc, bookmarks }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     default:

@@ -1,16 +1,17 @@
 ### Patches
 
-#### @credo-ts-core-npm-0.5.11-9122d8c9b8.patch
-Patch to fix two separate issues. One, fix websocket close handling to allow graceful agent shutdown, and two, ensure listeners are reactivated properly after agent shutdown and consecutive initialize. The websocket part will no longer be needed in Credo 0.6.x but no ETA yet on when the listener reactivation will be included. Here is the websocket PR:
-- https://github.com/openwallet-foundation/credo-ts/pull/2152
+#### @credo-ts-anoncreds-npm-0.5.13-446ac3168e.patch
+Bugs fixed by massaging qualified vs unqualified identifiers
 
-#### @credo-ts-indy-vdr-npm-0.5.11-ced84362c9.patch
-Prevent error on agent restart when same IndyVDR pool is reused. Part of this PR, can be removed when we reach Credo 0.6.x
-- https://github.com/openwallet-foundation/credo-ts/pull/2137
+#### @credo-ts-core-npm-0.5.13-725ab940d0.patch
+Fixes three separate issues. One, fix websocket close handling to allow graceful agent shutdown. Two, proper lookup to catch all formats of AnonCreds credentials. Three, dif presentation bug fix for MDoc / OID4VC
 
-#### @credo-ts-react-hooks-npm-0.6.0-3c59ce13d2.patch
-Patch to add setAgent functionality and properly restart listeners after agent restart. This functionality will not actually be needed once we refactor Bifold to properly use the AgentProvider at a lower level and pass the agent in from outside of it.
+#### @credo-ts-indy-vdr-npm-0.5.13-007d41ad5c.patch
+Prevent error on agent restart when same IndyVDR pool is reused. Prevent bug with revocation registry interval
 
 #### @hyperledger-indy-vdr-react-native-npm-0.2.2-627d424b96.patch
 #### @hyperledger-indy-vdr-shared-npm-0.2.2-b989282fc6.patch
 Patches adding support for caching by grabbing the 0.4.3 indy-vdr binary from github. There's also some changes to the cpp FFIs
+
+#### @sphereon-pex-npm-3.3.3-144d9252ec.patch
+Fixes local-dev-only bug with yarn install
