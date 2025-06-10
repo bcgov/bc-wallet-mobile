@@ -35,7 +35,6 @@ import { DependencyContainer } from 'tsyringe'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from '@utils/expiration'
-import VerifiedPersonStack from './src/bcsc-theme/_old/navigators/VerifiedPersonStack'
 import AddCredentialButton from './src/bcwallet-theme/components/AddCredentialButton'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
@@ -72,6 +71,7 @@ import {
   initialState,
 } from './src/store'
 import BCLogger from '@/utils/logger'
+import VerifyIdentityStack from '@/bcsc-theme/features/registration/VerifyIdentityStack'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
@@ -324,7 +324,7 @@ export class AppContainer implements Container {
     })
 
     this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, getProofRequestTemplates)
-    this._container.registerInstance(TOKENS.CUSTOM_NAV_STACK_1, VerifiedPersonStack)
+    this._container.registerInstance(TOKENS.CUSTOM_NAV_STACK_1, VerifyIdentityStack)
     this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
         const data = (await this.storage.getValueForKey(key)) as Type
