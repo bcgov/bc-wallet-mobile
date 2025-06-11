@@ -3,11 +3,11 @@ import { BCSCScreens, BCSCVerifyIdentityStackParamList } from '@/bcsc-theme/type
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useWorkflow } from '@/contexts/WorkFlowContext'
 
-type IdentityDescriptionScreenProps = {
-  navigation: NativeStackNavigationProp<BCSCVerifyIdentityStackParamList, BCSCScreens.IdentityDescription>
+type SelectVerificationMethodScreenProps = {
+  navigation: NativeStackNavigationProp<BCSCVerifyIdentityStackParamList, BCSCScreens.SelectVerificationMethod>
   route: { params: { stepIndex: number } }
 }
-const SelectVerificationTypeScreen: React.FC<IdentityDescriptionScreenProps> = ({ navigation, route }) => {
+const SelectVerificationMethodScreen: React.FC<SelectVerificationMethodScreenProps> = ({ navigation, route }) => {
   console.log('SHOW VERIFY IN PERSON CODE COMPONENT RENDERED')
   const { nextStep } = useWorkflow()
   const { stepIndex } = route.params
@@ -18,4 +18,4 @@ const SelectVerificationTypeScreen: React.FC<IdentityDescriptionScreenProps> = (
     </View>
   )
 }
-export default SelectVerificationTypeScreen
+export default SelectVerificationMethodScreen

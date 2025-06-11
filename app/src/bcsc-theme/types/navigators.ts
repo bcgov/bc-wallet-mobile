@@ -17,8 +17,8 @@ export enum BCSCScreens {
   EnterEvidence = 'BCSCEnterEvidence',
   EnterBirthdate = 'BCSCEnterBirthdate',
   SelectVerificationMethod = 'BCSCSelectVerificationMethod',
-  VerifyInPersonCode = 'BCSCVerifyInPersonCode'
-
+  VerifyInPersonCode = 'BCSCVerifyInPersonCode',
+  SetupSteps = 'BCSCSetupSteps',
 }
 
 export type BCSCTabStackParams = {
@@ -35,6 +35,7 @@ export type BCSCRootStackParams = {
 }
 
 export type BCSCVerifyIdentityStackParamList = {
+  [BCSCScreens.SetupSteps]: { stepIndex: number } | undefined;
   [BCSCScreens.IdentitySelection]: { stepIndex: number } | undefined;
   [BCSCScreens.IdentityDescription]: { stepIndex: number } | undefined;
   [BCSCScreens.EnterEvidence]: { stepIndex: number } | undefined;

@@ -59,7 +59,8 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation,
 
   const onSubmit = useCallback(() => {
     dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [date] })
-  }, [dispatch, date])
+    nextStep(navigation, stepIndex)
+  }, [dispatch, date, nextStep, navigation, stepIndex])
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>

@@ -4,14 +4,19 @@ import { createStackNavigator } from '@react-navigation/stack'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import { LoadingScreen } from '../loading/LoadingScreen'
 import IdentityDescriptionScreen from './IdentityDescriptionScreen'
-import EnterEvidenceScreen from './EnterSerialNumberScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import VerifyCodeScreen from './VerifyCodeScreen'
-import SelectVerificationTypeScreen from './SelectVerificationTypeScreen'
 import EnterSerialNumberScreen from './EnterSerialNumberScreen'
+import SelectVerificationMethodScreen from './SelectVerificationMethodScreen'
+import SetupSetsScreen from './SetupSetsScreen'
 
 // This stack will be in charge of all steps taken for verifying a person's identity
 const workflowSteps: WorkflowStep[] = [
+  {
+    name: BCSCScreens.SetupSteps,
+    component: SetupSetsScreen,
+    weight: 0.9,
+  },
   {
     name: BCSCScreens.IdentitySelection,
     component: IdentitySelectionScreen,
@@ -33,8 +38,19 @@ const workflowSteps: WorkflowStep[] = [
     weight: 1.3,
   },
   {
+    name: 'Validate Serial Number and birthdate',
+    weight: 1.31,
+    handler: async ({ step }) => {
+      console.log('FETCH STORE DATA AND VALIDATE SERIAL NUMBER AND BIRTHDATE')
+      console.log('ALSO FETCH EMAIL AND ADDRESS IS AVAILABLE AND ADD TO STORE')
+      // TODO: how will the error handling work within a workflow? should we add an error page to 'skip' to?
+      // or would the error just appear overtop of the current screen like a modal
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+    },
+  },
+  {
     name: BCSCScreens.SelectVerificationMethod,
-    component: SelectVerificationTypeScreen,
+    component: SelectVerificationMethodScreen,
     weight: 1.4,
   },
   {
