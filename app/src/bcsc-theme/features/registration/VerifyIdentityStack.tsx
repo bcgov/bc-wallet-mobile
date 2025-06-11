@@ -4,10 +4,11 @@ import { createStackNavigator } from '@react-navigation/stack'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import { LoadingScreen } from '../loading/LoadingScreen'
 import IdentityDescriptionScreen from './IdentityDescriptionScreen'
-import EnterEvidenceScreen from './EnterEvidenceScreen'
+import EnterEvidenceScreen from './EnterSerialNumberScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import VerifyCodeScreen from './VerifyCodeScreen'
 import SelectVerificationTypeScreen from './SelectVerificationTypeScreen'
+import EnterSerialNumberScreen from './EnterSerialNumberScreen'
 
 // This stack will be in charge of all steps taken for verifying a person's identity
 const workflowSteps: WorkflowStep[] = [
@@ -23,7 +24,7 @@ const workflowSteps: WorkflowStep[] = [
   },
   {
     name: BCSCScreens.EnterEvidence,
-    component: EnterEvidenceScreen,
+    component: EnterSerialNumberScreen,
     weight: 1.2,
   },
   {
