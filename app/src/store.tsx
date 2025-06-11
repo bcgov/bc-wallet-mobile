@@ -142,6 +142,8 @@ const bcscState: BCSCState = {
   serial: '',
   birthdate: undefined,
   bookmarks: [],
+  address: '',
+  email: '',
 }
 
 export enum BCLocalStorageKeys {
