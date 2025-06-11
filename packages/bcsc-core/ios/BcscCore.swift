@@ -435,10 +435,11 @@ class BcscCore: NSObject {
       builder.claim(name: DeviceInfoKeys.appSecurityOption, value: securityMethod.rawValue)
     }
 
-    let deviceInfoJWT = builder.build()
-
+    let deviceInfoClaims = builder.build()
+    let deviceInfoJWT = JWS(header: JWSHeader(alg: JWSAlgorithm("none"), kid: ""), payload: deviceInfoClaims)
+        
     // Convert device info JWT to JSON string
-    guard let deviceInfoJWTAsString = try? deviceInfoJWT.toJSONString() else {
+    guard let deviceInfoJWTAsString = try? deviceInfoJWT.serialize() else {
       reject("E_DEVICE_INFO_JWT_CONVERSION_FAILED", "Failed to convert device info JWT to JSON string", nil)
       return
     }
