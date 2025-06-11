@@ -72,7 +72,29 @@ class BcscCore: NSObject {
       return nil
     }
   }
-      
+    
+  private func clearKeychain() {
+    let secItemClasses = [
+      kSecClassGenericPassword,
+      kSecClassInternetPassword,
+      kSecClassCertificate,
+      kSecClassKey,
+      kSecClassIdentity
+    ]
+
+    for itemClass in secItemClasses {
+      let query: [String: Any] = [
+        kSecClass as String: itemClass,
+        kSecAttrSynchronizable as String: kSecAttrSynchronizableAny // Important for iCloud Keychain items
+      ]
+      SecItemDelete(query as CFDictionary)
+    }
+
+    print("BcscCore: Keychain cleared for this app.")
+  }
+
+  // MARK: - Public Methods
+   
   @objc
   func getAllKeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let keyPairManager = KeyPairManager()
@@ -372,6 +394,8 @@ class BcscCore: NSObject {
     let keyPair: (public: SecKey, private: SecKey)
     let keyId: String
     
+//    clearKeychain()
+      
     if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
       // Use existing latest key
       do {
