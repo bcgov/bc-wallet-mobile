@@ -446,7 +446,7 @@ class BcscCore: NSObject {
 
     // Create client registration data with real values
     let clientRegistrationData: [String: Any] = [
-      "client_name": clientName,
+      "client_name": BcscCore.clientName,
       "device_info": deviceInfoJWTAsString,
       "token_endpoint_auth_method": "private_key_jwt",
       "jwks": [
