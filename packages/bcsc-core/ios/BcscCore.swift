@@ -34,7 +34,7 @@ enum DeviceInfoKeys {
 class BcscCore: NSObject {
     static let generalizedOsName = "iOS"
     static let provider = "https://idsit.gov.bc.ca/device/"
-
+    static let clientName = "BC Services Wallet"
 
   @objc
   static func requiresMainQueueSetup() -> Bool {
@@ -446,7 +446,7 @@ class BcscCore: NSObject {
 
     // Create client registration data with real values
     let clientRegistrationData: [String: Any] = [
-      "client_name": "BC Services Card Mobile App",
+      "client_name": clientName,
       "device_info": deviceInfoJWTAsString,
       "token_endpoint_auth_method": "private_key_jwt",
       "jwks": [
