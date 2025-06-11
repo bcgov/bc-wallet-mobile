@@ -16,7 +16,6 @@ type EnterBirthdateScreenProps = {
   route: { params: { stepIndex: number } }
 }
 const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation, route }) => {
-  console.log('ENTER BIRTHDATE SCREEN RENDERED')
   const { nextStep } = useWorkflow()
   const { stepIndex } = route.params
   const today = new Date()

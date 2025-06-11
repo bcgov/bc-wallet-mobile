@@ -38,6 +38,8 @@ export interface BCSCState {
   serial: string
   birthdate?: Date
   bookmarks: string[]
+  address: string
+  email: string
 }
 
 export enum Mode {

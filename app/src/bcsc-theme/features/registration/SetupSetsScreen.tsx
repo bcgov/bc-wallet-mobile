@@ -1,13 +1,13 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParamList } from '@/bcsc-theme/types/navigators'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { useWorkflow } from '@/contexts/WorkFlowContext'
-import React, { useEffect, useState } from 'react'
-import { Link, testIdWithKey, Text, ThemedText, useTheme } from '@bifold/core'
-import { useMemo } from 'react'
+import React from 'react'
+import { testIdWithKey, Text, ThemedText, useStore, useTheme } from '@bifold/core'
 
 import { Pressable, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useTranslation } from 'react-i18next'
+import { BCState } from '@/store'
 
 type SetupSetsScreenProps = {
   navigation: NativeStackNavigationProp<BCSCVerifyIdentityStackParamList, BCSCScreens.SetupSteps>
@@ -18,21 +18,21 @@ const SetupSetsScreen: React.FC<SetupSetsScreenProps> = ({ navigation, route }) 
   const { nextStep } = useWorkflow()
   const { stepIndex } = route.params
   const { t } = useTranslation()
-  const { ColorPallet, TextTheme } = useTheme()
-  useEffect(() => {
-    const fetchData = async () => {
-      // go into store and fetch data to determine which steps to show filled
-    }
-    fetchData()
-  }, [])
+  const { ColorPallet } = useTheme()
+  const [store, dispatch] = useStore<BCState>()
+
+  const serialNumber = store.bcsc.serial ?? null
+  const emailAddress = store.bcsc.email ?? null
+  const residentialAddress = store.bcsc.address ?? null
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: ColorPallet.grayscale.white,
     },
     itemSeparator: {
       width: '100%',
-      height: 4,
+      height: 2,
       backgroundColor: ColorPallet.grayscale.black,
     },
     step: {
@@ -65,79 +65,138 @@ const SetupSetsScreen: React.FC<SetupSetsScreenProps> = ({ navigation, route }) 
     },
   })
 
-  // const steps: SetupStep[] = useMemo(() => {
-  //   return [
-  //     {
-  //       title: 'Step 1',
-  //       active: true,
-  //       complete: false,
-  //       content: (
-  //         <ThemedText style={[styles.contentText, { color: ColorPallet.brand.text }]}>
-  //           {t('Unified.Steps.ScanOrTakePhotos')}
-  //         </ThemedText>
-  //       ),
-  //       onPress: () => goToEvidenceCollectionStep(),
-  //       testIDKey: 'Step1',
-  //     },
-  //     {
-  //       title: 'Step 2',
-  //       active: false,
-  //       complete: true,
-  //       content: (
-  //         <ThemedText style={styles.contentText}>
-  //           Address: Residential address from your BC Services Card will be used
-  //         </ThemedText>
-  //       ),
-  //       onPress: () => null,
-  //       testIDKey: 'Step2',
-  //     },
-  //     {
-  //       title: 'Step 3',
-  //       active: false,
-  //       complete: true,
-  //       content: (
-  //         <View style={styles.contentEmailContainer}>
-  //           <ThemedText style={styles.contentEmail}>Email: j.lee-martinez@email.com</ThemedText>
-  //           <View style={styles.contentEmailButton}>
-  //             <Link style={{ textDecorationLine: 'none' }} linkText={'Edit'} onPress={() => null} />
-  //           </View>
-  //         </View>
-  //       ),
-  //       onPress: () => null,
-  //       testIDKey: 'Step3',
-  //     },
-  //     {
-  //       title: 'Step 4',
-  //       active: false,
-  //       complete: false,
-  //       content: <ThemedText style={styles.contentText}>Verify identity by April 20, 2025</ThemedText>,
-  //       onPress: () => null,
-  //       testIDKey: 'Step4',
-  //     },
-  //   ]
-  // }, [styles, t, ColorPallet.brand.text])
+  const handleOnPress = (shouldNavigate: boolean) => {
+    if (shouldNavigate) {
+      nextStep(navigation, stepIndex)
+    }
+  }
 
   return (
     <View style={styles.container}>
       <Pressable
         onPress={() => {
-          console.log('Step 1 pressed')
+          handleOnPress(!serialNumber)
         }}
         accessible={false}
-        testID={testIdWithKey('')}
+        testID={testIdWithKey('Step1')}
         accessibilityLabel={'Step 1'}
       >
         <View
-          style={[styles.step, { backgroundColor: false ? ColorPallet.brand.primary : ColorPallet.grayscale.white }]}
+          style={[
+            styles.step,
+            { backgroundColor: Boolean(serialNumber) ? ColorPallet.grayscale.white : ColorPallet.brand.primary },
+          ]}
         >
           <View style={styles.titleRow}>
             <ThemedText variant={'headingFour'} style={{ marginRight: 16, color: ColorPallet.grayscale.black }}>
               {'Step 1'}
             </ThemedText>
-            {true ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
+            {Boolean(serialNumber) ? (
+              <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} />
+            ) : null}
           </View>
           <View>
-            <Text style={{ color: ColorPallet.grayscale.black }}>{'Where does this end up'}</Text>
+            <Text style={{ color: ColorPallet.brand.text }}>
+              {Boolean(serialNumber) ? `ID: ${serialNumber}` : t('Unified.Steps.ScanOrTakePhotos')}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+      <View style={styles.itemSeparator} />
+      <Pressable
+        onPress={() => {
+          handleOnPress(Boolean(serialNumber) && !residentialAddress)
+        }}
+        accessible={false}
+        testID={testIdWithKey('Step2')}
+        accessibilityLabel={'Step 2'}
+      >
+        <View
+          style={[
+            styles.step,
+            {
+              backgroundColor:
+                Boolean(serialNumber) && !residentialAddress ? ColorPallet.brand.primary : ColorPallet.grayscale.white,
+            },
+          ]}
+        >
+          <View style={styles.titleRow}>
+            <ThemedText variant={'headingFour'} style={{ marginRight: 16, color: ColorPallet.grayscale.black }}>
+              {'Step 2'}
+            </ThemedText>
+            {Boolean(serialNumber) && Boolean(residentialAddress) ? (
+              <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} />
+            ) : null}
+          </View>
+          <View>
+            <Text style={{ color: ColorPallet.grayscale.black }}>
+              {Boolean(residentialAddress) ? 'Address collected from: CARD_TYPE' : 'Add residential address'}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+      <View style={styles.itemSeparator} />
+      <Pressable
+        onPress={() => {
+          handleOnPress(Boolean(serialNumber) && Boolean(residentialAddress) && !emailAddress)
+        }}
+        accessible={false}
+        testID={testIdWithKey('Step3')}
+        accessibilityLabel={'Step 3'}
+      >
+        <View
+          style={[
+            styles.step,
+            {
+              backgroundColor:
+                Boolean(serialNumber) && Boolean(residentialAddress) && !emailAddress
+                  ? ColorPallet.brand.primary
+                  : ColorPallet.grayscale.white,
+            },
+          ]}
+        >
+          <View style={styles.titleRow}>
+            <ThemedText variant={'headingFour'} style={{ marginRight: 16, color: ColorPallet.grayscale.black }}>
+              {'Step 3'}
+            </ThemedText>
+            {Boolean(serialNumber) && Boolean(emailAddress) && Boolean(residentialAddress) ? (
+              <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} />
+            ) : null}
+          </View>
+          <View>
+            <Text style={{ color: ColorPallet.grayscale.black }}>
+              {Boolean(emailAddress) ? `Email: ${emailAddress}` : 'Email Address'}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+      <View style={styles.itemSeparator} />
+      <Pressable
+        onPress={() => {
+          console.log('Step 4 pressed')
+        }}
+        accessible={false}
+        testID={testIdWithKey('Step4')}
+        accessibilityLabel={'Step 4'}
+      >
+        <View
+          style={[
+            styles.step,
+            {
+              backgroundColor:
+                Boolean(serialNumber) && Boolean(emailAddress) && Boolean(residentialAddress)
+                  ? ColorPallet.brand.primary
+                  : ColorPallet.grayscale.white,
+            },
+          ]}
+        >
+          <View style={styles.titleRow}>
+            <ThemedText variant={'headingFour'} style={{ marginRight: 16, color: ColorPallet.grayscale.black }}>
+              {'Step 4'}
+            </ThemedText>
+          </View>
+          <View>
+            <Text style={{ color: ColorPallet.grayscale.black }}>{'7 days from now'}</Text>
           </View>
         </View>
       </Pressable>
