@@ -33,12 +33,6 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     const val NAME = "BcscCore"
   }
 
-  // Example method
-  // See https://reactnative.dev/docs/native-modules-android
-  override fun multiply(a: Double, b: Double): Double {
-    return a * b
-  }
-
   @Throws(UnrecoverableEntryException::class, NoSuchAlgorithmException::class, KeyStoreException::class)
   private fun getSecretKey(kid: String): SecretKey {
     try {
@@ -193,5 +187,45 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     } catch (e: Exception) {
       promise.reject("E_KEYSTORE_ERROR", "Error accessing keystore: ${e.message}", e)
     }
+  }
+
+  @ReactMethod
+  override fun getToken(tokenType: Int, promise: Promise) {
+    // Mock implementation - returns null for now
+    // In a real implementation, this would retrieve the token from secure storage
+    Log.d(NAME, "getToken called with tokenType: $tokenType")
+    promise.resolve("getToken-mock-return-value")
+  }
+
+  @ReactMethod
+  override fun getAccount(promise: Promise) {
+    // Mock implementation - returns null for now
+    // In a real implementation, this would retrieve account data from storage
+    Log.d(NAME, "getAccount called")
+    promise.resolve(null)
+  }
+
+  @ReactMethod
+  override fun getRefreshTokenRequestBody(promise: Promise) {
+    // Mock implementation - returns null for now
+    // In a real implementation, this would:
+    // 1. Load account and client registration from storage
+    // 2. Create and sign a JWT assertion
+    // 3. Retrieve the refresh token
+    // 4. Format the OAuth request body
+    Log.d(NAME, "getRefreshTokenRequestBody called")
+    promise.resolve("getRefreshTokenRequestBody-mock-return-value")
+  }
+
+  @ReactMethod
+  override fun signPairingCode(code: String, promise: Promise) {
+    // Mock implementation - returns null for now
+    // In a real implementation, this would:
+    // 1. Load account and device info from storage
+    // 2. Create JWT claims with device information
+    // 3. Sign the JWT with the latest private key
+    // 4. Return the signed JWT string
+    Log.d(NAME, "signPairingCode called with code: $code")
+    promise.resolve("signPairingCode-mock-return-value")
   }
 }

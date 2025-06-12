@@ -10,4 +10,5 @@ abstract class BcscCoreSpec internal constructor(context: ReactApplicationContex
   abstract fun multiply(a: Double, b: Double): Double
   abstract fun getKeyPair(keyAlias: String, promise: Promise)
   abstract fun getAllKeys(promise: Promise)
+  abstract fun getDynamicClientRegistrationBody(promise: Promise)
 }

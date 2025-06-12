@@ -156,3 +156,19 @@ export const getRefreshTokenRequestBody = async (): Promise<string | null> => {
 export const signPairingCode = async (code: string): Promise<string | null> => {
   return BcscCore.signPairingCode(code);
 };
+
+/**
+ * Retrieves the body for a dynamic client registration request.
+ * This method generates a JSON structure containing client information,
+ * device info JWT, public key JWKS, and OAuth2 configuration for
+ * dynamic client registration with the BC Services Card authentication server.
+ * @param fcmDeviceToken The FCM device token to include in the device info.
+ * @param deviceToken The APNS device token (iOS only - not used by Android implementation).
+ * @returns A promise that resolves to a JSON string containing the DCR body, or null if an error occurs.
+ */
+export const getDynamicClientRegistrationBody = async (
+  fcmDeviceToken: string,
+  deviceToken?: string
+): Promise<string | null> => {
+  return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken);
+};
