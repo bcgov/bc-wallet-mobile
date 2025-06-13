@@ -10,5 +10,9 @@ abstract class BcscCoreSpec internal constructor(context: ReactApplicationContex
   abstract fun multiply(a: Double, b: Double): Double
   abstract fun getKeyPair(keyAlias: String, promise: Promise)
   abstract fun getAllKeys(promise: Promise)
-  abstract fun getDynamicClientRegistrationBody(promise: Promise)
+  abstract fun getToken(tokenType: Int, promise: Promise)
+  abstract fun getAccount(promise: Promise)
+  abstract fun getRefreshTokenRequestBody(promise: Promise)
+  abstract fun signPairingCode(code: String, promise: Promise)
+  abstract fun getDynamicClientRegistrationBody(fcmDeviceToken: String, deviceToken: String?, promise: Promise)
 }
