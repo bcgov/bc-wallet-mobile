@@ -8,6 +8,10 @@ import Foundation
 let defaultSearchPathDirectory = FileManager.SearchPathDirectory.applicationSupportDirectory
 let testSearchPathDirectory = FileManager.SearchPathDirectory.cachesDirectory
 
+// URL components for files
+let accountListURLComponent = "account_list"
+let metadataURLComponent = "metadata"
+
 // Available files in the `basePath` directory:
 // account_list
 
@@ -53,7 +57,7 @@ class StorageService {
                                                                  create: false)
             let accountListFileUrl = rootDirectoryURL
                 .appendingPathComponent(self.basePath)
-                .appendingPathComponent("account_list")
+                .appendingPathComponent(accountListURLComponent)
             
             guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
                 print("StorageService: Error - account_list file does not exist at \(accountListFileUrl.path).")
@@ -151,4 +155,115 @@ class StorageService {
             return nil
         }
     }
+    
+    func writeData<T: NSObject & NSCoding & NSSecureCoding>(
+        data: T, 
+        file: AccountFiles, 
+        pathDirectory: FileManager.SearchPathDirectory
+    ) -> Bool {
+        do {
+            // Ensure account structure exists before writing
+            try createAccountStructureIfRequired()
+            
+            // Mock implementation - doesn't actually write data yet
+            print("StorageService: writeData called for file: \(file.rawValue) with data: \(data)")
+            return true
+        } catch {
+            print("StorageService: Error creating account structure: \(error)")
+            return false
+        }
+    }
+
+    // Mark: - Directories
+
+    private func createAccountStructureIfRequired() throws {
+        // Generate a new UUID for the account
+        let newAccountID = UUID().uuidString
+        let rootDirectoryURL = try FileManager.default.url(for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+        let baseURL = rootDirectoryURL.appendingPathComponent(self.basePath)
+        let accountListPath = baseURL.appendingPathComponent(accountListURLComponent)
+        
+        // Check if the account_list file already exists
+        guard !FileManager.default.fileExists(atPath: accountListPath.path) else {
+            print("StorageService: account_list file already exists at \(accountListPath.path)")
+            return
+        }
+        
+        // Create the account list structure with new UUID
+        let accountListData: [String: Any] = [
+            "accounts": [newAccountID],
+            "current": newAccountID
+        ]
+        
+        // Convert to JSON data and write to file
+        let jsonData = try JSONSerialization.data(withJSONObject: accountListData, options: [])
+        try jsonData.write(to: accountListPath)
+        
+        // Create directory with newAccountID as name if it doesn't exist
+        let accountDirectory = baseURL.appendingPathComponent(newAccountID)
+        if !FileManager.default.fileExists(atPath: accountDirectory.path) {
+            try FileManager.default.createDirectory(at: accountDirectory, withIntermediateDirectories: true, attributes: nil)
+            print("StorageService: Created account directory at \(accountDirectory.path)")
+        } else {
+            print("StorageService: Account directory already exists at \(accountDirectory.path)")
+        }
+    }
+
+    // private func createMetadataFile(parent: URL) throws {
+    //     let data = MultipleAccountMetadata(envNames: AppConfig.envNames, envIssuers: AppConfig.envIssuers, currentIssuer: Defaults.selectedEnvironment)
+    //     var path = parent.appendingPathComponent(metadataURLComponent)
+    //     try writeCodableData(to: &path, data: data)
+    // }
+
+    // private func writeCodableData<T: Encodable>(to url: inout URL, data: T) throws {
+    //     let encoded = try JSONEncoder().encode(data)
+    //     try encoded.localWrite(to: &url)
+    // }
+
+    
+
+    // private func createEnvironmentsDirectories(parent: URL) throws {
+    //     // Create sub-directories for environments
+    //     // named by issuer
+    //     try AppConfig.envNames.forEach { env in
+    //         let envPath = parent.appendingPathComponent(env)
+    //         if !FileManager.default.fileExists(atPath: envPath.relativePath) {
+    //             try FileManager.default.createDirectory(at: envPath, withIntermediateDirectories: false)
+                
+    //             try createAccountStructure()
+    //         }
+    //     }
+    // }
+
+    // private func getDataDirectory(pathDirectory: FileManager.SearchPathDirectory,
+    //                       create: Bool = false) throws -> URL {
+    //     let bundleID: String
+    //     if let identifier = Bundle.main.bundleIdentifier {
+    //         bundleID =  identifier
+    //     } else {
+    //         bundleID = "ca.bc.gov.id.servicescard"
+    //     }
+        
+    //     let appSupportDir = try FileManager.default.url(for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: create)
+    //     let dataDirectory = appSupportDir.appendingPathComponent(bundleID).appendingPathComponent("data")
+    //     if(create) {
+    //         try FileManager.default.createDirectory(at: dataDirectory, withIntermediateDirectories: true, attributes: nil)
+    //     }
+    //     return dataDirectory
+    // }
+
+    // private func getMultipleAccountDirectory(pathDirectory: FileManager.SearchPathDirectory) throws -> URL {
+    //     return try getDataDirectory(pathDirectory: pathDirectory).appendingPathComponent("accounts_dir")
+    // }
+
+    // private func createMultipleAccountDirectory(pathDirectory: FileManager.SearchPathDirectory = defaultSearchPathDirectory) throws {
+    //     let path = try getMultipleAccountDirectory(pathDirectory: pathDirectory)
+    //     if FileManager.default.fileExists(atPath: path.relativePath) {
+    //         throw MultipleAccountError.directoryAlreadyExisted
+    //     } else {
+    //         try FileManager.default.createDirectory(at: path, withIntermediateDirectories: true)
+    //         try createEnvironmentsDirectories(parent: path)
+    //         try createMetadataFile(parent: path)
+    //     }
+    // }
 }

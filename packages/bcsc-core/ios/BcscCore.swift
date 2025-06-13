@@ -247,9 +247,56 @@ class BcscCore: NSObject {
 
   @objc
   func setAccount(_ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    // Mock implementation - doesn't actually store the account yet
     print("BcscCore: setAccount called with account: \(account)")
-    resolve(nil)
+    
+    // Extract required fields from the dictionary
+    guard let id = account["id"] as? String,
+          let issuer = account["issuer"] as? String else {
+      reject("E_INVALID_ACCOUNT_DATA", "Account must have 'id' and 'issuer' fields", nil)
+      return
+    }
+    
+    // Extract optional security method, default to pin without device auth
+    let securityMethod = account["_securityMethod"] as? String ?? "app_pin_no_device_authn"
+    
+    // Create Account object with required fields
+    let newAccount = Account(id: id, issuer: issuer, securityMethod: securityMethod)
+    
+    // Set optional fields if they exist
+    if let clientID = account["clientID"] as? String {
+      newAccount.clientID = clientID
+    }
+    
+    if let displayName = account["displayName"] as? String {
+      newAccount.displayName = displayName
+    }
+    
+    if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
+      newAccount.didPostNicknameToServer = didPostNicknameToServer
+    }
+    
+    if let nickname = account["nickname"] as? String {
+      newAccount.nickname = nickname
+    }
+    
+    if let failedAttemptCount = account["failedAttemptCount"] as? Int {
+      newAccount.failedAttemptCount = failedAttemptCount
+    }
+    
+    // Store the account using StorageService
+    let storage = StorageService()
+    let success = storage.writeData(
+      data: newAccount,
+      file: AccountFiles.accountMetadata,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+    
+    if success {
+      print("BcscCore: setAccount - Account successfully stored")
+      resolve(nil)
+    } else {
+      reject("E_ACCOUNT_STORAGE_FAILED", "Failed to store account data", nil)
+    }
   }
 
   @objc
