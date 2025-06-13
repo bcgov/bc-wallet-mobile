@@ -228,4 +228,17 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     Log.d(NAME, "signPairingCode called with code: $code")
     promise.resolve("signPairingCode-mock-return-value")
   }
+
+  @ReactMethod
+  override fun getDynamicClientRegistrationBody(fcmDeviceToken: String, deviceToken: String?, promise: Promise) {
+    // Mock implementation - returns null for now
+    // In a real implementation, this would:
+    // 1. Generate or retrieve latest key pair
+    // 2. Extract RSA components (modulus, exponent)
+    // 3. Create device info JWT with device information
+    // 4. Build JWKS with public key
+    // 5. Return structured JSON for client registration
+    Log.d(NAME, "getDynamicClientRegistrationBody called with fcmDeviceToken: $fcmDeviceToken, deviceToken: $deviceToken")
+    promise.resolve("getDynamicClientRegistrationBody-mock-return-value")
+  }
 }
