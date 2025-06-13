@@ -134,17 +134,35 @@ class StorageService {
             // Ensure account structure exists before writing
             try createAccountStructureIfRequired()
             
-            // Mock implementation - doesn't actually write data yet
-            print("StorageService: writeData called for file: \(file.rawValue) with data: \(data)")
+            // Get the current account ID
+            guard let accountID = self.currentAccountID else {
+                print("StorageService: Error - currentAccountID is nil. Cannot write data.")
+                return false
+            }
+            
+            // Build the file URL
+            let rootDirectoryURL = try FileManager.default.url(for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+            let fileUrl = rootDirectoryURL
+                .appendingPathComponent(self.basePath)
+                .appendingPathComponent(accountID)
+                .appendingPathComponent(file.rawValue)
+            
+            // Encode the object to data
+            let encodedData = try encodeArchivedObject(object: data)
+            
+            // Write the encoded data to file
+            try encodedData.write(to: fileUrl)
+            
+            print("StorageService: Successfully wrote data to file: \(fileUrl.path)")
             return true
         } catch {
-            print("StorageService: Error creating account structure: \(error)")
+            print("StorageService: Error writing data: \(error)")
             return false
         }
     } 
 
     // MARK: - Helper Methods
-    
+
     private func createAccountStructureIfRequired() throws {
         // Generate a new UUID for the account
         let newAccountID = UUID().uuidString
