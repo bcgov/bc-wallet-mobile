@@ -85,36 +85,6 @@ class StorageService {
     }
     var provider = "https://idsit.gov.bc.ca/device/"
     
-    func decodeArchivedObject<T: NSObject & NSSecureCoding>(
-        from data: Data,
-        moduleName: String = "bc_services_card_dev"
-    ) throws -> T? {
-        let className = String(describing: T.self)
-        
-        // Skip class registration if the expected type is NSDictionary
-        if T.self != NSDictionary.self {
-            let archivedClassName = "\(moduleName).\(className)"
-            NSKeyedUnarchiver.setClass(T.self, forClassName: archivedClassName)
-            print("Decoding classx: \(archivedClassName)")
-        } else {
-            print("Skipping class registration for NSDictionary")
-        }
-        
-        let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
-        unarchiver.requiresSecureCoding = false
-    
-        let decoded = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
-
-        if T.self != NSDictionary.self {
-            if let decodedDict = decoded as? [String: T] {
-                return decodedDict[provider]
-            }
-            return nil
-        } else {
-            return decoded as? T
-        }
-    }
-    
     func readData<T: NSObject & NSCoding & NSSecureCoding>(file: AccountFiles, pathDirectory: FileManager.SearchPathDirectory) -> T? { // Added file parameter
         do {
             guard let accountID = self.currentAccountID else {
@@ -126,8 +96,7 @@ class StorageService {
                 .appendingPathComponent(self.basePath)
                 .appendingPathComponent(accountID) // Use unwrapped accountID
                 .appendingPathComponent(file.rawValue)
-            
-            
+
             guard (FileManager.default.fileExists(atPath: fileUrl.path)) else {
                 return nil
             }
@@ -172,10 +141,10 @@ class StorageService {
             print("StorageService: Error creating account structure: \(error)")
             return false
         }
-    }
+    } 
 
-    // Mark: - Directories
-
+    // MARK: - Helper Methods
+    
     private func createAccountStructureIfRequired() throws {
         // Generate a new UUID for the account
         let newAccountID = UUID().uuidString
@@ -208,62 +177,68 @@ class StorageService {
             print("StorageService: Account directory already exists at \(accountDirectory.path)")
         }
     }
-
-    // private func createMetadataFile(parent: URL) throws {
-    //     let data = MultipleAccountMetadata(envNames: AppConfig.envNames, envIssuers: AppConfig.envIssuers, currentIssuer: Defaults.selectedEnvironment)
-    //     var path = parent.appendingPathComponent(metadataURLComponent)
-    //     try writeCodableData(to: &path, data: data)
-    // }
-
-    // private func writeCodableData<T: Encodable>(to url: inout URL, data: T) throws {
-    //     let encoded = try JSONEncoder().encode(data)
-    //     try encoded.localWrite(to: &url)
-    // }
-
     
-
-    // private func createEnvironmentsDirectories(parent: URL) throws {
-    //     // Create sub-directories for environments
-    //     // named by issuer
-    //     try AppConfig.envNames.forEach { env in
-    //         let envPath = parent.appendingPathComponent(env)
-    //         if !FileManager.default.fileExists(atPath: envPath.relativePath) {
-    //             try FileManager.default.createDirectory(at: envPath, withIntermediateDirectories: false)
-                
-    //             try createAccountStructure()
-    //         }
-    //     }
-    // }
-
-    // private func getDataDirectory(pathDirectory: FileManager.SearchPathDirectory,
-    //                       create: Bool = false) throws -> URL {
-    //     let bundleID: String
-    //     if let identifier = Bundle.main.bundleIdentifier {
-    //         bundleID =  identifier
-    //     } else {
-    //         bundleID = "ca.bc.gov.id.servicescard"
-    //     }
+    private func encodeArchivedObject<T: NSObject & NSSecureCoding>(
+        object: T,
+        moduleName: String = "bc_services_card_dev"
+    ) throws -> Data {
+        let className = String(describing: T.self)
         
-    //     let appSupportDir = try FileManager.default.url(for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: create)
-    //     let dataDirectory = appSupportDir.appendingPathComponent(bundleID).appendingPathComponent("data")
-    //     if(create) {
-    //         try FileManager.default.createDirectory(at: dataDirectory, withIntermediateDirectories: true, attributes: nil)
-    //     }
-    //     return dataDirectory
-    // }
+        // Skip class registration if the expected type is NSDictionary
+        if T.self != NSDictionary.self {
+            let archivedClassName = "\(moduleName).\(className)"
+            NSKeyedArchiver.setClassName(archivedClassName, for: T.self)
+            print("Encoding class: \(archivedClassName)")
+        } else {
+            print("Skipping class registration for NSDictionary")
+        }
+        
+        let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+        
+        // Prepare the object for archiving
+        let objectToArchive: Any
+        if T.self != NSDictionary.self {
+            // Wrap the object in a dictionary with provider key (reverse of decode logic)
+            objectToArchive = [provider: object]
+        } else {
+            objectToArchive = object
+        }
+        
+        archiver.encode(objectToArchive, forKey: NSKeyedArchiveRootObjectKey)
+        archiver.finishEncoding()
+        
+        return archiver.encodedData
+    }
 
-    // private func getMultipleAccountDirectory(pathDirectory: FileManager.SearchPathDirectory) throws -> URL {
-    //     return try getDataDirectory(pathDirectory: pathDirectory).appendingPathComponent("accounts_dir")
-    // }
+    private func decodeArchivedObject<T: NSObject & NSSecureCoding>(
+        from data: Data,
+        moduleName: String = "bc_services_card_dev"
+    ) throws -> T? {
+        let className = String(describing: T.self)
+        
+        // Skip class registration if the expected type is NSDictionary
+        if T.self != NSDictionary.self {
+            let archivedClassName = "\(moduleName).\(className)"
+            NSKeyedUnarchiver.setClass(T.self, forClassName: archivedClassName)
+            print("Decoding classx: \(archivedClassName)")
+        } else {
+            print("Skipping class registration for NSDictionary")
+        }
+        
+        let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)
+        unarchiver.requiresSecureCoding = false
+    
+        let decoded = try unarchiver.decodeTopLevelObject(forKey: NSKeyedArchiveRootObjectKey)
 
-    // private func createMultipleAccountDirectory(pathDirectory: FileManager.SearchPathDirectory = defaultSearchPathDirectory) throws {
-    //     let path = try getMultipleAccountDirectory(pathDirectory: pathDirectory)
-    //     if FileManager.default.fileExists(atPath: path.relativePath) {
-    //         throw MultipleAccountError.directoryAlreadyExisted
-    //     } else {
-    //         try FileManager.default.createDirectory(at: path, withIntermediateDirectories: true)
-    //         try createEnvironmentsDirectories(parent: path)
-    //         try createMetadataFile(parent: path)
-    //     }
-    // }
+        if T.self != NSDictionary.self {
+            if let decodedDict = decoded as? [String: T] {
+                return decodedDict[provider]
+            }
+            return nil
+        } else {
+            return decoded as? T
+        }
+    }
+    
+       
 }
