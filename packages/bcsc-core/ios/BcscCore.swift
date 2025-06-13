@@ -94,7 +94,7 @@ class BcscCore: NSObject {
   }
 
   // MARK: - Public Methods
-   
+
   @objc
   func getAllKeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let keyPairManager = KeyPairManager()
@@ -246,6 +246,13 @@ class BcscCore: NSObject {
   }
 
   @objc
+  func setAccount(_ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // Mock implementation - doesn't actually store the account yet
+    print("BcscCore: setAccount called with account: \(account)")
+    resolve(nil)
+  }
+
+  @objc
   func getAccount(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let storage = StorageService() // Changed from PersistentStorage
     let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
@@ -269,7 +276,6 @@ class BcscCore: NSObject {
         resolve(nil)
     }
   }
-
 
   @objc
   func getRefreshTokenRequestBody(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
