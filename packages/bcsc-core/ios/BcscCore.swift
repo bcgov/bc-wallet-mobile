@@ -406,8 +406,8 @@ class BcscCore: NSObject {
     
     // Make sure deviceToken and fcmDeviceToken have values
     // (empty string if missing)
-    let deviceToken = deviceinfo["device_token"] as? String ?? ""
-    let fcmDeviceToken = deviceinfo["fcm_device_token"] as? String ?? ""
+    let deviceToken = deviceinfo[DeviceInfoKeys.deviceToken] as? String ?? ""
+    let fcmDeviceToken = deviceinfo[DeviceInfoKeys.fcmDeviceToken] as? String ?? ""
     
     builder
       .claim(name: "aud", value: account.issuer)
@@ -416,7 +416,6 @@ class BcscCore: NSObject {
       .claim(name: "challenge", value: code)
       .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)
       .claim(name: "apns_token", value: deviceToken)
-      .claim(name: "fcm_device_token", value: fcmDeviceToken)
       .claim(name: DeviceInfoKeys.systemName, value: BcscCore.generalizedOsName)
       .claim(name: DeviceInfoKeys.systemVersion, value: UIDevice.current.systemVersion)
       .claim(name: DeviceInfoKeys.deviceName, value: UIDevice.current.name)
