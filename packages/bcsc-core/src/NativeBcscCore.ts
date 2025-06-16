@@ -43,7 +43,11 @@ export interface Spec extends TurboModule {
   getToken(tokenType: number): Promise<NativeToken | null>;
   getAccount(): Promise<NativeAccount | null>;
   getRefreshTokenRequestBody(): Promise<string | null>;
-  signPairingCode(code: string): Promise<string | null>;
+  signPairingCode(
+    code: string,
+    fcmDeviceToken: string,
+    deviceToken?: string
+  ): Promise<string | null>;
   getDynamicClientRegistrationBody(
     fcmDeviceToken: string,
     deviceToken?: string

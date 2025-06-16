@@ -159,11 +159,17 @@ export const getRefreshTokenRequestBody = async (): Promise<string | null> => {
 /**
  * Signs a given pairing code.
  * @param code The pairing code string to sign.
+ * @param fcmDeviceToken The FCM device token for push notifications.
+ * @param deviceToken The APNS device token (iOS only).
  * @returns A promise that resolves to a string containing the signature,
  *          or null if an error occurs. (Currently returns a mocked signature).
  */
-export const signPairingCode = async (code: string): Promise<string | null> => {
-  return BcscCore.signPairingCode(code);
+export const signPairingCode = async (
+  code: string,
+  fcmDeviceToken: string,
+  deviceToken?: string
+): Promise<string | null> => {
+  return BcscCore.signPairingCode(code, fcmDeviceToken, deviceToken);
 };
 
 /**

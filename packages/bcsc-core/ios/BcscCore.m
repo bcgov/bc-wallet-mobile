@@ -24,6 +24,8 @@ RCT_EXTERN_METHOD(getRefreshTokenRequestBody:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(signPairingCode:(NSString *)code
+                  fcmDeviceToken:(NSString *)fcmDeviceToken
+                  deviceToken:(NSString * _Nullable)deviceToken
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 

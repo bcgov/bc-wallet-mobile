@@ -218,14 +218,15 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun signPairingCode(code: String, promise: Promise) {
+  override fun signPairingCode(code: String, fcmDeviceToken: String, deviceToken: String?, promise: Promise) {
     // Mock implementation - returns null for now
     // In a real implementation, this would:
-    // 1. Load account and device info from storage
-    // 2. Create JWT claims with device information
+    // 1. Load account from storage
+    // 2. Create JWT claims with device information using provided fcmDeviceToken and deviceToken (or empty string if null)
     // 3. Sign the JWT with the latest private key
     // 4. Return the signed JWT string
-    Log.d(NAME, "signPairingCode called with code: $code")
+    val actualDeviceToken = deviceToken ?: ""
+    Log.d(NAME, "signPairingCode called with code: $code, fcmDeviceToken: $fcmDeviceToken, deviceToken: $actualDeviceToken")
     promise.resolve("signPairingCode-mock-return-value")
   }
 

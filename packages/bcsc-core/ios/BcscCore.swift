@@ -380,18 +380,16 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func signPairingCode(_ code: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func signPairingCode(_ code: String, fcmDeviceToken: String, deviceToken: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let storage = StorageService()
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
+    
+    // Use empty string if deviceToken is not provided
+    let actualDeviceToken = deviceToken ?? ""
 
     guard let account: Account = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: .applicationSupportDirectory) else {
       reject("E_ACCOUNT_NOT_FOUND", "Account not found.", nil)
-      return
-    }
-    
-    guard let deviceinfo: NSDictionary = storage.readData(file: AccountFiles.deviceInfo, pathDirectory: .applicationSupportDirectory) else {
-      reject("E_DEVICE_INFO_NOT_FOUND", "Device info not found.", nil)
       return
     }
       
@@ -404,24 +402,19 @@ class BcscCore: NSObject {
     let seconds = Int(Date().timeIntervalSince1970)
     let builder = JWTClaimsSet.builder()
     
-    // Make sure deviceToken and fcmDeviceToken have values
-    // (empty string if missing)
-    let deviceToken = deviceinfo[DeviceInfoKeys.deviceToken] as? String ?? ""
-    let fcmDeviceToken = deviceinfo[DeviceInfoKeys.fcmDeviceToken] as? String ?? ""
-    
     builder
       .claim(name: "aud", value: account.issuer)
       .claim(name: "iss", value: account.clientID)
       .claim(name: "iat", value: seconds)
       .claim(name: "challenge", value: code)
       .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)
-      .claim(name: "apns_token", value: deviceToken)
+      .claim(name: "apns_token", value: actualDeviceToken)
       .claim(name: DeviceInfoKeys.systemName, value: BcscCore.generalizedOsName)
       .claim(name: DeviceInfoKeys.systemVersion, value: UIDevice.current.systemVersion)
       .claim(name: DeviceInfoKeys.deviceName, value: UIDevice.current.name)
       .claim(name: DeviceInfoKeys.deviceID, value: UIDevice.current.identifierForVendor?.uuidString ?? "")
       .claim(name: DeviceInfoKeys.deviceModel, value: UIDevice.current.model)
-      .claim(name: DeviceInfoKeys.deviceToken, value: deviceToken) // Duplicate of apns_token?
+      .claim(name: DeviceInfoKeys.deviceToken, value: actualDeviceToken) // Duplicate of apns_token?
       .claim(name: DeviceInfoKeys.fcmDeviceToken, value: fcmDeviceToken) // Duplicate of fcm_device_token?
       .claim(name: DeviceInfoKeys.appVersion, value: version)
       .claim(name: DeviceInfoKeys.appBuild, value: build)
