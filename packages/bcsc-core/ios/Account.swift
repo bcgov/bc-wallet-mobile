@@ -9,7 +9,8 @@ class Account: NSObject, NSCoding, NSSecureCoding {
 
     let id: String
     let issuer: String
-    var clientID: String?
+    let clientID: String
+    
     private var _securityMethod: String
     
     // User full name
@@ -41,8 +42,9 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     }()
     
     // Regular initializer
-    init(id: String, issuer: String, securityMethod: String = "app_pin_no_device_authn") {
+    init(id: String, clientID: String, issuer: String, securityMethod: String = "app_pin_no_device_authn") {
         self.id = id
+        self.clientID = clientID
         self.issuer = issuer
         self._securityMethod = securityMethod
         super.init()
@@ -51,7 +53,7 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     required init?(coder decoder: NSCoder) {
         self.id = decoder.decodeObject(forKey: .id) as! String
         self.issuer = decoder.decodeObject(forKey: .issuer) as! String
-        self.clientID = decoder.decodeObject(forKey: .clientID) as? String
+        self.clientID = decoder.decodeObject(forKey: .clientID) as! String
         self._securityMethod = decoder.decodeObject(forKey: .securityMethod) as! String
         self.failedAttemptCount = decoder.decodeInteger(forKey: .failedAttemptCount)
         self.lastAttemptDate = decoder.decodeObject(forKey: .lastAttemptDate) as? Date

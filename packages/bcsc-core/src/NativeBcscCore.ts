@@ -28,7 +28,7 @@ export type NativeToken = {
 };
 
 export type NativeAccount = {
-  id: string;
+  readonly id: string;
   issuer: string;
   clientID?: string;
   displayName?: string;

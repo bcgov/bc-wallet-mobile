@@ -213,7 +213,7 @@ class BcscCore: NSObject {
     let storage = StorageService()
     let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
 
-    guard let currentAccount = account, let clientID = currentAccount.clientID else {
+    guard let currentAccount = account else {
         reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
         return
     }
@@ -223,7 +223,7 @@ class BcscCore: NSObject {
         return
     }
 
-    let id = "\(clientID)/tokens/\(tokenType.rawValue)/1"
+    let id = "\(currentAccount.clientID)/tokens/\(tokenType.rawValue)/1"
     
     if let token = tokenStorageService.get(id: id) {
       var tokenDict: [String: Any?] = [
@@ -248,11 +248,12 @@ class BcscCore: NSObject {
   @objc
   func setAccount(_ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     print("BcscCore: setAccount called with account: \(account)")
-    
+    let accountID = UUID().uuidString
+    let storage = StorageService()
+      
     // Extract required fields from the dictionary
-    guard let id = account["id"] as? String,
-          let issuer = account["issuer"] as? String else {
-      reject("E_INVALID_ACCOUNT_DATA", "Account must have 'id' and 'issuer' fields", nil)
+    guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String  else {
+      reject("E_INVALID_ACCOUNT_DATA", "Account must have an 'issuer' and 'clientID' fields", nil)
       return
     }
     
@@ -260,12 +261,7 @@ class BcscCore: NSObject {
     let securityMethod = account["_securityMethod"] as? String ?? "app_pin_no_device_authn"
     
     // Create Account object with required fields
-    let newAccount = Account(id: id, issuer: issuer, securityMethod: securityMethod)
-    
-    // Set optional fields if they exist
-    if let clientID = account["clientID"] as? String {
-      newAccount.clientID = clientID
-    }
+    let newAccount = Account(id: accountID, clientID: clientID, issuer: issuer, securityMethod: securityMethod)
     
     if let displayName = account["displayName"] as? String {
       newAccount.displayName = displayName
@@ -283,8 +279,14 @@ class BcscCore: NSObject {
       newAccount.failedAttemptCount = failedAttemptCount
     }
     
-    // Store the account using StorageService
-    let storage = StorageService()
+    // Ensure account structure exists before writing
+    do {
+      try storage.createAccountStructureIfRequired(accountID: accountID)
+    } catch {
+      reject("E_ACCOUNT_STRUCTURE_CREATION_FAILED", "Failed to create account structure: \(error.localizedDescription)", error)
+      return
+    }
+
     let success = storage.writeData(
       data: newAccount,
       file: AccountFiles.accountMetadata,
@@ -370,7 +372,7 @@ class BcscCore: NSObject {
         }
 
         // Construct the body for the refresh token request
-        let body = "grant_type=\(grantType)&client_id=\(account.clientID!)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(tokenValue)"
+        let body = "grant_type=\(grantType)&client_id=\(account.clientID)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(tokenValue)"
 
         resolve(body)
 

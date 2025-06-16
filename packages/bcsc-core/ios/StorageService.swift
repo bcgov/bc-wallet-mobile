@@ -131,10 +131,7 @@ class StorageService {
         pathDirectory: FileManager.SearchPathDirectory
     ) -> Bool {
         do {
-            // Ensure account structure exists before writing
-            try createAccountStructureIfRequired()
-            
-            // Get the current account ID
+            // Get the current account ID first
             guard let accountID = self.currentAccountID else {
                 print("StorageService: Error - currentAccountID is nil. Cannot write data.")
                 return false
@@ -146,7 +143,7 @@ class StorageService {
                 .appendingPathComponent(self.basePath)
                 .appendingPathComponent(accountID)
                 .appendingPathComponent(file.rawValue)
-            
+                        
             // Encode the object to data
             let encodedData = try encodeArchivedObject(object: data)
             
@@ -163,9 +160,7 @@ class StorageService {
 
     // MARK: - Helper Methods
 
-    private func createAccountStructureIfRequired() throws {
-        // Generate a new UUID for the account
-        let newAccountID = UUID().uuidString
+    func createAccountStructureIfRequired(accountID: String) throws {
         let rootDirectoryURL = try FileManager.default.url(for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
         let baseURL = rootDirectoryURL.appendingPathComponent(self.basePath)
         let accountListPath = baseURL.appendingPathComponent(accountListURLComponent)
@@ -176,24 +171,24 @@ class StorageService {
             return
         }
         
-        // Create the account list structure with new UUID
+        // Create the account list structure with provided accountID
         let accountListData: [String: Any] = [
-            "accounts": [newAccountID],
-            "current": newAccountID
+            "accounts": [accountID],
+            "current": accountID
         ]
-        
-        // Convert to JSON data and write to file
-        let jsonData = try JSONSerialization.data(withJSONObject: accountListData, options: [])
-        try jsonData.write(to: accountListPath)
-        
-        // Create directory with newAccountID as name if it doesn't exist
-        let accountDirectory = baseURL.appendingPathComponent(newAccountID)
+                
+        // Create directory with accountID as name if it doesn't exist
+        let accountDirectory = baseURL.appendingPathComponent(accountID)
         if !FileManager.default.fileExists(atPath: accountDirectory.path) {
             try FileManager.default.createDirectory(at: accountDirectory, withIntermediateDirectories: true, attributes: nil)
             print("StorageService: Created account directory at \(accountDirectory.path)")
         } else {
             print("StorageService: Account directory already exists at \(accountDirectory.path)")
         }
+
+        // Convert to JSON data and write to file
+        let jsonData = try JSONSerialization.data(withJSONObject: accountListData, options: [])
+        try jsonData.write(to: accountListPath)
     }
     
     private func encodeArchivedObject<T: NSObject & NSSecureCoding>(
