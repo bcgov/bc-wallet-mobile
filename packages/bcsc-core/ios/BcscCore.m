@@ -20,10 +20,14 @@ RCT_EXTERN_METHOD(setAccount:(NSDictionary *)account
 RCT_EXTERN_METHOD(getAccount:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
-RCT_EXTERN_METHOD(getRefreshTokenRequestBody:(RCTPromiseResolveBlock)resolve
+RCT_EXTERN_METHOD(getRefreshTokenRequestBody:(NSString *)issuer
+                  clientID:(NSString *)clientID
+                  resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(signPairingCode:(NSString *)code
+                  issuer:(NSString *)issuer
+                  clientID:(NSString *)clientID
                   fcmDeviceToken:(NSString *)fcmDeviceToken
                   deviceToken:(NSString * _Nullable)deviceToken
                   resolve:(RCTPromiseResolveBlock)resolve

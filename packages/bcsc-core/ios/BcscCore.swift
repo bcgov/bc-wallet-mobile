@@ -327,17 +327,10 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func getRefreshTokenRequestBody(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func getRefreshTokenRequestBody(_ issuer: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
     let grantType = "refresh_token"
     let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
-    let storage = StorageService()
-    let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
-
-    guard let account = account else {
-        reject("E_ACCOUNT_NOT_FOUND", "Account not found.", nil)
-        return
-    }
 
     // Make JWT Claim Set
     guard let uuid = UIDevice.current.identifierForVendor?.uuidString else {
@@ -350,9 +343,9 @@ class BcscCore: NSObject {
     let expireSeconds = Int(Date().addingTimeInterval(TimeInterval(clientAssertionJwtExpirationSeconds)).timeIntervalSince1970)
     
     builder
-        .claim(name: "aud", value: account.issuer)
-        .claim(name: "iss", value: account.clientID) // was from registration
-        .claim(name: "sub", value: account.clientID) // was from registration
+        .claim(name: "aud", value: issuer)
+        .claim(name: "iss", value: clientID) // was from registration
+        .claim(name: "sub", value: clientID) // was from registration
         .claim(name: "iat", value: seconds)
         .claim(name: "jti", value: uuid)
         .claim(name: "exp", value: expireSeconds)
@@ -372,7 +365,7 @@ class BcscCore: NSObject {
         }
 
         // Construct the body for the refresh token request
-        let body = "grant_type=\(grantType)&client_id=\(account.clientID)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(tokenValue)"
+        let body = "grant_type=\(grantType)&client_id=\(clientID)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(tokenValue)"
 
         resolve(body)
 
@@ -380,18 +373,13 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func signPairingCode(_ code: String, fcmDeviceToken: String, deviceToken: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func signPairingCode(_ code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let storage = StorageService()
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
     
     // Use empty string if deviceToken is not provided
     let actualDeviceToken = deviceToken ?? ""
-
-    guard let account: Account = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: .applicationSupportDirectory) else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found.", nil)
-      return
-    }
       
     guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
           let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String else { // Ensure build is also a String
@@ -403,8 +391,8 @@ class BcscCore: NSObject {
     let builder = JWTClaimsSet.builder()
     
     builder
-      .claim(name: "aud", value: account.issuer)
-      .claim(name: "iss", value: account.clientID)
+      .claim(name: "aud", value: issuer)
+      .claim(name: "iss", value: clientID)
       .claim(name: "iat", value: seconds)
       .claim(name: "challenge", value: code)
       .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)

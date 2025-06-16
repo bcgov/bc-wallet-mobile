@@ -206,27 +206,25 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun getRefreshTokenRequestBody(promise: Promise) {
+  override fun getRefreshTokenRequestBody(issuer: String, clientID: String, promise: Promise) {
     // Mock implementation - returns null for now
     // In a real implementation, this would:
-    // 1. Load account and client registration from storage
-    // 2. Create and sign a JWT assertion
-    // 3. Retrieve the refresh token
-    // 4. Format the OAuth request body
-    Log.d(NAME, "getRefreshTokenRequestBody called")
+    // 1. Create and sign a JWT assertion using provided issuer and clientID
+    // 2. Retrieve the refresh token
+    // 3. Format the OAuth request body
+    Log.d(NAME, "getRefreshTokenRequestBody called with issuer: $issuer, clientID: $clientID")
     promise.resolve("getRefreshTokenRequestBody-mock-return-value")
   }
 
   @ReactMethod
-  override fun signPairingCode(code: String, fcmDeviceToken: String, deviceToken: String?, promise: Promise) {
+  override fun signPairingCode(code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?, promise: Promise) {
     // Mock implementation - returns null for now
     // In a real implementation, this would:
-    // 1. Load account from storage
-    // 2. Create JWT claims with device information using provided fcmDeviceToken and deviceToken (or empty string if null)
-    // 3. Sign the JWT with the latest private key
-    // 4. Return the signed JWT string
+    // 1. Create JWT claims with device information using provided issuer, clientID, fcmDeviceToken and deviceToken (or empty string if null)
+    // 2. Sign the JWT with the latest private key
+    // 3. Return the signed JWT string
     val actualDeviceToken = deviceToken ?: ""
-    Log.d(NAME, "signPairingCode called with code: $code, fcmDeviceToken: $fcmDeviceToken, deviceToken: $actualDeviceToken")
+    Log.d(NAME, "signPairingCode called with code: $code, issuer: $issuer, clientID: $clientID, fcmDeviceToken: $fcmDeviceToken, deviceToken: $actualDeviceToken")
     promise.resolve("signPairingCode-mock-return-value")
   }
 
