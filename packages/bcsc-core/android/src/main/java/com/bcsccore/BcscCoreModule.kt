@@ -7,6 +7,7 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.WritableArray
+import com.facebook.react.bridge.ReadableMap
 import android.os.Build
 import android.security.keystore.KeyProperties
 import java.security.KeyPair
@@ -195,6 +196,17 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     // In a real implementation, this would retrieve the token from secure storage
     Log.d(NAME, "getToken called with tokenType: $tokenType")
     promise.resolve("getToken-mock-return-value")
+  }
+
+  @ReactMethod
+  override fun setAccount(account: ReadableMap, promise: Promise) {
+    // Mock implementation - returns success for now
+    // In a real implementation, this would:
+    // 1. Validate the account data structure
+    // 2. Store the account data securely
+    // 3. Handle any necessary encryption/serialization
+    Log.d(NAME, "setAccount called with account data")
+    promise.resolve(null)
   }
 
   @ReactMethod
