@@ -8,6 +8,10 @@ import Foundation
 let defaultSearchPathDirectory = FileManager.SearchPathDirectory.applicationSupportDirectory
 let testSearchPathDirectory = FileManager.SearchPathDirectory.cachesDirectory
 
+// URL components for files
+let accountListURLComponent = "account_list"
+let metadataURLComponent = "metadata"
+
 // Available files in the `basePath` directory:
 // account_list
 
@@ -53,7 +57,7 @@ class StorageService {
                                                                  create: false)
             let accountListFileUrl = rootDirectoryURL
                 .appendingPathComponent(self.basePath)
-                .appendingPathComponent("account_list")
+                .appendingPathComponent(accountListURLComponent)
             
             guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
                 print("StorageService: Error - account_list file does not exist at \(accountListFileUrl.path).")
@@ -81,7 +85,145 @@ class StorageService {
     }
     var provider = "https://idsit.gov.bc.ca/device/"
     
-    func decodeArchivedObject<T: NSObject & NSSecureCoding>(
+    func readData<T: NSObject & NSCoding & NSSecureCoding>(file: AccountFiles, pathDirectory: FileManager.SearchPathDirectory) -> T? { // Added file parameter
+        do {
+            guard let accountID = self.currentAccountID else {
+                print("StorageService: Error - currentAccountID is nil. Cannot read data.")
+                return nil
+            }
+            let rootDirectoryURL = try FileManager.default.url(for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+            let fileUrl = rootDirectoryURL
+                .appendingPathComponent(self.basePath)
+                .appendingPathComponent(accountID) // Use unwrapped accountID
+                .appendingPathComponent(file.rawValue)
+
+            guard (FileManager.default.fileExists(atPath: fileUrl.path)) else {
+                return nil
+            }
+            
+            let accessGranted = fileUrl.startAccessingSecurityScopedResource()
+            
+            defer {
+                if accessGranted {
+                    fileUrl.stopAccessingSecurityScopedResource()
+                }
+            }
+            
+            let data = try Data(contentsOf: fileUrl)
+            print("Data read from file: \(data)")
+            
+            if let obj: T = try? decodeArchivedObject(from: data) {
+                print("Decoded object: \(obj)")
+                return obj
+            }
+            
+            print("Failed to decode object from data.")
+            
+            return nil
+        } catch {
+            return nil
+        }
+    }
+    
+    func writeData<T: NSObject & NSCoding & NSSecureCoding>(
+        data: T, 
+        file: AccountFiles, 
+        pathDirectory: FileManager.SearchPathDirectory
+    ) -> Bool {
+        do {
+            // Get the current account ID first
+            guard let accountID = self.currentAccountID else {
+                print("StorageService: Error - currentAccountID is nil. Cannot write data.")
+                return false
+            }
+            
+            // Build the file URL
+            let rootDirectoryURL = try FileManager.default.url(for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+            let fileUrl = rootDirectoryURL
+                .appendingPathComponent(self.basePath)
+                .appendingPathComponent(accountID)
+                .appendingPathComponent(file.rawValue)
+                        
+            // Encode the object to data
+            let encodedData = try encodeArchivedObject(object: data)
+            
+            // Write the encoded data to file
+            try encodedData.write(to: fileUrl)
+            
+            print("StorageService: Successfully wrote data to file: \(fileUrl.path)")
+            return true
+        } catch {
+            print("StorageService: Error writing data: \(error)")
+            return false
+        }
+    } 
+
+    // MARK: - Helper Methods
+
+    func createAccountStructureIfRequired(accountID: String) throws {
+        let rootDirectoryURL = try FileManager.default.url(for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+        let baseURL = rootDirectoryURL.appendingPathComponent(self.basePath)
+        let accountListPath = baseURL.appendingPathComponent(accountListURLComponent)
+        
+        // Check if the account_list file already exists
+        guard !FileManager.default.fileExists(atPath: accountListPath.path) else {
+            print("StorageService: account_list file already exists at \(accountListPath.path)")
+            return
+        }
+        
+        // Create the account list structure with provided accountID
+        let accountListData: [String: Any] = [
+            "accounts": [accountID],
+            "current": accountID
+        ]
+                
+        // Create directory with accountID as name if it doesn't exist
+        let accountDirectory = baseURL.appendingPathComponent(accountID)
+        if !FileManager.default.fileExists(atPath: accountDirectory.path) {
+            try FileManager.default.createDirectory(at: accountDirectory, withIntermediateDirectories: true, attributes: nil)
+            print("StorageService: Created account directory at \(accountDirectory.path)")
+        } else {
+            print("StorageService: Account directory already exists at \(accountDirectory.path)")
+        }
+
+        // Convert to JSON data and write to file
+        let jsonData = try JSONSerialization.data(withJSONObject: accountListData, options: [])
+        try jsonData.write(to: accountListPath)
+    }
+    
+    private func encodeArchivedObject<T: NSObject & NSSecureCoding>(
+        object: T,
+        moduleName: String = "bc_services_card_dev"
+    ) throws -> Data {
+        let className = String(describing: T.self)
+        
+        // Skip class registration if the expected type is NSDictionary
+        if T.self != NSDictionary.self {
+            let archivedClassName = "\(moduleName).\(className)"
+            NSKeyedArchiver.setClassName(archivedClassName, for: T.self)
+            print("Encoding class: \(archivedClassName)")
+        } else {
+            print("Skipping class registration for NSDictionary")
+        }
+        
+        let archiver = NSKeyedArchiver(requiringSecureCoding: false)
+        
+        // Prepare the object for archiving
+        let objectToArchive: Any
+        if T.self != NSDictionary.self {
+            // Wrap the object in a dictionary with provider key (reverse of decode logic)
+            objectToArchive = [provider: object]
+        } else {
+            objectToArchive = object
+        }
+        
+        archiver.encode(objectToArchive, forKey: NSKeyedArchiveRootObjectKey)
+        archiver.finishEncoding()
+        
+        return archiver.encodedData
+    }
+
+    private func decodeArchivedObject<T: NSObject & NSSecureCoding>(
         from data: Data,
         moduleName: String = "bc_services_card_dev"
     ) throws -> T? {
@@ -111,44 +253,5 @@ class StorageService {
         }
     }
     
-    func readData<T: NSObject & NSCoding & NSSecureCoding>(file: AccountFiles, pathDirectory: FileManager.SearchPathDirectory) -> T? { // Added file parameter
-        do {
-            guard let accountID = self.currentAccountID else {
-                print("StorageService: Error - currentAccountID is nil. Cannot read data.")
-                return nil
-            }
-            let rootDirectoryURL = try FileManager.default.url(for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-            let fileUrl = rootDirectoryURL
-                .appendingPathComponent(self.basePath)
-                .appendingPathComponent(accountID) // Use unwrapped accountID
-                .appendingPathComponent(file.rawValue)
-            
-            
-            guard (FileManager.default.fileExists(atPath: fileUrl.path)) else {
-                return nil
-            }
-            
-            let accessGranted = fileUrl.startAccessingSecurityScopedResource()
-            
-            defer {
-                if accessGranted {
-                    fileUrl.stopAccessingSecurityScopedResource()
-                }
-            }
-            
-            let data = try Data(contentsOf: fileUrl)
-            print("Data read from file: \(data)")
-            
-            if let obj: T = try? decodeArchivedObject(from: data) {
-                print("Decoded object: \(obj)")
-                return obj
-            }
-            
-            print("Failed to decode object from data.")
-            
-            return nil
-        } catch {
-            return nil
-        }
-    }
+       
 }

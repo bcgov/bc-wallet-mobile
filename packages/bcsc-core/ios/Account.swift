@@ -9,7 +9,8 @@ class Account: NSObject, NSCoding, NSSecureCoding {
 
     let id: String
     let issuer: String
-    var clientID: String?
+    let clientID: String
+    
     private var _securityMethod: String
     
     // User full name
@@ -21,7 +22,7 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     // set their nickname
     var didPostNicknameToServer: Bool = false
     
-    private(set) var nickname: String?
+    var nickname: String?
     
     // PIN Penalty helper properties
     private let DAY: TimeInterval = 86400
@@ -29,7 +30,7 @@ class Account: NSObject, NSCoding, NSSecureCoding {
     private let MINUTE: TimeInterval = 60
     private let attemptsIncrement = 5
     private let attemptsThreshold = 20
-    private(set) var failedAttemptCount: Int = 0
+    var failedAttemptCount: Int = 0
     private var lastAttemptDate: Date?
     private lazy var penalties: [Int: TimeInterval] = {
         return [
@@ -40,10 +41,19 @@ class Account: NSObject, NSCoding, NSSecureCoding {
         ]
     }()
     
+    // Regular initializer
+    init(id: String, clientID: String, issuer: String, securityMethod: String = "app_pin_no_device_authn") {
+        self.id = id
+        self.clientID = clientID
+        self.issuer = issuer
+        self._securityMethod = securityMethod
+        super.init()
+    }
+    
     required init?(coder decoder: NSCoder) {
         self.id = decoder.decodeObject(forKey: .id) as! String
         self.issuer = decoder.decodeObject(forKey: .issuer) as! String
-        self.clientID = decoder.decodeObject(forKey: .clientID) as? String
+        self.clientID = decoder.decodeObject(forKey: .clientID) as! String
         self._securityMethod = decoder.decodeObject(forKey: .securityMethod) as! String
         self.failedAttemptCount = decoder.decodeInteger(forKey: .failedAttemptCount)
         self.lastAttemptDate = decoder.decodeObject(forKey: .lastAttemptDate) as? Date

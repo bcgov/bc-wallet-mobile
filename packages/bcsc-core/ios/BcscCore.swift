@@ -94,7 +94,7 @@ class BcscCore: NSObject {
   }
 
   // MARK: - Public Methods
-   
+
   @objc
   func getAllKeys(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let keyPairManager = KeyPairManager()
@@ -213,7 +213,7 @@ class BcscCore: NSObject {
     let storage = StorageService()
     let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
 
-    guard let currentAccount = account, let clientID = currentAccount.clientID else {
+    guard let currentAccount = account else {
         reject("E_ACCOUNT_NOT_FOUND", "Account or clientID not found.", nil)
         return
     }
@@ -223,7 +223,7 @@ class BcscCore: NSObject {
         return
     }
 
-    let id = "\(clientID)/tokens/\(tokenType.rawValue)/1"
+    let id = "\(currentAccount.clientID)/tokens/\(tokenType.rawValue)/1"
     
     if let token = tokenStorageService.get(id: id) {
       var tokenDict: [String: Any?] = [
@@ -242,6 +242,62 @@ class BcscCore: NSObject {
       resolve(tokenDict)
     } else {
       resolve(nil)
+    }
+  }
+
+  @objc
+  func setAccount(_ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    print("BcscCore: setAccount called with account: \(account)")
+    let accountID = UUID().uuidString
+    let storage = StorageService()
+      
+    // Extract required fields from the dictionary
+    guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String  else {
+      reject("E_INVALID_ACCOUNT_DATA", "Account must have an 'issuer' and 'clientID' fields", nil)
+      return
+    }
+    
+    // Extract optional security method, default to pin without device auth
+    let securityMethod = account["_securityMethod"] as? String ?? "app_pin_no_device_authn"
+    
+    // Create Account object with required fields
+    let newAccount = Account(id: accountID, clientID: clientID, issuer: issuer, securityMethod: securityMethod)
+    
+    if let displayName = account["displayName"] as? String {
+      newAccount.displayName = displayName
+    }
+    
+    if let didPostNicknameToServer = account["didPostNicknameToServer"] as? Bool {
+      newAccount.didPostNicknameToServer = didPostNicknameToServer
+    }
+    
+    if let nickname = account["nickname"] as? String {
+      newAccount.nickname = nickname
+    }
+    
+    if let failedAttemptCount = account["failedAttemptCount"] as? Int {
+      newAccount.failedAttemptCount = failedAttemptCount
+    }
+    
+    // Ensure account structure exists before writing
+    do {
+      try storage.createAccountStructureIfRequired(accountID: accountID)
+    } catch {
+      reject("E_ACCOUNT_STRUCTURE_CREATION_FAILED", "Failed to create account structure: \(error.localizedDescription)", error)
+      return
+    }
+
+    let success = storage.writeData(
+      data: newAccount,
+      file: AccountFiles.accountMetadata,
+      pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory
+    )
+    
+    if success {
+      print("BcscCore: setAccount - Account successfully stored")
+      resolve(nil)
+    } else {
+      reject("E_ACCOUNT_STORAGE_FAILED", "Failed to store account data", nil)
     }
   }
 
@@ -270,19 +326,11 @@ class BcscCore: NSObject {
     }
   }
 
-
   @objc
-  func getRefreshTokenRequestBody(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func getRefreshTokenRequestBody(_ issuer: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
     let grantType = "refresh_token"
     let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
-    let storage = StorageService()
-    let account: Account? = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
-
-    guard let account = account else {
-        reject("E_ACCOUNT_NOT_FOUND", "Account not found.", nil)
-        return
-    }
 
     // Make JWT Claim Set
     guard let uuid = UIDevice.current.identifierForVendor?.uuidString else {
@@ -295,9 +343,9 @@ class BcscCore: NSObject {
     let expireSeconds = Int(Date().addingTimeInterval(TimeInterval(clientAssertionJwtExpirationSeconds)).timeIntervalSince1970)
     
     builder
-        .claim(name: "aud", value: account.issuer)
-        .claim(name: "iss", value: account.clientID) // was from registration
-        .claim(name: "sub", value: account.clientID) // was from registration
+        .claim(name: "aud", value: issuer)
+        .claim(name: "iss", value: clientID) // was from registration
+        .claim(name: "sub", value: clientID) // was from registration
         .claim(name: "iat", value: seconds)
         .claim(name: "jti", value: uuid)
         .claim(name: "exp", value: expireSeconds)
@@ -317,7 +365,7 @@ class BcscCore: NSObject {
         }
 
         // Construct the body for the refresh token request
-        let body = "grant_type=\(grantType)&client_id=\(account.clientID!)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(tokenValue)"
+        let body = "grant_type=\(grantType)&client_id=\(clientID)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(tokenValue)"
 
         resolve(body)
 
@@ -325,20 +373,13 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func signPairingCode(_ code: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func signPairingCode(_ code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let storage = StorageService()
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
-
-    guard let account: Account = storage.readData(file: AccountFiles.accountMetadata, pathDirectory: .applicationSupportDirectory) else {
-      reject("E_ACCOUNT_NOT_FOUND", "Account not found.", nil)
-      return
-    }
     
-    guard let deviceinfo: NSDictionary = storage.readData(file: AccountFiles.deviceInfo, pathDirectory: .applicationSupportDirectory) else {
-      reject("E_DEVICE_INFO_NOT_FOUND", "Device info not found.", nil)
-      return
-    }
+    // Use empty string if deviceToken is not provided
+    let actualDeviceToken = deviceToken ?? ""
       
     guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
           let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String else { // Ensure build is also a String
@@ -349,25 +390,19 @@ class BcscCore: NSObject {
     let seconds = Int(Date().timeIntervalSince1970)
     let builder = JWTClaimsSet.builder()
     
-    // Make sure deviceToken and fcmDeviceToken have values
-    // (empty string if missing)
-    let deviceToken = deviceinfo["device_token"] as? String ?? ""
-    let fcmDeviceToken = deviceinfo["fcm_device_token"] as? String ?? ""
-    
     builder
-      .claim(name: "aud", value: account.issuer)
-      .claim(name: "iss", value: account.clientID)
+      .claim(name: "aud", value: issuer)
+      .claim(name: "iss", value: clientID)
       .claim(name: "iat", value: seconds)
       .claim(name: "challenge", value: code)
       .claim(name: "challenge_source", value: ChallengeSource.remote_pairing_code.rawValue)
-      .claim(name: "apns_token", value: deviceToken)
-      .claim(name: "fcm_device_token", value: fcmDeviceToken)
+      .claim(name: "apns_token", value: actualDeviceToken)
       .claim(name: DeviceInfoKeys.systemName, value: BcscCore.generalizedOsName)
       .claim(name: DeviceInfoKeys.systemVersion, value: UIDevice.current.systemVersion)
       .claim(name: DeviceInfoKeys.deviceName, value: UIDevice.current.name)
       .claim(name: DeviceInfoKeys.deviceID, value: UIDevice.current.identifierForVendor?.uuidString ?? "")
       .claim(name: DeviceInfoKeys.deviceModel, value: UIDevice.current.model)
-      .claim(name: DeviceInfoKeys.deviceToken, value: deviceToken) // Duplicate of apns_token?
+      .claim(name: DeviceInfoKeys.deviceToken, value: actualDeviceToken) // Duplicate of apns_token?
       .claim(name: DeviceInfoKeys.fcmDeviceToken, value: fcmDeviceToken) // Duplicate of fcm_device_token?
       .claim(name: DeviceInfoKeys.appVersion, value: version)
       .claim(name: DeviceInfoKeys.appBuild, value: build)

@@ -128,6 +128,15 @@ export const getToken = async (
 };
 
 /**
+ * Sets the current account information.
+ * @param account The Account object to set as the current account.
+ * @returns A promise that resolves when the account has been successfully set.
+ */
+export const setAccount = async (account: Account): Promise<void> => {
+  return BcscCore.setAccount(account);
+};
+
+/**
  * Retrieves the current account information.
  * @returns A promise that resolves to an Account object if an account exists, otherwise null.
  */
@@ -140,21 +149,42 @@ export const getAccount = async (): Promise<Account | null> => {
  * This involves creating a JWT, signing it with the latest private key,
  * and then formatting it along with the existing refresh token and other
  * necessary OAuth parameters.
+ * @param issuer The issuer URL for the OAuth provider.
+ * @param clientID The client ID for the OAuth application.
  * @returns A promise that resolves to a string containing the full
  *          refresh token request body, or null if an error occurs.
  */
-export const getRefreshTokenRequestBody = async (): Promise<string | null> => {
-  return BcscCore.getRefreshTokenRequestBody();
+export const getRefreshTokenRequestBody = async (
+  issuer: string,
+  clientID: string
+): Promise<string | null> => {
+  return BcscCore.getRefreshTokenRequestBody(issuer, clientID);
 };
 
 /**
  * Signs a given pairing code.
  * @param code The pairing code string to sign.
+ * @param issuer The issuer URL for the OAuth provider.
+ * @param clientID The client ID for the OAuth application.
+ * @param fcmDeviceToken The FCM device token for push notifications.
+ * @param deviceToken The APNS device token (iOS only).
  * @returns A promise that resolves to a string containing the signature,
  *          or null if an error occurs. (Currently returns a mocked signature).
  */
-export const signPairingCode = async (code: string): Promise<string | null> => {
-  return BcscCore.signPairingCode(code);
+export const signPairingCode = async (
+  code: string,
+  issuer: string,
+  clientID: string,
+  fcmDeviceToken: string,
+  deviceToken?: string
+): Promise<string | null> => {
+  return BcscCore.signPairingCode(
+    code,
+    issuer,
+    clientID,
+    fcmDeviceToken,
+    deviceToken
+  );
 };
 
 /**

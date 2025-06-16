@@ -28,7 +28,7 @@ export type NativeToken = {
 };
 
 export type NativeAccount = {
-  id: string;
+  readonly id: string;
   issuer: string;
   clientID?: string;
   displayName?: string;
@@ -42,8 +42,17 @@ export interface Spec extends TurboModule {
   getKeyPair(label: string): Promise<KeyPair>;
   getToken(tokenType: number): Promise<NativeToken | null>;
   getAccount(): Promise<NativeAccount | null>;
-  getRefreshTokenRequestBody(): Promise<string | null>;
-  signPairingCode(code: string): Promise<string | null>;
+  getRefreshTokenRequestBody(
+    issuer: string,
+    clientID: string
+  ): Promise<string | null>;
+  signPairingCode(
+    code: string,
+    issuer: string,
+    clientID: string,
+    fcmDeviceToken: string,
+    deviceToken?: string
+  ): Promise<string | null>;
   getDynamicClientRegistrationBody(
     fcmDeviceToken: string,
     deviceToken?: string
