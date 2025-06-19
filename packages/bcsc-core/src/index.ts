@@ -1,6 +1,7 @@
 import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec, { type NativeAccount } from './NativeBcscCore';
-export type { NativeAccount, AccountSecurityMethod } from './NativeBcscCore';
+export type { NativeAccount } from './NativeBcscCore';
+export { AccountSecurityMethod } from './NativeBcscCore';
 export interface TokenInfo {
   id: string;
   type: TokenType;
