@@ -115,10 +115,12 @@ export const getToken = async (
 
 /**
  * Sets the current account information.
- * @param account The Account object to set as the current account.
+ * @param account The Account object to set as the current account (without id, which will be generated).
  * @returns A promise that resolves when the account has been successfully set.
  */
-export const setAccount = async (account: NativeAccount): Promise<void> => {
+export const setAccount = async (
+  account: Omit<NativeAccount, 'id'>
+): Promise<void> => {
   return BcscCore.setAccount(account);
 };
 
