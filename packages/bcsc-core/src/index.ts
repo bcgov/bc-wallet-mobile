@@ -1,6 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
-import NativeBcscCoreSpec from './NativeBcscCore';
-
+import NativeBcscCoreSpec, { type NativeAccount } from './NativeBcscCore';
+export type { NativeAccount, AccountSecurityMethod } from './NativeBcscCore';
 export interface TokenInfo {
   id: string;
   type: TokenType;
@@ -31,21 +31,6 @@ export interface KeyPair {
   privateKeyAvailable: string; // Indicates if the private key exists,
   // even if not extractable
 }
-
-export interface Account {
-  id: string;
-  issuer: string;
-  clientID?: string;
-  // _securityMethod: string; // Consider if this should be exposed or mapped to a more friendly type
-  displayName?: string;
-  didPostNicknameToServer: boolean;
-  nickname?: string;
-  failedAttemptCount: number;
-  // lastAttemptDate?: number; // Timestamp
-  // Penalties are not directly included as it's a computed property
-  // with complex structure
-}
-
 export interface ProviderInfo {
   // Assuming Provider can be represented like this
   issuer: string;
@@ -132,7 +117,7 @@ export const getToken = async (
  * @param account The Account object to set as the current account.
  * @returns A promise that resolves when the account has been successfully set.
  */
-export const setAccount = async (account: Account): Promise<void> => {
+export const setAccount = async (account: NativeAccount): Promise<void> => {
   return BcscCore.setAccount(account);
 };
 
@@ -140,7 +125,7 @@ export const setAccount = async (account: Account): Promise<void> => {
  * Retrieves the current account information.
  * @returns A promise that resolves to an Account object if an account exists, otherwise null.
  */
-export const getAccount = async (): Promise<Account | null> => {
+export const getAccount = async (): Promise<NativeAccount | null> => {
   return BcscCore.getAccount();
 };
 

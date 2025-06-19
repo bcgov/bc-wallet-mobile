@@ -252,14 +252,12 @@ class BcscCore: NSObject {
     let storage = StorageService()
       
     // Extract required fields from the dictionary
-    guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String  else {
-      reject("E_INVALID_ACCOUNT_DATA", "Account must have an 'issuer' and 'clientID' fields", nil)
+    guard let issuer = account["issuer"] as? String, let clientID = account["clientID"] as? String,
+      let securityMethod = account["securityMethod"] as? String else {
+      reject("E_INVALID_ACCOUNT_DATA", "Account must have an 'issuer', 'clientID' and 'securityMethod' fields", nil)
       return
     }
-    
-    // Extract optional security method, default to pin without device auth
-    let securityMethod = account["_securityMethod"] as? String ?? "app_pin_no_device_authn"
-    
+        
     // Create Account object with required fields
     let newAccount = Account(id: accountID, clientID: clientID, issuer: issuer, securityMethod: securityMethod)
     

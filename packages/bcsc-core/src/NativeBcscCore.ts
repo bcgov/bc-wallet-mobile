@@ -27,14 +27,24 @@ export type NativeToken = {
   expiry?: number | null; // Timestamp or null
 };
 
+export enum AccountSecurityMethod {
+  PinNoDeviceAuth = 'app_pin_no_device_authn',
+  PinWithDeviceAuth = 'app_pin_has_device_authn',
+  DeviceAuth = 'device_authentication',
+}
+
 export type NativeAccount = {
   readonly id: string;
   issuer: string;
-  clientID?: string;
+  clientID: string;
+  securityMethod: AccountSecurityMethod;
   displayName?: string;
-  didPostNicknameToServer: boolean;
+  didPostNicknameToServer?: boolean;
   nickname?: string;
-  failedAttemptCount: number;
+  failedAttemptCount?: number;
+  // lastAttemptDate?: number; // Timestamp
+  // Penalties are not directly included as it's a computed property
+  // with complex structure
 };
 
 export interface Spec extends TurboModule {
