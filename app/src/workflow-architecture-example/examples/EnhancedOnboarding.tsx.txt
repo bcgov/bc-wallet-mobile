@@ -1,0 +1,331 @@
+/**
+ * Example Implementation: Enhanced Onboarding with Workflows
+ * 
+ * This file shows how to implement the enhanced onboarding system
+ * using the workflow architecture while maintaining compatibility
+ * with the existing BC Wallet Mobile onboarding system.
+ */
+
+import React, { useEffect } from 'react'
+import { DeviceEventEmitter } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import { useStore, EventTypes, Screens, DispatchAction } from '@bifold/core'
+import { WorkflowBuilder } from '../utils/workflowUtils'
+import { useWorkflowEngine } from '../providers/WorkflowProvider'
+import { WorkflowDefinition, WorkflowContext } from '../types/workflow'
+
+/**
+ * Enhanced Onboarding Workflow Definition
+ * 
+ * This extends the existing onboarding system to use the workflow architecture
+ * while maintaining all existing functionality and state management.
+ */
+export const createEnhancedOnboardingWorkflow = (config: any): WorkflowDefinition => {
+  return WorkflowBuilder
+    .create('enhanced-onboarding', 'Welcome to BC Wallet')
+    .description('Complete setup of your digital wallet')
+    .skippable(false)
+    .pausable(false)
+    
+    // Agent Initialization (headless)
+    .addHeadlessStep(async (context: WorkflowContext) => {
+      // Wait for agent to be initialized
+      while (!context.userState.agent) {
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+      context.completeStep('agent-init')
+    }, {
+      id: 'agent-init',
+      required: true,
+      metadata: { description: 'Initializing secure agent' }
+    })
+
+    // Version Check (conditional headless)
+    .addConditionalStep(
+      (context: WorkflowContext) => {
+        const { needsUpdate, dismissed } = context.userState.versionInfo || {}
+        return needsUpdate && !dismissed
+      },
+      {
+        id: 'version-check',
+        screen: Screens.UpdateAvailable,
+        required: true,
+        completionCondition: (context: WorkflowContext) => {
+          const { needsUpdate, dismissed } = context.userState.versionInfo || {}
+          return !needsUpdate || dismissed
+        }
+      }
+    )
+
+    // Preface (conditional)
+    .addConditionalStep(
+      (context: WorkflowContext) => config.showPreface === true,
+      {
+        id: 'preface',
+        screen: Screens.Preface,
+        required: true,
+        completionCondition: (context: WorkflowContext) => {
+          return context.userState.onboarding.didSeePreface
+        }
+      }
+    )
+
+    // Tutorial/Onboarding Pages
+    .addScreenStep(Screens.Onboarding, {
+      id: 'tutorial',
+      required: true,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.onboarding.didCompleteTutorial
+      }
+    })
+
+    // Terms and Conditions
+    .addScreenStep(Screens.Terms, {
+      id: 'terms',
+      required: true,
+      completionCondition: (context: WorkflowContext) => {
+        const { didAgreeToTerms } = context.userState.onboarding
+        const termsVersion = Number(context.data.termsVersion || 1)
+        return Number(didAgreeToTerms) === termsVersion
+      }
+    })
+
+    // PIN Creation
+    .addScreenStep(Screens.CreatePIN, {
+      id: 'create-pin',
+      required: true,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.onboarding.didCreatePIN
+      },
+      onComplete: async (context: WorkflowContext) => {
+        // Additional logic after PIN creation if needed
+      }
+    })
+
+    // Biometry Setup (optional)
+    .addScreenStep(Screens.UseBiometry, {
+      id: 'biometry',
+      required: false,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.onboarding.didConsiderBiometry
+      }
+    })
+
+    // Push Notifications (conditional)
+    .addConditionalStep(
+      (context: WorkflowContext) => config.enablePushNotifications === true,
+      {
+        id: 'push-notifications',
+        screen: Screens.UsePushNotifications,
+        required: false,
+        completionCondition: (context: WorkflowContext) => {
+          return context.userState.onboarding.didConsiderPushNotifications
+        }
+      }
+    )
+
+    // Wallet Naming (conditional)
+    .addConditionalStep(
+      (context: WorkflowContext) => context.userState.preferences.enableWalletNaming,
+      {
+        id: 'name-wallet',
+        screen: Screens.NameWallet,
+        required: false,
+        completionCondition: (context: WorkflowContext) => {
+          return context.userState.onboarding.didNameWallet
+        }
+      }
+    )
+
+    // Final Authentication
+    .addScreenStep(Screens.EnterPIN, {
+      id: 'authenticate',
+      required: true,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.authentication.didAuthenticate
+      }
+    })
+
+    // Workflow completion
+    .onComplete(async (context: WorkflowContext) => {
+      // Mark onboarding as complete
+      DeviceEventEmitter.emit(EventTypes.DID_COMPLETE_ONBOARDING)
+      
+      // Additional completion logic
+      console.log('Enhanced onboarding workflow completed successfully!')
+    })
+
+    .onCancel(async (context: WorkflowContext) => {
+      // Handle workflow cancellation if needed
+      console.log('Onboarding workflow was cancelled')
+    })
+
+    .build()
+}
+
+/**
+ * Enhanced Onboarding Hook
+ * 
+ * This hook manages the enhanced onboarding workflow and provides
+ * compatibility with the existing onboarding system.
+ */
+export const useEnhancedOnboarding = (config: any, termsVersion: number) => {
+  const [store, dispatch] = useStore()
+  const navigation = useNavigation()
+  const engine = useWorkflowEngine()
+
+  // Register the enhanced onboarding workflow
+  useEffect(() => {
+    const workflow = createEnhancedOnboardingWorkflow(config)
+    engine.registerWorkflow(workflow)
+  }, [config, engine])
+
+  // Start onboarding workflow when needed
+  useEffect(() => {
+    const shouldStartOnboarding = !store.onboarding.didCompleteOnboarding && 
+                                  store.stateLoaded &&
+                                  !engine.getCurrentState().activeWorkflow
+
+    if (shouldStartOnboarding) {
+      engine.startWorkflow('enhanced-onboarding', {
+        data: { termsVersion }
+      })
+    }
+  }, [
+    store.onboarding.didCompleteOnboarding,
+    store.stateLoaded,
+    engine,
+    termsVersion
+  ])
+
+  // Listen for workflow completion
+  useEffect(() => {
+    const workflowCompleteListener = DeviceEventEmitter.addListener(
+      'workflow:completed',
+      (event) => {
+        if (event.workflowId === 'enhanced-onboarding') {
+          // Update store to mark onboarding as complete
+          dispatch({
+            type: DispatchAction.DID_COMPLETE_ONBOARDING,
+          })
+        }
+      }
+    )
+
+    return () => workflowCompleteListener.remove()
+  }, [dispatch])
+
+  const currentState = engine.getCurrentState()
+  
+  return {
+    isOnboardingActive: currentState.activeWorkflow?.id === 'enhanced-onboarding',
+    currentStep: currentState.currentStepId,
+    progress: currentState.activeWorkflow ? 
+      calculateOnboardingProgress(currentState.activeWorkflow) : null,
+    canSkip: false, // Enhanced onboarding is not skippable
+    canPause: false, // Enhanced onboarding is not pausable
+  }
+}
+
+/**
+ * Calculate onboarding progress
+ */
+const calculateOnboardingProgress = (workflow: any) => {
+  const totalSteps = workflow.steps.filter((step: any) => !step.headless).length
+  const completedSteps = workflow.steps.filter((step: any) => step.completed).length
+  
+  return {
+    current: completedSteps,
+    total: totalSteps,
+    percentage: totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0,
+  }
+}
+
+/**
+ * Enhanced Onboarding Screen Wrapper
+ * 
+ * This HOC can be used to wrap existing onboarding screens to make them
+ * workflow-aware while maintaining backward compatibility.
+ */
+export const withEnhancedOnboarding = <P extends object>(
+  Component: React.ComponentType<P>,
+  stepId: string
+) => {
+  return React.forwardRef<any, P>((props, ref) => {
+    const engine = useWorkflowEngine()
+    const currentState = engine.getCurrentState()
+    
+    const isWorkflowStep = currentState.activeWorkflow?.id === 'enhanced-onboarding' &&
+                          currentState.currentStepId === stepId
+
+    const completeStep = React.useCallback((data?: any) => {
+      if (isWorkflowStep) {
+        engine.completeStep(stepId, data)
+      }
+    }, [isWorkflowStep, stepId, engine])
+
+    // Enhanced props with workflow functionality
+    const enhancedProps = {
+      ...props,
+      ref,
+      isWorkflowStep,
+      completeStep,
+      workflowContext: isWorkflowStep ? {
+        // Add workflow context if needed
+        stepId,
+        workflowId: 'enhanced-onboarding',
+      } : undefined,
+    }
+
+    return <Component {...enhancedProps} />
+  })
+}
+
+/**
+ * Integration Component
+ * 
+ * This component can be used in your main app to integrate the enhanced
+ * onboarding system with your existing navigation structure.
+ */
+interface EnhancedOnboardingIntegrationProps {
+  children: React.ReactNode
+  config: any
+  termsVersion: number
+}
+
+export const EnhancedOnboardingIntegration: React.FC<EnhancedOnboardingIntegrationProps> = ({
+  children,
+  config,
+  termsVersion,
+}) => {
+  const { isOnboardingActive, currentStep, progress } = useEnhancedOnboarding(config, termsVersion)
+
+  // You can add additional UI here for workflow progress, etc.
+  if (isOnboardingActive) {
+    console.log(`Onboarding active - Step: ${currentStep}, Progress: ${progress?.percentage}%`)
+  }
+
+  return <>{children}</>
+}
+
+/**
+ * Migration Helper
+ * 
+ * This function helps migrate from the old onboarding system to the new one
+ */
+export const migrateOnboardingData = (oldOnboardingState: any) => {
+  // Convert old onboarding state to new workflow state if needed
+  return {
+    // Map old state to new workflow step completion
+    'preface': oldOnboardingState.didSeePreface,
+    'tutorial': oldOnboardingState.didCompleteTutorial,
+    'terms': oldOnboardingState.didAgreeToTerms,
+    'create-pin': oldOnboardingState.didCreatePIN,
+    'biometry': oldOnboardingState.didConsiderBiometry,
+    'push-notifications': oldOnboardingState.didConsiderPushNotifications,
+    'name-wallet': oldOnboardingState.didNameWallet,
+    'authenticate': false, // Always require re-authentication
+  }
+}
+
+export default useEnhancedOnboarding

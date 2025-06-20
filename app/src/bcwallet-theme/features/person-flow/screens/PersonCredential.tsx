@@ -21,7 +21,7 @@ import PersonIssuance1 from '@assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '@assets/img/PersonIssuance2.svg'
 import { openLink } from '@utils/links'
 import { BCState } from '@/store'
-import { BCScreens } from '@/bcsc-theme/_old/types/navigators'
+import { BCSCScreens } from '@bcsc-theme/types/navigators'
 
 const links = {
   WhatIsPersonCredential: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential',
@@ -119,7 +119,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
 
   const startAltPersonFlow = useCallback(() => {
     navigation.getParent()?.navigate(Stacks.CustomNavStack1, {
-      screen: BCScreens.VerificationSteps,
+      screen: BCSCScreens.SetupSteps,
     })
   }, [navigation])
 

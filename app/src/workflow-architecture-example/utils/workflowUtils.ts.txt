@@ -1,0 +1,437 @@
+/**
+ * Workflow Utilities
+ * 
+ * This file contains utility functions and helpers for working with workflows
+ */
+
+import { WorkflowDefinition, WorkflowStep, WorkflowContext } from '../types/workflow'
+
+/**
+ * Workflow Builder - Fluent API for creating workflows
+ */
+export class WorkflowBuilder {
+  private workflow: Partial<WorkflowDefinition> = {
+    steps: [],
+  }
+
+  static create(id: string, name: string): WorkflowBuilder {
+    const builder = new WorkflowBuilder()
+    builder.workflow.id = id
+    builder.workflow.name = name
+    return builder
+  }
+
+  description(desc: string): WorkflowBuilder {
+    this.workflow.description = desc
+    return this
+  }
+
+  skippable(skippable: boolean = true): WorkflowBuilder {
+    this.workflow.skippable = skippable
+    return this
+  }
+
+  pausable(pausable: boolean = true): WorkflowBuilder {
+    this.workflow.pausable = pausable
+    return this
+  }
+
+  addStep(step: Omit<WorkflowStep, 'id'> & { id?: string }): WorkflowBuilder {
+    const stepId = step.id || `step-${this.workflow.steps!.length + 1}`
+    this.workflow.steps!.push({
+      ...step,
+      id: stepId,
+      completed: false,
+    } as WorkflowStep)
+    return this
+  }
+
+  addScreenStep(screen: string, options: Partial<WorkflowStep> = {}): WorkflowBuilder {
+    return this.addStep({
+      screen,
+      required: true,
+      ...options,
+    })
+  }
+
+  addHeadlessStep(action: (context: WorkflowContext) => Promise<void> | void, options: Partial<WorkflowStep> = {}): WorkflowBuilder {
+    return this.addStep({
+      headless: true,
+      required: true,
+      onActivate: action,
+      ...options,
+    })
+  }
+
+  addConditionalStep(
+    condition: (context: WorkflowContext) => boolean,
+    step: Omit<WorkflowStep, 'id'> & { id?: string }
+  ): WorkflowBuilder {
+    return this.addStep({
+      ...step,
+      completionCondition: (context: WorkflowContext) => {
+        if (!condition(context)) {
+          return true // Skip this step
+        }
+        return step.completionCondition?.(context) || false
+      },
+    })
+  }
+
+  onComplete(callback: (context: WorkflowContext) => Promise<void> | void): WorkflowBuilder {
+    this.workflow.onComplete = callback
+    return this
+  }
+
+  onStart(callback: (context: WorkflowContext) => Promise<void> | void): WorkflowBuilder {
+    this.workflow.onStart = callback
+    return this
+  }
+
+  onCancel(callback: (context: WorkflowContext) => Promise<void> | void): WorkflowBuilder {
+    this.workflow.onCancel = callback
+    return this
+  }
+
+  build(): WorkflowDefinition {
+    if (!this.workflow.id || !this.workflow.name) {
+      throw new Error('Workflow must have an id and name')
+    }
+    return this.workflow as WorkflowDefinition
+  }
+}
+
+/**
+ * Workflow State Utilities
+ */
+export const WorkflowUtils = {
+  /**
+   * Calculate workflow progress
+   */
+  getProgress(workflow: WorkflowDefinition): {
+    completed: number
+    total: number
+    percentage: number
+    requiredCompleted: number
+    requiredTotal: number
+  } {
+    const visibleSteps = workflow.steps.filter(step => !step.headless)
+    const requiredSteps = workflow.steps.filter(step => step.required)
+    
+    const completed = visibleSteps.filter(step => step.completed).length
+    const requiredCompleted = requiredSteps.filter(step => step.completed).length
+
+    return {
+      completed,
+      total: visibleSteps.length,
+      percentage: visibleSteps.length > 0 ? (completed / visibleSteps.length) * 100 : 0,
+      requiredCompleted,
+      requiredTotal: requiredSteps.length,
+    }
+  },
+
+  /**
+   * Check if workflow can be completed
+   */
+  canComplete(workflow: WorkflowDefinition): boolean {
+    const requiredSteps = workflow.steps.filter(step => step.required)
+    return requiredSteps.every(step => step.completed)
+  },
+
+  /**
+   * Get next available step
+   */
+  getNextStep(workflow: WorkflowDefinition, currentStepId?: string): WorkflowStep | null {
+    const currentIndex = currentStepId 
+      ? workflow.steps.findIndex(step => step.id === currentStepId)
+      : -1
+
+    for (let i = currentIndex + 1; i < workflow.steps.length; i++) {
+      const step = workflow.steps[i]
+      if (!step.completed && WorkflowUtils.areDependenciesMet(step, workflow)) {
+        return step
+      }
+    }
+
+    return null
+  },
+
+  /**
+   * Check if step dependencies are satisfied
+   */
+  areDependenciesMet(step: WorkflowStep, workflow: WorkflowDefinition): boolean {
+    if (!step.dependencies || step.dependencies.length === 0) {
+      return true
+    }
+
+    return step.dependencies.every(depId => {
+      const depStep = workflow.steps.find(s => s.id === depId)
+      return depStep?.completed || false
+    })
+  },
+
+  /**
+   * Get workflow summary
+   */
+  getSummary(workflow: WorkflowDefinition): {
+    id: string
+    name: string
+    totalSteps: number
+    completedSteps: number
+    requiredSteps: number
+    completedRequiredSteps: number
+    isComplete: boolean
+    nextStep?: string
+  } {
+    const progress = WorkflowUtils.getProgress(workflow)
+    const nextStep = WorkflowUtils.getNextStep(workflow)
+
+    return {
+      id: workflow.id,
+      name: workflow.name,
+      totalSteps: progress.total,
+      completedSteps: progress.completed,
+      requiredSteps: progress.requiredTotal,
+      completedRequiredSteps: progress.requiredCompleted,
+      isComplete: WorkflowUtils.canComplete(workflow),
+      nextStep: nextStep?.id,
+    }
+  },
+
+  /**
+   * Validate workflow definition
+   */
+  validate(workflow: WorkflowDefinition): { valid: boolean; errors: string[] } {
+    const errors: string[] = []
+
+    // Check required fields
+    if (!workflow.id) errors.push('Workflow must have an id')
+    if (!workflow.name) errors.push('Workflow must have a name')
+    if (!workflow.steps || workflow.steps.length === 0) {
+      errors.push('Workflow must have at least one step')
+    }
+
+    // Check step consistency
+    if (workflow.steps) {
+      const stepIds = new Set<string>()
+      
+      workflow.steps.forEach((step, index) => {
+        // Check for duplicate step IDs
+        if (stepIds.has(step.id)) {
+          errors.push(`Duplicate step ID: ${step.id}`)
+        }
+        stepIds.add(step.id)
+
+        // Check step dependencies
+        if (step.dependencies) {
+          step.dependencies.forEach(depId => {
+            if (!stepIds.has(depId)) {
+              errors.push(`Step ${step.id} depends on non-existent step: ${depId}`)
+            }
+          })
+        }
+
+        // Check that headless steps have some way to complete
+        if (step.headless && !step.onActivate && !step.completionCondition) {
+          errors.push(`Headless step ${step.id} must have onActivate or completionCondition`)
+        }
+
+        // Check that non-headless steps have a screen
+        if (!step.headless && !step.screen) {
+          errors.push(`Step ${step.id} must have a screen or be marked as headless`)
+        }
+      })
+    }
+
+    return {
+      valid: errors.length === 0,
+      errors,
+    }
+  },
+}
+
+/**
+ * Workflow Templates
+ */
+export const WorkflowTemplates = {
+  /**
+   * Simple linear workflow template
+   */
+  createLinearWorkflow(
+    id: string,
+    name: string,
+    screens: string[],
+    options: {
+      skippable?: boolean
+      pausable?: boolean
+      allRequired?: boolean
+    } = {}
+  ): WorkflowDefinition {
+    return WorkflowBuilder
+      .create(id, name)
+      .skippable(options.skippable || false)
+      .pausable(options.pausable || false)
+      .apply(builder => {
+        screens.forEach((screen, index) => {
+          builder.addScreenStep(screen, {
+            id: `step-${index + 1}`,
+            required: options.allRequired !== false,
+          })
+        })
+        return builder
+      })
+      .build()
+  },
+
+  /**
+   * Form wizard workflow template
+   */
+  createFormWizard(
+    id: string,
+    name: string,
+    forms: Array<{
+      screen: string
+      fields: string[]
+      validation?: Record<string, any>
+      required?: boolean
+    }>
+  ): WorkflowDefinition {
+    return WorkflowBuilder
+      .create(id, name)
+      .skippable(true)
+      .pausable(true)
+      .apply(builder => {
+        forms.forEach((form, index) => {
+          builder.addScreenStep(form.screen, {
+            id: `form-${index + 1}`,
+            required: form.required !== false,
+            metadata: {
+              formFields: form.fields,
+              validation: form.validation,
+            },
+          })
+        })
+        return builder
+      })
+      .build()
+  },
+
+  /**
+   * Conditional workflow template
+   */
+  createConditionalWorkflow(
+    id: string,
+    name: string,
+    steps: Array<{
+      screen?: string
+      condition?: (context: WorkflowContext) => boolean
+      required?: boolean
+      headless?: boolean
+    }>
+  ): WorkflowDefinition {
+    return WorkflowBuilder
+      .create(id, name)
+      .apply(builder => {
+        steps.forEach((stepDef, index) => {
+          if (stepDef.condition) {
+            builder.addConditionalStep(stepDef.condition, {
+              id: `conditional-${index + 1}`,
+              screen: stepDef.screen,
+              required: stepDef.required !== false,
+              headless: stepDef.headless,
+            })
+          } else {
+            builder.addStep({
+              id: `step-${index + 1}`,
+              screen: stepDef.screen,
+              required: stepDef.required !== false,
+              headless: stepDef.headless,
+            })
+          }
+        })
+        return builder
+      })
+      .build()
+  },
+}
+
+/**
+ * Workflow Storage Utilities
+ */
+export const WorkflowStorage = {
+  /**
+   * Serialize workflow state for storage
+   */
+  serialize(state: any): string {
+    return JSON.stringify({
+      ...state,
+      // Convert dates to ISO strings
+      history: state.history?.map((entry: any) => ({
+        ...entry,
+        completedAt: entry.completedAt.toISOString(),
+      })),
+    })
+  },
+
+  /**
+   * Deserialize workflow state from storage
+   */
+  deserialize(data: string): any {
+    const parsed = JSON.parse(data)
+    return {
+      ...parsed,
+      // Convert ISO strings back to dates
+      history: parsed.history?.map((entry: any) => ({
+        ...entry,
+        completedAt: new Date(entry.completedAt),
+      })),
+    }
+  },
+}
+
+/**
+ * Workflow Debug Utilities
+ */
+export const WorkflowDebug = {
+  /**
+   * Log workflow state for debugging
+   */
+  logState(workflow: WorkflowDefinition, currentStepId?: string): void {
+    const summary = WorkflowUtils.getSummary(workflow)
+    console.group(`Workflow: ${workflow.name}`)
+    console.log('Summary:', summary)
+    console.log('Current Step:', currentStepId)
+    console.log('Steps:', workflow.steps.map(step => ({
+      id: step.id,
+      screen: step.screen,
+      completed: step.completed,
+      required: step.required,
+      headless: step.headless,
+    })))
+    console.groupEnd()
+  },
+
+  /**
+   * Validate and log workflow definition
+   */
+  validateAndLog(workflow: WorkflowDefinition): boolean {
+    const validation = WorkflowUtils.validate(workflow)
+    if (!validation.valid) {
+      console.error('Workflow validation failed:', validation.errors)
+    } else {
+      console.log('Workflow validation passed')
+    }
+    return validation.valid
+  },
+}
+
+// Helper method for applying functions in fluent chains
+declare global {
+  interface Object {
+    apply<T>(fn: (obj: T) => T): T
+  }
+}
+
+Object.prototype.apply = function<T>(this: T, fn: (obj: T) => T): T {
+  return fn(this)
+}

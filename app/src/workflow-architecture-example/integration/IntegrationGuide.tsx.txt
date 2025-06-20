@@ -1,0 +1,293 @@
+/**
+ * Integration Guide for Workflow Architecture
+ * 
+ * This file provides examples of how to integrate the workflow system
+ * with the existing BC Wallet Mobile architecture.
+ */
+
+import React, { useEffect } from 'react'
+import { DeviceEventEmitter } from 'react-native'
+import { createStackNavigator } from '@react-navigation/stack'
+import { useNavigation } from '@react-navigation/native'
+import { useStore, EventTypes } from '@bifold/core'
+import { WorkflowProvider, useWorkflowEngine } from '../providers/WorkflowProvider'
+import { WorkflowNavigator, withWorkflow } from '../components/WorkflowNavigator'
+import { exampleWorkflows } from '../workflows/exampleWorkflows'
+
+/**
+ * 1. Integration with Main App
+ * 
+ * Wrap your main app component with WorkflowProvider
+ */
+export const AppWithWorkflows: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [store] = useStore()
+  const config = {} // Your app config
+
+  return (
+    <WorkflowProvider userState={store} config={config}>
+      <WorkflowNavigator>
+        {children}
+      </WorkflowNavigator>
+    </WorkflowProvider>
+  )
+}
+
+/**
+ * 2. Enhanced Navigation Stack
+ * 
+ * Example of how to modify your existing navigation stacks
+ * to be workflow-aware
+ */
+const Stack = createStackNavigator()
+
+export const WorkflowAwareMainStack: React.FC = () => {
+  const engine = useWorkflowEngine()
+
+  // Register workflows on app start
+  useEffect(() => {
+    exampleWorkflows.forEach(workflow => {
+      engine.registerWorkflow(workflow)
+    })
+  }, [engine])
+
+  // Listen for app events that might trigger workflows
+  useEffect(() => {
+    const credentialOfferListener = DeviceEventEmitter.addListener(
+      EventTypes.CREDENTIAL_OFFER_RECEIVED,
+      (event) => {
+        // Start credential issuance workflow
+        engine.startWorkflow('credential-issuance', {
+          data: { 
+            credentialId: event.credentialId,
+            connectionId: event.connectionId 
+          }
+        })
+      }
+    )
+
+    const proofRequestListener = DeviceEventEmitter.addListener(
+      EventTypes.PROOF_REQUEST_RECEIVED,
+      (event) => {
+        // Start proof request workflow
+        engine.startWorkflow('proof-request', {
+          data: { 
+            proofId: event.proofId 
+          }
+        })
+      }
+    )
+
+    return () => {
+      credentialOfferListener.remove()
+      proofRequestListener.remove()
+    }
+  }, [engine])
+
+  return (
+    <Stack.Navigator>
+      {/* Your existing screens */}
+      <Stack.Screen name="Home" component={withWorkflow(HomeScreen)} />
+      <Stack.Screen name="Credentials" component={withWorkflow(CredentialsScreen)} />
+      <Stack.Screen name="CredentialOffer" component={withWorkflow(CredentialOfferScreen)} />
+      <Stack.Screen name="ProofRequest" component={withWorkflow(ProofRequestScreen)} />
+      {/* Add more screens as needed */}
+    </Stack.Navigator>
+  )
+}
+
+/**
+ * 3. Example Screen Integration
+ * 
+ * How to make existing screens workflow-aware
+ */
+const CredentialOfferScreen: React.FC = (props: any) => {
+  const { workflowContext, isWorkflowStep } = props
+  const navigation = useNavigation()
+
+  // Handle credential acceptance
+  const handleAcceptCredential = async () => {
+    // Your existing credential acceptance logic
+    await acceptCredential()
+
+    // If this is part of a workflow, complete the step
+    if (isWorkflowStep && workflowContext) {
+      workflowContext.setData('credentialOfferAccepted', true)
+      workflowContext.completeStep('credential-offer-received')
+    } else {
+      // Regular navigation for non-workflow usage
+      navigation.navigate('Credentials')
+    }
+  }
+
+  // Your existing component JSX
+  return (
+    <div>
+      {/* Your existing UI */}
+      <button onClick={handleAcceptCredential}>
+        Accept Credential
+      </button>
+    </div>
+  )
+}
+
+/**
+ * 4. Using Workflow Hooks in Components
+ */
+const PersonalInfoFormScreen: React.FC = () => {
+  const { completeStep, setStepData, stepData } = useWorkflowStep('personal-info')
+  const [formData, setFormData] = React.useState(stepData?.personalInfo || {})
+
+  const handleSubmit = () => {
+    // Validate form
+    if (validateForm(formData)) {
+      // Save data to workflow context
+      setStepData('personalInfo', formData)
+      // Complete this step
+      completeStep()
+    }
+  }
+
+  return (
+    <div>
+      {/* Your form JSX */}
+    </div>
+  )
+}
+
+/**
+ * 5. Conditional Navigation Based on Workflows
+ */
+const HomeScreenWithWorkflows: React.FC = () => {
+  const { state } = useWorkflowEngine()
+  const navigation = useNavigation()
+
+  // Show different UI based on active workflow
+  if (state.activeWorkflow?.id === 'onboarding') {
+    // Don't show normal home content during onboarding
+    return <div>Welcome! Setting up your wallet...</div>
+  }
+
+  // Normal home screen content
+  return (
+    <div>
+      {/* Your existing home screen */}
+    </div>
+  )
+}
+
+/**
+ * 6. Migration Strategy
+ * 
+ * How to gradually migrate existing flows to use workflows
+ */
+
+// Phase 1: Wrapper around existing onboarding
+export const migrateOnboardingToWorkflow = () => {
+  const engine = useWorkflowEngine()
+  const [store] = useStore()
+
+  useEffect(() => {
+    // Check if onboarding is needed
+    if (!store.onboarding.didCompleteOnboarding) {
+      // Start new workflow-based onboarding
+      engine.startWorkflow('onboarding')
+    }
+  }, [store.onboarding.didCompleteOnboarding, engine])
+}
+
+// Phase 2: Individual screen migration
+export const CredentialOfferScreenMigrated: React.FC = () => {
+  // Use both old and new patterns during transition
+  const { isWorkflowStep, workflowContext } = useWorkflowStep('credential-offer-received')
+  
+  const handleComplete = () => {
+    if (isWorkflowStep) {
+      // New workflow-based completion
+      workflowContext?.completeStep('credential-offer-received')
+    } else {
+      // Old direct navigation
+      // navigation.navigate(...)
+    }
+  }
+
+  // Rest of component...
+  return <div>Migrated screen</div>
+}
+
+/**
+ * 7. Workflow State Persistence
+ * 
+ * Example of how to persist workflow state
+ */
+export const WorkflowStatePersistence = () => {
+  const { state } = useWorkflowEngine()
+
+  useEffect(() => {
+    // Save workflow state to storage
+    if (state.activeWorkflow) {
+      saveWorkflowState(state)
+    }
+  }, [state])
+
+  useEffect(() => {
+    // Restore workflow state on app start
+    restoreWorkflowState().then(savedState => {
+      if (savedState?.activeWorkflow) {
+        // Resume workflow
+      }
+    })
+  }, [])
+}
+
+// Helper functions (implement according to your storage strategy)
+const saveWorkflowState = async (state: any) => {
+  // Save to AsyncStorage, SecureStore, or your state management system
+}
+
+const restoreWorkflowState = async () => {
+  // Restore from storage
+  return null
+}
+
+const acceptCredential = async () => {
+  // Your existing credential acceptance logic
+}
+
+const validateForm = (data: any): boolean => {
+  // Your form validation logic
+  return true
+}
+
+/**
+ * 8. Testing Workflows
+ * 
+ * Example test utilities for workflows
+ */
+export const createMockWorkflowContext = (overrides: any = {}) => {
+  return {
+    workflow: { id: 'test-workflow', name: 'Test', steps: [] },
+    navigation: { navigate: jest.fn() },
+    userState: {},
+    config: {},
+    data: {},
+    setData: jest.fn(),
+    completeStep: jest.fn(),
+    skipToStep: jest.fn(),
+    cancelWorkflow: jest.fn(),
+    restartWorkflow: jest.fn(),
+    ...overrides,
+  }
+}
+
+export const mockWorkflowEngine = {
+  startWorkflow: jest.fn(),
+  stopWorkflow: jest.fn(),
+  pauseWorkflow: jest.fn(),
+  resumeWorkflow: jest.fn(),
+  completeStep: jest.fn(),
+  skipToStep: jest.fn(),
+  getCurrentState: jest.fn(),
+  registerWorkflow: jest.fn(),
+  getWorkflow: jest.fn(),
+  getAllWorkflows: jest.fn(),
+}

@@ -1,0 +1,332 @@
+/**
+ * Workflow Architecture Implementation Guide
+ * 
+ * This file provides a complete implementation guide for the workflow-based
+ * architecture in the BC Wallet Mobile project.
+ */
+
+import React from 'react'
+import { NavigationContainer } from '@react-navigation/native'
+import { useStore, EventTypes } from '@bifold/core'
+import { WorkflowProvider } from './providers/WorkflowProvider'
+import { WorkflowNavigator } from './components/WorkflowNavigator'
+import { EnhancedOnboardingIntegration } from './examples/EnhancedOnboarding'
+import { exampleWorkflows } from './workflows/exampleWorkflows'
+
+/**
+ * STEP 1: App-Level Integration
+ * 
+ * Wrap your main app with the WorkflowProvider to enable workflow functionality
+ */
+export const AppWithWorkflowArchitecture: React.FC<{ children: React.ReactNode }> = ({ 
+  children 
+}) => {
+  const [store] = useStore()
+  const config = {
+    showPreface: true,
+    enablePushNotifications: true,
+    enableBiometry: true,
+    // ... other config options
+  }
+
+  return (
+    <WorkflowProvider userState={store} config={config}>
+      <WorkflowNavigator>
+        <EnhancedOnboardingIntegration config={config} termsVersion={1}>
+          <NavigationContainer>
+            {children}
+          </NavigationContainer>
+        </EnhancedOnboardingIntegration>
+      </WorkflowNavigator>
+    </WorkflowProvider>
+  )
+}
+
+/**
+ * STEP 2: Register Workflows in Your Main Component
+ */
+export const MainAppWithWorkflows: React.FC = () => {
+  const { engine } = useWorkflowEngine()
+
+  React.useEffect(() => {
+    // Register all your workflows
+    exampleWorkflows.forEach(workflow => {
+      engine.registerWorkflow(workflow)
+    })
+  }, [engine])
+
+  // Listen for app events that trigger workflows
+  React.useEffect(() => {
+    const credentialOfferListener = DeviceEventEmitter.addListener(
+      EventTypes.CREDENTIAL_OFFER_RECEIVED,
+      (event) => {
+        engine.startWorkflow('credential-issuance', {
+          data: { 
+            credentialId: event.credentialId,
+            connectionId: event.connectionId 
+          }
+        })
+      }
+    )
+
+    const proofRequestListener = DeviceEventEmitter.addListener(
+      EventTypes.PROOF_REQUEST_RECEIVED,
+      (event) => {
+        engine.startWorkflow('proof-request', {
+          data: { proofId: event.proofId }
+        })
+      }
+    )
+
+    return () => {
+      credentialOfferListener.remove()
+      proofRequestListener.remove()
+    }
+  }, [engine])
+
+  return <YourExistingMainStack />
+}
+
+/**
+ * STEP 3: Implementation Roadmap
+ */
+
+/*
+PHASE 1: Foundation Setup (Week 1-2)
+- Implement core workflow types and provider
+- Set up WorkflowNavigator component
+- Create basic workflow utilities
+- Add workflow system to main app
+
+PHASE 2: Enhanced Onboarding (Week 3-4)
+- Implement enhanced onboarding workflow
+- Migrate existing onboarding screens to be workflow-aware
+- Test onboarding flow with new system
+- Maintain backward compatibility
+
+PHASE 3: Credential Flows (Week 5-6)
+- Implement credential issuance workflow
+- Convert CredentialOffer screen to be workflow-aware
+- Add credential processing workflows
+- Test credential acceptance flows
+
+PHASE 4: Proof Request Flows (Week 7-8)
+- Implement proof request workflow
+- Convert ProofRequest screen to be workflow-aware
+- Add credential selection workflows
+- Test proof sharing flows
+
+PHASE 5: Advanced Features (Week 9-10)
+- Add workflow persistence
+- Implement progress indicators
+- Add workflow debugging tools
+- Performance optimization
+
+PHASE 6: Testing & Documentation (Week 11-12)
+- Comprehensive testing of all workflows
+- Update documentation
+- Create migration guides
+- Performance testing
+*/
+
+/**
+ * STEP 4: Quick Start Example
+ * 
+ * Here's how to quickly create a new workflow:
+ */
+
+import { WorkflowBuilder } from './utils/workflowUtils'
+import { Screens } from '@bifold/core'
+
+export const createQuickStartWorkflow = () => {
+  return WorkflowBuilder
+    .create('quick-start', 'Quick Start Guide')
+    .description('Get familiar with the wallet quickly')
+    .skippable(true)
+    .pausable(true)
+    
+    // Welcome screen
+    .addScreenStep(Screens.Home, {
+      id: 'welcome',
+      required: true,
+      completionCondition: (ctx) => ctx.data.welcomeViewed === true,
+    })
+    
+    // Show credentials
+    .addScreenStep(Screens.Credentials, {
+      id: 'view-credentials',
+      required: true,
+      completionCondition: (ctx) => ctx.data.credentialsViewed === true,
+    })
+    
+    // Scan QR code
+    .addScreenStep(Screens.Scan, {
+      id: 'try-scan',
+      required: false,
+      completionCondition: (ctx) => ctx.data.scanTried === true,
+    })
+    
+    .onComplete(async (context) => {
+      // Mark quick start as complete
+      context.setData('quickStartComplete', true)
+      context.navigation.navigate('Home')
+    })
+    
+    .build()
+}
+
+/**
+ * STEP 5: Converting Existing Screens
+ * 
+ * Here's how to convert an existing screen to be workflow-aware:
+ */
+
+// Before (existing screen)
+const CredentialOfferScreenOld: React.FC = () => {
+  const navigation = useNavigation()
+  
+  const handleAccept = async () => {
+    await acceptCredential()
+    navigation.navigate('Credentials')
+  }
+
+  return (
+    <View>
+      <Button onPress={handleAccept} title="Accept" />
+    </View>
+  )
+}
+
+// After (workflow-aware screen)
+import { withWorkflow, useWorkflowStep } from './components/WorkflowNavigator'
+
+const CredentialOfferScreenNew: React.FC = withWorkflow((props) => {
+  const { workflowContext, isWorkflowStep } = props
+  const { completeStep } = useWorkflowStep('credential-offer-received')
+  const navigation = useNavigation()
+  
+  const handleAccept = async () => {
+    await acceptCredential()
+    
+    if (isWorkflowStep) {
+      // Workflow will handle navigation
+      workflowContext.setData('credentialOfferAccepted', true)
+      completeStep()
+    } else {
+      // Regular navigation for non-workflow usage
+      navigation.navigate('Credentials')
+    }
+  }
+
+  return (
+    <View>
+      <Button onPress={handleAccept} title="Accept" />
+      {isWorkflowStep && (
+        <WorkflowProgress style={{ marginTop: 16 }} />
+      )}
+    </View>
+  )
+})
+
+/**
+ * STEP 6: Testing Your Workflows
+ */
+
+// Unit test example
+import { WorkflowUtils } from './utils/workflowUtils'
+
+describe('Quick Start Workflow', () => {
+  const workflow = createQuickStartWorkflow()
+  
+  it('should be valid', () => {
+    const validation = WorkflowUtils.validate(workflow)
+    expect(validation.valid).toBe(true)
+  })
+  
+  it('should calculate progress correctly', () => {
+    const progress = WorkflowUtils.getProgress(workflow)
+    expect(progress.total).toBe(3) // 3 visible steps
+  })
+})
+
+// Integration test example
+import { render, fireEvent } from '@testing-library/react-native'
+import { createMockWorkflowContext } from './integration/IntegrationGuide'
+
+describe('Workflow Integration', () => {
+  it('should complete step when credential is accepted', async () => {
+    const mockContext = createMockWorkflowContext({
+      setData: jest.fn(),
+      completeStep: jest.fn(),
+    })
+    
+    const screen = render(
+      <CredentialOfferScreenNew 
+        workflowContext={mockContext}
+        isWorkflowStep={true}
+      />
+    )
+    
+    fireEvent.press(screen.getByText('Accept'))
+    
+    expect(mockContext.setData).toHaveBeenCalledWith('credentialOfferAccepted', true)
+    expect(mockContext.completeStep).toHaveBeenCalled()
+  })
+})
+
+/**
+ * STEP 7: Performance Tips
+ */
+
+// 1. Use React.memo for workflow-aware components
+export const OptimizedWorkflowScreen = React.memo(withWorkflow(MyScreen))
+
+// 2. Use useCallback for workflow actions
+const MyWorkflowComponent: React.FC = () => {
+  const { completeStep } = useWorkflowStep('my-step')
+  
+  const handleComplete = React.useCallback(() => {
+    completeStep({ timestamp: Date.now() })
+  }, [completeStep])
+  
+  return <Button onPress={handleComplete} title="Complete" />
+}
+
+// 3. Clean up workflow state appropriately
+const MyWorkflowManager: React.FC = () => {
+  const { engine, state } = useWorkflow()
+  
+  React.useEffect(() => {
+    // Clean up completed workflows after some time
+    const cleanup = setInterval(() => {
+      if (!state.activeWorkflow && state.history.length > 10) {
+        // Clean up old history entries
+      }
+    }, 60000) // Every minute
+    
+    return () => clearInterval(cleanup)
+  }, [state])
+  
+  return null
+}
+
+/**
+ * STEP 8: Debugging Workflows
+ */
+
+import { WorkflowDebug } from './utils/workflowUtils'
+
+// Add to your development tools
+const WorkflowDebugger: React.FC = () => {
+  const { state, engine } = useWorkflow()
+  
+  React.useEffect(() => {
+    if (__DEV__ && state.activeWorkflow) {
+      WorkflowDebug.logState(state.activeWorkflow, state.currentStepId)
+    }
+  }, [state.activeWorkflow, state.currentStepId])
+  
+  return null
+}
+
+export default AppWithWorkflowArchitecture
