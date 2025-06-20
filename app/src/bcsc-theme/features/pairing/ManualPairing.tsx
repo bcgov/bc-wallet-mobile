@@ -5,18 +5,19 @@ import {
   testIdWithKey,
   ThemedText,
   TOKENS,
+  useAnimatedComponents,
   useServices,
   useTheme,
 } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { mockServices } from '@/bcsc-theme/fixtures/services'
 import { BCSCRootStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 
 type ManualPairingProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ManualPairingCode>
 
@@ -25,8 +26,9 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | undefined>(undefined)
-  const { Spacing, ColorPallet } = useTheme()
+  const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { ButtonLoading } = useAnimatedComponents()
   const { pairing } = useApi()
 
   const styles = StyleSheet.create({
@@ -92,9 +94,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
             onPress={onSubmit}
             disabled={loading}
           >
-            {loading && (
-              <ActivityIndicator style={{ marginRight: Spacing.sm }} size={20} color={ColorPallet.brand.icon} />
-            )}
+            {loading && <ButtonLoading />}
           </Button>
         </View>
       </View>

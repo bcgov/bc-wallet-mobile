@@ -2,7 +2,7 @@ import BCLogger from '@/utils/logger'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { getAccount, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 
 interface BCSCEndpoints {
@@ -112,7 +112,12 @@ class BCSCService {
   }
 
   async fetchAccessToken(): Promise<AccessToken> {
-    const tokenBody = await getRefreshTokenRequestBody()
+    const account = await getAccount()
+    if (!account) {
+      throw new Error('No account found. Please register or log in first.')
+    }
+    const { issuer, clientID } = account
+    const tokenBody = await getRefreshTokenRequestBody(issuer, clientID)
     const tokenResponse = await this.post<AccessToken>(this.endpoints.token, tokenBody, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
@@ -132,8 +137,12 @@ class BCSCService {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    // skip processing if request is made to token or endpoint URL
-    if (config.url?.endsWith('/device/.well-known/openid-configuration') || config.url?.endsWith('/device/token')) {
+    // skip processing if request is made to token or endpoint URL or initial registration
+    if (
+      config.url?.endsWith('/device/.well-known/openid-configuration') ||
+      config.url?.endsWith('/device/token') ||
+      config.url?.endsWith('/device/register')
+    ) {
       return config
     }
 
@@ -166,7 +175,7 @@ class BCSCService {
 }
 
 const client = new BCSCService()
-client.fetchEndpoints(client.baseURL).catch(error => {
+client.fetchEndpoints(client.baseURL).catch((error) => {
   client.logger.error('Failed to fetch BCSC endpoints', {
     message: error instanceof Error ? error.message : String(error),
   })

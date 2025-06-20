@@ -1,0 +1,192 @@
+/**
+ * Workflow Architecture Types
+ * 
+ * This file defines the types for a workflow-based navigation system
+ * that extends the existing onboarding workflow pattern to support
+ * general user flows throughout the app.
+ */
+
+import { NavigationProp } from '@react-navigation/native'
+import { StackNavigationOptions } from '@react-navigation/stack'
+import React from 'react'
+
+// Core workflow types
+export interface WorkflowStep {
+  /** Unique identifier for this step */
+  id: string
+  /** Screen name to navigate to */
+  screen?: string
+  /** Whether this step has been completed */
+  completed: boolean
+  /** Whether this step is required for workflow completion */
+  required: boolean
+  /** Custom completion condition function */
+  completionCondition?: (context: WorkflowContext) => boolean
+  /** Navigation parameters to pass when navigating to this step */
+  navigationParams?: Record<string, any>
+  /** Custom component to render for headless steps */
+  component?: React.ComponentType<any>
+  /** Whether this is a headless step (no UI) */
+  headless?: boolean
+  /** Dependencies - steps that must be completed before this one */
+  dependencies?: string[]
+  /** Custom action to execute when step is activated */
+  onActivate?: (context: WorkflowContext) => Promise<void> | void
+  /** Custom action to execute when step is completed */
+  onComplete?: (context: WorkflowContext) => Promise<void> | void
+  /** Metadata for the step */
+  metadata?: Record<string, any>
+}
+
+export interface WorkflowDefinition {
+  /** Unique identifier for this workflow */
+  id: string
+  /** Human readable name */
+  name: string
+  /** Description of the workflow */
+  description?: string
+  /** Array of steps in this workflow */
+  steps: WorkflowStep[]
+  /** Whether this workflow can be skipped */
+  skippable?: boolean
+  /** Whether this workflow can be paused and resumed */
+  pausable?: boolean
+  /** Custom completion condition for the entire workflow */
+  completionCondition?: (context: WorkflowContext) => boolean
+  /** Callback when workflow is completed */
+  onComplete?: (context: WorkflowContext) => Promise<void> | void
+  /** Callback when workflow is started */
+  onStart?: (context: WorkflowContext) => Promise<void> | void
+  /** Callback when workflow is cancelled */
+  onCancel?: (context: WorkflowContext) => Promise<void> | void
+  /** Metadata for the workflow */
+  metadata?: Record<string, any>
+}
+
+export interface WorkflowContext {
+  /** Current workflow being executed */
+  workflow: WorkflowDefinition
+  /** Current step being executed */
+  currentStep?: WorkflowStep
+  /** Navigation object */
+  navigation: NavigationProp<any>
+  /** User state */
+  userState: any
+  /** App configuration */
+  config: any
+  /** Custom context data */
+  data: Record<string, any>
+  /** Set custom data */
+  setData: (key: string, value: any) => void
+  /** Complete current step */
+  completeStep: (stepId: string, data?: any) => void
+  /** Skip to specific step */
+  skipToStep: (stepId: string) => void
+  /** Cancel workflow */
+  cancelWorkflow: () => void
+  /** Restart workflow */
+  restartWorkflow: () => void
+}
+
+export interface WorkflowState {
+  /** Currently active workflow */
+  activeWorkflow?: WorkflowDefinition
+  /** Current step in active workflow */
+  currentStepId?: string
+  /** Whether workflow is paused */
+  paused: boolean
+  /** Workflow execution history */
+  history: WorkflowHistoryEntry[]
+  /** Custom workflow data */
+  data: Record<string, any>
+}
+
+export interface WorkflowHistoryEntry {
+  /** Workflow ID */
+  workflowId: string
+  /** Step ID */
+  stepId: string
+  /** Timestamp when step was completed */
+  completedAt: Date
+  /** Any data associated with step completion */
+  data?: any
+}
+
+// Navigation integration types
+export interface WorkflowNavigationOptions extends StackNavigationOptions {
+  /** Whether this screen is part of a workflow */
+  workflowStep?: boolean
+  /** Custom workflow progress indicator */
+  showWorkflowProgress?: boolean
+  /** Custom back handler for workflow */
+  workflowBackHandler?: () => boolean
+}
+
+export interface WorkflowScreenProps {
+  /** Workflow context */
+  workflowContext?: WorkflowContext
+  /** Whether this screen is part of an active workflow */
+  isWorkflowStep?: boolean
+}
+
+// Workflow engine types
+export interface WorkflowEngine {
+  /** Start a workflow */
+  startWorkflow: (workflowId: string, context?: Partial<WorkflowContext>) => Promise<void>
+  /** Stop current workflow */
+  stopWorkflow: () => Promise<void>
+  /** Pause current workflow */
+  pauseWorkflow: () => Promise<void>
+  /** Resume paused workflow */
+  resumeWorkflow: () => Promise<void>
+  /** Complete current step */
+  completeStep: (stepId: string, data?: any) => Promise<void>
+  /** Skip to specific step */
+  skipToStep: (stepId: string) => Promise<void>
+  /** Get current workflow state */
+  getCurrentState: () => WorkflowState
+  /** Register a workflow definition */
+  registerWorkflow: (workflow: WorkflowDefinition) => void
+  /** Get workflow by ID */
+  getWorkflow: (workflowId: string) => WorkflowDefinition | undefined
+  /** Get all registered workflows */
+  getAllWorkflows: () => WorkflowDefinition[]
+}
+
+// Helper types for common workflow patterns
+export interface OnboardingWorkflowStep extends WorkflowStep {
+  /** Whether this step should be shown based on configuration */
+  shouldShow?: (config: any) => boolean
+}
+
+export interface MultiStepFormWorkflowStep extends WorkflowStep {
+  /** Form validation for this step */
+  validate?: (data: any) => boolean | string[]
+  /** Form data for this step */
+  formData?: Record<string, any>
+}
+
+export interface ConditionalWorkflowStep extends WorkflowStep {
+  /** Condition to determine if step should be executed */
+  condition: (context: WorkflowContext) => boolean
+}
+
+// Events
+export enum WorkflowEvents {
+  WORKFLOW_STARTED = 'workflow:started',
+  WORKFLOW_COMPLETED = 'workflow:completed',
+  WORKFLOW_CANCELLED = 'workflow:cancelled',
+  WORKFLOW_PAUSED = 'workflow:paused',
+  WORKFLOW_RESUMED = 'workflow:resumed',
+  STEP_STARTED = 'workflow:step:started',
+  STEP_COMPLETED = 'workflow:step:completed',
+  STEP_SKIPPED = 'workflow:step:skipped',
+}
+
+export interface WorkflowEvent {
+  type: WorkflowEvents
+  workflowId: string
+  stepId?: string
+  timestamp: Date
+  data?: any
+}

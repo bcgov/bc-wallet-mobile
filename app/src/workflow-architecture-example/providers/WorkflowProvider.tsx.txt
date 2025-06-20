@@ -1,0 +1,419 @@
+/**
+ * Workflow Context Provider
+ * 
+ * This component provides workflow context to the entire app and manages
+ * the workflow state using React Context and reducers.
+ */
+
+import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react'
+import { DeviceEventEmitter } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import {
+  WorkflowContext,
+  WorkflowDefinition,
+  WorkflowEngine,
+  WorkflowEvents,
+  WorkflowState,
+  WorkflowStep,
+} from '../types/workflow'
+
+// Initial workflow state
+const initialState: WorkflowState = {
+  paused: false,
+  history: [],
+  data: {},
+}
+
+// Workflow actions
+type WorkflowAction =
+  | { type: 'START_WORKFLOW'; payload: { workflow: WorkflowDefinition; data?: Record<string, any> } }
+  | { type: 'STOP_WORKFLOW' }
+  | { type: 'PAUSE_WORKFLOW' }
+  | { type: 'RESUME_WORKFLOW' }
+  | { type: 'COMPLETE_STEP'; payload: { stepId: string; data?: any } }
+  | { type: 'SET_CURRENT_STEP'; payload: { stepId: string } }
+  | { type: 'SET_WORKFLOW_DATA'; payload: { key: string; value: any } }
+  | { type: 'ADD_HISTORY_ENTRY'; payload: { workflowId: string; stepId: string; data?: any } }
+
+// Workflow reducer
+function workflowReducer(state: WorkflowState, action: WorkflowAction): WorkflowState {
+  switch (action.type) {
+    case 'START_WORKFLOW':
+      return {
+        ...state,
+        activeWorkflow: action.payload.workflow,
+        currentStepId: undefined,
+        paused: false,
+        data: { ...state.data, ...action.payload.data },
+      }
+
+    case 'STOP_WORKFLOW':
+      return {
+        ...state,
+        activeWorkflow: undefined,
+        currentStepId: undefined,
+        paused: false,
+      }
+
+    case 'PAUSE_WORKFLOW':
+      return {
+        ...state,
+        paused: true,
+      }
+
+    case 'RESUME_WORKFLOW':
+      return {
+        ...state,
+        paused: false,
+      }
+
+    case 'COMPLETE_STEP':
+      if (!state.activeWorkflow) return state
+      
+      // Mark step as completed
+      const updatedWorkflow = {
+        ...state.activeWorkflow,
+        steps: state.activeWorkflow.steps.map(step =>
+          step.id === action.payload.stepId ? { ...step, completed: true } : step
+        ),
+      }
+
+      return {
+        ...state,
+        activeWorkflow: updatedWorkflow,
+      }
+
+    case 'SET_CURRENT_STEP':
+      return {
+        ...state,
+        currentStepId: action.payload.stepId,
+      }
+
+    case 'SET_WORKFLOW_DATA':
+      return {
+        ...state,
+        data: {
+          ...state.data,
+          [action.payload.key]: action.payload.value,
+        },
+      }
+
+    case 'ADD_HISTORY_ENTRY':
+      return {
+        ...state,
+        history: [
+          ...state.history,
+          {
+            workflowId: action.payload.workflowId,
+            stepId: action.payload.stepId,
+            completedAt: new Date(),
+            data: action.payload.data,
+          },
+        ],
+      }
+
+    default:
+      return state
+  }
+}
+
+// Context type
+interface WorkflowProviderContextType {
+  state: WorkflowState
+  engine: WorkflowEngine
+  context: WorkflowContext | null
+}
+
+// Create context
+const WorkflowProviderContext = createContext<WorkflowProviderContextType | null>(null)
+
+// Workflow registry (in real app, this might be in a service or store)
+const workflowRegistry = new Map<string, WorkflowDefinition>()
+
+interface WorkflowProviderProps {
+  children: React.ReactNode
+  userState: any
+  config: any
+}
+
+export const WorkflowProvider: React.FC<WorkflowProviderProps> = ({
+  children,
+  userState,
+  config,
+}) => {
+  const [state, dispatch] = useReducer(workflowReducer, initialState)
+  const navigation = useNavigation()
+
+  // Create workflow engine
+  const engine: WorkflowEngine = {
+    startWorkflow: async (workflowId: string, contextData?: Partial<WorkflowContext>) => {
+      const workflow = workflowRegistry.get(workflowId)
+      if (!workflow) {
+        throw new Error(`Workflow with id '${workflowId}' not found`)
+      }
+
+      dispatch({ type: 'START_WORKFLOW', payload: { workflow, data: contextData?.data } })
+      
+      // Emit event
+      DeviceEventEmitter.emit(WorkflowEvents.WORKFLOW_STARTED, {
+        type: WorkflowEvents.WORKFLOW_STARTED,
+        workflowId,
+        timestamp: new Date(),
+      })
+
+      // Execute onStart callback
+      if (workflow.onStart) {
+        await workflow.onStart(createWorkflowContext(workflow))
+      }
+
+      // Start first incomplete step
+      const firstIncompleteStep = workflow.steps.find(step => !step.completed)
+      if (firstIncompleteStep) {
+        await executeStep(firstIncompleteStep)
+      }
+    },
+
+    stopWorkflow: async () => {
+      if (state.activeWorkflow) {
+        // Emit event
+        DeviceEventEmitter.emit(WorkflowEvents.WORKFLOW_CANCELLED, {
+          type: WorkflowEvents.WORKFLOW_CANCELLED,
+          workflowId: state.activeWorkflow.id,
+          timestamp: new Date(),
+        })
+
+        // Execute onCancel callback
+        if (state.activeWorkflow.onCancel) {
+          await state.activeWorkflow.onCancel(createWorkflowContext(state.activeWorkflow))
+        }
+      }
+
+      dispatch({ type: 'STOP_WORKFLOW' })
+    },
+
+    pauseWorkflow: async () => {
+      if (state.activeWorkflow) {
+        dispatch({ type: 'PAUSE_WORKFLOW' })
+        
+        DeviceEventEmitter.emit(WorkflowEvents.WORKFLOW_PAUSED, {
+          type: WorkflowEvents.WORKFLOW_PAUSED,
+          workflowId: state.activeWorkflow.id,
+          timestamp: new Date(),
+        })
+      }
+    },
+
+    resumeWorkflow: async () => {
+      if (state.activeWorkflow) {
+        dispatch({ type: 'RESUME_WORKFLOW' })
+        
+        DeviceEventEmitter.emit(WorkflowEvents.WORKFLOW_RESUMED, {
+          type: WorkflowEvents.WORKFLOW_RESUMED,
+          workflowId: state.activeWorkflow.id,
+          timestamp: new Date(),
+        })
+      }
+    },
+
+    completeStep: async (stepId: string, data?: any) => {
+      if (!state.activeWorkflow) return
+
+      const step = state.activeWorkflow.steps.find(s => s.id === stepId)
+      if (!step) return
+
+      // Mark step as completed
+      dispatch({ type: 'COMPLETE_STEP', payload: { stepId, data } })
+      dispatch({ type: 'ADD_HISTORY_ENTRY', payload: { workflowId: state.activeWorkflow.id, stepId, data } })
+
+      // Emit event
+      DeviceEventEmitter.emit(WorkflowEvents.STEP_COMPLETED, {
+        type: WorkflowEvents.STEP_COMPLETED,
+        workflowId: state.activeWorkflow.id,
+        stepId,
+        timestamp: new Date(),
+        data,
+      })
+
+      // Execute onComplete callback
+      if (step.onComplete) {
+        await step.onComplete(createWorkflowContext(state.activeWorkflow, step))
+      }
+
+      // Check if workflow is complete
+      const allRequiredStepsComplete = state.activeWorkflow.steps
+        .filter(s => s.required)
+        .every(s => s.completed || s.id === stepId)
+
+      if (allRequiredStepsComplete) {
+        // Workflow is complete
+        DeviceEventEmitter.emit(WorkflowEvents.WORKFLOW_COMPLETED, {
+          type: WorkflowEvents.WORKFLOW_COMPLETED,
+          workflowId: state.activeWorkflow.id,
+          timestamp: new Date(),
+        })
+
+        if (state.activeWorkflow.onComplete) {
+          await state.activeWorkflow.onComplete(createWorkflowContext(state.activeWorkflow))
+        }
+
+        dispatch({ type: 'STOP_WORKFLOW' })
+      } else {
+        // Find next incomplete step
+        const nextStep = findNextStep(state.activeWorkflow, stepId)
+        if (nextStep) {
+          await executeStep(nextStep)
+        }
+      }
+    },
+
+    skipToStep: async (stepId: string) => {
+      if (!state.activeWorkflow) return
+
+      const step = state.activeWorkflow.steps.find(s => s.id === stepId)
+      if (step) {
+        await executeStep(step)
+      }
+    },
+
+    getCurrentState: () => state,
+
+    registerWorkflow: (workflow: WorkflowDefinition) => {
+      workflowRegistry.set(workflow.id, workflow)
+    },
+
+    getWorkflow: (workflowId: string) => {
+      return workflowRegistry.get(workflowId)
+    },
+
+    getAllWorkflows: () => {
+      return Array.from(workflowRegistry.values())
+    },
+  }
+
+  // Helper function to execute a step
+  const executeStep = async (step: WorkflowStep) => {
+    if (!state.activeWorkflow) return
+
+    // Set current step
+    dispatch({ type: 'SET_CURRENT_STEP', payload: { stepId: step.id } })
+
+    // Emit event
+    DeviceEventEmitter.emit(WorkflowEvents.STEP_STARTED, {
+      type: WorkflowEvents.STEP_STARTED,
+      workflowId: state.activeWorkflow.id,
+      stepId: step.id,
+      timestamp: new Date(),
+    })
+
+    // Execute onActivate callback
+    if (step.onActivate) {
+      await step.onActivate(createWorkflowContext(state.activeWorkflow, step))
+    }
+
+    // Navigate to screen if not headless
+    if (!step.headless && step.screen) {
+      navigation.navigate(step.screen as never, step.navigationParams as never)
+    }
+
+    // If headless step, check completion immediately
+    if (step.headless && step.completionCondition) {
+      const context = createWorkflowContext(state.activeWorkflow, step)
+      if (step.completionCondition(context)) {
+        await engine.completeStep(step.id)
+      }
+    }
+  }
+
+  // Helper function to find next step
+  const findNextStep = (workflow: WorkflowDefinition, currentStepId: string): WorkflowStep | undefined => {
+    const currentIndex = workflow.steps.findIndex(s => s.id === currentStepId)
+    
+    // Find next incomplete step
+    for (let i = currentIndex + 1; i < workflow.steps.length; i++) {
+      const step = workflow.steps[i]
+      if (!step.completed && areDependenciesMet(step, workflow)) {
+        return step
+      }
+    }
+
+    return undefined
+  }
+
+  // Helper function to check if step dependencies are met
+  const areDependenciesMet = (step: WorkflowStep, workflow: WorkflowDefinition): boolean => {
+    if (!step.dependencies || step.dependencies.length === 0) {
+      return true
+    }
+
+    return step.dependencies.every(depId => {
+      const depStep = workflow.steps.find(s => s.id === depId)
+      return depStep?.completed || false
+    })
+  }
+
+  // Create workflow context
+  const createWorkflowContext = (workflow: WorkflowDefinition, currentStep?: WorkflowStep): WorkflowContext => {
+    return {
+      workflow,
+      currentStep,
+      navigation,
+      userState,
+      config,
+      data: state.data,
+      setData: (key: string, value: any) => {
+        dispatch({ type: 'SET_WORKFLOW_DATA', payload: { key, value } })
+      },
+      completeStep: (stepId: string, data?: any) => {
+        engine.completeStep(stepId, data)
+      },
+      skipToStep: (stepId: string) => {
+        engine.skipToStep(stepId)
+      },
+      cancelWorkflow: () => {
+        engine.stopWorkflow()
+      },
+      restartWorkflow: () => {
+        if (workflow) {
+          engine.stopWorkflow().then(() => {
+            engine.startWorkflow(workflow.id)
+          })
+        }
+      },
+    }
+  }
+
+  // Create current context
+  const currentContext = state.activeWorkflow 
+    ? createWorkflowContext(
+        state.activeWorkflow, 
+        state.activeWorkflow.steps.find(s => s.id === state.currentStepId)
+      )
+    : null
+
+  return (
+    <WorkflowProviderContext.Provider value={{ state, engine, context: currentContext }}>
+      {children}
+    </WorkflowProviderContext.Provider>
+  )
+}
+
+// Hook to use workflow context
+export const useWorkflow = () => {
+  const context = useContext(WorkflowProviderContext)
+  if (!context) {
+    throw new Error('useWorkflow must be used within a WorkflowProvider')
+  }
+  return context
+}
+
+// Hook to use workflow engine
+export const useWorkflowEngine = () => {
+  const { engine } = useWorkflow()
+  return engine
+}
+
+// Hook to get current workflow context
+export const useWorkflowContext = () => {
+  const { context } = useWorkflow()
+  return context
+}

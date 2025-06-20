@@ -1,0 +1,210 @@
+/**
+ * Workflow Navigator Component
+ * 
+ * This component integrates the workflow system with react-navigation,
+ * providing workflow-aware navigation and screen management.
+ */
+
+import React, { useEffect, useMemo } from 'react'
+import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
+import { BackHandler } from 'react-native'
+import { useWorkflow, useWorkflowContext } from '../providers/WorkflowProvider'
+import { WorkflowNavigationOptions } from '../types/workflow'
+
+interface WorkflowNavigatorProps {
+  children: React.ReactNode
+  defaultStackOptions?: StackNavigationOptions
+  onWorkflowComplete?: (workflowId: string) => void
+  onWorkflowCancel?: (workflowId: string) => void
+}
+
+export const WorkflowNavigator: React.FC<WorkflowNavigatorProps> = ({
+  children,
+  defaultStackOptions = {},
+  onWorkflowComplete,
+  onWorkflowCancel,
+}) => {
+  const { state, engine } = useWorkflow()
+  const navigation = useNavigation()
+
+  // Enhanced stack options that include workflow-specific options
+  const enhancedStackOptions = useMemo((): StackNavigationOptions => {
+    const workflowOptions: WorkflowNavigationOptions = {
+      ...defaultStackOptions,
+    }
+
+    // If there's an active workflow, modify navigation options
+    if (state.activeWorkflow) {
+      // Add workflow progress indicator if enabled
+      if (workflowOptions.showWorkflowProgress !== false) {
+        const currentStepIndex = state.activeWorkflow.steps.findIndex(
+          step => step.id === state.currentStepId
+        )
+        const totalSteps = state.activeWorkflow.steps.filter(step => !step.headless).length
+        const completedSteps = state.activeWorkflow.steps.filter(step => step.completed).length
+
+        workflowOptions.headerTitle = workflowOptions.headerTitle || 
+          `${state.activeWorkflow.name} (${completedSteps}/${totalSteps})`
+      }
+
+      // Custom back handler for workflow
+      if (workflowOptions.workflowBackHandler) {
+        // This will be handled in the useFocusEffect below
+      }
+    }
+
+    return workflowOptions
+  }, [state.activeWorkflow, state.currentStepId, defaultStackOptions])
+
+  // Handle Android back button for workflows
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (state.activeWorkflow) {
+          // Check if current screen has custom workflow back handler
+          const currentStep = state.activeWorkflow.steps.find(
+            step => step.id === state.currentStepId
+          )
+
+          // For now, prevent back navigation during workflows
+          // In a real implementation, you might want to show a confirmation dialog
+          // or navigate to the previous step in the workflow
+          return true // Prevent default back behavior
+        }
+        return false // Allow default back behavior
+      }
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+      return () => subscription.remove()
+    }, [state.activeWorkflow, state.currentStepId])
+  )
+
+  // Listen for workflow completion events
+  useEffect(() => {
+    // In a real implementation, you'd listen to DeviceEventEmitter for workflow events
+    // and call the appropriate callbacks
+    if (onWorkflowComplete || onWorkflowCancel) {
+      // Setup event listeners
+    }
+  }, [onWorkflowComplete, onWorkflowCancel])
+
+  return <>{children}</>
+}
+
+/**
+ * Higher-order component to make a screen workflow-aware
+ */
+export function withWorkflow<P extends object>(
+  Component: React.ComponentType<P>
+): React.ComponentType<P> {
+  return function WorkflowAwareComponent(props: P) {
+    const workflowContext = useWorkflowContext()
+    const { state } = useWorkflow()
+
+    const enhancedProps = {
+      ...props,
+      workflowContext,
+      isWorkflowStep: !!state.activeWorkflow,
+    }
+
+    return <Component {...enhancedProps} />
+  }
+}
+
+/**
+ * Hook to make a screen automatically complete a workflow step
+ */
+export function useWorkflowStep(stepId: string, autoComplete: boolean = false) {
+  const workflowContext = useWorkflowContext()
+  const { engine } = useWorkflow()
+
+  const completeStep = React.useCallback((data?: any) => {
+    engine.completeStep(stepId, data)
+  }, [engine, stepId])
+
+  const isCurrentStep = workflowContext?.currentStep?.id === stepId
+
+  // Auto-complete step when component mounts (for headless steps)
+  useEffect(() => {
+    if (autoComplete && isCurrentStep) {
+      completeStep()
+    }
+  }, [autoComplete, isCurrentStep, completeStep])
+
+  return {
+    isCurrentStep,
+    completeStep,
+    workflowContext,
+    stepData: workflowContext?.data,
+    setStepData: workflowContext?.setData,
+  }
+}
+
+/**
+ * Component to render workflow progress indicator
+ */
+interface WorkflowProgressProps {
+  showStepNames?: boolean
+  style?: any
+}
+
+export const WorkflowProgress: React.FC<WorkflowProgressProps> = ({
+  showStepNames = false,
+  style,
+}) => {
+  const { state } = useWorkflow()
+
+  if (!state.activeWorkflow) {
+    return null
+  }
+
+  const visibleSteps = state.activeWorkflow.steps.filter(step => !step.headless)
+  const currentStepIndex = visibleSteps.findIndex(step => step.id === state.currentStepId)
+  const completedSteps = visibleSteps.filter(step => step.completed).length
+
+  // This is a basic example - in a real implementation you'd want proper styling
+  return (
+    <div style={{ padding: 16, ...style }}>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+        <span style={{ fontWeight: 'bold' }}>{state.activeWorkflow.name}</span>
+        <span style={{ marginLeft: 8, color: '#666' }}>
+          {completedSteps} of {visibleSteps.length} completed
+        </span>
+      </div>
+      
+      <div style={{ display: 'flex', gap: 4 }}>
+        {visibleSteps.map((step, index) => (
+          <div
+            key={step.id}
+            style={{
+              flex: 1,
+              height: 4,
+              backgroundColor: step.completed ? '#4CAF50' : 
+                             index === currentStepIndex ? '#2196F3' : '#E0E0E0',
+              borderRadius: 2,
+            }}
+          />
+        ))}
+      </div>
+
+      {showStepNames && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 12 }}>
+          {visibleSteps.map((step) => (
+            <span
+              key={step.id}
+              style={{
+                color: step.completed ? '#4CAF50' : 
+                       step.id === state.currentStepId ? '#2196F3' : '#666',
+              }}
+            >
+              {step.id}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default WorkflowNavigator

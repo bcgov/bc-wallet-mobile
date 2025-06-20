@@ -1,5 +1,6 @@
-import { signPairingCode } from 'react-native-bcsc-core'
+import { getAccount, signPairingCode } from 'react-native-bcsc-core'
 import apiClient from '../client'
+import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 
 // There is no actual data response (just a 200) from the pairing code login endpoint, so we
 // define a minimal response for DX and and TypeScript
@@ -9,7 +10,13 @@ export interface PairingCodeLoginResponseData {
 
 const usePairingApi = () => {
   const loginByPairingCode = async (code: string) => {
-    const signedCode = await signPairingCode(code)
+    const account = await getAccount()
+    if (!account) {
+      throw new Error('No account found. Please register or log in first.')
+    }
+    const { issuer, clientID } = account
+    const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
+    const signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, apnsToken)
     await apiClient.post<PairingCodeLoginResponseData>(
       // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
       `${apiClient.baseURL}/cardtap/v3/mobile/assertion`,

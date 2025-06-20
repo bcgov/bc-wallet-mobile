@@ -1,0 +1,376 @@
+/**
+ * Example Workflow Definitions
+ * 
+ * This file contains example workflow definitions that demonstrate
+ * how to structure different types of user flows using the workflow system.
+ */
+
+import { Screens } from '@bifold/core'
+import { WorkflowDefinition, WorkflowContext } from '../types/workflow'
+
+/**
+ * Enhanced Onboarding Workflow
+ * 
+ * This extends the existing onboarding system to use the new workflow architecture
+ */
+export const onboardingWorkflow: WorkflowDefinition = {
+  id: 'onboarding',
+  name: 'Welcome to BC Wallet',
+  description: 'Get started with your digital wallet',
+  skippable: false,
+  pausable: false,
+  steps: [
+    {
+      id: 'splash',
+      screen: Screens.Splash,
+      completed: false,
+      required: true,
+      headless: true,
+      completionCondition: (context: WorkflowContext) => {
+        // Agent is initialized
+        return !!context.userState.agent
+      },
+    },
+    {
+      id: 'preface',
+      screen: Screens.Preface,
+      completed: false,
+      required: true,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.onboarding.didSeePreface || !context.config.showPreface
+      },
+    },
+    {
+      id: 'tutorial',
+      screen: Screens.Onboarding,
+      completed: false,
+      required: true,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.onboarding.didCompleteTutorial
+      },
+    },
+    {
+      id: 'terms',
+      screen: Screens.Terms,
+      completed: false,
+      required: true,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.onboarding.didAgreeToTerms
+      },
+    },
+    {
+      id: 'create-pin',
+      screen: Screens.CreatePIN,
+      completed: false,
+      required: true,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.onboarding.didCreatePIN
+      },
+    },
+    {
+      id: 'biometry',
+      screen: Screens.UseBiometry,
+      completed: false,
+      required: false,
+      completionCondition: (context: WorkflowContext) => {
+        return context.userState.onboarding.didConsiderBiometry
+      },
+    },
+    {
+      id: 'push-notifications',
+      screen: Screens.UsePushNotifications,
+      completed: false,
+      required: false,
+      completionCondition: (context: WorkflowContext) => {
+        return !context.config.enablePushNotifications || 
+               context.userState.onboarding.didConsiderPushNotifications
+      },
+    },
+    {
+      id: 'name-wallet',
+      screen: Screens.NameWallet,
+      completed: false,
+      required: false,
+      completionCondition: (context: WorkflowContext) => {
+        return !context.userState.preferences.enableWalletNaming ||
+               context.userState.onboarding.didNameWallet
+      },
+    },
+  ],
+  onComplete: async (context: WorkflowContext) => {
+    // Mark onboarding as complete
+    // Dispatch appropriate actions to update state
+    console.log('Onboarding workflow completed!')
+  },
+}
+
+/**
+ * Credential Issuance Workflow
+ * 
+ * A workflow for receiving and accepting credentials
+ */
+export const credentialIssuanceWorkflow: WorkflowDefinition = {
+  id: 'credential-issuance',
+  name: 'Receive Credential',
+  description: 'Review and accept a new credential',
+  skippable: true,
+  pausable: true,
+  steps: [
+    {
+      id: 'connection-established',
+      completed: false,
+      required: true,
+      headless: true,
+      completionCondition: (context: WorkflowContext) => {
+        return !!context.data.connectionId
+      },
+      onActivate: async (context: WorkflowContext) => {
+        // Check if connection exists and is ready
+        const connectionId = context.data.connectionId
+        // Validate connection...
+      },
+    },
+    {
+      id: 'credential-offer-received',
+      screen: Screens.CredentialOffer,
+      completed: false,
+      required: true,
+      dependencies: ['connection-established'],
+      navigationParams: {
+        credentialId: '{{credentialId}}', // Will be replaced with actual value
+      },
+      completionCondition: (context: WorkflowContext) => {
+        return context.data.credentialOfferAccepted === true
+      },
+    },
+    {
+      id: 'credential-processing',
+      completed: false,
+      required: true,
+      headless: true,
+      dependencies: ['credential-offer-received'],
+      onActivate: async (context: WorkflowContext) => {
+        // Process credential acceptance
+        console.log('Processing credential...')
+        // Simulate processing time
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        context.completeStep('credential-processing')
+      },
+    },
+    {
+      id: 'credential-received',
+      screen: Screens.CredentialDetails,
+      completed: false,
+      required: true,
+      dependencies: ['credential-processing'],
+      navigationParams: {
+        credentialId: '{{credentialId}}',
+      },
+      completionCondition: (context: WorkflowContext) => {
+        return context.data.credentialViewed === true
+      },
+    },
+  ],
+  onComplete: async (context: WorkflowContext) => {
+    console.log('Credential issuance workflow completed!')
+    // Navigate to credentials list or home
+    context.navigation.navigate('Credentials' as never)
+  },
+  onCancel: async (context: WorkflowContext) => {
+    console.log('Credential issuance workflow cancelled')
+    // Clean up any pending operations
+  },
+}
+
+/**
+ * Proof Request Workflow
+ * 
+ * A workflow for handling proof requests
+ */
+export const proofRequestWorkflow: WorkflowDefinition = {
+  id: 'proof-request',
+  name: 'Share Information',
+  description: 'Review and respond to an information request',
+  skippable: false,
+  pausable: true,
+  steps: [
+    {
+      id: 'proof-request-received',
+      screen: Screens.ProofRequest,
+      completed: false,
+      required: true,
+      navigationParams: {
+        proofId: '{{proofId}}',
+      },
+      completionCondition: (context: WorkflowContext) => {
+        return context.data.proofRequestReviewed === true
+      },
+    },
+    {
+      id: 'credential-selection',
+      screen: Screens.ProofChangeCredential,
+      completed: false,
+      required: false,
+      dependencies: ['proof-request-received'],
+      completionCondition: (context: WorkflowContext) => {
+        // Only required if multiple credentials available
+        return context.data.multipleCredentialsAvailable !== true ||
+               context.data.credentialSelected === true
+      },
+    },
+    {
+      id: 'proof-confirmation',
+      completed: false,
+      required: true,
+      headless: true,
+      dependencies: ['proof-request-received', 'credential-selection'],
+      onActivate: async (context: WorkflowContext) => {
+        // Show confirmation dialog
+        const confirmed = await showProofConfirmationDialog(context)
+        if (confirmed) {
+          context.setData('proofConfirmed', true)
+          context.completeStep('proof-confirmation')
+        } else {
+          context.cancelWorkflow()
+        }
+      },
+    },
+    {
+      id: 'proof-sharing',
+      completed: false,
+      required: true,
+      headless: true,
+      dependencies: ['proof-confirmation'],
+      onActivate: async (context: WorkflowContext) => {
+        // Share proof
+        console.log('Sharing proof...')
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        context.completeStep('proof-sharing')
+      },
+    },
+    {
+      id: 'proof-shared',
+      screen: Screens.ProofDetails,
+      completed: false,
+      required: true,
+      dependencies: ['proof-sharing'],
+      navigationParams: {
+        recordId: '{{proofId}}',
+      },
+      completionCondition: (context: WorkflowContext) => {
+        return context.data.proofDetailsViewed === true
+      },
+    },
+  ],
+  onComplete: async (context: WorkflowContext) => {
+    console.log('Proof request workflow completed!')
+    // Navigate back to home or appropriate screen
+    context.navigation.navigate('Home' as never)
+  },
+}
+
+/**
+ * Multi-step Form Workflow
+ * 
+ * Example of a complex form split across multiple screens
+ */
+export const multiStepFormWorkflow: WorkflowDefinition = {
+  id: 'multi-step-form',
+  name: 'Complete Profile',
+  description: 'Fill out your profile information',
+  skippable: true,
+  pausable: true,
+  steps: [
+    {
+      id: 'personal-info',
+      screen: 'PersonalInfoScreen',
+      completed: false,
+      required: true,
+      metadata: {
+        formFields: ['firstName', 'lastName', 'dateOfBirth'],
+        validation: {
+          firstName: { required: true, minLength: 2 },
+          lastName: { required: true, minLength: 2 },
+          dateOfBirth: { required: true, type: 'date' },
+        },
+      },
+      completionCondition: (context: WorkflowContext) => {
+        const data = context.data.personalInfo
+        return data?.firstName && data?.lastName && data?.dateOfBirth
+      },
+    },
+    {
+      id: 'contact-info',
+      screen: 'ContactInfoScreen',
+      completed: false,
+      required: true,
+      dependencies: ['personal-info'],
+      metadata: {
+        formFields: ['email', 'phone', 'address'],
+        validation: {
+          email: { required: true, type: 'email' },
+          phone: { required: true, type: 'phone' },
+          address: { required: false },
+        },
+      },
+      completionCondition: (context: WorkflowContext) => {
+        const data = context.data.contactInfo
+        return data?.email && data?.phone
+      },
+    },
+    {
+      id: 'preferences',
+      screen: 'PreferencesScreen',
+      completed: false,
+      required: false,
+      dependencies: ['contact-info'],
+      metadata: {
+        formFields: ['notifications', 'privacy', 'theme'],
+      },
+      completionCondition: (context: WorkflowContext) => {
+        return context.data.preferencesSet === true
+      },
+    },
+    {
+      id: 'review',
+      screen: 'ReviewScreen',
+      completed: false,
+      required: true,
+      dependencies: ['personal-info', 'contact-info'],
+      completionCondition: (context: WorkflowContext) => {
+        return context.data.reviewConfirmed === true
+      },
+    },
+    {
+      id: 'submit',
+      completed: false,
+      required: true,
+      headless: true,
+      dependencies: ['review'],
+      onActivate: async (context: WorkflowContext) => {
+        // Submit form data
+        console.log('Submitting form...', context.data)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        context.completeStep('submit', { submitted: true })
+      },
+    },
+  ],
+  onComplete: async (context: WorkflowContext) => {
+    console.log('Multi-step form completed!')
+    // Show success message and navigate
+  },
+}
+
+// Helper function for proof confirmation (would be implemented elsewhere)
+async function showProofConfirmationDialog(context: WorkflowContext): Promise<boolean> {
+  // This would show a native dialog or modal
+  // For now, just return true
+  return true
+}
+
+export const exampleWorkflows = [
+  onboardingWorkflow,
+  credentialIssuanceWorkflow,
+  proofRequestWorkflow,
+  multiStepFormWorkflow,
+]
