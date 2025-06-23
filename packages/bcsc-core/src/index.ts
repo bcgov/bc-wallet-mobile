@@ -199,3 +199,32 @@ export const getDynamicClientRegistrationBody = async (
 ): Promise<string | null> => {
   return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken);
 };
+
+/**
+ * Constructs the body for a device code request.
+ * This involves creating a JWT, signing it with the latest private key,
+ * and constructing the full OAuth device code request body.
+ * @param deviceCode The device code received from the authorization server.
+ * @param clientId The client ID for the OAuth application.
+ * @param confirmationCode The confirmation code to include in the request.
+ * @returns A promise that resolves to a string containing the full
+ *          device code request body, or null if an error occurs.
+ */
+export const getDeviceCodeRequestBody = async (
+  deviceCode: string,
+  clientId: string,
+  confirmationCode: string
+): Promise<string | null> => {
+  // Validate all parameters are provided
+  if (!deviceCode || !clientId || !confirmationCode) {
+    throw new Error(
+      'All parameters (deviceCode, clientId, confirmationCode) are required'
+    );
+  }
+
+  return BcscCore.getDeviceCodeRequestBody(
+    deviceCode,
+    clientId,
+    confirmationCode
+  );
+};

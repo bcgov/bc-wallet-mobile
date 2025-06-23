@@ -258,4 +258,23 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     Log.d(NAME, "getDynamicClientRegistrationBody called with fcmDeviceToken: $fcmDeviceToken, deviceToken: $deviceToken")
     promise.resolve("getDynamicClientRegistrationBody-mock-return-value")
   }
+
+  @ReactMethod
+  override fun getDeviceCodeRequestBody(deviceCode: String, clientId: String, confirmationCode: String, promise: Promise) {
+    // Validate all parameters are provided
+    if (deviceCode.isEmpty() || clientId.isEmpty() || confirmationCode.isEmpty()) {
+      promise.reject("E_INVALID_PARAMETERS", "All parameters (deviceCode, clientId, confirmationCode) are required and cannot be empty.")
+      return
+    }
+    
+    // Mock implementation - returns a device code request body
+    // In a real implementation, this would:
+    // 1. Create and sign a JWT assertion using the provided clientId
+    // 2. Format the OAuth device code request body with the provided deviceCode and confirmationCode
+    // 3. Return the constructed request body
+    Log.d(NAME, "getDeviceCodeRequestBody called with deviceCode: [REDACTED], clientId: $clientId, confirmationCode: [REDACTED]")
+    
+    val mockRequestBody = "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=$deviceCode&client_id=$clientId&code=$confirmationCode"
+    promise.resolve(mockRequestBody)
+  }
 }
