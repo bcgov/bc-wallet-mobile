@@ -325,7 +325,13 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func getRefreshTokenRequestBody(_ issuer: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func getRefreshTokenRequestBody(_ issuer: String, clientID: String, refreshToken: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // Validate all parameters are provided
+    guard !issuer.isEmpty, !clientID.isEmpty, !refreshToken.isEmpty else {
+      reject("E_INVALID_PARAMETERS", "All parameters (issuer, clientID, refreshToken) are required and cannot be empty.", nil)
+      return
+    }
+    
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
     let grantType = "refresh_token"
     let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
@@ -354,20 +360,10 @@ class BcscCore: NSObject {
         return // Error already handled by signJWT
     }
 
-    self.getToken(NSNumber(value: TokenType.Refresh.rawValue), resolve: { tokenData in
-        guard let tokenDict = tokenData as? [String: Any],
-              let tokenValue = tokenDict["token"] as? String else {
-            
-            reject("E_REFRESH_TOKEN_INVALID", "Refresh token data is invalid or token string not found.", nil)
-            return
-        }
+    // Construct the body for the refresh token request using the provided refreshToken
+    let body = "grant_type=\(grantType)&client_id=\(clientID)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(refreshToken)"
 
-        // Construct the body for the refresh token request
-        let body = "grant_type=\(grantType)&client_id=\(clientID)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)&refresh_token=\(tokenValue)"
-
-        resolve(body)
-
-    }, reject: reject) // Pass the outer reject handler
+    resolve(body)
   }
 
   @objc

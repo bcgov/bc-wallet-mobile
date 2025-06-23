@@ -135,18 +135,27 @@ export const getAccount = async (): Promise<NativeAccount | null> => {
 /**
  * Constructs the body for a refresh token request.
  * This involves creating a JWT, signing it with the latest private key,
- * and then formatting it along with the existing refresh token and other
+ * and then formatting it along with the provided refresh token and other
  * necessary OAuth parameters.
  * @param issuer The issuer URL for the OAuth provider.
  * @param clientID The client ID for the OAuth application.
+ * @param refreshToken The refresh token to include in the request.
  * @returns A promise that resolves to a string containing the full
  *          refresh token request body, or null if an error occurs.
  */
 export const getRefreshTokenRequestBody = async (
   issuer: string,
-  clientID: string
+  clientID: string,
+  refreshToken: string
 ): Promise<string | null> => {
-  return BcscCore.getRefreshTokenRequestBody(issuer, clientID);
+  // Validate all parameters are provided
+  if (!issuer || !clientID || !refreshToken) {
+    throw new Error(
+      'All parameters (issuer, clientID, refreshToken) are required'
+    );
+  }
+
+  return BcscCore.getRefreshTokenRequestBody(issuer, clientID, refreshToken);
 };
 
 /**

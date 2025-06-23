@@ -12,7 +12,7 @@ abstract class BcscCoreSpec internal constructor(context: ReactApplicationContex
   abstract fun getToken(tokenType: Int, promise: Promise)
   abstract fun setAccount(account: com.facebook.react.bridge.ReadableMap, promise: Promise)
   abstract fun getAccount(promise: Promise)
-  abstract fun getRefreshTokenRequestBody(issuer: String, clientID: String, promise: Promise)
+  abstract fun getRefreshTokenRequestBody(issuer: String, clientID: String, refreshToken: String, promise: Promise)
   abstract fun signPairingCode(code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?, promise: Promise)
   abstract fun getDynamicClientRegistrationBody(fcmDeviceToken: String, deviceToken: String?, promise: Promise)
 }

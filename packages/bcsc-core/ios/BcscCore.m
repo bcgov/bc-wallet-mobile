@@ -22,6 +22,7 @@ RCT_EXTERN_METHOD(getAccount:(RCTPromiseResolveBlock)resolve
 
 RCT_EXTERN_METHOD(getRefreshTokenRequestBody:(NSString *)issuer
                   clientID:(NSString *)clientID
+                  refreshToken:(NSString *)refreshToken
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
