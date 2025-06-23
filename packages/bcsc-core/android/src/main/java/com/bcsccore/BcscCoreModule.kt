@@ -218,13 +218,19 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun getRefreshTokenRequestBody(issuer: String, clientID: String, promise: Promise) {
+  override fun getRefreshTokenRequestBody(issuer: String, clientID: String, refreshToken: String, promise: Promise) {
+    // Validate all parameters are provided
+    if (issuer.isEmpty() || clientID.isEmpty() || refreshToken.isEmpty()) {
+      promise.reject("E_INVALID_PARAMETERS", "All parameters (issuer, clientID, refreshToken) are required and cannot be empty.")
+      return
+    }
+    
     // Mock implementation - returns null for now
     // In a real implementation, this would:
     // 1. Create and sign a JWT assertion using provided issuer and clientID
-    // 2. Retrieve the refresh token
+    // 2. Use the provided refreshToken parameter instead of retrieving it
     // 3. Format the OAuth request body
-    Log.d(NAME, "getRefreshTokenRequestBody called with issuer: $issuer, clientID: $clientID")
+    Log.d(NAME, "getRefreshTokenRequestBody called with issuer: $issuer, clientID: $clientID, refreshToken: [REDACTED]")
     promise.resolve("getRefreshTokenRequestBody-mock-return-value")
   }
 

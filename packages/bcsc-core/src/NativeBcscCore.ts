@@ -55,7 +55,8 @@ export interface Spec extends TurboModule {
   setAccount(account: Omit<NativeAccount, 'id'>): Promise<void>;
   getRefreshTokenRequestBody(
     issuer: string,
-    clientID: string
+    clientID: string,
+    refreshToken: string
   ): Promise<string | null>;
   signPairingCode(
     code: string,
