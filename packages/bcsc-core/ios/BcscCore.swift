@@ -42,7 +42,52 @@ class BcscCore: NSObject {
   }
   
   // MARK: - Private Helper Methods
-  
+
+  /**
+   * Creates a signed JWT client assertion for OAuth requests
+   * @param audience The audience for the JWT (typically issuer or clientID)
+   * @param issuer The issuer for the JWT iss claim
+   * @param subject The subject for the JWT sub claim
+   * @param additionalClaims Optional additional claims to include in the JWT
+   * @param reject The reject callback for error handling
+   * @returns The signed JWT string, or nil if an error occurred
+   */
+  private func createClientAssertionJWT(audience: String, issuer: String, subject: String, additionalClaims: [String: Any] = [:], reject: @escaping RCTPromiseRejectBlock) -> String? {
+    let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
+    
+    // Make JWT Claim Set
+    guard let uuid = UIDevice.current.identifierForVendor?.uuidString else {
+        reject("E_UUID_NOT_FOUND", "UUID not found for the device.", nil)    
+        return nil
+    }
+
+    let builder = JWTClaimsSet.builder()
+    let seconds = Int(Date().timeIntervalSince1970)
+    let expireSeconds = Int(Date().addingTimeInterval(TimeInterval(clientAssertionJwtExpirationSeconds)).timeIntervalSince1970)
+    
+    // Add standard claims
+    builder
+        .claim(name: "aud", value: audience)
+        .claim(name: "iss", value: issuer)
+        .claim(name: "sub", value: subject)
+        .claim(name: "iat", value: seconds)
+        .claim(name: "jti", value: uuid)
+        .claim(name: "exp", value: expireSeconds)
+    
+    // Add any additional claims
+    for (key, value) in additionalClaims {
+        builder.claim(name: key, value: value)
+    }
+
+    let payload = builder.build()
+
+    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+        return nil // Error already handled by signJWT
+    }
+    
+    return serializedJWT
+  }
+
   private func signJWT(payload: JWTClaimsSet, reject: @escaping RCTPromiseRejectBlock) -> String? {
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
@@ -334,30 +379,10 @@ class BcscCore: NSObject {
     
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
     let grantType = "refresh_token"
-    let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
 
-    // Make JWT Claim Set
-    guard let uuid = UIDevice.current.identifierForVendor?.uuidString else {
-        reject("E_UUID_NOT_FOUND", "UUID not found for the device.", nil)    
-        return
-    }
-
-    let builder = JWTClaimsSet.builder()
-    let seconds = Int(Date().timeIntervalSince1970)
-    let expireSeconds = Int(Date().addingTimeInterval(TimeInterval(clientAssertionJwtExpirationSeconds)).timeIntervalSince1970)
-    
-    builder
-        .claim(name: "aud", value: issuer)
-        .claim(name: "iss", value: clientID) // was from registration
-        .claim(name: "sub", value: clientID) // was from registration
-        .claim(name: "iat", value: seconds)
-        .claim(name: "jti", value: uuid)
-        .claim(name: "exp", value: expireSeconds)
-
-    let payload = builder.build()
-
-    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
-        return // Error already handled by signJWT
+    // Create the client assertion JWT using the helper function
+    guard let serializedJWT = createClientAssertionJWT(audience: issuer, issuer: clientID, subject: clientID, reject: reject) else {
+        return // Error already handled by createClientAssertionJWT
     }
 
     // Construct the body for the refresh token request using the provided refreshToken
@@ -534,40 +559,20 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func getDeviceCodeRequestBody(_ deviceCode: String, clientID: String, confirmationCode: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func getDeviceCodeRequestBody(_ deviceCode: String, clientID: String, issuer: String, confirmationCode: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let grantType = "urn:ietf:params:oauth:grant-type:device_code"
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-    let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
 
     // Validate all parameters are provided
-    guard !deviceCode.isEmpty, !clientID.isEmpty, !confirmationCode.isEmpty else {
-      reject("E_INVALID_PARAMETERS", "All parameters (deviceCode, clientID, confirmationCode) are required and cannot be empty.", nil)
+    guard !deviceCode.isEmpty, !clientID.isEmpty, !issuer.isEmpty, !confirmationCode.isEmpty else {
+      reject("E_INVALID_PARAMETERS", "All parameters (deviceCode, clientID, issuer, confirmationCode) are required and cannot be empty.", nil)
       return
     }
     
-    // Make JWT Claim Set
-    guard let uuid = UIDevice.current.identifierForVendor?.uuidString else {
-        reject("E_UUID_NOT_FOUND", "UUID not found for the device.", nil)    
-        return
-    }
-
-    let builder = JWTClaimsSet.builder()
-    let seconds = Int(Date().timeIntervalSince1970)
-    let expireSeconds = Int(Date().addingTimeInterval(TimeInterval(clientAssertionJwtExpirationSeconds)).timeIntervalSince1970)
-    
-    builder
-        .claim(name: "aud", value: clientID) // Using clientID as audience
-        .claim(name: "iss", value: clientID) // was from registration
-        .claim(name: "sub", value: clientID) // was from registration
-        .claim(name: "iat", value: seconds)
-        .claim(name: "jti", value: uuid)
-        .claim(name: "exp", value: expireSeconds)
-        .claim(name: "code", value: confirmationCode) // Add the confirmationCode claim
-
-    let payload = builder.build()
-
-    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
-        return // Error already handled by signJWT
+    // Create the client assertion JWT using the helper function with additional code claim
+    let additionalClaims = ["code": confirmationCode]
+    guard let serializedJWT = createClientAssertionJWT(audience: issuer, issuer: clientID, subject: clientID, additionalClaims: additionalClaims, reject: reject) else {
+        return // Error already handled by createClientAssertionJWT
     }
 
     // Construct the body for the device code request using the provided information
