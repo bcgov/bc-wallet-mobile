@@ -69,6 +69,11 @@ export interface Spec extends TurboModule {
     fcmDeviceToken: string,
     deviceToken?: string
   ): Promise<string | null>;
+  getDeviceCodeRequestBody(
+    deviceCode: string,
+    clientId: string,
+    confirmationCode: string
+  ): Promise<string | null>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

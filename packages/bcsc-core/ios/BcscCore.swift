@@ -533,6 +533,49 @@ class BcscCore: NSObject {
     }
   }
 
+  @objc
+  func getDeviceCodeRequestBody(_ deviceCode: String, clientID: String, confirmationCode: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let grantType = "urn:ietf:params:oauth:grant-type:device_code"
+    let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+    let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
+
+    // Validate all parameters are provided
+    guard !deviceCode.isEmpty, !clientID.isEmpty, !confirmationCode.isEmpty else {
+      reject("E_INVALID_PARAMETERS", "All parameters (deviceCode, clientID, confirmationCode) are required and cannot be empty.", nil)
+      return
+    }
+    
+    // Make JWT Claim Set
+    guard let uuid = UIDevice.current.identifierForVendor?.uuidString else {
+        reject("E_UUID_NOT_FOUND", "UUID not found for the device.", nil)    
+        return
+    }
+
+    let builder = JWTClaimsSet.builder()
+    let seconds = Int(Date().timeIntervalSince1970)
+    let expireSeconds = Int(Date().addingTimeInterval(TimeInterval(clientAssertionJwtExpirationSeconds)).timeIntervalSince1970)
+    
+    builder
+        .claim(name: "aud", value: clientID) // Using clientID as audience
+        .claim(name: "iss", value: clientID) // was from registration
+        .claim(name: "sub", value: clientID) // was from registration
+        .claim(name: "iat", value: seconds)
+        .claim(name: "jti", value: uuid)
+        .claim(name: "exp", value: expireSeconds)
+        .claim(name: "code", value: confirmationCode) // Add the confirmationCode claim
+
+    let payload = builder.build()
+
+    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+        return // Error already handled by signJWT
+    }
+
+    // Construct the body for the device code request using the provided information
+    let body = "grant_type=\(grantType)&device_code=\(deviceCode)&code=\(confirmationCode)&client_id=\(clientID)&client_assertion_type=\(assertionType)&client_assertion=\(serializedJWT)"
+    
+    resolve(body)
+  }
+
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED
   @objc
