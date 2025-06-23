@@ -46,12 +46,13 @@ class BcscCore: NSObject {
   /**
    * Creates a signed JWT client assertion for OAuth requests
    * @param audience The audience for the JWT (typically issuer or clientID)
-   * @param clientID The client ID for iss and sub claims
+   * @param issuer The issuer for the JWT iss claim
+   * @param subject The subject for the JWT sub claim
    * @param additionalClaims Optional additional claims to include in the JWT
    * @param reject The reject callback for error handling
    * @returns The signed JWT string, or nil if an error occurred
    */
-  private func createClientAssertionJWT(audience: String, clientID: String, additionalClaims: [String: Any] = [:], reject: @escaping RCTPromiseRejectBlock) -> String? {
+  private func createClientAssertionJWT(audience: String, issuer: String, subject: String, additionalClaims: [String: Any] = [:], reject: @escaping RCTPromiseRejectBlock) -> String? {
     let clientAssertionJwtExpirationSeconds = 3600 // 1 hour
     
     // Make JWT Claim Set
@@ -67,8 +68,8 @@ class BcscCore: NSObject {
     // Add standard claims
     builder
         .claim(name: "aud", value: audience)
-        .claim(name: "iss", value: clientID)
-        .claim(name: "sub", value: clientID)
+        .claim(name: "iss", value: issuer)
+        .claim(name: "sub", value: subject)
         .claim(name: "iat", value: seconds)
         .claim(name: "jti", value: uuid)
         .claim(name: "exp", value: expireSeconds)
@@ -380,7 +381,7 @@ class BcscCore: NSObject {
     let grantType = "refresh_token"
 
     // Create the client assertion JWT using the helper function
-    guard let serializedJWT = createClientAssertionJWT(audience: issuer, clientID: clientID, reject: reject) else {
+    guard let serializedJWT = createClientAssertionJWT(audience: issuer, issuer: clientID, subject: clientID, reject: reject) else {
         return // Error already handled by createClientAssertionJWT
     }
 
@@ -570,7 +571,7 @@ class BcscCore: NSObject {
     
     // Create the client assertion JWT using the helper function with additional code claim
     let additionalClaims = ["code": confirmationCode]
-    guard let serializedJWT = createClientAssertionJWT(audience: clientID, clientID: clientID, additionalClaims: additionalClaims, reject: reject) else {
+    guard let serializedJWT = createClientAssertionJWT(audience: clientID, issuer: clientID, subject: clientID, additionalClaims: additionalClaims, reject: reject) else {
         return // Error already handled by createClientAssertionJWT
     }
 
