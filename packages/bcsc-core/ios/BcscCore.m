@@ -41,6 +41,7 @@ RCT_EXTERN_METHOD(getDynamicClientRegistrationBody:(NSString *)fcmDeviceToken
 
 RCT_EXTERN_METHOD(getDeviceCodeRequestBody:(NSString *)deviceCode
                   clientID:(NSString *)clientID
+                  issuer:(NSString *)issuer
                   confirmationCode:(NSString *)confirmationCode
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)

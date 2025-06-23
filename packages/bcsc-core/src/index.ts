@@ -206,6 +206,7 @@ export const getDynamicClientRegistrationBody = async (
  * and constructing the full OAuth device code request body.
  * @param deviceCode The device code received from the authorization server.
  * @param clientId The client ID for the OAuth application.
+ * @param issuer The issuer URL for the OAuth provider.
  * @param confirmationCode The confirmation code to include in the request.
  * @returns A promise that resolves to a string containing the full
  *          device code request body, or null if an error occurs.
@@ -213,18 +214,20 @@ export const getDynamicClientRegistrationBody = async (
 export const getDeviceCodeRequestBody = async (
   deviceCode: string,
   clientId: string,
+  issuer: string,
   confirmationCode: string
 ): Promise<string | null> => {
   // Validate all parameters are provided
-  if (!deviceCode || !clientId || !confirmationCode) {
+  if (!deviceCode || !clientId || !issuer || !confirmationCode) {
     throw new Error(
-      'All parameters (deviceCode, clientId, confirmationCode) are required'
+      'All parameters (deviceCode, clientId, issuer, confirmationCode) are required'
     );
   }
 
   return BcscCore.getDeviceCodeRequestBody(
     deviceCode,
     clientId,
+    issuer,
     confirmationCode
   );
 };

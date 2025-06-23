@@ -559,19 +559,19 @@ class BcscCore: NSObject {
   }
 
   @objc
-  func getDeviceCodeRequestBody(_ deviceCode: String, clientID: String, confirmationCode: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+  func getDeviceCodeRequestBody(_ deviceCode: String, clientID: String, issuer: String, confirmationCode: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let grantType = "urn:ietf:params:oauth:grant-type:device_code"
     let assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 
     // Validate all parameters are provided
-    guard !deviceCode.isEmpty, !clientID.isEmpty, !confirmationCode.isEmpty else {
-      reject("E_INVALID_PARAMETERS", "All parameters (deviceCode, clientID, confirmationCode) are required and cannot be empty.", nil)
+    guard !deviceCode.isEmpty, !clientID.isEmpty, !issuer.isEmpty, !confirmationCode.isEmpty else {
+      reject("E_INVALID_PARAMETERS", "All parameters (deviceCode, clientID, issuer, confirmationCode) are required and cannot be empty.", nil)
       return
     }
     
     // Create the client assertion JWT using the helper function with additional code claim
     let additionalClaims = ["code": confirmationCode]
-    guard let serializedJWT = createClientAssertionJWT(audience: clientID, issuer: clientID, subject: clientID, additionalClaims: additionalClaims, reject: reject) else {
+    guard let serializedJWT = createClientAssertionJWT(audience: issuer, issuer: clientID, subject: clientID, additionalClaims: additionalClaims, reject: reject) else {
         return // Error already handled by createClientAssertionJWT
     }
 

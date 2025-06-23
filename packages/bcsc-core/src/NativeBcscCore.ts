@@ -72,6 +72,7 @@ export interface Spec extends TurboModule {
   getDeviceCodeRequestBody(
     deviceCode: string,
     clientId: string,
+    issuer: string,
     confirmationCode: string
   ): Promise<string | null>;
 }
