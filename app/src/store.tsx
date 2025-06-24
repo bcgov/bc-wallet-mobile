@@ -7,7 +7,7 @@ import {
   PersistentStorage,
 } from '@bifold/core'
 
-import { BCSCCardType } from '@bcsc-theme/_old/types'
+import { BCSCCardType } from '@bcsc-theme/types/cards'
 
 export interface IASEnvironment {
   name: string
@@ -37,6 +37,11 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
+  email?: string
+  deviceCode?: string
+  userCode?: string
+  deviceCodeExpiresAt?: Date
+  refreshToken?: string
   bookmarks: string[]
 }
 
@@ -71,6 +76,11 @@ enum BCSCDispatchAction {
   UPDATE_CARD_TYPE = 'bcsc/updateCardType',
   UPDATE_SERIAL = 'bcsc/updateSerial',
   UPDATE_BIRTHDATE = 'bcsc/updateBirthdate',
+  UPDATE_EMAIL = 'bcsc/updateEmail',
+  UPDATE_DEVICE_CODE = 'bcsc/updateDeviceCode',
+  UPDATE_USER_CODE = 'bcsc/updateUserCode',
+  UPDATE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateDeviceCodeExpiresAt',
+  UPDATE_REFRESH_TOKEN = 'bcsc/updateRefreshToken',
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
 }
@@ -140,6 +150,11 @@ const bcscState: BCSCState = {
   serial: '',
   birthdate: undefined,
   bookmarks: [],
+  email: undefined,
+  userCode: undefined,
+  deviceCode: undefined,
+  deviceCodeExpiresAt: undefined,
+  refreshToken: undefined,
 }
 
 export enum BCLocalStorageKeys {
@@ -258,9 +273,54 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
+    case BCSCDispatchAction.UPDATE_EMAIL: {
+      const email = (action?.payload || []).pop() ?? ''
+      const bcsc = { ...state.bcsc, email }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
     case BCSCDispatchAction.UPDATE_BIRTHDATE: {
       const birthdate = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, birthdate }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_USER_CODE: {
+      const userCode = (action?.payload || []).pop() ?? ''
+      const bcsc = { ...state.bcsc, userCode }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_DEVICE_CODE: {
+      const deviceCode = (action?.payload || []).pop() ?? ''
+      const bcsc = { ...state.bcsc, deviceCode }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT: {
+      const deviceCodeExpiresAt = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, deviceCodeExpiresAt }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_REFRESH_TOKEN: {
+      const refreshToken = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, refreshToken }
       const newState = { ...state, bcsc }
 
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)

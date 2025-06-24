@@ -9,6 +9,15 @@ export enum BCSCScreens {
   Services = 'BCSCServices',
   Account = 'BCSCAccount',
   Settings = 'BCSCSettings',
+  SetupSteps = 'BCSCSetupSteps',
+  IdentitySelection = 'BCSCIdentitySelection',
+  SerialInstructions = 'BCSCSerialInstructions',
+  ManualSerial = 'BCSCManualSerial',
+  EnterBirthdate = 'BCSCEnterBirthdate',
+  MismatchedSerial = 'BCSCMismatchedSerial',
+  VerificationMethodSelection = 'BCSCVerificationMethodSelection',
+  VerifyInPerson = 'BCSCVerifyInPerson',
+  VerificationSuccess = 'BCSCVerificationSuccess',
   ManualPairingCode = 'BCSCManualPairingCode',
   PairingConfirmation = 'BCSCPairingConfirmation',
 }
@@ -24,4 +33,16 @@ export type BCSCRootStackParams = {
   [BCSCStacks.TabStack]: NavigatorScreenParams<BCSCTabStackParams>
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
+}
+
+export type BCSCVerifyIdentityStackParams = {
+  [BCSCScreens.SetupSteps]: undefined
+  [BCSCScreens.IdentitySelection]: undefined
+  [BCSCScreens.SerialInstructions]: undefined
+  [BCSCScreens.ManualSerial]: undefined
+  [BCSCScreens.EnterBirthdate]: undefined
+  [BCSCScreens.MismatchedSerial]: undefined
+  [BCSCScreens.VerificationMethodSelection]: undefined
+  [BCSCScreens.VerifyInPerson]: undefined
+  [BCSCScreens.VerificationSuccess]: undefined
 }
