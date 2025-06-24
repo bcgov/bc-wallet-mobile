@@ -200,7 +200,7 @@ export class AppContainer implements Container {
       enableChat: true,
       enableReuseConnections: true,
       enableHiddenDevModeTrigger: true,
-      preventScreenCapture: false,
+      preventScreenCapture: true,
       supportedLanguages: ['en'],
       showPreface: true,
       disableOnboardingSkip: true,
