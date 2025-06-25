@@ -28,6 +28,7 @@ interface BCSCEndpoints {
   savedServices: string
   token: string
   credential: string
+  evidence: string
 }
 
 class BCSCService {
@@ -70,6 +71,7 @@ class BCSCService {
       savedServices: 'https://idsit.gov.bc.ca/device/services',
       token: 'https://idsit.gov.bc.ca/device/token',
       credential: 'https://idsit.gov.bc.ca/credentials/v1/person',
+      evidence: 'https://idsit.gov.bc.ca/evidence',
     }
 
     // Add interceptors
@@ -101,6 +103,7 @@ class BCSCService {
       savedServices: response.data['saved_services_endpoint'],
       token: response.data['token_endpoint'],
       credential: response.data['credential_endpoint'],
+      evidence: 'https://idsit.gov.bc.ca/evidence',
     }
   }
 
