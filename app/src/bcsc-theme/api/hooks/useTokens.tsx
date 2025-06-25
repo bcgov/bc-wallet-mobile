@@ -1,4 +1,4 @@
-import { getAccount, getDeviceCodeRequestBody } from 'react-native-bcsc-core'
+import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
 

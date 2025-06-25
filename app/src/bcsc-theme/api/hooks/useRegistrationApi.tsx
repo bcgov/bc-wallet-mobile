@@ -1,4 +1,4 @@
-import { getDynamicClientRegistrationBody, setAccount, AccountSecurityMethod, getAccount } from 'react-native-bcsc-core'
+import { getDynamicClientRegistrationBody, setAccount, AccountSecurityMethod } from 'react-native-bcsc-core'
 
 import apiClient from '../client'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'

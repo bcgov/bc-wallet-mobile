@@ -1,4 +1,4 @@
-import { getAccount, signPairingCode } from 'react-native-bcsc-core'
+import { signPairingCode } from 'react-native-bcsc-core'
 import apiClient from '../client'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { withAccount } from './withAccountGuard'
