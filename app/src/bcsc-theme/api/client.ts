@@ -112,7 +112,11 @@ class BCSCService {
   }
 
   async fetchAccessToken(): Promise<AccessToken> {
-    const tokenBody = await getRefreshTokenRequestBody()
+    const tokenBody = await getRefreshTokenRequestBody(
+      this.endpoints.issuer,
+      this.endpoints.clientMetadata,
+      this.refreshToken ?? '',
+    )
     const tokenResponse = await this.post<AccessToken>(this.endpoints.token, tokenBody, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
@@ -166,7 +170,7 @@ class BCSCService {
 }
 
 const client = new BCSCService()
-client.fetchEndpoints(client.baseURL).catch(error => {
+client.fetchEndpoints(client.baseURL).catch((error) => {
   client.logger.error('Failed to fetch BCSC endpoints', {
     message: error instanceof Error ? error.message : String(error),
   })

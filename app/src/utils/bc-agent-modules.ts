@@ -26,6 +26,7 @@ import {
 import { DrpcModule } from '@credo-ts/drpc'
 import { IndyVdrAnonCredsRegistry, IndyVdrModule, IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 import { PushNotificationsApnsModule, PushNotificationsFcmModule } from '@credo-ts/push-notifications'
+import { WebvhDidResolver } from '@credo-ts/webvh'
 import { anoncreds } from '@hyperledger/anoncreds-react-native'
 import { ariesAskar } from '@hyperledger/aries-askar-react-native'
 import { indyVdr } from '@hyperledger/indy-vdr-react-native'
@@ -118,7 +119,9 @@ export function getBCAgentModules({
     }),
     pushNotificationsFcm: new PushNotificationsFcmModule(),
     pushNotificationsApns: new PushNotificationsApnsModule(),
-    dids: new DidsModule(),
+    dids: new DidsModule({
+      resolvers: [new WebvhDidResolver() as any],
+    }),
     drpc: new DrpcModule(),
   }
 
@@ -128,7 +131,7 @@ export function getBCAgentModules({
       registries: [new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings })],
     })
     modules.dids = new DidsModule({
-      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl })],
+      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl }), new WebvhDidResolver() as any],
     })
   }
 
