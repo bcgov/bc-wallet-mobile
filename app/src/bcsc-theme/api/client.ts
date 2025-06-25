@@ -2,8 +2,10 @@ import BCLogger from '@/utils/logger'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { getAccount, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
+
+import { TokenStatusResponseData } from './hooks/useTokens'
 
 interface BCSCEndpoints {
   // METADATA
@@ -28,21 +30,12 @@ interface BCSCEndpoints {
   credential: string
 }
 
-interface AccessToken {
-  access_token: string
-  expires_in: number
-  id_token: string
-  refresh_token: string
-  scope: string
-  token_type: string
-}
-
 class BCSCService {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
   endpoints: BCSCEndpoints
   baseURL: string
-  accessToken?: AccessToken // this token will be used to interact and access data from IAS servers
+  tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
   refreshToken?: string // this is used to refresh access tokens, it is long lived, it might be worth putting in storage
 
   constructor(baseURL: string = String(Config.IAS_URL)) {
@@ -111,9 +104,21 @@ class BCSCService {
     }
   }
 
-  async fetchAccessToken(): Promise<AccessToken> {
-    const tokenBody = await getRefreshTokenRequestBody()
-    const tokenResponse = await this.post<AccessToken>(this.endpoints.token, tokenBody, {
+  async fetchAccessToken(): Promise<TokenStatusResponseData> {
+    // TODO: put this check in a reusable guard
+    const account = await getAccount()
+    if (!account) {
+      throw new Error('No account found. Please register or log in first.')
+    }
+
+    // TODO: handle
+    if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
+      throw new Error('TODO: Reregister if refresh token is expired or not present')
+    }
+
+    const { issuer, clientID } = account
+    const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, this.tokens.refresh_token)
+    const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     })
 
@@ -132,17 +137,22 @@ class BCSCService {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    // skip processing if request is made to token or endpoint URL
-    if (config.url?.endsWith('/device/.well-known/openid-configuration') || config.url?.endsWith('/device/token')) {
+    // skip processing if request is made to token or endpoint URL or initial registration
+    if (
+      config.url?.endsWith('/device/.well-known/openid-configuration') ||
+      config.url?.endsWith('/device/token') ||
+      config.url?.endsWith('/device/register') ||
+      config.url?.endsWith('/device/devicecode')
+    ) {
       return config
     }
 
-    if (!this.accessToken || this.isTokenExpired(this.accessToken.access_token)) {
-      this.accessToken = await this.fetchAccessToken()
+    if (!this.tokens || this.isTokenExpired(this.tokens.access_token)) {
+      this.tokens = await this.fetchAccessToken()
     }
 
-    if (this.accessToken) {
-      config.headers.set('Authorization', `Bearer ${this.accessToken.access_token}`)
+    if (this.tokens) {
+      config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
     }
     this.logger.debug(`${String(config.method)}: ${String(config.url)}`, {})
     return config
@@ -166,7 +176,7 @@ class BCSCService {
 }
 
 const client = new BCSCService()
-client.fetchEndpoints(client.baseURL).catch(error => {
+client.fetchEndpoints(client.baseURL).catch((error) => {
   client.logger.error('Failed to fetch BCSC endpoints', {
     message: error instanceof Error ? error.message : String(error),
   })

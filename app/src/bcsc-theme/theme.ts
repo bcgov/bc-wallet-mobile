@@ -152,7 +152,7 @@ export const BCSCTextTheme: ITextTheme = {
 export const BCSCNavigationTheme = {
   dark: true,
   colors: {
-    primary: BCSCColorPallet.brand.headerText,
+    primary: BCSCColorPallet.brand.primaryBackground,
     background: BCSCColorPallet.brand.primaryBackground,
     card: BCSCColorPallet.brand.primaryBackground,
     text: BCSCColorPallet.brand.text,
