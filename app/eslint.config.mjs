@@ -6,7 +6,8 @@ import importPlugin from 'eslint-plugin-import'
 import reactHooks from 'eslint-plugin-react-hooks'
 import jestPlugin from 'eslint-plugin-jest'
 
-export default [
+/** @type {import('eslint').Linter.Config[]} */
+const config = [
   {
     settings: {
       react: {
@@ -82,3 +83,5 @@ export default [
     },
   },
 ]
+
+export default config
