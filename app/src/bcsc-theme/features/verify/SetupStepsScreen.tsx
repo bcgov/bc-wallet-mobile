@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, Text, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useMemo } from 'react'
 
@@ -66,7 +66,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
-          if (!serialNumber) {
+          if (!registered) {
             navigation.navigate(BCSCScreens.IdentitySelection)
           }
         }}
@@ -76,19 +76,22 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <View
           style={[
             styles.step,
-            { backgroundColor: serialNumber ? ColorPallet.brand.secondaryBackground : ColorPallet.brand.primary },
+            { backgroundColor: registered ? ColorPallet.brand.secondaryBackground : ColorPallet.brand.primary },
           ]}
         >
           <View style={styles.titleRow}>
-            <ThemedText variant={'headingFour'} style={{ marginRight: 16, color: serialNumber ? TextTheme.headingFour.color : ColorPallet.brand.text }}>
+            <ThemedText
+              variant={'headingFour'}
+              style={{ marginRight: 16, color: registered ? TextTheme.headingFour.color : ColorPallet.brand.text }}
+            >
               {'Step 1'}
             </ThemedText>
-            {serialNumber ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
+            {registered ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
           </View>
           <View>
-            <Text style={{ color: serialNumber ? TextTheme.normal.color : ColorPallet.brand.text }}>
-              {serialNumber ? `ID: ${serialNumber}` : t('Unified.Steps.ScanOrTakePhotos')}
-            </Text>
+            <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPallet.brand.text }}>
+              {registered ? `ID: BC Services Card (${serialNumber})` : t('Unified.Steps.ScanOrTakePhotos')}
+            </ThemedText>
           </View>
         </View>
       </TouchableOpacity>
@@ -120,9 +123,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             {registered ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
           </View>
           <View>
-            <ThemedText>
-              {registered ? `Email: ${emailAddress}` : 'Email Address'}
-            </ThemedText>
+            <ThemedText>{registered ? `Email: ${emailAddress}` : 'Email Address'}</ThemedText>
           </View>
         </View>
       </TouchableOpacity>
@@ -145,12 +146,23 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           ]}
         >
           <View style={styles.titleRow}>
-            <ThemedText variant={'headingFour'} style={{ marginRight: 16, color: registered ? ColorPallet.brand.text : TextTheme.headingFour.color }}>
+            <ThemedText
+              variant={'headingFour'}
+              style={{ marginRight: 16, color: registered ? ColorPallet.brand.text : TextTheme.headingFour.color }}
+            >
               {'Step 4'}
             </ThemedText>
           </View>
           <View>
-            <Text style={{ color: registered ? ColorPallet.brand.text : TextTheme.headingFour.color }}>{'7 days from now'}</Text>
+            <ThemedText style={{ color: registered ? ColorPallet.brand.text : TextTheme.headingFour.color }}>
+              {registered
+                ? `Verify identity by ${store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                  })}`
+                : 'Verify identity'}
+            </ThemedText>
           </View>
         </View>
       </TouchableOpacity>

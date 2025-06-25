@@ -1,9 +1,9 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Button, ButtonType, Link, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, Link, testIdWithKey, ThemedText, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { useState } from 'react'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 
@@ -13,10 +13,13 @@ type VerifyInPersonScreenProps = {
 
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   const { ColorPallet, Spacing } = useTheme()
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const [error, setError] = useState(false)
+  const [loading, setLoading] = useState(false)
   const { token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { ButtonLoading } = useAnimatedComponents()
+
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
@@ -30,24 +33,36 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
     controlsContainer: {
       marginTop: 'auto'
     },
+    bulletContainer: {
+      flexDirection: 'row',
+    },
+    bullet: {
+      marginRight: Spacing.xs,
+    }
   })
   
   const onPressComplete = async () => {
     try {
+      setLoading(true)
+      setError(false)
+
       if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
         throw new Error('Device code or user code is missing in the store.')
       }
 
       const data = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
-      if (data.access_token) {
+      if (data.refresh_token) {
+        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [data.refresh_token] })
         navigation.navigate(BCSCScreens.VerificationSuccess)
       } else {
         setError(true)
-        logger.error('Device verification failed, no access token received.')
+        logger.error('Device verification failed, no refresh token received.')
       }
     } catch (e) {
       logger.error(`Error completing device verification: ${e}`)
       setError(true)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -63,31 +78,42 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
           style={{ marginBottom: Spacing.md }}
         />
         <ThemedText variant={'bold'}>What to bring</ThemedText>
-        <ThemedText>
-          {'\u2022 This device'}
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.lg }}>
-          {`\u2022 Your BC Services Card - if it's a non-photo card, bring your additional ID too`}
-        </ThemedText>
+        <View style={styles.bulletContainer}>
+          <ThemedText style={styles.bullet}>
+            {'\u2022'}
+          </ThemedText>
+          <ThemedText>
+            {'This device'}
+          </ThemedText>
+        </View>
+        <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
+          <ThemedText style={styles.bullet}>
+            {'\u2022'}
+          </ThemedText>
+          <ThemedText>
+            {`Your BC Services Card - if it's a non-photo card, bring your additional ID too`}
+          </ThemedText>
+        </View>
         <ThemedText variant={'bold'}>Show this confirmation number</ThemedText>
-        <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl }}>
+        <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
           {`${store.bcsc.userCode?.slice(0, 4)}-${store.bcsc.userCode?.slice(4, 8)}`}
         </ThemedText>
         <ThemedText variant={'bold'}>You must complete this by</ThemedText>
-        <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
+        <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
           {store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}
         </ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <View style={{ marginBottom: Spacing.md }}>
-          {error && (<ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.xs }}>You have not yet been verified</ThemedText>)}
+          {error && (<ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>You have not yet been verified</ThemedText>)}
           <Button
             buttonType={ButtonType.Primary}
             testID={testIdWithKey('Complete')}
             accessibilityLabel={'Complete'}
             title={'Complete'}
             onPress={onPressComplete}
-          />
+            disabled={loading}
+          >{loading && <ButtonLoading />}</Button>
         </View>
         <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>Card serial number: {store.bcsc.serial}</ThemedText>
       </View>  

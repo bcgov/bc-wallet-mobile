@@ -2,6 +2,7 @@ import {
   Button,
   ButtonType,
   testIdWithKey,
+  ThemedText,
   TOKENS,
   useAnimatedComponents,
   useServices,
@@ -10,7 +11,7 @@ import {
 } from '@bifold/core'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -28,7 +29,7 @@ type EnterBirthdateScreenProps = {
 const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation }: EnterBirthdateScreenProps) => {
   const today = new Date()
   const { t } = useTranslation()
-  const { ColorPallet, TextTheme, themeName } = useTheme()
+  const { ColorPallet, themeName, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [date, setDate] = useState(store.bcsc.birthdate ?? today)
   const [loading, setLoading] = useState(false)
@@ -38,33 +39,24 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
   const styles = StyleSheet.create({
     pageContainer: {
-      height: '100%',
+      flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPallet.brand.primaryBackground,
     },
     scrollView: {
       flex: 1,
-      padding: 24,
+      padding: Spacing.md,
     },
     controlsContainer: {
-      marginBottom: 20,
+      margin: Spacing.md,
       marginTop: 'auto',
-      marginHorizontal: 20,
       position: 'relative',
-    },
-    heading: {
-      ...TextTheme.headingThree,
-      marginBottom: 16,
-    },
-    paragraph: {
-      ...TextTheme.normal,
-      marginBottom: 8,
     },
     lineBreak: {
       height: 8,
-      backgroundColor: ColorPallet.grayscale.veryLightGrey,
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
       width: '100%',
-      marginBottom: 16,
+      marginBottom: Spacing.md,
     },
   })
 
@@ -102,17 +94,19 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <Text style={styles.paragraph}>{t('Unified.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}</Text>
+        <ThemedText style={{ marginBottom: Spacing.sm}}>{t('Unified.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}</ThemedText>
         <View style={styles.lineBreak} />
-        <Text style={styles.heading}>{t('Unified.Birthdate.Heading')}</Text>
-        <Text style={styles.paragraph}>{t('Unified.Birthdate.Paragraph')}</Text>
-        <DatePicker
-          theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
-          mode={'date'}
-          date={date}
-          onDateChange={setDate}
-          maximumDate={today}
-        />
+        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>{t('Unified.Birthdate.Heading')}</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.Birthdate.Paragraph')}</ThemedText>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <DatePicker
+            theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
+            mode={'date'}
+            date={date}
+            onDateChange={setDate}
+            maximumDate={today}
+          />
+        </View>
       </ScrollView>
       <View style={styles.controlsContainer}>
         <Button

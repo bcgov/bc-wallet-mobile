@@ -1,42 +1,47 @@
-import { useStore, useTheme } from '@bifold/core'
+import { ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native'
+import { Image, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
+import { StackNavigationProp } from '@react-navigation/stack'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
 import { BCSCCardType } from '../../types/cards'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
+import ComboCardImage from '@assets/img/combo_card.png'
+import PhotoCardImage from '@assets/img/photo_card.png'
+import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 
-const pagePadding = 24
+const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
+const PHOTO_CARD = Image.resolveAssetSource(PhotoCardImage).uri
+const NO_PHOTO_CARD = Image.resolveAssetSource(NoPhotoCardImage).uri
 
 type IdentitySelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IdentitySelection>
 }
 
-const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({ navigation }: IdentitySelectionScreenProps) => {
+const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
+  navigation,
+}: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPallet, TextTheme } = useTheme()
+  const { ColorPallet, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { width } = useWindowDimensions()
 
   const styles = StyleSheet.create({
     scrollView: {
       flex: 1,
-      paddingHorizontal: pagePadding,
+      paddingHorizontal: Spacing.md,
       backgroundColor: ColorPallet.brand.primaryBackground,
     },
     heading: {
-      ...TextTheme.headingThree,
-      marginTop: 24,
-      marginBottom: 16,
+      marginTop: Spacing.md,
+      marginBottom: Spacing.sm,
     },
     description: {
-      ...TextTheme.normal,
-      marginBottom: 16,
+      marginBottom: Spacing.md,
     },
     pageBreakSlot: {
       position: 'relative',
@@ -49,15 +54,14 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({ navig
       width,
       height: 8,
       backgroundColor: ColorPallet.brand.secondaryBackground,
-      left: -pagePadding,
+      left: -Spacing.md,
     },
     checkButton: {
-      marginVertical: 16,
+      marginVertical: Spacing.md,
       flexWrap: 'wrap',
       flex: 1,
     },
     checkButtonText: {
-      ...TextTheme.bold,
       color: ColorPallet.brand.primary,
     },
   })
@@ -92,8 +96,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({ navig
           accessibilityLabel: t('Unified.ChooseYourID.CombinedCard'),
           actionText: t('Unified.ChooseYourID.CombinedCardActionText'),
           description: t('Unified.ChooseYourID.CombinedCardDescription'),
-          imgSrc: require('@assets/img/combo_card.png'),
-          style: { marginBottom: 16 },
+          imgSrc: { uri: COMBO_CARD },
+          style: { marginBottom: Spacing.md },
         },
         {
           onPress: onPressPhotoCard,
@@ -101,8 +105,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({ navig
           accessibilityLabel: t('Unified.ChooseYourID.PhotoCard'),
           actionText: t('Unified.ChooseYourID.PhotoCardActionText'),
           description: t('Unified.ChooseYourID.PhotoCardDescription'),
-          imgSrc: require('@assets/img/photo_card.png'),
-          style: { marginBottom: 16 },
+          imgSrc: { uri: PHOTO_CARD },
+          style: { marginBottom: Spacing.md },
         },
         {
           onPress: onPressNoPhotoCard,
@@ -110,34 +114,38 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({ navig
           accessibilityLabel: t('Unified.ChooseYourID.NoPhotoCard'),
           actionText: t('Unified.ChooseYourID.NoPhotoCardActionText'),
           description: t('Unified.ChooseYourID.NoPhotoCardDescription'),
-          imgSrc: require('@assets/img/no_photo_card.png'),
-          style: { marginBottom: 16 },
+          imgSrc: { uri: NO_PHOTO_CARD },
+          style: { marginBottom: Spacing.md },
         },
       ] as TileButtonProps[]
     ).map((props, i) => <TileButton {...props} key={i + 1} />)
-  }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t])
+  }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
 
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
       <ScrollView style={styles.scrollView}>
-        <Text style={styles.heading}>{t('Unified.ChooseYourID.WhatCardDoYou')}</Text>
-        <Text style={styles.description}>{t('Unified.ChooseYourID.SomePeopleStillCallIt')}</Text>
+        <ThemedText variant={'headingThree'} style={styles.heading}>
+          {t('Unified.ChooseYourID.WhatCardDoYou')}
+        </ThemedText>
+        <ThemedText style={styles.description}>{t('Unified.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
         {cardButtons}
         <View style={styles.pageBreakSlot}>
           <View style={styles.pageBreak} />
         </View>
-        <Text style={styles.heading}>{t('Unified.ChooseYourID.DontHaveOne')}</Text>
-        <Text style={styles.description}>{t('Unified.ChooseYourID.CheckBefore')}</Text>
+        <ThemedText variant={'headingThree'} style={styles.heading}>
+          {t('Unified.ChooseYourID.DontHaveOne')}
+        </ThemedText>
+        <ThemedText style={styles.description}>{t('Unified.ChooseYourID.CheckBefore')}</ThemedText>
         <Pressable
           onPress={onCheckForServicesCard}
           testID={'CheckForServicesCard'}
           accessibilityLabel={t('Unified.ChooseYourID.CheckForServicesCard')}
           style={styles.checkButton}
         >
-          <Text style={styles.checkButtonText}>
+          <ThemedText variant={'bold'} style={styles.checkButtonText}>
             {t('Unified.ChooseYourID.CheckIfIHave') + ' '}
             <Icon size={20} color={ColorPallet.brand.primary} name={'help-circle-outline'} />
-          </Text>
+          </ThemedText>
         </Pressable>
         <TileButton
           onPress={onPressOtherID}
@@ -145,7 +153,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({ navig
           accessibilityLabel={t('Unified.ChooseYourID.OtherID')}
           actionText={t('Unified.ChooseYourID.OtherIDActionText')}
           description={t('Unified.ChooseYourID.OtherIDDescription')}
-          style={{ marginBottom: 16 }}
+          style={{ marginBottom: Spacing.md }}
         />
       </ScrollView>
     </SafeAreaView>

@@ -33,10 +33,10 @@ const VerificationSuccessScreen = ({ navigation }: VerificationSuccessScreenProp
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.contentContainer}>
-        <Icon name={'check'} size={48} color={ColorPallet.brand.primary} />
-        <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.md }}>{`You're all set`}</ThemedText>
-        <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.lg }}>{`Use this app to securely log in to many different websites.`}</ThemedText>
-        <ThemedText variant={'headingFour'} style={{ fontWeight: 'normal' }}>{`Remember, it is not a health card, vaccine card, driver's license, or photo ID.`}</ThemedText>
+        <Icon name={'check'} size={108} color={ColorPallet.brand.primary} />
+        <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.md, textAlign: 'center' }}>{`You're all set`}</ThemedText>
+        <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.lg, textAlign: 'center' }}>{`Use this app to securely log in to many different websites.`}</ThemedText>
+        <ThemedText variant={'headingFour'} style={{ fontWeight: 'normal', textAlign: 'center' }}>{`Remember, it is not a health card, vaccine card, driver's license, or photo ID.`}</ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <Button

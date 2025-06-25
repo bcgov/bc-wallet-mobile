@@ -1,13 +1,15 @@
-import { Button, ButtonType, KeyboardView, LimitedTextInput, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, KeyboardView, LimitedTextInput, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
+import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
 
 import { BCDispatchAction, BCState } from '@/store'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 
-const pagePadding = 24
+const SERIAL_HIGHLIGHT_IMAGE = Image.resolveAssetSource(SerialHighlightImage).uri
+
 const twoThirds = 0.67
 const maxSerialNumberLength = 15
 
@@ -22,7 +24,7 @@ type ManualSerialScreenProps = {
 
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPallet, TextTheme } = useTheme()
+  const { ColorPallet, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [serial, setSerial] = useState(store.bcsc.serial ?? '')
   const { width } = useWindowDimensions()
@@ -33,28 +35,22 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
 
   const styles = StyleSheet.create({
     screenContainer: {
-      height: '100%',
-      backgroundColor: ColorPallet.brand.secondaryBackground,
-      padding: pagePadding,
+      flex: 1,
+      backgroundColor: ColorPallet.brand.primaryBackground,
+      padding: Spacing.md,
       justifyContent: 'space-between',
     },
     contentContainer: {
       flexDirection: 'column',
     },
     image: {
-      width: width - pagePadding * 2,
-      height: (width - pagePadding * 2) * twoThirds,
-      marginBottom: 24,
+      width: width - Spacing.md * 2,
+      height: (width - Spacing.md * 2) * twoThirds,
+      marginBottom: Spacing.md,
     },
     error: {
-      ...TextTheme.labelSubtitle,
       color: ColorPallet.semantic.error,
-      marginBottom: 8,
-      justifyContent: 'flex-start',
-    },
-    subText: {
-      ...TextTheme.labelSubtitle,
-      marginBottom: 16,
+      marginBottom: Spacing.sm,
     },
 
     // below used as helpful label for view, no properties needed atp
@@ -95,7 +91,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       <View style={styles.screenContainer}>
         <View style={styles.contentContainer}>
           <Image
-            source={require('@assets/img/highlight_serial_barcode.png')}
+            source={{ uri: SERIAL_HIGHLIGHT_IMAGE }}
             style={styles.image}
             resizeMode={'contain'}
           />
@@ -106,9 +102,13 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
             handleChangeText={handleChangeText}
             accessibilityLabel={t('Unified.ManualSerial.InputLabel')}
             testID={testIdWithKey('SerialInput')}
+            autoCapitalize={'characters'}
+            autoCorrect={false}
+            autoComplete={'off'}
+            showLimitCounter={false}
           />
-          {errorState.visible ? <Text style={styles.error}>{errorState.description}</Text> : null}
-          <Text style={styles.subText}>{t('Unified.ManualSerial.InputSubText')}</Text>
+          {errorState.visible ? <ThemedText variant={'labelSubtitle'} style={styles.error}>{errorState.description}</ThemedText> : null}
+          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.ManualSerial.InputSubText')}</ThemedText>
         </View>
         <View style={styles.controlsContainer}>
           <View style={styles.buttonContainer}>
