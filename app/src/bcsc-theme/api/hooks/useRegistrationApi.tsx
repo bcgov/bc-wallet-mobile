@@ -1,8 +1,7 @@
-import { getDynamicClientRegistrationBody, setAccount, AccountSecurityMethod } from 'react-native-bcsc-core'
+import { getDynamicClientRegistrationBody, setAccount, AccountSecurityMethod, getAccount } from 'react-native-bcsc-core'
 
 import apiClient from '../client'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
-import { withAccount } from './withAccountGuard'
 
 export interface RegistrationResponseData {
   client_id: string
@@ -39,20 +38,22 @@ export interface RegistrationResponseData {
 
 const useRegistrationApi = () => {
   const register = async () => {
-    return withAccount(async (account) => {
-      const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
-      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
-      apiClient.logger.info(`Registration body: ${JSON.stringify(JSON.parse(body!), null, 2)}`)
-      const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
-        headers: { 'Content-Type': 'application/json' },
-      })
-      await setAccount({
-        clientID: data.client_id,
-        issuer: apiClient.endpoints.issuer,
-        securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-      })
-      return data
+    const account = await getAccount()
+    // If an account already exists, we don't need to register again
+    if (account) return 
+    
+    const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
+    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
+    apiClient.logger.info(`Registration body: ${JSON.stringify(JSON.parse(body!), null, 2)}`)
+    const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
+      headers: { 'Content-Type': 'application/json' },
     })
+    await setAccount({
+      clientID: data.client_id,
+      issuer: apiClient.endpoints.issuer,
+      securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+    })
+    return data
   }
 
   const updateRegistration = async (clientId: string) => {
