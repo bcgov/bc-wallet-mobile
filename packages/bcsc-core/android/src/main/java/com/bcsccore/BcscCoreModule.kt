@@ -132,10 +132,19 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getToken(tokenType: Int, promise: Promise) {
-    // Mock implementation - returns null for now
+    // Mock implementation - returns a mock token object
     // In a real implementation, this would retrieve the token from secure storage
     Log.d(NAME, "getToken called with tokenType: $tokenType")
-    promise.resolve("getToken-mock-return-value")
+    
+    // Create a mock NativeToken object that matches the TypeScript interface
+    val mockToken: WritableMap = Arguments.createMap()
+    mockToken.putString("id", "mock-token-id-${System.currentTimeMillis()}")
+    mockToken.putInt("type", tokenType)
+    mockToken.putString("token", "mock-token-value-for-type-$tokenType")
+    mockToken.putDouble("created", (System.currentTimeMillis() / 1000).toDouble()) // Unix timestamp in seconds
+    mockToken.putDouble("expiry", ((System.currentTimeMillis() / 1000) + 3600).toDouble()) // Expires in 1 hour
+    
+    promise.resolve(mockToken)
   }
 
   @ReactMethod
@@ -151,14 +160,32 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getAccount(promise: Promise) {
-    // Mock implementation - returns null for now
+    // Mock implementation - returns a mock NativeAccount object
     // In a real implementation, this would retrieve account data from storage
     Log.d(NAME, "getAccount called")
-    promise.resolve(null)
+    
+    // Create a mock NativeAccount object that matches the TypeScript interface
+    val mockAccount: WritableMap = Arguments.createMap()
+    mockAccount.putString("id", "mock-account-id-${System.currentTimeMillis()}")
+    mockAccount.putString("issuer", "https://mock-issuer.example.com")
+    mockAccount.putString("clientID", "mock-client-id-12345")
+    mockAccount.putString("securityMethod", "device_authentication") // AccountSecurityMethod.DeviceAuth
+    mockAccount.putString("displayName", "Mock Test Account")
+    mockAccount.putBoolean("didPostNicknameToServer", false)
+    mockAccount.putString("nickname", "MockUser")
+    mockAccount.putInt("failedAttemptCount", 0)
+    
+    promise.resolve(mockAccount)
   }
 
   @ReactMethod
-  override fun getRefreshTokenRequestBody(issuer: String, clientID: String, promise: Promise) {
+  override fun getRefreshTokenRequestBody(issuer: String, clientID: String, refreshToken: String, promise: Promise) {
+    // Validate all parameters are provided
+    if (issuer.isEmpty() || clientID.isEmpty() || refreshToken.isEmpty()) {
+      promise.reject("E_INVALID_PARAMETERS", "All parameters (issuer, clientID, refreshToken) are required and cannot be empty.")
+      return
+    }
+    
     try {
       // Get the current key pair for signing
       val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
@@ -184,9 +211,8 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       val assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
       val grantType = "refresh_token"
       
-      // Note: In a real implementation, you would retrieve the actual refresh token from storage
-      // For now, we'll create a mock body structure that indicates where the refresh token would go
-      val body = "grant_type=$grantType&client_id=$clientID&client_assertion_type=$assertionType&client_assertion=$clientAssertion&refresh_token=REFRESH_TOKEN_PLACEHOLDER"
+      // Use the actual refresh token provided as parameter
+      val body = "grant_type=$grantType&client_id=$clientID&client_assertion_type=$assertionType&client_assertion=$clientAssertion&refresh_token=$refreshToken"
       
       Log.d(NAME, "getRefreshTokenRequestBody: Successfully created request body with issuer: $issuer, clientID: $clientID")
       promise.resolve(body)
@@ -300,5 +326,24 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       Log.e(NAME, "getDynamicClientRegistrationBody: Unexpected error: ${e.message}", e)
       promise.reject("E_DCR_ERROR", "Unexpected error creating dynamic client registration: ${e.message}", e)
     }
+  }
+
+  @ReactMethod
+  override fun getDeviceCodeRequestBody(deviceCode: String, clientId: String, issuer: String, confirmationCode: String, promise: Promise) {
+    // Validate all parameters are provided
+    if (deviceCode.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || confirmationCode.isEmpty()) {
+      promise.reject("E_INVALID_PARAMETERS", "All parameters (deviceCode, clientId, issuer, confirmationCode) are required and cannot be empty.")
+      return
+    }
+    
+    // Mock implementation - returns a device code request body
+    // In a real implementation, this would:
+    // 1. Create and sign a JWT assertion using the provided clientId and issuer
+    // 2. Format the OAuth device code request body with the provided deviceCode and confirmationCode
+    // 3. Return the constructed request body
+    Log.d(NAME, "getDeviceCodeRequestBody called with deviceCode: [REDACTED], clientId: $clientId, issuer: $issuer, confirmationCode: [REDACTED]")
+    
+    val mockRequestBody = "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=$deviceCode&client_id=$clientId&code=$confirmationCode"
+    promise.resolve(mockRequestBody)
   }
 }
