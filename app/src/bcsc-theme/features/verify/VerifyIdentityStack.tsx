@@ -15,6 +15,7 @@ import VerificationSuccessScreen from './VerificationSuccessScreen'
 import { CommonActions } from '@react-navigation/native'
 import { useEffect } from 'react'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import InformationRequiredScreen from './send-video/InformationRequiredScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -66,6 +67,11 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
         options={{ headerRight: HelpHeaderButton }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.InformationRequired}
+        component={InformationRequiredScreen}
+        options={{ title: 'Information Required' }}
       />
       <Stack.Screen
         name={BCSCScreens.VerificationSuccess}

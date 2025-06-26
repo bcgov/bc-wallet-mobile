@@ -64,13 +64,13 @@
 		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera used for in-app QR Code scanning</string>
+	<string>Camera used for QR Code scanning and video calls</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>$(PRODUCT_NAME) needs access to your microphone to enable video calls.</string>
+	<string>$(PRODUCT_NAME) needs access to your microphone to enable video calls</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>$(PRODUCT_NAME) wants to use your FaceID/TouchID to authenticate your identity</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We include this permission because a library our app uses references it, even though we don't use it directly.</string>
+	<string>We include this permission because a library our app uses references it, even though we don't use it directly</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>MaterialIcons.ttf</string>
