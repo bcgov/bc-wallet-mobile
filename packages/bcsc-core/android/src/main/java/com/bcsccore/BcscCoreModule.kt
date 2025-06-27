@@ -35,6 +35,10 @@ import com.nimbusds.jose.jwk.JWK
 import java.util.Date
 import java.util.UUID
 
+// Bcsc File Port imports
+import com.bcsccore.fileport.FileReader
+import com.bcsccore.fileport.FileReaderFactory
+
 @ReactModule(name = BcscCoreModule.NAME)
 class BcscCoreModule(reactContext: ReactApplicationContext) :
   BcscCoreSpec(reactContext) {
@@ -132,11 +136,41 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getToken(tokenType: Int, promise: Promise) {
-    // Mock implementation - returns a mock token object
-    // In a real implementation, this would retrieve the token from secure storage
+    // Partial implementation - attempts to read the "token" file using bcsc-file-port
+    // but always returns the mock value regardless of success or failure
     Log.d(NAME, "getToken called with tokenType: $tokenType")
     
-    // Create a mock NativeToken object that matches the TypeScript interface
+    // Attempt to read the token file using bcsc-file-port from the specific path
+    try {
+      val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
+      
+      // Get and log the base storage directory
+      val baseDir = fileReader.getStorageDirectory()
+      Log.d(NAME, "Base files directory: ${baseDir.absolutePath}")
+      
+      // List all available files for debugging
+      val availableFiles = fileReader.listFiles()
+      Log.d(NAME, "Available files in base directory (${availableFiles.size} files): ${availableFiles.joinToString(", ")}")
+      
+      val relativePath = "sit/5c790f9f-99b2-4de8-b150-127552a206ad/tokens"
+      val tokenFilePath = "${baseDir.absolutePath}/$relativePath"
+      Log.d(NAME, "Full token file path: $tokenFilePath")
+      val tokenData: ByteArray? = fileReader.readFile(relativePath)
+      
+      if (tokenData != null) {
+        Log.d(NAME, "Successfully read token file using bcsc-file-port from path: $tokenFilePath. File size: ${tokenData.size} bytes")
+        // Note: In a full implementation, this would parse and return the actual token data
+      } else {
+        Log.d(NAME, "Failed to read token file using bcsc-file-port from path: $tokenFilePath - file not found or empty")
+        // Check if the file exists at all
+        val fileExists = fileReader.fileExists(relativePath)
+        Log.d(NAME, "File exists check for $tokenFilePath: $fileExists")
+      }
+    } catch (e: Exception) {
+      Log.e(NAME, "Exception occurred while reading token file using bcsc-file-port from path: files/sit/5c790f9f-99b2-4de8-b150-127552a206ad/tokens - ${e.message}", e)
+    }
+    
+    // Always return the mock token object regardless of file read success/failure
     val mockToken: WritableMap = Arguments.createMap()
     mockToken.putString("id", "mock-token-id-${System.currentTimeMillis()}")
     mockToken.putInt("type", tokenType)

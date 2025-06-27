@@ -93,6 +93,11 @@ android {
       } else {
         java.srcDirs += ["src/oldarch"]
       }
+      
+      // Exclude bcsc-token-port directory to avoid compilation errors
+      java {
+        exclude "**/bcsc-token-port/**"
+      }
     }
   }
 }
