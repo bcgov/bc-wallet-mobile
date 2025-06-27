@@ -3,6 +3,8 @@ import useConfigApi from './useConfigApi'
 import useRegistrationApi from './useRegistrationApi'
 import useAuthorizationApi from './useAuthorizationApi'
 import useTokenApi from './useTokens'
+import useUserApi from './useUserApi'
+import useEvidenceApi from './useEvidenceApi'
 
 const useApi = () => {
   const config = useConfigApi()
@@ -10,6 +12,8 @@ const useApi = () => {
   const registration = useRegistrationApi()
   const authorization = useAuthorizationApi()
   const token = useTokenApi()
+  const user = useUserApi()
+  const evidence = useEvidenceApi()
 
   return {
     config,
@@ -17,6 +21,8 @@ const useApi = () => {
     registration,
     authorization,
     token,
+    user,
+    evidence,
   }
 }
 

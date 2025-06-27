@@ -8,6 +8,7 @@ import { Button, ButtonType, LockoutReason, TOKENS, useAuth, useServices, useSto
 import React from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import SampleApiDisplay from './components/SampleApiDisplay'
+import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 
 // Placeholder for now, not sure if we want to reuse our
 // existing settings screen or create a new one, prob create new
@@ -15,7 +16,7 @@ const Settings: React.FC = () => {
   const { Spacing, setTheme, themeName } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { lockOutUser } = useAuth()
-  const { config } = useApi()
+  const { config, evidence, user } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const styles = StyleSheet.create({
     container: {
@@ -41,6 +42,13 @@ const Settings: React.FC = () => {
   const termsDataLoader = useDataLoader<TermsOfUseResponseData>(() => config.getTermsOfUse(), {
     onError: onTermsOfUseError,
   })
+  const evidenceStart = useDataLoader<any>(() => evidence.createVerificationRequest(), {
+    onError: (error: unknown) => logger.error(`Error loading: ${error}`),
+  })
+
+  const userAccount = useDataLoader<any>(() => user.getUserInfo(), {
+    onError: (error: unknown) => logger.error(`Error loading: ${error}`),
+  })
 
   const onPressMode = () => {
     lockOutUser(LockoutReason.Logout)
@@ -62,6 +70,8 @@ const Settings: React.FC = () => {
         <ScrollView contentContainerStyle={styles.contentContainer}>
           <SampleApiDisplay<TermsOfUseResponseData> dataLoader={termsDataLoader} title={'Terms of Use'} />
           <SampleApiDisplay<ServerStatusResponseData> dataLoader={serverStatusDataLoader} title={'Server Status'} />
+          <SampleApiDisplay<any> dataLoader={evidenceStart} title={'Start Evidence'} />
+          <SampleApiDisplay<UserInfoResponseData> dataLoader={userAccount} title={'User Account'} />
         </ScrollView>
         <View style={styles.controlsContainer}>
           <View style={{ marginVertical: Spacing.md }}>
