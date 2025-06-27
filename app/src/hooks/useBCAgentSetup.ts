@@ -19,6 +19,7 @@ import { CachesDirectoryPath } from 'react-native-fs'
 import { activate } from '@/utils/PushNotificationsHelper'
 import { getBCAgentModules } from '@/utils/bc-agent-modules'
 import { BCState, BCLocalStorageKeys } from '@/store'
+import { batchPickup } from '@/utils/mediator'
 
 const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,6 +58,8 @@ const useBCAgentSetup = () => {
           key: walletSecret.key,
         })
         await agent.initialize()
+
+        batchPickup(agent)
       } catch (error) {
         logger.warn(`Agent restart failed with error ${error}`)
         // if the existing agents wallet cannot be opened or initialize() fails it was
@@ -201,6 +204,8 @@ const useBCAgentSetup = () => {
 
       logger.info('Initializing agent...')
       await newAgent.initialize()
+
+      batchPickup(newAgent)
 
       logger.info('Warming up cache...')
       await warmUpCache(newAgent, cachedLedgers)
