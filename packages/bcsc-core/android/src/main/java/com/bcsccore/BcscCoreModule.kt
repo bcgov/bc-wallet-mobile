@@ -21,6 +21,10 @@ import java.security.cert.Certificate
 import javax.crypto.SecretKey
 import java.util.Base64
 import android.util.Log
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.TimeZone
+import java.util.Locale
 
 // Bcsc KeyPair package imports
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
@@ -38,6 +42,9 @@ import java.util.UUID
 // Bcsc File Port imports
 import com.bcsccore.fileport.FileReader
 import com.bcsccore.fileport.FileReaderFactory
+import com.bcsccore.fileport.decryption.DecryptedFileReader
+import com.bcsccore.fileport.decryption.DecryptedFileData
+import com.bcsccore.fileport.decryption.DecryptionException
 
 @ReactModule(name = BcscCoreModule.NAME)
 class BcscCoreModule(reactContext: ReactApplicationContext) :
@@ -136,11 +143,9 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getToken(tokenType: Int, promise: Promise) {
-    // Partial implementation - attempts to read the "token" file using bcsc-file-port
-    // but always returns the mock value regardless of success or failure
     Log.d(NAME, "getToken called with tokenType: $tokenType")
     
-    // Attempt to read the token file using bcsc-file-port from the specific path
+    // Attempt to read and decrypt the token file using bcsc-file-port
     try {
       val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
       
@@ -152,33 +157,168 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       val availableFiles = fileReader.listFiles()
       Log.d(NAME, "Available files in base directory (${availableFiles.size} files): ${availableFiles.joinToString(", ")}")
       
+      // Use DecryptedFileReader to read and decrypt the token file
+      val decryptedFileReader = DecryptedFileReader(reactApplicationContext)
       val relativePath = "sit/5c790f9f-99b2-4de8-b150-127552a206ad/tokens"
       val tokenFilePath = "${baseDir.absolutePath}/$relativePath"
       Log.d(NAME, "Full token file path: $tokenFilePath")
-      val tokenData: ByteArray? = fileReader.readFile(relativePath)
       
-      if (tokenData != null) {
-        Log.d(NAME, "Successfully read token file using bcsc-file-port from path: $tokenFilePath. File size: ${tokenData.size} bytes")
-        // Note: In a full implementation, this would parse and return the actual token data
-      } else {
-        Log.d(NAME, "Failed to read token file using bcsc-file-port from path: $tokenFilePath - file not found or empty")
-        // Check if the file exists at all
-        val fileExists = fileReader.fileExists(relativePath)
-        Log.d(NAME, "File exists check for $tokenFilePath: $fileExists")
+      try {
+        val decryptedFileData: DecryptedFileData? = decryptedFileReader.readDecryptedFile(relativePath)
+        
+        if (decryptedFileData != null) {
+          Log.d(NAME, "Successfully read and decrypted token file using bcsc-file-port from path: $tokenFilePath")
+          Log.d(NAME, "Decrypted content size: ${decryptedFileData.decryptedSize} bytes")
+          Log.d(NAME, "Content appears to be JSON: ${decryptedFileData.isJson()}")
+          
+          if (decryptedFileData.isJson()) {
+            try {
+              val jsonObject = JSONObject(decryptedFileData.decryptedContent)
+              
+              when (tokenType) {
+                0 -> { // Access Token
+                  if (jsonObject.has("accessToken")) {
+                    val accessTokenObj = jsonObject.getJSONObject("accessToken")
+                    val token = createTokenFromJson(accessTokenObj, tokenType)
+                    Log.d(NAME, "Returning access token with id: ${accessTokenObj.optString("id")}")
+                    promise.resolve(token)
+                    return
+                  }
+                }
+                1 -> { // Refresh Token
+                  if (jsonObject.has("refreshToken")) {
+                    val refreshTokenObj = jsonObject.getJSONObject("refreshToken")
+                    val token = createTokenFromJson(refreshTokenObj, tokenType)
+                    Log.d(NAME, "Returning refresh token with id: ${refreshTokenObj.optString("id")}")
+                    promise.resolve(token)
+                    return
+                  }
+                }
+                2 -> { // Registration Token (idToken)
+                  if (jsonObject.has("idToken")) {
+                    val idTokenObj = jsonObject.getJSONObject("idToken")
+                    val token = createRegistrationTokenFromJson(idTokenObj, tokenType)
+                    Log.d(NAME, "Returning registration token (idToken)")
+                    promise.resolve(token)
+                    return
+                  }
+                }
+              }
+              
+              Log.d(NAME, "Token type $tokenType not found in decrypted JSON")
+              promise.resolve(null)
+              
+            } catch (e: Exception) {
+              Log.e(NAME, "Failed to parse decrypted JSON content: ${e.message}", e)
+              promise.resolve(null)
+            }
+          } else {
+            Log.d(NAME, "Decrypted content is not valid JSON")
+            promise.resolve(null)
+          }
+          
+        } else {
+          Log.d(NAME, "Failed to read token file using bcsc-file-port from path: $tokenFilePath - file not found or empty")
+          promise.resolve(null)
+        }
+      } catch (e: DecryptionException) {
+        Log.e(NAME, "Failed to decrypt token file from path: $tokenFilePath - ${e.message}", e)
+        promise.resolve(null)
       }
+      
     } catch (e: Exception) {
-      Log.e(NAME, "Exception occurred while reading token file using bcsc-file-port from path: files/sit/5c790f9f-99b2-4de8-b150-127552a206ad/tokens - ${e.message}", e)
+      Log.e(NAME, "Exception occurred while reading/decrypting token file using bcsc-file-port: ${e.message}", e)
+      promise.resolve(null)
+    }
+  }
+  
+  private fun createTokenFromJson(tokenObj: JSONObject, tokenType: Int): WritableMap {
+    val token: WritableMap = Arguments.createMap()
+    token.putString("id", tokenObj.optString("id", "unknown"))
+    token.putInt("type", tokenType)
+    token.putString("token", tokenObj.optString("token", ""))
+    
+    // Parse timestamps from various possible formats
+    val createdStr = tokenObj.optString("created", "")
+    val expiryStr = tokenObj.optString("expiry", "")
+    
+    if (createdStr.isNotEmpty()) {
+      val createdTimestamp = parseFlexibleDateToTimestamp(createdStr)
+      if (createdTimestamp > 0) {
+        token.putDouble("created", createdTimestamp)
+      }
     }
     
-    // Always return the mock token object regardless of file read success/failure
-    val mockToken: WritableMap = Arguments.createMap()
-    mockToken.putString("id", "mock-token-id-${System.currentTimeMillis()}")
-    mockToken.putInt("type", tokenType)
-    mockToken.putString("token", "mock-token-value-for-type-$tokenType")
-    mockToken.putDouble("created", (System.currentTimeMillis() / 1000).toDouble()) // Unix timestamp in seconds
-    mockToken.putDouble("expiry", ((System.currentTimeMillis() / 1000) + 3600).toDouble()) // Expires in 1 hour
+    if (expiryStr.isNotEmpty()) {
+      val expiryTimestamp = parseFlexibleDateToTimestamp(expiryStr)
+      if (expiryTimestamp > 0) {
+        token.putDouble("expiry", expiryTimestamp)
+      }
+    }
     
-    promise.resolve(mockToken)
+    return token
+  }
+  
+  private fun createRegistrationTokenFromJson(idTokenObj: JSONObject, tokenType: Int): WritableMap {
+    val token: WritableMap = Arguments.createMap()
+    token.putString("id", idTokenObj.optString("jti", "unknown"))
+    token.putInt("type", tokenType)
+    // For registration token, we use the entire idToken object as a JSON string
+    token.putString("token", idTokenObj.toString())
+    
+    // Parse iat (issued at) and exp (expiry) from idToken
+    val iat = idTokenObj.optLong("iat", 0)
+    val exp = idTokenObj.optLong("exp", 0)
+    
+    if (iat > 0) {
+      token.putDouble("created", iat.toDouble())
+    }
+    
+    if (exp > 0) {
+      token.putDouble("expiry", exp.toDouble())
+    }
+    
+    return token
+  }
+  
+  private fun parseFlexibleDateToTimestamp(dateString: String): Double {
+    return try {
+      // Try different date formats
+      val formats = arrayOf(
+        // ISO format with milliseconds
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US),
+        // ISO format without milliseconds
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US),
+        // US format: "Jun 26, 2025 3:39:55 PM"
+        SimpleDateFormat("MMM dd, yyyy h:mm:ss a", Locale.US),
+        // Alternative US format
+        SimpleDateFormat("MMM d, yyyy h:mm:ss a", Locale.US),
+        // ISO without Z
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US),
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+      )
+      
+      for (format in formats) {
+        try {
+          format.timeZone = TimeZone.getTimeZone("UTC")
+          val date = format.parse(dateString)
+          if (date != null) {
+            val timestamp = date.time / 1000.0 // Convert to seconds
+            Log.d(NAME, "Successfully parsed date '$dateString' to timestamp: $timestamp")
+            return timestamp
+          }
+        } catch (e: Exception) {
+          // Try next format
+          continue
+        }
+      }
+      
+      Log.w(NAME, "Failed to parse date with any known format: $dateString")
+      0.0
+    } catch (e: Exception) {
+      Log.w(NAME, "Exception parsing date: $dateString", e)
+      0.0
+    }
   }
 
   @ReactMethod
