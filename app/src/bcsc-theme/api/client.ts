@@ -2,10 +2,11 @@ import BCLogger from '@/utils/logger'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import { getAccount, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import Config from 'react-native-config'
 
 import { TokenStatusResponseData } from './hooks/useTokens'
+import { withAccount } from './hooks/withAccountGuard'
 
 interface BCSCEndpoints {
   // METADATA
@@ -37,7 +38,6 @@ class BCSCService {
   endpoints: BCSCEndpoints
   baseURL: string
   tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
-  refreshToken?: string // this is used to refresh access tokens, it is long lived, it might be worth putting in storage
 
   constructor(baseURL: string = String(Config.IAS_URL)) {
     this.baseURL = baseURL
@@ -103,29 +103,26 @@ class BCSCService {
       savedServices: response.data['saved_services_endpoint'],
       token: response.data['token_endpoint'],
       credential: response.data['credential_endpoint'],
-      evidence: 'https://idsit.gov.bc.ca/evidence',
+      evidence: 'https://idsit.gov.bc.ca/evidence', // this comes from /device/devicecode if an evidence flag is provided to that call
     }
   }
 
   async fetchAccessToken(): Promise<TokenStatusResponseData> {
-    // TODO: put this check in a reusable guard
-    const account = await getAccount()
-    if (!account) {
-      throw new Error('No account found. Please register or log in first.')
-    }
+    return withAccount(async (account) => {
+      if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
+        // refresh token should be saved when a device is authorized with IAS
+        throw new Error('TODO: Reregister if refresh token is expired or not present')
+      }
 
-    // TODO: handle
-    if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
-      throw new Error('TODO: Reregister if refresh token is expired or not present')
-    }
+      const { issuer, clientID } = account
 
-    const { issuer, clientID } = account
-    const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, this.tokens.refresh_token)
-    const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, this.tokens.refresh_token)
+      const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      })
+
+      return tokenResponse.data
     })
-
-    return tokenResponse.data
   }
 
   private isTokenExpired(token?: string): boolean {
@@ -159,6 +156,17 @@ class BCSCService {
     }
     this.logger.debug(`${String(config.method)}: ${String(config.url)}`, {})
     return config
+  }
+
+  async setTokensForRefreshToken(refreshToken: string): Promise<void> {
+    return withAccount(async (account) => {
+      const { issuer, clientID } = account
+      const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, refreshToken)
+      const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      })
+      this.tokens = tokenResponse.data
+    })
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {

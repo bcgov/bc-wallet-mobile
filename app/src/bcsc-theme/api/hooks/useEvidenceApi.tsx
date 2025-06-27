@@ -1,22 +1,22 @@
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
-interface VerificationPrompt {
+export interface VerificationPrompt {
   id: number
   prompt: string
 }
-interface VerificationResponseData {
+export interface VerificationResponseData {
   id: string
   sha256: string
   prompts: VerificationPrompt[]
 }
 
-interface SendVerificationPayload {
+export interface SendVerificationPayload {
   upload_uris: string[]
   sha256: string
 }
 
-interface VerificationStatusResponseData {
+export interface VerificationStatusResponseData {
   id: string
   status: 'pending' | 'verified' | 'cancelled'
   status_message?: string
@@ -24,7 +24,7 @@ interface VerificationStatusResponseData {
   avg_turnaround_time_message?: string
 }
 
-interface VerificationPhotoUploadPayload {
+export interface VerificationPhotoUploadPayload {
   label: string
   content_type: string
   content_length: number
@@ -32,7 +32,7 @@ interface VerificationPhotoUploadPayload {
   sha256: string
 }
 
-interface VerificationVideoUploadPayload {
+export interface VerificationVideoUploadPayload {
   content_type: string
   content_length: number
   date: string
@@ -46,7 +46,7 @@ const useEvidenceApi = () => {
   const createVerificationRequest = async (): Promise<VerificationResponseData> => {
     return withAccount(async () => {
       const { data } = await apiClient.post<VerificationResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications`
+        `${apiClient.endpoints.evidence}/v1/verifications`,
       )
       return data
     })
@@ -67,12 +67,12 @@ const useEvidenceApi = () => {
 
   const sendVerificationRequest = async (
     verificationRequestId: string,
-    payload: SendVerificationPayload
+    payload: SendVerificationPayload,
   ): Promise<VerificationStatusResponseData> => {
     return withAccount(async () => {
       const { data } = await apiClient.put<VerificationStatusResponseData>(
         `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
-        payload
+        payload,
       )
       return data
     })
@@ -81,18 +81,18 @@ const useEvidenceApi = () => {
   const getVerificationRequestPrompts = async (verificationRequestId: string): Promise<VerificationResponseData> => {
     return withAccount(async () => {
       const { data } = await apiClient.get<VerificationResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`,
       )
       return data
     })
   }
 
   const getVerificationRequestStatus = async (
-    verificationRequestId: string
+    verificationRequestId: string,
   ): Promise<VerificationStatusResponseData> => {
     return withAccount(async () => {
       const { data } = await apiClient.get<VerificationStatusResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
       )
       return data
     })
@@ -101,8 +101,24 @@ const useEvidenceApi = () => {
   const cancelVerificationRequest = async (verificationRequestId: string): Promise<void> => {
     return withAccount(async () => {
       const { data } = await apiClient.delete<void>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
       )
+      return data
+    })
+  }
+
+  const createEmailVerification = async (email: string): Promise<any> => {
+    return withAccount(async () => {
+      const { data } = await apiClient.post<any>(`${apiClient.endpoints.evidence}/v1/emails`, { email_address: email })
+      return data
+    })
+  }
+
+  const sendEmailVerificationCode = async (code: string, emailAddressId: string): Promise<void> => {
+    return withAccount(async () => {
+      const { data } = await apiClient.put<void>(`${apiClient.endpoints.evidence}/v1/emails/${emailAddressId}`, {
+        verification_code: code,
+      })
       return data
     })
   }
@@ -115,6 +131,8 @@ const useEvidenceApi = () => {
     getVerificationRequestStatus,
     cancelVerificationRequest,
     getVerificationRequestPrompts,
+    createEmailVerification,
+    sendEmailVerificationCode,
   }
 }
 
