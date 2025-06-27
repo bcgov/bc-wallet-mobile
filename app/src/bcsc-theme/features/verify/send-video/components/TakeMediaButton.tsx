@@ -11,6 +11,8 @@ interface TakeMediaButtonProps {
   style?: ViewStyle
 }
 
+const thumbnailHeight = 80
+
 const TakeMediaButton = ({ onPress, title, actionLabel, thumbnailUri, style = {} }: TakeMediaButtonProps) => {
   const { ColorPallet, Spacing } = useTheme()
   const styles = StyleSheet.create({
@@ -24,7 +26,7 @@ const TakeMediaButton = ({ onPress, title, actionLabel, thumbnailUri, style = {}
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      minHeight: 80, // Set a minimum height for the container
+      minHeight: thumbnailHeight, // needed to constrain the thumbnail
       ...style,
     },
     actionContainer: {
@@ -33,9 +35,8 @@ const TakeMediaButton = ({ onPress, title, actionLabel, thumbnailUri, style = {}
       justifyContent: 'flex-end',
     },
     image: {
-      height: 80, // Set a fixed reasonable height
+      height: thumbnailHeight,
       aspectRatio: 1,
-      backgroundColor: 'orange',
     },
     iconContainer: {
       justifyContent: 'center',
