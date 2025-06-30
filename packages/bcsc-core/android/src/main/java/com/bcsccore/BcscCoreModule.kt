@@ -354,7 +354,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getAccount(promise: Promise) {
-    Log.d(NAME, "getAccount called in environment: $currentEnvName")
+    Log.d(NAME, "getAccount called")
     
     // Attempt to read the accounts file using bcsc-file-port (non-encrypted)
     try {
