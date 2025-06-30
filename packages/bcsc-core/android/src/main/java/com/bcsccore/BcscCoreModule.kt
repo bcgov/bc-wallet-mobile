@@ -69,6 +69,26 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     return android.util.Base64.encodeToString(this, android.util.Base64.NO_WRAP)
   }
 
+  /**
+   * Determines the current environment based on the Android package name
+   * Similar to the Swift implementation that uses bundle ID
+   * @return String representing the current environment ("PROD", "SIT", etc.)
+   */
+  private val currentEnvName: String
+    get() {
+      val packageName = reactApplicationContext.packageName
+      return when (packageName) {
+        "ca.bc.gov.id.servicescard" -> "prod"
+        "ca.bc.gov.id.servicescard.dev" -> "sit"
+        "ca.bc.gov.id.servicescard.qa" -> "qa"
+        else -> {
+          // Fallback to SIT or handle as an error/unknown state
+          Log.d(NAME, "Unknown package name: $packageName, defaulting to SIT environment")
+          "SIT"
+        }
+      }
+    }
+
   @ReactMethod
   override fun getKeyPair(keyAlias: String, promise: Promise) {
     try {
@@ -159,7 +179,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       
       // Use DecryptedFileReader to read and decrypt the token file
       val decryptedFileReader = DecryptedFileReader(reactApplicationContext)
-      val relativePath = "sit/5c790f9f-99b2-4de8-b150-127552a206ad/tokens"
+      val relativePath = "$currentEnvName/5c790f9f-99b2-4de8-b150-127552a206ad/tokens"
       val tokenFilePath = "${baseDir.absolutePath}/$relativePath"
       Log.d(NAME, "Full token file path: $tokenFilePath")
       
@@ -334,7 +354,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getAccount(promise: Promise) {
-    Log.d(NAME, "getAccount called")
+    Log.d(NAME, "getAccount called in environment: $currentEnvName")
     
     // Attempt to read the accounts file using bcsc-file-port (non-encrypted)
     try {
