@@ -165,6 +165,23 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   override fun getToken(tokenType: Int, promise: Promise) {
     Log.d(NAME, "getToken called with tokenType: $tokenType")
     
+    // First, get the account to obtain the account ID
+    val account = getAccountSync()
+    if (account == null) {
+      Log.w(NAME, "getToken - Cannot get account, returning null")
+      promise.resolve(null)
+      return
+    }
+    
+    val accountId = account.getString("id")
+    if (accountId == null || accountId.isEmpty()) {
+      Log.w(NAME, "getToken - Account ID is null or empty, returning null")
+      promise.resolve(null)
+      return
+    }
+    
+    Log.d(NAME, "getToken - Using account ID: $accountId")
+    
     // Attempt to read and decrypt the token file using bcsc-file-port
     try {
       val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
@@ -179,7 +196,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       
       // Use DecryptedFileReader to read and decrypt the token file
       val decryptedFileReader = DecryptedFileReader(reactApplicationContext)
-      val relativePath = "$currentEnvName/5c790f9f-99b2-4de8-b150-127552a206ad/tokens"
+      val relativePath = "$currentEnvName/$accountId/tokens"
       val tokenFilePath = "${baseDir.absolutePath}/$relativePath"
       Log.d(NAME, "Full token file path: $tokenFilePath")
       
@@ -640,5 +657,75 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     
     val mockRequestBody = "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=$deviceCode&client_id=$clientId&code=$confirmationCode"
     promise.resolve(mockRequestBody)
+  }
+  
+  /**
+   * Helper method to get account data synchronously (without Promise)
+   * This is used internally by getToken to get the account ID
+   */
+  private fun getAccountSync(): WritableMap? {
+    Log.d(NAME, "getAccountSync called")
+    
+    try {
+      val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
+      
+      // Get the base storage directory
+      val baseDir = fileReader.getStorageDirectory()
+      Log.d(NAME, "getAccountSync - Base files directory: ${baseDir.absolutePath}")
+      
+      // The accounts file is at the root directory
+      val relativePath = "accounts"
+      val accountFilePath = "${baseDir.absolutePath}/$relativePath"
+      Log.d(NAME, "getAccountSync - Full accounts file path: $accountFilePath")
+      
+
+      try {
+        // Read the non-encrypted accounts file
+        val accountFileBytes = fileReader.readFile(relativePath)
+        
+        if (accountFileBytes != null && accountFileBytes.isNotEmpty()) {
+          // Convert bytes to string
+          val accountFileContent = String(accountFileBytes, Charsets.UTF_8)
+          Log.d(NAME, "getAccountSync - Successfully read accounts file from path: $accountFilePath")
+          Log.d(NAME, "getAccountSync - Accounts file content size: ${accountFileContent.length} characters")
+          
+          // Try to parse as JSON array
+          try {
+            val jsonArray = org.json.JSONArray(accountFileContent)
+            Log.d(NAME, "getAccountSync - Accounts file content appears to be valid JSON array with ${jsonArray.length()} accounts")
+            
+            if (jsonArray.length() > 0) {
+              // Get the first account from the array
+              val accountObj = jsonArray.getJSONObject(0)
+              Log.d(NAME, "getAccountSync - Found account with UUID: ${accountObj.optString("uuid")}")
+              
+              // Parse the account data and create NativeAccount object
+              val account = createNativeAccountFromJson(accountObj)
+              Log.d(NAME, "getAccountSync - Returning parsed account data")
+              return account
+            } else {
+              Log.d(NAME, "getAccountSync - Accounts file is empty array")
+              return null
+            }
+            
+          } catch (e: Exception) {
+            Log.w(NAME, "getAccountSync - Accounts file content is not valid JSON array: ${e.message}")
+          }
+          
+        } else {
+          Log.d(NAME, "getAccountSync - Accounts file not found or empty at path: $accountFilePath")
+        }
+        
+      } catch (e: Exception) {
+        Log.e(NAME, "getAccountSync - Failed to read accounts file from path: $accountFilePath - ${e.message}", e)
+      }
+      
+    } catch (e: Exception) {
+      Log.e(NAME, "getAccountSync - Exception occurred while reading accounts file: ${e.message}", e)
+    }
+    
+    // If we couldn't read the file or parse it, return null
+    Log.d(NAME, "getAccountSync - Could not read or parse accounts file, returning null")
+    return null
   }
 }
