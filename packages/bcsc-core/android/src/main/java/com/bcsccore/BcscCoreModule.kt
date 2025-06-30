@@ -334,22 +334,123 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun getAccount(promise: Promise) {
-    // Mock implementation - returns a mock NativeAccount object
-    // In a real implementation, this would retrieve account data from storage
     Log.d(NAME, "getAccount called")
     
-    // Create a mock NativeAccount object that matches the TypeScript interface
-    val mockAccount: WritableMap = Arguments.createMap()
-    mockAccount.putString("id", "mock-account-id-${System.currentTimeMillis()}")
-    mockAccount.putString("issuer", "https://mock-issuer.example.com")
-    mockAccount.putString("clientID", "mock-client-id-12345")
-    mockAccount.putString("securityMethod", "device_authentication") // AccountSecurityMethod.DeviceAuth
-    mockAccount.putString("displayName", "Mock Test Account")
-    mockAccount.putBoolean("didPostNicknameToServer", false)
-    mockAccount.putString("nickname", "MockUser")
-    mockAccount.putInt("failedAttemptCount", 0)
+    // Attempt to read the accounts file using bcsc-file-port (non-encrypted)
+    try {
+      val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
+      
+      // Get and log the base storage directory
+      val baseDir = fileReader.getStorageDirectory()
+      Log.d(NAME, "getAccount - Base files directory: ${baseDir.absolutePath}")
+      
+      // List all available files for debugging
+      val availableFiles = fileReader.listFiles()
+      Log.d(NAME, "getAccount - Available files in base directory (${availableFiles.size} files): ${availableFiles.joinToString(", ")}")
+
+      // The accounts file is at the root directory
+      val relativePath = "accounts"
+      val accountFilePath = "${baseDir.absolutePath}/$relativePath"
+      Log.d(NAME, "getAccount - Full accounts file path: $accountFilePath")
+      
+
+      try {
+        // Read the non-encrypted accounts file
+        val accountFileBytes = fileReader.readFile(relativePath)
+        
+        if (accountFileBytes != null && accountFileBytes.isNotEmpty()) {
+          // Convert bytes to string
+          val accountFileContent = String(accountFileBytes, Charsets.UTF_8)
+          Log.d(NAME, "getAccount - Successfully read accounts file from path: $accountFilePath")
+          Log.d(NAME, "getAccount - Accounts file content size: ${accountFileContent.length} characters")
+          
+          // Try to parse as JSON array
+          try {
+            val jsonArray = org.json.JSONArray(accountFileContent)
+            Log.d(NAME, "getAccount - Accounts file content appears to be valid JSON array with ${jsonArray.length()} accounts")
+            
+            if (jsonArray.length() > 0) {
+              // Get the first account from the array
+              val accountObj = jsonArray.getJSONObject(0)
+              Log.d(NAME, "getAccount - Found account with UUID: ${accountObj.optString("uuid")}")
+              
+              // Parse the account data and create NativeAccount object
+              val account = createNativeAccountFromJson(accountObj)
+              Log.d(NAME, "getAccount - Returning parsed account data")
+              promise.resolve(account)
+              return
+            } else {
+              Log.d(NAME, "getAccount - Accounts file is empty array")
+              promise.resolve(null)
+              return
+            }
+            
+          } catch (e: Exception) {
+            Log.w(NAME, "getAccount - Accounts file content is not valid JSON array: ${e.message}")
+          }
+          
+        } else {
+          Log.d(NAME, "getAccount - Accounts file not found or empty at path: $accountFilePath")
+        }
+        
+      } catch (e: Exception) {
+        Log.e(NAME, "getAccount - Failed to read accounts file from path: $accountFilePath - ${e.message}", e)
+      }
+      
+    } catch (e: Exception) {
+      Log.e(NAME, "getAccount - Exception occurred while reading accounts file: ${e.message}", e)
+    }
     
-    promise.resolve(mockAccount)
+    // If we couldn't read the file or parse it, return null
+    Log.d(NAME, "getAccount - Could not read or parse accounts file, returning null")
+    promise.resolve(null)
+  }
+  
+  private fun createNativeAccountFromJson(accountObj: JSONObject): WritableMap {
+    val account: WritableMap = Arguments.createMap()
+    
+    // Map the JSON fields to the NativeAccount interface fields
+    // uuid -> id (as specified)
+    account.putString("id", accountObj.optString("uuid", "unknown"))
+    
+    // issuer -> issuer (direct mapping)
+    account.putString("issuer", accountObj.optString("issuer", ""))
+    
+    // clientId -> clientID (note the capitalization difference)
+    account.putString("clientID", accountObj.optString("clientId", ""))
+    
+    // Map accountSecurityType to securityMethod (AccountSecurityMethod enum)
+    val securityType = accountObj.optString("accountSecurityType", "")
+    val securityMethod = when (securityType) {
+      "DeviceSecurity" -> "device_authentication" // AccountSecurityMethod.DeviceAuth
+      "PinNoDeviceAuth" -> "app_pin_no_device_authn" // AccountSecurityMethod.PinNoDeviceAuth
+      "PinWithDeviceAuth" -> "app_pin_has_device_authn" // AccountSecurityMethod.PinWithDeviceAuth
+      else -> "device_authentication" // Default fallback to DeviceAuth
+    }
+    account.putString("securityMethod", securityMethod)
+    
+    // Use nickName as both displayName and nickname (optional fields)
+    val nickName = accountObj.optString("nickName", "")
+    if (nickName.isNotEmpty()) {
+      account.putString("displayName", nickName)
+      account.putString("nickname", nickName)
+    }
+    
+    // Parse penalty information for failedAttemptCount
+    val penaltyObj = accountObj.optJSONObject("penalty")
+    if (penaltyObj != null) {
+      val failedAttempts = penaltyObj.optInt("penaltyAttempts", 0)
+      account.putInt("failedAttemptCount", failedAttempts)
+    } else {
+      account.putInt("failedAttemptCount", 0)
+    }
+    
+    // didPostNicknameToServer - not available in JSON, use reasonable default
+    account.putBoolean("didPostNicknameToServer", false)
+    
+    Log.d(NAME, "createNativeAccountFromJson - Created account: id=${account.getString("id")}, issuer=${account.getString("issuer")}, clientID=${account.getString("clientID")}, securityMethod=${account.getString("securityMethod")}")
+    
+    return account
   }
 
   @ReactMethod
