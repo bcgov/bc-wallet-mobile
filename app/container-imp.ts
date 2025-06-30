@@ -71,7 +71,6 @@ import {
   initialState,
 } from './src/store'
 import BCLogger from '@utils/logger'
-import VerifyIdentityStack from '@bcsc-theme/features/verify/VerifyIdentityStack'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
@@ -200,7 +199,7 @@ export class AppContainer implements Container {
       enableChat: true,
       enableReuseConnections: true,
       enableHiddenDevModeTrigger: true,
-      preventScreenCapture: true,
+      preventScreenCapture: false,
       supportedLanguages: ['en'],
       showPreface: true,
       disableOnboardingSkip: true,
@@ -324,7 +323,6 @@ export class AppContainer implements Container {
     })
 
     this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, getProofRequestTemplates)
-    this._container.registerInstance(TOKENS.CUSTOM_NAV_STACK_1, VerifyIdentityStack)
     this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
         const data = (await this.storage.getValueForKey(key)) as Type

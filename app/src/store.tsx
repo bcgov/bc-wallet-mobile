@@ -34,6 +34,7 @@ export interface DismissPersonCredentialOffer {
 }
 
 export interface BCSCState {
+  verified: boolean
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
@@ -73,6 +74,7 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  UPDATE_VERIFIED = 'bcsc/updateVerified',
   UPDATE_CARD_TYPE = 'bcsc/updateCardType',
   UPDATE_SERIAL = 'bcsc/updateSerial',
   UPDATE_BIRTHDATE = 'bcsc/updateBirthdate',
@@ -146,6 +148,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 const bcscState: BCSCState = {
+  verified: false,
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
@@ -253,6 +256,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         newState.dismissPersonCredentialOffer
       )
 
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_VERIFIED: {
+      const verified = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, verified }
+      const newState = { ...state, bcsc }
+      // don't persist, should be checked on every app start
       return newState
     }
     case BCSCDispatchAction.UPDATE_CARD_TYPE: {
