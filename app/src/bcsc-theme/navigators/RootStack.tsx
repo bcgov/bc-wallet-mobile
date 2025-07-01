@@ -76,7 +76,7 @@ const BCSCRootStack: React.FC = () => {
 
         if (token) {
           logger.info('token found')
-          await client.setTokensForRefreshToken(token)
+          await client.getTokensForRefreshToken(token)
           dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
         }
       } catch (error) {

@@ -1,6 +1,7 @@
+import { decodePayload } from 'react-native-bcsc-core'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
-
+import { jwtDecode } from 'jwt-decode'
 export interface UserInfoResponseData {
   identity_assurance_level: string
   credential_reference: string
@@ -11,7 +12,7 @@ export interface UserInfoResponseData {
   display_name: string
   birthdate: string
   gender: string
-  address: string
+  address: { formatted: string }
   picture: string
   card_type: any
   card_expiry: string
@@ -20,8 +21,9 @@ export interface UserInfoResponseData {
 const useUserApi = () => {
   const getUserInfo = async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {
-      const { data } = await apiClient.get<UserInfoResponseData>(apiClient.endpoints.userInfo)
-      return data
+      const response = await apiClient.get<any>(apiClient.endpoints.userInfo)
+      const userInfoToken = await decodePayload(String(response.data))
+      return jwtDecode<UserInfoResponseData>(userInfoToken)
     })
   }
 

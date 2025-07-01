@@ -231,3 +231,7 @@ export const getDeviceCodeRequestBody = async (
     confirmationCode
   );
 };
+
+export const decodePayload = async (jweString: string): Promise<any> => {
+  return BcscCore.decodePayload(jweString)
+}

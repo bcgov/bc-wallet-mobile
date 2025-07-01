@@ -114,14 +114,8 @@ class BCSCService {
         throw new Error('TODO: Reregister if refresh token is expired or not present')
       }
 
-      const { issuer, clientID } = account
-
-      const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, this.tokens.refresh_token)
-      const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      })
-
-      return tokenResponse.data
+      const tokenData = await this.getTokensForRefreshToken(this.tokens.refresh_token)
+      return tokenData
     })
   }
 
@@ -154,11 +148,12 @@ class BCSCService {
     if (this.tokens) {
       config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
     }
+
     this.logger.debug(`${String(config.method)}: ${String(config.url)}`, {})
     return config
   }
 
-  async setTokensForRefreshToken(refreshToken: string): Promise<void> {
+  async getTokensForRefreshToken(refreshToken: string): Promise<TokenStatusResponseData> {
     return withAccount(async (account) => {
       const { issuer, clientID } = account
       const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, refreshToken)
@@ -166,6 +161,7 @@ class BCSCService {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
       this.tokens = tokenResponse.data
+      return tokenResponse.data
     })
   }
 

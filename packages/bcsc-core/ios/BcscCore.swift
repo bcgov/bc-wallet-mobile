@@ -581,6 +581,28 @@ class BcscCore: NSObject {
     resolve(body)
   }
 
+  @objc
+  func decodePayload(_ jweString: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+
+    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+        reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
+        return
+    }
+
+    do {
+        let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+        let jwe = try JWE.parse(s: jweString)
+        let decrypter = RSADecrypter(privateKey: keyPair.private)
+        let payload = try jwe.decrypt(withDecrypter: decrypter)
+
+        // TODO: Add decode functionality here instead of passing it onto react-native
+        resolve(payload)
+    } catch {
+        reject("E_PAYLOAD_DECODE_ERROR", "", nil)
+    }
+  }
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED
   @objc
@@ -588,4 +610,6 @@ class BcscCore: NSObject {
     return "BcscCore"
   }
   #endif
+
+
 }
