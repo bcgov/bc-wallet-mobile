@@ -14,15 +14,17 @@ const Account: React.FC = () => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { user } = useApi()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<UserInfoResponseData | null>(null)
+  const [pictureUri, setPictureUri] = useState<string>()
 
   useEffect(() => {
     const asyncEffect = async () => {
       try {
         setLoading(true)
-        const userInfo = await user.getUserInfo()
+        const [userInfo, picture] = await Promise.all([user.getUserInfo(), user.getPicture()])
         setUserInfo(userInfo)
+        setPictureUri(picture)
       } catch (error) {
         console.error('Error fetching user info:', error)
         // Handle error appropriately, e.g., show an alert or log it
@@ -60,7 +62,7 @@ const Account: React.FC = () => {
       ) : (
         <View style={styles.container}>
           <View style={styles.photoAndNameContainer}>
-            <AccountPhoto photoUri={userInfo?.picture} />
+            <AccountPhoto photoUri={pictureUri} />
             <ThemedText variant={'headingTwo'} style={styles.name}>
               {userInfo?.family_name}, {userInfo?.given_name}
             </ThemedText>

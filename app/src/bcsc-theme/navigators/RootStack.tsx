@@ -61,6 +61,7 @@ const BCSCRootStack: React.FC = () => {
     }
 
     const checkIfVerified = async () => {
+      console.log('khghgfhgfhjgfhgfhgjfhjgfh')
       try {
         setLoading(true)
         let token
@@ -88,7 +89,7 @@ const BCSCRootStack: React.FC = () => {
 
     checkIfVerified()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.bcsc.refreshToken, dispatch])
+  }, [])
 
   useEffect(() => {
     // if user gets locked out, erase agent

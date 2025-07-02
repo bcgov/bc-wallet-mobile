@@ -108,7 +108,7 @@ class BCSCService {
   }
 
   async fetchAccessToken(): Promise<TokenStatusResponseData> {
-    return withAccount(async (account) => {
+    return withAccount(async () => {
       if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
         // refresh token should be saved when a device is authorized with IAS
         throw new Error('TODO: Reregister if refresh token is expired or not present')

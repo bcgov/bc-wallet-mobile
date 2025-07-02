@@ -19,36 +19,22 @@ const mockLogInTitle = 'Log in from a computer'
 const mockLogInDescription =
   'Enter pairing code to log in from a different device – like a computer, laptop, or tablet.'
 
-const mockGetUserInfo: () => Promise<Partial<UserInfoResponseData>> = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000))
-  return {
-    given_name: 'JAIME ANN',
-    family_name: 'LEE-RODRIGUEZ',
-    card_expiry: '2028-09-19',
-    card_type: 'BC Services Card with photo',
-    address: '123 LEDSHAM RD\nVICTORIA, BC V9B 1W8',
-    birthdate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 365 * 28)
-      .toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })
-      .toUpperCase(),
-  }
-}
-
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 
 const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { user } = useApi()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
 
   useEffect(() => {
     const asyncEffect = async () => {
       try {
         setLoading(true)
-        // const userInfo = await user.getUserInfo()
-        const userInfo = await mockGetUserInfo()
+        const userInfo = await user.getUserInfo()
         setUserInfo(userInfo)
+        console.log('User Info on Home Page:', JSON.stringify(userInfo, null, 2))
       } catch (error) {
         console.error('Error fetching user info:', error)
         // Handle error appropriately, e.g., show an alert or log it
@@ -59,6 +45,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
 
     asyncEffect()
   }, [])
+
   // replace with API response
   const savedServices = mockServices.filter((service) =>
     store.bcsc.bookmarks.some((serviceId) => serviceId === service.id)
