@@ -1,15 +1,22 @@
 package com.bcsccore
 
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.module.annotations.ReactModule
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.WritableMap
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.WritableArray
-import com.facebook.react.bridge.ReadableMap
+// Android imports
 import android.os.Build
 import android.security.keystore.KeyProperties
+import android.util.Log
+
+// React Native imports
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.WritableArray
+import com.facebook.react.bridge.WritableMap
+import com.facebook.react.module.annotations.ReactModule
+
+// Java/Kotlin standard library imports
+import org.json.JSONObject
 import java.security.KeyPair
 import java.security.KeyStore
 import java.security.KeyStoreException
@@ -18,45 +25,57 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.UnrecoverableEntryException
 import java.security.cert.Certificate
-import javax.crypto.SecretKey
-import java.util.Base64
-import android.util.Log
-import org.json.JSONObject
 import java.text.SimpleDateFormat
-import java.util.TimeZone
+import java.util.Base64
+import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
+import java.util.UUID
+import javax.crypto.SecretKey
 
-// Bcsc KeyPair package imports
+// JWT/Nimbus imports
+import com.nimbusds.jose.jwk.JWK
+import com.nimbusds.jwt.JWTClaimsSet
+
+// BCSC KeyPair package imports
+import com.bcsccore.keypair.core.exceptions.BcscException
 import com.bcsccore.keypair.core.interfaces.BcscKeyPairSource
 import com.bcsccore.keypair.core.interfaces.KeyPairInfoSource
 import com.bcsccore.keypair.core.models.BcscKeyPair
 import com.bcsccore.keypair.core.models.KeyPairInfo
-import com.bcsccore.keypair.core.exceptions.BcscException
 import com.bcsccore.keypair.repos.key.BcscKeyPairRepo
 import com.bcsccore.keypair.repos.keypairinfo.SimpleKeyPairInfoSource
-import com.nimbusds.jwt.JWTClaimsSet
-import com.nimbusds.jose.jwk.JWK
-import java.util.Date
-import java.util.UUID
 
-// Bcsc File Port imports
+// BCSC File Port imports
 import com.bcsccore.fileport.FileReader
 import com.bcsccore.fileport.FileReaderFactory
-import com.bcsccore.fileport.decryption.DecryptedFileReader
 import com.bcsccore.fileport.decryption.DecryptedFileData
+import com.bcsccore.fileport.decryption.DecryptedFileReader
 import com.bcsccore.fileport.decryption.DecryptionException
 
+/**
+ * BC Services Card React Native Module
+ * 
+ * Provides secure key management, token handling, and authentication services
+ * for BC Services Card integration in React Native applications.
+ */
 @ReactModule(name = BcscCoreModule.NAME)
 class BcscCoreModule(reactContext: ReactApplicationContext) :
   BcscCoreSpec(reactContext) {
 
-  override fun getName(): String {
-    return NAME
-  }
-
   companion object {
     const val NAME = "BcscCore"
+    
+    // Token type constants
+    private const val TOKEN_TYPE_ACCESS = 0
+    private const val TOKEN_TYPE_REFRESH = 1
+    private const val TOKEN_TYPE_REGISTRATION = 2
+    
+    // JWT expiration in seconds
+    private const val JWT_EXPIRATION_SECONDS = 3600 // 1 hour
   }
+
+  override fun getName(): String = NAME
 
   // Initialize the BC Services Card KeyPair functionality
   private val keyPairSource: BcscKeyPairSource by lazy {
@@ -64,27 +83,20 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     BcscKeyPairRepo(keyPairInfoSource)
   }
 
-  // Extension function to convert ByteArray to Base64 String
-  private fun ByteArray.toBase64String(): String {
-    return android.util.Base64.encodeToString(this, android.util.Base64.NO_WRAP)
-  }
-
   /**
-   * Determines the current environment based on the Android package name
-   * Similar to the Swift implementation that uses bundle ID
-   * @return String representing the current environment ("PROD", "SIT", etc.)
+   * Determines the current environment based on the Android package name.
+   * Similar to the Swift implementation that uses bundle ID.
    */
   private val currentEnvName: String
     get() {
       val packageName = reactApplicationContext.packageName
       return when (packageName) {
         "ca.bc.gov.id.servicescard" -> "prod"
-        "ca.bc.gov.id.servicescard.dev" -> "sit"
+        "ca.bc.gov.id.servicescard.dev" -> "sit"  
         "ca.bc.gov.id.servicescard.qa" -> "qa"
         else -> {
-          // Fallback to SIT or handle as an error/unknown state
           Log.d(NAME, "Unknown package name: $packageName, defaulting to SIT environment")
-          "SIT"
+          "sit"
         }
       }
     }
@@ -213,7 +225,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
               val jsonObject = JSONObject(decryptedFileData.decryptedContent)
               
               when (tokenType) {
-                0 -> { // Access Token
+                TOKEN_TYPE_ACCESS -> { // Access Token
                   if (jsonObject.has("accessToken")) {
                     val accessTokenObj = jsonObject.getJSONObject("accessToken")
                     val token = createTokenFromJson(accessTokenObj, tokenType)
@@ -222,7 +234,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
                     return
                   }
                 }
-                1 -> { // Refresh Token
+                TOKEN_TYPE_REFRESH -> { // Refresh Token
                   if (jsonObject.has("refreshToken")) {
                     val refreshTokenObj = jsonObject.getJSONObject("refreshToken")
                     val token = createTokenFromJson(refreshTokenObj, tokenType)
@@ -231,7 +243,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
                     return
                   }
                 }
-                2 -> { // Registration Token (idToken)
+                TOKEN_TYPE_REGISTRATION -> { // Registration Token (idToken)
                   if (jsonObject.has("idToken")) {
                     val idTokenObj = jsonObject.getJSONObject("idToken")
                     val token = createRegistrationTokenFromJson(idTokenObj, tokenType)
@@ -268,6 +280,8 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       promise.resolve(null)
     }
   }
+  
+  // MARK: - Token creation helper methods
   
   private fun createTokenFromJson(tokenObj: JSONObject, tokenType: Int): WritableMap {
     val token: WritableMap = Arguments.createMap()
@@ -318,21 +332,22 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     return token
   }
   
+  /**
+   * Parses a date string in various formats and converts it to a Unix timestamp in seconds.
+   * Supports ISO 8601 and US date formats.
+   */
   private fun parseFlexibleDateToTimestamp(dateString: String): Double {
+    if (dateString.isEmpty()) return 0.0
+    
     return try {
-      // Try different date formats
+      // Supported date formats in order of preference
       val formats = arrayOf(
-        // ISO format with milliseconds
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US),
-        // ISO format without milliseconds
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US),
-        // US format: "Jun 26, 2025 3:39:55 PM"
-        SimpleDateFormat("MMM dd, yyyy h:mm:ss a", Locale.US),
-        // Alternative US format
-        SimpleDateFormat("MMM d, yyyy h:mm:ss a", Locale.US),
-        // ISO without Z
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US),
-        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US), // ISO with milliseconds
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US),     // ISO without milliseconds
+        SimpleDateFormat("MMM dd, yyyy h:mm:ss a", Locale.US),       // US format: "Jun 26, 2025 3:39:55 PM"
+        SimpleDateFormat("MMM d, yyyy h:mm:ss a", Locale.US),        // Alternative US format
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US),    // ISO without Z
+        SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)         // ISO without Z and milliseconds
       )
       
       for (format in formats) {
@@ -345,8 +360,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
             return timestamp
           }
         } catch (e: Exception) {
-          // Try next format
-          continue
+          // Continue to next format
         }
       }
       
@@ -360,12 +374,14 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun setAccount(account: ReadableMap, promise: Promise) {
-    // Mock implementation - returns success for now
-    // In a real implementation, this would:
-    // 1. Validate the account data structure
-    // 2. Store the account data securely
-    // 3. Handle any necessary encryption/serialization
     Log.d(NAME, "setAccount called with account data")
+    
+    // TODO: Implement actual account storage
+    // This should:
+    // 1. Validate the account data structure
+    // 2. Store the account data securely using bcsc-file-port
+    // 3. Handle any necessary encryption/serialization
+    
     promise.resolve(null)
   }
 
@@ -443,49 +459,47 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     promise.resolve(null)
   }
   
+  /**
+   * Converts a JSON account object to a NativeAccount WritableMap.
+   * Maps JSON fields to the NativeAccount interface specification.
+   */
   private fun createNativeAccountFromJson(accountObj: JSONObject): WritableMap {
     val account: WritableMap = Arguments.createMap()
     
-    // Map the JSON fields to the NativeAccount interface fields
-    // uuid -> id (as specified)
-    account.putString("id", accountObj.optString("uuid", "unknown"))
-    
-    // issuer -> issuer (direct mapping)
+    // Map JSON fields to NativeAccount interface fields
+    account.putString("id", accountObj.optString("uuid", "unknown")) // uuid -> id
     account.putString("issuer", accountObj.optString("issuer", ""))
+    account.putString("clientID", accountObj.optString("clientId", "")) // clientId -> clientID
     
-    // clientId -> clientID (note the capitalization difference)
-    account.putString("clientID", accountObj.optString("clientId", ""))
-    
-    // Map accountSecurityType to securityMethod (AccountSecurityMethod enum)
+    // Map accountSecurityType to securityMethod enum values
     val securityType = accountObj.optString("accountSecurityType", "")
     val securityMethod = when (securityType) {
-      "DeviceSecurity" -> "device_authentication" // AccountSecurityMethod.DeviceAuth
-      "PinNoDeviceAuth" -> "app_pin_no_device_authn" // AccountSecurityMethod.PinNoDeviceAuth
-      "PinWithDeviceAuth" -> "app_pin_has_device_authn" // AccountSecurityMethod.PinWithDeviceAuth
-      else -> "device_authentication" // Default fallback to DeviceAuth
+      "DeviceSecurity" -> "device_authentication"
+      "PinNoDeviceAuth" -> "app_pin_no_device_authn"
+      "PinWithDeviceAuth" -> "app_pin_has_device_authn"
+      else -> "device_authentication" // Default fallback
     }
     account.putString("securityMethod", securityMethod)
     
-    // Use nickName as both displayName and nickname (optional fields)
+    // Optional fields
     val nickName = accountObj.optString("nickName", "")
     if (nickName.isNotEmpty()) {
       account.putString("displayName", nickName)
       account.putString("nickname", nickName)
     }
     
-    // Parse penalty information for failedAttemptCount
+    // Parse penalty information
     val penaltyObj = accountObj.optJSONObject("penalty")
-    if (penaltyObj != null) {
-      val failedAttempts = penaltyObj.optInt("penaltyAttempts", 0)
-      account.putInt("failedAttemptCount", failedAttempts)
-    } else {
-      account.putInt("failedAttemptCount", 0)
-    }
+    val failedAttempts = penaltyObj?.optInt("penaltyAttempts", 0) ?: 0
+    account.putInt("failedAttemptCount", failedAttempts)
     
-    // didPostNicknameToServer - not available in JSON, use reasonable default
+    // Default values for fields not available in JSON
     account.putBoolean("didPostNicknameToServer", false)
     
-    Log.d(NAME, "createNativeAccountFromJson - Created account: id=${account.getString("id")}, issuer=${account.getString("issuer")}, clientID=${account.getString("clientID")}, securityMethod=${account.getString("securityMethod")}")
+    Log.d(NAME, "Created account: id=${account.getString("id")}, " +
+                "issuer=${account.getString("issuer")}, " +
+                "clientID=${account.getString("clientID")}, " +
+                "securityMethod=${account.getString("securityMethod")}")
     
     return account
   }
@@ -503,9 +517,8 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
       
       // Create JWT assertion for OAuth2 client credentials
-      val jwtExpirationSeconds = 3600 // 1 hour
       val now = Date()
-      val expiration = Date(now.time + jwtExpirationSeconds * 1000)
+      val expiration = Date(now.time + JWT_EXPIRATION_SECONDS * 1000)
       
       val claimsSet = JWTClaimsSet.Builder()
         .audience(issuer)
@@ -641,24 +654,33 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun getDeviceCodeRequestBody(deviceCode: String, clientId: String, issuer: String, confirmationCode: String, promise: Promise) {
+  override fun getDeviceCodeRequestBody(
+    deviceCode: String, 
+    clientId: String, 
+    issuer: String, 
+    confirmationCode: String, 
+    promise: Promise
+  ) {
     // Validate all parameters are provided
     if (deviceCode.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || confirmationCode.isEmpty()) {
-      promise.reject("E_INVALID_PARAMETERS", "All parameters (deviceCode, clientId, issuer, confirmationCode) are required and cannot be empty.")
+      promise.reject("E_INVALID_PARAMETERS", 
+        "All parameters (deviceCode, clientId, issuer, confirmationCode) are required and cannot be empty.")
       return
     }
     
-    // Mock implementation - returns a device code request body
-    // In a real implementation, this would:
+    Log.d(NAME, "getDeviceCodeRequestBody called with clientId: $clientId, issuer: $issuer")
+    
+    // TODO: Implement proper JWT assertion signing
+    // This should:
     // 1. Create and sign a JWT assertion using the provided clientId and issuer
     // 2. Format the OAuth device code request body with the provided deviceCode and confirmationCode
     // 3. Return the constructed request body
-    Log.d(NAME, "getDeviceCodeRequestBody called with deviceCode: [REDACTED], clientId: $clientId, issuer: $issuer, confirmationCode: [REDACTED]")
     
     val mockRequestBody = "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=$deviceCode&client_id=$clientId&code=$confirmationCode"
     promise.resolve(mockRequestBody)
   }
   
+  // MARK: - Account management methods
   /**
    * Helper method to get account data synchronously (without Promise)
    * This is used internally by getToken to get the account ID
@@ -728,4 +750,12 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     Log.d(NAME, "getAccountSync - Could not read or parse accounts file, returning null")
     return null
   }
+
+  // Extension function to convert ByteArray to Base64 String
+  private fun ByteArray.toBase64String(): String =
+    android.util.Base64.encodeToString(this, android.util.Base64.NO_WRAP)
+
+  // MARK: - ReactMethod implementations
+
+  // MARK: - Internal helper methods
 }
