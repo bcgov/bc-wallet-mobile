@@ -1,7 +1,6 @@
 import { decodePayload } from 'react-native-bcsc-core'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
-import { jwtDecode } from 'jwt-decode'
 
 export interface UserInfoResponseData {
   identity_assurance_level: string
@@ -23,25 +22,22 @@ const useUserApi = () => {
   const getUserInfo = async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {
       const response = await apiClient.get<any>(apiClient.endpoints.userInfo)
-      const userInfoToken = await decodePayload(String(response.data))
-      return jwtDecode<UserInfoResponseData>(userInfoToken)
+      const userInfoString = await decodePayload(String(response.data))
+      return JSON.parse(userInfoString)
     })
   }
 
-  const getPicture = async (): Promise<string> => {
+  const getPicture = async (pictureUrl: string): Promise<string> => {
     return withAccount(async () => {
-      const response = await apiClient.get<ArrayBuffer>('https://idsit.gov.bc.ca/device/picture', {
+      const response = await apiClient.get<ArrayBuffer>(pictureUrl, {
         responseType: 'arraybuffer', // get raw binary data
       })
-      
+
       // convert to base64
       const base64String = btoa(
-        new Uint8Array(response.data).reduce(
-          (data, byte) => data + String.fromCharCode(byte),
-          ''
-        )
+        new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
       )
-      
+
       // return as uri
       return `data:image/jpeg;base64,${base64String}`
     })

@@ -22,7 +22,12 @@ const Account: React.FC = () => {
     const asyncEffect = async () => {
       try {
         setLoading(true)
-        const [userInfo, picture] = await Promise.all([user.getUserInfo(), user.getPicture()])
+
+        const userInfo = await user.getUserInfo()
+        let picture = ''
+        if (userInfo.picture) {
+          picture = await user.getPicture(userInfo.picture)
+        }
         setUserInfo(userInfo)
         setPictureUri(picture)
       } catch (error) {

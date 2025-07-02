@@ -34,7 +34,6 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         setLoading(true)
         const userInfo = await user.getUserInfo()
         setUserInfo(userInfo)
-        console.log('User Info on Home Page:', JSON.stringify(userInfo, null, 2))
       } catch (error) {
         console.error('Error fetching user info:', error)
         // Handle error appropriately, e.g., show an alert or log it
