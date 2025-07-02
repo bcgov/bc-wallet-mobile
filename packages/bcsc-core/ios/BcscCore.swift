@@ -587,20 +587,35 @@ class BcscCore: NSObject {
     let keys = keyPairManager.findAllPrivateKeys()
 
     guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
-        reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
-        return
+      reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
+      return
     }
 
     do {
         let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
         let jwe = try JWE.parse(s: jweString)
         let decrypter = RSADecrypter(privateKey: keyPair.private)
+        // Decrpyt payload into JWT
         let payload = try jwe.decrypt(withDecrypter: decrypter)
 
-        // TODO: Add decode functionality here instead of passing it onto react-native
-        resolve(payload)
+        // Break down and decode JWT
+        let segments = payload.components(separatedBy: ".")
+        var base64String = segments[1]
+        let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
+        let nbrPaddings = requiredLength - base64String.count
+        if nbrPaddings > 0 {
+            let padding = String().padding(toLength: nbrPaddings, withPad: "=", startingAt: 0)
+            base64String = base64String.appending(padding)
+        }
+        base64String = base64String.replacingOccurrences(of: "-", with: "+")
+        base64String = base64String.replacingOccurrences(of: "_", with: "/")
+        let decodedData = Data(base64Encoded: base64String, options: Data.Base64DecodingOptions(rawValue: UInt(0)))
+        
+        let base64Decoded: String = String(data: decodedData! as Data, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue))!
+
+        resolve(base64Decoded)
     } catch {
-        reject("E_PAYLOAD_DECODE_ERROR", "", nil)
+        reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
     }
   }
   // Support for the new architecture (Fabric)

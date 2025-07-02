@@ -61,7 +61,6 @@ const BCSCRootStack: React.FC = () => {
     }
 
     const checkIfVerified = async () => {
-      console.log('khghgfhgfhjgfhgfhgjfhjgfh')
       try {
         setLoading(true)
         let token
