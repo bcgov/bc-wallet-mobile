@@ -6,8 +6,8 @@ export interface TokenInfo {
   id: string;
   type: TokenType;
   token: string;
-  created: number; // Timestamp
-  expiry?: number | null; // Timestamp or null
+  created: number; // Unix timestamp in seconds
+  expiry?: number | null; // Unix timestamp in seconds or null
 }
 
 export interface PrivateKeyInfo {
@@ -93,18 +93,24 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 
 /**
  * Retrieves a token of a specified type.
- * @param tokenType The type of token to retrieve (e.g., Access, Refresh).
+ * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
+ *          For Registration tokens, returns null for now.
  */
 export const getToken = async (
   tokenType: TokenType
 ): Promise<TokenInfo | null> => {
-  // Updated return type
+  // For Registration token type, return null for now as requested
+  if (tokenType === TokenType.Registration) {
+    return null;
+  }
+
   // Pass the raw numeric value of the enum to the native side
   const nativeToken = await BcscCore.getToken(tokenType as number);
   if (!nativeToken) {
     return null;
   }
+
   // The native side returns 'type' as a number (rawValue of TokenType).
   // We cast it back to the TokenType enum on the JS side.
   return {
@@ -233,5 +239,24 @@ export const getDeviceCodeRequestBody = async (
 };
 
 export const decodePayload = async (jweString: string): Promise<any> => {
-  return BcscCore.decodePayload(jweString)
-}
+  return BcscCore.decodePayload(jweString);
+};
+
+/**
+ * Retrieves the registration token (idToken) - currently commented out but ready for use.
+ * @returns A promise that resolves to a TokenInfo object containing the idToken, or null if not found.
+ */
+export const getRegistrationToken = async (): Promise<TokenInfo | null> => {
+  // Uncomment when ready to use:
+  // const nativeToken = await BcscCore.getToken(TokenType.Registration as number);
+  // if (!nativeToken) {
+  //   return null;
+  // }
+  // return {
+  //   ...nativeToken,
+  //   type: nativeToken.type as TokenType,
+  // };
+
+  // For now, return null
+  return null;
+};

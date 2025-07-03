@@ -93,6 +93,11 @@ android {
       } else {
         java.srcDirs += ["src/oldarch"]
       }
+      
+      // Exclude bcsc-token-port directory to avoid compilation errors
+      java {
+        exclude "**/bcsc-token-port/**"
+      }
     }
   }
 }
@@ -112,6 +117,18 @@ dependencies {
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "com.google.android.gms:play-services-base:18.2.0"
   implementation "com.google.android.play:integrity:1.2.0"
+  
+  // Required: Nimbus JOSE library for JWT operations
+  implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+  
+  // Required: Android annotations
+  implementation 'androidx.annotation:annotation:1.7.0'
+  
+  // Required: Gson for JSON serialization (used by SimpleKeyPairInfoSource)
+  implementation 'com.google.code.gson:gson:2.10.1'
+  
+  // Optional: To use more advanced storage instead of SharedPreferences
+  // implementation 'androidx.security:security-crypto:1.1.0-alpha06'
 }
 
 if (isNewArchitectureEnabled()) {
