@@ -16,7 +16,11 @@ import com.facebook.react.bridge.WritableMap
 import com.facebook.react.module.annotations.ReactModule
 
 // Java/Kotlin standard library imports
+import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.FileWriter
+import java.io.IOException
 import java.security.KeyPair
 import java.security.KeyStore
 import java.security.KeyStoreException
@@ -374,15 +378,85 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
   @ReactMethod
   override fun setAccount(account: ReadableMap, promise: Promise) {
-    Log.d(NAME, "setAccount called with account data")
-    
-    // TODO: Implement actual account storage
-    // This should:
-    // 1. Validate the account data structure
-    // 2. Store the account data securely using bcsc-file-port
-    // 3. Handle any necessary encryption/serialization
-    
-    promise.resolve(null)
+    try {
+      // Validate required fields
+      if (!account.hasKey("issuer") || !account.hasKey("clientID") || !account.hasKey("securityMethod")) {
+        promise.reject("E_INVALID_PARAMETERS", "Account must have issuer, clientID, and securityMethod fields")
+        return
+      }
+      
+      val issuer = account.getString("issuer")
+      val clientID = account.getString("clientID")
+      val securityMethod = account.getString("securityMethod")
+      
+      if (issuer.isNullOrEmpty() || clientID.isNullOrEmpty() || securityMethod.isNullOrEmpty()) {
+        promise.reject("E_INVALID_PARAMETERS", "Account issuer, clientID, and securityMethod cannot be empty")
+        return
+      }
+      
+      // Generate a new UUID for the account
+      val accountId = UUID.randomUUID().toString()
+      
+      Log.d(NAME, "setAccount - Creating account with generated id: $accountId")
+      
+      try {
+        // Get the file reader to determine the root directory (for consistency)
+        val fileReader: FileReader = FileReaderFactory.createSimpleFileReader(reactApplicationContext)
+        val accountsFile = File(reactApplicationContext.filesDir, "accounts")
+        
+        // Create account object with generated ID
+        val accountWithId = Arguments.createMap()
+        accountWithId.putString("id", accountId)
+        accountWithId.putString("issuer", issuer)
+        accountWithId.putString("clientID", clientID)
+        accountWithId.putString("securityMethod", securityMethod)
+        
+        // Copy optional fields
+        if (account.hasKey("displayName")) {
+          accountWithId.putString("displayName", account.getString("displayName"))
+        }
+        if (account.hasKey("nickname")) {
+          accountWithId.putString("nickname", account.getString("nickname"))
+        }
+        if (account.hasKey("didPostNicknameToServer")) {
+          accountWithId.putBoolean("didPostNicknameToServer", account.getBoolean("didPostNicknameToServer"))
+        }
+        if (account.hasKey("failedAttemptCount")) {
+          accountWithId.putInt("failedAttemptCount", account.getInt("failedAttemptCount"))
+        }
+        
+        // Convert to JSON and create single-account array
+        val accountJson = createJsonAccountFromNative(accountWithId)
+        val accountsArray = JSONArray()
+        accountsArray.put(accountJson)
+        
+        Log.d(NAME, "setAccount - Created new single-account array, overwriting any existing file")
+        
+        // Always overwrite the accounts file with the new single account
+        try {
+          accountsFile.parentFile?.mkdirs() // Ensure directory exists
+          FileWriter(accountsFile).use { writer ->
+            writer.write(accountsArray.toString())
+            writer.flush()
+          }
+          
+          Log.d(NAME, "setAccount - Successfully overwrote accounts file with new account")
+          promise.resolve(null)
+          
+        } catch (e: IOException) {
+          Log.e(NAME, "setAccount - Failed to write accounts file: ${e.message}", e)
+          promise.reject("E_FILE_WRITE_ERROR", "Failed to write accounts file: ${e.message}")
+        }
+        
+      } catch (e: Exception) {
+        Log.e(NAME, "setAccount - Exception occurred while accessing accounts file: ${e.message}", e)
+        promise.reject("E_FILE_ACCESS_ERROR", "Failed to access accounts file: ${e.message}")
+      }
+      
+    } catch (e: Exception) {
+      Log.e(NAME, "setAccount - Unexpected error: ${e.message}", e)
+      promise.reject("E_UNEXPECTED_ERROR", "Unexpected error while setting account: ${e.message}")
+    }
   }
 
   @ReactMethod
@@ -502,6 +576,52 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
                 "securityMethod=${account.getString("securityMethod")}")
     
     return account
+  }
+
+  /**
+   * Converts a React Native account ReadableMap to JSON format for storage.
+   * Maps NativeAccount interface fields to the JSON storage format.
+   */
+  private fun createJsonAccountFromNative(account: ReadableMap): JSONObject {
+    val accountJson = JSONObject()
+    
+    // Required fields - map NativeAccount to JSON storage format
+    accountJson.put("uuid", account.getString("id")) // id -> uuid
+    accountJson.put("issuer", account.getString("issuer"))
+    accountJson.put("clientId", account.getString("clientID")) // clientID -> clientId
+    
+    // Map securityMethod enum back to accountSecurityType
+    val securityMethod = account.getString("securityMethod") ?: "device_authentication"
+    val securityType = when (securityMethod) {
+      "device_authentication" -> "DeviceSecurity"
+      "app_pin_no_device_authn" -> "PinNoDeviceAuth"
+      "app_pin_has_device_authn" -> "PinWithDeviceAuth"
+      else -> "DeviceSecurity" // Default fallback
+    }
+    accountJson.put("accountSecurityType", securityType)
+    
+    // Optional fields
+    if (account.hasKey("displayName")) {
+      val displayName = account.getString("displayName")
+      if (!displayName.isNullOrEmpty()) {
+        accountJson.put("nickName", displayName)
+      }
+    }
+    
+    // Handle penalty information
+    if (account.hasKey("failedAttemptCount")) {
+      val failedAttempts = account.getInt("failedAttemptCount")
+      val penaltyObj = JSONObject()
+      penaltyObj.put("penaltyAttempts", failedAttempts)
+      accountJson.put("penalty", penaltyObj)
+    }
+    
+    Log.d(NAME, "Created JSON account: uuid=${accountJson.optString("uuid")}, " +
+                "issuer=${accountJson.optString("issuer")}, " +
+                "clientId=${accountJson.optString("clientId")}, " +
+                "accountSecurityType=${accountJson.optString("accountSecurityType")}")
+    
+    return accountJson
   }
 
   @ReactMethod
