@@ -46,4 +46,8 @@ RCT_EXTERN_METHOD(getDeviceCodeRequestBody:(NSString *)deviceCode
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(decodePayload:(NSString *)jweString
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
 @end

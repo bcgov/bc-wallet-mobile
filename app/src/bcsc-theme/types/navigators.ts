@@ -17,6 +17,7 @@ export enum BCSCScreens {
   MismatchedSerial = 'BCSCMismatchedSerial',
   VerificationMethodSelection = 'BCSCVerificationMethodSelection',
   VerifyInPerson = 'BCSCVerifyInPerson',
+  InformationRequired = 'BCSCInformationRequired',
   VerificationSuccess = 'BCSCVerificationSuccess',
   ManualPairingCode = 'BCSCManualPairingCode',
   PairingConfirmation = 'BCSCPairingConfirmation',
@@ -44,5 +45,6 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.MismatchedSerial]: undefined
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
+  [BCSCScreens.InformationRequired]: undefined
   [BCSCScreens.VerificationSuccess]: undefined
 }

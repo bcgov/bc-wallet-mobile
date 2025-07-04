@@ -1,0 +1,30 @@
+// Build.gradle template for using the BC Services Card KeyPair functionality
+// Add these dependencies to your app's build.gradle file
+
+android {
+    compileSdkVersion 34
+
+    defaultConfig {
+        minSdkVersion 23  // Required for Android KeyStore features
+        targetSdkVersion 34
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    // Required: Nimbus JOSE library for JWT operations
+    implementation 'com.nimbusds:nimbus-jose-jwt:9.37.3'
+    
+    // Required: Android annotations
+    implementation 'androidx.annotation:annotation:1.7.0'
+    
+    // Required: Gson for JSON serialization (used by SimpleKeyPairInfoSource)
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    // Optional: If you want to use more advanced storage instead of SharedPreferences
+    // implementation 'androidx.security:security-crypto:1.1.0-alpha06'
+}

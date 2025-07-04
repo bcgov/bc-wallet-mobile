@@ -25,7 +25,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         title={'Send a video'}
         description={`Record a short video and we'll review it to verify your identity.`}
         icon={'repeat'}
-        onPress={() => null}
+        onPress={() => navigation.navigate(BCSCScreens.InformationRequired)}
         style={{ marginBottom: Spacing.xl}}
       />
       <ThemedText variant={'bold'} style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>Cannot send a video?</ThemedText>

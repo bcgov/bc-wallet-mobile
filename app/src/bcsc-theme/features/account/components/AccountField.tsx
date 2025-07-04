@@ -18,7 +18,7 @@ const AccountField: React.FC<AccountFieldProps> = ({ label, value, style }) => {
   })
 
   return (
-    <View style={style}>
+    <View style={[{ marginTop: Spacing.lg }, style]}>
       <ThemedText style={styles.label} variant={'bold'}>
         {label}
       </ThemedText>
