@@ -1,5 +1,6 @@
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
+import { createEvidenceRequestJWT, decodePayload } from 'react-native-bcsc-core'
 
 export interface VerificationPrompt {
   id: number
@@ -43,10 +44,20 @@ export interface VerificationVideoUploadPayload {
 
 const useEvidenceApi = () => {
   // This needs ot be called for the process to start
-  const createVerificationRequest = async (): Promise<VerificationResponseData> => {
-    return withAccount(async () => {
+  const createVerificationRequest = async (deviceCode: string): Promise<VerificationResponseData> => {
+    return withAccount(async (account) => {
+      // generate a custom token hear with client and device code
+      // this endpoint needs to be ignored in the request interceptor
+      const token = await createEvidenceRequestJWT(deviceCode, account.clientID)
+
       const { data } = await apiClient.post<VerificationResponseData>(
         `${apiClient.endpoints.evidence}/v1/verifications`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       )
       return data
     })
@@ -67,12 +78,12 @@ const useEvidenceApi = () => {
 
   const sendVerificationRequest = async (
     verificationRequestId: string,
-    payload: SendVerificationPayload,
+    payload: SendVerificationPayload
   ): Promise<VerificationStatusResponseData> => {
     return withAccount(async () => {
       const { data } = await apiClient.put<VerificationStatusResponseData>(
         `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
-        payload,
+        payload
       )
       return data
     })
@@ -81,18 +92,18 @@ const useEvidenceApi = () => {
   const getVerificationRequestPrompts = async (verificationRequestId: string): Promise<VerificationResponseData> => {
     return withAccount(async () => {
       const { data } = await apiClient.get<VerificationResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`,
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`
       )
       return data
     })
   }
 
   const getVerificationRequestStatus = async (
-    verificationRequestId: string,
+    verificationRequestId: string
   ): Promise<VerificationStatusResponseData> => {
     return withAccount(async () => {
       const { data } = await apiClient.get<VerificationStatusResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`
       )
       return data
     })
@@ -101,7 +112,7 @@ const useEvidenceApi = () => {
   const cancelVerificationRequest = async (verificationRequestId: string): Promise<void> => {
     return withAccount(async () => {
       const { data } = await apiClient.delete<void>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`
       )
       return data
     })

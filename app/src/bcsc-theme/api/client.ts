@@ -133,10 +133,11 @@ class BCSCService {
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
     // skip processing if request is made to token or endpoint URL or initial registration
     if (
-      config.url?.endsWith('/device/.well-known/openid-configuration') ||
-      config.url?.endsWith('/device/token') ||
-      config.url?.endsWith('/device/register') ||
-      config.url?.endsWith('/device/devicecode')
+      config.url?.endsWith('/device/.well-known/openid-configuration') || // this endpoint is open
+      config.url?.endsWith('/device/token') || // this endpoint does not require an access token to fetch a token
+      config.url?.endsWith('/device/register') || // this endpoint registers the user and grants an access token 
+      config.url?.endsWith('/device/devicecode') || // this endpoint registers the device before an access token is granted
+      config.url?.endsWith('/v1/verifications') // this is a special endpoint to start the verify by video flow and needs custom authorization headers
     ) {
       return config
     }

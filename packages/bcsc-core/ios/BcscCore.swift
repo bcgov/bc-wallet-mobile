@@ -291,6 +291,22 @@ class BcscCore: NSObject {
   }
 
   @objc
+  func createEvidenceRequestJWT(_ deviceCode: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    print("ARE WE EVEN GETTING ONE OF THESE THINGS CALLED? I DON'T THINK SO")
+    let builder = JWTClaimsSet.builder()
+    builder.claim(name: "device_code", value: deviceCode)
+           .claim(name: "client_id", value: clientID)
+
+    let payload = builder.build()
+    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+        reject("E_INVALID_ACCOUNT_DATA", "Account must have an 'issuer', 'clientID' and 'securityMethod' fields", nil) // Error already handled by signJWT
+        return
+    }
+    print(serializedJWT)
+    resolve(serializedJWT)
+  }
+
+  @objc
   func setAccount(_ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     print("BcscCore: setAccount called with account: \(account)")
     let accountID = UUID().uuidString

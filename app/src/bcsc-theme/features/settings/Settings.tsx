@@ -9,12 +9,13 @@ import React from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import SampleApiDisplay from './components/SampleApiDisplay'
 import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
+import { getAccount } from 'react-native-bcsc-core'
 
 // Placeholder for now, not sure if we want to reuse our
 // existing settings screen or create a new one, prob create new
 const Settings: React.FC = () => {
   const { Spacing, setTheme, themeName } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { lockOutUser } = useAuth()
   const { config, evidence, user } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -42,9 +43,18 @@ const Settings: React.FC = () => {
   const termsDataLoader = useDataLoader<TermsOfUseResponseData>(() => config.getTermsOfUse(), {
     onError: onTermsOfUseError,
   })
-  const evidenceStart = useDataLoader<any>(() => evidence.createVerificationRequest(), {
-    onError: (error: unknown) => logger.error(`Error loading: ${error}`),
-  })
+  const evidenceStart = useDataLoader<any>(
+    async () => {
+      const account = await getAccount()
+      if (!store.bcsc.deviceCode) {
+        throw new Error('Device code is not available. Something went wrong.')
+      }
+      return evidence.createVerificationRequest(store.bcsc.deviceCode)
+    },
+    {
+      onError: (error: unknown) => logger.error(`Error loading: ${error}`),
+    }
+  )
 
   const userAccount = useDataLoader<any>(() => user.getUserInfo(), {
     onError: (error: unknown) => logger.error(`Error loading: ${error}`),

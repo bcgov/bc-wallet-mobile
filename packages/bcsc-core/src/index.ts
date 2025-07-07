@@ -242,6 +242,10 @@ export const decodePayload = async (jweString: string): Promise<any> => {
   return BcscCore.decodePayload(jweString);
 };
 
+export const createEvidenceRequestJWT = async (deviceCode: string, clientID: string): Promise<string> => {
+  return BcscCore.createEvidenceRequestJWT(deviceCode, clientID);
+};
+
 /**
  * Retrieves the registration token (idToken) - currently commented out but ready for use.
  * @returns A promise that resolves to a TokenInfo object containing the idToken, or null if not found.
