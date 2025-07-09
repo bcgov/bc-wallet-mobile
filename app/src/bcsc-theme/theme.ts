@@ -325,6 +325,30 @@ export const BCSCButtons = StyleSheet.create({
     color: BCSCColorPallet.brand.secondaryDisabled,
     textAlign: 'center',
   },
+  tertiary: {
+    padding: 16,
+    borderRadius: 4,
+    borderWidth: 0,
+    backgroundColor: BCSCColorPallet.grayscale.white,
+  },
+  tertiaryDisabled: {
+    padding: 16,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: BCSCColorPallet.brand.tertiaryDisabled,
+  },
+  tertiaryText: {
+    ...BCSCTextTheme.normal,
+    fontWeight: 'bold',
+    color: BCSCColorPallet.brand.text,
+    textAlign: 'center',
+  },
+  tertiaryTextDisabled: {
+    ...BCSCTextTheme.normal,
+    fontWeight: 'bold',
+    color: BCSCColorPallet.brand.secondaryDisabled,
+    textAlign: 'center',
+  },
   modalCritical: {
     padding: 16,
     borderRadius: 4,

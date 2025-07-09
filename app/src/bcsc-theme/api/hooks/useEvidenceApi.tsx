@@ -48,6 +48,7 @@ const useEvidenceApi = () => {
     return withAccount(async (account) => {
       // generate a custom token hear with client and device code
       // this endpoint needs to be ignored in the request interceptor
+      // TODO: move this into a request interceptor
       const token = await createEvidenceRequestJWT(deviceCode, account.clientID)
 
       const { data } = await apiClient.post<VerificationResponseData>(
@@ -63,9 +64,14 @@ const useEvidenceApi = () => {
     })
   }
 
-  const uploadPhotoEvidence = async (payload: VerificationPhotoUploadPayload): Promise<void> => {
-    return withAccount(async () => {
-      const { data } = await apiClient.post<void>(`${apiClient.endpoints.evidence}/v1/photos`, payload)
+  const uploadPhotoEvidence = async (payload: VerificationPhotoUploadPayload, deviceCode: string): Promise<any> => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(deviceCode, account.clientID)
+      const { data } = await apiClient.post<any>(`${apiClient.endpoints.evidence}/v1/photos`, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
       return data
     })
   }
@@ -109,10 +115,19 @@ const useEvidenceApi = () => {
     })
   }
 
-  const cancelVerificationRequest = async (verificationRequestId: string): Promise<void> => {
-    return withAccount(async () => {
-      const { data } = await apiClient.delete<void>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`
+  // This is only valid once the verification flow has truly started
+  // meaning the user has uploaded their photo, video and document evidence
+  // In the mean time the ID is 'held' for the time being and discarded if teh user backs out
+  const cancelVerificationRequest = async (verificationRequestId: string, deviceCode: string): Promise<any> => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(deviceCode, account.clientID)
+      const { data } = await apiClient.delete<any>(
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       )
       return data
     })

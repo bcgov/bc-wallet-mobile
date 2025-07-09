@@ -42,8 +42,14 @@ export interface BCSCState {
   deviceCode?: string
   userCode?: string
   deviceCodeExpiresAt?: Date
+  pendingVerification?: boolean
   refreshToken?: string
+  photoPath?: string
+  videoPath?: string
+  videoThumbnailPath?: string
   bookmarks: string[]
+  verificationRequestId?: string
+  verificationRequestSha?: string
 }
 
 export enum Mode {
@@ -82,9 +88,14 @@ enum BCSCDispatchAction {
   UPDATE_DEVICE_CODE = 'bcsc/updateDeviceCode',
   UPDATE_USER_CODE = 'bcsc/updateUserCode',
   UPDATE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateDeviceCodeExpiresAt',
+  UPDATE_PENDING_VERIFICATION = 'bcsc/updatePendingVerification',
   UPDATE_REFRESH_TOKEN = 'bcsc/updateRefreshToken',
+  SAVE_PHOTO = 'bcsc/savePhoto',
+  SAVE_VIDEO = 'bcsc/saveVideo',
+  SAVE_VIDEO_THUMBNAIL = 'bcsc/saveVideoThumbnail',
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
+  UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
 }
 
 enum ModeDispatchAction {
@@ -158,6 +169,8 @@ const bcscState: BCSCState = {
   deviceCode: undefined,
   deviceCodeExpiresAt: undefined,
   refreshToken: undefined,
+  verificationRequestId: undefined,
+  verificationRequestSha: undefined,
 }
 
 export enum BCLocalStorageKeys {
@@ -319,22 +332,43 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
+    case BCSCDispatchAction.UPDATE_PENDING_VERIFICATION: {
+      const pendingVerification = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, pendingVerification }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
     case BCSCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT: {
       const deviceCodeExpiresAt = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, deviceCodeExpiresAt }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
     case BCSCDispatchAction.UPDATE_REFRESH_TOKEN: {
       const refreshToken = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, refreshToken }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
+      return newState
+    }
+    case BCSCDispatchAction.SAVE_PHOTO: {
+      const photoPath = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, photoPath }
+      const newState = { ...state, bcsc }
+      return newState
+    }
+    case BCSCDispatchAction.SAVE_VIDEO: {
+      const videoPath = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, videoPath }
+      const newState = { ...state, bcsc }
+      return newState
+    }
+    case BCSCDispatchAction.SAVE_VIDEO_THUMBNAIL: {
+      const videoThumbnailPath = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, videoThumbnailPath }
+      const newState = { ...state, bcsc }
       return newState
     }
     case BCSCDispatchAction.ADD_BOOKMARK: {
@@ -351,6 +385,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = { ...state.bcsc, bookmarks }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_VERIFICATION_REQUEST: {
+      const evidence = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, verificationRequestId: evidence?.id, verificationRequestSha: evidence?.sha256 }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
       return newState
     }
     default:

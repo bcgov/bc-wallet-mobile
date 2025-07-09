@@ -1061,6 +1061,15 @@ PODS:
   - react-native-tcp-socket (6.0.6):
     - CocoaAsyncSocket
     - React-Core
+  - react-native-video (6.16.1):
+    - glog
+    - RCT-Folly (= 2022.05.16.00)
+    - React-Core
+    - react-native-video/Video (= 6.16.1)
+  - react-native-video/Video (6.16.1):
+    - glog
+    - RCT-Folly (= 2022.05.16.00)
+    - React-Core
   - react-native-webview (13.13.4):
     - glog
     - RCT-Folly (= 2022.05.16.00)
@@ -1337,6 +1346,7 @@ DEPENDENCIES:
   - react-native-screenguard (from `../node_modules/react-native-screenguard`)
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - react-native-tcp-socket (from `../node_modules/react-native-tcp-socket`)
+  - react-native-video (from `../node_modules/react-native-video`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -1484,6 +1494,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-splash-screen"
   react-native-tcp-socket:
     :path: "../node_modules/react-native-tcp-socket"
+  react-native-video:
+    :path: "../node_modules/react-native-video"
   react-native-webview:
     :path: "../node_modules/react-native-webview"
   React-nativeconfig:
@@ -1622,6 +1634,7 @@ SPEC CHECKSUMS:
   react-native-screenguard: 936ece62b4e66a47fa2a33691a2dcc505a861b4a
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   react-native-tcp-socket: ae8abcfebc071216302a09d9ed1e375d4e877484
+  react-native-video: d74d94fbaeee3c0d8f6570173289f43fe210066f
   react-native-webview: 065ace7829588381d19aeba794f9dd2e28e21349
   React-nativeconfig: b4d4e9901d4cabb57be63053fd2aa6086eb3c85f
   React-NativeModulesApple: 541d64309a3037060cc416db5c8a63ee5884048e

@@ -1,20 +1,19 @@
-import { Image, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
-import { Button, ButtonType, useAnimatedComponents, useTheme } from '@bifold/core'
+import { Button, ButtonType, useAnimatedComponents, useStore, useTheme } from '@bifold/core'
 import { useMemo, useState } from 'react'
-// import { StackNavigationProp } from '@react-navigation/stack'
-// import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import ComboCardImage from '@assets/img/combo_card.png'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCState } from '@/store'
 
-const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
+type InformationRequiredScreenProps = {
+  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.InformationRequired>
+}
 
-// type InformationRequiredScreenProps = {
-//   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.InformationRequired>
-// }
-
-const InformationRequiredScreen = () => {
+const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProps) => {
   const { Spacing } = useTheme()
+  const [store] = useStore<BCState>()
   const [loading] = useState(false)
   const uploadedBoth = useMemo(() => true, [])
   const { ButtonLoading } = useAnimatedComponents()
@@ -38,17 +37,17 @@ const InformationRequiredScreen = () => {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View style={styles.mediaContainer}>
         <TakeMediaButton
-          onPress={() => {}}
+          onPress={() => { navigation.navigate(BCSCScreens.PhotoInstructions) }}
           title={'Photo of your face'}
           actionLabel={'Take Photo'}
-          thumbnailUri={COMBO_CARD}
+          thumbnailUri={store.bcsc.photoPath}
           style={{ borderBottomWidth: 0 }}
         />
         <TakeMediaButton
-          onPress={() => {}}
+          onPress={() => { navigation.navigate(BCSCScreens.VideoInstructions) }}
           title={'Video of your face'}
           actionLabel={'Record Video'}
-          thumbnailUri={undefined}
+          thumbnailUri={store.bcsc.videoThumbnailPath}
         />
       </View>
       <View style={styles.controlsContainer}>

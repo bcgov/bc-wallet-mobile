@@ -137,7 +137,7 @@ class BCSCService {
       config.url?.endsWith('/device/token') || // this endpoint does not require an access token to fetch a token
       config.url?.endsWith('/device/register') || // this endpoint registers the user and grants an access token 
       config.url?.endsWith('/device/devicecode') || // this endpoint registers the device before an access token is granted
-      config.url?.endsWith('/v1/verifications') // this is a special endpoint to start the verify by video flow and needs custom authorization headers
+      config.url?.includes('/v1/verifications') // this is a special endpoint to start the verify by video flow and needs custom authorization headers
     ) {
       return config
     }

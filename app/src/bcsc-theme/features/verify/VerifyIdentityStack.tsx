@@ -12,6 +12,12 @@ import VerifyInPersonScreen from './in-person/VerifyInPersonScreen'
 import MismatchedSerialScreen from './MismatchedSerialScreen'
 import VerificationSuccessScreen from './VerificationSuccessScreen'
 import InformationRequiredScreen from './send-video/InformationRequiredScreen'
+import PhotoInstructionsScreen from './send-video/PhotoInstructionsScreen'
+import TakePhotoScreen from './send-video/TakePhotoScreen'
+import PhotoReviewScreen from './send-video/PhotoReviewScreen'
+import TakeVideoScreen from './send-video/TakeVideoScreen'
+import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
+import VideoReviewScreen from './send-video/VideoReviewScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -48,6 +54,34 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.InformationRequired}
         component={InformationRequiredScreen}
         options={{ title: 'Information Required' }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PhotoInstructions}
+        component={PhotoInstructionsScreen}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TakePhoto}
+        component={TakePhotoScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PhotoReview}
+        component={PhotoReviewScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VideoInstructions}
+        component={VideoInstructionsScreen}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TakeVideo}
+        component={TakeVideoScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VideoReview}
+        component={VideoReviewScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={BCSCScreens.VerificationSuccess}
