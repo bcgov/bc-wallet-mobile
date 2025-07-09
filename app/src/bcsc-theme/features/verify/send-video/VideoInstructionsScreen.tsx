@@ -1,9 +1,12 @@
-import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { BCState } from '@/store'
+import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { Fragment, useEffect } from 'react'
 
 type VideoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VideoInstructions>
@@ -11,10 +14,7 @@ type VideoInstructionsScreenProps = {
 
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
   const { ColorPallet, Spacing, TextTheme } = useTheme()
-  // TODO: get prompts from API
-  const prompt1 = 'Read this out loud: "Run"'
-  const prompt2 = 'Smile'
-  const prompt3 = 'Say your full name on your ID'
+  const [store] = useStore<BCState>()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -45,6 +45,10 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
     },
   })
 
+  useEffect(() => {
+    console.log('VideoInstructionsScreen: Prompts updated', store.bcsc.prompts)
+  }, [store.bcsc.prompts])
+
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
@@ -53,20 +57,16 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
           Record a short video.
         </ThemedText>
         <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>
-          You'll be asked to
+          {`You'll be asked to`}
         </ThemedText>
-        <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
-          1
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>{prompt1}</ThemedText>
-        <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
-          2
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>{prompt2}</ThemedText>
-        <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
-          3
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>{prompt3}</ThemedText>
+        {store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
+          <Fragment key={id}>
+            <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
+              {index + 1}
+            </ThemedText>
+            <ThemedText style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>{prompt}</ThemedText>
+          </Fragment>
+        ))}
         <View style={styles.lineBreak} />
         <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.xl }}>
           A person at Service BC will watch the video. They need to hear and see you clearly.

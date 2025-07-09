@@ -374,10 +374,11 @@ export class AppContainer implements Container {
         bcsc.deviceCodeExpiresAt = new Date(Date.parse(bcsc.deviceCodeExpiresAt))
       }
 
-      // Reset paths on load as they should not be persisted
+      // Reset paths and prompts on load as they should not be persisted
       bcsc.photoPath = undefined
       bcsc.videoPath = undefined
       bcsc.videoThumbnailPath = undefined
+      bcsc.prompts = undefined
 
       const state = {
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },

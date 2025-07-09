@@ -8,6 +8,7 @@ import {
 } from '@bifold/core'
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
+import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 
 export interface IASEnvironment {
   name: string
@@ -43,6 +44,7 @@ export interface BCSCState {
   userCode?: string
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
+  prompts?: VerificationPrompt[]
   refreshToken?: string
   photoPath?: string
   videoPath?: string
@@ -90,6 +92,7 @@ enum BCSCDispatchAction {
   UPDATE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateDeviceCodeExpiresAt',
   UPDATE_PENDING_VERIFICATION = 'bcsc/updatePendingVerification',
   UPDATE_REFRESH_TOKEN = 'bcsc/updateRefreshToken',
+  UPDATE_VIDEO_PROMPTS = 'bcsc/updateVideoPrompts',
   SAVE_PHOTO = 'bcsc/savePhoto',
   SAVE_VIDEO = 'bcsc/saveVideo',
   SAVE_VIDEO_THUMBNAIL = 'bcsc/saveVideoThumbnail',
@@ -337,6 +340,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = { ...state.bcsc, pendingVerification }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_VIDEO_PROMPTS: {
+      const prompts: VerificationPrompt[] = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, prompts }
+      const newState = { ...state, bcsc }
       return newState
     }
     case BCSCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT: {

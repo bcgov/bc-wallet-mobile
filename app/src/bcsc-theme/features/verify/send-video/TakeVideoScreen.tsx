@@ -4,16 +4,12 @@ import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ColorPallet, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { StyleSheet, View, Text, Alert, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 
 const overlay = 'rgba(0, 0, 0, 0.4)'
-const prompt1 = 'Read this out loud: "Run"'
-const prompt2 = 'Smile'
-const prompt3 = 'Say your full name on your ID'
-const prompts = [prompt1, prompt2, prompt3]
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakeVideo>
@@ -21,7 +17,8 @@ type PhotoInstructionsScreenProps = {
 
 const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const { Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
+  const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
@@ -143,7 +140,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         })
       },
     })
-  }, [dispatch, logger, startTimer, stopTimer, navigation])
+  }, [dispatch, logger, startTimer, stopTimer, navigation, prompts])
 
   const onPressNextPrompt = async () => {
     if (prompts.indexOf(prompt) === prompts.length - 1) {
@@ -152,39 +149,41 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     setPrompt((prevPrompt) => prompts[prompts.indexOf(prevPrompt) + 1])
   }
 
-  useFocusEffect(useCallback(() => {
-    const checkPermissions = async () => {
-      if (!hasCameraPermission) {
-        const permission = await requestCameraPermission()
-        if (!permission) {
-          Alert.alert('Camera Permission Required', 'Please enable camera permission to take a photo.', [
-            { text: 'OK', onPress: () => navigation.goBack() },
-          ])
-          return
+  useFocusEffect(
+    useCallback(() => {
+      const checkPermissions = async () => {
+        if (!hasCameraPermission) {
+          const permission = await requestCameraPermission()
+          if (!permission) {
+            Alert.alert('Camera Permission Required', 'Please enable camera permission to take a photo.', [
+              { text: 'OK', onPress: () => navigation.goBack() },
+            ])
+            return
+          }
         }
-      }
-      if (!hasMicrophonePermission) {
-        const permission = await requestMicrophonePermission()
-        if (!permission) {
-          Alert.alert('Microphone Permission Required', 'Please enable microphone permission to record a video.', [
-            { text: 'OK', onPress: () => navigation.goBack() },
-          ])
-          return
+        if (!hasMicrophonePermission) {
+          const permission = await requestMicrophonePermission()
+          if (!permission) {
+            Alert.alert('Microphone Permission Required', 'Please enable microphone permission to record a video.', [
+              { text: 'OK', onPress: () => navigation.goBack() },
+            ])
+            return
+          }
         }
+
+        startRecording()
       }
 
-      startRecording()
-    }
-
-    checkPermissions()
-  }, [
-    startRecording,
-    hasCameraPermission,
-    requestCameraPermission,
-    hasMicrophonePermission,
-    requestMicrophonePermission,
-    navigation,
-  ]))
+      checkPermissions()
+    }, [
+      startRecording,
+      hasCameraPermission,
+      requestCameraPermission,
+      hasMicrophonePermission,
+      requestMicrophonePermission,
+      navigation,
+    ])
+  )
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -240,7 +239,9 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
 
         {/* Top overlay with prompt text */}
         <View style={styles.promptContainer}>
-          <ThemedText variant={'headingTwo'} style={{ textAlign: 'center' }}>{prompt}</ThemedText>
+          <ThemedText variant={'headingTwo'} style={{ textAlign: 'center' }}>
+            {prompt}
+          </ThemedText>
         </View>
 
         {/* Bottom overlay with controls */}
