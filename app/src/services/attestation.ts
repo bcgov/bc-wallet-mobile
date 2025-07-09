@@ -627,7 +627,7 @@ export class AttestationMonitor implements AttestationMonitorI {
         'Google Attestation Error',
         'There was a problem with the Google Integrity API.',
         (error as Error)?.message || 'No details provided.',
-        AttestationErrorCodes.FailedToGenerateAttestation,
+        AttestationErrorCodes.IntegrityUnavailable,
       )
       throw bifoldError
     }
