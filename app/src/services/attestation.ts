@@ -619,13 +619,23 @@ export class AttestationMonitor implements AttestationMonitorI {
 
     this.log?.info('Using Google on-device attestation')
 
-    const tokenString = await googleAttestation(nonce)
+    let tokenString: string
+    try {
+      tokenString = await googleAttestation(nonce)
+    } catch (error) {
+      const bifoldError = new BifoldError(
+        'Google Attestation Error',
+        'There was a problem with the Google Integrity API.',
+        (error as Error)?.message || 'No details provided.',
+        AttestationErrorCodes.FailedToGenerateAttestation,
+      )
+      throw bifoldError
+    }
     const attestationRequest = {
       ...common,
       platform: 'google',
       attestation_object: tokenString,
     } as AttestationRequestParams
-
     this.log?.info('On-device Google attestation complete')
 
     return attestationRequest
