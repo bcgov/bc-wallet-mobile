@@ -610,7 +610,6 @@ export class AttestationMonitor implements AttestationMonitorI {
         'The device attestation process cannot be completed without Google Play Integrity services.',
         AttestationErrorCodes.IntegrityUnavailable,
       )
-      DeviceEventEmitter.emit(AttestationEventTypes.FailedHandleOffer, error)
 
       throw error
     } else {
