@@ -49,7 +49,7 @@ const Settings: React.FC = () => {
         throw new Error('Device code is not available. Something went wrong.')
       }
       // need to store id and SHA! for later
-      const response = await evidence.createVerificationRequest(store.bcsc.deviceCode)
+      const response = await evidence.createVerificationRequest()
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [response] })
       return response
     },
@@ -63,17 +63,14 @@ const Settings: React.FC = () => {
       if (!store.bcsc.deviceCode || !store.bcsc.verificationRequestSha) {
         throw new Error('Device code is not available. Something went wrong.')
       }
-      const response = await evidence.uploadPhotoEvidence(
-        {
-          content_length: 350828,
-          content_type: 'image/png',
-          date: 1752096719,
-          label: 'front',
-          filename: 'selfie.jpg',
-          sha256: '38e76c4dc27b4f6b276ed98927864e7c8fbb237b4366eb80e35c634409f3850b',
-        },
-        store.bcsc.deviceCode
-      )
+      const response = await evidence.uploadPhotoEvidence({
+        content_length: 350828,
+        content_type: 'image/png',
+        date: 1752096719,
+        label: 'front',
+        filename: 'selfie.jpg',
+        sha256: '38e76c4dc27b4f6b276ed98927864e7c8fbb237b4366eb80e35c634409f3850b',
+      })
       return response
     },
     {
@@ -84,7 +81,7 @@ const Settings: React.FC = () => {
   const deleteRequest = useDataLoader<any>(
     async () => {
       if (store.bcsc.verificationRequestId && store.bcsc.deviceCode) {
-        await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId, store.bcsc.deviceCode)
+        await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId)
 
         return 'DELETED REQUEST FOR ID: ' + store.bcsc.verificationRequestId
       } else {

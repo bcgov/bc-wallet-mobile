@@ -70,17 +70,14 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       // Read the PNG file as base64 bytes
       const pngBytes = await RNFS.readFile(convertedPhoto.uri, 'base64')
       const photoSHA = await hashBase64(pngBytes)
-      const response = await evidence.uploadPhotoEvidence(
-        {
-          content_length: pngBytes.length,
-          content_type: 'image/png',
-          date: 1752096719,
-          label: 'front',
-          filename: 'selfie.jpg',
-          sha256: photoSHA,
-        },
-        store.bcsc.deviceCode!
-      )
+      const response = await evidence.uploadPhotoEvidence({
+        content_length: pngBytes.length,
+        content_type: 'image/png',
+        date: 1752096719,
+        label: 'front',
+        filename: 'selfie.jpg',
+        sha256: photoSHA,
+      })
 
       console.log(response)
       // const [{ uri: photoUri }, { uri: videoUri }] = await Promise.all([

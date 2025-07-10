@@ -1,6 +1,8 @@
+import { useStore } from '@bifold/core'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
 import { createEvidenceRequestJWT } from 'react-native-bcsc-core'
+import { BCState } from '@/store'
 
 export interface VerificationPrompt {
   id: number
@@ -43,15 +45,23 @@ export interface VerificationVideoUploadPayload {
   prompts: VerificationPrompt[]
 }
 
-const useEvidenceApi = () => {
-  // This needs ot be called for the process to start
-  const createVerificationRequest = async (deviceCode: string): Promise<VerificationResponseData> => {
-    return withAccount(async (account) => {
-      // generate a custom token hear with client and device code
-      // this endpoint needs to be ignored in the request interceptor
-      // TODO: move this into a request interceptor
-      const token = await createEvidenceRequestJWT(deviceCode, account.clientID)
+export interface UploadEvidenceResponseData {
+  label: string
+  upload_uri: string
+}
 
+const useEvidenceApi = () => {
+  const [store, _] = useStore<BCState>()
+
+  const _getDeviceCode = () => {
+    const code = store.bcsc.deviceCode
+    if (!code) throw new Error('Device code is missing. Re install the app and setup try again.')
+    return code
+  }
+  // This needs ot be called for the process to start
+  const createVerificationRequest = async (): Promise<VerificationResponseData> => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.post<VerificationResponseData>(
         `${apiClient.endpoints.evidence}/v1/verifications`,
         null,
@@ -65,20 +75,33 @@ const useEvidenceApi = () => {
     })
   }
 
-  const uploadPhotoEvidence = async (payload: VerificationPhotoUploadPayload, deviceCode: string): Promise<any> => {
+  const uploadPhotoEvidence = async (payload: VerificationPhotoUploadPayload): Promise<UploadEvidenceResponseData> => {
     return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(deviceCode, account.clientID)
-      const { data } = await apiClient.post<any>(`${apiClient.endpoints.evidence}/v1/photos`, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.post<UploadEvidenceResponseData>(
+        `${apiClient.endpoints.evidence}/v1/photos`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       return data
     })
   }
-  const uploadVideoEvidence = async (payload: VerificationVideoUploadPayload): Promise<void> => {
-    return withAccount(async () => {
-      const { data } = await apiClient.post<void>(`${apiClient.endpoints.evidence}/v1/videos`, payload)
+  const uploadVideoEvidence = async (payload: VerificationVideoUploadPayload): Promise<UploadEvidenceResponseData> => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.post<UploadEvidenceResponseData>(
+        `${apiClient.endpoints.evidence}/v1/videos`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       return data
     })
   }
@@ -87,19 +110,31 @@ const useEvidenceApi = () => {
     verificationRequestId: string,
     payload: SendVerificationPayload
   ): Promise<VerificationStatusResponseData> => {
-    return withAccount(async () => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.put<VerificationStatusResponseData>(
         `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
-        payload
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       )
       return data
     })
   }
 
   const getVerificationRequestPrompts = async (verificationRequestId: string): Promise<VerificationResponseData> => {
-    return withAccount(async () => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.get<VerificationResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       )
       return data
     })
@@ -108,9 +143,15 @@ const useEvidenceApi = () => {
   const getVerificationRequestStatus = async (
     verificationRequestId: string
   ): Promise<VerificationStatusResponseData> => {
-    return withAccount(async () => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.get<VerificationStatusResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`
+        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       )
       return data
     })
@@ -119,9 +160,9 @@ const useEvidenceApi = () => {
   // This is only valid once the verification flow has truly started
   // meaning the user has uploaded their photo, video and document evidence
   // In the mean time the ID is 'held' for the time being and discarded if teh user backs out
-  const cancelVerificationRequest = async (verificationRequestId: string, deviceCode: string): Promise<any> => {
+  const cancelVerificationRequest = async (verificationRequestId: string): Promise<any> => {
     return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(deviceCode, account.clientID)
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.delete<any>(
         `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
         {
@@ -135,17 +176,35 @@ const useEvidenceApi = () => {
   }
 
   const createEmailVerification = async (email: string): Promise<any> => {
-    return withAccount(async () => {
-      const { data } = await apiClient.post<any>(`${apiClient.endpoints.evidence}/v1/emails`, { email_address: email })
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.post<any>(
+        `${apiClient.endpoints.evidence}/v1/emails`,
+        { email_address: email },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       return data
     })
   }
 
   const sendEmailVerificationCode = async (code: string, emailAddressId: string): Promise<void> => {
-    return withAccount(async () => {
-      const { data } = await apiClient.put<void>(`${apiClient.endpoints.evidence}/v1/emails/${emailAddressId}`, {
-        verification_code: code,
-      })
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.put<void>(
+        `${apiClient.endpoints.evidence}/v1/emails/${emailAddressId}`,
+        {
+          verification_code: code,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       return data
     })
   }
