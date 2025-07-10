@@ -246,6 +246,10 @@ export const createEvidenceRequestJWT = async (deviceCode: string, clientID: str
   return BcscCore.createEvidenceRequestJWT(deviceCode, clientID);
 };
 
+export const hashBase64 = async (base64: string): Promise<string> => {
+  return BcscCore.hashBase64(base64);
+};
+
 /**
  * Retrieves the registration token (idToken) - currently commented out but ready for use.
  * @returns A promise that resolves to a TokenInfo object containing the idToken, or null if not found.

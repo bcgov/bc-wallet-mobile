@@ -30,7 +30,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       setLoading(true)
       const { sha256, id, prompts } = await evidence.createVerificationRequest(store.bcsc.deviceCode!)
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
-      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts]})
+      dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
       navigation.navigate(BCSCScreens.InformationRequired)
       console.log('Successfully created verification request:', { sha256, id, prompts })
     } catch (error) {
@@ -49,10 +49,12 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         description={`Record a short video and we'll review it to verify your identity.`}
         icon={'repeat'}
         onPress={handlePressSendVideo}
-        style={{ marginBottom: Spacing.xl}}
+        style={{ marginBottom: Spacing.xl }}
         loading={loading}
       />
-      <ThemedText variant={'bold'} style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>Cannot send a video?</ThemedText>
+      <ThemedText variant={'bold'} style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>
+        Cannot send a video?
+      </ThemedText>
       <VerifyMethodActionButton
         title={'Video call'}
         description={`We will verify your identity during a video call.`}

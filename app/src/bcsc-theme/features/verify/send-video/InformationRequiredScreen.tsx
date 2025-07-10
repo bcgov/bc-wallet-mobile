@@ -9,6 +9,7 @@ import RNFS from 'react-native-fs'
 import ImageResizer from 'react-native-image-resizer'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
+import { hashBase64 } from 'react-native-bcsc-core'
 
 type InformationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.InformationRequired>
@@ -54,8 +55,6 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       }
 
       const { width, height } = await getImageDimensions()
-      console.log('Original image dimensions:', width, 'x', height)
-
       const convertedPhoto = await ImageResizer.createResizedImage(
         store.bcsc.photoPath!,
         width, // use original width
@@ -68,13 +67,22 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         { mode: 'contain', onlyScaleDown: false }
       )
 
-      console.log('Original photo path:', store.bcsc.photoPath)
-      console.log('Converted PNG path:', convertedPhoto.uri)
-
       // Read the PNG file as base64 bytes
       const pngBytes = await RNFS.readFile(convertedPhoto.uri, 'base64')
-      console.log('PNG bytes length:', pngBytes.length)
+      const photoSHA = await hashBase64(pngBytes)
+      const response = await evidence.uploadPhotoEvidence(
+        {
+          content_length: pngBytes.length,
+          content_type: 'image/png',
+          date: 1752096719,
+          label: 'front',
+          filename: 'selfie.jpg',
+          sha256: photoSHA,
+        },
+        store.bcsc.deviceCode!
+      )
 
+      console.log(response)
       // const [{ uri: photoUri }, { uri: videoUri }] = await Promise.all([
       //   evidence.uploadPhotoEvidence(pngBytes, store.bcsc.deviceCode!),
       //   evidence.uploadVideoEvidence(videoBytes)

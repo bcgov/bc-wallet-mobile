@@ -1,5 +1,6 @@
 import Foundation
 import React
+import CryptoKit
 
 enum AccountSecurityMethod: String {
     case pinNoDeviceAuth = "app_pin_no_device_authn"
@@ -407,7 +408,6 @@ class BcscCore: NSObject {
 
   @objc
   func signPairingCode(_ code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    let storage = StorageService()
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
     
@@ -626,11 +626,28 @@ class BcscCore: NSObject {
         let decodedData = Data(base64Encoded: base64String, options: Data.Base64DecodingOptions(rawValue: UInt(0)))
         
         let base64Decoded: String = String(data: decodedData! as Data, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue))!
-
+        print("TOKEN GENERATED")
+        print(base64Decoded)
         resolve(base64Decoded)
     } catch {
         reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
     }
+  }
+
+  @objc
+  func hashBase64(_ base64: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {  
+      guard let data = Data(base64Encoded: base64) else {
+        reject("E_INVALID_BASE64", "Input is not valid base64", nil)
+        return
+      }
+      var hash = [UInt8](repeating: 0,  count: Int(CC_SHA256_DIGEST_LENGTH))
+      data.withUnsafeBytes {
+          _ = CC_SHA256($0, CC_LONG(data.count), &hash)
+      }
+      let hashedData = Data(hash)
+      let hashString = hashedData.map { String(format: "%02hhx", $0) }.joined()
+
+      resolve(hashString)
   }
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED

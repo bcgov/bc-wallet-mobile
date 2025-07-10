@@ -45,11 +45,51 @@ const Settings: React.FC = () => {
   })
   const evidenceStart = useDataLoader<any>(
     async () => {
-      const account = await getAccount()
       if (!store.bcsc.deviceCode) {
         throw new Error('Device code is not available. Something went wrong.')
       }
-      return evidence.createVerificationRequest(store.bcsc.deviceCode)
+      // need to store id and SHA! for later
+      const response = await evidence.createVerificationRequest(store.bcsc.deviceCode)
+      dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [response] })
+      return response
+    },
+    {
+      onError: (error: unknown) => logger.error(`Error loading: ${error}`),
+    }
+  )
+
+  const evidenceUploadPhoto = useDataLoader<any>(
+    async () => {
+      if (!store.bcsc.deviceCode || !store.bcsc.verificationRequestSha) {
+        throw new Error('Device code is not available. Something went wrong.')
+      }
+      const response = await evidence.uploadPhotoEvidence(
+        {
+          content_length: 350828,
+          content_type: 'image/png',
+          date: 1752096719,
+          label: 'front',
+          filename: 'selfie.jpg',
+          sha256: '38e76c4dc27b4f6b276ed98927864e7c8fbb237b4366eb80e35c634409f3850b',
+        },
+        store.bcsc.deviceCode
+      )
+      return response
+    },
+    {
+      onError: (error: unknown) => logger.error(`Error loading: ${error}`),
+    }
+  )
+
+  const deleteRequest = useDataLoader<any>(
+    async () => {
+      if (store.bcsc.verificationRequestId && store.bcsc.deviceCode) {
+        await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId, store.bcsc.deviceCode)
+
+        return 'DELETED REQUEST FOR ID: ' + store.bcsc.verificationRequestId
+      } else {
+        return 'No ID found to delete'
+      }
     },
     {
       onError: (error: unknown) => logger.error(`Error loading: ${error}`),
@@ -80,8 +120,10 @@ const Settings: React.FC = () => {
         <ScrollView contentContainerStyle={styles.contentContainer}>
           <SampleApiDisplay<TermsOfUseResponseData> dataLoader={termsDataLoader} title={'Terms of Use'} />
           <SampleApiDisplay<ServerStatusResponseData> dataLoader={serverStatusDataLoader} title={'Server Status'} />
-          <SampleApiDisplay<any> dataLoader={evidenceStart} title={'Start Evidence'} />
           <SampleApiDisplay<UserInfoResponseData> dataLoader={userAccount} title={'User Account'} />
+          <SampleApiDisplay<any> dataLoader={evidenceStart} title={'Start Evidence'} />
+          <SampleApiDisplay<any> dataLoader={deleteRequest} title={'Delete Verification Request'} />
+          <SampleApiDisplay<any> dataLoader={evidenceUploadPhoto} title={'Upload PhotoEvidence'} />
         </ScrollView>
         <View style={styles.controlsContainer}>
           <View style={{ marginVertical: Spacing.md }}>

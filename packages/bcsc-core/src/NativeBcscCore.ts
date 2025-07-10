@@ -77,6 +77,7 @@ export interface Spec extends TurboModule {
   ): Promise<string | null>;
   decodePayload(jweString: string): Promise<string>
   createEvidenceRequestJWT(deviceCode: string, clientID: string): Promise<string>
+  hashBase64(base64: string): Promise<string>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

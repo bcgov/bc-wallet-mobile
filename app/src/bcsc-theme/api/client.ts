@@ -111,7 +111,7 @@ class BCSCService {
     return withAccount(async () => {
       if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
         // refresh token should be saved when a device is authorized with IAS
-        throw new Error('TODO: Reregister if refresh token is expired or not present')
+        throw new Error('TODO: Register if refresh token is expired or not present')
       }
 
       const tokenData = await this.getTokensForRefreshToken(this.tokens.refresh_token)
@@ -137,7 +137,7 @@ class BCSCService {
       config.url?.endsWith('/device/token') || // this endpoint does not require an access token to fetch a token
       config.url?.endsWith('/device/register') || // this endpoint registers the user and grants an access token 
       config.url?.endsWith('/device/devicecode') || // this endpoint registers the device before an access token is granted
-      config.url?.includes('/v1/verifications') // this is a special endpoint to start the verify by video flow and needs custom authorization headers
+      config.url?.includes('/evidence') // the evidence endpoints are to be used to verify a user, so the user will not have an access token yet
     ) {
       return config
     }

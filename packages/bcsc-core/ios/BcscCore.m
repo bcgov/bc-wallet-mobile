@@ -55,4 +55,7 @@ RCT_EXTERN_METHOD(createEvidenceRequestJWT:(NSString *)deviceCode
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(hashBase64:(NSString *)base64
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 @end

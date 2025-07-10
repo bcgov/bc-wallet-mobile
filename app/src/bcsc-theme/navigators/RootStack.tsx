@@ -69,6 +69,7 @@ const BCSCRootStack: React.FC = () => {
           // fetch token data and save it son
           const tokenInfo = await getToken(TokenType.Refresh)
           token = tokenInfo?.token
+          // TODO: Get device code from bscs core package
           dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [token] })
         } else {
           token = store.bcsc.refreshToken

@@ -1,6 +1,6 @@
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
-import { createEvidenceRequestJWT, decodePayload } from 'react-native-bcsc-core'
+import { createEvidenceRequestJWT } from 'react-native-bcsc-core'
 
 export interface VerificationPrompt {
   id: number
@@ -26,11 +26,12 @@ export interface VerificationStatusResponseData {
 }
 
 export interface VerificationPhotoUploadPayload {
-  label: string
+  label: 'front' | 'back'
   content_type: string
   content_length: number
-  date: string
+  date: number
   sha256: string
+  filename?: string
 }
 
 export interface VerificationVideoUploadPayload {
