@@ -8,6 +8,11 @@ export interface VerificationPrompt {
   id: number
   prompt: string
 }
+
+export interface VerificationPromptUploadPayload {
+  id: number
+  prompted_at: number // this provides the index/ order in which the prompt was given. 0 is the first prompt, 1 is the second prompt show ect.
+}
 export interface VerificationResponseData {
   id: string
   sha256: string
@@ -32,17 +37,18 @@ export interface VerificationPhotoUploadPayload {
   content_type: string
   content_length: number
   date: number
-  sha256: string
+  sha256: string // hashed copy of the photo
   filename?: string
 }
 
 export interface VerificationVideoUploadPayload {
   content_type: string
   content_length: number
-  date: string
-  sha256: string
-  duration: number
-  prompts: VerificationPrompt[]
+  date: number
+  sha256: string // hashed copy of the video
+  duration: number // video duration in seconds
+  prompts: VerificationPromptUploadPayload[]
+  filename?: string
 }
 
 export interface UploadEvidenceResponseData {
