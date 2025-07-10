@@ -73,7 +73,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       const response = await evidence.uploadPhotoEvidence({
         content_length: pngBytes.length,
         content_type: 'image/png',
-        date: 1752096719,
+        date: new Date().getTime(),
         label: 'front',
         filename: 'selfie.jpg',
         sha256: photoSHA,
