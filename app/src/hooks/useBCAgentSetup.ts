@@ -30,6 +30,14 @@ const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => 
   }
 }
 
+const checkMediatorType = async (agent: Agent, mediatorUrl: string): Promise<void> => {
+  if (mediatorUrl.startsWith('https://mediator-credo-dev.apps.silver.devops.gov.bc.ca/')) {
+    await agent.mediationRecipient.initiateMessagePickup(undefined, MediatorPickupStrategy.PickUpV2LiveMode)
+  } else {
+    batchPickup(agent)
+  }
+}
+
 const useBCAgentSetup = () => {
   const [agent, setAgent] = useState<Agent | null>(null)
   const agentInstanceRef = useRef<Agent | null>(null)
@@ -47,7 +55,7 @@ const useBCAgentSetup = () => {
       attestationMonitor?.stop()
       attestationMonitor?.start(agent)
     },
-    [attestationMonitor]
+    [attestationMonitor],
   )
 
   const restartExistingAgent = useCallback(
@@ -58,8 +66,6 @@ const useBCAgentSetup = () => {
           key: walletSecret.key,
         })
         await agent.initialize()
-
-        batchPickup(agent)
       } catch (error) {
         logger.warn(`Agent restart failed with error ${error}`)
         // if the existing agents wallet cannot be opened or initialize() fails it was
@@ -69,11 +75,11 @@ const useBCAgentSetup = () => {
 
       return agent
     },
-    [logger]
+    [logger],
   )
 
   const createNewAgent = useCallback(
-    async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret): Promise<Agent> => {
+    async (ledgers: IndyVdrPoolConfig[], walletSecret: WalletSecret, mediatorUrl: string): Promise<Agent> => {
       const options = {
         config: {
           label: store.preferences.walletName || 'BC Wallet',
@@ -89,7 +95,7 @@ const useBCAgentSetup = () => {
         dependencies: agentDependencies,
         modules: getBCAgentModules({
           indyNetworks: ledgers,
-          mediatorInvitationUrl: Config.MEDIATOR_URL,
+          mediatorInvitationUrl: mediatorUrl,
           txnCache: {
             capacity: 1000,
             expiryOffsetMs: 1000 * 60 * 60 * 24 * 7,
@@ -115,7 +121,7 @@ const useBCAgentSetup = () => {
 
       return newAgent
     },
-    [store.preferences.walletName, logger, store.developer.enableProxy]
+    [store.preferences.walletName, logger, store.developer.enableProxy],
   )
 
   const migrateIfRequired = useCallback(
@@ -128,7 +134,7 @@ const useBCAgentSetup = () => {
         })
       }
     },
-    [store.migration.didMigrateToAskar, dispatch]
+    [store.migration.didMigrateToAskar, dispatch],
   )
 
   const warmUpCache = useCallback(
@@ -175,16 +181,18 @@ const useBCAgentSetup = () => {
         await pool.pool.submitRequest(schemaRequest)
       })
     },
-    [credDefs, schemas]
+    [credDefs, schemas],
   )
 
   const initializeAgent = useCallback(
     async (walletSecret: WalletSecret): Promise<void> => {
+      const mediatorUrl = store.preferences.selectedMediator
       logger.info('Checking for existing agent...')
       if (agentInstanceRef.current) {
         const restartedAgent = await restartExistingAgent(agentInstanceRef.current, walletSecret)
         if (restartedAgent) {
           logger.info('Successfully restarted existing agent...')
+          await checkMediatorType(restartedAgent, mediatorUrl)
           refreshAttestationMonitor(restartedAgent)
           agentInstanceRef.current = restartedAgent
           setAgent(restartedAgent)
@@ -197,7 +205,7 @@ const useBCAgentSetup = () => {
       const ledgers = cachedLedgers ?? indyLedgers
 
       logger.info('Creating new agent...')
-      const newAgent = await createNewAgent(ledgers, walletSecret)
+      const newAgent = await createNewAgent(ledgers, walletSecret, mediatorUrl)
 
       logger.info('Migrating agent if required...')
       await migrateIfRequired(newAgent, walletSecret)
@@ -205,7 +213,8 @@ const useBCAgentSetup = () => {
       logger.info('Initializing agent...')
       await newAgent.initialize()
 
-      batchPickup(newAgent)
+      logger.info(`checking mediator type for ${mediatorUrl}`)
+      await checkMediatorType(newAgent, mediatorUrl)
 
       logger.info('Warming up cache...')
       await warmUpCache(newAgent, cachedLedgers)
@@ -227,15 +236,16 @@ const useBCAgentSetup = () => {
       setAgent(newAgent)
     },
     [
-      restartExistingAgent,
+      store.preferences.selectedMediator,
+      store.preferences.usePushNotifications,
+      logger,
       indyLedgers,
       createNewAgent,
-      logger,
       migrateIfRequired,
       warmUpCache,
-      store.preferences.usePushNotifications,
       refreshAttestationMonitor,
-    ]
+      restartExistingAgent,
+    ],
   )
 
   const shutdownAndClearAgentIfExists = useCallback(async () => {
