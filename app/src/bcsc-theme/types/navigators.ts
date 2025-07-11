@@ -58,7 +58,7 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.PhotoReview]: { photoPath: string }
   [BCSCScreens.VideoInstructions]: undefined
   [BCSCScreens.TakeVideo]: undefined
-  [BCSCScreens.VideoReview]: { videoPath: string }
+  [BCSCScreens.VideoReview]: { videoPath: string, videoThumbnailPath: string }
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.VerificationSuccess]: undefined
 }

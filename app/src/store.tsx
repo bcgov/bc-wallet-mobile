@@ -8,7 +8,7 @@ import {
 } from '@bifold/core'
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
-import { VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { VerificationPhotoUploadPayload, VerificationPrompt, VerificationVideoUploadPayload } from './bcsc-theme/api/hooks/useEvidenceApi'
 
 export interface IASEnvironment {
   name: string
@@ -45,6 +45,8 @@ export interface BCSCState {
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
   prompts?: VerificationPrompt[]
+  videoMetadata?: VerificationVideoUploadPayload
+  photoMetadata?: VerificationPhotoUploadPayload
   refreshToken?: string
   photoPath?: string
   videoPath?: string
@@ -369,8 +371,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.SAVE_VIDEO: {
-      const videoPath = (action.payload ?? []).pop()
-      const bcsc = { ...state.bcsc, videoPath }
+      const { videoPath, videoMetadata } = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, videoPath, videoMetadata }
       const newState = { ...state, bcsc }
       return newState
     }

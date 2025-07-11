@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { VerificationPhotoUploadPayload, VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { VerificationPhotoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, useAnimatedComponents, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useMemo, useState } from 'react'
@@ -10,9 +10,8 @@ import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import ImageResizer from 'react-native-image-resizer'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import type { OnLoadData } from 'react-native-video'
-import Video from 'react-native-video'
 import TakeMediaButton from './components/TakeMediaButton'
+import { CommonActions } from '@react-navigation/native'
 
 type InformationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.InformationRequired>
@@ -68,79 +67,12 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         }
       }
 
-      const getVideoInfo = async (
-        videoPath: string
-      ): Promise<{
-        duration: number
-        size: number
-        timestamp: number
-        filename: string
-      }> => {
-        return new Promise((resolve, reject) => {
-          // Get file stats first
-          RNFS.stat(videoPath)
-            .then((stats) => {
-              const filename = videoPath.split('/').pop() || 'video.mp4'
-              const timestamp = new Date(stats.mtime).getTime()
-
-              // Use a hidden Video component to get duration
-              let videoRef: Video | null = null
-
-              const cleanup = () => {
-                if (videoRef) {
-                  videoRef = null
-                }
-              }
-
-              // Create video element to extract metadata
-              const VideoComponent = (
-                <Video
-                  ref={(ref) => {
-                    videoRef = ref
-                  }}
-                  source={{ uri: videoPath }}
-                  paused={true}
-                  muted={true}
-                  resizeMode="contain"
-                  style={{ width: 0, height: 0, position: 'absolute', opacity: 0 }}
-                  onLoad={(data: OnLoadData) => {
-                    cleanup()
-                    resolve({
-                      duration: Math.round(data.duration), // Round to nearest second
-                      size: stats.size,
-                      timestamp,
-                      filename,
-                    })
-                  }}
-                  onError={(error: any) => {
-                    cleanup()
-                    reject(new Error(`Failed to load video metadata: ${error.error || 'Unknown error'}`))
-                  }}
-                />
-              )
-
-              // For now, we'll use a fallback approach since we can't render the component here
-              // We'll estimate duration or use a default value
-              // This is a limitation - ideally we'd use a native module for video metadata
-              resolve({
-                duration: 30, // Default fallback duration in seconds
-                size: stats.size,
-                timestamp,
-                filename,
-              })
-            })
-            .catch(reject)
-        })
-      }
-
-      const [{ width, height }, fileInfo, videoInfo] = await Promise.all([
+      const [{ width, height }, fileInfo] = await Promise.all([
         getImageDimensions(),
         getFileInfo(store.bcsc.photoPath!),
-        getVideoInfo(store.bcsc.videoPath!),
       ])
 
       console.log('Original image info:', { width, height, ...fileInfo })
-      console.log('Video info:', videoInfo)
       const convertedPhoto = await ImageResizer.createResizedImage(
         store.bcsc.photoPath!,
         width, // use original width
@@ -166,41 +98,31 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         sha256: photoSHA,
       }
 
-      // Read the video file and calculate its hash
-      const videoBytes = await RNFS.readFile(store.bcsc.videoPath!, 'base64')
-      const videoSHA = await hashBase64(videoBytes)
-      const prompts = store.bcsc.prompts!.map(({ id }, i) => ({
-        id,
-        prompted_at: i,
-      }))
-
-      // Prepare video upload payload
-      const videoUploadPayload: VerificationVideoUploadPayload = {
-        content_type: 'video/quicktime', // Assuming QuickTime format
-        content_length: videoInfo.size,
-        date: new Date().getTime(),
-        sha256: videoSHA,
-        duration: videoInfo.duration,
-        prompts,
-        filename: 'selfievideo.mov', // Use a default filename or extract from videoInfo if available
-      }
-
-      console.log('Video upload payload:', videoUploadPayload)
+      console.log('Video upload payload:', store.bcsc.videoMetadata)
 
       const response = await evidence.uploadPhotoEvidence(photoUploadPayload)
 
       console.log('Photo upload response:', response)
 
       // Upload video evidence
-      const videoResponse = await evidence.uploadVideoEvidence(videoUploadPayload)
-      console.log('Video upload response:', videoResponse)
-
+      const videoResponse = await evidence.uploadVideoEvidence(store.bcsc.videoMetadata!)
+        
       // const [{ uri: photoUri }, { uri: videoUri }] = await Promise.all([
       //   evidence.uploadPhotoEvidence(pngBytes, store.bcsc.deviceCode!),
       //   evidence.uploadVideoEvidence(videoBytes)
       // ])
-      const thaBigResponse = await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, { uploadUris: [response.upload_uri, videoResponse.upload_uri], sha256: store.bcsc.verificationRequestSha })
+      const thaBigResponse = await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
+        upload_uris: [response.upload_uri, videoResponse.upload_uri],
+        sha256: store.bcsc.verificationRequestSha!,
+      })
       console.log('Verification request response:', JSON.stringify(thaBigResponse, null, 2))
+      dispatch({type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [true] })
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.SetupSteps }]
+        })
+      )
     } catch (error) {
       console.error('Error sending verification request:', error)
       // Handle error, e.g., show an alert or log the error

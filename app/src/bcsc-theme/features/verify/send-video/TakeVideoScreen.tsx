@@ -122,6 +122,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     startTimer() // Start the timer when recording begins
 
     cameraRef.current?.startRecording({
+      fileType: 'mp4',
       onRecordingError: (error) => {
         logger.error(`Recording error: ${error}`)
         stopTimer() // Stop timer on error
@@ -130,13 +131,11 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       onRecordingFinished: async (video) => {
         setRecordingInProgress(false)
         logger.info(`Recording finished: ${video}`)
-        const snapshot = await cameraRef.current?.takeSnapshot()
-        dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [video.path] })
-        dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [snapshot?.path] })
+        const snapshot = await cameraRef.current!.takeSnapshot()
         stopTimer() // Stop timer when manually stopping recording
-        // TODO implement this navigation
         navigation.navigate(BCSCScreens.VideoReview, {
           videoPath: video.path,
+          videoThumbnailPath: snapshot.path,
         })
       },
     })

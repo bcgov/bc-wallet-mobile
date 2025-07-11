@@ -379,6 +379,8 @@ export class AppContainer implements Container {
       bcsc.videoPath = undefined
       bcsc.videoThumbnailPath = undefined
       bcsc.prompts = undefined
+      bcsc.photoMetadata = undefined
+      bcsc.videoMetadata = undefined
 
       const state = {
         loginAttempt: { ...initialState.loginAttempt, ...loginAttempt },
