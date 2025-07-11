@@ -17,6 +17,14 @@ export enum BCSCScreens {
   MismatchedSerial = 'BCSCMismatchedSerial',
   VerificationMethodSelection = 'BCSCVerificationMethodSelection',
   VerifyInPerson = 'BCSCVerifyInPerson',
+  InformationRequired = 'BCSCInformationRequired',
+  PhotoInstructions = 'BCSCPhotoInstructions',
+  TakePhoto = 'BCSCTakePhoto',
+  PhotoReview = 'BCSCPhotoReview',
+  VideoInstructions = 'BCSCVideoInstructions',
+  TakeVideo = 'BCSCTakeVideo',
+  VideoReview = 'BCSCVideoReview',
+  PendingReview = 'BCSCPendingReview',
   VerificationSuccess = 'BCSCVerificationSuccess',
   ManualPairingCode = 'BCSCManualPairingCode',
   PairingConfirmation = 'BCSCPairingConfirmation',
@@ -44,5 +52,13 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.MismatchedSerial]: undefined
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
+  [BCSCScreens.InformationRequired]: undefined
+  [BCSCScreens.PhotoInstructions]: undefined
+  [BCSCScreens.TakePhoto]: undefined
+  [BCSCScreens.PhotoReview]: { photoPath: string }
+  [BCSCScreens.VideoInstructions]: undefined
+  [BCSCScreens.TakeVideo]: undefined
+  [BCSCScreens.VideoReview]: { videoPath: string, videoThumbnailPath: string }
+  [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.VerificationSuccess]: undefined
 }

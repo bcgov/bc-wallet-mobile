@@ -46,4 +46,16 @@ RCT_EXTERN_METHOD(getDeviceCodeRequestBody:(NSString *)deviceCode
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(decodePayload:(NSString *)jweString
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(createEvidenceRequestJWT:(NSString *)deviceCode
+                  clientID:(NSString *)clientID
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(hashBase64:(NSString *)base64
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 @end

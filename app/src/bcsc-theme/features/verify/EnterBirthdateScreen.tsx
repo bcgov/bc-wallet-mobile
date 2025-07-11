@@ -64,7 +64,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     try {
       setLoading(true)
       dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [date] })
-      const { expires_in, user_code, device_code, verified_email } = await authorization.verifyInPerson(
+      const { expires_in, user_code, device_code, verified_email } = await authorization.authorizeDevice(
         store.bcsc.serial,
         date
       )
@@ -94,9 +94,13 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText style={{ marginBottom: Spacing.sm}}>{t('Unified.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.sm }}>
+          {t('Unified.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
+        </ThemedText>
         <View style={styles.lineBreak} />
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>{t('Unified.Birthdate.Heading')}</ThemedText>
+        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+          {t('Unified.Birthdate.Heading')}
+        </ThemedText>
         <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.Birthdate.Paragraph')}</ThemedText>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <DatePicker

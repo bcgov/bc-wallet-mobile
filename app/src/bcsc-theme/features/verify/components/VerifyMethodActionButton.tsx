@@ -1,5 +1,5 @@
 import { ThemedText, useTheme } from '@bifold/core'
-import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type VerifyMethodActionButtonProps = {
@@ -8,11 +8,19 @@ type VerifyMethodActionButtonProps = {
   title: string
   description: string
   onPress: () => void
+  loading?: boolean
 }
 
 const iconSize = 36
 
-const VerifyMethodActionButton = ({ style = {}, title, description, icon, onPress }: VerifyMethodActionButtonProps) => {
+const VerifyMethodActionButton = ({
+  style = {},
+  title,
+  description,
+  icon,
+  onPress,
+  loading,
+}: VerifyMethodActionButtonProps) => {
   const { ColorPallet, Spacing, TextTheme } = useTheme()
 
   const styles = StyleSheet.create({
@@ -44,7 +52,12 @@ const VerifyMethodActionButton = ({ style = {}, title, description, icon, onPres
   })
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => {
+        if (!loading) onPress()
+      }}
+    >
       <View style={styles.iconContainer}>
         <Icon name={icon} size={iconSize} color={ColorPallet.brand.primary} />
       </View>
@@ -55,7 +68,11 @@ const VerifyMethodActionButton = ({ style = {}, title, description, icon, onPres
         <ThemedText numberOfLines={0}>{description}</ThemedText>
       </View>
       <View style={styles.chevronContainer}>
-        <Icon name={'chevron-right'} size={iconSize} color={TextTheme.normal.color} />
+        {loading ? (
+          <ActivityIndicator size="small" color={TextTheme.normal.color} />
+        ) : (
+          <Icon name={'chevron-right'} size={iconSize} color={TextTheme.normal.color} />
+        )}
       </View>
     </TouchableOpacity>
   )

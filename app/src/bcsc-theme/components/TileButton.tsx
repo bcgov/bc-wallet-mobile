@@ -1,5 +1,5 @@
 import { testIdWithKey, useTheme } from '@bifold/core'
-import { Text, View, Image, StyleSheet, Pressable, ImageSourcePropType, ViewStyle } from 'react-native'
+import { Text, View, Image, StyleSheet, ImageSourcePropType, ViewStyle, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 export type TileButtonProps = {
@@ -41,7 +41,7 @@ const TileButton: React.FC<TileButtonProps> = ({
   })
 
   return (
-    <Pressable
+    <TouchableOpacity
       style={style}
       onPress={onPress}
       testID={testIdWithKey(testIDKey)}
@@ -57,7 +57,7 @@ const TileButton: React.FC<TileButtonProps> = ({
           <Image source={imgSrc} style={{ flex: 1, height: 100, width: 150, marginTop: 16 }} resizeMode={'contain'} />
         ) : null}
       </View>
-    </Pressable>
+    </TouchableOpacity>
   )
 }
 

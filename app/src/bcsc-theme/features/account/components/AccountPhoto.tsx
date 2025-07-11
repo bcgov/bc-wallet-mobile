@@ -1,9 +1,9 @@
 import { useTheme } from '@bifold/core'
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import { Image, StyleSheet, View } from 'react-native'
 
 // Placholder for now
-const AccountPhoto: React.FC = () => {
+const AccountPhoto: React.FC<{ photoUri?: string }> = ({ photoUri }) => {
   const { Spacing, ColorPallet } = useTheme()
 
   const styles = StyleSheet.create({
@@ -23,7 +23,7 @@ const AccountPhoto: React.FC = () => {
     },
   })
 
-  return <View style={styles.container}>{/* <Image source={{ uri: photoUri }} style={styles.photo} /> */}</View>
+  return <View style={styles.container}>{photoUri ? <Image source={{ uri: photoUri }} style={styles.photo} /> : null}</View>
 }
 
 export default AccountPhoto

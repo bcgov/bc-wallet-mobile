@@ -307,7 +307,7 @@ const Developer: React.FC = () => {
   }
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
       <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
