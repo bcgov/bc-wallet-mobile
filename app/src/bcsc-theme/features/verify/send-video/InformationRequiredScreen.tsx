@@ -98,7 +98,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         sha256: photoSHA,
       }
 
-      console.log('Video upload payload:', store.bcsc.videoMetadata)
+      console.log('Video upload payload:')
+      console.log(JSON.stringify(store.bcsc.videoMetadata, null, 2))
 
       const response = await evidence.uploadPhotoEvidence(photoUploadPayload)
 
@@ -111,6 +112,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       //   evidence.uploadPhotoEvidence(pngBytes, store.bcsc.deviceCode!),
       //   evidence.uploadVideoEvidence(videoBytes)
       // ])
+      console.log('Video upload response:', videoResponse)
       const thaBigResponse = await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
         upload_uris: [response.upload_uri, videoResponse.upload_uri],
         sha256: store.bcsc.verificationRequestSha!,
@@ -124,6 +126,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         })
       )
     } catch (error) {
+      console.error(JSON.stringify(error, null, 2))
       console.error('Error sending verification request:', error)
       // Handle error, e.g., show an alert or log the error
       return

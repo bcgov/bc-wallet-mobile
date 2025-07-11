@@ -234,6 +234,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           video={true}
           onInitialized={onInitialized}
           onError={onError}
+          audio={true}
         />
 
         {/* Top overlay with prompt text */}

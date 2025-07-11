@@ -47,7 +47,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       <VerifyMethodActionButton
         title={'Send a video'}
         description={`Record a short video and we'll review it to verify your identity.`}
-        icon={'repeat'}
+        icon={'send'}
         onPress={handlePressSendVideo}
         style={{ marginBottom: Spacing.xl }}
         loading={loading}

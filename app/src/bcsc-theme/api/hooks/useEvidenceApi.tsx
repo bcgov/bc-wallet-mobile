@@ -44,7 +44,7 @@ export interface VerificationPhotoUploadPayload {
 export interface VerificationVideoUploadPayload {
   content_type: string
   content_length: number
-  date: number
+  date: number // enoch timestamp in seconds
   sha256: string // hashed copy of the video
   duration: number // video duration in seconds
   prompts: VerificationPromptUploadPayload[]

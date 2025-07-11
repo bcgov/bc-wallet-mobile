@@ -104,10 +104,10 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   }
 
   const onVideoLoad = async (data: OnLoadData) => {
-    const duration = Math.floor(data.duration)
-    const { size, mtime } = await RNFS.stat(videoPath)
-    const filename = videoPath.split('/').pop() || 'video.mp4'
-    const timestamp = new Date(mtime).getTime()
+    const duration = Math.ceil(data.duration)
+    const { mtime } = await RNFS.stat(videoPath)
+    const filename = 'selfieVideo.mp4'
+    const date = Math.floor(mtime / 1000)
     const videoBytes = await RNFS.readFile(videoPath, 'base64')
     const videoSHA = await hashBase64(videoBytes)
     const prompts = store.bcsc.prompts!.map(({ id }, i) => ({
@@ -117,8 +117,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
 
     setVideoMetadata({
       content_type: 'video/mp4',
-      content_length: size,
-      date: timestamp,
+      content_length: videoBytes.length,
+      date,
       sha256: videoSHA,
       duration,
       filename,
@@ -137,6 +137,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
             ref={videoRef}
             source={{ uri: videoPath }}
             paused={paused}
+            audioOutput={'speaker'}
             repeat
             resizeMode={'cover'}
             style={styles.video}
