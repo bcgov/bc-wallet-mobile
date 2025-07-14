@@ -12,6 +12,7 @@ import ImageResizer from 'react-native-image-resizer'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
 import { CommonActions } from '@react-navigation/native'
+import base64 from 'base64-js'
 
 type InformationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.InformationRequired>
@@ -87,10 +88,11 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
 
       // Read the PNG file as base64 bytes
       const pngBytes = await RNFS.readFile(convertedPhoto.uri, 'base64')
+      const data = base64.toByteArray(pngBytes)
       const photoSHA = await hashBase64(pngBytes)
 
       const photoUploadPayload: VerificationPhotoUploadPayload = {
-        content_length: pngBytes.length,
+        content_length: data.byteLength,
         content_type: 'image/png',
         date: Math.floor(fileInfo.timestamp),
         label: 'front',
@@ -98,31 +100,36 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         sha256: photoSHA,
       }
 
-      console.log('Video upload payload:')
-      console.log(JSON.stringify(store.bcsc.videoMetadata, null, 2))
+      console.log('______________')
+      console.log('______________')
+      console.log('______________')
+      console.log('______________')
+      console.log('______________')
 
-      const response = await evidence.uploadPhotoEvidence(photoUploadPayload)
+      const photoResponse = await evidence.uploadPhotoEvidenceMetadata(photoUploadPayload)
 
-      console.log('Photo upload response:', response)
+      console.log('Photo payload:', JSON.stringify(photoUploadPayload, null, 2))
+      console.log('Photo upload response:', photoResponse)
+      await evidence.uploadPhotoEvidenceBinary(photoResponse.upload_uri, data)
 
       // Upload video evidence
-      const videoResponse = await evidence.uploadVideoEvidence(store.bcsc.videoMetadata!)
-        
+      // const videoResponse = await evidence.uploadVideoEvidenceMetadata(store.bcsc.videoMetadata!)
+
       // const [{ uri: photoUri }, { uri: videoUri }] = await Promise.all([
       //   evidence.uploadPhotoEvidence(pngBytes, store.bcsc.deviceCode!),
       //   evidence.uploadVideoEvidence(videoBytes)
       // ])
-      console.log('Video upload response:', videoResponse)
-      const thaBigResponse = await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
-        upload_uris: [response.upload_uri, videoResponse.upload_uri],
-        sha256: store.bcsc.verificationRequestSha!,
-      })
-      console.log('Verification request response:', JSON.stringify(thaBigResponse, null, 2))
-      dispatch({type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [true] })
+      // console.log('Video upload response:', videoResponse)
+      // const thaBigResponse = await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
+      //   upload_uris: [photoResponse.upload_uri, videoResponse.upload_uri],
+      //   sha256: store.bcsc.verificationRequestSha!,
+      // })
+      // console.log('Verification request response:', JSON.stringify(thaBigResponse, null, 2))
+      // dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [true] })
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: BCSCScreens.SetupSteps }]
+          routes: [{ name: BCSCScreens.SetupSteps }],
         })
       )
     } catch (error) {
@@ -163,7 +170,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           onPress={onPressSend}
           testID={'SendToServiceBCNow'}
           accessibilityLabel={'Send to Service BC Now'}
-          disabled={!uploadedBoth || loading}
+          disabled={loading}
         >
           {loading && <ButtonLoading />}
         </Button>

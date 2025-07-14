@@ -81,6 +81,7 @@
     "@react-navigation/stack": "^6.3.21",
     "axios": "1.4.0",
     "base-64": "^1.0.0",
+    "base64-js": "^1.5.1",
     "buffer": "6.0.3",
     "credo-ts-indy-vdr-proxy-client": "0.2.3",
     "fast-text-encoding": "^1.0.6",

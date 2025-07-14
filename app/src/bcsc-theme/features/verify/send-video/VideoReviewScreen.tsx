@@ -12,6 +12,8 @@ import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import type { OnLoadData } from 'react-native-video'
 import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import base64 from 'base64-js'
 
 type VideoReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VideoReview>
@@ -24,6 +26,7 @@ type VideoReviewScreenProps = {
 }
 
 const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
+  const { evidence } = useApi()
   const { ColorPallet, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { width } = useWindowDimensions()
@@ -108,16 +111,29 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     const { mtime } = await RNFS.stat(videoPath)
     const filename = 'selfieVideo.mp4'
     const date = Math.floor(mtime / 1000)
-    const videoBytes = await RNFS.readFile(videoPath, 'base64')
-    const videoSHA = await hashBase64(videoBytes)
+    const baseBase64 = await RNFS.readFile(videoPath, 'base64')
+    const videoSHA = await hashBase64(baseBase64)
+    const videoBytes = base64.toByteArray(baseBase64)
     const prompts = store.bcsc.prompts!.map(({ id }, i) => ({
       id,
       prompted_at: i,
     }))
+    const metadataResponse = await evidence.uploadVideoEvidenceMetadata({
+      content_type: 'video/mp4',
+      content_length: videoBytes.byteLength,
+      date,
+      sha256: videoSHA,
+      duration,
+      filename,
+      prompts,
+    })
+
+    const temp = await evidence.uploadVideoEvidenceBinary(metadataResponse.upload_uri, videoBytes)
+    console.log(temp)
 
     setVideoMetadata({
       content_type: 'video/mp4',
-      content_length: videoBytes.length,
+      content_length: videoBytes.byteLength,
       date,
       sha256: videoSHA,
       duration,

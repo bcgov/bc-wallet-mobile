@@ -81,7 +81,9 @@ const useEvidenceApi = () => {
     })
   }
 
-  const uploadPhotoEvidence = async (payload: VerificationPhotoUploadPayload): Promise<UploadEvidenceResponseData> => {
+  const uploadPhotoEvidenceMetadata = async (
+    payload: VerificationPhotoUploadPayload
+  ): Promise<UploadEvidenceResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.post<UploadEvidenceResponseData>(
@@ -96,7 +98,9 @@ const useEvidenceApi = () => {
       return data
     })
   }
-  const uploadVideoEvidence = async (payload: VerificationVideoUploadPayload): Promise<UploadEvidenceResponseData> => {
+  const uploadVideoEvidenceMetadata = async (
+    payload: VerificationVideoUploadPayload
+  ): Promise<UploadEvidenceResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.post<UploadEvidenceResponseData>(
@@ -215,10 +219,40 @@ const useEvidenceApi = () => {
     })
   }
 
+  const uploadPhotoEvidenceBinary = async (url: string, binaryData: any): Promise<any> => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.put<any>(url, binaryData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'image/png',
+          Accept: 'image/png',
+        },
+      })
+      return data
+    })
+  }
+
+  const uploadVideoEvidenceBinary = async (url: string, binaryData: any): Promise<any> => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.put<any>(url, binaryData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'video/mp4',
+          Accept: 'video/mp4',
+        },
+      })
+      return data
+    })
+  }
+
   return {
     createVerificationRequest,
-    uploadPhotoEvidence,
-    uploadVideoEvidence,
+    uploadPhotoEvidenceMetadata,
+    uploadVideoEvidenceMetadata,
+    uploadPhotoEvidenceBinary,
+    uploadVideoEvidenceBinary,
     sendVerificationRequest,
     getVerificationRequestStatus,
     cancelVerificationRequest,

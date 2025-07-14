@@ -626,8 +626,6 @@ class BcscCore: NSObject {
         let decodedData = Data(base64Encoded: base64String, options: Data.Base64DecodingOptions(rawValue: UInt(0)))
         
         let base64Decoded: String = String(data: decodedData! as Data, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue))!
-        print("TOKEN GENERATED")
-        print(base64Decoded)
         resolve(base64Decoded)
     } catch {
         reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)

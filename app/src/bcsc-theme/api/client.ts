@@ -77,7 +77,8 @@ class BCSCService {
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
     this.client.interceptors.response.use(undefined, (error: AxiosError) => {
-      this.logger.error(`${error.name}: ${error.code}`, { message: `IAS API Error: ${error.message}` })
+      console.log(JSON.stringify(error.response?.data, null, 2))
+      this.logger.error(`${error.name}: ${error.code}`, { message: `IAS API Error: ${error.message}`, error: error.response?.data })
       return Promise.reject(error)
     })
   }
