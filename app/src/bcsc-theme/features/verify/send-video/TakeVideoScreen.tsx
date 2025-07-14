@@ -5,7 +5,7 @@ import { Button, ButtonType, ColorPallet, ThemedText, TOKENS, useServices, useSt
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
-import { StyleSheet, View, Text, Alert, TouchableOpacity } from 'react-native'
+import { StyleSheet, View, Text, Alert, TouchableOpacity, Animated } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 
@@ -16,20 +16,31 @@ type PhotoInstructionsScreenProps = {
 }
 
 const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
-  const { Spacing } = useTheme()
+  const { Spacing, TextTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
+
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
   const device = useCameraDevice('front')
   const [isActive, setIsActive] = useState(false)
-  const [prompt, setPrompt] = useState('')
+  const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const promptOpacity = useRef(new Animated.Value(1)).current
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  useEffect(() => {
+    promptOpacity.setValue(0)
+    Animated.timing(promptOpacity, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start()
+  }, [prompt])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -105,13 +116,10 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   }, [])
 
   const startRecording = useCallback(async () => {
-    // Count down from 3 before starting the recording
-    setPrompt('Recording will start in\n3')
     for (let i = 2; i > 0; i--) {
-      logger.info(`Starting recording in ${i} seconds...`)
       await new Promise((resolve) =>
         setTimeout(() => {
-          setPrompt(`Recording will start in\n${i}`)
+          setPrompt(`${i}`)
           resolve(true)
         }, 1000)
       )
@@ -239,9 +247,20 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
 
         {/* Top overlay with prompt text */}
         <View style={styles.promptContainer}>
-          <ThemedText variant={'headingTwo'} style={{ textAlign: 'center' }}>
-            {prompt}
-          </ThemedText>
+          {recordingInProgress ? (
+            <Animated.Text style={[{ textAlign: 'center', opacity: promptOpacity }, TextTheme.headingTwo]}>
+              {prompt}
+            </Animated.Text>
+          ) : (
+            <>
+              <ThemedText variant={'headingTwo'} style={{ textAlign: 'center' }}>
+                Recording will start in
+              </ThemedText>
+              <Animated.Text style={[{ textAlign: 'center', opacity: promptOpacity }, TextTheme.headingTwo]}>
+                {prompt}
+              </Animated.Text>
+            </>
+          )}
         </View>
 
         {/* Bottom overlay with controls */}
