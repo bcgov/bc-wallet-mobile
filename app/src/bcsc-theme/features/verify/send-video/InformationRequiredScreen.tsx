@@ -73,7 +73,6 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         getFileInfo(store.bcsc.photoPath!),
       ])
 
-      console.log('Original image info:', { width, height, ...fileInfo })
       const convertedPhoto = await ImageResizer.createResizedImage(
         store.bcsc.photoPath!,
         width, // use original width
@@ -100,32 +99,27 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         sha256: photoSHA,
       }
 
-      console.log('______________')
-      console.log('______________')
-      console.log('______________')
-      console.log('______________')
-      console.log('______________')
-
+      // Upload photo metadata
       const photoResponse = await evidence.uploadPhotoEvidenceMetadata(photoUploadPayload)
 
-      console.log('Photo payload:', JSON.stringify(photoUploadPayload, null, 2))
-      console.log('Photo upload response:', photoResponse)
-      await evidence.uploadPhotoEvidenceBinary(photoResponse.upload_uri, data)
+      // Upload photo binary
+      const uploadResponse = await evidence.uploadPhotoEvidenceBinary(photoResponse.upload_uri, data)
 
       // Upload video evidence
-      // const videoResponse = await evidence.uploadVideoEvidenceMetadata(store.bcsc.videoMetadata!)
+      const videoResponse = await evidence.uploadVideoEvidenceMetadata(store.bcsc.videoMetadata!)
 
-      // const [{ uri: photoUri }, { uri: videoUri }] = await Promise.all([
-      //   evidence.uploadPhotoEvidence(pngBytes, store.bcsc.deviceCode!),
-      //   evidence.uploadVideoEvidence(videoBytes)
-      // ])
-      // console.log('Video upload response:', videoResponse)
-      // const thaBigResponse = await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
-      //   upload_uris: [photoResponse.upload_uri, videoResponse.upload_uri],
-      //   sha256: store.bcsc.verificationRequestSha!,
-      // })
-      // console.log('Verification request response:', JSON.stringify(thaBigResponse, null, 2))
-      // dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [true] })
+      // Fetch video file, convert to base64, and upload
+      const videoBase64 = await RNFS.readFile(store.bcsc.videoPath!, 'base64')
+      const videoBytes = base64.toByteArray(videoBase64)
+
+      const response = await evidence.uploadVideoEvidenceBinary(videoResponse.upload_uri, videoBytes)
+
+      await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
+        upload_uris: [photoResponse.upload_uri, videoResponse.upload_uri],
+        sha256: store.bcsc.verificationRequestSha!,
+      })
+
+      dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [true] })
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -170,7 +164,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           onPress={onPressSend}
           testID={'SendToServiceBCNow'}
           accessibilityLabel={'Send to Service BC Now'}
-          disabled={loading}
+          disabled={!uploadedBoth || loading}
         >
           {loading && <ButtonLoading />}
         </Button>

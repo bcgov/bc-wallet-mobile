@@ -45,10 +45,6 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
     },
   })
 
-  useEffect(() => {
-    console.log('VideoInstructionsScreen: Prompts updated', store.bcsc.prompts)
-  }, [store.bcsc.prompts])
-
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>

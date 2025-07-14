@@ -28,7 +28,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const handlePressSendVideo = async () => {
     try {
       setLoading(true)
-      const { sha256, id, prompts } = await evidence.createVerificationRequest(store.bcsc.deviceCode!)
+      const { sha256, id, prompts } = await evidence.createVerificationRequest()
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
       navigation.navigate(BCSCScreens.InformationRequired)

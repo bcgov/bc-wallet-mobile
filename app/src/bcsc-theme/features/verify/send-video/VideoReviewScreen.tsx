@@ -118,18 +118,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       id,
       prompted_at: i,
     }))
-    const metadataResponse = await evidence.uploadVideoEvidenceMetadata({
-      content_type: 'video/mp4',
-      content_length: videoBytes.byteLength,
-      date,
-      sha256: videoSHA,
-      duration,
-      filename,
-      prompts,
-    })
-
-    const temp = await evidence.uploadVideoEvidenceBinary(metadataResponse.upload_uri, videoBytes)
-    console.log(temp)
 
     setVideoMetadata({
       content_type: 'video/mp4',
