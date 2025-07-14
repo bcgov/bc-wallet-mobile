@@ -178,7 +178,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   })
 
   if (!device || !hasPermission) {
-    // return view with error message
+    // return placeholder view
     return (
       <View style={[styles.container, style]}>
         <View style={styles.overlayContainer}>
@@ -201,7 +201,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         ref={camera}
         style={styles.camera}
         device={device}
-        isActive={true && hasPermission}
+        isActive={hasPermission}
         codeScanner={codeScanner}
         torch={torchEnabled ? 'on' : 'off'}
       />
