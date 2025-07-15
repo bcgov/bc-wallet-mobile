@@ -365,8 +365,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.SAVE_PHOTO: {
-      const photoPath = (action.payload ?? []).pop()
-      const bcsc = { ...state.bcsc, photoPath }
+      const { photoPath, photoMetadata } = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, photoPath, photoMetadata }
       const newState = { ...state, bcsc }
       return newState
     }

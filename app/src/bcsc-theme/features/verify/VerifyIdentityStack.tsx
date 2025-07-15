@@ -18,6 +18,9 @@ import PhotoReviewScreen from './send-video/PhotoReviewScreen'
 import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
+import VideoTooLongScreen from './send-video/VideoTooLongScreen'
+import PendingReviewScreen from './send-video/PendingReviewScreen'
+import SuccessfullySentScreen from './send-video/SuccessfullySentScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -81,6 +84,20 @@ const VerifyIdentityStack = () => {
       <Stack.Screen
         name={BCSCScreens.VideoReview}
         component={VideoReviewScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PendingReview}
+        component={PendingReviewScreen}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VideoTooLong}
+        component={VideoTooLongScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.SuccessfullySent}
+        component={SuccessfullySentScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

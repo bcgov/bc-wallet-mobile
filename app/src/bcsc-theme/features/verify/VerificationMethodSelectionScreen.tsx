@@ -1,12 +1,12 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
-import { useState } from 'react'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCDispatchAction, BCState } from '@/store'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerificationMethodSelection>
@@ -49,10 +49,11 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         description={`Record a short video and we'll review it to verify your identity.`}
         icon={'send'}
         onPress={handlePressSendVideo}
-        style={{ marginBottom: Spacing.xl }}
+        style={{ marginBottom: Spacing.xxl }}
         loading={loading}
+        disabled={loading}
       />
-      <ThemedText variant={'bold'} style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>
+      <ThemedText variant={'bold'} style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>
         Cannot send a video?
       </ThemedText>
       <VerifyMethodActionButton
@@ -61,14 +62,14 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         icon={'video'}
         onPress={() => null}
         style={{ borderBottomWidth: 0 }}
-        loading={loading}
+        disabled={loading}
       />
       <VerifyMethodActionButton
         title={'In person'}
         description={`Find out where to go and what to bring.`}
         icon={'account'}
         onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
-        loading={loading}
+        disabled={loading}
       />
     </SafeAreaView>
   )

@@ -59,6 +59,10 @@ export const BCSCColorPallet: IColorPallet = {
     buttonText: GrayscaleColors.white,
     tabBarInactive: GrayscaleColors.white,
   },
+  semantic: {
+    ...BCWalletTheme.ColorPallet.semantic,
+    success: '#89CE00',
+  }
 }
 
 export const BCSCTextTheme: ITextTheme = {

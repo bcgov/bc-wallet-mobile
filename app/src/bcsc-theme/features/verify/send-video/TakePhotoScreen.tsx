@@ -1,27 +1,86 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from "@/bcsc-theme/types/navigators"
-import { ThemedText, TOKENS, useServices, useTheme } from "@bifold/core"
-import { StackNavigationProp } from "@react-navigation/stack"
-import { useEffect, useState, useRef } from "react"
-import { StyleSheet, View, Text, Alert, TouchableOpacity, useWindowDimensions } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { Camera, useCameraDevice, useCameraPermission } from "react-native-vision-camera"
-import MaskedView from "@react-native-masked-view/masked-view"
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useEffect, useState, useRef } from 'react'
+import { StyleSheet, View, Text, Alert, TouchableOpacity, useWindowDimensions } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import MaskedView from '@react-native-masked-view/masked-view'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
 }
 
 const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPallet } = useTheme()
   const { hasPermission, requestPermission } = useCameraPermission()
   const device = useCameraDevice('front')
   const [isActive, setIsActive] = useState(false)
+  const [torchOn, setTorchOn] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { width, height } = useWindowDimensions()
-  const maskWidth = width - Spacing.md * 2
-  const maskHeight = height * 0.6
+  const { width } = useWindowDimensions()
+  const maskWidth = width - Spacing.lg * 2
+  const maskHeight = width * 1.2
   const maskBorderRadius = maskWidth / 2
+  const hasTorch = device?.hasTorch ?? false
+
+  const styles = StyleSheet.create({
+    pageContainer: {
+      flex: 1,
+      position: 'relative',
+    },
+    camera: {
+      flex: 1,
+    },
+    mask: {
+      flex: 1,
+      backgroundColor: ColorPallet.notification.popupOverlay,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    controlsContainer: {
+      position: 'absolute',
+      bottom: 30,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-evenly',
+      paddingHorizontal: Spacing.lg,
+    },
+    instructionText: {
+      color: 'white',
+      textAlign: 'center',
+      backgroundColor: 'transparent',
+      position: 'absolute',
+      fontWeight: 'normal',
+      top: '5%',
+      left: 0,
+      right: 0,
+      zIndex: 5,
+      paddingHorizontal: Spacing.md,
+    },
+    captureButton: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      backgroundColor: 'white',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    captureButtonInner: {
+      width: 64,
+      height: 64,
+      borderRadius: 30,
+      backgroundColor: 'white',
+      borderColor: '#CCC',
+      borderWidth: 2,
+    },
+  })
+
+  const toggleTorch = () => setTorchOn((prev) => !prev)
 
   const takePhoto = async () => {
     try {
@@ -29,10 +88,10 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         const photo = await cameraRef.current.takePhoto({
           flash: 'off',
         })
-        
+
         // Navigate to photo review screen with the photo data
         navigation.navigate(BCSCScreens.PhotoReview, {
-          photoPath: photo.path
+          photoPath: photo.path,
         })
 
         logger.info(`Photo taken and saved temporarily: ${photo.path}`)
@@ -52,11 +111,9 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       if (!hasPermission) {
         const permission = await requestPermission()
         if (!permission) {
-          Alert.alert(
-            'Camera Permission Required',
-            'Please enable camera permission to take a photo.',
-            [{ text: 'OK', onPress: () => navigation.goBack() }]
-          )
+          Alert.alert('Camera Permission Required', 'Please enable camera permission to take a photo.', [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ])
           return
         }
       }
@@ -64,7 +121,6 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
 
     checkPermissions()
   }, [hasPermission, requestPermission, navigation])
-
 
   const onInitialized = () => {
     setIsActive(true)
@@ -75,58 +131,6 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     console.error('Camera error:', error)
     Alert.alert('Camera Error', 'There was an issue with the camera. Please try again.')
   }
-
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      position: 'relative',
-    },
-    camera: {
-      flex: 1,
-    },
-    controlsContainer: {
-      position: 'absolute',
-      bottom: 30,
-      left: 0,
-      right: 0,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    instructionText: {
-      color: 'white',
-      textAlign: 'center',
-      backgroundColor: 'transparent',
-      position: 'absolute',
-      top: 65,
-      left: 0,
-      right: 0,
-      zIndex: 5,
-      paddingHorizontal: Spacing.md,
-    },
-    cancelButton: {
-      position: 'absolute',
-      left: 30,
-      paddingVertical: 10,
-      paddingHorizontal: 15,
-    },
-    captureButton: {
-      width: 70,
-      height: 70,
-      borderRadius: 35,
-      backgroundColor: 'white',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    captureButtonInner: {
-      width: 64,
-      height: 64,
-      borderRadius: 30,
-      backgroundColor: 'white',
-      borderColor: '#CCC',
-      borderWidth: 2,
-    }
-  })
 
   if (!hasPermission) {
     return (
@@ -154,8 +158,15 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         <MaskedView
           style={{ flex: 1, backgroundColor: 'black' }}
           maskElement={
-            <View style={{flex: 1, backgroundColor: 'rgba(0, 0, 0, 0.6)', alignItems: 'center', justifyContent: 'center'}}>
-              <View style={{ backgroundColor: 'white', width: maskWidth, height: maskHeight, borderRadius: maskBorderRadius }}/>
+            <View style={styles.mask}>
+              <View
+                style={{
+                  backgroundColor: 'white',
+                  width: maskWidth,
+                  height: maskHeight,
+                  borderRadius: maskBorderRadius,
+                }}
+              />
             </View>
           }
         >
@@ -167,18 +178,26 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
             photo={true}
             onInitialized={onInitialized}
             onError={onError}
+            torch={torchOn ? 'on' : 'off'}
           />
         </MaskedView>
-        <ThemedText style={styles.instructionText}>
-          Position your face within the oval frame
+        <ThemedText style={styles.instructionText} variant={'headingFour'}>
+          Position your face within the oval and press the button on the screen
         </ThemedText>
         <View style={styles.controlsContainer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+          <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
             <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
           </TouchableOpacity>
           <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
             <View style={styles.captureButtonInner} />
           </TouchableOpacity>
+          {hasTorch ? (
+            <TouchableOpacity style={{ flex: 1 }} onPress={toggleTorch}>
+              <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPallet.grayscale.white} />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
         </View>
       </View>
     </SafeAreaView>

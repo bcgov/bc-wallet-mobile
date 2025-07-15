@@ -69,7 +69,11 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         </ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>Be the only person in the photo</ThemedText>
+          <ThemedText>Keep the video under 30 seconds in length</ThemedText>
+        </View>
+        <View style={styles.bulletContainer}>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>Be the only person in the video</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
@@ -97,7 +101,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
           Videos with inappropriate, offensive, or harassing behavior will not be accepted.
         </ThemedText>
         <Button
-          buttonType={ButtonType.Critical}
+          buttonType={ButtonType.Primary}
           title={'Start Recording Video'}
           onPress={() => {
             navigation.navigate(BCSCScreens.TakeVideo)

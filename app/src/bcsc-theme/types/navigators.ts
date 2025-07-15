@@ -24,7 +24,9 @@ export enum BCSCScreens {
   VideoInstructions = 'BCSCVideoInstructions',
   TakeVideo = 'BCSCTakeVideo',
   VideoReview = 'BCSCVideoReview',
+  VideoTooLong = 'BCSCVideoTooLong',
   PendingReview = 'BCSCPendingReview',
+  SuccessfullySent = 'BCSCSuccessfullySent',
   VerificationSuccess = 'BCSCVerificationSuccess',
   ManualPairingCode = 'BCSCManualPairingCode',
   PairingConfirmation = 'BCSCPairingConfirmation',
@@ -59,6 +61,8 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.VideoInstructions]: undefined
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string, videoThumbnailPath: string }
+  [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
+  [BCSCScreens.SuccessfullySent]: undefined
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.VerificationSuccess]: undefined
 }

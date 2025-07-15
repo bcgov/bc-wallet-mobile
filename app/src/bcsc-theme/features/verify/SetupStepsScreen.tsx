@@ -1,12 +1,13 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useMemo } from 'react'
 
 import { BCDispatchAction, BCState } from '@/store'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -16,7 +17,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { ColorPallet, Spacing, TextTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-
+  const { evidence, token } = useApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const serialNumber = store.bcsc.serial ?? null
   const emailAddress = store.bcsc.email ?? null
   const registered = useMemo(() => serialNumber && emailAddress, [serialNumber, emailAddress])
@@ -61,6 +63,46 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       alignSelf: 'flex-end',
     },
   })
+
+  const handleCheckStatus = async () => {
+    const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId!)
+    if (status === 'verified') {
+      const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode!, store.bcsc.userCode!)
+      if (refresh_token) {
+        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+      }
+      navigation.navigate(BCSCScreens.VerificationSuccess)
+    } else {
+      navigation.navigate(BCSCScreens.PendingReview)
+    }
+  }
+
+  const handleCancelVerification = async () => {
+    Alert.alert(
+      'Are you sure?',
+      'Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.',
+      [
+        {
+          text: 'Delete Verify Request',
+          onPress: async () => {
+            try {
+              await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId!)
+            } catch (error) {
+              logger.error(`Error cancelling verification request: ${error}`)
+            } finally {
+              dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [false] })
+              navigation.navigate(BCSCScreens.VerificationMethodSelection)
+            }
+          },
+        },
+        {
+          text: 'Cancel',
+          onPress: () => {},
+          style: 'cancel',
+        },
+      ]
+    )
+  }
 
   return (
     <View style={styles.container}>
@@ -159,13 +201,39 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       {store.bcsc.pendingVerification ? (
         <>
           <View style={styles.itemSeparator} />
-          <TouchableOpacity style={[styles.step, styles.titleRow, { backgroundColor: ColorPallet.brand.primary, justifyContent: 'space-between', paddingVertical: Spacing.md }]} onPress={() => navigation.navigate(BCSCScreens.VerificationStatus)}>
-            <ThemedText variant={'headingFour'} style={{ color: ColorPallet.brand.text }}>Check status</ThemedText>
+          <TouchableOpacity
+            style={[
+              styles.step,
+              styles.titleRow,
+              {
+                backgroundColor: ColorPallet.brand.primary,
+                justifyContent: 'space-between',
+                paddingVertical: Spacing.md,
+              },
+            ]}
+            onPress={handleCheckStatus}
+          >
+            <ThemedText variant={'headingFour'} style={{ color: ColorPallet.brand.text }}>
+              Check status
+            </ThemedText>
             <Icon name={'chevron-right'} color={ColorPallet.brand.text} size={32} />
           </TouchableOpacity>
           <View style={styles.itemSeparator} />
-          <TouchableOpacity style={[styles.step, styles.titleRow, { backgroundColor: ColorPallet.brand.primary, justifyContent: 'space-between', paddingVertical: Spacing.md }]} onPress={() => navigation.navigate(BCSCScreens.VerificationStatus)}>
-            <ThemedText variant={'headingFour'} style={{ color: ColorPallet.brand.text }}>Choose another way to verify</ThemedText>
+          <TouchableOpacity
+            style={[
+              styles.step,
+              styles.titleRow,
+              {
+                backgroundColor: ColorPallet.brand.primary,
+                justifyContent: 'space-between',
+                paddingVertical: Spacing.md,
+              },
+            ]}
+            onPress={handleCancelVerification}
+          >
+            <ThemedText variant={'headingFour'} style={{ color: ColorPallet.brand.text }}>
+              Choose another way to verify
+            </ThemedText>
             <Icon name={'chevron-right'} color={ColorPallet.brand.text} size={32} />
           </TouchableOpacity>
         </>

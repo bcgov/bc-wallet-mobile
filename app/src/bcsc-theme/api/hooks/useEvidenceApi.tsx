@@ -225,8 +225,8 @@ const useEvidenceApi = () => {
       const { data } = await apiClient.put<any>(url, binaryData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'image/png',
-          Accept: 'image/png',
+          'Content-Type': 'image/jpeg',
+          Accept: 'image/jpeg',
         },
       })
       return data

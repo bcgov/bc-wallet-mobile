@@ -9,6 +9,7 @@ type VerifyMethodActionButtonProps = {
   description: string
   onPress: () => void
   loading?: boolean
+  disabled?: boolean
 }
 
 const iconSize = 36
@@ -20,6 +21,7 @@ const VerifyMethodActionButton = ({
   icon,
   onPress,
   loading,
+  disabled = false,
 }: VerifyMethodActionButtonProps) => {
   const { ColorPallet, Spacing, TextTheme } = useTheme()
 
@@ -55,7 +57,7 @@ const VerifyMethodActionButton = ({
     <TouchableOpacity
       style={styles.container}
       onPress={() => {
-        if (!loading) onPress()
+        if (!disabled && !loading) onPress()
       }}
     >
       <View style={styles.iconContainer}>

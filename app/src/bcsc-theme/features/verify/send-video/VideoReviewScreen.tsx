@@ -12,8 +12,9 @@ import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import type { OnLoadData } from 'react-native-video'
 import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import base64 from 'base64-js'
+import { Buffer } from 'buffer'
+
+const pauseButtonSize = 60
 
 type VideoReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VideoReview>
@@ -26,7 +27,6 @@ type VideoReviewScreenProps = {
 }
 
 const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
-  const { evidence } = useApi()
   const { ColorPallet, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { width } = useWindowDimensions()
@@ -63,9 +63,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     },
     pauseButton: {
       backgroundColor: ColorPallet.grayscale.white,
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+      width: pauseButtonSize,
+      height: pauseButtonSize,
+      borderRadius: pauseButtonSize / 2,
       marginTop: Spacing.lg,
       justifyContent: 'center',
       alignItems: 'center',
@@ -111,9 +111,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     const { mtime } = await RNFS.stat(videoPath)
     const filename = 'selfieVideo.mp4'
     const date = Math.floor(mtime / 1000)
-    const baseBase64 = await RNFS.readFile(videoPath, 'base64')
-    const videoSHA = await hashBase64(baseBase64)
-    const videoBytes = base64.toByteArray(baseBase64)
+    const base64Video = await RNFS.readFile(videoPath, 'base64')
+    const videoSHA = await hashBase64(base64Video)
+    const videoBytes = new Uint8Array(Buffer.from(base64Video, 'base64'))
     const prompts = store.bcsc.prompts!.map(({ id }, i) => ({
       id,
       prompted_at: i,
@@ -146,9 +146,10 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
             resizeMode={'cover'}
             style={styles.video}
             onLoad={(data) => onVideoLoad(data)}
+            disableAudioSessionManagement
           />
           <TouchableOpacity style={styles.pauseButton} onPress={onTogglePause}>
-            <Icon name={paused ? 'play' : 'pause'} size={80} color={ColorPallet.brand.primaryBackground} />
+            <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPallet.brand.primaryBackground} />
           </TouchableOpacity>
         </View>
         <View style={styles.controlsContainer}>

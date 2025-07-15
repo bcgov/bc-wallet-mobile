@@ -1,3 +1,4 @@
+import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
 import useApi from '@bcsc-theme/api/hooks/useApi'
@@ -8,8 +9,6 @@ import { Button, ButtonType, LockoutReason, TOKENS, useAuth, useServices, useSto
 import React from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import SampleApiDisplay from './components/SampleApiDisplay'
-import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
-import { getAccount } from 'react-native-bcsc-core'
 
 // Placeholder for now, not sure if we want to reuse our
 // existing settings screen or create a new one, prob create new
@@ -51,26 +50,6 @@ const Settings: React.FC = () => {
       // need to store id and SHA! for later
       const response = await evidence.createVerificationRequest()
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [response] })
-      return response
-    },
-    {
-      onError: (error: unknown) => logger.error(`Error loading: ${error}`),
-    }
-  )
-
-  const evidenceUploadPhoto = useDataLoader<any>(
-    async () => {
-      if (!store.bcsc.deviceCode || !store.bcsc.verificationRequestSha) {
-        throw new Error('Device code is not available. Something went wrong.')
-      }
-      const response = await evidence.uploadPhotoEvidence({
-        content_length: 350828,
-        content_type: 'image/png',
-        date: 1752096719,
-        label: 'front',
-        filename: 'selfie.jpg',
-        sha256: '38e76c4dc27b4f6b276ed98927864e7c8fbb237b4366eb80e35c634409f3850b',
-      })
       return response
     },
     {
@@ -120,7 +99,6 @@ const Settings: React.FC = () => {
           <SampleApiDisplay<UserInfoResponseData> dataLoader={userAccount} title={'User Account'} />
           <SampleApiDisplay<any> dataLoader={evidenceStart} title={'Start Evidence'} />
           <SampleApiDisplay<any> dataLoader={deleteRequest} title={'Delete Verification Request'} />
-          <SampleApiDisplay<any> dataLoader={evidenceUploadPhoto} title={'Upload PhotoEvidence'} />
         </ScrollView>
         <View style={styles.controlsContainer}>
           <View style={{ marginVertical: Spacing.md }}>

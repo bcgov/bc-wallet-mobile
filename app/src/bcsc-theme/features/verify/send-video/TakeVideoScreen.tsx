@@ -1,7 +1,7 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { hitSlop } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, ColorPallet, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
@@ -9,14 +9,13 @@ import { StyleSheet, View, Text, Alert, TouchableOpacity, Animated } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 
-const overlay = 'rgba(0, 0, 0, 0.4)'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakeVideo>
 }
 
 const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
-  const { Spacing, TextTheme } = useTheme()
+  const { ColorPallet, Spacing, TextTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
 
@@ -28,6 +27,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [over30Seconds, setOver30Seconds] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const promptOpacity = useRef(new Animated.Value(1)).current
@@ -54,7 +54,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       top: 0,
       left: 0,
       right: 0,
-      backgroundColor: overlay,
+      backgroundColor: ColorPallet.notification.popupOverlay,
       paddingVertical: Spacing.lg,
       paddingHorizontal: Spacing.md,
       alignItems: 'center',
@@ -65,7 +65,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       bottom: 0,
       left: 0,
       right: 0,
-      backgroundColor: overlay,
+      backgroundColor: ColorPallet.notification.popupOverlay,
       paddingBottom: Spacing.md,
       paddingHorizontal: Spacing.md,
       flexDirection: 'column',
@@ -104,6 +104,9 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     timerRef.current = setInterval(() => {
       const currentTime = Date.now()
       const elapsed = Math.floor((currentTime - startTime) / 1000)
+      if (elapsed >= 30 && !over30Seconds) {
+        setOver30Seconds(true)
+      }
       setElapsedTime(elapsed)
     }, 1000)
   }, [])
@@ -116,7 +119,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   }, [])
 
   const startRecording = useCallback(async () => {
-    for (let i = 2; i > 0; i--) {
+    for (let i = 2; i >= 0; i--) {
       await new Promise((resolve) =>
         setTimeout(() => {
           setPrompt(`${i}`)
@@ -141,10 +144,14 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         logger.info(`Recording finished: ${video}`)
         const snapshot = await cameraRef.current!.takeSnapshot()
         stopTimer() // Stop timer when manually stopping recording
-        navigation.navigate(BCSCScreens.VideoReview, {
-          videoPath: video.path,
-          videoThumbnailPath: snapshot.path,
-        })
+        if (over30Seconds) {
+          navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTime })
+        } else {
+          navigation.navigate(BCSCScreens.VideoReview, {
+            videoPath: video.path,
+            videoThumbnailPath: snapshot.path,
+          })
+        }
       },
     })
   }, [dispatch, logger, startTimer, stopTimer, navigation, prompts])
@@ -242,7 +249,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           video={true}
           onInitialized={onInitialized}
           onError={onError}
-          audio={true}
+          audio
         />
 
         {/* Top overlay with prompt text */}
@@ -272,7 +279,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
                 <ThemedText style={{ color: ColorPallet.semantic.error }}>{'\u2B24'}</ThemedText>
-                <ThemedText style={{ color: ColorPallet.brand.text }}>{formatTime(elapsedTime)}</ThemedText>
+                <ThemedText style={{ color: over30Seconds ? ColorPallet.semantic.error : ColorPallet.grayscale.white }}>{formatTime(elapsedTime)}</ThemedText>
               </View>
             </View>
             <Button
