@@ -1,6 +1,6 @@
 import { ButtonLocation, IconButton, testIdWithKey, useTour } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 

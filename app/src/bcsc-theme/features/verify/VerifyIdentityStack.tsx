@@ -1,7 +1,6 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { Stacks, testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme } from '@bifold/core'
+import { useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
-import { HeaderBackButton } from '@react-navigation/elements'
 import SetupStepsScreen from './SetupStepsScreen'
 import HelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
@@ -10,47 +9,35 @@ import ManualSerialScreen from './ManualSerialScreen'
 import ScanSerialScreen from './ScanSerialScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import VerificationMethodSelectionScreen from './VerificationMethodSelectionScreen'
-import VerifyInPersonScreen from './VerifyInPersonScreen'
+import VerifyInPersonScreen from './in-person/VerifyInPersonScreen'
 import MismatchedSerialScreen from './MismatchedSerialScreen'
 import VerificationSuccessScreen from './VerificationSuccessScreen'
-import { CommonActions } from '@react-navigation/native'
-import { useEffect } from 'react'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
+import InformationRequiredScreen from './send-video/InformationRequiredScreen'
+import PhotoInstructionsScreen from './send-video/PhotoInstructionsScreen'
+import TakePhotoScreen from './send-video/TakePhotoScreen'
+import PhotoReviewScreen from './send-video/PhotoReviewScreen'
+import TakeVideoScreen from './send-video/TakeVideoScreen'
+import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
+import VideoReviewScreen from './send-video/VideoReviewScreen'
+import VideoTooLongScreen from './send-video/VideoTooLongScreen'
+import PendingReviewScreen from './send-video/PendingReviewScreen'
+import SuccessfullySentScreen from './send-video/SuccessfullySentScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
   const theme = useTheme()
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const { registration } = useApi()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
-  useEffect(() => {
-    registration.register().catch((error) => {
-      logger.error(`Error during registration: ${error}`)
-      // Handle error appropriately, e.g., show an alert or log it
-    })
-    // TODO: registration shouldn't actually be called here, this is just temporary until we move the flow where it should be
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   return (
     <Stack.Navigator screenOptions={{ ...defaultStackOptions, headerShown: true, title: '' }}>
       <Stack.Screen
         name={BCSCScreens.SetupSteps}
         component={SetupStepsScreen}
-        options={({ navigation }) => ({
+        options={{
           title: 'Setup Steps',
           headerRight: HelpHeaderButton,
-          headerLeft: (props) => (
-            <HeaderBackButton
-              {...props}
-              testID={testIdWithKey('Back')}
-              onPress={() => {
-                navigation.getParent()?.dispatch(CommonActions.reset({ index: 0, routes: [{ name: Stacks.TabStack }] }))
-              }}
-            />
-          ),
-        })}
+          headerLeft: () => null,
+        }}
       />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen name={BCSCScreens.SerialInstructions} component={SerialInstructionsScreen} />
@@ -67,6 +54,53 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
         options={{ headerRight: HelpHeaderButton }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.InformationRequired}
+        component={InformationRequiredScreen}
+        options={{ title: 'Information Required' }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PhotoInstructions}
+        component={PhotoInstructionsScreen}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TakePhoto}
+        component={TakePhotoScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PhotoReview}
+        component={PhotoReviewScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VideoInstructions}
+        component={VideoInstructionsScreen}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TakeVideo}
+        component={TakeVideoScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VideoReview}
+        component={VideoReviewScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PendingReview}
+        component={PendingReviewScreen}
+      />
+      <Stack.Screen
+        name={BCSCScreens.VideoTooLong}
+        component={VideoTooLongScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.SuccessfullySent}
+        component={SuccessfullySentScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={BCSCScreens.VerificationSuccess}

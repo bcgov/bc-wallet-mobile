@@ -8,6 +8,7 @@ import {
 } from '@bifold/core'
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
+import { VerificationPhotoUploadPayload, VerificationPrompt, VerificationVideoUploadPayload } from './bcsc-theme/api/hooks/useEvidenceApi'
 
 export interface IASEnvironment {
   name: string
@@ -34,6 +35,7 @@ export interface DismissPersonCredentialOffer {
 }
 
 export interface BCSCState {
+  verified: boolean
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
@@ -41,8 +43,17 @@ export interface BCSCState {
   deviceCode?: string
   userCode?: string
   deviceCodeExpiresAt?: Date
+  pendingVerification?: boolean
+  prompts?: VerificationPrompt[]
+  videoMetadata?: VerificationVideoUploadPayload
+  photoMetadata?: VerificationPhotoUploadPayload
   refreshToken?: string
+  photoPath?: string
+  videoPath?: string
+  videoThumbnailPath?: string
   bookmarks: string[]
+  verificationRequestId?: string
+  verificationRequestSha?: string
 }
 
 export enum Mode {
@@ -73,6 +84,7 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  UPDATE_VERIFIED = 'bcsc/updateVerified',
   UPDATE_CARD_TYPE = 'bcsc/updateCardType',
   UPDATE_SERIAL = 'bcsc/updateSerial',
   UPDATE_BIRTHDATE = 'bcsc/updateBirthdate',
@@ -80,9 +92,15 @@ enum BCSCDispatchAction {
   UPDATE_DEVICE_CODE = 'bcsc/updateDeviceCode',
   UPDATE_USER_CODE = 'bcsc/updateUserCode',
   UPDATE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateDeviceCodeExpiresAt',
+  UPDATE_PENDING_VERIFICATION = 'bcsc/updatePendingVerification',
   UPDATE_REFRESH_TOKEN = 'bcsc/updateRefreshToken',
+  UPDATE_VIDEO_PROMPTS = 'bcsc/updateVideoPrompts',
+  SAVE_PHOTO = 'bcsc/savePhoto',
+  SAVE_VIDEO = 'bcsc/saveVideo',
+  SAVE_VIDEO_THUMBNAIL = 'bcsc/saveVideoThumbnail',
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
+  UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
 }
 
 enum ModeDispatchAction {
@@ -146,6 +164,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 const bcscState: BCSCState = {
+  verified: false,
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
@@ -155,6 +174,8 @@ const bcscState: BCSCState = {
   deviceCode: undefined,
   deviceCodeExpiresAt: undefined,
   refreshToken: undefined,
+  verificationRequestId: undefined,
+  verificationRequestSha: undefined,
 }
 
 export enum BCLocalStorageKeys {
@@ -255,6 +276,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
+    case BCSCDispatchAction.UPDATE_VERIFIED: {
+      const verified = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, verified }
+      const newState = { ...state, bcsc }
+      // don't persist, should be checked on every app start
+      return newState
+    }
     case BCSCDispatchAction.UPDATE_CARD_TYPE: {
       const cardType = (action?.payload ?? []).pop() ?? BCSCCardType.None
       const bcsc = { ...state.bcsc, cardType }
@@ -309,22 +337,49 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
+    case BCSCDispatchAction.UPDATE_PENDING_VERIFICATION: {
+      const pendingVerification = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, pendingVerification }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_VIDEO_PROMPTS: {
+      const prompts: VerificationPrompt[] = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, prompts }
+      const newState = { ...state, bcsc }
+      return newState
+    }
     case BCSCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT: {
       const deviceCodeExpiresAt = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, deviceCodeExpiresAt }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
     case BCSCDispatchAction.UPDATE_REFRESH_TOKEN: {
       const refreshToken = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, refreshToken }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
+      return newState
+    }
+    case BCSCDispatchAction.SAVE_PHOTO: {
+      const { photoPath, photoMetadata } = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, photoPath, photoMetadata }
+      const newState = { ...state, bcsc }
+      return newState
+    }
+    case BCSCDispatchAction.SAVE_VIDEO: {
+      const { videoPath, videoMetadata } = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, videoPath, videoMetadata }
+      const newState = { ...state, bcsc }
+      return newState
+    }
+    case BCSCDispatchAction.SAVE_VIDEO_THUMBNAIL: {
+      const videoThumbnailPath = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, videoThumbnailPath }
+      const newState = { ...state, bcsc }
       return newState
     }
     case BCSCDispatchAction.ADD_BOOKMARK: {
@@ -341,6 +396,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = { ...state.bcsc, bookmarks }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_VERIFICATION_REQUEST: {
+      const evidence = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, verificationRequestId: evidence?.id, verificationRequestSha: evidence?.sha256 }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
       return newState
     }
     default:

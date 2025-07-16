@@ -1,37 +1,44 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useTheme, ThemedText } from '@bifold/core'
-import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import { useTheme, ThemedText, useStore } from '@bifold/core'
+import React, { useEffect, useState } from 'react'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import AccountPhoto from './components/AccountPhoto'
-import AccountField, { AccountFieldProps } from './components/AccountField'
+import AccountField from './components/AccountField'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
+import { BCState } from '@/store'
 
-const mockName = 'LEE-MARTINEZ, JAIME ANN'
 const mockWarning = `This cannot be used as photo ID, a driver's licence, or a health card.`
-const mockData: AccountFieldProps[] = [
-  {
-    label: 'App expiry date',
-    value: 'SEPTEMBER 19, 2028',
-  },
-  {
-    label: 'Account type',
-    value: 'BC Services Card with photo',
-  },
-  {
-    label: 'Address',
-    value: '123 LEDSHAM RD\nVICTORIA, BC V9B 1W8',
-  },
-  {
-    label: 'Date of birth',
-    value: 'JANUARY 28, 1995',
-  },
-  {
-    label: 'Email address',
-    value: 'jaime.lee-martinez@gmail.com',
-  },
-]
 
 const Account: React.FC = () => {
   const { Spacing } = useTheme()
+  const [store] = useStore<BCState>()
+  const { user } = useApi()
+  const [loading, setLoading] = useState(true)
+  const [userInfo, setUserInfo] = useState<UserInfoResponseData | null>(null)
+  const [pictureUri, setPictureUri] = useState<string>()
+
+  useEffect(() => {
+    const asyncEffect = async () => {
+      try {
+        setLoading(true)
+
+        const userInfo = await user.getUserInfo()
+        let picture = ''
+        if (userInfo.picture) {
+          picture = await user.getPicture(userInfo.picture)
+        }
+        setUserInfo(userInfo)
+        setPictureUri(picture)
+      } catch (error) {
+        // TODO: Handle error appropriately, e.g., show an alert or log it
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    asyncEffect()
+  }, [user])
 
   const styles = StyleSheet.create({
     container: {
@@ -54,23 +61,24 @@ const Account: React.FC = () => {
 
   return (
     <TabScreenWrapper>
-      <View style={styles.container}>
-        <View style={styles.photoAndNameContainer}>
-          <AccountPhoto />
-          <ThemedText variant={'headingTwo'} style={styles.name}>
-            {mockName}
-          </ThemedText>
+      {loading && userInfo ? (
+        <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+      ) : (
+        <View style={styles.container}>
+          <View style={styles.photoAndNameContainer}>
+            <AccountPhoto photoUri={pictureUri} />
+            <ThemedText variant={'headingTwo'} style={styles.name}>
+              {userInfo?.family_name}, {userInfo?.given_name}
+            </ThemedText>
+          </View>
+          <ThemedText style={styles.warning}>{mockWarning}</ThemedText>
+          <AccountField label={'App expiry date'} value={userInfo?.card_expiry ?? ''} />
+          <AccountField label={'Account type'} value={userInfo?.card_type ?? ''} />
+          <AccountField label={'Address'} value={userInfo?.address?.formatted ?? ''} />
+          <AccountField label={'Date of birth'} value={userInfo?.birthdate ?? ''} />
+          <AccountField label={'Email address'} value={store.bcsc.email ?? ''} />
         </View>
-        <ThemedText style={styles.warning}>{mockWarning}</ThemedText>
-        {mockData.map((field, index) => (
-          <AccountField
-            key={`field-${index}`}
-            label={field.label}
-            value={field.value}
-            style={{ marginTop: Spacing.lg }}
-          />
-        ))}
-      </View>
+      )}
     </TabScreenWrapper>
   )
 }

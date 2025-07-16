@@ -41,9 +41,9 @@ const useRegistrationApi = () => {
     const account = await getAccount()
     // If an account already exists, we don't need to register again
     if (account) return 
+    
     const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
-    apiClient.logger.info(`Registration body: ${JSON.stringify(JSON.parse(body!), null, 2)}`)
     const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
       headers: { 'Content-Type': 'application/json' },
     })

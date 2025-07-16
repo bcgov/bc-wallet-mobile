@@ -59,6 +59,10 @@ export const BCSCColorPallet: IColorPallet = {
     buttonText: GrayscaleColors.white,
     tabBarInactive: GrayscaleColors.white,
   },
+  semantic: {
+    ...BCWalletTheme.ColorPallet.semantic,
+    success: '#89CE00',
+  }
 }
 
 export const BCSCTextTheme: ITextTheme = {
@@ -279,6 +283,15 @@ export const BCSCButtons = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#D8292F',
   },
+  criticalText: {
+    ...Buttons.primaryText,
+    color: BCSCColorPallet.grayscale.white,
+  },
+  criticalDisabled: {
+    padding: 16,
+    borderRadius: 4,
+    backgroundColor: BCSCColorPallet.brand.primaryDisabled,
+  },
   primary: {
     padding: 16,
     borderRadius: 4,
@@ -320,6 +333,30 @@ export const BCSCButtons = StyleSheet.create({
     textAlign: 'center',
   },
   secondaryTextDisabled: {
+    ...BCSCTextTheme.normal,
+    fontWeight: 'bold',
+    color: BCSCColorPallet.brand.secondaryDisabled,
+    textAlign: 'center',
+  },
+  tertiary: {
+    padding: 16,
+    borderRadius: 4,
+    borderWidth: 0,
+    backgroundColor: BCSCColorPallet.grayscale.white,
+  },
+  tertiaryDisabled: {
+    padding: 16,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: BCSCColorPallet.brand.tertiaryDisabled,
+  },
+  tertiaryText: {
+    ...BCSCTextTheme.normal,
+    fontWeight: 'bold',
+    color: BCSCColorPallet.brand.text,
+    textAlign: 'center',
+  },
+  tertiaryTextDisabled: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
     color: BCSCColorPallet.brand.secondaryDisabled,

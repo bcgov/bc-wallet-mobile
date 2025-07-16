@@ -1,5 +1,6 @@
 import Foundation
 import React
+import CryptoKit
 
 enum AccountSecurityMethod: String {
     case pinNoDeviceAuth = "app_pin_no_device_authn"
@@ -290,6 +291,27 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Creates a JWT for evidence request using device code and client ID.
+  ///
+  /// - Parameters:
+  ///   - deviceCode: The device code to include in the JWT.
+  ///   - clientID: The client ID to include in the JWT.
+  /// - Resolves: The hashed string in hexadecimal format.
+  /// - Rejects: An error if the input is not valid base64 or if hashing fails.
+  @objc
+  func createEvidenceRequestJWT(_ deviceCode: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let builder = JWTClaimsSet.builder()
+    builder.claim(name: "device_code", value: deviceCode)
+           .claim(name: "client_id", value: clientID)
+
+    let payload = builder.build()
+    guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+        reject("E_INVALID_ACCOUNT_DATA", "Account must have an 'issuer', 'clientID' and 'securityMethod' fields", nil) // Error already handled by signJWT
+        return
+    }
+    resolve(serializedJWT)
+  }
+
   @objc
   func setAccount(_ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     print("BcscCore: setAccount called with account: \(account)")
@@ -393,7 +415,6 @@ class BcscCore: NSObject {
 
   @objc
   func signPairingCode(_ code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
-    let storage = StorageService()
     let hasOtherAccounts = false
     let accountSecurityMethod: AccountSecurityMethod? = nil
     
@@ -581,6 +602,70 @@ class BcscCore: NSObject {
     resolve(body)
   }
 
+  /// Decodes a JWE string payload into a JWT and extracts the base64 encoded string from the JWT's payload.
+  ///
+  /// - Parameters:
+  ///   - jweString: A string representing the JWE to decode.
+  ///   - resolve: The decoded JWT payload as a base64 encoded string.
+  ///   - reject: An error if the JWE cannot be parsed or the payload cannot be decoded.
+  @objc
+  func decodePayload(_ jweString: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+
+    guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+      reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
+      return
+    }
+
+    do {
+        let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+        let jwe = try JWE.parse(s: jweString)
+        let decrypter = RSADecrypter(privateKey: keyPair.private)
+        // Decrpyt payload into JWT
+        let payload = try jwe.decrypt(withDecrypter: decrypter)
+
+        // Break down and decode JWT
+        let segments = payload.components(separatedBy: ".")
+        var base64String = segments[1]
+        let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
+        let nbrPaddings = requiredLength - base64String.count
+        if nbrPaddings > 0 {
+            let padding = String().padding(toLength: nbrPaddings, withPad: "=", startingAt: 0)
+            base64String = base64String.appending(padding)
+        }
+        base64String = base64String.replacingOccurrences(of: "-", with: "+")
+        base64String = base64String.replacingOccurrences(of: "_", with: "/")
+        let decodedData = Data(base64Encoded: base64String, options: Data.Base64DecodingOptions(rawValue: UInt(0)))
+        
+        let base64Decoded: String = String(data: decodedData! as Data, encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue))!
+        resolve(base64Decoded)
+    } catch {
+        reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)
+    }
+  }
+
+  /// Hashes a base64 encoded string using SHA-256 and returns the hash as a hex string.
+  ///
+  /// - Parameters:
+  ///   - base64: The base64 encoded string to hash.
+  ///   - resolve: The hashed string in hexadecimal format.
+  ///   - reject: An error if the input is not valid base64 or if hashing fails.
+  @objc
+  func hashBase64(_ base64: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {  
+      guard let data = Data(base64Encoded: base64) else {
+        reject("E_INVALID_BASE64", "Input is not valid base64", nil)
+        return
+      }
+      var hash = [UInt8](repeating: 0,  count: Int(CC_SHA256_DIGEST_LENGTH))
+      data.withUnsafeBytes {
+          _ = CC_SHA256($0, CC_LONG(data.count), &hash)
+      }
+      let hashedData = Data(hash)
+      let hashString = hashedData.map { String(format: "%02hhx", $0) }.joined()
+
+      resolve(hashString)
+  }
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED
   @objc
@@ -588,4 +673,6 @@ class BcscCore: NSObject {
     return "BcscCore"
   }
   #endif
+
+
 }
