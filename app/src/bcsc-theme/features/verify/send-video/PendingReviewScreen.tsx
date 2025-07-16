@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -36,9 +36,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.contentContainer}>
-        <ThemedText
-          variant={'headingThree'}
-        >{`Request pending review`}</ThemedText>
+        <ThemedText variant={'headingThree'}>{`Request pending review`}</ThemedText>
         <ThemedText style={{ marginVertical: Spacing.md }}>{`We review requests:`}</ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
@@ -46,15 +44,15 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>In the order they're received</ThemedText>
+          <ThemedText>In the order they&apos;re received</ThemedText>
         </View>
-        <ThemedText style={{ marginBottom: Spacing.md }}>Usually, we review requests within 2 business days. During busy periods, it may take longer.</ThemedText>
         <ThemedText style={{ marginBottom: Spacing.md }}>
-          After it's reviewed, you will get an email if your provided your email.
+          Usually, we review requests within 2 business days. During busy periods, it may take longer.
         </ThemedText>
-        <ThemedText>
-          Do not resend your video. If you do, your request will go to the back of the queue.
+        <ThemedText style={{ marginBottom: Spacing.md }}>
+          After it&apos;s reviewed, you will get an email if your provided your email.
         </ThemedText>
+        <ThemedText>Do not resend your video. If you do, your request will go to the back of the queue.</ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <Button
@@ -62,9 +60,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
           accessibilityLabel={'Ok'}
           title={'Ok'}
           buttonType={ButtonType.Primary}
-          onPress={() =>
-            navigation.goBack()
-          }
+          onPress={() => navigation.goBack()}
         />
       </View>
     </SafeAreaView>

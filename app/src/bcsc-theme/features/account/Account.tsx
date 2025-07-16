@@ -31,7 +31,6 @@ const Account: React.FC = () => {
         setUserInfo(userInfo)
         setPictureUri(picture)
       } catch (error) {
-        console.error('Error fetching user info:', error)
         // TODO: Handle error appropriately, e.g., show an alert or log it
       } finally {
         setLoading(false)
@@ -39,7 +38,7 @@ const Account: React.FC = () => {
     }
 
     asyncEffect()
-  }, [])
+  }, [user])
 
   const styles = StyleSheet.create({
     container: {

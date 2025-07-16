@@ -9,14 +9,13 @@ import { StyleSheet, View, Text, Alert, TouchableOpacity, Animated } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 
-
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakeVideo>
 }
 
 const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const { ColorPallet, Spacing, TextTheme } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
 
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
@@ -40,7 +39,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       duration: 1000,
       useNativeDriver: true,
     }).start()
-  }, [prompt])
+  }, [prompt, promptOpacity])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -109,7 +108,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       }
       setElapsedTime(elapsed)
     }, 1000)
-  }, [])
+  }, [over30Seconds])
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -124,7 +123,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         setTimeout(() => {
           setPrompt(`${i}`)
           resolve(true)
-        }, 1000)
+        }, 1000),
       )
     }
 
@@ -154,7 +153,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         }
       },
     })
-  }, [dispatch, logger, startTimer, stopTimer, navigation, prompts])
+  }, [logger, startTimer, stopTimer, navigation, prompts, over30Seconds, elapsedTime])
 
   const onPressNextPrompt = async () => {
     if (prompts.indexOf(prompt) === prompts.length - 1) {
@@ -196,7 +195,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       hasMicrophonePermission,
       requestMicrophonePermission,
       navigation,
-    ])
+    ]),
   )
 
   // Cleanup timer on unmount
@@ -279,7 +278,9 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
                 <ThemedText style={{ color: ColorPallet.semantic.error }}>{'\u2B24'}</ThemedText>
-                <ThemedText style={{ color: over30Seconds ? ColorPallet.semantic.error : ColorPallet.grayscale.white }}>{formatTime(elapsedTime)}</ThemedText>
+                <ThemedText style={{ color: over30Seconds ? ColorPallet.semantic.error : ColorPallet.grayscale.white }}>
+                  {formatTime(elapsedTime)}
+                </ThemedText>
               </View>
             </View>
             <Button

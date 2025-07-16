@@ -32,9 +32,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
       navigation.navigate(BCSCScreens.InformationRequired)
-      console.log('Successfully created verification request:', { sha256, id, prompts })
     } catch (error) {
-      console.error('Error navigating to InformationRequired:', error)
       // TODO: Handle error, e.g., show an alert or log the error
       return
     } finally {

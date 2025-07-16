@@ -35,7 +35,6 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         const userInfo = await user.getUserInfo()
         setUserInfo(userInfo)
       } catch (error) {
-        console.error('Error fetching user info:', error)
         // TODO: Handle error appropriately, e.g., show an alert or log it
       } finally {
         setLoading(false)
@@ -43,11 +42,11 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     }
 
     asyncEffect()
-  }, [])
+  }, [user])
 
   // replace with API response
   const savedServices = mockServices.filter((service) =>
-    store.bcsc.bookmarks.some((serviceId) => serviceId === service.id)
+    store.bcsc.bookmarks.some((serviceId) => serviceId === service.id),
   )
 
   const styles = StyleSheet.create({

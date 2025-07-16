@@ -6,7 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { BCState } from '@/store'
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { Fragment, useEffect } from 'react'
+import { Fragment } from 'react'
 
 type VideoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VideoInstructions>

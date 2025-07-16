@@ -21,7 +21,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   const [loading, setLoading] = useState(false)
   const uploadedBoth = useMemo(
     () => store.bcsc.photoPath && store.bcsc.videoPath && store.bcsc.videoThumbnailPath,
-    [store.bcsc.photoPath, store.bcsc.videoPath, store.bcsc.videoThumbnailPath]
+    [store.bcsc.photoPath, store.bcsc.videoPath, store.bcsc.videoThumbnailPath],
   )
   const { ButtonLoading } = useAnimatedComponents()
   const { evidence } = useApi()
@@ -73,12 +73,10 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.SuccessfullySent }],
-        })
+        }),
       )
     } catch (error) {
       // TODO: Handle error, e.g., show an alert or log the error
-      console.error(JSON.stringify(error, null, 2))
-      console.error('Error sending verification request:', error)
     } finally {
       setLoading(false)
     }

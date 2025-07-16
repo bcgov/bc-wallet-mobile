@@ -38,7 +38,7 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
   return (
     <SafeAreaView style={styles.pageContainer}>
       <View style={styles.contentContainer}>
-        <Icon name={'check'} size={108} color={ColorPallet.brand.primary} style={{ alignSelf: 'center' }}/>
+        <Icon name={'check'} size={108} color={ColorPallet.brand.primary} style={{ alignSelf: 'center' }} />
         <ThemedText
           variant={'headingThree'}
           style={{ marginTop: Spacing.lg }}
@@ -50,11 +50,11 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>In the order they're received</ThemedText>
+          <ThemedText>In the order they&apos;re received</ThemedText>
         </View>
         <ThemedText style={{ marginBottom: Spacing.md }}>Usually, we review requests within 24 hours.</ThemedText>
         <ThemedText>
-          You'll get an email after we review your request. You can also check the status in this app.
+          You&apos;ll get an email after we review your request. You can also check the status in this app.
         </ThemedText>
       </View>
       <View style={styles.controlsContainer}>
@@ -68,7 +68,7 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
               CommonActions.reset({
                 index: 0,
                 routes: [{ name: BCSCScreens.SetupSteps }],
-              })
+              }),
             )
           }
         />
