@@ -291,6 +291,13 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Creates a JWT for evidence request using device code and client ID.
+  ///
+  /// - Parameters:
+  ///   - deviceCode: The device code to include in the JWT.
+  ///   - clientID: The client ID to include in the JWT.
+  /// - Resolves: The hashed string in hexadecimal format.
+  /// - Rejects: An error if the input is not valid base64 or if hashing fails.
   @objc
   func createEvidenceRequestJWT(_ deviceCode: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let builder = JWTClaimsSet.builder()
@@ -595,6 +602,12 @@ class BcscCore: NSObject {
     resolve(body)
   }
 
+  /// Decodes a JWE string payload into a JWT and extracts the base64 encoded string from the JWT's payload.
+  ///
+  /// - Parameters:
+  ///   - jweString: A string representing the JWE to decode.
+  ///   - resolve: The decoded JWT payload as a base64 encoded string.
+  ///   - reject: An error if the JWE cannot be parsed or the payload cannot be decoded.
   @objc
   func decodePayload(_ jweString: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
     let keyPairManager = KeyPairManager()
@@ -632,6 +645,12 @@ class BcscCore: NSObject {
     }
   }
 
+  /// Hashes a base64 encoded string using SHA-256 and returns the hash as a hex string.
+  ///
+  /// - Parameters:
+  ///   - base64: The base64 encoded string to hash.
+  ///   - resolve: The hashed string in hexadecimal format.
+  ///   - reject: An error if the input is not valid base64 or if hashing fails.
   @objc
   func hashBase64(_ base64: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {  
       guard let data = Data(base64Encoded: base64) else {
