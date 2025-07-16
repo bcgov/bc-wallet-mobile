@@ -46,11 +46,7 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <Image
-          source={{ uri: SERIAL_HIGHLIGHT_IMAGE }}
-          style={styles.image}
-          resizeMode={'contain'}
-        />
+        <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
           {t('Unified.Instructions.Heading')}
         </ThemedText>
@@ -61,6 +57,7 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
           title={t('Unified.Instructions.ScanBarcode')}
           accessibilityLabel={t('Unified.Instructions.ScanBarcode')}
           testID={testIdWithKey('ScanBarcode')}
+          onPress={() => navigation.navigate(BCSCScreens.ScanSerial)}
           buttonType={ButtonType.Primary}
         />
         <View style={{ marginTop: Spacing.md }}>

@@ -13,6 +13,7 @@ export enum BCSCScreens {
   IdentitySelection = 'BCSCIdentitySelection',
   SerialInstructions = 'BCSCSerialInstructions',
   ManualSerial = 'BCSCManualSerial',
+  ScanSerial = 'BCSCScanSerial',
   EnterBirthdate = 'BCSCEnterBirthdate',
   MismatchedSerial = 'BCSCMismatchedSerial',
   VerificationMethodSelection = 'BCSCVerificationMethodSelection',
@@ -50,6 +51,7 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
   [BCSCScreens.ManualSerial]: undefined
+  [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
   [BCSCScreens.MismatchedSerial]: undefined
   [BCSCScreens.VerificationMethodSelection]: undefined

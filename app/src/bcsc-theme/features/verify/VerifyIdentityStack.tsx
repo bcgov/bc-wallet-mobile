@@ -6,6 +6,7 @@ import HelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import SerialInstructionsScreen from './SerialInstructionsScreen'
 import ManualSerialScreen from './ManualSerialScreen'
+import ScanSerialScreen from './ScanSerialScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import VerificationMethodSelectionScreen from './VerificationMethodSelectionScreen'
 import VerifyInPersonScreen from './in-person/VerifyInPersonScreen'
@@ -41,6 +42,7 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen name={BCSCScreens.SerialInstructions} component={SerialInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.ManualSerial} component={ManualSerialScreen} />
+      <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
       <Stack.Screen
