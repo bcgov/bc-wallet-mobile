@@ -7,6 +7,7 @@ import HelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import SerialInstructionsScreen from './SerialInstructionsScreen'
 import ManualSerialScreen from './ManualSerialScreen'
+import ScanSerialScreen from './ScanSerialScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import VerificationMethodSelectionScreen from './VerificationMethodSelectionScreen'
 import VerifyInPersonScreen from './VerifyInPersonScreen'
@@ -24,13 +25,12 @@ const VerifyIdentityStack = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   useEffect(() => {
-    registration.register()
-      .catch((error) => {
-        logger.error(`Error during registration: ${error}`)
-        // Handle error appropriately, e.g., show an alert or log it
-      })
-      // TODO: registration shouldn't actually be called here, this is just temporary until we move the flow where it should be
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    registration.register().catch((error) => {
+      logger.error(`Error during registration: ${error}`)
+      // Handle error appropriately, e.g., show an alert or log it
+    })
+    // TODO: registration shouldn't actually be called here, this is just temporary until we move the flow where it should be
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -55,6 +55,7 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen name={BCSCScreens.SerialInstructions} component={SerialInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.ManualSerial} component={ManualSerialScreen} />
+      <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
       <Stack.Screen
