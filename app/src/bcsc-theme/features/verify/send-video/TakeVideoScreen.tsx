@@ -140,10 +140,10 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         Alert.alert('Recording Error', 'There was an issue with the recording. Please try again.')
       },
       onRecordingFinished: async (video) => {
-        setRecordingInProgress(false)
         logger.info(`Recording finished: ${video}`)
-        const snapshot = await cameraRef.current!.takeSnapshot()
         stopTimer() // Stop timer when manually stopping recording
+        setPrompt('')
+        const snapshot = await cameraRef.current!.takeSnapshot()
         if (over30Seconds) {
           navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTime })
         } else {

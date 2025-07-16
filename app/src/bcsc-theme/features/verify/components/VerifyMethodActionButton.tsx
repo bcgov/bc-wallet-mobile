@@ -37,16 +37,18 @@ const VerifyMethodActionButton = ({
       alignItems: 'center',
       ...style,
     },
-    title: {
-      color: ColorPallet.brand.primary,
+    titleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexShrink: 1,
       marginBottom: Spacing.sm,
     },
-    textContainer: {
-      marginHorizontal: Spacing.md,
-      flex: 1,
+    title: {
+      color: ColorPallet.brand.primary,
+      marginLeft: Spacing.sm,
     },
-    iconContainer: {
-      justifyContent: 'center',
+    description: {
+      flexShrink: 1,
     },
     chevronContainer: {
       justifyContent: 'center',
@@ -60,14 +62,14 @@ const VerifyMethodActionButton = ({
         if (!disabled && !loading) onPress()
       }}
     >
-      <View style={styles.iconContainer}>
-        <Icon name={icon} size={iconSize} color={ColorPallet.brand.primary} />
-      </View>
-      <View style={styles.textContainer}>
-        <ThemedText variant={'bold'} style={styles.title} numberOfLines={0}>
-          {title}
-        </ThemedText>
-        <ThemedText numberOfLines={0}>{description}</ThemedText>
+      <View style={{ flex: 1 }}>
+        <View style={styles.titleContainer}>
+          <Icon name={icon} size={iconSize} color={ColorPallet.brand.primary} />
+          <ThemedText variant={'bold'} style={styles.title} numberOfLines={0}>
+            {title}
+          </ThemedText>
+        </View>
+        <ThemedText numberOfLines={0} style={styles.description}>{description}</ThemedText>
       </View>
       <View style={styles.chevronContainer}>
         {loading ? (

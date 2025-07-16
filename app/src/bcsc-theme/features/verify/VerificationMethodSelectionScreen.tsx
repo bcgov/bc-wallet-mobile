@@ -53,7 +53,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         loading={loading}
         disabled={loading}
       />
-      <ThemedText variant={'bold'} style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>
+      <ThemedText variant={'bold'} style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>
         Cannot send a video?
       </ThemedText>
       <VerifyMethodActionButton

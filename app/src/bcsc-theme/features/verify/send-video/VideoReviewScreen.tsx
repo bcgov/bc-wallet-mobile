@@ -55,7 +55,11 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       alignItems: 'center',
       paddingHorizontal: Spacing.md,
     },
-    heading: { marginBottom: Spacing.md, width: '100%' },
+    heading: {
+      textAlign: 'center',
+      marginBottom: Spacing.md,
+      width: '100%',
+    },
     video: {
       height: width - 2 * Spacing.md,
       width: width - 2 * Spacing.md,

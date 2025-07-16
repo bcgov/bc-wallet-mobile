@@ -49,7 +49,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
           <ThemedText>In the order they're received</ThemedText>
         </View>
         <ThemedText style={{ marginBottom: Spacing.md }}>Usually, we review requests within 2 business days. During busy periods, it may take longer.</ThemedText>
-        <ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>
           After it's reviewed, you will get an email if your provided your email.
         </ThemedText>
         <ThemedText>
