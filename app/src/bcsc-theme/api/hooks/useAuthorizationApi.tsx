@@ -9,7 +9,7 @@ export interface VerifyInPersonResponseData {
 }
 
 const useAuthorizationApi = () => {
-  // this isn't verifying in person, it's actually verifying the device, this is where we "should" get the evidence URI
+  // TODO: fetch evidence API endpoint from this endpoint
   const authorizeDevice = async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData> => {
     return withAccount<VerifyInPersonResponseData>(async (account) => {
       const body = {

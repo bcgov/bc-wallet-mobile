@@ -14,7 +14,7 @@ type VerificationMethodSelectionScreenProps = {
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { ColorPallet, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const [loading, setLoading] = useState(false)
   const { evidence } = useApi()
 
@@ -35,7 +35,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       console.log('Successfully created verification request:', { sha256, id, prompts })
     } catch (error) {
       console.error('Error navigating to InformationRequired:', error)
-      // Handle error, e.g., show an alert or log the error
+      // TODO: Handle error, e.g., show an alert or log the error
       return
     } finally {
       setLoading(false)
@@ -53,7 +53,10 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         loading={loading}
         disabled={loading}
       />
-      <ThemedText variant={'bold'} style={{ marginTop: Spacing.xxl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>
+      <ThemedText
+        variant={'bold'}
+        style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}
+      >
         Cannot send a video?
       </ThemedText>
       <VerifyMethodActionButton

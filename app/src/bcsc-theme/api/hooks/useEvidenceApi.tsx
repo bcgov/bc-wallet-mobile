@@ -44,7 +44,7 @@ export interface VerificationPhotoUploadPayload {
 export interface VerificationVideoUploadPayload {
   content_type: string
   content_length: number
-  date: number // enoch timestamp in seconds
+  date: number // epoch timestamp in seconds
   sha256: string // hashed copy of the video
   duration: number // video duration in seconds
   prompts: VerificationPromptUploadPayload[]
@@ -167,9 +167,9 @@ const useEvidenceApi = () => {
     })
   }
 
-  // This is only valid once the verification flow has truly started
+  // This is only valid once sendVerificationRequest has been called
   // meaning the user has uploaded their photo, video and document evidence
-  // In the mean time the ID is 'held' for the time being and discarded if teh user backs out
+  // In the mean time the ID is 'held' for the time being and discarded if the user backs out
   const cancelVerificationRequest = async (verificationRequestId: string): Promise<any> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)

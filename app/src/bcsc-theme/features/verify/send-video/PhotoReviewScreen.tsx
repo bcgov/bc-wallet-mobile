@@ -32,7 +32,7 @@ type PhotoReviewScreenProps = {
 
 const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   const { ColorPallet, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const { photoPath } = route.params
   const [loading, setLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
@@ -94,6 +94,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       )
     } catch (error) {
       logger.error(`Error saving photo: ${error}`)
+      // TODO: Handle error, e.g., show an alert or log the error
     } finally {
       setLoading(false)
     }

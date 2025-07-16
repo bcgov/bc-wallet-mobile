@@ -32,7 +32,7 @@ const Account: React.FC = () => {
         setPictureUri(picture)
       } catch (error) {
         console.error('Error fetching user info:', error)
-        // Handle error appropriately, e.g., show an alert or log it
+        // TODO: Handle error appropriately, e.g., show an alert or log it
       } finally {
         setLoading(false)
       }

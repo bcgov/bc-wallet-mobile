@@ -77,7 +77,6 @@ class BCSCService {
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
     this.client.interceptors.response.use(undefined, (error: AxiosError) => {
-      console.log(JSON.stringify(error.response?.data, null, 2))
       this.logger.error(`${error.name}: ${error.code}`, { message: `IAS API Error: ${error.message}`, error: error.response?.data })
       return Promise.reject(error)
     })
@@ -138,7 +137,7 @@ class BCSCService {
       config.url?.endsWith('/device/token') || // this endpoint does not require an access token to fetch a token
       config.url?.endsWith('/device/register') || // this endpoint registers the user and grants an access token 
       config.url?.endsWith('/device/devicecode') || // this endpoint registers the device before an access token is granted
-      config.url?.includes('/evidence') // the evidence endpoints are to be used to verify a user, so the user will not have an access token yet
+      config.url?.includes('/evidence') // the evidence endpoints are used to verify a user, so the user will not have an access token yet
     ) {
       return config
     }

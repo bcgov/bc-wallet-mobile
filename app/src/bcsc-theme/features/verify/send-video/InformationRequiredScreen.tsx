@@ -42,23 +42,27 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   const onPressSend = async () => {
     try {
       setLoading(true)
-
+      // Fetch photo and convert into bytes
       const jpegBytes = await RNFS.readFile(store.bcsc.photoPath!, 'base64')
       const photoBytes = new Uint8Array(Buffer.from(jpegBytes, 'base64'))
 
+      // Fetch video and convert into bytes
       const videoBase64 = await RNFS.readFile(store.bcsc.videoPath!, 'base64')
       const videoBytes = new Uint8Array(Buffer.from(videoBase64, 'base64'))
 
+      // Send photo and video metadata to API
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
         evidence.uploadPhotoEvidenceMetadata(store.bcsc.photoMetadata!),
         evidence.uploadVideoEvidenceMetadata(store.bcsc.videoMetadata!),
       ])
 
+      // Upload photo and video bytes to the respective URIs
       await Promise.all([
         evidence.uploadPhotoEvidenceBinary(photoMetadataResponse.upload_uri, photoBytes),
         evidence.uploadVideoEvidenceBinary(videoMetadataResponse.upload_uri, videoBytes),
       ])
 
+      // Send final verification request
       await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
         upload_uris: [photoMetadataResponse.upload_uri, videoMetadataResponse.upload_uri],
         sha256: store.bcsc.verificationRequestSha!,
@@ -72,6 +76,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         })
       )
     } catch (error) {
+      // TODO: Handle error, e.g., show an alert or log the error
       console.error(JSON.stringify(error, null, 2))
       console.error('Error sending verification request:', error)
     } finally {
