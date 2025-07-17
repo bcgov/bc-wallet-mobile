@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import usePairingApi from './usePairingApi'
 import useConfigApi from './useConfigApi'
 import useRegistrationApi from './useRegistrationApi'
@@ -15,15 +16,18 @@ const useApi = () => {
   const user = useUserApi()
   const evidence = useEvidenceApi()
 
-  return {
-    config,
-    pairing,
-    registration,
-    authorization,
-    token,
-    user,
-    evidence,
-  }
+  return useMemo(
+    () => ({
+      config,
+      pairing,
+      registration,
+      authorization,
+      token,
+      user,
+      evidence,
+    }),
+    [config, pairing, registration, authorization, token, user, evidence],
+  )
 }
 
 export default useApi
