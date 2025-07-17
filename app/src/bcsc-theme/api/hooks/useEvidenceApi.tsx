@@ -56,6 +56,29 @@ export interface UploadEvidenceResponseData {
   upload_uri: string
 }
 
+export interface EvidenceMetadataResponseData {
+  processes: {
+    process: 'IDIM L3 Remote Non-BCSC Identity Verification' | 'IDIM L3 Remote Non-photo BCSC Identity Verification'
+    evidence_types: {
+      evidence_type: string
+      has_photo: boolean
+      group: 'BRITISH COLUMBIA' | 'CANADA, OR OTHER LOCATION IN CANADA' | 'UNITED STATES' | 'OTHER COUNTRIES'
+      group_sort_order: number
+      sort_order: number
+      collection_form: 'FIRST' | 'SECOND' | 'BOTH'
+      document_reference_input_mask: string // a regex mask for ID document reference input, number only can indicate to use a number only keyboard
+      document_reference_label: string
+      document_reference_sample: string
+      image_sides: {
+        image_side_name: 'FRONT_SIDE' | 'BACK_SIDE'
+        image_side_label: string
+        image_side_tip: string
+      }[]
+      evidence_type_label: string
+    }[]
+  }[]
+}
+
 const useEvidenceApi = () => {
   const [store] = useStore<BCState>()
 
@@ -63,6 +86,11 @@ const useEvidenceApi = () => {
     const code = store.bcsc.deviceCode
     if (!code) throw new Error('Device code is missing. Re install the app and setup try again.')
     return code
+  }
+
+  const evidenceMetadata = async (): Promise<EvidenceMetadataResponseData> => {
+    const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`)
+    return data
   }
   // This needs ot be called for the process to start
   const createVerificationRequest = async (): Promise<VerificationResponseData> => {
@@ -75,14 +103,14 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
   }
 
   const uploadPhotoEvidenceMetadata = async (
-    payload: VerificationPhotoUploadPayload,
+    payload: VerificationPhotoUploadPayload
   ): Promise<UploadEvidenceResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
@@ -93,13 +121,13 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
   }
   const uploadVideoEvidenceMetadata = async (
-    payload: VerificationVideoUploadPayload,
+    payload: VerificationVideoUploadPayload
   ): Promise<UploadEvidenceResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
@@ -110,7 +138,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -118,7 +146,7 @@ const useEvidenceApi = () => {
 
   const sendVerificationRequest = async (
     verificationRequestId: string,
-    payload: SendVerificationPayload,
+    payload: SendVerificationPayload
   ): Promise<VerificationStatusResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
@@ -129,7 +157,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -144,14 +172,14 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
   }
 
   const getVerificationRequestStatus = async (
-    verificationRequestId: string,
+    verificationRequestId: string
   ): Promise<VerificationStatusResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
@@ -161,7 +189,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -179,7 +207,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -195,7 +223,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -213,7 +241,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -259,6 +287,7 @@ const useEvidenceApi = () => {
     getVerificationRequestPrompts,
     createEmailVerification,
     sendEmailVerificationCode,
+    evidenceMetadata,
   }
 }
 

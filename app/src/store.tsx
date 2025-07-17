@@ -8,7 +8,11 @@ import {
 } from '@bifold/core'
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
-import { VerificationPhotoUploadPayload, VerificationPrompt, VerificationVideoUploadPayload } from './bcsc-theme/api/hooks/useEvidenceApi'
+import {
+  VerificationPhotoUploadPayload,
+  VerificationPrompt,
+  VerificationVideoUploadPayload,
+} from './bcsc-theme/api/hooks/useEvidenceApi'
 
 export interface IASEnvironment {
   name: string
@@ -54,6 +58,7 @@ export interface BCSCState {
   bookmarks: string[]
   verificationRequestId?: string
   verificationRequestSha?: string
+  additionalIdentification: {}[]
 }
 
 export enum Mode {
@@ -176,6 +181,7 @@ const bcscState: BCSCState = {
   refreshToken: undefined,
   verificationRequestId: undefined,
   verificationRequestSha: undefined,
+  additionalIdentification: [],
 }
 
 export enum BCLocalStorageKeys {

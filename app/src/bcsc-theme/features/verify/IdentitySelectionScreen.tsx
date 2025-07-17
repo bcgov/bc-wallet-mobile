@@ -76,7 +76,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [])
 
   const onPressNoPhotoCard = useCallback(() => {
-    // TODO: Implement
+    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.NonPhoto] })
+    navigation.navigate(BCSCScreens.SerialInstructions)
   }, [])
 
   const onCheckForServicesCard = useCallback(() => {

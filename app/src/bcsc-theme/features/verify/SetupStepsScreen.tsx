@@ -5,9 +5,10 @@ import React, { useMemo } from 'react'
 
 import { BCDispatchAction, BCState } from '@/store'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -104,6 +105,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     )
   }
 
+  // step 1 needs to be reminded that things are not done yet IF
+  // non photo card is selected
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -134,6 +138,21 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           </ThemedText>
         </View>
       </TouchableOpacity>
+      {registered && store.bcsc.cardType === BCSCCardType.NonPhoto && (
+        <TouchableOpacity
+          onPress={() => navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)}
+          style={[
+            styles.step,
+            { backgroundColor: registered ? ColorPallet.brand.secondaryBackground : ColorPallet.brand.primary },
+          ]}
+        >
+          <View>
+            <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPallet.brand.text }}>
+              {'Additional identification required for non-photo BC Services Card.'}
+            </ThemedText>
+          </View>
+        </TouchableOpacity>
+      )}
       <View style={styles.itemSeparator} />
       <TouchableOpacity testID={testIdWithKey('Step2')} accessibilityLabel={'Step 2'} style={styles.step}>
         <View style={styles.titleRow}>
