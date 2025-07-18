@@ -8,7 +8,6 @@ import {
   initStoredLanguage,
   MainContainer,
   NavContainer,
-  NetInfo,
   NetworkProvider,
   StoreProvider,
   ThemeProvider,
@@ -71,7 +70,6 @@ const App = () => {
             <AnimatedComponentsProvider value={animatedComponents}>
               <AuthProvider>
                 <NetworkProvider>
-                  <NetInfo />
                   <ErrorModal enableReport />
                   <WebDisplay
                     destinationUrl={surveyMonkeyUrl}
