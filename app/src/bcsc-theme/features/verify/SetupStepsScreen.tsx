@@ -105,9 +105,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     )
   }
 
-  // step 1 needs to be reminded that things are not done yet IF
-  // non photo card is selected
-
   return (
     <View style={styles.container}>
       <TouchableOpacity

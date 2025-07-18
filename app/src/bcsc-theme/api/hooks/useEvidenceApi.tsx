@@ -88,7 +88,7 @@ const useEvidenceApi = () => {
     return code
   }
 
-  const evidenceMetadata = async (): Promise<EvidenceMetadataResponseData> => {
+  const getEvidenceMetadata = async (): Promise<EvidenceMetadataResponseData> => {
     const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`)
     return data
   }
@@ -287,7 +287,7 @@ const useEvidenceApi = () => {
     getVerificationRequestPrompts,
     createEmailVerification,
     sendEmailVerificationCode,
-    evidenceMetadata,
+    getEvidenceMetadata,
   }
 }
 
