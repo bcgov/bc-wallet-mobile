@@ -8,7 +8,11 @@ import {
 } from '@bifold/core'
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
-import { VerificationPhotoUploadPayload, VerificationPrompt, VerificationVideoUploadPayload } from './bcsc-theme/api/hooks/useEvidenceApi'
+import {
+  VerificationPhotoUploadPayload,
+  VerificationPrompt,
+  VerificationVideoUploadPayload,
+} from './bcsc-theme/api/hooks/useEvidenceApi'
 
 export interface IASEnvironment {
   name: string
@@ -26,7 +30,6 @@ export interface Developer {
   environment: IASEnvironment
   remoteDebugging: RemoteDebuggingState
   enableProxy: boolean
-  enableAltPersonFlow: boolean
   enableAppToAppPersonFlow: boolean
 }
 
@@ -40,6 +43,7 @@ export interface BCSCState {
   serial: string
   birthdate?: Date
   email?: string
+  emailConfirmed?: boolean
   deviceCode?: string
   userCode?: string
   deviceCodeExpiresAt?: Date
@@ -71,7 +75,6 @@ export interface BCState extends BifoldState {
 enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
   TOGGLE_PROXY = 'developer/toggleProxy',
-  TOGGLE_ALT_PERSON_FLOW = 'developer/toggleAltPersonFlow',
   TOGGLE_APP_TO_APP_PERSON_FLOW = 'developer/toggleAppToAppPersonFlow',
 }
 
@@ -155,7 +158,6 @@ const developerState: Developer = {
   enableProxy: false,
   environment: iasEnvironments[0],
   remoteDebugging: remoteDebuggingState,
-  enableAltPersonFlow: false,
   enableAppToAppPersonFlow: false,
 }
 
@@ -184,7 +186,6 @@ export enum BCLocalStorageKeys {
   GenesisTransactions = 'GenesisTransactions',
   RemoteDebugging = 'RemoteDebugging',
   EnableProxy = 'EnableProxy',
-  EnableAltPersonFlow = 'EnableAltPersonFlow',
   EnableAppToAppPersonFlow = 'EnableAppToAppPersonFlow',
   UserDeniedPushNotifications = 'userDeniedPushNotifications',
   DeviceToken = 'deviceToken',
@@ -219,7 +220,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       if (enabledAt) {
         PersistentStorage.storeValueForKey<RemoteDebuggingState>(
           BCLocalStorageKeys.RemoteDebugging,
-          developer.remoteDebugging
+          developer.remoteDebugging,
         )
       } else {
         PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
@@ -244,21 +245,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return { ...state, developer }
     }
-    case DeveloperDispatchAction.TOGGLE_ALT_PERSON_FLOW: {
-      const enableAltPersonFlow: boolean = (action?.payload || []).pop() || false
-      const developer = { ...state.developer, enableAltPersonFlow }
-
-      PersistentStorage.storeValueForKey<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, developer.enableAltPersonFlow)
-
-      return { ...state, developer }
-    }
     case DeveloperDispatchAction.TOGGLE_APP_TO_APP_PERSON_FLOW: {
       const enableAppToAppPersonFlow: boolean = (action?.payload || []).pop() || false
       const developer = { ...state.developer, enableAppToAppPersonFlow }
 
       PersistentStorage.storeValueForKey<boolean>(
         BCLocalStorageKeys.EnableAppToAppPersonFlow,
-        developer.enableAppToAppPersonFlow
+        developer.enableAppToAppPersonFlow,
       )
 
       return { ...state, developer }
@@ -271,7 +264,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // save to storage so notification doesn't reapper on app restart
       PersistentStorage.storeValueForKey<DismissPersonCredentialOffer>(
         BCLocalStorageKeys.PersonCredentialOfferDismissed,
-        newState.dismissPersonCredentialOffer
+        newState.dismissPersonCredentialOffer,
       )
 
       return newState
@@ -287,54 +280,42 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const cardType = (action?.payload ?? []).pop() ?? BCSCCardType.None
       const bcsc = { ...state.bcsc, cardType }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
     case BCSCDispatchAction.UPDATE_SERIAL: {
       const serial = (action?.payload || []).pop() ?? ''
       const bcsc = { ...state.bcsc, serial }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
     case BCSCDispatchAction.UPDATE_EMAIL: {
-      const email = (action?.payload || []).pop() ?? ''
-      const bcsc = { ...state.bcsc, email }
+      const { email, emailConfirmed } = (action?.payload || []).pop() ?? {}
+      const bcsc = { ...state.bcsc, email, emailConfirmed }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
     case BCSCDispatchAction.UPDATE_BIRTHDATE: {
       const birthdate = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, birthdate }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
     case BCSCDispatchAction.UPDATE_USER_CODE: {
       const userCode = (action?.payload || []).pop() ?? ''
       const bcsc = { ...state.bcsc, userCode }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
     case BCSCDispatchAction.UPDATE_DEVICE_CODE: {
       const deviceCode = (action?.payload || []).pop() ?? ''
       const bcsc = { ...state.bcsc, deviceCode }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
     case BCSCDispatchAction.UPDATE_PENDING_VERIFICATION: {

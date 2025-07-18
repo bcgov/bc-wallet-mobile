@@ -35,6 +35,7 @@ import { DependencyContainer } from 'tsyringe'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from '@utils/expiration'
+import BCLogger from '@utils/logger'
 import AddCredentialButton from './src/bcwallet-theme/components/AddCredentialButton'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
@@ -70,7 +71,6 @@ import {
   RemoteDebuggingState,
   initialState,
 } from './src/store'
-import BCLogger from '@utils/logger'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
@@ -85,7 +85,7 @@ export class AppContainer implements Container {
     bifoldContainer: Container,
     t: TFunction<'translation', undefined>,
     navigate: (stack: never, params: never) => void,
-    setSurveyVisible: (visible: boolean) => void
+    setSurveyVisible: (visible: boolean) => void,
   ) {
     this._container = bifoldContainer.container.createChildContainer()
     this.t = t
@@ -337,8 +337,7 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let { environment, remoteDebugging, enableProxy, enableAltPersonFlow, enableAppToAppPersonFlow } =
-        initialState.developer
+      let { environment, remoteDebugging, enableProxy, enableAppToAppPersonFlow } = initialState.developer
       let bcsc = initialState.bcsc
       let mode = initialState.mode
 
@@ -354,12 +353,11 @@ export class AppContainer implements Container {
         loadState<OnboardingState>(LocalStorageKeys.Onboarding, (val) => (onboarding = val)),
         loadState<DismissPersonCredentialOffer>(
           BCLocalStorageKeys.PersonCredentialOfferDismissed,
-          (val) => (personCredOfferDissmissed = val)
+          (val) => (personCredOfferDissmissed = val),
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
-        loadState<boolean>(BCLocalStorageKeys.EnableAltPersonFlow, (val) => (enableAltPersonFlow = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
         loadState<BCSCState>(BCLocalStorageKeys.BCSC, (val) => (bcsc = val)),
         loadState<Mode>(BCLocalStorageKeys.Mode, (val) => (mode = val)),
@@ -397,7 +395,6 @@ export class AppContainer implements Container {
             sessionId: remoteDebugging.sessionId,
           },
           enableProxy,
-          enableAltPersonFlow,
           enableAppToAppPersonFlow,
         },
         bcsc: { ...initialState.bcsc, ...bcsc },
@@ -414,7 +411,7 @@ export class AppContainer implements Container {
           logger.overrideCurrentAutoDisableExpiration(override)
 
           logger.info(
-            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}.  Expiration override is ${override} minutes`
+            `Remote logging enabled, last enabled at ${enabledAt}, session id: ${logger.sessionId}.  Expiration override is ${override} minutes`,
           )
         }
       }
@@ -434,7 +431,7 @@ export class AppContainer implements Container {
   }
 
   public resolveAll<K extends keyof TokenMapping, T extends K[]>(
-    tokens: [...T]
+    tokens: [...T],
   ): { [I in keyof T]: TokenMapping[T[I]] } {
     return tokens.map((key) => this.resolve(key)!) as { [I in keyof T]: TokenMapping[T[I]] }
   }

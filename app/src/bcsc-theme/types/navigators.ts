@@ -1,4 +1,5 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
+import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
@@ -16,6 +17,8 @@ export enum BCSCScreens {
   ScanSerial = 'BCSCScanSerial',
   EnterBirthdate = 'BCSCEnterBirthdate',
   MismatchedSerial = 'BCSCMismatchedSerial',
+  EnterEmailScreen = 'BCSCEnterEmailScreen',
+  EmailConfirmationScreen = 'BCSCEmailConfirmationScreen',
   VerificationMethodSelection = 'BCSCVerificationMethodSelection',
   VerifyInPerson = 'BCSCVerifyInPerson',
   InformationRequired = 'BCSCInformationRequired',
@@ -54,6 +57,8 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.ScanSerial]: undefined
   [BCSCScreens.EnterBirthdate]: undefined
   [BCSCScreens.MismatchedSerial]: undefined
+  [BCSCScreens.EnterEmailScreen]: { cardType: BCSCCardType }
+  [BCSCScreens.EmailConfirmationScreen]: { emailAddressId: string }
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
   [BCSCScreens.InformationRequired]: undefined
@@ -62,7 +67,7 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.PhotoReview]: { photoPath: string }
   [BCSCScreens.VideoInstructions]: undefined
   [BCSCScreens.TakeVideo]: undefined
-  [BCSCScreens.VideoReview]: { videoPath: string, videoThumbnailPath: string }
+  [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
   [BCSCScreens.VideoTooLong]: { videoLengthSeconds: number }
   [BCSCScreens.SuccessfullySent]: undefined
   [BCSCScreens.PendingReview]: undefined
