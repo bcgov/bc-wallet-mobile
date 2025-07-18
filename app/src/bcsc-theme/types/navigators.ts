@@ -32,6 +32,8 @@ export enum BCSCScreens {
   ManualPairingCode = 'BCSCManualPairingCode',
   PairingConfirmation = 'BCSCPairingConfirmation',
   AdditionalIdentificationRequired = 'BCSCAdditionalIdentificationRequired',
+  IDPhotoInformation = 'BCSCIDPhotoInformation',
+  EvidenceTypeList = 'EvidenceTypeList',
 }
 
 export type BCSCTabStackParams = {
@@ -69,4 +71,6 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.VerificationSuccess]: undefined
   [BCSCScreens.AdditionalIdentificationRequired]: undefined
+  [BCSCScreens.IDPhotoInformation]: undefined
+  [BCSCScreens.EvidenceTypeList]: undefined
 }

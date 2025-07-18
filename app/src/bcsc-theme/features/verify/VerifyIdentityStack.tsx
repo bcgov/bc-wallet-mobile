@@ -22,7 +22,9 @@ import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
 import PendingReviewScreen from './send-video/PendingReviewScreen'
 import SuccessfullySentScreen from './send-video/SuccessfullySentScreen'
-import AdditionalIdentificationRequiredScreen from './AdditionalIdentificationRequiredScreen'
+import AdditionalIdentificationRequiredScreen from './non-photo/AdditionalIdentificationRequiredScreen'
+import IDPhotoInformationScreen from './non-photo/IDPhotoInformationScreen'
+import EvidenceTypeListScreen from './non-photo/EvidenceTypeListScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -46,10 +48,6 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
-      <Stack.Screen
-        name={BCSCScreens.AdditionalIdentificationRequired}
-        component={AdditionalIdentificationRequiredScreen}
-      />
       <Stack.Screen
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
@@ -83,6 +81,12 @@ const VerifyIdentityStack = () => {
         component={VerificationSuccessScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name={BCSCScreens.AdditionalIdentificationRequired}
+        component={AdditionalIdentificationRequiredScreen}
+      />
+      <Stack.Screen name={BCSCScreens.IDPhotoInformation} component={IDPhotoInformationScreen} />
+      <Stack.Screen name={BCSCScreens.EvidenceTypeList} component={EvidenceTypeListScreen} />
     </Stack.Navigator>
   )
 }
