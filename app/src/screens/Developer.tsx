@@ -36,6 +36,7 @@ const Developer: React.FC = () => {
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
     !!store.preferences.useConnectionInviterCapability,
   )
+  const [BCSCMode, setBCSCMode] = useState<boolean>(store.mode === Mode.BCSC)
   const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
@@ -289,12 +290,24 @@ const Developer: React.FC = () => {
   }
 
   const toggleMode = () => {
-    lockOutUser(LockoutReason.Timeout)
-    setTheme(BCThemeNames.BCSC)
-    dispatch({
-      type: BCDispatchAction.UPDATE_MODE,
-      payload: [Mode.BCSC],
-    })
+    if (!BCSCMode) {
+      // mode is bcwallet
+      lockOutUser(LockoutReason.Timeout)
+      setTheme(BCThemeNames.BCSC)
+      dispatch({
+        type: BCDispatchAction.UPDATE_MODE,
+        payload: [Mode.BCSC],
+      })
+      setBCSCMode(true)
+    } else {
+      lockOutUser(LockoutReason.Timeout)
+      setTheme(BCThemeNames.BCWallet)
+      dispatch({
+        type: BCDispatchAction.UPDATE_MODE,
+        payload: [Mode.BCWallet],
+      })
+      setBCSCMode(false)
+    }
   }
 
   return (
@@ -522,10 +535,10 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={ColorPallet.grayscale.mediumGrey}
+            thumbColor={!BCSCMode ? ColorPallet.grayscale.mediumGrey : ColorPallet.brand.primary}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleMode}
-            value={false}
+            value={BCSCMode}
           />
         </SectionRow>
       </ScrollView>
