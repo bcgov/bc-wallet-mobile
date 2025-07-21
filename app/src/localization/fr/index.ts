@@ -167,7 +167,6 @@ const translation = {
     "Toggle": "Activer/Désactiver le mode développeur",
     "AttestationSupport": "Soutien d'attestation",
     "EnableProxy": "Enable proxy (FR)",
-    "EnableAltPersonFlow": "Alt Person flow (FR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (FR)",
   },
   "Tips": {

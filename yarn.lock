@@ -2994,9 +2994,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@npm:2.2.0":
-  version: 2.2.0
-  resolution: "@bifold/core@npm:2.2.0"
+"@bifold/core@npm:2.2.1":
+  version: 2.2.1
+  resolution: "@bifold/core@npm:2.2.1"
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.13
     "@credo-ts/askar": 0.5.13
@@ -3071,38 +3071,38 @@ __metadata:
     uuid: ^9.0.0
   bin:
     bifold: bin/bifold
-  checksum: 10c0/c0e957f3bfc2ed86921ea2d76fa6f360321428f1dcd34b2b86c21f8c0200796fff783552b24bfd99e2498e2f4b8b47801e1c194be4aada1cc875739cac700893
+  checksum: 10c0/3025caa7dfc7bc5d16e2dbaa2827365d4dea73195e554449ff84e79110367fcb0da9cda489e029d8a387d67b01a5c1f4db67cda6bb20a51214ae8875bb507c11
   languageName: node
   linkType: hard
 
-"@bifold/oca@npm:2.2.0":
-  version: 2.2.0
-  resolution: "@bifold/oca@npm:2.2.0"
+"@bifold/oca@npm:2.2.1":
+  version: 2.2.1
+  resolution: "@bifold/oca@npm:2.2.1"
   dependencies:
     "@credo-ts/anoncreds": "npm:0.5.13"
     "@credo-ts/core": "npm:0.5.13"
     axios: "npm:^1.4.0"
     lodash.startcase: "npm:^4.4.0"
     react-native-fs: "npm:^2.16.6"
-  checksum: 10c0/ec03f1eb759b71638366b445a5fe2358fa64f86158f42714bf5fb7a248c11db5e66319aa6ff67285e867442e7595fa37fd50271764af2efa9a6166344cfa52c7
+  checksum: 10c0/50bf0e2d7d67a8209efa1926a6e26f275fabb0cf2783cfe930be3baf7450916fc5e3933d75dea1216cc097b1da7218198e536a4568522f55e185e650cd7c183f
   languageName: node
   linkType: hard
 
-"@bifold/react-native-attestation@npm:2.2.0":
-  version: 2.2.0
-  resolution: "@bifold/react-native-attestation@npm:2.2.0"
+"@bifold/react-native-attestation@npm:2.2.1":
+  version: 2.2.1
+  resolution: "@bifold/react-native-attestation@npm:2.2.1"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/650120cc50399506b46ccb6f2d037c8f33ae13898c2e212a5024a7325327cea054cfe04530dc492e46c407f169336156715e9810c5d267d02daf6657012ff3f5
+  checksum: 10c0/9df60de0d0f71860cf39cc008849d7b5c29bbdd09e5839b05b5cf7b55f2835da20e16c2fed3a989af08a0644205dafdc7ea6d7036f2ce881616f5276b76f9be9
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@npm:2.2.0":
-  version: 2.2.0
-  resolution: "@bifold/remote-logs@npm:2.2.0"
+"@bifold/remote-logs@npm:2.2.1":
+  version: 2.2.1
+  resolution: "@bifold/remote-logs@npm:2.2.1"
   dependencies:
-    "@bifold/core": "npm:2.2.0"
+    "@bifold/core": "npm:2.2.1"
     "@credo-ts/core": "npm:0.5.13"
     axios: "npm:^1.4.0"
     buffer: "npm:^6.0.3"
@@ -3116,20 +3116,20 @@ __metadata:
     react: ^18.2.0
     react-native: ^0.73.6
     react-native-logs: ~5.1.0
-  checksum: 10c0/4ce76d27d1341ff9b5c9269d3982b6ff3a235681e7b995e2eaa19316644f3af678386701cfa6abbc78f067b8d4c3f815013d3617d1af534373c1202e5c612bf0
+  checksum: 10c0/b33b33fcec6115fe08b486522206d2e9b4da67b5a8cc17e63d0565ef63373f77c89cbb11d7914389470f2f091618e4b4816cc842ad0a69cade566f5b1e27f051
   languageName: node
   linkType: hard
 
-"@bifold/verifier@npm:2.2.0":
-  version: 2.2.0
-  resolution: "@bifold/verifier@npm:2.2.0"
+"@bifold/verifier@npm:2.2.1":
+  version: 2.2.1
+  resolution: "@bifold/verifier@npm:2.2.1"
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.13
     "@credo-ts/core": 0.5.13
     "@credo-ts/react-hooks": 0.6.0
     "@hyperledger/anoncreds-shared": 0.2.4
     react: ^18.2.0
-  checksum: 10c0/89bb778e59a2dfb57c4c7256809611478644863062df3d7f699ddf612bf0e52292be76c0a544e8081f06d974bc9de82991234d615f1f9a9f3106eb67bc7137ee
+  checksum: 10c0/d2a16877144cdefa7258b404d85ba1331a05d542f7e05670e293fe21b592365f5a4b9924e0df7c426f1225a481102f90e235ae8aaa3b206ae13193a8a8e58257
   languageName: node
   linkType: hard
 
@@ -11044,11 +11044,11 @@ __metadata:
     "@babel/core": "npm:7.22.1"
     "@babel/preset-env": "npm:7.22.20"
     "@babel/runtime": "npm:7.23.1"
-    "@bifold/core": "npm:2.2.0"
-    "@bifold/oca": "npm:2.2.0"
-    "@bifold/react-native-attestation": "npm:2.2.0"
-    "@bifold/remote-logs": "npm:2.2.0"
-    "@bifold/verifier": "npm:2.2.0"
+    "@bifold/core": "npm:2.2.1"
+    "@bifold/oca": "npm:2.2.1"
+    "@bifold/react-native-attestation": "npm:2.2.1"
+    "@bifold/remote-logs": "npm:2.2.1"
+    "@bifold/verifier": "npm:2.2.1"
     "@commitlint/cli": "npm:11.0.0"
     "@credo-ts/anoncreds": "npm:0.5.13"
     "@credo-ts/askar": "npm:0.5.13"

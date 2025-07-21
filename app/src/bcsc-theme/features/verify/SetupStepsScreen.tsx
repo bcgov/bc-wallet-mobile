@@ -3,11 +3,12 @@ import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, use
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useMemo } from 'react'
 
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { hitSlop } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -21,6 +22,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const serialNumber = store.bcsc.serial ?? null
   const emailAddress = store.bcsc.email ?? null
+  const emailConfirmed = store.bcsc.emailConfirmed ?? false
   const registered = useMemo(() => serialNumber && emailAddress, [serialNumber, emailAddress])
 
   const styles = StyleSheet.create({
@@ -64,6 +66,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     },
   })
 
+  const handleEmailStepPress = () => {
+    navigation.navigate(BCSCScreens.EnterEmailScreen, { cardType: store.bcsc.cardType })
+  }
+
   const handleCheckStatus = async () => {
     const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId!)
     if (status === 'verified') {
@@ -100,7 +106,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           onPress: () => {},
           style: 'cancel',
         },
-      ]
+      ],
     )
   }
 
@@ -151,15 +157,50 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         </View>
       </TouchableOpacity>
       <View style={styles.itemSeparator} />
-      <TouchableOpacity testID={testIdWithKey('Step3')} accessibilityLabel={'Step 3'} style={styles.step}>
+      <TouchableOpacity
+        testID={testIdWithKey('Step3')}
+        accessibilityLabel={'Step 3'}
+        style={[
+          styles.step,
+          {
+            backgroundColor:
+              registered && !emailConfirmed ? ColorPallet.brand.primary : ColorPallet.brand.secondaryBackground,
+          },
+        ]}
+        disabled={!registered || emailConfirmed}
+        onPress={handleEmailStepPress}
+      >
         <View style={styles.titleRow}>
-          <ThemedText variant={'headingFour'} style={{ marginRight: Spacing.md }}>
+          <ThemedText
+            variant={'headingFour'}
+            style={{
+              marginRight: Spacing.md,
+              color: registered && !emailConfirmed ? ColorPallet.brand.text : TextTheme.normal.color,
+            }}
+          >
             {'Step 3'}
           </ThemedText>
-          {registered ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
+          {registered && emailConfirmed ? (
+            <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} />
+          ) : null}
         </View>
-        <View>
-          <ThemedText>{registered ? `Email: ${emailAddress}` : 'Email Address'}</ThemedText>
+        <View style={styles.contentEmailContainer}>
+          <ThemedText
+            style={{ color: registered && !emailConfirmed ? ColorPallet.brand.text : TextTheme.normal.color }}
+          >
+            {registered && emailConfirmed ? `Email: ${emailAddress}` : 'Email Address'}
+          </ThemedText>
+          {registered && emailConfirmed ? (
+            <TouchableOpacity
+              style={styles.contentEmailButton}
+              onPress={handleEmailStepPress}
+              testID={testIdWithKey('EditEmail')}
+              accessibilityLabel={'Edit'}
+              hitSlop={hitSlop}
+            >
+              <ThemedText style={{ color: ColorPallet.brand.link, textDecorationLine: 'underline' }}>Edit</ThemedText>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </TouchableOpacity>
       <View style={styles.itemSeparator} />

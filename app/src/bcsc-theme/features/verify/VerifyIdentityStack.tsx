@@ -22,6 +22,8 @@ import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
 import PendingReviewScreen from './send-video/PendingReviewScreen'
 import SuccessfullySentScreen from './send-video/SuccessfullySentScreen'
+import EnterEmailScreen from './email/EnterEmailScreen'
+import EmailConfirmationScreen from './email/EmailConfirmationScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -45,6 +47,8 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
+      <Stack.Screen name={BCSCScreens.EnterEmailScreen} component={EnterEmailScreen} />
+      <Stack.Screen name={BCSCScreens.EmailConfirmationScreen} component={EmailConfirmationScreen} />
       <Stack.Screen
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
@@ -60,43 +64,14 @@ const VerifyIdentityStack = () => {
         component={InformationRequiredScreen}
         options={{ title: 'Information Required' }}
       />
-      <Stack.Screen
-        name={BCSCScreens.PhotoInstructions}
-        component={PhotoInstructionsScreen}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TakePhoto}
-        component={TakePhotoScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name={BCSCScreens.PhotoReview}
-        component={PhotoReviewScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name={BCSCScreens.VideoInstructions}
-        component={VideoInstructionsScreen}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TakeVideo}
-        component={TakeVideoScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name={BCSCScreens.VideoReview}
-        component={VideoReviewScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name={BCSCScreens.PendingReview}
-        component={PendingReviewScreen}
-      />
-      <Stack.Screen
-        name={BCSCScreens.VideoTooLong}
-        component={VideoTooLongScreen}
-        options={{ headerShown: false }}
-      />
+      <Stack.Screen name={BCSCScreens.PhotoInstructions} component={PhotoInstructionsScreen} />
+      <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
+      <Stack.Screen name={BCSCScreens.PhotoReview} component={PhotoReviewScreen} options={{ headerShown: false }} />
+      <Stack.Screen name={BCSCScreens.VideoInstructions} component={VideoInstructionsScreen} />
+      <Stack.Screen name={BCSCScreens.TakeVideo} component={TakeVideoScreen} options={{ headerShown: false }} />
+      <Stack.Screen name={BCSCScreens.VideoReview} component={VideoReviewScreen} options={{ headerShown: false }} />
+      <Stack.Screen name={BCSCScreens.PendingReview} component={PendingReviewScreen} />
+      <Stack.Screen name={BCSCScreens.VideoTooLong} component={VideoTooLongScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name={BCSCScreens.SuccessfullySent}
         component={SuccessfullySentScreen}
