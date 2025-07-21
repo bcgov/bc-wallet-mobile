@@ -36,24 +36,12 @@
     "typecheck": "cd app && yarn typecheck"
   },
   "devDependencies": {
-    "@commitlint/cli": "^11.0.0",
-    "commitlint": "^17.7.1",
-    "husky": "^7.0.0",
-    "npm-run-all": "^4.1.5"
+    "@commitlint/cli": "~19.8.1",
+    "commitlint": "~19.8.1",
+    "husky": "~9.1.7"
   },
   "resolutions": {
-    "typescript": "^5.0.4",
-    "tsyringe": "4.8.0",
-    "@types/react": "^18.2.6",
-    "@react-navigation/core": "6.1.0",
-    "@react-navigation/native": "6.0.6",
-    "@react-navigation/stack": "6.0.11",
-    "@types/react-dom": "^18.0.24",
-    "@types/node": "16.9.6",
     "did-resolver": "3.1.5",
-    "react-native": "0.73.6",
-    "react-i18next": "11.18.6",
-    "react-native-vision-camera": "4.3.1",
     "@credo-ts/anoncreds@npm:0.5.13": "patch:@credo-ts/anoncreds@npm%3A0.5.13#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.13-446ac3168e.patch",
     "@credo-ts/anoncreds@npm:^0.5.11": "patch:@credo-ts/anoncreds@npm%3A0.5.13#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.13-446ac3168e.patch",
     "@credo-ts/core@npm:0.5.13": "patch:@credo-ts/core@npm%3A0.5.13#~/.yarn/patches/@credo-ts-core-npm-0.5.13-725ab940d0.patch",
