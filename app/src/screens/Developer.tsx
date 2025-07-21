@@ -290,24 +290,17 @@ const Developer: React.FC = () => {
   }
 
   const toggleMode = () => {
-    if (!BCSCMode) {
-      // mode is bcwallet
-      lockOutUser(LockoutReason.Timeout)
-      setTheme(BCThemeNames.BCSC)
-      dispatch({
-        type: BCDispatchAction.UPDATE_MODE,
-        payload: [Mode.BCSC],
-      })
-      setBCSCMode(true)
-    } else {
-      lockOutUser(LockoutReason.Timeout)
-      setTheme(BCThemeNames.BCWallet)
-      dispatch({
-        type: BCDispatchAction.UPDATE_MODE,
-        payload: [Mode.BCWallet],
-      })
-      setBCSCMode(false)
-    }
+    lockOutUser(LockoutReason.Timeout)
+    
+    const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
+    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.BCSC
+    
+    setTheme(newTheme)
+    dispatch({
+      type: BCDispatchAction.UPDATE_MODE,
+      payload: [newMode],
+    })
+    setBCSCMode((previousState) => !previousState)
   }
 
   return (
