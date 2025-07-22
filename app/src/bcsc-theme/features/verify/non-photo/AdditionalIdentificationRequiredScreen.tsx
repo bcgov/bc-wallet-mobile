@@ -61,7 +61,9 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
             title={'Choose ID'}
             accessibilityLabel={'Choose ID'}
             testID={''}
-            onPress={() => console.log('Navigate to list of accepted card types')}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.EvidenceTypeList)
+            }}
             buttonType={ButtonType.Secondary}
           />
         </View>

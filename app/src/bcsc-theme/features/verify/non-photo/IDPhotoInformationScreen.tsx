@@ -4,14 +4,19 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
+import { useEffect } from 'react'
 
-type AdditionalIdentificationRequiredScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
+type IDPhotoInformationScreenProps = {
+  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IDPhotoInformation>
+  cardType: any
 }
 
-const IDPhotoInformationScreen: React.FC<AdditionalIdentificationRequiredScreenProps> = ({
+const IDPhotoInformationScreen: React.FC<IDPhotoInformationScreenProps> = ({
   navigation,
-}: AdditionalIdentificationRequiredScreenProps) => {
+  cardType,
+}: IDPhotoInformationScreenProps) => {
+  console.log('____________')
+  console.log(cardType)
   const { ColorPallet, Spacing } = useTheme()
   const styles = StyleSheet.create({
     pageContainer: {
@@ -29,12 +34,14 @@ const IDPhotoInformationScreen: React.FC<AdditionalIdentificationRequiredScreenP
       position: 'relative',
     },
   })
+  useEffect(() => {
+    console.log('_________+++++++++_______')
+    console.log(cardType)
+  }, [])
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <View>
-          <Image source={{ uri: '' }} />
-        </View>
+        <View>{/* <Image source={{ uri: '' }} /> */}</View>
         <View>
           <ThemedText variant={'headingThree'}>
             {'Take a photo of your ID. An agent will look at this photo when verifying your identity.'}

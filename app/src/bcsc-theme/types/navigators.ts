@@ -71,6 +71,6 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.VerificationSuccess]: undefined
   [BCSCScreens.AdditionalIdentificationRequired]: undefined
-  [BCSCScreens.IDPhotoInformation]: undefined
+  [BCSCScreens.IDPhotoInformation]: { cardType: any }
   [BCSCScreens.EvidenceTypeList]: undefined
 }

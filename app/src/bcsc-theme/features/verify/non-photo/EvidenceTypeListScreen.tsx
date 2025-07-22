@@ -1,24 +1,44 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEffect } from 'react'
-import { TextTheme } from '@/bcwallet-theme/theme'
-import { BCState } from '@/store'
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
 }
 
-// ok I need a component for the list items
-// and a components for the headers
-
 const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigation }: EvidenceTypeListScreenProps) => {
   const { ColorPallet, Spacing } = useTheme()
-  const [store] = useStore<BCState>()
+  const { data, error, load } = useDataLoader<any[]>(
+    async () => {
+      const cards: any = {}
+      const evidenceMetadata = await evidence.getEvidenceMetadata()
+      evidenceMetadata.processes.forEach((process) => {
+        process.evidence_types.forEach((evidenceType) => {
+          if (!cards[evidenceType.group]) {
+            cards[evidenceType.group] = [evidenceType]
+          } else {
+            cards[evidenceType.group].push(evidenceType)
+          }
+        })
+      })
+      const data: any[] = []
+      Object.keys(cards).forEach((key) => {
+        data.push({
+          title: key,
+          data: cards[key],
+        })
+      })
+      return data
+    },
+    { onError: (error: unknown) => console.log(error) }
+  )
+
   const { evidence } = useApi()
   const styles = StyleSheet.create({
     pageContainer: {
@@ -36,10 +56,10 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     },
     itemSeparator: {
       width: '100%',
-      height: 8,
+      height: 3,
       backgroundColor: ColorPallet.brand.primaryBackground,
     },
-    step: {
+    cardSection: {
       paddingVertical: 24,
       paddingHorizontal: 24,
       backgroundColor: ColorPallet.brand.secondaryBackground,
@@ -48,75 +68,45 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
       marginTop: 16,
       flex: 1,
     },
-    titleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    contentText: {
-      flex: 1,
-      flexWrap: 'wrap',
-    },
-    contentEmailContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    contentEmail: {
-      flex: 1,
-      flexWrap: 'wrap',
-    },
-    contentEmailButton: {
-      alignSelf: 'flex-end',
-    },
   })
 
   useEffect(() => {
-    const cards: any = {}
-    const fetchData = async () => {
-      const evidenceMetadata = await evidence.getEvidenceMetadata()
-      console.log(evidenceMetadata)
-      evidenceMetadata.processes.forEach((process) => {
-        // TODO: update to use card flow selected
-        // process.process === store.bcsc.cardType
-        if (process.process === 'IDIM L3 Remote Non-photo BCSC Identity Verification') {
-          process.evidence_types.forEach((evidenceType) => {
-            if (!cards[evidenceType.group]) {
-              cards[evidenceType.group] = [evidenceType]
-            } else {
-              cards[evidenceType.group].push(evidenceType)
-            }
-          })
-        }
-      })
-    }
+    load()
+  }, [])
 
-    fetchData()
-  }, [evidence])
+  console.log(error)
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <View>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            Choose photo ID
-          </ThemedText>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            Use an ID that has the same name as on your BC Services Card.
-          </ThemedText>
-        </View>
-        <View>
-          <TouchableOpacity
-            onPress={() => {
-              console.log('Woot')
-            }}
-            testID={testIdWithKey('Step1')}
-            style={[styles.step, { backgroundColor: ColorPallet.brand.secondaryBackground }]}
-          >
-            <View>
-              <ThemedText style={{ color: TextTheme.normal.color }}>{`ID: BC Services Card`}</ThemedText>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      <View>
+        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+          Choose photo ID
+        </ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>
+          Use an ID that has the same name as on your BC Services Card.
+        </ThemedText>
+      </View>
+      <View>
+        <SectionList
+          sections={data || []}
+          renderSectionHeader={(item) => <ThemedText>{item.section.title}</ThemedText>}
+          renderItem={(data) => (
+            <TouchableOpacity
+              onPress={() => {
+                console.log('-_-_-_-_-_')
+                console.log(data)
+                // navigate to the next screen with the correct data
+                navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data })
+              }}
+              testID={testIdWithKey('Step1')}
+              style={[styles.cardSection, { backgroundColor: ColorPallet.brand.secondaryBackground }]}
+            >
+              <View>
+                <ThemedText>{data.item.evidence_type_label}</ThemedText>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
     </SafeAreaView>
   )
 }
