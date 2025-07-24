@@ -129,8 +129,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           <ThemedText
             variant={'headingFour'}
             style={{ marginRight: 16, color: registered ? TextTheme.headingFour.color : ColorPallet.brand.text }}
+            accessibilityLabel={t('Unified.Steps.Step1')}
           >
-            {'Step 1'}
+            {t('Unified.Steps.Step1')}
           </ThemedText>
           {registered ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
         </View>
@@ -141,10 +142,15 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         </View>
       </TouchableOpacity>
       <View style={styles.itemSeparator} />
-      <TouchableOpacity testID={testIdWithKey('Step2')} accessibilityLabel={'Step 2'} style={styles.step}>
+      <TouchableOpacity
+        testID={testIdWithKey('Step2')}
+        accessibilityLabel={t('Unified.Steps.Step2')}
+        style={styles.step}
+        disabled={!registered}
+      >
         <View style={styles.titleRow}>
           <ThemedText variant={'headingFour'} style={{ marginRight: Spacing.md }}>
-            {'Step 2'}
+            {t('Unified.Steps.Step2')}
           </ThemedText>
           {registered ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
         </View>
@@ -159,7 +165,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <View style={styles.itemSeparator} />
       <TouchableOpacity
         testID={testIdWithKey('Step3')}
-        accessibilityLabel={'Step 3'}
+        accessibilityLabel={t('Unified.Steps.Step3')}
         style={[
           styles.step,
           {
@@ -178,7 +184,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               color: registered && !emailConfirmed ? ColorPallet.brand.text : TextTheme.normal.color,
             }}
           >
-            {'Step 3'}
+            {t('Unified.Steps.Step3')}
           </ThemedText>
           {registered && emailConfirmed ? (
             <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} />
@@ -211,7 +217,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           }
         }}
         testID={testIdWithKey('Step4')}
-        accessibilityLabel={'Step 4'}
+        accessibilityLabel={t('Unified.Steps.Step4')}
+        disabled={!registered || store.bcsc.pendingVerification}
         style={[
           styles.step,
           {
@@ -224,7 +231,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             variant={'headingFour'}
             style={{ marginRight: 16, color: registered ? ColorPallet.brand.text : TextTheme.headingFour.color }}
           >
-            {'Step 4'}
+            {t('Unified.Steps.Step4')}
           </ThemedText>
         </View>
         <View>

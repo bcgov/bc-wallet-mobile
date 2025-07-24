@@ -217,7 +217,11 @@ const translation = {
   },
   "Unified": {
     "Steps": {
-      "ScanOrTakePhotos": "Scan or take photos of your ID."
+      "ScanOrTakePhotos": "Scan or take photos of your ID.",
+      "Step1": "Step 1",
+      "Step2": "Step 2",
+      "Step3": "Step 3",
+      "Step4": "Step 4"
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",
