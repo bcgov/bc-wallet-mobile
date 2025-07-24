@@ -695,8 +695,8 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
         .claim("device_model", Build.MODEL)
         .claim("device_id", UUID.randomUUID().toString()) // Generate unique device ID
         .claim("device_token", actualDeviceToken)
-        .claim("app_version", "1.0.0") // This could be made dynamic
-        .claim("app_build", "1") // This could be made dynamic
+        .claim("app_version", getAppVersion())
+        .claim("app_build", getAppBuildNumber())
         .claim("has_other_accounts", false) // This could be made dynamic
         .build()
       
@@ -735,8 +735,8 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
         .claim("device_id", UUID.randomUUID().toString())
         .claim("device_token", actualDeviceToken)
         .claim("fcm_device_token", fcmDeviceToken)
-        .claim("app_version", "1.0.0") // This could be made dynamic
-        .claim("app_build", "1") // This could be made dynamic
+        .claim("app_version", getAppVersion())
+        .claim("app_build", getAppBuildNumber())
         .claim("has_other_accounts", false)
         .issueTime(Date())
         .build()
@@ -875,7 +875,38 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   private fun ByteArray.toBase64String(): String =
     android.util.Base64.encodeToString(this, android.util.Base64.NO_WRAP)
 
-  // MARK: - ReactMethod implementations
+  /**
+   * Gets the app version name from the package info
+   */
+  private fun getAppVersion(): String {
+    return try {
+      val packageInfo = reactApplicationContext.packageManager.getPackageInfo(
+        reactApplicationContext.packageName, 0
+      )
+      packageInfo.versionName ?: "0.0.0"
+    } catch (e: Exception) {
+      Log.w(NAME, "Could not get app version: ${e.message}")
+      return "0.0.0"
+    }
+  }
 
-  // MARK: - Internal helper methods
+  /**
+   * Gets the app build number (version code) from the package info
+   */
+  private fun getAppBuildNumber(): String {
+    return try {
+      val packageInfo = reactApplicationContext.packageManager.getPackageInfo(
+        reactApplicationContext.packageName, 0
+      )
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+        packageInfo.longVersionCode.toString()
+      } else {
+        @Suppress("DEPRECATION")
+        packageInfo.versionCode.toString()
+      }
+    } catch (e: Exception) {
+      Log.w(NAME, "Could not get app build number: ${e.message}")
+      return "0"
+    }
+  }
 }
