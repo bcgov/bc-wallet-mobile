@@ -1,4 +1,5 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
+import { EvidenceType } from '../api/hooks/useEvidenceApi'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
@@ -34,6 +35,7 @@ export enum BCSCScreens {
   AdditionalIdentificationRequired = 'BCSCAdditionalIdentificationRequired',
   IDPhotoInformation = 'BCSCIDPhotoInformation',
   EvidenceTypeList = 'EvidenceTypeList',
+  EvidenceCapture = 'BCSCEvidenceCapture'
 }
 
 export type BCSCTabStackParams = {
@@ -61,8 +63,8 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.VerifyInPerson]: undefined
   [BCSCScreens.InformationRequired]: undefined
   [BCSCScreens.PhotoInstructions]: undefined
-  [BCSCScreens.TakePhoto]: undefined
-  [BCSCScreens.PhotoReview]: { photoPath: string }
+  [BCSCScreens.TakePhoto]: { deviceSide: 'front' | 'back'; cameraLabel: string; cameraInstructions: string }
+  [BCSCScreens.PhotoReview]: { photoPath: string, }
   [BCSCScreens.VideoInstructions]: undefined
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string, videoThumbnailPath: string }
@@ -71,6 +73,7 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.VerificationSuccess]: undefined
   [BCSCScreens.AdditionalIdentificationRequired]: undefined
-  [BCSCScreens.IDPhotoInformation]: { cardType: any }
+  [BCSCScreens.IDPhotoInformation]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceTypeList]: undefined
+  [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
 }

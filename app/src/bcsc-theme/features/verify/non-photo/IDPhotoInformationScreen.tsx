@@ -5,18 +5,20 @@ import { Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
 import { useEffect } from 'react'
+import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 
 type IDPhotoInformationScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IDPhotoInformation>
-  cardType: any
+  route: { params: { cardType: EvidenceType } }
 }
 
 const IDPhotoInformationScreen: React.FC<IDPhotoInformationScreenProps> = ({
   navigation,
-  cardType,
+  route,
 }: IDPhotoInformationScreenProps) => {
   console.log('____________')
-  console.log(cardType)
+  console.log(route.params.cardType)
+  const { cardType } = route.params
   const { ColorPallet, Spacing } = useTheme()
   const styles = StyleSheet.create({
     pageContainer: {
@@ -34,10 +36,6 @@ const IDPhotoInformationScreen: React.FC<IDPhotoInformationScreenProps> = ({
       position: 'relative',
     },
   })
-  useEffect(() => {
-    console.log('_________+++++++++_______')
-    console.log(cardType)
-  }, [])
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
@@ -56,7 +54,13 @@ const IDPhotoInformationScreen: React.FC<IDPhotoInformationScreenProps> = ({
             title={'Take Photo'}
             accessibilityLabel={'Take Photo'}
             testID={''}
-            onPress={() => console.log('Navigate to take photo screen')}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.TakePhoto, {
+                deviceSide: 'back',
+                cameraLabel: cardType.image_sides[0].image_side_label,
+                cameraInstructions: cardType.image_sides[0].image_side_tip,
+              })
+            }}
             buttonType={ButtonType.Primary}
           />
         </View>

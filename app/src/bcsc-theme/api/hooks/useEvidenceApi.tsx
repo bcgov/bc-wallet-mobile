@@ -56,26 +56,29 @@ export interface UploadEvidenceResponseData {
   upload_uri: string
 }
 
+export interface EvidenceImageSide {
+  image_side_name: 'FRONT_SIDE' | 'BACK_SIDE'
+  image_side_label: string
+  image_side_tip: string
+}
+
+export interface EvidenceType {
+  evidence_type: string
+  has_photo: boolean
+  group: 'BRITISH COLUMBIA' | 'CANADA, OR OTHER LOCATION IN CANADA' | 'UNITED STATES' | 'OTHER COUNTRIES'
+  group_sort_order: number
+  sort_order: number
+  collection_form: 'FIRST' | 'SECOND' | 'BOTH'
+  document_reference_input_mask: string // a regex mask for ID document reference input, number only can indicate to use a number only keyboard
+  document_reference_label: string
+  document_reference_sample: string
+  image_sides: EvidenceImageSide[]
+  evidence_type_label: string
+}
 export interface EvidenceMetadataResponseData {
   processes: {
     process: 'IDIM L3 Remote Non-BCSC Identity Verification' | 'IDIM L3 Remote Non-photo BCSC Identity Verification'
-    evidence_types: {
-      evidence_type: string
-      has_photo: boolean
-      group: 'BRITISH COLUMBIA' | 'CANADA, OR OTHER LOCATION IN CANADA' | 'UNITED STATES' | 'OTHER COUNTRIES'
-      group_sort_order: number
-      sort_order: number
-      collection_form: 'FIRST' | 'SECOND' | 'BOTH'
-      document_reference_input_mask: string // a regex mask for ID document reference input, number only can indicate to use a number only keyboard
-      document_reference_label: string
-      document_reference_sample: string
-      image_sides: {
-        image_side_name: 'FRONT_SIDE' | 'BACK_SIDE'
-        image_side_label: string
-        image_side_tip: string
-      }[]
-      evidence_type_label: string
-    }[]
+    evidence_types: EvidenceType[]
   }[]
 }
 

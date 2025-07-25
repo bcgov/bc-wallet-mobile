@@ -7,6 +7,7 @@ import { ScrollView } from 'react-native-gesture-handler'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEffect } from 'react'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
+import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -16,7 +17,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
   const { ColorPallet, Spacing } = useTheme()
   const { data, error, load } = useDataLoader<any[]>(
     async () => {
-      const cards: any = {}
+      const cards: Record<string, EvidenceType[]> = {}
       const evidenceMetadata = await evidence.getEvidenceMetadata()
       evidenceMetadata.processes.forEach((process) => {
         process.evidence_types.forEach((evidenceType) => {
@@ -93,9 +94,9 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
             <TouchableOpacity
               onPress={() => {
                 console.log('-_-_-_-_-_')
-                console.log(data)
+                console.log(data.item)
                 // navigate to the next screen with the correct data
-                navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data })
+                navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
               }}
               testID={testIdWithKey('Step1')}
               style={[styles.cardSection, { backgroundColor: ColorPallet.brand.secondaryBackground }]}
