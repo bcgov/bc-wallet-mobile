@@ -55,10 +55,8 @@ const IDPhotoInformationScreen: React.FC<IDPhotoInformationScreenProps> = ({
             accessibilityLabel={'Take Photo'}
             testID={''}
             onPress={() => {
-              navigation.navigate(BCSCScreens.TakePhoto, {
-                deviceSide: 'back',
-                cameraLabel: cardType.image_sides[0].image_side_label,
-                cameraInstructions: cardType.image_sides[0].image_side_tip,
+              navigation.navigate(BCSCScreens.EvidenceCapture, {
+                cardType: cardType,
               })
             }}
             buttonType={ButtonType.Primary}

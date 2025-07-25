@@ -25,6 +25,7 @@ import SuccessfullySentScreen from './send-video/SuccessfullySentScreen'
 import AdditionalIdentificationRequiredScreen from './non-photo/AdditionalIdentificationRequiredScreen'
 import IDPhotoInformationScreen from './non-photo/IDPhotoInformationScreen'
 import EvidenceTypeListScreen from './non-photo/EvidenceTypeListScreen'
+import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -87,6 +88,7 @@ const VerifyIdentityStack = () => {
       />
       <Stack.Screen name={BCSCScreens.IDPhotoInformation} component={IDPhotoInformationScreen} />
       <Stack.Screen name={BCSCScreens.EvidenceTypeList} component={EvidenceTypeListScreen} />
+      <Stack.Screen name={BCSCScreens.EvidenceCapture} component={EvidenceCaptureScreen} />
     </Stack.Navigator>
   )
 }

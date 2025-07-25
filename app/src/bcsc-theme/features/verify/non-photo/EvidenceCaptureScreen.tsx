@@ -9,8 +9,10 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
 import MaskedView from '@react-native-masked-view/masked-view'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { EvidenceImageSide, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { StyleSheet, View, Text, Alert, TouchableOpacity, useWindowDimensions } from 'react-native'
+import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
+import RectangularMask from '@/bcsc-theme/components/RectangularMask'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceCapture>
@@ -28,19 +30,32 @@ const EvidenceCaptureScreen: React.FC<EvidenceCaptureScreenProps> = ({
   const { cardType } = route.params
   console.log('EVIDENCE COLLECTION CONTROLLER')
   console.log(cardType)
-  // const [imagesSides, setImageSides] = useState<any[] | undefined>(undefined)
+  const imageSides = cardType.image_sides
+  const [currentSide, setCurrentSide] = useState<EvidenceImageSide | null>(null)
 
-  // useEffect(() => {
-  //   if (imagesSides === undefined) {
-  //     setImageSides(cardType.image_sides)
-  //   } else if (imagesSides.length > 0) {
+  useEffect(() => {
+    if (imageSides.length > 0) {
+      setCurrentSide(imageSides[0])
+    } else {
+      Alert.alert('Error', 'No image sides available for this evidence type.')
+    }
+  }, [imageSides])
 
-  //   } else {
+  if (currentSide) {
+    return (
+      <MaskedCamera
+        navigation={navigation}
+        cameraFace={'back'}
+        cameraInstructions={currentSide.image_side_tip}
+        cameraLabel={currentSide.image_side_label}
+        cameraMask={<RectangularMask />}
+      />
+      // <SafeAreaView style={{ flex: 1 }}>
+      // </SafeAreaView>
+    )
+  }
 
-  //   }
-  // }, [cardType])
-
-  return <SafeAreaView style={{ flex: 1, position: 'relative' }}></SafeAreaView>
+  return <Text>BUTTS</Text>
 }
 
 export default EvidenceCaptureScreen

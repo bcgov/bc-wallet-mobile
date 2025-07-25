@@ -1,23 +1,42 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { ColorPallet, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useState, useRef } from 'react'
 import { StyleSheet, View, Text, Alert, TouchableOpacity, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
 import MaskedView from '@react-native-masked-view/masked-view'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
+import CircularMask from './CircularMask'
 
-type MAskedCameraProps = {
+type MaskedCameraProps = {
   navigation: any
   cameraFace: 'front' | 'back'
-  cameraMask: any // should be a masked component
-  // handleCancel: () => void
+  cameraInstructions: string
+  cameraLabel?: string
+  cameraMask?: React.ReactElement
 }
 
-const MaskedCamera = ({ navigation, cameraMask, cameraFace = 'back' }: MAskedCameraProps) => {
+const MaskedCamera = ({
+  navigation,
+  cameraMask,
+  cameraInstructions,
+  cameraLabel,
+  cameraFace = 'back',
+}: MaskedCameraProps) => {
   const device = useCameraDevice(cameraFace)
+
+  const { Spacing, ColorPallet } = useTheme()
+  const { hasPermission, requestPermission } = useCameraPermission()
+  const [isActive, setIsActive] = useState(false)
+  const [torchOn, setTorchOn] = useState(false)
   const cameraRef = useRef<Camera>(null)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { width } = useWindowDimensions()
+  const maskWidth = width - Spacing.lg * 2
+  const maskHeight = width * 1.2
+  const maskBorderRadius = maskWidth / 2
+  const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
     container: {
@@ -27,8 +46,48 @@ const MaskedCamera = ({ navigation, cameraMask, cameraFace = 'back' }: MAskedCam
     camera: {
       flex: 1,
     },
+    controlsContainer: {
+      position: 'absolute',
+      bottom: 30,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-evenly',
+      paddingHorizontal: Spacing.lg,
+    },
+    instructionText: {
+      color: 'white',
+      backgroundColor: 'transparent',
+      position: 'absolute',
+      fontWeight: 'normal',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 5,
+      paddingHorizontal: Spacing.md,
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    captureButton: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      backgroundColor: 'white',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    captureButtonInner: {
+      width: 64,
+      height: 64,
+      borderRadius: 30,
+      backgroundColor: 'white',
+      borderColor: '#CCC',
+      borderWidth: 2,
+    },
   })
-  const { hasPermission, requestPermission } = useCameraPermission()
+
   useEffect(() => {
     const checkPermissions = async () => {
       if (!hasPermission) {
@@ -45,6 +104,7 @@ const MaskedCamera = ({ navigation, cameraMask, cameraFace = 'back' }: MAskedCam
     checkPermissions()
   }, [hasPermission, requestPermission, navigation])
 
+  const toggleTorch = () => setTorchOn((prev) => !prev)
   if (!hasPermission) {
     return (
       <SafeAreaView style={styles.container}>
@@ -59,38 +119,74 @@ const MaskedCamera = ({ navigation, cameraMask, cameraFace = 'back' }: MAskedCam
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>No front camera available</Text>
+          <Text style={{ color: 'white' }}>{`No ${device} camera available`}</Text>
         </View>
       </SafeAreaView>
     )
   }
 
   const handleCancel = () => {
-    console.log('CANCEL THIS CAMERA')
+    navigation.goBack()
   }
   const onError = (error: any) => {
     console.log('OOPS, there was a camera error')
   }
 
-  // Ok whats the point though, I think I could just modify the screen to handle things differently?
-  // umm components and screens get messy
-  // so it will be two screens? yes because my screen needs to be able to handle multiple pictures at once, so we an handle things a little differently
-  // ok sounds like I need to keep going then
-  // woohoo
+  const takePhoto = async () => {
+    try {
+      if (cameraRef.current && isActive) {
+        const photo = await cameraRef.current.takePhoto({
+          flash: 'off',
+        })
+
+        // Navigate to photo review screen with the photo data
+        navigation.navigate(BCSCScreens.PhotoReview, {
+          photoPath: photo.path,
+        })
+
+        logger.info(`Photo taken and saved temporarily: ${photo.path}`)
+      }
+    } catch (error) {
+      logger.error(`Error taking photo: ${error}`)
+      Alert.alert('Error', 'Failed to take photo. Please try again.')
+    }
+  }
+  const defaultMask = () => <CircularMask />
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Camera
-        ref={cameraRef}
-        style={styles.camera}
-        device={device}
-        isActive={isActive}
-        photo={true}
-        onInitialized={onInitialized}
-        onError={onError}
-        torch={torchOn ? 'on' : 'off'}
-      />
-    </SafeAreaView>
+    <View style={{ flex: 1, backgroundColor: 'black', position: 'relative' }}>
+      <MaskedView style={{ flex: 1, backgroundColor: 'black' }} maskElement={cameraMask || defaultMask()}>
+        <Camera
+          ref={cameraRef}
+          style={styles.camera}
+          device={device}
+          isActive={isActive}
+          photo={true}
+          onInitialized={() => setIsActive(true)}
+          onError={onError}
+          torch={torchOn ? 'on' : 'off'}
+        />
+      </MaskedView>
+      <View style={styles.instructionText}>
+        <ThemedText variant={'headingFour'}>{cameraLabel}</ThemedText>
+        <ThemedText variant={'headingFour'}>{cameraInstructions}</ThemedText>
+      </View>
+      <View style={styles.controlsContainer}>
+        <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
+          <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
+          <View style={styles.captureButtonInner} />
+        </TouchableOpacity>
+        {hasTorch ? (
+          <TouchableOpacity style={{ flex: 1 }} onPress={toggleTorch}>
+            <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPallet.grayscale.white} />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ flex: 1 }} />
+        )}
+      </View>
+    </View>
   )
 }
 
