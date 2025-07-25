@@ -14,12 +14,15 @@
  * 
  * Usage Example:
  * ```
- * import { WorkflowEngine, exampleMiniWorkflow } from '@/bcsc-theme/workflow'
+ * import { WorkflowEngine, testWorkflow } from '@/bcsc-theme/workflow'
  * 
  * const MyWorkflowScreen = () => (
- *   <WorkflowEngine workflow={exampleMiniWorkflow} />
+ *   <WorkflowEngine workflow={testWorkflow} />
  * )
  * ```
+ * 
+ * For comprehensive documentation, see README.md
+ * For PR details and implementation notes, see PR_DOCUMENTATION.md
  */
 
 export { WorkflowEngine } from './WorkflowEngine'
@@ -34,3 +37,6 @@ export type {
   ShouldSkipFunction,
 } from './types'
 export type { WorkflowStepProps } from './WorkflowEngine'
+
+// Test utilities for validation
+export { validateWorkflow, testWorkflowNavigation, runWorkflowTests } from './__tests__/workflow.test'
