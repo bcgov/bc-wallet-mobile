@@ -275,6 +275,17 @@ export const Buttons: ITheme['Buttons'] = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#D8292F',
   },
+  criticalDisabled: {
+    padding: 16,
+    borderRadius: 4,
+    backgroundColor: ColorPallet.brand.primaryDisabled,
+  },
+  criticalText: {
+    ...TextTheme.normal,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: ColorPallet.grayscale.white,
+  },
   primary: {
     padding: 16,
     borderRadius: 4,
@@ -325,6 +336,12 @@ export const Buttons: ITheme['Buttons'] = StyleSheet.create({
     padding: 16,
     borderRadius: 4,
     backgroundColor: '#D8292F',
+  },
+  modalCriticalText: {
+    ...TextTheme.normal,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: ColorPallet.grayscale.white,
   },
   modalPrimary: {
     padding: 16,

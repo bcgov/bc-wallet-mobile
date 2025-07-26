@@ -287,20 +287,6 @@ export const BCSCInputs: IInputs = StyleSheet.create({
 
 export const BCSCButtons: ITheme['Buttons'] = StyleSheet.create({
   ...Buttons,
-  critical: {
-    padding: 16,
-    borderRadius: 4,
-    backgroundColor: '#D8292F',
-  },
-  criticalText: {
-    ...Buttons.primaryText,
-    color: BCSCColorPallet.grayscale.white,
-  },
-  criticalDisabled: {
-    padding: 16,
-    borderRadius: 4,
-    backgroundColor: BCSCColorPallet.brand.primaryDisabled,
-  },
   primary: {
     padding: 16,
     borderRadius: 4,
@@ -370,11 +356,6 @@ export const BCSCButtons: ITheme['Buttons'] = StyleSheet.create({
     fontWeight: 'bold',
     color: BCSCColorPallet.brand.secondaryDisabled,
     textAlign: 'center',
-  },
-  modalCritical: {
-    padding: 16,
-    borderRadius: 4,
-    backgroundColor: '#D8292F',
   },
   modalPrimary: {
     padding: 16,
