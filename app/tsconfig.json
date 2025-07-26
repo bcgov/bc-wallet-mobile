@@ -19,13 +19,5 @@
       "@utils/*": ["src/utils/*"]
     }
   },
-  "exclude": [
-    "bifold-wallet/**/*",
-    "bifold/**/*",
-    "node_modules/**/*",
-    "metro.config.js",
-    "babel.config.js",
-    "jest.config.js",
-    "jestSetup.js"
-  ]
+  "exclude": ["node_modules", "metro.config.js", "babel.config.js", "jest.config.js", "jestSetup.js"]
 }
