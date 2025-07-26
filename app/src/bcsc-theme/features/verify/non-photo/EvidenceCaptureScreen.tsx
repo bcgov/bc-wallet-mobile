@@ -1,61 +1,79 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { testIdWithKey, ThemedText, useStore, useTheme, useServices, TOKENS } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScrollView } from 'react-native-gesture-handler'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useEffect, useState, useRef } from 'react'
-import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
-import MaskedView from '@react-native-masked-view/masked-view'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { EvidenceImageSide, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { StyleSheet, View, Text, Alert, TouchableOpacity, useWindowDimensions } from 'react-native'
+import { useState } from 'react'
+import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import RectangularMask from '@/bcsc-theme/components/RectangularMask'
+import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceCapture>
   route: { params: { cardType: EvidenceType } }
 }
 
-// This should act like a controller, so I'll need to create a new camera component, that will pass in the props like:
-// camera direction and mask?
-// then the controller will handle what to do with the
-// this should be replaced by the workflow components
 const EvidenceCaptureScreen: React.FC<EvidenceCaptureScreenProps> = ({
   navigation,
   route,
 }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
-  console.log('EVIDENCE COLLECTION CONTROLLER')
-  console.log(cardType)
-  const imageSides = cardType.image_sides
-  const [currentSide, setCurrentSide] = useState<EvidenceImageSide | null>(null)
 
-  useEffect(() => {
-    if (imageSides.length > 0) {
-      setCurrentSide(imageSides[0])
-    } else {
-      Alert.alert('Error', 'No image sides available for this evidence type.')
-    }
-  }, [imageSides])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [captureState, setCaptureState] = useState<'CAPTURING' | 'REVIEWING'>('CAPTURING')
+  const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
+  const [capturedPhotos, setCapturedPhotos] = useState<any[]>([])
 
-  if (currentSide) {
-    return (
-      <MaskedCamera
-        navigation={navigation}
-        cameraFace={'back'}
-        cameraInstructions={currentSide.image_side_tip}
-        cameraLabel={currentSide.image_side_label}
-        cameraMask={<RectangularMask />}
-      />
-      // <SafeAreaView style={{ flex: 1 }}>
-      // </SafeAreaView>
-    )
+  const currentSide = cardType.image_sides[currentIndex]
+  const isLastSide = currentIndex === cardType.image_sides.length - 1
+
+  const handlePhotoTaken = (path: string) => {
+    setCurrentPhotoPath(path)
+    setCaptureState('REVIEWING')
   }
 
-  return <Text>BUTTS</Text>
+  const handleAcceptPhoto = async () => {
+    if (!currentPhotoPath || !currentSide) return
+
+    const newPhotos = [...capturedPhotos, { path: currentPhotoPath, side: currentSide }]
+    setCapturedPhotos(newPhotos)
+
+    if (isLastSide) {
+      // All photos captured, navigate back with results
+      navigation.navigate(BCSCScreens.SetupSteps)
+    } else {
+      // Move to next side
+      setCurrentIndex((prev) => prev + 1)
+      setCaptureState('CAPTURING')
+      setCurrentPhotoPath(undefined)
+    }
+  }
+
+  const handleRetakePhoto = () => {
+    setCaptureState('CAPTURING')
+    setCurrentPhotoPath(undefined)
+  }
+
+  if (!currentSide) {
+    // needs to throw an error instead...
+    return <></>
+  }
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      {captureState === 'CAPTURING' ? (
+        <MaskedCamera
+          navigation={navigation}
+          cameraFace={'back'}
+          cameraInstructions={currentSide.image_side_tip}
+          cameraLabel={currentSide.image_side_label}
+          cameraMask={<RectangularMask />}
+          onPhotoTaken={handlePhotoTaken}
+        />
+      ) : (
+        <PhotoReview photoPath={currentPhotoPath!} onAccept={handleAcceptPhoto} onRetake={handleRetakePhoto} />
+      )}
+    </SafeAreaView>
+  )
 }
 
 export default EvidenceCaptureScreen

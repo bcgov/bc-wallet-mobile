@@ -15,6 +15,7 @@ type MaskedCameraProps = {
   cameraInstructions: string
   cameraLabel?: string
   cameraMask?: React.ReactElement
+  onPhotoTaken: (path: string) => void
 }
 
 const MaskedCamera = ({
@@ -23,6 +24,7 @@ const MaskedCamera = ({
   cameraInstructions,
   cameraLabel,
   cameraFace = 'back',
+  onPhotoTaken,
 }: MaskedCameraProps) => {
   const device = useCameraDevice(cameraFace)
 
@@ -32,10 +34,6 @@ const MaskedCamera = ({
   const [torchOn, setTorchOn] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { width } = useWindowDimensions()
-  const maskWidth = width - Spacing.lg * 2
-  const maskHeight = width * 1.2
-  const maskBorderRadius = maskWidth / 2
   const hasTorch = device?.hasTorch ?? false
 
   const styles = StyleSheet.create({
@@ -139,11 +137,7 @@ const MaskedCamera = ({
           flash: 'off',
         })
 
-        // Navigate to photo review screen with the photo data
-        navigation.navigate(BCSCScreens.PhotoReview, {
-          photoPath: photo.path,
-        })
-
+        onPhotoTaken(photo.path)
         logger.info(`Photo taken and saved temporarily: ${photo.path}`)
       }
     } catch (error) {
