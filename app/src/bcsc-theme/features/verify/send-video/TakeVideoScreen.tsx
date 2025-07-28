@@ -39,6 +39,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       duration: 1000,
       useNativeDriver: true,
     }).start()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prompt])
 
   const styles = StyleSheet.create({
