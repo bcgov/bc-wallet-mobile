@@ -28,7 +28,11 @@ describe('useConfigApi', () => {
       const response = await config.getServerStatus()
 
       // Verify correct endpoint called with the mocked baseURL
-      expect(apiClient.get).toHaveBeenCalledWith(`${apiClient.baseURL}/cardtap/v3/status/android/mobile_card`)
+      expect(apiClient.get).toHaveBeenCalledWith(`${apiClient.baseURL}/cardtap/v3/status/android/mobile_card`, {
+        headers: {
+          skipBearerAuth: true,
+        },
+      })
       expect(response).toEqual({ status: 'ok' })
     })
 
@@ -37,7 +41,11 @@ describe('useConfigApi', () => {
       ;(apiClient.get as jest.Mock).mockResolvedValueOnce({ data: { status: 'ok' } })
       const response = await config.getServerStatus()
 
-      expect(apiClient.get).toHaveBeenCalledWith(`${apiClient.baseURL}/cardtap/v3/status/ios/mobile_card`)
+      expect(apiClient.get).toHaveBeenCalledWith(`${apiClient.baseURL}/cardtap/v3/status/ios/mobile_card`, {
+        headers: {
+          skipBearerAuth: true,
+        },
+      })
       expect(response).toEqual({ status: 'ok' })
     })
 
