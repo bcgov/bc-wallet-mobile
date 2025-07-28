@@ -20,13 +20,20 @@ export const NotificationBannerContainer: React.FC = () => {
     const asyncEffect = async () => {
       try {
         const serverStatus = await getServerStatus()
+
+        // If the server status is OK, do nothing
+        if (serverStatus.status === 'ok') {
+          return
+        }
+
+        // If the server status is not OK, show a warning banner
         dispatch({
           type: DispatchAction.BANNER_MESSAGES,
           payload: [
             {
-              id: 'ServerStatus',
-              title: serverStatus.statusMessage,
-              type: serverStatus.status === 'ok' ? 'success' : 'error',
+              id: 'IASServerUnavailable',
+              title: serverStatus.statusMessage ?? 'IAS server is unavailable',
+              type: 'warning',
               variant: 'summary',
               dismissible: true,
             } satisfies BannerMessage,
@@ -38,7 +45,7 @@ export const NotificationBannerContainer: React.FC = () => {
           type: DispatchAction.BANNER_MESSAGES,
           payload: [
             {
-              id: 'ServerStatusError',
+              id: 'IASServerError',
               title: 'Unable to retrieve server status',
               type: 'error',
               variant: 'summary',
