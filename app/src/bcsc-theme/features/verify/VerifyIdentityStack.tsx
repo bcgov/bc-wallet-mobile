@@ -26,6 +26,7 @@ import AdditionalIdentificationRequiredScreen from './non-photo/AdditionalIdenti
 import IDPhotoInformationScreen from './non-photo/IDPhotoInformationScreen'
 import EvidenceTypeListScreen from './non-photo/EvidenceTypeListScreen'
 import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
+import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -89,6 +90,7 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.IDPhotoInformation} component={IDPhotoInformationScreen} />
       <Stack.Screen name={BCSCScreens.EvidenceTypeList} component={EvidenceTypeListScreen} />
       <Stack.Screen name={BCSCScreens.EvidenceCapture} component={EvidenceCaptureScreen} />
+      <Stack.Screen name={BCSCScreens.EvidenceIDCollection} component={EvidenceIDCollectionScreen} />
     </Stack.Navigator>
   )
 }

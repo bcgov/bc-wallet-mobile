@@ -35,7 +35,8 @@ export enum BCSCScreens {
   AdditionalIdentificationRequired = 'BCSCAdditionalIdentificationRequired',
   IDPhotoInformation = 'BCSCIDPhotoInformation',
   EvidenceTypeList = 'EvidenceTypeList',
-  EvidenceCapture = 'BCSCEvidenceCapture'
+  EvidenceCapture = 'BCSCEvidenceCapture',
+  EvidenceIDCollection = 'BCSCEvidenceIDCollection'
 }
 
 export type BCSCTabStackParams = {
@@ -76,4 +77,5 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.IDPhotoInformation]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceTypeList]: undefined
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
+  [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType }
 }

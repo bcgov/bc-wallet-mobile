@@ -38,8 +38,8 @@ const EvidenceCaptureScreen: React.FC<EvidenceCaptureScreenProps> = ({
     setCapturedPhotos(newPhotos)
 
     if (isLastSide) {
-      // All photos captured, navigate back with results
-      navigation.navigate(BCSCScreens.SetupSteps)
+      // All photos captured, navigate to form screen
+      navigation.navigate(BCSCScreens.EvidenceIDCollection, { cardType })
     } else {
       // Move to next side
       setCurrentIndex((prev) => prev + 1)
