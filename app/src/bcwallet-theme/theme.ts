@@ -269,11 +269,22 @@ export const Inputs: IInputs = StyleSheet.create({
   },
 })
 
-export const Buttons = StyleSheet.create({
+export const Buttons: ITheme['Buttons'] = StyleSheet.create({
   critical: {
     padding: 16,
     borderRadius: 4,
     backgroundColor: '#D8292F',
+  },
+  criticalDisabled: {
+    padding: 16,
+    borderRadius: 4,
+    backgroundColor: ColorPallet.brand.primaryDisabled,
+  },
+  criticalText: {
+    ...TextTheme.normal,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: ColorPallet.grayscale.white,
   },
   primary: {
     padding: 16,
@@ -326,6 +337,12 @@ export const Buttons = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#D8292F',
   },
+  modalCriticalText: {
+    ...TextTheme.normal,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: ColorPallet.grayscale.white,
+  },
   modalPrimary: {
     padding: 16,
     borderRadius: 4,
@@ -351,7 +368,7 @@ export const Buttons = StyleSheet.create({
   },
 })
 
-export const ListItems = StyleSheet.create({
+export const ListItems: ITheme['ListItems'] = StyleSheet.create({
   credentialBackground: {
     backgroundColor: ColorPallet.brand.secondaryBackground,
   },
@@ -503,7 +520,7 @@ export const TabTheme: ITabTheme = {
   tabBarSecondaryBackgroundColor: ColorPallet.brand.secondaryBackground,
 }
 
-export const NavigationTheme = {
+export const NavigationTheme: ITheme['NavigationTheme'] = {
   dark: true,
   colors: {
     primary: ColorPallet.brand.primary,
@@ -515,7 +532,7 @@ export const NavigationTheme = {
   },
 }
 
-export const HomeTheme = StyleSheet.create({
+export const HomeTheme: ITheme['HomeTheme'] = StyleSheet.create({
   welcomeHeader: {
     ...TextTheme.headingOne,
   },
@@ -548,7 +565,7 @@ export const SettingsTheme = {
   },
 }
 
-export const ChatTheme = {
+export const ChatTheme: ITheme['ChatTheme'] = {
   containerStyle: {
     marginBottom: 16,
     marginLeft: 16,
@@ -645,7 +662,7 @@ export const ChatTheme = {
   },
 }
 
-export const OnboardingTheme = {
+export const OnboardingTheme: ITheme['OnboardingTheme'] = {
   container: {
     backgroundColor: ColorPallet.brand.primaryBackground,
   },
@@ -680,7 +697,7 @@ export const OnboardingTheme = {
   },
 }
 
-export const DialogTheme = {
+export const DialogTheme: ITheme['DialogTheme'] = {
   modalView: {
     backgroundColor: ColorPallet.brand.secondaryBackground,
   },
@@ -698,17 +715,17 @@ export const DialogTheme = {
   },
 }
 
-export const LoadingTheme = {
+export const LoadingTheme: ITheme['LoadingTheme'] = {
   backgroundColor: ColorPallet.brand.primary,
 }
 
-export const PINEnterTheme = {
+export const PINEnterTheme: ITheme['PINEnterTheme'] = {
   image: {
     alignSelf: 'center',
     marginBottom: 20,
   },
 }
-export const PINInputTheme = {
+export const PINInputTheme: ITheme['PINInputTheme'] = {
   cell: {
     backgroundColor: ColorPallet.grayscale.lightGrey,
     borderColor: ColorPallet.grayscale.lightGrey,

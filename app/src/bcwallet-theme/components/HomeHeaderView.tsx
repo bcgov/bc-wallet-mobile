@@ -28,7 +28,7 @@ const HomeHeaderView = () => {
   })
 
   const onPressBanner = () => {
-    navigation.getParent()?.navigate(Stacks.SettingStack as never, { screen: Screens.Developer } as never)
+    navigation.getParent()?.navigate(Stacks.SettingStack, { screen: Screens.Developer } as never)
   }
 
   return logger?.remoteLoggingEnabled ? (

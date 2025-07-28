@@ -1,4 +1,13 @@
-import { ColorPallet, IColorPallet, IInputs, INotificationColors, ITabTheme, ITextTheme, ITheme } from '@bifold/core'
+import {
+  ColorPallet,
+  IAssets,
+  IColorPallet,
+  IInputs,
+  INotificationColors,
+  ITabTheme,
+  ITextTheme,
+  ITheme,
+} from '@bifold/core'
 import { StyleSheet } from 'react-native'
 
 import Logo from '@assets/img/logo-with-text-dark.svg'
@@ -62,7 +71,7 @@ export const BCSCColorPallet: IColorPallet = {
   semantic: {
     ...BCWalletTheme.ColorPallet.semantic,
     success: '#89CE00',
-  }
+  },
 }
 
 export const BCSCTextTheme: ITextTheme = {
@@ -153,7 +162,7 @@ export const BCSCTextTheme: ITextTheme = {
   },
 }
 
-export const BCSCNavigationTheme = {
+export const BCSCNavigationTheme: ITheme['NavigationTheme'] = {
   dark: true,
   colors: {
     primary: BCSCColorPallet.brand.primaryBackground,
@@ -165,7 +174,7 @@ export const BCSCNavigationTheme = {
   },
 }
 
-export const BCSCOnboardingTheme = {
+export const BCSCOnboardingTheme: ITheme['OnboardingTheme'] = {
   container: {
     backgroundColor: BCSCColorPallet.brand.primaryBackground,
   },
@@ -200,7 +209,7 @@ export const BCSCOnboardingTheme = {
   },
 }
 
-export const BCSCDialogTheme = {
+export const BCSCDialogTheme: ITheme['DialogTheme'] = {
   modalView: {
     backgroundColor: BCSCColorPallet.brand.secondaryBackground,
   },
@@ -218,11 +227,11 @@ export const BCSCDialogTheme = {
   },
 }
 
-export const BCSCLoadingTheme = {
+export const BCSCLoadingTheme: ITheme['LoadingTheme'] = {
   backgroundColor: BCSCColorPallet.brand.primary,
 }
 
-export const BCSCPINInputTheme = {
+export const BCSCPINInputTheme: ITheme['PINInputTheme'] = {
   ...PINInputTheme,
   cell: {
     backgroundColor: BCSCColorPallet.grayscale.white,
@@ -276,22 +285,8 @@ export const BCSCInputs: IInputs = StyleSheet.create({
   },
 })
 
-export const BCSCButtons = StyleSheet.create({
+export const BCSCButtons: ITheme['Buttons'] = StyleSheet.create({
   ...Buttons,
-  critical: {
-    padding: 16,
-    borderRadius: 4,
-    backgroundColor: '#D8292F',
-  },
-  criticalText: {
-    ...Buttons.primaryText,
-    color: BCSCColorPallet.grayscale.white,
-  },
-  criticalDisabled: {
-    padding: 16,
-    borderRadius: 4,
-    backgroundColor: BCSCColorPallet.brand.primaryDisabled,
-  },
   primary: {
     padding: 16,
     borderRadius: 4,
@@ -362,11 +357,6 @@ export const BCSCButtons = StyleSheet.create({
     color: BCSCColorPallet.brand.secondaryDisabled,
     textAlign: 'center',
   },
-  modalCritical: {
-    padding: 16,
-    borderRadius: 4,
-    backgroundColor: '#D8292F',
-  },
   modalPrimary: {
     padding: 16,
     borderRadius: 4,
@@ -392,7 +382,7 @@ export const BCSCButtons = StyleSheet.create({
   },
 })
 
-export const BCSCListItems = StyleSheet.create({
+export const BCSCListItems: ITheme['ListItems'] = StyleSheet.create({
   ...ListItems,
   credentialBackground: {
     backgroundColor: BCSCColorPallet.brand.secondaryBackground,
@@ -542,7 +532,7 @@ export const BCSCTabTheme: ITabTheme = {
   tabBarSecondaryBackgroundColor: '#252423',
 }
 
-export const BCSCHomeTheme = StyleSheet.create({
+export const BCSCHomeTheme: ITheme['HomeTheme'] = StyleSheet.create({
   ...HomeTheme,
   welcomeHeader: {
     ...BCSCTextTheme.headingOne,
@@ -563,7 +553,7 @@ export const BCSCHomeTheme = StyleSheet.create({
   },
 })
 
-export const BCSCSettingsTheme = {
+export const BCSCSettingsTheme: ITheme['SettingsTheme'] = {
   ...SettingsTheme,
   groupHeader: {
     ...BCSCTextTheme.normal,
@@ -577,7 +567,7 @@ export const BCSCSettingsTheme = {
   },
 }
 
-export const BCSCChatTheme = {
+export const BCSCChatTheme: ITheme['ChatTheme'] = {
   ...ChatTheme,
   leftBubble: {
     ...ChatTheme.leftBubble,
@@ -657,7 +647,7 @@ export const BCSCChatTheme = {
   },
 }
 
-export const BCSCAssets = {
+export const BCSCAssets: IAssets = {
   ...Assets,
   svg: {
     ...Assets.svg,

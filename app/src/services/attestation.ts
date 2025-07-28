@@ -26,13 +26,15 @@ import {
 } from '@credo-ts/core'
 import { DeviceEventEmitter, Platform } from 'react-native'
 import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
-import { Subscription } from 'rxjs'
 
 import { AttestationRestrictions } from '@/constants'
 import { credentialsMatchForProof } from '@utils/credentials'
 import { AttestationRequestParams, AttestationResult, requestAttestationDrpc, requestNonceDrpc } from '@utils/drpc'
 
 const defaultResponseTimeoutInMs = 10000 // DRPC response timeout
+
+// subscription type from agent events (TODO: add type export from Credo)
+type AgentSubscription = ReturnType<ReturnType<Agent['events']['observable']>['subscribe']>
 
 export type AttestationMonitorOptions = {
   shouldHandleProofRequestAutomatically?: boolean
@@ -147,8 +149,8 @@ export const isOfferingAttestation = (credDefId: string, restrictions: Attestati
 }
 
 export class AttestationMonitor implements AttestationMonitorI {
-  private proofSubscription?: Subscription
-  private offerSubscription?: Subscription
+  private proofSubscription?: AgentSubscription
+  private offerSubscription?: AgentSubscription
   private agent?: Agent
   private options: AttestationMonitorOptions
   private log?: BifoldLogger
