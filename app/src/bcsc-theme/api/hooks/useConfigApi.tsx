@@ -22,7 +22,7 @@ const useConfigApi = () => {
   /**
    * Fetches the server status from the IAS API.
    *
-   * @returns {Promise<ServerStatusResponseData>} A promise that resolves to the server status data.
+   * @returns {*} {Promise<ServerStatusResponseData>} A promise that resolves to the server status data.
    */
   const getServerStatus = async () => {
     // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded

@@ -5,8 +5,7 @@ import { BannerMessage } from '@bifold/core/lib/typescript/src/components/views/
 import { useEffect } from 'react'
 
 /**
- * NotificationBannerContainer is a React component that fetches the server status
- * and updates the notification banner messages accordingly.
+ * NotificationBannerContainer fetches the server status and displays a notification banner.
  *
  * @returns {JSX.Element} The rendered NotificationBanner component.
  */
