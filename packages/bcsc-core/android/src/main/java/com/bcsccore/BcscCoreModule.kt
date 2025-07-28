@@ -695,8 +695,8 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
         .claim("device_model", Build.MODEL)
         .claim("device_id", UUID.randomUUID().toString()) // Generate unique device ID
         .claim("device_token", actualDeviceToken)
-        .claim("app_version", getAppVersion())
-        .claim("app_build", getAppBuildNumber())
+        .claim("mobile_id_version", getAppVersion())
+        .claim("mobile_id_build", getAppBuildNumber())
         .claim("has_other_accounts", false) // This could be made dynamic
         .build()
       
