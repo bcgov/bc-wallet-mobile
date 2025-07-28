@@ -3,7 +3,7 @@ import { PersistentStorage } from '@bifold/core'
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
-import { request, check, PERMISSIONS, RESULTS, PermissionStatus } from 'react-native-permissions'
+import { RESULTS, PermissionStatus, requestNotifications, checkNotifications } from 'react-native-permissions'
 
 import { BCLocalStorageKeys } from '../store'
 
@@ -18,8 +18,8 @@ const enum NotificationPermissionStatus {
  */
 
 const requestNotificationPermission = async (): Promise<PermissionStatus> => {
-  const result = await request(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
-  return result
+  const { status } = await requestNotifications()
+  return status
 }
 
 const formatPermissionIos = (permission: FirebaseMessagingTypes.AuthorizationStatus): NotificationPermissionStatus => {
@@ -55,13 +55,13 @@ const requestPermission = async (): Promise<NotificationPermissionStatus> => {
     return formatPermissionIos(permission)
   }
 
-  const checkPermission = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
-  if (checkPermission !== RESULTS.GRANTED) {
+  const { status } = await checkNotifications()
+  if (status !== RESULTS.GRANTED) {
     const result = await requestNotificationPermission()
 
     return formatPermissionAndroid(result)
   }
-  return formatPermissionAndroid(checkPermission)
+  return formatPermissionAndroid(status)
 }
 
 /**
@@ -209,8 +209,8 @@ const status = async (): Promise<NotificationPermissionStatus> => {
     const permission = await messaging().hasPermission()
     return formatPermissionIos(permission)
   } else if (Platform.OS === 'android') {
-    const result = await check(PERMISSIONS.ANDROID.POST_NOTIFICATIONS)
-    return formatPermissionAndroid(result)
+    const { status } = await checkNotifications()
+    return formatPermissionAndroid(status)
   }
   return NotificationPermissionStatus.UNKNOWN
 }
