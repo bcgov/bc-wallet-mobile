@@ -729,41 +729,56 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       
       // Create device info JWT claims
       val deviceInfoClaims = JWTClaimsSet.Builder()
+        .claim("app_set_id", getAppSetId())
         .claim("system_name", "Android")
         .claim("system_version", Build.VERSION.RELEASE)
         .claim("device_model", Build.MODEL)
         .claim("device_id", UUID.randomUUID().toString())
         .claim("device_token", actualDeviceToken)
+        .claim("device_name", getDeviceName())
         .claim("fcm_device_token", fcmDeviceToken)
-        .claim("app_version", getAppVersion())
-        .claim("app_build", getAppBuildNumber())
+        .claim("mobile_id_version", getAppVersion())
+        .claim("mobile_id_build", getAppBuildNumber())
         .claim("has_other_accounts", false)
-        .issueTime(Date())
+        // .issueTime(Date())
         .build()
       
-      // Sign the device info JWT
-      val deviceInfoJWT = keyPairSource.signAndSerializeClaimsSet(deviceInfoClaims)
+      // Create unsigned device info JWT with "none" algorithm (similar to iOS implementation)
+      val deviceInfoJWTAsString = createUnsignedJWT(deviceInfoClaims)
       
-      // Create the dynamic client registration body structure
-      // This is a simplified structure - in a real implementation you might want a more sophisticated JSON builder
-      val registrationBody = """
-      {
-        "client_name": "BC Services Card Mobile App",
-        "redirect_uris": ["bcservicescard://auth"],
-        "response_types": ["code"],
-        "grant_types": ["authorization_code", "refresh_token"],
-        "token_endpoint_auth_method": "private_key_jwt",
-        "jwks": {
-          "keys": [${publicKeyJWK.toJSONString()}]
-        },
-        "device_info": "$deviceInfoJWT",
-        "application_type": "native"
+      // Create the dynamic client registration body structure using JSONObject for proper serialization
+      val registrationBodyJson = JSONObject().apply {
+        put("client_name", "BC Services Wallet")
+        put("redirect_uris", JSONArray().apply {
+          put("http://localhost:8080/")
+        })
+        put("grant_types", JSONArray().apply {
+          put("authorization_code")
+        })
+        put("token_endpoint_auth_method", "private_key_jwt")
+        put("jwks", JSONObject().apply {
+          put("keys", JSONArray().apply {
+            // Add the JWK with proper base64url-encoded RSA parameters
+            put(JSONObject().apply {
+              val rsaKey = publicKeyJWK.toRSAKey()
+              put("kty", publicKeyJWK.keyType.value)
+              // RSAKey.getPublicExponent() and getModulus() return Base64URL objects
+              put("e", rsaKey.publicExponent.toString()) // Base64URL.toString() gives base64url string
+              put("n", rsaKey.modulus.toString()) // Base64URL.toString() gives base64url string  
+              put("kid", publicKeyJWK.keyID ?: "rsa1")
+              put("alg", publicKeyJWK.algorithm?.name ?: "RS512")
+            })
+          })
+        })
+        put("device_info", deviceInfoJWTAsString)
+        put("application_type", "native")
       }
-      """.trimIndent()
+      
+      // Convert to serialized JSON string
+      val registrationBodyAsString = registrationBodyJson.toString()
       
       Log.d(NAME, "getDynamicClientRegistrationBody: Successfully created DCR body")
-      promise.resolve(registrationBody)
-      
+      promise.resolve(registrationBodyAsString)
     } catch (e: BcscException) {
       Log.e(NAME, "getDynamicClientRegistrationBody: BCSC error: ${e.devMessage}", e)
       promise.reject("E_BCSC_DCR_ERROR", "Error creating dynamic client registration with bcsc-keypair-port: ${e.devMessage}", e)
@@ -871,6 +886,40 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     return null
   }
 
+  /**
+   * Creates an unsigned JWT with "none" algorithm (similar to iOS implementation)
+   * This matches the iOS behavior for device info JWTs
+   */
+  private fun createUnsignedJWT(claimsSet: JWTClaimsSet): String {
+    return try {
+      // Create JWT header with "none" algorithm
+      val header = mapOf(
+        "alg" to "none",
+        "typ" to "JWT"
+      )
+      
+      // Convert header and payload to JSON and then base64url encode
+      val headerJson = JSONObject(header).toString()
+      val payloadJson = claimsSet.toString()
+      
+      val headerBase64 = headerJson.toByteArray(Charsets.UTF_8).toBase64UrlString()
+      val payloadBase64 = payloadJson.toByteArray(Charsets.UTF_8).toBase64UrlString()
+      
+      // For "none" algorithm, signature is empty
+      "$headerBase64.$payloadBase64."
+    } catch (e: Exception) {
+      Log.e(NAME, "Failed to create unsigned JWT: ${e.message}", e)
+      throw e
+    }
+  }
+
+  /**
+   * Convert ByteArray to base64url encoded string (URL-safe base64 without padding)
+   */
+  private fun ByteArray.toBase64UrlString(): String {
+    return android.util.Base64.encodeToString(this, android.util.Base64.URL_SAFE or android.util.Base64.NO_PADDING or android.util.Base64.NO_WRAP)
+  }
+
   // Extension function to convert ByteArray to Base64 String
   private fun ByteArray.toBase64String(): String =
     android.util.Base64.encodeToString(this, android.util.Base64.NO_WRAP)
@@ -907,6 +956,55 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     } catch (e: Exception) {
       Log.w(NAME, "Could not get app build number: ${e.message}")
       return "0"
+    }
+  }
+
+  /**
+   * Gets the device name from Android system settings
+   */
+  private fun getDeviceName(): String {
+    return try {
+      // Try to get the user-set device name from Settings.Global
+      val deviceName = android.provider.Settings.Global.getString(
+        reactApplicationContext.contentResolver,
+        android.provider.Settings.Global.DEVICE_NAME
+      )
+      
+      // Fall back to Build.MODEL if device name is not set
+      deviceName?.takeIf { it.isNotEmpty() } ?: Build.MODEL
+    } catch (e: Exception) {
+      Log.w(NAME, "Could not get device name: ${e.message}")
+      // Final fallback to Build.MODEL
+      Build.MODEL
+    }
+  }
+
+  /**
+   * Gets the Android App Set ID for app attribution
+   * This is used for privacy-preserving analytics and attribution
+   */
+  private fun getAppSetId(): String {
+    return try {
+      // For Android App Set ID, we need to use Google Play Services
+      // Since this requires additional dependencies and async operations,
+      // we'll generate a consistent UUID based on the package name as a fallback
+      val packageName = reactApplicationContext.packageName
+      
+      // Create a consistent UUID based on package name using a hash
+      // This ensures the same ID is generated each time for the same app
+      val seedString = "app_set_id_$packageName"
+      val hash = seedString.hashCode()
+      
+      // Generate UUID from hash to ensure consistency
+      val mostSigBits = hash.toLong() shl 32 or (hash.toLong() and 0xFFFFFFFFL)
+      val leastSigBits = hash.toLong() shl 32 or (hash.toLong() and 0xFFFFFFFFL)
+      val uuid = UUID(mostSigBits, leastSigBits)
+      
+      uuid.toString()
+    } catch (e: Exception) {
+      Log.w(NAME, "Could not generate app set ID: ${e.message}")
+      // Final fallback to a default UUID
+      "00000000-0000-0000-0000-000000000000"
     }
   }
 }
