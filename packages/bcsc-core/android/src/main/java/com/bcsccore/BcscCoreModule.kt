@@ -805,14 +805,39 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     
     Log.d(NAME, "getDeviceCodeRequestBody called with clientId: $clientId, issuer: $issuer")
     
-    // TODO: Implement proper JWT assertion signing
-    // This should:
-    // 1. Create and sign a JWT assertion using the provided clientId and issuer
-    // 2. Format the OAuth device code request body with the provided deviceCode and confirmationCode
-    // 3. Return the constructed request body
-    
-    val mockRequestBody = "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=$deviceCode&client_id=$clientId&code=$confirmationCode"
-    promise.resolve(mockRequestBody)
+    try {
+      // Create JWT assertion for OAuth2 device code request (similar to iOS implementation)
+      val now = Date()
+      val expiration = Date(now.time + JWT_EXPIRATION_SECONDS * 1000)
+      
+      val claimsSet = JWTClaimsSet.Builder()
+        .audience(issuer)
+        .issuer(clientId)
+        .subject(clientId)
+        .issueTime(now)
+        .expirationTime(expiration)
+        .jwtID(UUID.randomUUID().toString())
+        .claim("code", confirmationCode) // Add confirmation code as additional claim
+        .build()
+      
+      // Sign the JWT assertion using bcsc-keypair-port
+      val clientAssertion = keyPairSource.signAndSerializeClaimsSet(claimsSet)
+      
+      // Format OAuth2 device code request body (matching iOS implementation)
+      val grantType = "urn:ietf:params:oauth:grant-type:device_code"
+      val assertionType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+      
+      val body = "grant_type=$grantType&device_code=$deviceCode&code=$confirmationCode&client_id=$clientId&client_assertion_type=$assertionType&client_assertion=$clientAssertion"
+      
+      Log.d(NAME, "getDeviceCodeRequestBody: Successfully created device code request body")
+      promise.resolve(body)
+    } catch (e: BcscException) {
+      Log.e(NAME, "getDeviceCodeRequestBody: BCSC error: ${e.devMessage}", e)
+      promise.reject("E_BCSC_DEVICE_CODE_ERROR", "Error creating device code request with bcsc-keypair-port: ${e.devMessage}", e)
+    } catch (e: Exception) {
+      Log.e(NAME, "getDeviceCodeRequestBody: Unexpected error: ${e.message}", e)
+      promise.reject("E_DEVICE_CODE_ERROR", "Unexpected error creating device code request: ${e.message}", e)
+    }
   }
   
   // MARK: - Account management methods
