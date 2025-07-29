@@ -1,5 +1,5 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useStore, useTheme } from '@bifold/core'
+import { useStore, useTheme, useServices, TOKENS } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import HomeHeader from './components/HomeHeader'
@@ -11,6 +11,7 @@ import { BCState } from '@/store'
 import { mockServices } from '@/bcsc-theme/fixtures/services'
 import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { NotificationBannerContainer } from './components/NotificationBannerContainer'
 
 // to be replaced with API response or translation entries, whichever ends up being the case
 const mockFindTitle = 'Where to use'
@@ -27,7 +28,9 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { user } = useApi()
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  // Fetch user info and update the user state
   useEffect(() => {
     const asyncEffect = async () => {
       try {
@@ -35,18 +38,18 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         const userInfo = await user.getUserInfo()
         setUserInfo(userInfo)
       } catch (error) {
-        // TODO: Handle error appropriately, e.g., show an alert or log it
+        logger.error(`Error while fetching user info`)
       } finally {
         setLoading(false)
       }
     }
 
     asyncEffect()
-  }, [user])
+  }, [user, logger])
 
   // replace with API response
   const savedServices = mockServices.filter((service) =>
-    store.bcsc.bookmarks.some((serviceId) => serviceId === service.id),
+    store.bcsc.bookmarks.some((serviceId) => serviceId === service.id)
   )
 
   const styles = StyleSheet.create({
@@ -65,6 +68,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
         <>
+          <NotificationBannerContainer />
           <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
           <View style={styles.buttonsContainer}>
             <SectionButton

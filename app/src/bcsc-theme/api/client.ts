@@ -8,6 +8,13 @@ import Config from 'react-native-config'
 import { TokenStatusResponseData } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 
+// Extend AxiosRequestConfig to include skipBearerAuth
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipBearerAuth?: boolean
+  }
+}
+
 interface BCSCEndpoints {
   // METADATA
   pairDeviceWithQRCodeSupported: boolean
@@ -77,7 +84,10 @@ class BCSCService {
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
     this.client.interceptors.response.use(undefined, (error: AxiosError) => {
-      this.logger.error(`${error.name}: ${error.code}`, { message: `IAS API Error: ${error.message}`, error: error.response?.data })
+      this.logger.error(`${error.name}: ${error.code}`, {
+        message: `IAS API Error: ${error.message}`,
+        error: error.response?.data,
+      })
       return Promise.reject(error)
     })
   }
@@ -131,11 +141,16 @@ class BCSCService {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
+    // skip processing if skipBearerAuth is set in the config
+    if (config.skipBearerAuth) {
+      return config
+    }
+
     // skip processing if request is made to token or endpoint URL or initial registration
     if (
       config.url?.endsWith('/device/.well-known/openid-configuration') || // this endpoint is open
       config.url?.endsWith('/device/token') || // this endpoint does not require an access token to fetch a token
-      config.url?.endsWith('/device/register') || // this endpoint registers the user and grants an access token 
+      config.url?.endsWith('/device/register') || // this endpoint registers the user and grants an access token
       config.url?.endsWith('/device/devicecode') || // this endpoint registers the device before an access token is granted
       config.url?.includes('/evidence') // the evidence endpoints are used to verify a user, so the user will not have an access token yet
     ) {

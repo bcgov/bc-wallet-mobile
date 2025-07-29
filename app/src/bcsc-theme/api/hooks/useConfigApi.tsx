@@ -6,8 +6,8 @@ export interface ServerStatusResponseData {
   minVersionMessage: string
   supportedVersions: string[]
   service: string
-  status: string
-  statusMessage: string
+  status: 'ok' | 'unavailable'
+  statusMessage?: string
   contactLink: string
   controlNumber: number
 }
@@ -19,10 +19,18 @@ export interface TermsOfUseResponseData {
 }
 
 const useConfigApi = () => {
+  /**
+   * Fetches the server status from the IAS API.
+   *
+   * @returns {*} {Promise<ServerStatusResponseData>} A promise that resolves to the server status data.
+   */
   const getServerStatus = async () => {
     // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
     const { data } = await apiClient.get<ServerStatusResponseData>(
-      `${apiClient.baseURL}/cardtap/v3/status/${Platform.OS}/mobile_card`
+      `${apiClient.baseURL}/cardtap/v3/status/${Platform.OS}/mobile_card`,
+      {
+        skipBearerAuth: true, // this endpoint does not require an access token
+      }
     )
     return data
   }
