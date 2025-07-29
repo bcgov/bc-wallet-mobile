@@ -14,7 +14,7 @@ type PhotoInstructionsScreenProps = {
 }
 
 const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
-  const { ColorPallet, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
 
@@ -54,7 +54,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       top: 0,
       left: 0,
       right: 0,
-      backgroundColor: ColorPallet.notification.popupOverlay,
+      backgroundColor: ColorPalette.notification.popupOverlay,
       paddingVertical: Spacing.lg,
       paddingHorizontal: Spacing.md,
       alignItems: 'center',
@@ -65,7 +65,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       bottom: 0,
       left: 0,
       right: 0,
-      backgroundColor: ColorPallet.notification.popupOverlay,
+      backgroundColor: ColorPalette.notification.popupOverlay,
       paddingBottom: Spacing.md,
       paddingHorizontal: Spacing.md,
       flexDirection: 'column',
@@ -281,8 +281,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
                 <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
-                <ThemedText style={{ color: ColorPallet.semantic.error }}>{'\u2B24'}</ThemedText>
-                <ThemedText style={{ color: over30Seconds ? ColorPallet.semantic.error : ColorPallet.grayscale.white }}>
+                <ThemedText style={{ color: ColorPalette.semantic.error }}>{'\u2B24'}</ThemedText>
+                <ThemedText style={{ color: over30Seconds ? ColorPalette.semantic.error : ColorPalette.grayscale.white }}>
                   {formatTime(elapsedTime)}
                 </ThemedText>
               </View>

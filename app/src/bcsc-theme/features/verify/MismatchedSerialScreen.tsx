@@ -9,14 +9,14 @@ const CARD_NOT_FOUND_IMAGE = Image.resolveAssetSource(CardNotFoundImage).uri
 const twoThirds = 0.67
 
 const MismatchedSerialScreen = () => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { width } = useWindowDimensions()
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     image: {

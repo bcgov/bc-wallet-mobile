@@ -29,7 +29,7 @@ type EnterBirthdateScreenProps = {
 const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation }: EnterBirthdateScreenProps) => {
   const today = new Date()
   const { t } = useTranslation()
-  const { ColorPallet, themeName, Spacing } = useTheme()
+  const { ColorPalette, themeName, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [date, setDate] = useState(store.bcsc.birthdate ?? today)
   const [loading, setLoading] = useState(false)
@@ -41,7 +41,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
       flex: 1,

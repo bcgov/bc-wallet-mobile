@@ -49,7 +49,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   autoRequestPermission = true,
   cameraType = 'back',
 }) => {
-  const { ColorPallet } = useTheme()
+  const { ColorPalette } = useTheme()
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
   const { width } = useWindowDimensions()
@@ -105,7 +105,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       position: 'relative',
     },
     camera: {

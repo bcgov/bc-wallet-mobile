@@ -14,7 +14,7 @@ type RemoteLogWarningProps = {
 const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onBackPressed, onEnablePressed }) => {
   const [checked, setChecked] = useState(false)
   const { t } = useTranslation()
-  const { TextTheme, ColorPallet, NavigationTheme } = useTheme()
+  const { TextTheme, ColorPalette, NavigationTheme } = useTheme()
 
   const onSubmitPressed = () => {
     onEnablePressed()
@@ -38,9 +38,9 @@ const RemoteLogWarning: React.FC<RemoteLogWarningProps> = ({ onBackPressed, onEn
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: NavigationTheme.colors.primary }} edges={['top', 'right', 'left']}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: ColorPallet.brand.primaryBackground }} edges={['bottom']}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }} edges={['bottom']}>
         <FauxHeader title={t('RemoteLogging.ScreenTitle')} onBackPressed={onBackPressed} />
-        <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: ColorPallet.brand.primaryBackground }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
           <View style={style.screenContainer}>
             <View style={style.contentContainer}>
               <Text style={[TextTheme.headingTwo, { marginBottom: 10 }]}>{t('RemoteLogging.Heading')}</Text>

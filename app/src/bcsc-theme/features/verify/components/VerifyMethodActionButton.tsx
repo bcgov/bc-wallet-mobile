@@ -23,16 +23,16 @@ const VerifyMethodActionButton = ({
   loading,
   disabled = false,
 }: VerifyMethodActionButtonProps) => {
-  const { ColorPallet, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
       padding: Spacing.md,
       borderTopWidth: 1,
-      borderTopColor: ColorPallet.brand.tertiary,
+      borderTopColor: ColorPalette.brand.tertiary,
       borderBottomWidth: 1,
-      borderBottomColor: ColorPallet.brand.tertiary,
+      borderBottomColor: ColorPalette.brand.tertiary,
       flexDirection: 'row',
       alignItems: 'center',
       ...style,
@@ -44,7 +44,7 @@ const VerifyMethodActionButton = ({
       marginBottom: Spacing.sm,
     },
     title: {
-      color: ColorPallet.brand.primary,
+      color: ColorPalette.brand.primary,
       marginLeft: Spacing.sm,
     },
     description: {
@@ -64,7 +64,7 @@ const VerifyMethodActionButton = ({
     >
       <View style={{ flex: 1 }}>
         <View style={styles.titleContainer}>
-          <Icon name={icon} size={iconSize} color={ColorPallet.brand.primary} />
+          <Icon name={icon} size={iconSize} color={ColorPalette.brand.primary} />
           <ThemedText variant={'bold'} style={styles.title} numberOfLines={0}>
             {title}
           </ThemedText>

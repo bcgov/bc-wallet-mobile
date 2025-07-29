@@ -24,7 +24,7 @@ type ManualSerialScreenProps = {
 
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [serial, setSerial] = useState(store.bcsc.serial ?? '')
   const { width } = useWindowDimensions()
@@ -36,7 +36,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   const styles = StyleSheet.create({
     screenContainer: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
       justifyContent: 'space-between',
     },
@@ -49,7 +49,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       marginBottom: Spacing.md,
     },
     error: {
-      color: ColorPallet.semantic.error,
+      color: ColorPalette.semantic.error,
       marginBottom: Spacing.sm,
     },
 

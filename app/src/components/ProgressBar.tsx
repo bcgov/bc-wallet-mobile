@@ -8,7 +8,7 @@ export interface ProgressBarProps {
 }
 
 const ProgressBar = ({ progressPercent, dark = false }: ProgressBarProps) => {
-  const { ColorPallet } = useTheme()
+  const { ColorPalette } = useTheme()
   const { width: windowWidth } = useWindowDimensions()
   const [progressBarScale] = useState(new Animated.Value(0))
 
@@ -24,12 +24,12 @@ const ProgressBar = ({ progressPercent, dark = false }: ProgressBarProps) => {
     progressBarContainer: {
       width: '100%',
       height: 11,
-      backgroundColor: dark ? '#001e3d' : ColorPallet.brand.primaryBackground,
+      backgroundColor: dark ? '#001e3d' : ColorPalette.brand.primaryBackground,
     },
     progressBar: {
       height: '100%',
       width: '100%',
-      backgroundColor: ColorPallet.brand.highlight,
+      backgroundColor: ColorPalette.brand.highlight,
     },
   })
   // scaleX rather than width is used for the progress bar as this allows useNativeDriver to be true

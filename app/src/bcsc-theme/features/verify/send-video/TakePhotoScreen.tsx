@@ -13,7 +13,7 @@ type PhotoInstructionsScreenProps = {
 }
 
 const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
-  const { Spacing, ColorPallet } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const { hasPermission, requestPermission } = useCameraPermission()
   const device = useCameraDevice('front')
   const [isActive, setIsActive] = useState(false)
@@ -36,7 +36,7 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     },
     mask: {
       flex: 1,
-      backgroundColor: ColorPallet.notification.popupOverlay,
+      backgroundColor: ColorPalette.notification.popupOverlay,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -193,7 +193,7 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           </TouchableOpacity>
           {hasTorch ? (
             <TouchableOpacity style={{ flex: 1 }} onPress={toggleTorch}>
-              <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPallet.grayscale.white} />
+              <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
             </TouchableOpacity>
           ) : (
             <View style={{ flex: 1 }} />

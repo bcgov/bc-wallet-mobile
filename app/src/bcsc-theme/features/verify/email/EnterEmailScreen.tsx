@@ -18,7 +18,7 @@ type EnterEmailScreenProps = {
 }
 
 const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { evidence } = useApi()
   const [email, setEmail] = useState('')
@@ -31,7 +31,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {

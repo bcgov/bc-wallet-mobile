@@ -34,7 +34,7 @@ import {
 type PersonProps = StackScreenProps<NotificationStackParams, Screens.CustomNotification>
 
 const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
-  const { ColorPallet, TextTheme, Spacing } = useTheme()
+  const { ColorPalette, TextTheme, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const [remoteAgentDetails, setRemoteAgentDetails] = useState<WellKnownAgentDetails | undefined>()
   const timer = useRef<NodeJS.Timeout>()
@@ -73,7 +73,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   const styles = StyleSheet.create({
     container: {
       height: '100%',
-      backgroundColor: ColorPallet.brand.modalPrimaryBackground,
+      backgroundColor: ColorPalette.brand.modalPrimaryBackground,
       padding: 20,
     },
     progressStep: {
@@ -234,7 +234,7 @@ const PersonCredentialLoading: React.FC<PersonProps> = ({ navigation }) => {
   }, [navigation])
 
   return (
-    <SafeAreaView style={{ backgroundColor: ColorPallet.brand.modalPrimaryBackground, flex: 1 }}>
+    <SafeAreaView style={{ backgroundColor: ColorPalette.brand.modalPrimaryBackground, flex: 1 }}>
       <ProgressBar progressPercent={progressPercent} />
       <ThemedText variant={'caption'} style={styles.progressStep}>
         {stepText}

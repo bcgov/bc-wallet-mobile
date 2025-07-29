@@ -10,7 +10,7 @@ import WebDisplay from '@screens/WebDisplay'
 interface HomeFooterViewProps extends PropsWithChildren {}
 
 const HomeFooterView = ({ children }: HomeFooterViewProps) => {
-  const { ColorPallet } = useTheme()
+  const { ColorPalette } = useTheme()
   const { t } = useTranslation()
   const [surveyVisible, setSurveyVisible] = useState(false)
 
@@ -19,7 +19,7 @@ const HomeFooterView = ({ children }: HomeFooterViewProps) => {
       marginTop: 10,
       paddingHorizontal: 20,
       paddingVertical: 20,
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
     },
     feedbackIcon: {
       paddingRight: 10,
@@ -39,9 +39,9 @@ const HomeFooterView = ({ children }: HomeFooterViewProps) => {
       >
         <Icon
           name="message-draw"
-          style={[styles.feedbackIcon, { color: ColorPallet.brand.primary }]}
+          style={[styles.feedbackIcon, { color: ColorPalette.brand.primary }]}
           size={26}
-          color={ColorPallet.grayscale.white}
+          color={ColorPalette.grayscale.white}
         />
       </Button>
       <WebDisplay

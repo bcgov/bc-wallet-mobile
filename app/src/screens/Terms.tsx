@@ -26,7 +26,7 @@ export const TermsVersion = '2'
 const Terms: React.FC = () => {
   const [store, dispatch] = useStore()
   const { t } = useTranslation()
-  const { ColorPallet, TextTheme } = useTheme()
+  const { ColorPalette, TextTheme } = useTheme()
   const agreedToPreviousTerms = store.onboarding.didAgreeToTerms && store.onboarding.didAgreeToTerms !== TermsVersion
   const style = StyleSheet.create({
     safeAreaView: {
@@ -58,7 +58,7 @@ const Terms: React.FC = () => {
     },
     link: {
       ...TextTheme.normal,
-      color: ColorPallet.brand.link,
+      color: ColorPalette.brand.link,
       textDecorationLine: 'underline',
       fontWeight: 'bold',
     },

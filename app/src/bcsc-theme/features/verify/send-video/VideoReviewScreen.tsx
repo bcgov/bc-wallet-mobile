@@ -27,7 +27,7 @@ type VideoReviewScreenProps = {
 }
 
 const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { width } = useWindowDimensions()
   const { ButtonLoading } = useAnimatedComponents()
@@ -44,7 +44,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     pageContainer: {
       position: 'relative',
       flexGrow: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     contentContainer: {
       flexGrow: 1,
@@ -66,7 +66,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       aspectRatio: 1,
     },
     pauseButton: {
-      backgroundColor: ColorPallet.grayscale.white,
+      backgroundColor: ColorPalette.grayscale.white,
       width: pauseButtonSize,
       height: pauseButtonSize,
       borderRadius: pauseButtonSize / 2,
@@ -153,7 +153,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
             disableAudioSessionManagement
           />
           <TouchableOpacity style={styles.pauseButton} onPress={onTogglePause}>
-            <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPallet.brand.primaryBackground} />
+            <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
           </TouchableOpacity>
         </View>
         <View style={styles.controlsContainer}>

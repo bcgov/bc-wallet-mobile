@@ -12,7 +12,7 @@ type VerifyInPersonScreenProps = {
 }
 
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -24,7 +24,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {

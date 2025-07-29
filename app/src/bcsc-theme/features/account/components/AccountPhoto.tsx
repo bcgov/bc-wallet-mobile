@@ -4,13 +4,13 @@ import { Image, StyleSheet, View } from 'react-native'
 
 // Placholder for now
 const AccountPhoto: React.FC<{ photoUri?: string }> = ({ photoUri }) => {
-  const { Spacing, ColorPallet } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
       width: 130,
       height: 180,
-      backgroundColor: ColorPallet.grayscale.lightGrey,
+      backgroundColor: ColorPalette.grayscale.lightGrey,
       marginBottom: Spacing.md,
       justifyContent: 'center',
       alignItems: 'center',
