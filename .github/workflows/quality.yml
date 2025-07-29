@@ -23,6 +23,12 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install --immutable
+      # Note: The `bcsc-core` package must be built before type checking.
+      - name: Build bcsc-core
+        run: |
+          cd packages/bcsc-core
+          yarn build
+          cd ../../
       - name: Switch to app folder
         run: |
           cd app
@@ -35,9 +41,6 @@ jobs:
       - name: Type checking
         # Note: To pass the type check, the `bcsc-core` package must be built first.
         run: |
-          cd ../packages/bcsc-core
-          yarn build
-          cd ../../app
           yarn typecheck
   test:
     runs-on: ubuntu-22.04
