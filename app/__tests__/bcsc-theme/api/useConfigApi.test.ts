@@ -29,9 +29,7 @@ describe('useConfigApi', () => {
 
       // Verify correct endpoint called with the mocked baseURL
       expect(apiClient.get).toHaveBeenCalledWith(`${apiClient.baseURL}/cardtap/v3/status/android/mobile_card`, {
-        headers: {
-          skipBearerAuth: true,
-        },
+        skipBearerAuth: true,
       })
       expect(response).toEqual({ status: 'ok' })
     })
@@ -42,9 +40,7 @@ describe('useConfigApi', () => {
       const response = await config.getServerStatus()
 
       expect(apiClient.get).toHaveBeenCalledWith(`${apiClient.baseURL}/cardtap/v3/status/ios/mobile_card`, {
-        headers: {
-          skipBearerAuth: true,
-        },
+        skipBearerAuth: true,
       })
       expect(response).toEqual({ status: 'ok' })
     })
