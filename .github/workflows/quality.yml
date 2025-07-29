@@ -33,7 +33,11 @@ jobs:
         run: |
           yarn lint
       - name: Type checking
+        # Note: To pass the type check, the `bcsc-core` package must be built first.
         run: |
+          cd ../packages/bcsc-core
+          yarn build
+          cd ../../app
           yarn typecheck
   test:
     runs-on: ubuntu-22.04
