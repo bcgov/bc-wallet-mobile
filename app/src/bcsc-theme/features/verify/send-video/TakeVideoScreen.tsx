@@ -39,7 +39,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       duration: 1000,
       useNativeDriver: true,
     }).start()
-  }, [prompt, promptOpacity])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prompt])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -108,7 +109,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       }
       setElapsedTime(elapsed)
     }, 1000)
-  }, [over30Seconds])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -123,7 +125,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         setTimeout(() => {
           setPrompt(`${i}`)
           resolve(true)
-        }, 1000),
+        }, 1000)
       )
     }
 
@@ -153,7 +155,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         }
       },
     })
-  }, [logger, startTimer, stopTimer, navigation, prompts, over30Seconds, elapsedTime])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [logger, startTimer, stopTimer, navigation, prompts])
 
   const onPressNextPrompt = async () => {
     if (prompts.indexOf(prompt) === prompts.length - 1) {
@@ -188,6 +191,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       }
 
       checkPermissions()
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       startRecording,
       hasCameraPermission,
@@ -195,7 +199,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       hasMicrophonePermission,
       requestMicrophonePermission,
       navigation,
-    ]),
+    ])
   )
 
   // Cleanup timer on unmount

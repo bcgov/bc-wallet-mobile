@@ -6,13 +6,13 @@ import { View } from 'react-native'
 
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
-import { BCSCScreens, BCSCStacks } from '../types/navigators'
+import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
 
 const MainStack: React.FC = () => {
   const { t } = useTranslation()
   const { currentStep } = useTour()
-  const Stack = createStackNavigator()
+  const Stack = createStackNavigator<BCSCRootStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
 
   const headerRight = () => (
