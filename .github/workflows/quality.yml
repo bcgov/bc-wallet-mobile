@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-22.04
-    name: Linting
+    name: Lint+Format+Types
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
@@ -20,28 +20,37 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v3
+        working-directory: app
+        with:
+          path: |
+            ~/.cache/yarn
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Install dependencies
-        run: |
-          yarn install --immutable
+        working-directory: app
+        run: yarn install --immutable
+
       # Note: The `bcsc-core` package must be built before type checking.
       - name: Build bcsc-core
-        run: |
-          cd packages/bcsc-core
-          yarn build
-          cd ../../
-      - name: Switch to app folder
-        run: |
-          cd app
+        working-directory: packages/bcsc-core
+        run: yarn build
+
       - name: Check style
-        run: |
-          yarn prettier
+        working-directory: app
+        run: yarn prettier
+
       - name: LINTing
-        run: |
-          yarn lint
-      - name: Type checking
+        working-directory: app
+        run: yarn lint
+
+      - name: Check types
+        working-directory: app
         # Note: To pass the type check, the `bcsc-core` package must be built first.
-        run: |
-          yarn typecheck
+        run: yarn typecheck
   test:
     runs-on: ubuntu-22.04
     name: Testing
