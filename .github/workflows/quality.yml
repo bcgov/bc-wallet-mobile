@@ -34,6 +34,15 @@ jobs:
         working-directory: app
         run: yarn install --immutable
 
+      - name: Cache bcsc-core build output
+        uses: actions/cache@v3
+        working-directory: packages/bcsc-core
+        with:
+          path: packages/bcsc-core/lib
+          key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-bcsc-core-build-
+
       # Note: The `bcsc-core` package must be built before type checking.
       - name: Build bcsc-core
         working-directory: packages/bcsc-core
