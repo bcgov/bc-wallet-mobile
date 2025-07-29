@@ -32,6 +32,9 @@ jobs:
       - name: LINTing
         run: |
           yarn lint
+      - name: Type checking
+        run: |
+          yarn typecheck
   test:
     runs-on: ubuntu-22.04
     name: Testing
