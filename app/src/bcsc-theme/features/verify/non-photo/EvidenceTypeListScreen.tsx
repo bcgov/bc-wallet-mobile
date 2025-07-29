@@ -1,9 +1,8 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { SectionList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScrollView } from 'react-native-gesture-handler'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useEffect } from 'react'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
@@ -15,7 +14,7 @@ type EvidenceTypeListScreenProps = {
 
 const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigation }: EvidenceTypeListScreenProps) => {
   const { ColorPallet, Spacing } = useTheme()
-  const { data, error, load } = useDataLoader<any[]>(
+  const { data, load } = useDataLoader<any[]>(
     async () => {
       const cards: Record<string, EvidenceType[]> = {}
       const evidenceMetadata = await evidence.getEvidenceMetadata()
@@ -75,7 +74,6 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     load()
   }, [])
 
-  console.log(error)
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <View>
@@ -93,8 +91,6 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
           renderItem={(data) => (
             <TouchableOpacity
               onPress={() => {
-                console.log('-_-_-_-_-_')
-                console.log(data.item)
                 // navigate to the next screen with the correct data
                 navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
               }}

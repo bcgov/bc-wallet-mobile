@@ -6,6 +6,8 @@ import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import RectangularMask from '@/bcsc-theme/components/RectangularMask'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
+import { useStore } from '@bifold/core'
+import { BCState, BCDispatchAction } from '@/store'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceCapture>
@@ -14,7 +16,7 @@ type EvidenceCaptureScreenProps = {
 
 const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
-
+  const [, dispatch] = useStore<BCState>()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<'CAPTURING' | 'REVIEWING'>('CAPTURING')
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
@@ -32,6 +34,10 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     if (!currentPhotoPath || !currentSide) return
 
     const newPhotos = [...capturedPhotos, { path: currentPhotoPath, side: currentSide }]
+    dispatch({
+      type: BCDispatchAction.UPDATE_EVIDENCE_PATHS,
+      payload: [{ label: currentSide, path: currentPhotoPath }],
+    })
     setCapturedPhotos(newPhotos)
 
     if (isLastSide) {

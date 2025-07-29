@@ -4,7 +4,6 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
-import { useEffect } from 'react'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 
 type IDPhotoInformationScreenProps = {
@@ -13,8 +12,6 @@ type IDPhotoInformationScreenProps = {
 }
 
 const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScreenProps) => {
-  console.log('____________')
-  console.log(route.params.cardType)
   const { cardType } = route.params
   const { ColorPallet, Spacing } = useTheme()
   const styles = StyleSheet.create({

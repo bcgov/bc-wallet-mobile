@@ -59,6 +59,7 @@ export interface BCSCState {
   verificationRequestId?: string
   verificationRequestSha?: string
   additionalIdentification: {}[]
+  evidencePaths?: { label: string; path: string }[]
 }
 
 export enum Mode {
@@ -105,6 +106,7 @@ enum BCSCDispatchAction {
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
+  UPDATE_EVIDENCE_PATHS = 'bcsc/updateEvidencePaths',
 }
 
 enum ModeDispatchAction {
@@ -222,7 +224,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       if (enabledAt) {
         PersistentStorage.storeValueForKey<RemoteDebuggingState>(
           BCLocalStorageKeys.RemoteDebugging,
-          developer.remoteDebugging,
+          developer.remoteDebugging
         )
       } else {
         PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
@@ -253,7 +255,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       PersistentStorage.storeValueForKey<boolean>(
         BCLocalStorageKeys.EnableAppToAppPersonFlow,
-        developer.enableAppToAppPersonFlow,
+        developer.enableAppToAppPersonFlow
       )
 
       return { ...state, developer }
@@ -266,7 +268,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // save to storage so notification doesn't reapper on app restart
       PersistentStorage.storeValueForKey<DismissPersonCredentialOffer>(
         BCLocalStorageKeys.PersonCredentialOfferDismissed,
-        newState.dismissPersonCredentialOffer,
+        newState.dismissPersonCredentialOffer
       )
 
       return newState
@@ -384,6 +386,18 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_VERIFICATION_REQUEST: {
       const evidence = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, verificationRequestId: evidence?.id, verificationRequestSha: evidence?.sha256 }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_EVIDENCE_PATHS: {
+      const evidence = (action?.payload || []).pop() ?? undefined
+      const bcsc = {
+        ...state.bcsc,
+        evidencePaths: state.bcsc.evidencePaths ? [...state.bcsc.evidencePaths, ...evidence] : evidence,
+      }
       const newState = { ...state, bcsc }
 
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)

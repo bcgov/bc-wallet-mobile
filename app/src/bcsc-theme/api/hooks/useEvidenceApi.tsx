@@ -82,6 +82,21 @@ export interface EvidenceMetadataResponseData {
   }[]
 }
 
+export interface EvidenceImageMetadataPayload {
+  label: string
+  content_type: string
+  date: string // date in UTC
+  sha256: string // hashed copy of the image
+}
+export interface EvidenceMetadataPayload {
+  type: string
+  number: string
+  images: EvidenceImageMetadataPayload[]
+  barcodes: {
+    type: string
+  }[]
+}
+
 const useEvidenceApi = () => {
   const [store] = useStore<BCState>()
 
@@ -278,6 +293,21 @@ const useEvidenceApi = () => {
     })
   }
 
+  const sendEvidenceMetadata = async (
+    url: string,
+    payload: EvidenceImageMetadataPayload
+  ): Promise<UploadEvidenceResponseData[]> => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.post<UploadEvidenceResponseData[]>(url, payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      return data
+    })
+  }
+
   return {
     createVerificationRequest,
     uploadPhotoEvidenceMetadata,
@@ -291,6 +321,7 @@ const useEvidenceApi = () => {
     createEmailVerification,
     sendEmailVerificationCode,
     getEvidenceMetadata,
+    sendEvidenceMetadata,
   }
 }
 
