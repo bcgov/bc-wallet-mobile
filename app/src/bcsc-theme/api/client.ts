@@ -8,6 +8,13 @@ import Config from 'react-native-config'
 import { TokenStatusResponseData } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 
+// Extend AxiosRequestConfig to include skipBearerAuth
+declare module 'axios' {
+  export interface AxiosRequestConfig {
+    skipBearerAuth?: boolean
+  }
+}
+
 interface BCSCEndpoints {
   // METADATA
   pairDeviceWithQRCodeSupported: boolean
@@ -134,9 +141,8 @@ class BCSCService {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    // skip adding the Authorization header if the request is marked to skip it
-    if (config.headers.skipBearerAuth) {
-      delete config.headers.skipBearerAuth
+    // skip processing if skipBearerAuth is set in the config
+    if (config.skipBearerAuth) {
       return config
     }
 

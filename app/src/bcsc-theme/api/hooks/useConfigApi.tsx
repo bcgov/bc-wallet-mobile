@@ -29,9 +29,7 @@ const useConfigApi = () => {
     const { data } = await apiClient.get<ServerStatusResponseData>(
       `${apiClient.baseURL}/cardtap/v3/status/${Platform.OS}/mobile_card`,
       {
-        headers: {
-          skipBearerAuth: true,
-        },
+        skipBearerAuth: true, // this endpoint does not require an access token
       }
     )
     return data
