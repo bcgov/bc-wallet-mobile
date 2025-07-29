@@ -167,7 +167,6 @@ const translation = {
     "Toggle": "Toggle Developer Mode",
     "AttestationSupport": "Attestation support (PT-BR)",
     "EnableProxy": "Enable proxy (PT-BR)",
-    "EnableAltPersonFlow": "Alt Person flow (PT-BR)",
     "EnableAppToAppPersonFlow": "App-to-app Person flow (PT-BR)",
   },
   "Tips": {
@@ -216,6 +215,10 @@ const translation = {
   "Unified": {
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
+      "Step1": "Step 1 (PT-BR)",
+      "Step2": "Step 2 (PT-BR)",
+      "Step3": "Step 3 (PT-BR)",
+      "Step4": "Step 4 (PT-BR)"
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",

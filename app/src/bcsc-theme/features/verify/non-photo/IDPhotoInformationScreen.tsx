@@ -12,10 +12,7 @@ type IDPhotoInformationScreenProps = {
   route: { params: { cardType: EvidenceType } }
 }
 
-const IDPhotoInformationScreen: React.FC<IDPhotoInformationScreenProps> = ({
-  navigation,
-  route,
-}: IDPhotoInformationScreenProps) => {
+const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScreenProps) => {
   console.log('____________')
   console.log(route.params.cardType)
   const { cardType } = route.params

@@ -34,8 +34,9 @@ const Developer: React.FC = () => {
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
-    !!store.preferences.useConnectionInviterCapability
+    !!store.preferences.useConnectionInviterCapability,
   )
+  const [BCSCMode, setBCSCMode] = useState<boolean>(store.mode === Mode.BCSC)
   const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
@@ -43,7 +44,6 @@ const Developer: React.FC = () => {
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
   const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
   const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
-  const [enableAltPersonFlow, setEnableAltPersonFlow] = useState(!!store.developer.enableAltPersonFlow)
   const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
   const navigation = useNavigation()
 
@@ -273,14 +273,6 @@ const Developer: React.FC = () => {
     setEnableProxy((previousState) => !previousState)
   }
 
-  const toggleEnableAltPersonFlowSwitch = () => {
-    dispatch({
-      type: BCDispatchAction.TOGGLE_ALT_PERSON_FLOW,
-      payload: [!enableAltPersonFlow],
-    })
-    setEnableAltPersonFlow((previousState) => !previousState)
-  }
-
   const toggleEnableAppToAppPersonFlowSwitch = () => {
     dispatch({
       type: BCDispatchAction.TOGGLE_APP_TO_APP_PERSON_FLOW,
@@ -299,11 +291,16 @@ const Developer: React.FC = () => {
 
   const toggleMode = () => {
     lockOutUser(LockoutReason.Timeout)
-    setTheme(BCThemeNames.BCSC)
+    
+    const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
+    const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.BCSC
+    
+    setTheme(newTheme)
     dispatch({
       type: BCDispatchAction.UPDATE_MODE,
-      payload: [Mode.BCSC],
+      payload: [newMode],
     })
+    setBCSCMode((previousState) => !previousState)
   }
 
   return (
@@ -497,20 +494,6 @@ const Developer: React.FC = () => {
         </SectionRow>
 
         <SectionRow
-          title={t('Developer.EnableAltPersonFlow')}
-          accessibilityLabel={t('Developer.EnableAltPersonFlow')}
-          testID={testIdWithKey('ToggleEnableAltPersonFlow')}
-        >
-          <Switch
-            trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={enableAltPersonFlow ? ColorPallet.brand.primary : ColorPallet.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPallet.grayscale.lightGrey}
-            onValueChange={toggleEnableAltPersonFlowSwitch}
-            value={enableAltPersonFlow}
-          />
-        </SectionRow>
-
-        <SectionRow
           title={t('Developer.EnableAppToAppPersonFlow')}
           accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
           testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
@@ -545,10 +528,10 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPallet.grayscale.lightGrey, true: ColorPallet.brand.primaryDisabled }}
-            thumbColor={ColorPallet.grayscale.mediumGrey}
+            thumbColor={!BCSCMode ? ColorPallet.grayscale.mediumGrey : ColorPallet.brand.primary}
             ios_backgroundColor={ColorPallet.grayscale.lightGrey}
             onValueChange={toggleMode}
-            value={false}
+            value={BCSCMode}
           />
         </SectionRow>
       </ScrollView>

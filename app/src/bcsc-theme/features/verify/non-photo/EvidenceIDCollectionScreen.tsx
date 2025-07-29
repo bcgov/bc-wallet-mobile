@@ -14,7 +14,7 @@ type EvidenceIDCollectionScreenProps = {
   route: { params: { cardType: EvidenceType } }
 }
 
-const EvidenceIDCollectionScreen: React.FC<EvidenceIDCollectionScreenProps> = ({ navigation, route }) => {
+const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const { Inputs } = useTheme()
   const { cardType } = route.params
   const [currentDocumentNumber, setCurrentDocumentNumber] = useState('')

@@ -27,6 +27,8 @@ import IDPhotoInformationScreen from './non-photo/IDPhotoInformationScreen'
 import EvidenceTypeListScreen from './non-photo/EvidenceTypeListScreen'
 import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
 import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
+import EnterEmailScreen from './email/EnterEmailScreen'
+import EmailConfirmationScreen from './email/EmailConfirmationScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -50,6 +52,8 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
+      <Stack.Screen name={BCSCScreens.EnterEmailScreen} component={EnterEmailScreen} />
+      <Stack.Screen name={BCSCScreens.EmailConfirmationScreen} component={EmailConfirmationScreen} />
       <Stack.Screen
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}

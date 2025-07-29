@@ -12,10 +12,7 @@ type EvidenceCaptureScreenProps = {
   route: { params: { cardType: EvidenceType } }
 }
 
-const EvidenceCaptureScreen: React.FC<EvidenceCaptureScreenProps> = ({
-  navigation,
-  route,
-}: EvidenceCaptureScreenProps) => {
+const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
 
   const [currentIndex, setCurrentIndex] = useState(0)

@@ -7,12 +7,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
+import ComboCardImage from '@assets/img/combo_card.png'
+import NoPhotoCardImage from '@assets/img/no_photo_card.png'
+import PhotoCardImage from '@assets/img/photo_card.png'
 import { StackNavigationProp } from '@react-navigation/stack'
 import TileButton, { TileButtonProps } from '../../components/TileButton'
 import { BCSCCardType } from '../../types/cards'
-import ComboCardImage from '@assets/img/combo_card.png'
-import PhotoCardImage from '@assets/img/photo_card.png'
-import NoPhotoCardImage from '@assets/img/no_photo_card.png'
 
 const COMBO_CARD = Image.resolveAssetSource(ComboCardImage).uri
 const PHOTO_CARD = Image.resolveAssetSource(PhotoCardImage).uri
@@ -72,8 +72,9 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [dispatch, navigation])
 
   const onPressPhotoCard = useCallback(() => {
-    // TODO: Implement
-  }, [])
+    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Photo] })
+    navigation.navigate(BCSCScreens.SerialInstructions)
+  }, [dispatch, navigation])
 
   const onPressNoPhotoCard = useCallback(() => {
     dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.NonPhoto] })
