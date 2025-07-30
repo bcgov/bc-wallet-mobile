@@ -58,8 +58,7 @@ export interface BCSCState {
   bookmarks: string[]
   verificationRequestId?: string
   verificationRequestSha?: string
-  additionalIdentification: {}[]
-  evidencePaths?: { label: string; path: string }[]
+  evidenceMetadata: VerificationPhotoUploadPayload[]
 }
 
 export enum Mode {
@@ -181,7 +180,7 @@ const bcscState: BCSCState = {
   refreshToken: undefined,
   verificationRequestId: undefined,
   verificationRequestSha: undefined,
-  additionalIdentification: [],
+  evidenceMetadata: [],
 }
 
 export enum BCLocalStorageKeys {
@@ -394,9 +393,10 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.UPDATE_EVIDENCE_PATHS: {
       const evidence = (action?.payload || []).pop() ?? undefined
+      console.log('Evidence paths updated:', evidence)
       const bcsc = {
         ...state.bcsc,
-        evidencePaths: state.bcsc.evidencePaths ? [...state.bcsc.evidencePaths, ...evidence] : evidence,
+        evidenceMetadata: evidence,
       }
       const newState = { ...state, bcsc }
 

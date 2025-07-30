@@ -2,7 +2,7 @@ import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { BCDispatchAction, BCState } from '@/store'
 import { VerificationPhotoUploadPayload } from '@bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { getFileInfo } from '@bcsc-theme/utils/file-info'
+import { getFileInfo, getPhotoMetadata } from '@bcsc-theme/utils/file-info'
 import { TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -55,19 +55,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
 
   const onPressUse = async () => {
     try {
-      const fileInfo = await getFileInfo(photoPath)
-      const jpegBytes = await RNFS.readFile(photoPath, 'base64')
-      const data = new Uint8Array(Buffer.from(jpegBytes, 'base64'))
-      const photoSHA = await hashBase64(jpegBytes)
-
-      const photoMetadata: VerificationPhotoUploadPayload = {
-        content_length: data.byteLength,
-        content_type: 'image/jpeg',
-        date: Math.floor(fileInfo.timestamp),
-        label: 'front',
-        filename: fileInfo.filename,
-        sha256: photoSHA,
-      }
+      const photoMetadata = await getPhotoMetadata(photoPath)
 
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
       navigation.dispatch(

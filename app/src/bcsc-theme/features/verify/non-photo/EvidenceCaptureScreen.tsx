@@ -2,12 +2,13 @@ import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/n
 import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react'
-import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { EvidenceType, VerificationPhotoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import RectangularMask from '@/bcsc-theme/components/RectangularMask'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { useStore } from '@bifold/core'
 import { BCState, BCDispatchAction } from '@/store'
+import { getPhotoMetadata } from '@/bcsc-theme/utils/file-info'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceCapture>
@@ -20,7 +21,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [currentIndex, setCurrentIndex] = useState(0)
   const [captureState, setCaptureState] = useState<'CAPTURING' | 'REVIEWING'>('CAPTURING')
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
-  const [capturedPhotos, setCapturedPhotos] = useState<any[]>([])
+  const [capturedPhotos, setCapturedPhotos] = useState<VerificationPhotoUploadPayload[]>([])
 
   const currentSide = cardType.image_sides[currentIndex]
   const isLastSide = currentIndex === cardType.image_sides.length - 1
@@ -32,15 +33,16 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
 
   const handleAcceptPhoto = async () => {
     if (!currentPhotoPath || !currentSide) return
-
-    const newPhotos = [...capturedPhotos, { path: currentPhotoPath, side: currentSide }]
-    dispatch({
-      type: BCDispatchAction.UPDATE_EVIDENCE_PATHS,
-      payload: [{ label: currentSide, path: currentPhotoPath }],
-    })
+    const photoMetadata = await getPhotoMetadata(currentPhotoPath)
+    photoMetadata.label = currentSide.image_side_label
+    const newPhotos = [...capturedPhotos, photoMetadata]
     setCapturedPhotos(newPhotos)
-
     if (isLastSide) {
+      console.log('Captured photos:', newPhotos)
+      dispatch({
+        type: BCDispatchAction.UPDATE_EVIDENCE_PATHS,
+        payload: [newPhotos],
+      })
       // All photos captured, navigate to form screen
       navigation.navigate(BCSCScreens.EvidenceIDCollection, { cardType })
     } else {

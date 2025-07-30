@@ -33,7 +33,7 @@ export interface VerificationStatusResponseData {
 }
 
 export interface VerificationPhotoUploadPayload {
-  label: 'front' | 'back'
+  label: string
   content_type: string
   content_length: number
   date: number
@@ -81,18 +81,11 @@ export interface EvidenceMetadataResponseData {
     evidence_types: EvidenceType[]
   }[]
 }
-
-export interface EvidenceImageMetadataPayload {
-  label: string
-  content_type: string
-  date: string // date in UTC
-  sha256: string // hashed copy of the image
-}
 export interface EvidenceMetadataPayload {
   type: string
   number: string
-  images: EvidenceImageMetadataPayload[]
-  barcodes: {
+  images: VerificationPhotoUploadPayload[]
+  barcodes?: {
     type: string
   }[]
 }
@@ -293,17 +286,18 @@ const useEvidenceApi = () => {
     })
   }
 
-  const sendEvidenceMetadata = async (
-    url: string,
-    payload: EvidenceImageMetadataPayload
-  ): Promise<UploadEvidenceResponseData[]> => {
+  const sendEvidenceMetadata = async (payload: EvidenceMetadataPayload): Promise<UploadEvidenceResponseData[]> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.post<UploadEvidenceResponseData[]>(url, payload, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+      const { data } = await apiClient.post<UploadEvidenceResponseData[]>(
+        `${apiClient.endpoints.evidence}/v1/documents`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
       return data
     })
   }

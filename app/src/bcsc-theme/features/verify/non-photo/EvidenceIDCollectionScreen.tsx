@@ -9,6 +9,7 @@ import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { Button, ButtonType, Text, ThemedText, useStore, useTheme } from '@bifold/core'
 import { TextInput, View } from 'react-native'
 import { BCSCState, BCState } from '@/store'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceIDCollection>
@@ -18,11 +19,14 @@ type EvidenceIDCollectionScreenProps = {
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const [store] = useStore<BCState>()
   const { Inputs } = useTheme()
+  const { evidence } = useApi()
   const { cardType } = route.params
 
   const [currentDocumentNumber, setCurrentDocumentNumber] = useState('')
 
   const handleOnContinue = async () => {
+    console.log('ARE WE READY TO GO OR WHAT...')
+    console.log(JSON.stringify(store.bcsc.evidenceMetadata, null, 2))
     // ok what needs to happen, we need to grab both images
     // load them into memory
     // sha them
@@ -30,9 +34,14 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     // get the uploads back and save those for the next step
     // I'll need to update the BCSCState with the on device image location
     // and I'll need an a state for the upload URI as a flag for the steps page to allow the next step
-
-    if (store.bcsc.evidencePaths) {
-      const evidence = store.bcsc.evidencePaths
+    if (store.bcsc.evidenceMetadata) {
+      const evidenceMetadata = store.bcsc.evidenceMetadata
+      const response = await evidence.sendEvidenceMetadata({
+        type: cardType.evidence_type,
+        number: currentDocumentNumber,
+        images: evidenceMetadata,
+      })
+      console.log(response)
     }
   }
 
