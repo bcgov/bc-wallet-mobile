@@ -20,14 +20,15 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
-      - name: Cache Yarn dependencies
+      - name: Cache app node_modules
         uses: actions/cache@v3
         with:
-          path: .yarn/cache
-          # Cache will be invalidated if the yarn.lock file changes
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          path: |
+            app/node_modules
+          # Cache will be invalidated if package.json or yarn.lock changes
+          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-app-node_modules-
 
       - name: Install dependencies
         working-directory: app
@@ -75,14 +76,15 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
-      - name: Cache Yarn dependencies
+      - name: Cache app node_modules
         uses: actions/cache@v3
         with:
-          path: .yarn/cache
-          # Cache will be invalidated if the yarn.lock file changes
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          path: |
+            app/node_modules
+          # Cache will be invalidated if package.json or yarn.lock changes
+          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-app-node_modules-
 
       - name: Install dependencies
         working-directory: app
