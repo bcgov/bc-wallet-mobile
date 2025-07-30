@@ -839,6 +839,58 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       promise.reject("E_DEVICE_CODE_ERROR", "Unexpected error creating device code request: ${e.message}", e)
     }
   }
+
+  @ReactMethod
+  override fun createEvidenceRequestJWT(deviceCode: String, clientID: String, promise: Promise) {
+    try {
+      // Create JWT claims set for evidence request (matching iOS implementation)
+      val claimsSet = JWTClaimsSet.Builder()
+        .claim("device_code", deviceCode)
+        .claim("client_id", clientID)
+        .build()
+      
+      // Sign the JWT using bcsc-keypair-port
+      val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
+      
+      Log.d(NAME, "createEvidenceRequestJWT: Successfully created evidence request JWT")
+      promise.resolve(signedJWT)
+      
+    } catch (e: BcscException) {
+      Log.e(NAME, "createEvidenceRequestJWT: BCSC signing error: ${e.devMessage}", e)
+      promise.reject("E_BCSC_EVIDENCE_JWT_ERROR", "Error creating evidence request JWT with bcsc-keypair-port: ${e.devMessage}", e)
+    } catch (e: Exception) {
+      Log.e(NAME, "createEvidenceRequestJWT: Unexpected error: ${e.message}", e)
+      promise.reject("E_EVIDENCE_JWT_ERROR", "Unexpected error creating evidence request JWT: ${e.message}", e)
+    }
+  }
+
+  @ReactMethod
+  override fun hashBase64(base64: String, promise: Promise) {
+    try {
+      // Decode base64 string to bytes (similar to iOS implementation)
+      val data = android.util.Base64.decode(base64, android.util.Base64.DEFAULT)
+      
+      // Create SHA-256 hash
+      val digest = java.security.MessageDigest.getInstance("SHA-256")
+      val hashBytes = digest.digest(data)
+      
+      // Convert hash bytes to hexadecimal string (similar to iOS implementation)
+      val hashString = hashBytes.joinToString("") { "%02x".format(it) }
+      
+      Log.d(NAME, "hashBase64: Successfully hashed base64 string")
+      promise.resolve(hashString)
+      
+    } catch (e: IllegalArgumentException) {
+      Log.e(NAME, "hashBase64: Invalid base64 input: ${e.message}", e)
+      promise.reject("E_INVALID_BASE64", "Input is not valid base64", e)
+    } catch (e: java.security.NoSuchAlgorithmException) {
+      Log.e(NAME, "hashBase64: SHA-256 algorithm not available: ${e.message}", e)
+      promise.reject("E_HASH_ALGORITHM_ERROR", "SHA-256 hashing algorithm not available", e)
+    } catch (e: Exception) {
+      Log.e(NAME, "hashBase64: Unexpected error: ${e.message}", e)
+      promise.reject("E_HASH_ERROR", "Unexpected error hashing base64: ${e.message}", e)
+    }
+  }
   
   // MARK: - Account management methods
   /**

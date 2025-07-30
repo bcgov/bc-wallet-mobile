@@ -16,4 +16,6 @@ abstract class BcscCoreSpec internal constructor(context: ReactApplicationContex
   abstract fun signPairingCode(code: String, issuer: String, clientID: String, fcmDeviceToken: String, deviceToken: String?, promise: Promise)
   abstract fun getDynamicClientRegistrationBody(fcmDeviceToken: String, deviceToken: String?, promise: Promise)
   abstract fun getDeviceCodeRequestBody(deviceCode: String, clientId: String, issuer: String, confirmationCode: String, promise: Promise)
+  abstract fun createEvidenceRequestJWT(deviceCode: String, clientID: String, promise: Promise)
+  abstract fun hashBase64(base64: String, promise: Promise)
 }
