@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 const HomeHeaderView = () => {
-  const { ColorPallet } = useTheme()
+  const { ColorPalette } = useTheme()
   const { t } = useTranslation()
   const { agent } = useAgent()
   const logger = agent?.config.logger as RemoteLogger
@@ -16,12 +16,12 @@ const HomeHeaderView = () => {
   const styles = StyleSheet.create({
     banner: {
       padding: 10,
-      backgroundColor: ColorPallet.notification.errorText,
+      backgroundColor: ColorPalette.notification.errorText,
       justifyContent: 'center',
       alignItems: 'center',
     },
     bannerText: {
-      color: ColorPallet.grayscale.white,
+      color: ColorPalette.grayscale.white,
       fontSize: 16,
       fontWeight: 'bold',
     },

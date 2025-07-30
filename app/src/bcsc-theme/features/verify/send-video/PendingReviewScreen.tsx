@@ -9,13 +9,13 @@ type PendingReviewScreenProps = {
 }
 
 const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {

@@ -12,7 +12,7 @@ const timing: Animated.TimingAnimationConfig = {
 }
 
 const PersonCredentialSpinner: React.FC = () => {
-  const { ColorPallet } = useTheme()
+  const { ColorPalette } = useTheme()
   const rotationAnim = useRef(new Animated.Value(0))
   const rotation = rotationAnim.current.interpolate({
     inputRange: [0, 1],
@@ -29,10 +29,10 @@ const PersonCredentialSpinner: React.FC = () => {
     },
   })
   const displayOptions = {
-    fill: ColorPallet.notification.infoText,
+    fill: ColorPalette.notification.infoText,
   }
   const animatedCircleDisplayOptions = {
-    fill: ColorPallet.notification.infoText,
+    fill: ColorPalette.notification.infoText,
     height: 250,
     width: 250,
   }

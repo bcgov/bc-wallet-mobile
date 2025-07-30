@@ -44,10 +44,10 @@ export const AppBanner: React.FC<AppBannerProps> = ({ messages }) => {
 }
 
 export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type, onDismiss, dismissible = true }) => {
-  const { Spacing, ColorPallet } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPallet.brand.primary,
+      backgroundColor: ColorPalette.brand.primary,
       flexDirection: 'row',
       alignItems: 'center',
       padding: Spacing.md,
@@ -101,13 +101,13 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
       <Icon
         name={iconName(type)}
         size={24}
-        color={type === 'warning' ? ColorPallet.brand.secondaryBackground : ColorPallet.grayscale.white}
+        color={type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white}
         style={styles.icon}
         testID={testIdWithKey(`icon-${type}`)}
       />
       <ThemedText
         variant={'bold'}
-        style={{ color: type === 'warning' ? ColorPallet.brand.secondaryBackground : ColorPallet.grayscale.white }}
+        style={{ color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white }}
         testID={testIdWithKey(`text-${type}`)}
       >
         {title}

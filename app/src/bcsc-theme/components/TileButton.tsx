@@ -21,18 +21,18 @@ const TileButton: React.FC<TileButtonProps> = ({
   imgSrc,
   style,
 }: TileButtonProps) => {
-  const { ColorPallet, TextTheme, Spacing } = useTheme()
+  const { ColorPalette, TextTheme, Spacing } = useTheme()
   const styles = StyleSheet.create({
     tile: {
       borderRadius: Spacing.sm,
       borderWidth: 1,
-      borderColor: ColorPallet.notification.infoBorder,
-      backgroundColor: ColorPallet.notification.info,
+      borderColor: ColorPalette.notification.infoBorder,
+      backgroundColor: ColorPalette.notification.info,
       padding: 24,
     },
     actionText: {
       ...TextTheme.bold,
-      color: ColorPallet.brand.primary,
+      color: ColorPalette.brand.primary,
     },
     description: {
       ...TextTheme.normal,
@@ -50,7 +50,7 @@ const TileButton: React.FC<TileButtonProps> = ({
       <View style={styles.tile}>
         <Text style={styles.actionText}>
           {actionText}
-          <Icon size={20} color={ColorPallet.brand.primary} name={'arrow-right-thin'} />
+          <Icon size={20} color={ColorPalette.brand.primary} name={'arrow-right-thin'} />
         </Text>
         <Text style={styles.description}>{description}</Text>
         {imgSrc ? (

@@ -10,21 +10,21 @@ interface SectionButtonProps {
 }
 
 const SectionButton: React.FC<SectionButtonProps> = ({ title, description, style, onPress }) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
       borderRadius: Spacing.sm,
-      borderColor: ColorPallet.brand.tertiary,
+      borderColor: ColorPalette.brand.tertiary,
       borderWidth: 1,
       padding: Spacing.md,
     },
     title: {
-      color: ColorPallet.brand.primary,
+      color: ColorPalette.brand.primary,
     },
     description: {
-      color: ColorPallet.brand.tertiary,
+      color: ColorPalette.brand.tertiary,
       marginTop: Spacing.sm,
     },
   })

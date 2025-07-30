@@ -1,6 +1,17 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Button, ButtonType, Link, testIdWithKey, ThemedText, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  Link,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useAnimatedComponents,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BCDispatchAction, BCState } from '@/store'
@@ -12,7 +23,7 @@ type VerifyInPersonScreenProps = {
 }
 
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -24,23 +35,23 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {
       flex: 1,
     },
     controlsContainer: {
-      marginTop: 'auto'
+      marginTop: 'auto',
     },
     bulletContainer: {
       flexDirection: 'row',
     },
     bullet: {
       marginRight: Spacing.xs,
-    }
+    },
   })
-  
+
   const onPressComplete = async () => {
     try {
       setLoading(true)
@@ -69,7 +80,9 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.contentContainer}>
-        <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>Verify in person</ThemedText>
+        <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
+          Verify in person
+        </ThemedText>
         <ThemedText variant={'bold'}>Where to go</ThemedText>
         <Link
           linkText={'A Service BC Location'}
@@ -79,20 +92,12 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         />
         <ThemedText variant={'bold'}>What to bring</ThemedText>
         <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>
-            {'\u2022'}
-          </ThemedText>
-          <ThemedText>
-            {'This device'}
-          </ThemedText>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>{'This device'}</ThemedText>
         </View>
         <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
-          <ThemedText style={styles.bullet}>
-            {'\u2022'}
-          </ThemedText>
-          <ThemedText>
-            {`Your BC Services Card - if it's a non-photo card, bring your additional ID too`}
-          </ThemedText>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>{`Your BC Services Card - if it's a non-photo card, bring your additional ID too`}</ThemedText>
         </View>
         <ThemedText variant={'bold'}>Show this confirmation number</ThemedText>
         <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
@@ -105,7 +110,11 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       </View>
       <View style={styles.controlsContainer}>
         <View style={{ marginBottom: Spacing.md }}>
-          {error && (<ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>You have not yet been verified</ThemedText>)}
+          {error && (
+            <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
+              You have not yet been verified
+            </ThemedText>
+          )}
           <Button
             buttonType={ButtonType.Primary}
             testID={testIdWithKey('Complete')}
@@ -113,10 +122,14 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
             title={'Complete'}
             onPress={onPressComplete}
             disabled={loading}
-          >{loading && <ButtonLoading />}</Button>
+          >
+            {loading && <ButtonLoading />}
+          </Button>
         </View>
-        <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>Card serial number: {store.bcsc.serial}</ThemedText>
-      </View>  
+        <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
+          Card serial number: {store.bcsc.serial}
+        </ThemedText>
+      </View>
     </SafeAreaView>
   )
 }

@@ -33,7 +33,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
   const { agent } = useAgent()
   const [store] = useStore<BCState>()
   const [appInstalled, setAppInstalled] = useState<boolean>(false)
-  const { ColorPallet, TextTheme } = useTheme()
+  const { ColorPalette, TextTheme } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
@@ -53,7 +53,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
       marginBottom: 15,
     },
     section: {
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
       paddingVertical: 24,
       paddingHorizontal: 25,
       marginTop: 10,
@@ -81,7 +81,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
     },
     itemSeparator: {
       borderBottomWidth: 1,
-      borderBottomColor: ColorPallet.brand.primaryBackground,
+      borderBottomColor: ColorPalette.brand.primaryBackground,
       marginHorizontal: 25,
     },
     link: {
@@ -92,7 +92,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
     },
     line: {
       height: 1,
-      backgroundColor: ColorPallet.grayscale.lightGrey,
+      backgroundColor: ColorPalette.grayscale.lightGrey,
       marginVertical: 20,
     },
   })
@@ -136,7 +136,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
                 TextTheme.headingThree,
                 {
                   flexShrink: 1,
-                  color: appInstalled ? ColorPallet.brand.primaryDisabled : TextTheme.headingThree.color,
+                  color: appInstalled ? ColorPalette.brand.primaryDisabled : TextTheme.headingThree.color,
                 },
               ]}
             >
@@ -147,7 +147,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
                 name="check-circle"
                 testID={testIdWithKey('AppInstalledIcon')}
                 size={35}
-                style={{ marginLeft: 10, color: ColorPallet.semantic.success }}
+                style={{ marginLeft: 10, color: ColorPalette.semantic.success }}
               />
             )}
           </View>
@@ -166,7 +166,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
                 testID={testIdWithKey('AppOnOtherDevice')}
                 style={styles.sectionSecondaryAction}
               >
-                <Text style={{ ...TextTheme.bold, color: ColorPallet.brand.primary }}>
+                <Text style={{ ...TextTheme.bold, color: ColorPalette.brand.primary }}>
                   {t('PersonCredential.AppOnOtherDevice')}
                 </Text>
               </TouchableOpacity>
@@ -181,7 +181,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
                 TextTheme.headingThree,
                 {
                   flexShrink: 1,
-                  color: appInstalled ? TextTheme.headingThree.color : ColorPallet.brand.primaryDisabled,
+                  color: appInstalled ? TextTheme.headingThree.color : ColorPalette.brand.primaryDisabled,
                 },
               ]}
             >

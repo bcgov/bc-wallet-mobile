@@ -21,10 +21,10 @@ import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import BCSCMainStack from './MainStack'
 
 const TempLoadingView = () => {
-  const { ColorPallet } = useTheme()
+  const { ColorPalette } = useTheme()
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: ColorPallet.brand.primaryBackground }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
       <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
     </SafeAreaView>
   )

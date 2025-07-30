@@ -9,13 +9,7 @@ type SampleApiDisplayProps<T> = {
 
 const SampleApiDisplay = <T,>({ dataLoader, title }: SampleApiDisplayProps<T>) => {
   const { Spacing } = useTheme()
-  const {
-    load,
-    isLoading,
-    data,
-    isReady,
-    error,
-  } = dataLoader
+  const { load, isLoading, data, isReady, error } = dataLoader
 
   const Content = () => {
     if (isLoading) {

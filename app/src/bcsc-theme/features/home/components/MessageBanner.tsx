@@ -14,7 +14,7 @@ interface MessageBannerProps {
 }
 
 const MessageBanner: React.FC<MessageBannerProps> = ({ messages, handlePress }) => {
-  const { Spacing, ColorPallet } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
 
   if (!messages || messages.length <= 0) {
     return null
@@ -22,7 +22,7 @@ const MessageBanner: React.FC<MessageBannerProps> = ({ messages, handlePress }) 
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPallet.brand.primary,
+      backgroundColor: ColorPalette.brand.primary,
       flexDirection: 'row',
       alignItems: 'center',
       padding: Spacing.md,
@@ -34,8 +34,8 @@ const MessageBanner: React.FC<MessageBannerProps> = ({ messages, handlePress }) 
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
-      <Icon name="information" size={24} color={ColorPallet.brand.secondaryBackground} style={styles.icon} />
-      <ThemedText variant={'bold'} style={{ color: ColorPallet.brand.secondaryBackground }}>
+      <Icon name="information" size={24} color={ColorPalette.brand.secondaryBackground} style={styles.icon} />
+      <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.secondaryBackground }}>
         {messages.length} new {messages.length === 1 ? 'message' : 'messages'}
       </ThemedText>
     </TouchableOpacity>

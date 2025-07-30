@@ -15,14 +15,14 @@ type VideoTooLongScreenProps = {
 }
 
 const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const { videoLengthSeconds } = route.params
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {
