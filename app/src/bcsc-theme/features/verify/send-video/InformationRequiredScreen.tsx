@@ -91,7 +91,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           }}
           title={'Photo of your face'}
           actionLabel={'Take Photo'}
-          thumbnailUri={store.bcsc.photoPath}
+          thumbnailUri={`file://${store.bcsc.photoPath}`}
           style={{ borderBottomWidth: 0 }}
         />
         <TakeMediaButton
@@ -100,7 +100,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           }}
           title={'Video of your face'}
           actionLabel={'Record Video'}
-          thumbnailUri={store.bcsc.videoPath && store.bcsc.videoThumbnailPath}
+          thumbnailUri={`file://${store.bcsc.videoPath}`}
         />
       </View>
       <View style={styles.controlsContainer}>
