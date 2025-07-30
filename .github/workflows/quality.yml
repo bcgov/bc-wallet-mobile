@@ -24,6 +24,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .yarn/cache
+          # Cache will be invalidated if the yarn.lock file changes
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
@@ -36,6 +37,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: packages/bcsc-core/lib
+          # Cache will be invalidated if any source file changes
           key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('packages/bcsc-core/src/**') }}
           restore-keys: |
             ${{ runner.os }}-bcsc-core-build-
@@ -71,12 +73,18 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v3
+        with:
+          path: .yarn/cache
+          # Cache will be invalidated if the yarn.lock file changes
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Install dependencies
-        run: |
-          yarn install --immutable
-      - name: Switch to app folder
-        run: |
-          cd app
+        working-directory: app
+        run: yarn install --immutable
+
       - name: Automated testing
-        run: |
-          yarn test
+        run: yarn test
