@@ -62,6 +62,7 @@ jobs:
         working-directory: app
         # Note: To pass the type check, the `bcsc-core` package must be built first.
         run: yarn typecheck
+
   test:
     runs-on: ubuntu-22.04
     name: Testing
