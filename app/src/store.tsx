@@ -93,6 +93,7 @@ enum BCSCDispatchAction {
   UPDATE_SERIAL = 'bcsc/updateSerial',
   UPDATE_BIRTHDATE = 'bcsc/updateBirthdate',
   UPDATE_EMAIL = 'bcsc/updateEmail',
+  UPDATE_ADDRESS = 'bcsc/updateAddress',
   UPDATE_DEVICE_CODE = 'bcsc/updateDeviceCode',
   UPDATE_USER_CODE = 'bcsc/updateUserCode',
   UPDATE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateDeviceCodeExpiresAt',
@@ -395,6 +396,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
 
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_ADDRESS: {
+      const address = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, address }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     default:

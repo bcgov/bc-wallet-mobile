@@ -262,6 +262,15 @@ const translation = {
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
       "InputLabel": "Birthdate",
     },
+    "Address": {
+      "Heading": "Address",
+      "Paragraph": "Enter the address of where you live.",
+      "StreetLine1": "Street Line 1",
+      "StreetLine2": "Street Line 2 (optional)",
+      "City": "City",
+      "ProvinceOrTerritory": "Province or Territory",
+      "PostalCode": "Postal Code",
+    }
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting",

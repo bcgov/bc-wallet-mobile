@@ -20,6 +20,7 @@ export enum BCSCScreens {
   MismatchedSerial = 'BCSCMismatchedSerial',
   EnterEmailScreen = 'BCSCEnterEmailScreen',
   EmailConfirmationScreen = 'BCSCEmailConfirmationScreen',
+  UpdateAddressScreen = 'BCSCUpdateAddressScreen',
   VerificationMethodSelection = 'BCSCVerificationMethodSelection',
   VerifyInPerson = 'BCSCVerifyInPerson',
   InformationRequired = 'BCSCInformationRequired',
@@ -61,6 +62,7 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.MismatchedSerial]: undefined
   [BCSCScreens.EnterEmailScreen]: { cardType: BCSCCardType }
   [BCSCScreens.EmailConfirmationScreen]: { emailAddressId: string }
+  [BCSCScreens.UpdateAddressScreen]: undefined
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
   [BCSCScreens.InformationRequired]: undefined

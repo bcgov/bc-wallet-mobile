@@ -166,7 +166,11 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         testID={testIdWithKey('Step2')}
         accessibilityLabel={t('Unified.Steps.Step2')}
         style={styles.step}
-        disabled={!registered}
+                // disabled={!registered}
+        onPress={() => {
+          // Navigate directly to UpdateAddressScreen
+          navigation.navigate(BCSCScreens.UpdateAddressScreen)
+        }}
       >
         <View style={styles.titleRow}>
           <ThemedText variant={'headingFour'} style={{ marginRight: Spacing.md }}>
