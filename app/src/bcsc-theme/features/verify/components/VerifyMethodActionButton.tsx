@@ -69,7 +69,9 @@ const VerifyMethodActionButton = ({
             {title}
           </ThemedText>
         </View>
-        <ThemedText numberOfLines={0} style={styles.description}>{description}</ThemedText>
+        <ThemedText numberOfLines={0} style={styles.description}>
+          {description}
+        </ThemedText>
       </View>
       <View style={styles.chevronContainer}>
         {loading ? (

@@ -106,7 +106,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           onPress: () => {},
           style: 'cancel',
         },
-      ],
+      ]
     )
   }
 

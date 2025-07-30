@@ -66,7 +66,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [date] })
       const { expires_in, user_code, device_code, verified_email } = await authorization.authorizeDevice(
         store.bcsc.serial,
-        date,
+        date
       )
       const expiresAt = new Date(Date.now() + expires_in * 1000)
       dispatch({
@@ -81,7 +81,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.SetupSteps }],
-        }),
+        })
       )
     } catch (error) {
       logger.error(`Error during BCSC verification: ${error}`)

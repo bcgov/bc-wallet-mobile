@@ -131,9 +131,11 @@ export default function useDataLoader<ResponseType>(
           }
         }
 
-        throw new Error(lastError ? `Operation timed out after ${timeout}ms${lastError}` : `Operation timed out after ${timeout}ms`)
+        throw new Error(
+          lastError ? `Operation timed out after ${timeout}ms${lastError}` : `Operation timed out after ${timeout}ms`
+        )
       }
-      
+
       // If retry config not provided, just fetch the data once
       const response = await fetchData()
       setDataWithReady(response)

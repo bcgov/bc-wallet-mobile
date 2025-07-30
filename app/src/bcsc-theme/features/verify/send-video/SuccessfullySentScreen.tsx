@@ -68,7 +68,7 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
               CommonActions.reset({
                 index: 0,
                 routes: [{ name: BCSCScreens.SetupSteps }],
-              }),
+              })
             )
           }
         />

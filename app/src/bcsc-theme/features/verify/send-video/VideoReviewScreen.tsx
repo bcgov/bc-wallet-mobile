@@ -153,7 +153,11 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
             disableAudioSessionManagement
           />
           <TouchableOpacity style={styles.pauseButton} onPress={onTogglePause}>
-            <Icon name={paused ? 'play' : 'pause'} size={pauseButtonSize} color={ColorPalette.brand.primaryBackground} />
+            <Icon
+              name={paused ? 'play' : 'pause'}
+              size={pauseButtonSize}
+              color={ColorPalette.brand.primaryBackground}
+            />
           </TouchableOpacity>
         </View>
         <View style={styles.controlsContainer}>

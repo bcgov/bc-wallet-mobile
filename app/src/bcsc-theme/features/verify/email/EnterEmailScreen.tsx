@@ -88,7 +88,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             navigation.goBack()
           },
         },
-      ],
+      ]
     )
   }
 

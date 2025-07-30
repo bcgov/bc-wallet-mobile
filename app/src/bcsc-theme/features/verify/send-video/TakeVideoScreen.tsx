@@ -282,7 +282,9 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
                 <ThemedText style={{ color: ColorPalette.semantic.error }}>{'\u2B24'}</ThemedText>
-                <ThemedText style={{ color: over30Seconds ? ColorPalette.semantic.error : ColorPalette.grayscale.white }}>
+                <ThemedText
+                  style={{ color: over30Seconds ? ColorPalette.semantic.error : ColorPalette.grayscale.white }}
+                >
                   {formatTime(elapsedTime)}
                 </ThemedText>
               </View>

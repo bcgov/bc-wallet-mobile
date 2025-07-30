@@ -34,7 +34,7 @@ const Developer: React.FC = () => {
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
-    !!store.preferences.useConnectionInviterCapability,
+    !!store.preferences.useConnectionInviterCapability
   )
   const [BCSCMode, setBCSCMode] = useState<boolean>(store.mode === Mode.BCSC)
   const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
@@ -291,10 +291,10 @@ const Developer: React.FC = () => {
 
   const toggleMode = () => {
     lockOutUser(LockoutReason.Timeout)
-    
+
     const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
     const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.BCSC
-    
+
     setTheme(newTheme)
     dispatch({
       type: BCDispatchAction.UPDATE_MODE,
@@ -514,7 +514,9 @@ const Developer: React.FC = () => {
         >
           <Switch
             trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={themeName === BCThemeNames.BCSC ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+            thumbColor={
+              themeName === BCThemeNames.BCSC ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey
+            }
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleTheme}
             value={themeName === BCThemeNames.BCSC}

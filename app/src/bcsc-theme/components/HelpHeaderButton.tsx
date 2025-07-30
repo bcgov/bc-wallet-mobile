@@ -1,5 +1,5 @@
-import { ButtonLocation, IconButton, testIdWithKey } from "@bifold/core"
-import { useTranslation } from "react-i18next"
+import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
+import { useTranslation } from 'react-i18next'
 
 const HelpHeaderButton = () => {
   const { t } = useTranslation()

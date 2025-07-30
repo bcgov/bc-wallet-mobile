@@ -96,7 +96,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.SetupSteps }],
-        }),
+        })
       )
     } catch (error) {
       setError('Error submitting email')
