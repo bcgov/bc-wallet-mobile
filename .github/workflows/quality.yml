@@ -49,7 +49,9 @@ jobs:
 
       - name: Check style
         working-directory: app
-        run: yarn prettier
+        run: |
+          yarn prettier
+          echo "Run 'yarn prettier:fix to automatically fix formatting issues."
 
       - name: LINTing
         working-directory: app
