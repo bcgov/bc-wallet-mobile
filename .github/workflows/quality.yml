@@ -22,11 +22,9 @@ jobs:
 
       - name: Cache Yarn dependencies
         uses: actions/cache@v3
-        working-directory: app
         with:
-          path: |
-            ~/.cache/yarn
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          path: .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
 
@@ -36,10 +34,9 @@ jobs:
 
       - name: Cache bcsc-core build output
         uses: actions/cache@v3
-        working-directory: packages/bcsc-core
         with:
           path: packages/bcsc-core/lib
-          key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('src/**') }}
+          key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('pacakges/bcsc-core/src/**') }}
           restore-keys: |
             ${{ runner.os }}-bcsc-core-build-
 
