@@ -14,14 +14,14 @@ interface IASEnvironmentProps {
 
 const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModal }) => {
   const { t } = useTranslation()
-  const { ColorPallet, TextTheme, SettingsTheme } = useTheme()
+  const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
 
   const environments = iasEnvironments
 
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       width: '100%',
     },
     section: {
@@ -36,7 +36,7 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
     },
     itemSeparator: {
       borderBottomWidth: 1,
-      borderBottomColor: ColorPallet.brand.primaryBackground,
+      borderBottomColor: ColorPalette.brand.primaryBackground,
       marginHorizontal: 25,
     },
   })
@@ -65,8 +65,8 @@ const IASEnvironmentScreen: React.FC<IASEnvironmentProps> = ({ shouldDismissModa
                 fillColor="#FFFFFFFF"
                 unfillColor="#FFFFFFFF"
                 size={36}
-                innerIconStyle={{ borderColor: ColorPallet.brand.primary, borderWidth: 2 }}
-                ImageComponent={() => <Icon name="circle" size={18} color={ColorPallet.brand.primary}></Icon>}
+                innerIconStyle={{ borderColor: ColorPalette.brand.primary, borderWidth: 2 }}
+                ImageComponent={() => <Icon name="circle" size={18} color={ColorPalette.brand.primary}></Icon>}
                 onPress={() => {
                   handleEnvironmentChange(environment)
                 }}

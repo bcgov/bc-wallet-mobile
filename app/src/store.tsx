@@ -220,7 +220,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       if (enabledAt) {
         PersistentStorage.storeValueForKey<RemoteDebuggingState>(
           BCLocalStorageKeys.RemoteDebugging,
-          developer.remoteDebugging,
+          developer.remoteDebugging
         )
       } else {
         PersistentStorage.removeValueForKey(BCLocalStorageKeys.RemoteDebugging)
@@ -251,7 +251,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       PersistentStorage.storeValueForKey<boolean>(
         BCLocalStorageKeys.EnableAppToAppPersonFlow,
-        developer.enableAppToAppPersonFlow,
+        developer.enableAppToAppPersonFlow
       )
 
       return { ...state, developer }
@@ -264,7 +264,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       // save to storage so notification doesn't reapper on app restart
       PersistentStorage.storeValueForKey<DismissPersonCredentialOffer>(
         BCLocalStorageKeys.PersonCredentialOfferDismissed,
-        newState.dismissPersonCredentialOffer,
+        newState.dismissPersonCredentialOffer
       )
 
       return newState

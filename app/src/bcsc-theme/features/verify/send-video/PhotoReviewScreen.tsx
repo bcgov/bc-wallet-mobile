@@ -31,7 +31,7 @@ type PhotoReviewScreenProps = {
 }
 
 const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { photoPath } = route.params
   const [loading, setLoading] = useState(false)
@@ -46,7 +46,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
     pageContainer: {
       position: 'relative',
       flexGrow: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     contentContainer: {
       flexGrow: 1,
@@ -57,7 +57,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       left: 0,
       right: 0,
       padding: Spacing.md,
-      backgroundColor: ColorPallet.notification.popupOverlay,
+      backgroundColor: ColorPalette.notification.popupOverlay,
     },
     secondButton: {
       marginTop: Spacing.sm,

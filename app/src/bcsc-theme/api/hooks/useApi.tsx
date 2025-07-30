@@ -26,7 +26,7 @@ const useApi = () => {
       user,
       evidence,
     }),
-    [config, pairing, registration, authorization, token, user, evidence],
+    [config, pairing, registration, authorization, token, user, evidence]
   )
 }
 

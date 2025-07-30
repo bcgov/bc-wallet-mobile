@@ -30,7 +30,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
   const { walletSecret } = useAuth()
-  const { ColorPallet, Assets } = useTheme()
+  const { ColorPalette, Assets } = useTheme()
   const [stepText, setStepText] = useState<string>(t('Init.Starting'))
   const [store] = useStore<BCState>()
   const [progressPercent, setProgressPercent] = useState(0)
@@ -41,7 +41,7 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const [logger, ocaBundleResolver] = useServices([TOKENS.UTIL_LOGGER, TOKENS.UTIL_OCA_RESOLVER, TOKENS.CONFIG])
   const styles = StyleSheet.create({
     screenContainer: {
-      backgroundColor: ColorPallet.brand.tertiaryBackground,
+      backgroundColor: ColorPalette.brand.tertiaryBackground,
       flex: 1,
     },
     scrollContentContainer: {
@@ -151,9 +151,9 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   const secondaryCallToActionIcon = useMemo(
     () =>
       reported ? (
-        <Icon style={{ marginRight: 8 }} name={'check-circle'} size={18} color={ColorPallet.semantic.success} />
+        <Icon style={{ marginRight: 8 }} name={'check-circle'} size={18} color={ColorPalette.semantic.success} />
       ) : undefined,
-    [reported, ColorPallet.semantic.success]
+    [reported, ColorPalette.semantic.success]
   )
 
   return (

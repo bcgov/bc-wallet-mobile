@@ -28,7 +28,7 @@ type EmailConfirmationScreenProps = {
 }
 
 const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { evidence } = useApi()
   const [code, setCode] = useState('')
@@ -47,7 +47,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {
@@ -68,15 +68,15 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       height: 60,
       lineHeight: 60,
       fontSize: 32,
-      backgroundColor: ColorPallet.grayscale.white,
+      backgroundColor: ColorPalette.grayscale.white,
       textAlign: 'center',
       textAlignVertical: 'center',
       borderRadius: 8,
       alignSelf: 'center',
-      color: ColorPallet.brand.text,
+      color: ColorPalette.brand.text,
     },
     focusCell: {
-      borderColor: ColorPallet.brand.primary,
+      borderColor: ColorPalette.brand.primary,
     },
   })
 
@@ -96,7 +96,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         CommonActions.reset({
           index: 0,
           routes: [{ name: BCSCScreens.SetupSteps }],
-        }),
+        })
       )
     } catch (error) {
       setError('Error submitting email')

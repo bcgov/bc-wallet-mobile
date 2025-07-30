@@ -1,7 +1,7 @@
 import {
-  ColorPallet,
+  ColorPalette,
   IAssets,
-  IColorPallet,
+  IColorPalette,
   IInputs,
   INotificationColors,
   ITabTheme,
@@ -35,11 +35,11 @@ export const BCSCNotificationColors: INotificationColors = {
   infoText: GrayscaleColors.lightGrey,
 }
 
-export const BCSCColorPallet: IColorPallet = {
-  ...BCWalletTheme.ColorPallet,
+export const BCSCColorPalette: IColorPalette = {
+  ...BCWalletTheme.ColorPalette,
   notification: BCSCNotificationColors,
   brand: {
-    ...BCWalletTheme.ColorPallet.brand,
+    ...BCWalletTheme.ColorPalette.brand,
     primary: '#FCBA19',
     primaryDisabled: `#757575`,
     secondary: GrayscaleColors.white,
@@ -69,7 +69,7 @@ export const BCSCColorPallet: IColorPallet = {
     tabBarInactive: GrayscaleColors.white,
   },
   semantic: {
-    ...BCWalletTheme.ColorPallet.semantic,
+    ...BCWalletTheme.ColorPalette.semantic,
     success: '#89CE00',
   },
 }
@@ -78,178 +78,178 @@ export const BCSCTextTheme: ITextTheme = {
   ...BCWalletTheme.TextTheme,
   headingOne: {
     ...BCWalletTheme.TextTheme.headingOne,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   headingTwo: {
     ...BCWalletTheme.TextTheme.headingTwo,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   headingThree: {
     ...BCWalletTheme.TextTheme.headingThree,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   headingFour: {
     ...BCWalletTheme.TextTheme.headingFour,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   normal: {
     ...BCWalletTheme.TextTheme.normal,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   bold: {
     ...BCWalletTheme.TextTheme.bold,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   label: {
     ...BCWalletTheme.TextTheme.label,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   labelTitle: {
     ...BCWalletTheme.TextTheme.labelTitle,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   labelSubtitle: {
     ...BCWalletTheme.TextTheme.labelSubtitle,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   labelText: {
     ...BCWalletTheme.TextTheme.labelText,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   caption: {
     ...BCWalletTheme.TextTheme.caption,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   title: {
     ...BCWalletTheme.TextTheme.title,
-    color: BCSCColorPallet.notification.infoText,
+    color: BCSCColorPalette.notification.infoText,
   },
   headerTitle: {
     ...BCWalletTheme.TextTheme.headerTitle,
-    color: BCSCColorPallet.brand.headerText,
+    color: BCSCColorPalette.brand.headerText,
   },
   modalNormal: {
     ...BCWalletTheme.TextTheme.modalNormal,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   modalTitle: {
     ...BCWalletTheme.TextTheme.modalTitle,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   modalHeadingOne: {
     ...BCWalletTheme.TextTheme.modalHeadingOne,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   modalHeadingThree: {
     ...BCWalletTheme.TextTheme.modalHeadingThree,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   popupModalText: {
     ...BCWalletTheme.TextTheme.popupModalText,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   settingsText: {
     ...BCWalletTheme.TextTheme.settingsText,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   inlineErrorText: {
     ...BCWalletTheme.TextTheme.inlineErrorText,
-    color: BCSCColorPallet.notification.errorText,
+    color: BCSCColorPalette.notification.errorText,
   },
   inlineWarningText: {
     ...BCWalletTheme.TextTheme.inlineWarningText,
-    color: BCSCColorPallet.notification.warnText,
+    color: BCSCColorPalette.notification.warnText,
   },
 }
 
 export const BCSCNavigationTheme: ITheme['NavigationTheme'] = {
   dark: true,
   colors: {
-    primary: BCSCColorPallet.brand.primaryBackground,
-    background: BCSCColorPallet.brand.primaryBackground,
-    card: BCSCColorPallet.brand.primaryBackground,
-    text: BCSCColorPallet.brand.text,
-    border: BCSCColorPallet.grayscale.darkGrey,
-    notification: BCSCColorPallet.grayscale.white,
+    primary: BCSCColorPalette.brand.primaryBackground,
+    background: BCSCColorPalette.brand.primaryBackground,
+    card: BCSCColorPalette.brand.primaryBackground,
+    text: BCSCColorPalette.brand.text,
+    border: BCSCColorPalette.grayscale.darkGrey,
+    notification: BCSCColorPalette.grayscale.white,
   },
 }
 
 export const BCSCOnboardingTheme: ITheme['OnboardingTheme'] = {
   container: {
-    backgroundColor: BCSCColorPallet.brand.primaryBackground,
+    backgroundColor: BCSCColorPalette.brand.primaryBackground,
   },
   carouselContainer: {
-    backgroundColor: BCSCColorPallet.brand.primaryBackground,
+    backgroundColor: BCSCColorPalette.brand.primaryBackground,
   },
   pagerDot: {
-    borderColor: BCSCColorPallet.brand.primary,
+    borderColor: BCSCColorPalette.brand.primary,
   },
   pagerDotActive: {
-    color: BCSCColorPallet.brand.primary,
+    color: BCSCColorPalette.brand.primary,
   },
   pagerDotInactive: {
-    color: BCSCColorPallet.brand.secondary,
+    color: BCSCColorPalette.brand.secondary,
   },
   pagerNavigationButton: {
-    color: BCSCColorPallet.brand.primary,
+    color: BCSCColorPalette.brand.primary,
     fontWeight: 'bold',
     fontSize: 18,
   },
-  headerTintColor: BCSCColorPallet.grayscale.white,
+  headerTintColor: BCSCColorPalette.grayscale.white,
   headerText: {
     ...BCSCTextTheme.headingTwo,
-    color: BCSCColorPallet.notification.infoText,
+    color: BCSCColorPalette.notification.infoText,
   },
   bodyText: {
     ...BCSCTextTheme.normal,
-    color: BCSCColorPallet.notification.infoText,
+    color: BCSCColorPalette.notification.infoText,
   },
   imageDisplayOptions: {
-    fill: BCSCColorPallet.notification.infoText,
+    fill: BCSCColorPalette.notification.infoText,
   },
 }
 
 export const BCSCDialogTheme: ITheme['DialogTheme'] = {
   modalView: {
-    backgroundColor: BCSCColorPallet.brand.secondaryBackground,
+    backgroundColor: BCSCColorPalette.brand.secondaryBackground,
   },
   titleText: {
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   description: {
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   closeButtonIcon: {
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   carouselButtonText: {
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
 }
 
 export const BCSCLoadingTheme: ITheme['LoadingTheme'] = {
-  backgroundColor: BCSCColorPallet.brand.primary,
+  backgroundColor: BCSCColorPalette.brand.primary,
 }
 
 export const BCSCPINInputTheme: ITheme['PINInputTheme'] = {
   ...PINInputTheme,
   cell: {
-    backgroundColor: BCSCColorPallet.grayscale.white,
-    borderColor: BCSCColorPallet.grayscale.lightGrey,
+    backgroundColor: BCSCColorPalette.grayscale.white,
+    borderColor: BCSCColorPalette.grayscale.lightGrey,
   },
   focussedCell: {
     borderColor: '#3399FF',
   },
   cellText: {
-    color: BCSCColorPallet.grayscale.darkGrey,
+    color: BCSCColorPalette.grayscale.darkGrey,
   },
   icon: {
-    color: BCSCColorPallet.grayscale.darkGrey,
+    color: BCSCColorPalette.grayscale.darkGrey,
   },
   labelAndFieldContainer: {
     ...PINInputTheme.labelAndFieldContainer,
-    backgroundColor: BCSCColorPallet.grayscale.white,
-    borderColor: BCSCColorPallet.grayscale.white,
+    backgroundColor: BCSCColorPalette.grayscale.white,
+    borderColor: BCSCColorPalette.grayscale.white,
   },
 }
 
@@ -260,25 +260,25 @@ export const BCSCInputs: IInputs = StyleSheet.create({
   },
   textInput: {
     ...Inputs.textInput,
-    backgroundColor: BCSCColorPallet.grayscale.white,
-    color: BCSCColorPallet.brand.text,
-    borderColor: BCSCColorPallet.grayscale.lightGrey,
+    backgroundColor: BCSCColorPalette.grayscale.white,
+    color: BCSCColorPalette.brand.text,
+    borderColor: BCSCColorPalette.grayscale.lightGrey,
   },
   inputSelected: {
-    borderColor: ColorPallet.grayscale.lightGrey,
+    borderColor: ColorPalette.grayscale.lightGrey,
   },
   singleSelect: {
     ...Inputs.singleSelect,
-    backgroundColor: BCSCColorPallet.brand.secondaryBackground,
+    backgroundColor: BCSCColorPalette.brand.secondaryBackground,
   },
   singleSelectText: {
     ...BCSCTextTheme.normal,
   },
   singleSelectIcon: {
-    color: BCSCColorPallet.brand.text,
+    color: BCSCColorPalette.brand.text,
   },
   checkBoxColor: {
-    color: BCSCColorPallet.brand.primary,
+    color: BCSCColorPalette.brand.primary,
   },
   checkBoxText: {
     ...BCSCTextTheme.normal,
@@ -290,94 +290,94 @@ export const BCSCButtons: ITheme['Buttons'] = StyleSheet.create({
   primary: {
     padding: 16,
     borderRadius: 4,
-    backgroundColor: BCSCColorPallet.brand.primary,
+    backgroundColor: BCSCColorPalette.brand.primary,
   },
   primaryDisabled: {
     padding: 16,
     borderRadius: 4,
-    backgroundColor: BCSCColorPallet.brand.primaryDisabled,
+    backgroundColor: BCSCColorPalette.brand.primaryDisabled,
   },
   primaryText: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
-    color: BCSCColorPallet.brand.text,
+    color: BCSCColorPalette.brand.text,
     textAlign: 'center',
   },
   primaryTextDisabled: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
-    color: BCSCColorPallet.brand.text,
+    color: BCSCColorPalette.brand.text,
     textAlign: 'center',
   },
   secondary: {
     padding: 16,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: BCSCColorPallet.brand.primary,
+    borderColor: BCSCColorPalette.brand.primary,
   },
   secondaryDisabled: {
     padding: 16,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: BCSCColorPallet.brand.secondaryDisabled,
+    borderColor: BCSCColorPalette.brand.secondaryDisabled,
   },
   secondaryText: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
-    color: BCSCColorPallet.brand.primary,
+    color: BCSCColorPalette.brand.primary,
     textAlign: 'center',
   },
   secondaryTextDisabled: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
-    color: BCSCColorPallet.brand.secondaryDisabled,
+    color: BCSCColorPalette.brand.secondaryDisabled,
     textAlign: 'center',
   },
   tertiary: {
     padding: 16,
     borderRadius: 4,
     borderWidth: 0,
-    backgroundColor: BCSCColorPallet.grayscale.white,
+    backgroundColor: BCSCColorPalette.grayscale.white,
   },
   tertiaryDisabled: {
     padding: 16,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: BCSCColorPallet.brand.tertiaryDisabled,
+    borderColor: BCSCColorPalette.brand.tertiaryDisabled,
   },
   tertiaryText: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
-    color: BCSCColorPallet.brand.text,
+    color: BCSCColorPalette.brand.text,
     textAlign: 'center',
   },
   tertiaryTextDisabled: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
-    color: BCSCColorPallet.brand.secondaryDisabled,
+    color: BCSCColorPalette.brand.secondaryDisabled,
     textAlign: 'center',
   },
   modalPrimary: {
     padding: 16,
     borderRadius: 4,
-    backgroundColor: BCSCColorPallet.brand.primary,
+    backgroundColor: BCSCColorPalette.brand.primary,
   },
   modalPrimaryText: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: BCSCColorPallet.brand.text,
+    color: BCSCColorPalette.brand.text,
   },
   modalSecondary: {
     padding: 16,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: BCSCColorPallet.brand.primary,
+    borderColor: BCSCColorPalette.brand.primary,
   },
   modalSecondaryText: {
     ...BCSCTextTheme.normal,
     fontWeight: 'bold',
-    color: BCSCColorPallet.brand.primary,
+    color: BCSCColorPalette.brand.primary,
     textAlign: 'center',
   },
 })
@@ -385,7 +385,7 @@ export const BCSCButtons: ITheme['Buttons'] = StyleSheet.create({
 export const BCSCListItems: ITheme['ListItems'] = StyleSheet.create({
   ...ListItems,
   credentialBackground: {
-    backgroundColor: BCSCColorPallet.brand.secondaryBackground,
+    backgroundColor: BCSCColorPalette.brand.secondaryBackground,
   },
   credentialTitle: {
     ...BCSCTextTheme.headingFour,
@@ -394,7 +394,7 @@ export const BCSCListItems: ITheme['ListItems'] = StyleSheet.create({
     ...BCSCTextTheme.caption,
   },
   credentialOfferBackground: {
-    backgroundColor: BCSCColorPallet.brand.modalPrimaryBackground,
+    backgroundColor: BCSCColorPalette.brand.modalPrimaryBackground,
   },
   credentialOfferTitle: {
     ...BCSCTextTheme.modalHeadingThree,
@@ -403,41 +403,41 @@ export const BCSCListItems: ITheme['ListItems'] = StyleSheet.create({
     ...BCSCTextTheme.normal,
   },
   revoked: {
-    backgroundColor: BCSCColorPallet.notification.error,
-    borderColor: BCSCColorPallet.notification.errorBorder,
+    backgroundColor: BCSCColorPalette.notification.error,
+    borderColor: BCSCColorPalette.notification.errorBorder,
   },
   contactBackground: {
-    backgroundColor: BCSCColorPallet.brand.secondaryBackground,
+    backgroundColor: BCSCColorPalette.brand.secondaryBackground,
   },
   credentialIconColor: {
-    color: BCSCColorPallet.notification.infoText,
+    color: BCSCColorPalette.notification.infoText,
   },
   contactTitle: {
     fontFamily: BCSCTextTheme.title.fontFamily,
-    color: BCSCColorPallet.grayscale.darkGrey,
+    color: BCSCColorPalette.grayscale.darkGrey,
   },
   contactDate: {
     fontFamily: BCSCTextTheme.normal.fontFamily,
-    color: BCSCColorPallet.grayscale.darkGrey,
+    color: BCSCColorPalette.grayscale.darkGrey,
     marginTop: 10,
   },
   contactIconBackground: {
-    backgroundColor: BCSCColorPallet.brand.primary,
+    backgroundColor: BCSCColorPalette.brand.primary,
   },
   contactIcon: {
-    color: BCSCColorPallet.brand.text,
+    color: BCSCColorPalette.brand.text,
   },
   recordAttributeLabel: {
     ...BCSCTextTheme.bold,
   },
   recordContainer: {
-    backgroundColor: BCSCColorPallet.brand.secondaryBackground,
+    backgroundColor: BCSCColorPalette.brand.secondaryBackground,
   },
   recordBorder: {
-    borderBottomColor: BCSCColorPallet.brand.primaryBackground,
+    borderBottomColor: BCSCColorPalette.brand.primaryBackground,
   },
   recordLink: {
-    color: BCSCColorPallet.brand.link,
+    color: BCSCColorPalette.brand.link,
   },
   recordAttributeText: {
     ...BCSCTextTheme.normal,
@@ -446,14 +446,14 @@ export const BCSCListItems: ITheme['ListItems'] = StyleSheet.create({
     ...BCSCTextTheme.headingOne,
   },
   proofError: {
-    color: BCSCColorPallet.semantic.error,
+    color: BCSCColorPalette.semantic.error,
   },
   proofListItem: {
     paddingHorizontal: 25,
     paddingTop: 16,
-    backgroundColor: BCSCColorPallet.brand.primaryBackground,
-    borderTopColor: BCSCColorPallet.brand.secondaryBackground,
-    borderBottomColor: BCSCColorPallet.brand.secondaryBackground,
+    backgroundColor: BCSCColorPalette.brand.primaryBackground,
+    borderTopColor: BCSCColorPalette.brand.secondaryBackground,
+    borderBottomColor: BCSCColorPalette.brand.secondaryBackground,
     borderTopWidth: 2,
     borderBottomWidth: 2,
   },
@@ -463,7 +463,7 @@ export const BCSCListItems: ITheme['ListItems'] = StyleSheet.create({
   },
   avatarCircle: {
     borderRadius: BCSCTextTheme.headingTwo.fontSize,
-    borderColor: BCSCColorPallet.grayscale.lightGrey,
+    borderColor: BCSCColorPalette.grayscale.lightGrey,
     width: BCSCTextTheme.headingTwo.fontSize * 2,
     height: BCSCTextTheme.headingTwo.fontSize * 2,
   },
@@ -471,27 +471,27 @@ export const BCSCListItems: ITheme['ListItems'] = StyleSheet.create({
     ...BCSCTextTheme.normal,
   },
   requestTemplateBackground: {
-    backgroundColor: BCSCColorPallet.grayscale.white,
+    backgroundColor: BCSCColorPalette.grayscale.white,
   },
   requestTemplateIconColor: {
-    color: BCSCColorPallet.notification.infoText,
+    color: BCSCColorPalette.notification.infoText,
   },
   requestTemplateTitle: {
-    color: BCSCColorPallet.grayscale.black,
+    color: BCSCColorPalette.grayscale.black,
     fontWeight: 'bold',
   },
   requestTemplateDetails: {
-    color: BCSCColorPallet.grayscale.black,
+    color: BCSCColorPalette.grayscale.black,
     fontWeight: 'normal',
   },
   requestTemplateZkpLabel: {
-    color: BCSCColorPallet.grayscale.mediumGrey,
+    color: BCSCColorPalette.grayscale.mediumGrey,
   },
   requestTemplateIcon: {
-    color: BCSCColorPallet.grayscale.black,
+    color: BCSCColorPalette.grayscale.black,
   },
   requestTemplateDate: {
-    color: BCSCColorPallet.grayscale.mediumGrey,
+    color: BCSCColorPalette.grayscale.mediumGrey,
   },
 })
 
@@ -503,31 +503,31 @@ export const BCSCTabTheme: ITabTheme = {
     backgroundColor: '#252423',
     shadowOffset: { width: 0, height: -3 },
     shadowRadius: 6,
-    shadowColor: BCSCColorPallet.grayscale.black,
+    shadowColor: BCSCColorPalette.grayscale.black,
     shadowOpacity: 0.1,
     borderTopWidth: 0,
     paddingBottom: 0,
   },
-  tabBarActiveTintColor: BCSCColorPallet.brand.primary,
-  tabBarInactiveTintColor: BCSCColorPallet.grayscale.white,
+  tabBarActiveTintColor: BCSCColorPalette.brand.primary,
+  tabBarInactiveTintColor: BCSCColorPalette.grayscale.white,
   tabBarTextStyle: {
     ...BCSCTextTheme.label,
     ...TabTheme.tabBarTextStyle,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   tabBarButtonIconStyle: {
-    color: BCSCColorPallet.brand.primaryBackground,
+    color: BCSCColorPalette.brand.primaryBackground,
   },
   focusTabIconStyle: {
     height: 60,
     width: 60,
-    backgroundColor: BCSCColorPallet.brand.primary,
+    backgroundColor: BCSCColorPalette.brand.primary,
     borderRadius: 60,
     justifyContent: 'center',
     alignItems: 'center',
   },
   focusTabActiveTintColor: {
-    backgroundColor: BCSCColorPallet.brand.secondary,
+    backgroundColor: BCSCColorPalette.brand.secondary,
   },
   tabBarSecondaryBackgroundColor: '#252423',
 }
@@ -545,11 +545,11 @@ export const BCSCHomeTheme: ITheme['HomeTheme'] = StyleSheet.create({
   },
   noNewUpdatesText: {
     ...BCSCTextTheme.normal,
-    color: BCSCColorPallet.notification.infoText,
+    color: BCSCColorPalette.notification.infoText,
   },
   link: {
     ...BCSCTextTheme.normal,
-    color: BCSCColorPallet.brand.link,
+    color: BCSCColorPalette.brand.link,
   },
 })
 
@@ -559,11 +559,11 @@ export const BCSCSettingsTheme: ITheme['SettingsTheme'] = {
     ...BCSCTextTheme.normal,
     ...SettingsTheme.groupHeader,
   },
-  groupBackground: BCSCColorPallet.brand.secondaryBackground,
-  iconColor: BCSCColorPallet.grayscale.veryLightGrey,
+  groupBackground: BCSCColorPalette.brand.secondaryBackground,
+  iconColor: BCSCColorPalette.grayscale.veryLightGrey,
   text: {
     ...BCSCTextTheme.caption,
-    color: BCSCColorPallet.grayscale.veryLightGrey,
+    color: BCSCColorPalette.grayscale.veryLightGrey,
   },
 }
 
@@ -571,43 +571,43 @@ export const BCSCChatTheme: ITheme['ChatTheme'] = {
   ...ChatTheme,
   leftBubble: {
     ...ChatTheme.leftBubble,
-    backgroundColor: BCSCColorPallet.brand.secondaryBackground,
+    backgroundColor: BCSCColorPalette.brand.secondaryBackground,
   },
   rightBubble: {
     ...ChatTheme.rightBubble,
-    backgroundColor: BCSCColorPallet.brand.primaryLight,
+    backgroundColor: BCSCColorPalette.brand.primaryLight,
   },
   timeStyleLeft: {
     ...ChatTheme.timeStyleLeft,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   timeStyleRight: {
     ...ChatTheme.timeStyleRight,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
   leftText: {
     ...ChatTheme.leftText,
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
     fontSize: BCSCTextTheme.normal.fontSize,
   },
   leftTextHighlighted: {
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
     fontSize: BCSCTextTheme.normal.fontSize,
     fontWeight: 'bold',
   },
   rightText: {
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
     fontSize: BCSCTextTheme.normal.fontSize,
   },
   rightTextHighlighted: {
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
     fontSize: BCSCTextTheme.normal.fontSize,
     fontWeight: 'bold',
   },
   inputToolbar: {
     ...ChatTheme.inputToolbar,
-    backgroundColor: BCSCColorPallet.brand.secondary,
-    shadowColor: BCSCColorPallet.brand.primaryDisabled,
+    backgroundColor: BCSCColorPalette.brand.secondary,
+    shadowColor: BCSCColorPalette.brand.primaryDisabled,
   },
   inputText: {
     lineHeight: undefined,
@@ -615,14 +615,14 @@ export const BCSCChatTheme: ITheme['ChatTheme'] = {
     fontSize: BCSCTextTheme.normal.fontSize,
     color: BCSCInputs.textInput.color,
   },
-  placeholderText: BCSCColorPallet.grayscale.lightGrey,
-  sendEnabled: BCSCColorPallet.brand.primary,
-  sendDisabled: BCSCColorPallet.brand.primaryDisabled,
-  options: BCSCColorPallet.brand.primary,
-  optionsText: BCSCColorPallet.grayscale.white,
+  placeholderText: BCSCColorPalette.grayscale.lightGrey,
+  sendEnabled: BCSCColorPalette.brand.primary,
+  sendDisabled: BCSCColorPalette.brand.primaryDisabled,
+  options: BCSCColorPalette.brand.primary,
+  optionsText: BCSCColorPalette.grayscale.white,
   openButtonStyle: {
     borderRadius: 32,
-    backgroundColor: BCSCColorPallet.brand.primary,
+    backgroundColor: BCSCColorPalette.brand.primary,
     paddingTop: 8,
     paddingBottom: 8,
     paddingLeft: 16,
@@ -643,7 +643,7 @@ export const BCSCChatTheme: ITheme['ChatTheme'] = {
     marginBottom: 8,
   },
   documentIcon: {
-    color: BCSCColorPallet.grayscale.white,
+    color: BCSCColorPalette.grayscale.white,
   },
 }
 
@@ -659,7 +659,7 @@ export const BCSCTheme: ITheme = {
   ...BCWalletTheme,
   Assets: BCSCAssets,
   themeName: BCThemeNames.BCSC,
-  ColorPallet: BCSCColorPallet,
+  ColorPalette: BCSCColorPalette,
   TextTheme: BCSCTextTheme,
   Buttons: BCSCButtons,
   Inputs: BCSCInputs,

@@ -11,13 +11,13 @@ type SuccessfullySentScreenProps = {
 }
 
 const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {
@@ -38,7 +38,7 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
   return (
     <SafeAreaView style={styles.pageContainer}>
       <View style={styles.contentContainer}>
-        <Icon name={'check'} size={108} color={ColorPallet.brand.primary} style={{ alignSelf: 'center' }} />
+        <Icon name={'check'} size={108} color={ColorPalette.brand.primary} style={{ alignSelf: 'center' }} />
         <ThemedText
           variant={'headingThree'}
           style={{ marginTop: Spacing.lg }}
@@ -68,7 +68,7 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
               CommonActions.reset({
                 index: 0,
                 routes: [{ name: BCSCScreens.SetupSteps }],
-              }),
+              })
             )
           }
         />

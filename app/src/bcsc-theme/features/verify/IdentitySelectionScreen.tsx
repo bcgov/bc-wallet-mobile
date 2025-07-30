@@ -26,7 +26,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   navigation,
 }: IdentitySelectionScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { width } = useWindowDimensions()
 
@@ -34,7 +34,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     scrollView: {
       flex: 1,
       paddingHorizontal: Spacing.md,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     heading: {
       marginTop: Spacing.md,
@@ -53,7 +53,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
       position: 'absolute',
       width,
       height: 8,
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
       left: -Spacing.md,
     },
     checkButton: {
@@ -62,7 +62,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
       flex: 1,
     },
     checkButtonText: {
-      color: ColorPallet.brand.primary,
+      color: ColorPalette.brand.primary,
     },
   })
 
@@ -145,7 +145,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
         >
           <ThemedText variant={'bold'} style={styles.checkButtonText}>
             {t('Unified.ChooseYourID.CheckIfIHave') + ' '}
-            <Icon size={20} color={ColorPallet.brand.primary} name={'help-circle-outline'} />
+            <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
           </ThemedText>
         </Pressable>
         <TileButton

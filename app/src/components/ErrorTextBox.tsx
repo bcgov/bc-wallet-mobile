@@ -11,13 +11,13 @@ const iconSize = 30
 const offset = 10
 
 const ErrorTextBox: React.FC<ErrorTextBoxProps> = ({ children }) => {
-  const { ColorPallet, TextTheme } = useTheme()
+  const { ColorPalette, TextTheme } = useTheme()
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPallet.notification.error,
+      backgroundColor: ColorPalette.notification.error,
       borderRadius: 5,
       borderWidth: 1,
-      borderColor: ColorPallet.notification.errorBorder,
+      borderColor: ColorPalette.notification.errorBorder,
       paddingHorizontal: 10,
       paddingVertical: 20,
     },
@@ -27,7 +27,7 @@ const ErrorTextBox: React.FC<ErrorTextBoxProps> = ({ children }) => {
     },
     textContainer: {
       ...TextTheme.normal,
-      color: ColorPallet.notification.errorText,
+      color: ColorPalette.notification.errorText,
       alignSelf: 'center',
       flexShrink: 1,
     },
@@ -40,7 +40,7 @@ const ErrorTextBox: React.FC<ErrorTextBoxProps> = ({ children }) => {
     <View style={styles.container}>
       <View style={styles.row}>
         <View style={styles.iconContainer}>
-          <Icon name={'error'} size={iconSize} color={ColorPallet.notification.errorIcon} />
+          <Icon name={'error'} size={iconSize} color={ColorPalette.notification.errorIcon} />
         </View>
         {typeof children === 'string' ? <Text style={styles.textContainer}>{children}</Text> : <>{children}</>}
       </View>

@@ -1,4 +1,13 @@
-import { Button, ButtonType, KeyboardView, LimitedTextInput, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  KeyboardView,
+  LimitedTextInput,
+  testIdWithKey,
+  ThemedText,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
@@ -24,7 +33,7 @@ type ManualSerialScreenProps = {
 
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [serial, setSerial] = useState(store.bcsc.serial ?? '')
   const { width } = useWindowDimensions()
@@ -36,7 +45,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   const styles = StyleSheet.create({
     screenContainer: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
       justifyContent: 'space-between',
     },
@@ -49,7 +58,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
       marginBottom: Spacing.md,
     },
     error: {
-      color: ColorPallet.semantic.error,
+      color: ColorPalette.semantic.error,
       marginBottom: Spacing.sm,
     },
 
@@ -90,11 +99,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
     <KeyboardView>
       <View style={styles.screenContainer}>
         <View style={styles.contentContainer}>
-          <Image
-            source={{ uri: SERIAL_HIGHLIGHT_IMAGE }}
-            style={styles.image}
-            resizeMode={'contain'}
-          />
+          <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
           <LimitedTextInput
             defaultValue={serial}
             label={t('Unified.ManualSerial.InputLabel')}
@@ -107,7 +112,11 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
             autoComplete={'off'}
             showLimitCounter={false}
           />
-          {errorState.visible ? <ThemedText variant={'labelSubtitle'} style={styles.error}>{errorState.description}</ThemedText> : null}
+          {errorState.visible ? (
+            <ThemedText variant={'labelSubtitle'} style={styles.error}>
+              {errorState.description}
+            </ThemedText>
+          ) : null}
           <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.ManualSerial.InputSubText')}</ThemedText>
         </View>
         <View style={styles.controlsContainer}>

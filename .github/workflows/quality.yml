@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-22.04
-    name: Linting
+    name: Lint+Format+Types
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
@@ -20,18 +20,49 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
+      - name: Cache app node_modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            app/node_modules
+          # Cache will be invalidated if package.json or yarn.lock changes
+          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-app-node_modules-
+
       - name: Install dependencies
-        run: |
-          yarn install --immutable
-      - name: Switch to app folder
-        run: |
-          cd app
+        working-directory: app
+        run: yarn install --immutable
+
+      - name: Cache bcsc-core build output
+        uses: actions/cache@v3
+        with:
+          path: packages/bcsc-core/lib
+          # Cache will be invalidated if any source file changes
+          key: ${{ runner.os }}-bcsc-core-build-${{ hashFiles('packages/bcsc-core/src/**') }}
+          restore-keys: |
+            ${{ runner.os }}-bcsc-core-build-
+
+      # Note: The `bcsc-core` package must be built before type checking.
+      - name: Build bcsc-core
+        working-directory: packages/bcsc-core
+        run: yarn build
+
       - name: Check style
+        working-directory: app
         run: |
           yarn prettier
+          echo "Run 'yarn prettier:fix to automatically fix formatting issues."
+
       - name: LINTing
-        run: |
-          yarn lint
+        working-directory: app
+        run: yarn lint
+
+      - name: Check types
+        working-directory: app
+        # Note: To pass the type check, the `bcsc-core` package must be built first.
+        run: yarn typecheck
+
   test:
     runs-on: ubuntu-22.04
     name: Testing
@@ -46,12 +77,19 @@ jobs:
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
 
+      - name: Cache app node_modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            app/node_modules
+          # Cache will be invalidated if package.json or yarn.lock changes
+          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-app-node_modules-
+
       - name: Install dependencies
-        run: |
-          yarn install --immutable
-      - name: Switch to app folder
-        run: |
-          cd app
+        working-directory: app
+        run: yarn install --immutable
+
       - name: Automated testing
-        run: |
-          yarn test
+        run: yarn test

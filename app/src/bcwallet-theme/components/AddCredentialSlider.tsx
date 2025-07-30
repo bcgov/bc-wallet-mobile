@@ -13,7 +13,7 @@ import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-f
 import { BCWalletEventTypes } from '@events/eventTypes'
 
 export default function AddCredentialSlider() {
-  const { ColorPallet, TextTheme } = useTheme()
+  const { ColorPalette, TextTheme } = useTheme()
   const navigation = useNavigation()
   const { t } = useTranslation()
 
@@ -32,7 +32,7 @@ export default function AddCredentialSlider() {
       height: '100%',
     },
     modalView: {
-      backgroundColor: ColorPallet.grayscale.white,
+      backgroundColor: ColorPalette.grayscale.white,
       borderTopStartRadius: 20,
       borderTopEndRadius: 20,
       shadowColor: '#000',
@@ -61,7 +61,7 @@ export default function AddCredentialSlider() {
       marginVertical: 12,
     },
     drawerRowItem: {
-      color: ColorPallet.grayscale.black,
+      color: ColorPalette.grayscale.black,
     },
     closeButton: {
       alignSelf: 'flex-start',
