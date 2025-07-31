@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { ColorPallet, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { ColorPalette, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect, useState, useRef } from 'react'
 import { StyleSheet, View, Text, Alert, TouchableOpacity, useWindowDimensions } from 'react-native'
@@ -28,7 +28,7 @@ const MaskedCamera = ({
 }: MaskedCameraProps) => {
   const device = useCameraDevice(cameraFace)
 
-  const { Spacing, ColorPallet } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const { hasPermission, requestPermission } = useCameraPermission()
   const [isActive, setIsActive] = useState(false)
   const [torchOn, setTorchOn] = useState(false)
@@ -174,7 +174,7 @@ const MaskedCamera = ({
         </TouchableOpacity>
         {hasTorch ? (
           <TouchableOpacity style={{ flex: 1 }} onPress={toggleTorch}>
-            <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPallet.grayscale.white} />
+            <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (
           <View style={{ flex: 1 }} />

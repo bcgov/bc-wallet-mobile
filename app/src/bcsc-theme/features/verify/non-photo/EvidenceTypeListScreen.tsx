@@ -13,7 +13,7 @@ type EvidenceTypeListScreenProps = {
 }
 
 const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigation }: EvidenceTypeListScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const { data, load } = useDataLoader<any[]>(
     async () => {
       const cards: Record<string, EvidenceType[]> = {}
@@ -44,7 +44,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
       flex: 1,
@@ -52,17 +52,17 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     },
     container: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     itemSeparator: {
       width: '100%',
       height: 3,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     cardSection: {
       paddingVertical: 24,
       paddingHorizontal: 24,
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
     },
     contentContainer: {
       marginTop: 16,
@@ -95,7 +95,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
                 navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
               }}
               testID={testIdWithKey('Step1')}
-              style={[styles.cardSection, { backgroundColor: ColorPallet.brand.secondaryBackground }]}
+              style={[styles.cardSection, { backgroundColor: ColorPalette.brand.secondaryBackground }]}
             >
               <View>
                 <ThemedText>{data.item.evidence_type_label}</ThemedText>

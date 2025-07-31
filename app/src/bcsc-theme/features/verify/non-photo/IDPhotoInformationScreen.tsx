@@ -13,12 +13,12 @@ type IDPhotoInformationScreenProps = {
 
 const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScreenProps) => {
   const { cardType } = route.params
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
       flex: 1,

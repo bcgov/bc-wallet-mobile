@@ -11,7 +11,7 @@ const RectangularMask: React.FC<RectangularMaskProps> = ({
   padding = 40,
 }) => {
   const { width: screenWidth } = useWindowDimensions()
-  const { ColorPallet } = useTheme()
+  const { ColorPalette } = useTheme()
 
   // Calculate mask dimensions
   const maskWidth = screenWidth - padding * 2
@@ -20,7 +20,7 @@ const RectangularMask: React.FC<RectangularMaskProps> = ({
   const styles = StyleSheet.create({
     maskContainer: {
       flex: 1,
-      backgroundColor: ColorPallet.notification.popupOverlay,
+      backgroundColor: ColorPalette.notification.popupOverlay,
       alignItems: 'center',
       justifyContent: 'center',
     },

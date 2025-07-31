@@ -12,7 +12,7 @@ const CircularMask: React.FC<CircularMaskProps> = ({
   maskHeight: customHeight,
   maskBorderRadius: customBorderRadius,
 }) => {
-  const { Spacing, ColorPallet } = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const { width } = useWindowDimensions()
 
   // Use provided dimensions or calculate defaults
@@ -23,7 +23,7 @@ const CircularMask: React.FC<CircularMaskProps> = ({
   const styles = StyleSheet.create({
     mask: {
       flex: 1,
-      backgroundColor: ColorPallet.notification.popupOverlay,
+      backgroundColor: ColorPalette.notification.popupOverlay,
       alignItems: 'center',
       justifyContent: 'center',
     },

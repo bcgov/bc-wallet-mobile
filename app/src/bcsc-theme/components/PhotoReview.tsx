@@ -9,7 +9,7 @@ interface PhotoReviewProps {
 }
 
 const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake }) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [loading, setLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
 
@@ -23,7 +23,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
       left: 0,
       right: 0,
       padding: Spacing.md,
-      backgroundColor: ColorPallet.notification.popupOverlay,
+      backgroundColor: ColorPalette.notification.popupOverlay,
     },
     secondButton: {
       marginTop: Spacing.sm,
@@ -41,7 +41,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
 
   return (
     <View style={styles.contentContainer}>
-      <Image source={{ uri: photoPath }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
+      <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}

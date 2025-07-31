@@ -13,12 +13,12 @@ type AdditionalIdentificationRequiredScreenProps = {
 const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationRequiredScreenProps> = ({
   navigation,
 }: AdditionalIdentificationRequiredScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
       flex: 1,
@@ -53,7 +53,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           <ThemedText>{`Some services only accept the app when it's set up with a BC Services Card with a photo.`}</ThemedText>
         </View>
         <TouchableOpacity onPress={() => console.log('OPEN SO COOL WEBVIEW')}>
-          <Text style={{ color: ColorPallet.brand.primary, marginTop: Spacing.sm }}>{'Which services?'}</Text>
+          <Text style={{ color: ColorPalette.brand.primary, marginTop: Spacing.sm }}>{'Which services?'}</Text>
           <Icon name={'help-circle'} />
         </TouchableOpacity>
         <View style={{ marginTop: Spacing.md }}>

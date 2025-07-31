@@ -17,7 +17,7 @@ type SetupStepsScreenProps = {
 
 const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { Spacing, TextTheme, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -147,11 +147,11 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           onPress={() => navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)}
           style={[
             styles.step,
-            { backgroundColor: registered ? ColorPallet.brand.secondaryBackground : ColorPallet.brand.primary },
+            { backgroundColor: registered ? ColorPalette.brand.secondaryBackground : ColorPalette.brand.primary },
           ]}
         >
           <View>
-            <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPallet.brand.text }}>
+            <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPalette.brand.text }}>
               {'Additional identification required for non-photo BC Services Card.'}
             </ThemedText>
           </View>
