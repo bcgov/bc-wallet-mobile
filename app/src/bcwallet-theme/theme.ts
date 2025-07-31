@@ -170,12 +170,12 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
         color: theme.ColorPalette.grayscale.darkGrey,
       },
       modalHeadingOne: {
-        // TODO: fontWeight not defined, should we assume 'bold' or 'normal'?
         color: theme.ColorPalette.grayscale.darkGrey,
+        fontWeight: undefined,
       },
       modalHeadingThree: {
-        // TODO: fontWeight not defined, should we assume 'bold' or 'normal'?
         color: theme.ColorPalette.grayscale.darkGrey,
+        fontWeight: undefined,
       },
       popupModalText: {
         color: theme.ColorPalette.grayscale.darkGrey,
@@ -245,6 +245,9 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
         ...theme.TextTheme.headingTwo,
         color: theme.ColorPalette.notification.infoText,
       },
+      imageDisplayOptions: {
+        fill: theme.ColorPalette.notification.infoText,
+      },
       bodyText: {
         ...theme.TextTheme.normal,
         color: theme.ColorPalette.notification.infoText,
@@ -297,6 +300,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
         },
         logoPrimary: {
           src: require('@assets/img/logo-large-white.png'),
+          aspectRatio: undefined,
           height: 170,
           width: 170,
           resizeMode: undefined, // Bifold default is 'contain'
@@ -333,10 +337,12 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       },
       secondaryText: {
         ...theme.TextTheme.normal,
+        color: theme.ColorPalette.brand.primary,
         fontWeight: 'bold',
       },
       secondaryTextDisabled: {
         ...theme.TextTheme.normal,
+        color: theme.ColorPalette.brand.secondaryDisabled,
         fontWeight: 'bold',
       },
       modalCritical: {
@@ -363,6 +369,21 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
         fontWeight: 'bold',
         color: theme.ColorPalette.brand.primary,
       },
+      criticalTextDisabled: undefined,
+      modalPrimaryDisabled: undefined,
+      modalPrimaryTextDisabled: undefined,
+      modalCriticalDisabled: undefined,
+      modalCriticalTextDisabled: undefined,
+      modalSecondaryDisabled: undefined,
+      modalSecondaryTextDisabled: undefined,
+      modalTertiary: undefined,
+      modalTertiaryDisabled: undefined,
+      modalTertiaryText: undefined,
+      modalTertiaryTextDisabled: undefined,
+      tertiary: undefined,
+      tertiaryDisabled: undefined,
+      tertiaryText: undefined,
+      tertiaryTextDisabled: undefined,
     },
   }))
   // ListItems overrides
@@ -370,6 +391,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
     ListItems: {
       credentialOfferTitle: {
         ...theme.TextTheme.modalHeadingThree,
+        fontWeight: undefined,
       },
       contactTitle: {
         fontFamily: theme.TextTheme.title.fontFamily,
@@ -385,8 +407,24 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       avatarCircle: {
         borderColor: theme.ColorPalette.grayscale.lightGrey,
       },
+      requestTemplateDetails: {
+        fontSize: undefined,
+      },
+      requestTemplateTitle: {
+        fontSize: undefined,
+      },
+      requestTemplateDate: {
+        fontSize: undefined,
+      },
+      requestTemplateIcon: {
+        fontSize: undefined,
+      },
+      requestTemplateZkpLabel: {
+        fontSize: undefined,
+      },
     },
   }))
+  // ChatTheme overrides
   .withOverrides((theme) => ({
     ChatTheme: {
       timeStyleLeft: {
@@ -400,6 +438,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       },
       leftTextHighlighted: {
         color: theme.ColorPalette.grayscale.black,
+        fontFamily: undefined,
         fontSize: theme.TextTheme.normal.fontSize,
         fontWeight: 'bold',
       },
@@ -408,6 +447,7 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       },
       rightTextHighlighted: {
         color: theme.ColorPalette.grayscale.black,
+        fontFamily: undefined,
         fontSize: theme.TextTheme.normal.fontSize,
         fontWeight: 'bold',
       },
@@ -450,6 +490,8 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
     maxFontSizeMultiplier: maxFontSizeMultiplier,
   })
   .build()
+
+console.log(JSON.stringify(BCWalletTheme, null, 2))
 
 /**
  * TODO: Remove these once the ThemeBuilder is fully implemented for BCWallet and BCSC
