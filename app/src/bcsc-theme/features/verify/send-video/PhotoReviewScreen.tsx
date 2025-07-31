@@ -58,6 +58,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       const photoMetadata = await getPhotoMetadata(photoPath)
 
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
+
       navigation.dispatch(
         CommonActions.reset({
           index: 2,

@@ -71,7 +71,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   })
 
   const handleChangeText = useCallback((text: string) => {
-    setSerial(text)
+    setSerial(text.replace(/\s/g, ''))
   }, [])
 
   const onContinuePressed = useCallback(() => {
