@@ -100,7 +100,9 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           }}
           title={'Video of your face'}
           actionLabel={'Record Video'}
-          thumbnailUri={`file://${store.bcsc.videoPath}`}
+          thumbnailUri={
+            store.bcsc.videoPath && store.bcsc.videoThumbnailPath && `file://${store.bcsc.videoThumbnailPath}`
+          }
         />
       </View>
       <View style={styles.controlsContainer}>
