@@ -307,10 +307,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <Button
           title={'Reset data'}
           onPress={() => {
-            // dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [undefined] })
-            // dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [undefined] })
-            // dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [undefined] })
-            // dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [undefined] })
             dispatch({ type: BCDispatchAction.UPDATE_EVIDENCE_PATHS, payload: [undefined] })
           }}
           testID={testIdWithKey('ResetData')}
