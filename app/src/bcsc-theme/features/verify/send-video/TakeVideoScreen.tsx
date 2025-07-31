@@ -136,12 +136,12 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     cameraRef.current?.startRecording({
       fileType: 'mp4',
       onRecordingError: (error) => {
-        logger.error(`Recording error: ${error}`)
+        logger.error(`Recording error: ${error.message}`)
         stopTimer() // Stop timer on error
         Alert.alert('Recording Error', 'There was an issue with the recording. Please try again.')
       },
       onRecordingFinished: async (video) => {
-        logger.info(`Recording finished: ${video}`)
+        logger.info(`Recording finished, duration: ${video.duration}`)
         stopTimer() // Stop timer when manually stopping recording
         setPrompt('')
         const snapshot = await cameraRef.current!.takeSnapshot()

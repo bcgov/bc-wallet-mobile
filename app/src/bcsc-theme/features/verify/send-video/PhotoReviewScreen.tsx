@@ -82,6 +82,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       }
 
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
+
       navigation.dispatch(
         CommonActions.reset({
           index: 2,
@@ -107,7 +108,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   return (
     <SafeAreaView style={styles.pageContainer}>
       <View style={styles.contentContainer}>
-        <Image source={{ uri: photoPath }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
+        <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
         <View style={styles.controlsContainer}>
           <Button
             buttonType={ButtonType.Primary}
