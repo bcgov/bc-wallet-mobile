@@ -1,7 +1,8 @@
-import { ColorPalette, IColorPalette, INotificationColors, ThemeBuilder } from '@bifold/core'
+import { IColorPalette, INotificationColors, ThemeBuilder } from '@bifold/core'
 
 import Logo from '@assets/img/logo-with-text-dark.svg'
 import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
+import { BCThemeNames } from '@/constants'
 
 export const BCSCNotificationColors: INotificationColors = {
   ...NotificationColors,
@@ -43,6 +44,8 @@ export const BCSCColorPalette: IColorPalette = {
     headerText: GrayscaleColors.white,
     buttonText: GrayscaleColors.white,
     tabBarInactive: GrayscaleColors.white,
+    inlineError: '',
+    inlineWarning: '',
   },
   semantic: {
     ...BCWalletTheme.ColorPalette.semantic,
@@ -51,7 +54,7 @@ export const BCSCColorPalette: IColorPalette = {
 }
 
 export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
-  .setColorPalette(ColorPalette)
+  .setColorPalette(BCSCColorPalette)
   // TextTheme overrides
   .withOverrides((theme) => ({
     TextTheme: {
@@ -90,24 +93,39 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
       headerTitle: {
         color: theme.ColorPalette.brand.headerText,
+        fontSize: 20,
       },
       modalNormal: {
         color: theme.ColorPalette.grayscale.white,
       },
       modalTitle: {
         color: theme.ColorPalette.grayscale.white,
+        fontSize: 28,
       },
       modalHeadingOne: {
         color: theme.ColorPalette.grayscale.white,
+        fontWeight: undefined,
       },
       modalHeadingThree: {
         color: theme.ColorPalette.grayscale.white,
+        fontWeight: undefined,
       },
       popupModalText: {
         color: theme.ColorPalette.grayscale.white,
       },
       settingsText: {
+        ...theme.TextTheme.settingsText,
         color: theme.ColorPalette.grayscale.white,
+      },
+      inlineErrorText: {
+        ...theme.TextTheme.inlineErrorText,
+        color: theme.ColorPalette.notification.errorText,
+      },
+      inlineWarningText: {
+        color: theme.ColorPalette.notification.warnText,
+      },
+      title: {
+        color: theme.ColorPalette.notification.infoText,
       },
     },
   }))
@@ -116,8 +134,9 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
     NavigationTheme: {
       colors: {
         card: theme.ColorPalette.brand.primaryBackground,
-        text: theme.ColorPalette.grayscale.white,
         border: theme.ColorPalette.grayscale.darkGrey,
+        primary: theme.ColorPalette.brand.primaryBackground,
+        text: theme.ColorPalette.brand.secondaryBackground,
       },
     },
   }))
@@ -132,10 +151,38 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
     PINInputTheme: {
       cell: {
         backgroundColor: theme.ColorPalette.grayscale.white,
+        borderColor: theme.ColorPalette.grayscale.lightGrey,
+        borderWidth: undefined,
+      },
+      focussedCell: {
+        borderColor: '#3399FF',
       },
       labelAndFieldContainer: {
         backgroundColor: theme.ColorPalette.grayscale.white,
         borderColor: theme.ColorPalette.grayscale.white,
+        borderWidth: undefined,
+      },
+      cellText: {
+        color: theme.ColorPalette.grayscale.darkGrey,
+      },
+      icon: {
+        color: theme.ColorPalette.grayscale.darkGrey,
+      },
+    },
+  }))
+  .withOverrides((theme) => ({
+    OnboardingTheme: {
+      bodyText: {
+        color: theme.ColorPalette.grayscale.lightGrey,
+      },
+      headerText: {
+        ...theme.TextTheme.normal,
+        color: theme.ColorPalette.notification.infoText,
+        fontSize: 32,
+        fontWeight: 'bold',
+      },
+      imageDisplayOptions: {
+        fill: theme.ColorPalette.notification.infoText,
       },
     },
   }))
@@ -144,12 +191,14 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
     Inputs: {
       textInput: {
         backgroundColor: theme.ColorPalette.grayscale.white,
+        borderColor: theme.ColorPalette.grayscale.lightGrey,
         color: theme.ColorPalette.brand.text,
+        borderWidth: 1,
       },
       inputSelected: {
-        backgroundColor: theme.ColorPalette.grayscale.white,
-        color: theme.ColorPalette.brand.text,
         borderColor: theme.ColorPalette.grayscale.lightGrey,
+        backgroundColor: undefined,
+        color: undefined,
       },
       singleSelect: {
         backgroundColor: theme.ColorPalette.brand.secondaryBackground,
@@ -162,10 +211,19 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
   // ButtonTheme overrides
   .withOverrides((theme) => ({
     Buttons: {
+      critical: {
+        backgroundColor: theme.ColorPalette.semantic.error,
+      },
       primaryText: {
+        ...theme.TextTheme.normal,
+        color: theme.ColorPalette.brand.text,
+        fontWeight: 'bold',
         textAlign: 'center',
       },
       primaryTextDisabled: {
+        ...theme.TextTheme.normal,
+        color: theme.ColorPalette.brand.text,
+        fontWeight: 'bold',
         textAlign: 'center',
       },
       secondaryText: {
@@ -196,6 +254,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       },
       modalPrimaryText: {
         textAlign: 'center',
+        color: theme.ColorPalette.brand.text,
       },
       modalSecondary: {
         borderColor: theme.ColorPalette.brand.primary,
@@ -203,26 +262,59 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       modalSecondaryText: {
         textAlign: 'center',
       },
+      modalCritical: {
+        backgroundColor: theme.ColorPalette.semantic.error,
+      },
+      criticalTextDisabled: undefined,
+      modalCriticalDisabled: undefined,
+      modalCriticalTextDisabled: undefined,
+      modalPrimaryDisabled: undefined,
+      modalSecondaryDisabled: undefined,
+      modalSecondaryTextDisabled: undefined,
+      modalTertiary: undefined,
+      modalTertiaryDisabled: undefined,
+      modalTertiaryText: undefined,
+      modalTertiaryTextDisabled: undefined,
+      modalPrimaryTextDisabled: undefined,
     },
   }))
   // ListItems overrides
   .withOverrides((theme) => ({
     ListItems: {
+      avatarCircle: {
+        borderColor: theme.ColorPalette.grayscale.lightGrey,
+      },
       contactTitle: {
         color: theme.ColorPalette.grayscale.darkGrey,
       },
       contactDate: {
         color: theme.ColorPalette.grayscale.darkGrey,
       },
+      contactIcon: {
+        color: theme.ColorPalette.brand.secondaryBackground,
+      },
+      credentialOfferTitle: {
+        fontWeight: undefined,
+      },
       requestTemplateTitle: {
         color: theme.ColorPalette.grayscale.black,
         fontWeight: 'bold',
-        fontSize: undefined, // Previously this was not set, so intentionally setting undefined Bifold default: 16
+        fontSize: undefined,
       },
       requestTemplateDetails: {
         color: theme.ColorPalette.grayscale.black,
         fontSize: undefined, // Previously this was not set, so intentionally setting undefined Bifold default: 16
       },
+      requestTemplateDate: {
+        fontSize: undefined,
+      },
+      requestTemplateIcon: {
+        fontSize: undefined,
+      },
+      requestTemplateZkpLabel: {
+        fontSize: undefined,
+      },
+      avatar: undefined,
     },
   }))
   // TabTheme overrides
@@ -233,7 +325,12 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         backgroundColor: '#252423',
         shadowColor: theme.ColorPalette.grayscale.black,
       },
-      tabBarInactiveTintColor: theme.ColorPalette.grayscale.white,
+      focusTabIconStyle: {
+        backgroundColor: theme.ColorPalette.brand.primary,
+      },
+      focusTabActiveTintColor: {
+        backgroundColor: theme.ColorPalette.brand.secondary,
+      },
       tabBarTextStyle: {
         ...theme.TabTheme.tabBarTextStyle,
         color: theme.ColorPalette.grayscale.white,
@@ -242,6 +339,8 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         color: theme.ColorPalette.brand.primaryBackground,
       },
       tabBarSecondaryBackgroundColor: '#252423',
+      tabBarActiveTintColor: theme.ColorPalette.brand.primary,
+      tabBarInactiveTintColor: theme.ColorPalette.grayscale.white,
     },
   }))
   // SettingsTheme overrides
@@ -250,12 +349,14 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
       groupHeader: {
         ...theme.TextTheme.normal,
         ...theme.SettingsTheme.groupHeader,
+        color: theme.ColorPalette.grayscale.darkGrey,
       },
       iconColor: theme.ColorPalette.grayscale.veryLightGrey,
       text: {
         ...theme.TextTheme.caption,
         color: theme.ColorPalette.grayscale.veryLightGrey,
       },
+      groupBackground: theme.ColorPalette.brand.secondaryBackground,
     },
   }))
   // ChatTheme overrides
@@ -274,6 +375,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         color: theme.ColorPalette.grayscale.white,
         fontSize: theme.TextTheme.normal.fontSize,
         fontWeight: 'bold',
+        fontFamily: undefined,
       },
       rightText: {
         color: theme.ColorPalette.grayscale.white,
@@ -283,6 +385,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         color: theme.ColorPalette.grayscale.white,
         fontSize: theme.TextTheme.normal.fontSize,
         fontWeight: 'bold',
+        fontFamily: undefined,
       },
       inputToolbar: {
         ...theme.ChatTheme.inputToolbar,
@@ -296,7 +399,28 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         fontSize: theme.TextTheme.normal.fontSize,
       },
       documentIconContainer: {
+        backgroundColor: '#1c70bf',
         alignSelf: 'flex-start',
+        padding: 4,
+        borderRadius: 8,
+        marginBottom: 8,
+        height: undefined,
+        width: undefined,
+        justifyContent: undefined,
+        alignItems: undefined,
+      },
+    },
+  }))
+  // HomeTheme overrides
+  .withOverrides((theme) => ({
+    HomeTheme: {
+      noNewUpdatesText: {
+        ...theme.TextTheme.normal,
+        color: theme.ColorPalette.notification.infoText,
+      },
+      link: {
+        ...theme.TextTheme.normal,
+        color: theme.ColorPalette.brand.link,
       },
     },
   }))
@@ -307,5 +431,8 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         logo: Logo as React.FC,
       },
     },
+  })
+  .withOverrides({
+    themeName: BCThemeNames.BCSC,
   })
   .build()

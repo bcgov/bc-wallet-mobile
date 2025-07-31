@@ -491,8 +491,6 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
   })
   .build()
 
-console.log(JSON.stringify(BCWalletTheme, null, 2))
-
 /**
  * TODO: Remove these once the ThemeBuilder is fully implemented for BCWallet and BCSC
  *
