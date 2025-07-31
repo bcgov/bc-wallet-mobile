@@ -5,6 +5,8 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import CardDetails from '@assets/img/card-details.svg'
+import BulletPointWithText from '@/components/BulletPointWithText'
 
 type AdditionalIdentificationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -33,9 +35,9 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <Image source={{ uri: '' }} />
+        <CardDetails {...{ height: 180, width: 180 }} />
         <View>
-          <ThemedText variant={'headingThree'}>
+          <ThemedText variant={'headingFour'}>
             {'You must provide additional ID case your BC Services Card does not have a photo on it.'}
           </ThemedText>
           <ThemedText>
@@ -43,19 +45,20 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           </ThemedText>
         </View>
         <View>
-          <ThemedText variant={'headingThree'}>{'Check your ID'}</ThemedText>
-          <ThemedText>{'Has the same name as on your BC Services Card'}</ThemedText>
-          <ThemedText>{'Has a recent photo'}</ThemedText>
-          <ThemedText>{'Is not expired'}</ThemedText>
+          <ThemedText variant={'headingFour'}>{'Check your ID'}</ThemedText>
+          <BulletPointWithText text={'Has the same name as on your BC Services Card'} />
+          <BulletPointWithText text={'Has a recent photo'} />
+          <BulletPointWithText text={'Is not expired'} />
         </View>
         <View>
-          <ThemedText variant={'headingThree'}>{'Limited access to services'}</ThemedText>
+          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+            <ThemedText variant={'headingFour'}>{'Limited access to services'}</ThemedText>
+            <TouchableOpacity onPress={() => console.log('OPEN SO COOL WEBVIEW')}>
+              <Icon name={'open-in-new'} />
+            </TouchableOpacity>
+          </View>
           <ThemedText>{`Some services only accept the app when it's set up with a BC Services Card with a photo.`}</ThemedText>
         </View>
-        <TouchableOpacity onPress={() => console.log('OPEN SO COOL WEBVIEW')}>
-          <Text style={{ color: ColorPalette.brand.primary, marginTop: Spacing.sm }}>{'Which services?'}</Text>
-          <Icon name={'help-circle'} />
-        </TouchableOpacity>
         <View style={{ marginTop: Spacing.md }}>
           <Button
             title={'Choose ID'}
@@ -64,7 +67,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
             onPress={() => {
               navigation.navigate(BCSCScreens.EvidenceTypeList)
             }}
-            buttonType={ButtonType.Secondary}
+            buttonType={ButtonType.Primary}
           />
         </View>
       </ScrollView>
