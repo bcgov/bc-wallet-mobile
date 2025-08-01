@@ -118,181 +118,197 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
     maxFontSizeMultiplier: maxFontSizeMultiplier,
   })
   // TextTheme overrides
-  .withOverrides((theme) => ({
-    TextTheme: {
-      headingOne: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      TextTheme: {
+        headingOne: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        headingTwo: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        headingThree: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        headingFour: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        normal: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        bold: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        label: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        labelTitle: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        labelSubtitle: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        labelText: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        caption: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        title: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.notification.infoText,
+        },
+        headerTitle: {
+          fontSize: 20,
+        },
+        modalNormal: {
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        modalTitle: {
+          fontSize: 28,
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        modalHeadingOne: {
+          color: theme.ColorPalette.grayscale.darkGrey,
+          fontWeight: undefined,
+        },
+        modalHeadingThree: {
+          color: theme.ColorPalette.grayscale.darkGrey,
+          fontWeight: undefined,
+        },
+        popupModalText: {
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        settingsText: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        inlineErrorText: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.notification.errorText,
+        },
+        inlineWarningText: {
+          fontFamily: 'BCSans-Regular',
+          color: theme.ColorPalette.notification.warnText,
+        },
       },
-      headingTwo: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      headingThree: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      headingFour: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      normal: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      bold: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      label: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      labelTitle: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      labelSubtitle: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      labelText: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      caption: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      title: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.notification.infoText,
-      },
-      headerTitle: {
-        fontSize: 20,
-      },
-      modalNormal: {
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      modalTitle: {
-        fontSize: 28,
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      modalHeadingOne: {
-        color: theme.ColorPalette.grayscale.darkGrey,
-        fontWeight: undefined,
-      },
-      modalHeadingThree: {
-        color: theme.ColorPalette.grayscale.darkGrey,
-        fontWeight: undefined,
-      },
-      popupModalText: {
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      settingsText: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      inlineErrorText: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.notification.errorText,
-      },
-      inlineWarningText: {
-        fontFamily: 'BCSans-Regular',
-        color: theme.ColorPalette.notification.warnText,
-      },
-    },
-  }))
+    })
+  )
   // Inputs overrides
-  .withOverrides((theme) => ({
-    Inputs: {
-      textInput: {
-        fontFamily: theme.TextTheme.normal.fontFamily,
-        backgroundColor: theme.ColorPalette.grayscale.lightGrey,
-        color: theme.TextTheme.normal.color,
-        borderWidth: 1,
-        borderColor: theme.ColorPalette.grayscale.lightGrey,
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      Inputs: {
+        textInput: {
+          fontFamily: theme.TextTheme.normal.fontFamily,
+          backgroundColor: theme.ColorPalette.grayscale.lightGrey,
+          color: theme.TextTheme.normal.color,
+          borderWidth: 1,
+          borderColor: theme.ColorPalette.grayscale.lightGrey,
+        },
+        singleSelectIcon: {
+          color: theme.ColorPalette.brand.text,
+        },
+        inputSelected: {
+          borderColor: theme.TextTheme.normal.color,
+        },
       },
-      singleSelectIcon: {
-        color: theme.ColorPalette.brand.text,
-      },
-      inputSelected: {
-        borderColor: theme.TextTheme.normal.color,
-      },
-    },
-  }))
+    })
+  )
   // TabTheme overrides
-  .withOverrides((theme) => ({
-    TabTheme: {
-      tabBarInactiveTintColor: theme.ColorPalette.notification.infoText,
-      tabBarButtonIconStyle: {
-        color: theme.ColorPalette.grayscale.white,
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      TabTheme: {
+        tabBarInactiveTintColor: theme.ColorPalette.notification.infoText,
+        tabBarButtonIconStyle: {
+          color: theme.ColorPalette.grayscale.white,
+        },
       },
-    },
-  }))
+    })
+  )
   // NavigationTheme overrides
-  .withOverrides((theme) => ({
-    NavigationTheme: {
-      colors: {
-        text: theme.ColorPalette.brand.text,
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      NavigationTheme: {
+        colors: {
+          text: theme.ColorPalette.brand.text,
+        },
       },
-    },
-  }))
+    })
+  )
   // SettingsTheme overrides
-  .withOverrides((theme) => ({
-    SettingsTheme: {
-      text: {
-        color: theme.ColorPalette.grayscale.darkGrey,
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      SettingsTheme: {
+        text: {
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        iconColor: theme.ColorPalette.grayscale.darkGrey,
       },
-      iconColor: theme.ColorPalette.grayscale.darkGrey,
-    },
-  }))
+    })
+  )
   // OnboardingTheme overrides
-  .withOverrides((theme) => ({
-    OnboardingTheme: {
-      headerText: {
-        ...theme.TextTheme.headingTwo,
-        color: theme.ColorPalette.notification.infoText,
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      OnboardingTheme: {
+        headerText: {
+          ...theme.TextTheme.headingTwo,
+          color: theme.ColorPalette.notification.infoText,
+        },
+        imageDisplayOptions: {
+          fill: theme.ColorPalette.notification.infoText,
+        },
+        bodyText: {
+          ...theme.TextTheme.normal,
+          color: theme.ColorPalette.notification.infoText,
+        },
       },
-      imageDisplayOptions: {
-        fill: theme.ColorPalette.notification.infoText,
-      },
-      bodyText: {
-        ...theme.TextTheme.normal,
-        color: theme.ColorPalette.notification.infoText,
-      },
-    },
-  }))
+    })
+  )
   // LoadingTheme overrides
-  .withOverrides((theme) => ({
-    LoadingTheme: {
-      backgroundColor: theme.ColorPalette.brand.primary,
-    },
-  }))
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      LoadingTheme: {
+        backgroundColor: theme.ColorPalette.brand.primary,
+      },
+    })
+  )
   // PINInputTheme overrides
-  .withOverrides((theme) => ({
-    PINInputTheme: {
-      cell: {
-        backgroundColor: theme.ColorPalette.grayscale.lightGrey,
-        borderColor: theme.ColorPalette.grayscale.lightGrey,
-        borderWidth: undefined, // Bifold default is 1
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      PINInputTheme: {
+        cell: {
+          backgroundColor: theme.ColorPalette.grayscale.lightGrey,
+          borderColor: theme.ColorPalette.grayscale.lightGrey,
+          borderWidth: undefined, // Bifold default is 1
+        },
+        focussedCell: {
+          borderColor: '#3399FF',
+        },
+        cellText: {
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        icon: {
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        labelAndFieldContainer: {
+          backgroundColor: theme.ColorPalette.grayscale.lightGrey,
+          borderColor: theme.ColorPalette.grayscale.lightGrey,
+          borderWidth: undefined, // Bifold default is 1
+        },
       },
-      focussedCell: {
-        borderColor: '#3399FF',
-      },
-      cellText: {
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      icon: {
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      labelAndFieldContainer: {
-        backgroundColor: theme.ColorPalette.grayscale.lightGrey,
-        borderColor: theme.ColorPalette.grayscale.lightGrey,
-        borderWidth: undefined, // Bifold default is 1
-      },
-    },
-  }))
+    })
+  )
   // Assets overrides
   .withOverrides({
     Assets: {
@@ -318,175 +334,184 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
     },
   })
   // CredentialCardShadowTheme overrides
-  .withOverrides((theme) => ({
-    CredentialCardShadowTheme: {
-      shadowColor: theme.ColorPalette.grayscale.black,
-    },
-  }))
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      CredentialCardShadowTheme: {
+        shadowColor: theme.ColorPalette.grayscale.black,
+      },
+    })
+  )
   // Buttons overrides
-  .withOverrides((theme) => ({
-    Buttons: {
-      critical: {
-        backgroundColor: '#D8292F',
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      Buttons: {
+        critical: {
+          backgroundColor: '#D8292F',
+          test: '',
+        },
+        criticalText: {
+          ...theme.TextTheme.normal,
+          fontWeight: 'bold',
+          color: theme.ColorPalette.grayscale.white,
+        },
+        primaryText: {
+          ...theme.TextTheme.normal,
+          fontWeight: 'bold',
+          color: theme.ColorPalette.brand.text,
+        },
+        primaryTextDisabled: {
+          ...theme.TextTheme.normal,
+          fontWeight: 'bold',
+          color: theme.ColorPalette.brand.text,
+        },
+        secondaryText: {
+          ...theme.TextTheme.normal,
+          color: theme.ColorPalette.brand.primary,
+          fontWeight: 'bold',
+        },
+        secondaryTextDisabled: {
+          ...theme.TextTheme.normal,
+          color: theme.ColorPalette.brand.secondaryDisabled,
+          fontWeight: 'bold',
+        },
+        modalCritical: {
+          backgroundColor: '#D8292F',
+        },
+        modalCriticalText: {
+          ...theme.TextTheme.normal,
+          fontWeight: 'bold',
+          color: theme.ColorPalette.grayscale.white,
+        },
+        modalPrimary: {
+          backgroundColor: theme.ColorPalette.brand.primary,
+        },
+        modalPrimaryText: {
+          ...theme.TextTheme.normal,
+          fontWeight: 'bold',
+          color: theme.ColorPalette.brand.text,
+        },
+        modalSecondary: {
+          borderColor: theme.ColorPalette.brand.primary,
+        },
+        modalSecondaryText: {
+          ...theme.TextTheme.normal,
+          fontWeight: 'bold',
+          color: theme.ColorPalette.brand.primary,
+        },
+        criticalTextDisabled: undefined,
+        modalPrimaryDisabled: undefined,
+        modalPrimaryTextDisabled: undefined,
+        modalCriticalDisabled: undefined,
+        modalCriticalTextDisabled: undefined,
+        modalSecondaryDisabled: undefined,
+        modalSecondaryTextDisabled: undefined,
+        modalTertiary: undefined,
+        modalTertiaryDisabled: undefined,
+        modalTertiaryText: undefined,
+        modalTertiaryTextDisabled: undefined,
+        tertiary: undefined,
+        tertiaryDisabled: undefined,
+        tertiaryText: undefined,
+        tertiaryTextDisabled: undefined,
       },
-      criticalText: {
-        ...theme.TextTheme.normal,
-        fontWeight: 'bold',
-        color: theme.ColorPalette.grayscale.white,
-      },
-      primaryText: {
-        ...theme.TextTheme.normal,
-        fontWeight: 'bold',
-        color: theme.ColorPalette.brand.text,
-      },
-      primaryTextDisabled: {
-        ...theme.TextTheme.normal,
-        fontWeight: 'bold',
-        color: theme.ColorPalette.brand.text,
-      },
-      secondaryText: {
-        ...theme.TextTheme.normal,
-        color: theme.ColorPalette.brand.primary,
-        fontWeight: 'bold',
-      },
-      secondaryTextDisabled: {
-        ...theme.TextTheme.normal,
-        color: theme.ColorPalette.brand.secondaryDisabled,
-        fontWeight: 'bold',
-      },
-      modalCritical: {
-        backgroundColor: '#D8292F',
-      },
-      modalCriticalText: {
-        ...theme.TextTheme.normal,
-        fontWeight: 'bold',
-        color: theme.ColorPalette.grayscale.white,
-      },
-      modalPrimary: {
-        backgroundColor: theme.ColorPalette.brand.primary,
-      },
-      modalPrimaryText: {
-        ...theme.TextTheme.normal,
-        fontWeight: 'bold',
-        color: theme.ColorPalette.brand.text,
-      },
-      modalSecondary: {
-        borderColor: theme.ColorPalette.brand.primary,
-      },
-      modalSecondaryText: {
-        ...theme.TextTheme.normal,
-        fontWeight: 'bold',
-        color: theme.ColorPalette.brand.primary,
-      },
-      criticalTextDisabled: undefined,
-      modalPrimaryDisabled: undefined,
-      modalPrimaryTextDisabled: undefined,
-      modalCriticalDisabled: undefined,
-      modalCriticalTextDisabled: undefined,
-      modalSecondaryDisabled: undefined,
-      modalSecondaryTextDisabled: undefined,
-      modalTertiary: undefined,
-      modalTertiaryDisabled: undefined,
-      modalTertiaryText: undefined,
-      modalTertiaryTextDisabled: undefined,
-      tertiary: undefined,
-      tertiaryDisabled: undefined,
-      tertiaryText: undefined,
-      tertiaryTextDisabled: undefined,
-    },
-  }))
+    })
+  )
   // ListItems overrides
-  .withOverrides((theme) => ({
-    ListItems: {
-      credentialOfferTitle: {
-        ...theme.TextTheme.modalHeadingThree,
-        fontWeight: undefined,
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      ListItems: {
+        credentialOfferTitle: {
+          ...theme.TextTheme.modalHeadingThree,
+          fontWeight: undefined,
+        },
+        contactTitle: {
+          fontFamily: theme.TextTheme.title.fontFamily,
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        contactDate: {
+          fontFamily: theme.TextTheme.normal.fontFamily,
+          color: theme.ColorPalette.grayscale.darkGrey,
+        },
+        contactIcon: {
+          color: theme.ColorPalette.brand.text,
+        },
+        avatarCircle: {
+          borderColor: theme.ColorPalette.grayscale.lightGrey,
+        },
+        requestTemplateDetails: {
+          fontSize: undefined,
+        },
+        requestTemplateTitle: {
+          fontSize: undefined,
+        },
+        requestTemplateDate: {
+          fontSize: undefined,
+        },
+        requestTemplateIcon: {
+          fontSize: undefined,
+        },
+        requestTemplateZkpLabel: {
+          fontSize: undefined,
+        },
       },
-      contactTitle: {
-        fontFamily: theme.TextTheme.title.fontFamily,
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      contactDate: {
-        fontFamily: theme.TextTheme.normal.fontFamily,
-        color: theme.ColorPalette.grayscale.darkGrey,
-      },
-      contactIcon: {
-        color: theme.ColorPalette.brand.text,
-      },
-      avatarCircle: {
-        borderColor: theme.ColorPalette.grayscale.lightGrey,
-      },
-      requestTemplateDetails: {
-        fontSize: undefined,
-      },
-      requestTemplateTitle: {
-        fontSize: undefined,
-      },
-      requestTemplateDate: {
-        fontSize: undefined,
-      },
-      requestTemplateIcon: {
-        fontSize: undefined,
-      },
-      requestTemplateZkpLabel: {
-        fontSize: undefined,
-      },
-    },
-  }))
+    })
+  )
   // ChatTheme overrides
-  .withOverrides((theme) => ({
-    ChatTheme: {
-      timeStyleLeft: {
-        color: theme.ColorPalette.grayscale.black,
+  .withOverrides(
+    (theme): DeepPartial<ITheme> => ({
+      ChatTheme: {
+        timeStyleLeft: {
+          color: theme.ColorPalette.grayscale.black,
+        },
+        timeStyleRight: {
+          color: theme.ColorPalette.grayscale.black,
+        },
+        leftText: {
+          color: theme.ColorPalette.grayscale.black,
+        },
+        leftTextHighlighted: {
+          color: theme.ColorPalette.grayscale.black,
+          fontFamily: undefined,
+          fontSize: theme.TextTheme.normal.fontSize,
+          fontWeight: 'bold',
+        },
+        rightText: {
+          color: theme.ColorPalette.grayscale.black,
+        },
+        rightTextHighlighted: {
+          color: theme.ColorPalette.grayscale.black,
+          fontFamily: undefined,
+          fontSize: theme.TextTheme.normal.fontSize,
+          fontWeight: 'bold',
+        },
+        inputText: {
+          lineHeight: undefined,
+          color: theme.ColorPalette.brand.primary,
+        },
+        openButtonStyle: {
+          borderRadius: 32,
+          backgroundColor: theme.ColorPalette.brand.primary,
+          paddingTop: 8,
+          paddingBottom: 8,
+          paddingLeft: 16,
+          paddingRight: 16,
+          marginTop: 16,
+        },
+        openButtonTextStyle: {
+          color: theme.ColorPalette.brand.secondary,
+        },
+        documentIconContainer: {
+          backgroundColor: '#1c70bf',
+          padding: 4,
+          borderRadius: 8,
+          marginBottom: 8,
+          // These properties are defined in Bifold so overriding them to keep previous styling consistent
+          justifyContent: undefined,
+          alignItems: undefined,
+          width: undefined,
+          height: undefined,
+        },
       },
-      timeStyleRight: {
-        color: theme.ColorPalette.grayscale.black,
-      },
-      leftText: {
-        color: theme.ColorPalette.grayscale.black,
-      },
-      leftTextHighlighted: {
-        color: theme.ColorPalette.grayscale.black,
-        fontFamily: undefined,
-        fontSize: theme.TextTheme.normal.fontSize,
-        fontWeight: 'bold',
-      },
-      rightText: {
-        color: theme.ColorPalette.grayscale.black,
-      },
-      rightTextHighlighted: {
-        color: theme.ColorPalette.grayscale.black,
-        fontFamily: undefined,
-        fontSize: theme.TextTheme.normal.fontSize,
-        fontWeight: 'bold',
-      },
-      inputText: {
-        lineHeight: undefined,
-        color: theme.ColorPalette.brand.primary,
-      },
-      openButtonStyle: {
-        borderRadius: 32,
-        backgroundColor: ColorPalette.brand.primary,
-        paddingTop: 8,
-        paddingBottom: 8,
-        paddingLeft: 16,
-        paddingRight: 16,
-        marginTop: 16,
-      },
-      openButtonTextStyle: {
-        color: theme.ColorPalette.brand.secondary,
-      },
-      documentIconContainer: {
-        backgroundColor: '#1c70bf',
-        padding: 4,
-        borderRadius: 8,
-        marginBottom: 8,
-        // These properties are defined in Bifold so overriding them to keep previous styling consistent
-        justifyContent: undefined,
-        alignItems: undefined,
-        width: undefined,
-        height: undefined,
-      },
-    },
-  }))
+    })
+  )
   .build()
