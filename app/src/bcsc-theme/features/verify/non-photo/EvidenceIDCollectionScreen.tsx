@@ -27,13 +27,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const handleOnContinue = async () => {
     console.log('ARE WE READY TO GO OR WHAT...')
     console.log(JSON.stringify(store.bcsc.evidenceMetadata, null, 2))
-    // ok what needs to happen, we need to grab both images
-    // load them into memory
-    // sha them
-    // send them to the metadata upload
-    // get the uploads back and save those for the next step
-    // I'll need to update the BCSCState with the on device image location
-    // and I'll need an a state for the upload URI as a flag for the steps page to allow the next step
+
     if (store.bcsc.evidenceMetadata) {
       const evidenceMetadata = store.bcsc.evidenceMetadata
       const response = await evidence.sendEvidenceMetadata({

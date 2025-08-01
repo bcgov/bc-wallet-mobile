@@ -5,6 +5,8 @@ import { Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
+import BulletPointWithText from '@/components/BulletPointWithText'
 
 type IDPhotoInformationScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IDPhotoInformation>
@@ -33,20 +35,22 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <View>{/* <Image source={{ uri: '' }} /> */}</View>
+        <View>
+          <Image source={SCAN_ID_IMAGE} />
+        </View>
         <View>
           <ThemedText variant={'headingThree'}>
             {'Take a photo of your ID. An agent will look at this photo when verifying your identity.'}
           </ThemedText>
-          <ThemedText>{'Center your ID within the frame'}</ThemedText>
-          <ThemedText>{'Have no other objects in the photo'}</ThemedText>
-          <ThemedText>{'Make sure the entire ID is visible'}</ThemedText>
-          <ThemedText>{'Make sure the image is clear without any glare or shadows'}</ThemedText>
+          <BulletPointWithText text={'Center your ID within the frame'} />
+          <BulletPointWithText text={'Have no other objects in the photo'} />
+          <BulletPointWithText text={'Make sure the entire ID is visible'} />
+          <BulletPointWithText text={'Make sure the image is clear without any glare or shadows'} />
         </View>
         <View style={{ marginTop: Spacing.md }}>
           <Button
-            title={'Take Photo'}
-            accessibilityLabel={'Take Photo'}
+            title={'Take photo of ID'}
+            accessibilityLabel={'Take photo of ID'}
             testID={''}
             onPress={() => {
               navigation.navigate(BCSCScreens.EvidenceCapture, {
