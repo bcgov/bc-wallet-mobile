@@ -124,6 +124,7 @@ jobs:
     outputs:
       app_version: ${{ steps.set-vars.outputs.app_version }}
       is_single_app_build: ${{ steps.set-vars.outputs.is_single_app_build }}
+      android_package_name: ${{ steps.set-vars.outputs.android_package_name }}
     steps:
       - name: Set App Version Vars
         id: set-vars
@@ -133,10 +134,12 @@ jobs:
             echo "Odd run number detected, using Single App build settings."
             echo "app_version=${{ env.APP_SINGLE_APP_BUILD_VERSION }}" >> "$GITHUB_OUTPUT"
             echo "is_single_app_build=true" >> "$GITHUB_OUTPUT"
+            echo "android_package_name=ca.bc.gov.id.servicescard.dev" >> "$GITHUB_OUTPUT"
           else
             echo "Even run number detected, using BC Wallet build settings."
             echo "app_version=${{ env.APP_BC_WALLET_BUILD_VERSION }}" >> "$GITHUB_OUTPUT"
             echo "is_single_app_build=false" >> "$GITHUB_OUTPUT"
+            echo "android_package_name=ca.bc.gov.BCWallet" >> "$GITHUB_OUTPUT"
           fi
   build-ios:
     needs: [check-secrets, check-vars, early-exit-check]
@@ -318,6 +321,7 @@ jobs:
     env:
       APP_VERSION: ${{ needs.set-build-vars.outputs.app_version }}
       IS_SINGLE_APP_BUILD: ${{ needs.set-build-vars.outputs.is_single_app_build }}
+      ANDROID_PACKAGE_NAME: ${{ needs.set-build-vars.outputs.android_package_name }}
     steps:
       - uses: actions/checkout@v4
 
@@ -442,9 +446,9 @@ jobs:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
           GOOGLE_API_CREDENTIALS: "api_keys.json"
           ANDROID_BUNDLE_PATH: "./android/app/build/outputs/bundle/release/app-release.aab"
-          ANDROID_PACKAGE_NAME: "ca.bc.gov.BCWallet"
+          ANDROID_PACKAGE_NAME: ${{ env.ANDROID_PACKAGE_NAME }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
-          VERSION_NAME: ${{ env.appBCWalletBuildVersion }}
+          VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
           # when we updated to yarn we started getting an error with paths
           # and had to add `/android` to the path.
