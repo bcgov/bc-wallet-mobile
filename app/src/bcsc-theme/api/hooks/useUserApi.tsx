@@ -36,7 +36,7 @@ const useUserApi = () => {
 
       // convert to base64
       const base64String = btoa(
-        new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), ''),
+        new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
       )
 
       // return as uri
@@ -49,7 +49,7 @@ const useUserApi = () => {
       getUserInfo,
       getPicture,
     }),
-    [getUserInfo, getPicture],
+    [getUserInfo, getPicture]
   )
 }
 

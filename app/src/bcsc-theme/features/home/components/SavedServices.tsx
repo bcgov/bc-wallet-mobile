@@ -10,12 +10,12 @@ interface SavedServiceProps {
 }
 
 const SavedService: React.FC<SavedServiceProps> = ({ title, onPress }) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     serviceContainer: {
       marginBottom: Spacing.sm,
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
       paddingVertical: Spacing.lg,
       paddingHorizontal: Spacing.md,
       justifyContent: 'center',
@@ -37,7 +37,7 @@ const mockTitle = 'YOUR SAVED SERVICES'
 const mockNoServicesMessage = 'No saved services'
 
 const SavedServices: React.FC<SavedServicesProps> = ({ services = [] }) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
@@ -57,8 +57,8 @@ const SavedServices: React.FC<SavedServicesProps> = ({ services = [] }) => {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Icon name="bookmark" size={24} color={ColorPallet.brand.tertiary} style={styles.bookmarkIcon} />
-        <ThemedText variant={'bold'} style={{ color: ColorPallet.brand.tertiary }}>
+        <Icon name="bookmark" size={24} color={ColorPalette.brand.tertiary} style={styles.bookmarkIcon} />
+        <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.tertiary }}>
           {mockTitle}
         </ThemedText>
       </View>
@@ -66,7 +66,7 @@ const SavedServices: React.FC<SavedServicesProps> = ({ services = [] }) => {
       {services.length === 0 ? (
         <ThemedText
           variant={'headingFour'}
-          style={{ color: ColorPallet.brand.tertiary, fontWeight: 'normal', paddingHorizontal: Spacing.md }}
+          style={{ color: ColorPalette.brand.tertiary, fontWeight: 'normal', paddingHorizontal: Spacing.md }}
         >
           {mockNoServicesMessage}
         </ThemedText>

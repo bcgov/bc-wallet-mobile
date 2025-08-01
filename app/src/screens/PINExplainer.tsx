@@ -11,7 +11,7 @@ interface BoldedBulletPointProps {
 
 const BoldedBulletPoint: React.FC<BoldedBulletPointProps> = ({ i18nKey }) => {
   const { t } = useTranslation()
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
@@ -27,7 +27,7 @@ const BoldedBulletPoint: React.FC<BoldedBulletPointProps> = ({ i18nKey }) => {
   return (
     <View style={styles.container}>
       <View style={styles.iconContainer}>
-        <Icon name={'circle'} size={Spacing.sm} color={ColorPallet.brand.modalIcon} />
+        <Icon name={'circle'} size={Spacing.sm} color={ColorPalette.brand.modalIcon} />
       </View>
       <ThemedText style={{ flexShrink: 1 }}>
         <Trans
@@ -48,12 +48,12 @@ export interface PINExplainerProps {
 
 const PINExplainer: React.FC<PINExplainerProps> = ({ continueCreatePIN }) => {
   const { t } = useTranslation()
-  const { ColorPallet, Assets, Spacing } = useTheme()
+  const { ColorPalette, Assets, Spacing } = useTheme()
 
   const style = StyleSheet.create({
     safeAreaView: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.lg,
     },
     scrollViewContentContainer: {
@@ -69,7 +69,7 @@ const PINExplainer: React.FC<PINExplainerProps> = ({ continueCreatePIN }) => {
   })
 
   const imageDisplayOptions = {
-    fill: ColorPallet.notification.infoText,
+    fill: ColorPalette.notification.infoText,
     height: 150,
     width: 150,
   }

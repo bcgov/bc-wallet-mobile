@@ -13,14 +13,14 @@ type VideoInstructionsScreenProps = {
 }
 
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
-  const { ColorPallet, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
       flexGrow: 1,

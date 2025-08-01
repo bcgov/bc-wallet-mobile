@@ -31,7 +31,7 @@ type PhotoReviewScreenProps = {
 }
 
 const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { photoPath } = route.params
   const [loading, setLoading] = useState(false)
@@ -46,7 +46,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
     pageContainer: {
       position: 'relative',
       flexGrow: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     contentContainer: {
       flexGrow: 1,
@@ -57,7 +57,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       left: 0,
       right: 0,
       padding: Spacing.md,
-      backgroundColor: ColorPallet.notification.popupOverlay,
+      backgroundColor: ColorPalette.notification.popupOverlay,
     },
     secondButton: {
       marginTop: Spacing.sm,
@@ -82,6 +82,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       }
 
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
+
       navigation.dispatch(
         CommonActions.reset({
           index: 2,
@@ -107,7 +108,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   return (
     <SafeAreaView style={styles.pageContainer}>
       <View style={styles.contentContainer}>
-        <Image source={{ uri: photoPath }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
+        <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
         <View style={styles.controlsContainer}>
           <Button
             buttonType={ButtonType.Primary}

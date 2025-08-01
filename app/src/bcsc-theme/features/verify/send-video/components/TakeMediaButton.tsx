@@ -14,15 +14,15 @@ interface TakeMediaButtonProps {
 const thumbnailHeight = 80
 
 const TakeMediaButton = ({ onPress, title, actionLabel, thumbnailUri, style = {} }: TakeMediaButtonProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const styles = StyleSheet.create({
     container: {
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
       paddingHorizontal: Spacing.md,
       borderTopWidth: 1,
-      borderTopColor: ColorPallet.brand.tertiary,
+      borderTopColor: ColorPalette.brand.tertiary,
       borderBottomWidth: 1,
-      borderBottomColor: ColorPallet.brand.tertiary,
+      borderBottomColor: ColorPalette.brand.tertiary,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -59,10 +59,10 @@ const TakeMediaButton = ({ onPress, title, actionLabel, thumbnailUri, style = {}
         {thumbnailUri ? (
           <Image source={{ uri: thumbnailUri }} resizeMode={'cover'} style={styles.image} />
         ) : (
-          <ThemedText style={{ color: ColorPallet.brand.primary }}>{actionLabel}</ThemedText>
+          <ThemedText style={{ color: ColorPalette.brand.primary }}>{actionLabel}</ThemedText>
         )}
         <View style={styles.iconContainer}>
-          <Icon name={'chevron-right'} size={32} color={ColorPallet.brand.primary} />
+          <Icon name={'chevron-right'} size={32} color={ColorPalette.brand.primary} />
         </View>
       </View>
     </TouchableOpacity>

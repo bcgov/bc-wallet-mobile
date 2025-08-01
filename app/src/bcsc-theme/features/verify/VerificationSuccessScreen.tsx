@@ -5,14 +5,14 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const VerificationSuccessScreen = () => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {
@@ -28,7 +28,7 @@ const VerificationSuccessScreen = () => {
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.contentContainer}>
-        <Icon name={'check'} size={108} color={ColorPallet.brand.primary} />
+        <Icon name={'check'} size={108} color={ColorPalette.brand.primary} />
         <ThemedText
           variant={'headingThree'}
           style={{ marginTop: Spacing.md, textAlign: 'center' }}

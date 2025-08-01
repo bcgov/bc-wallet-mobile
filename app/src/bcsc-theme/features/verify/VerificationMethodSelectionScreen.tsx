@@ -13,7 +13,7 @@ type VerificationMethodSelectionScreenProps = {
 }
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const [loading, setLoading] = useState(false)
   const { evidence } = useApi()
@@ -21,7 +21,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
   })
 

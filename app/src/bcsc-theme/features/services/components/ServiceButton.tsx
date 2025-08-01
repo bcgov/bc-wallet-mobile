@@ -9,18 +9,18 @@ interface ServiceButtonProps {
 }
 
 const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPress }) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
       padding: Spacing.md,
       borderBottomWidth: 1,
-      borderBottomColor: ColorPallet.brand.primaryBackground,
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      borderBottomColor: ColorPalette.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
     },
     title: {
       marginBottom: Spacing.sm,
-      color: ColorPallet.brand.primary,
+      color: ColorPalette.brand.primary,
     },
   })
 
@@ -29,7 +29,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPre
       <ThemedText variant={'headingFour'} style={styles.title}>
         {title}
       </ThemedText>
-      <ThemedText style={{ color: ColorPallet.brand.tertiary }}>{description}</ThemedText>
+      <ThemedText style={{ color: ColorPalette.brand.tertiary }}>{description}</ThemedText>
     </TouchableOpacity>
   )
 }

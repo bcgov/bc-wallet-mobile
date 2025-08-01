@@ -1,9 +1,9 @@
-import { Button, ButtonType, ThemedText, useTheme } from "@bifold/core"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import SelfieImage from '@assets/img/selfie_example.png'
-import { Image, StyleSheet, View } from "react-native"
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from "@/bcsc-theme/types/navigators"
-import { StackNavigationProp } from "@react-navigation/stack"
+import { Image, StyleSheet, View } from 'react-native'
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { StackNavigationProp } from '@react-navigation/stack'
 
 const SELFIE_IMAGE = Image.resolveAssetSource(SelfieImage).uri
 
@@ -12,13 +12,13 @@ type PhotoInstructionsScreenProps = {
 }
 
 const PhotoInstructionsScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
     contentContainer: {
@@ -30,7 +30,7 @@ const PhotoInstructionsScreen = ({ navigation }: PhotoInstructionsScreenProps) =
       marginBottom: Spacing.md,
     },
     controlsContainer: {
-      marginTop: 'auto'
+      marginTop: 'auto',
     },
     bulletContainer: {
       flexDirection: 'row',
@@ -38,46 +38,30 @@ const PhotoInstructionsScreen = ({ navigation }: PhotoInstructionsScreenProps) =
     },
     bullet: {
       marginRight: Spacing.xs,
-    }
+    },
   })
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
-      <View style={styles.contentContainer}> 
+      <View style={styles.contentContainer}>
         <Image source={{ uri: SELFIE_IMAGE }} style={styles.image} />
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
           Take a photo of your face. The agent will use this photo when verifying your identity.
         </ThemedText>
         <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>
-            {'\u2022'}
-          </ThemedText>
-          <ThemedText>
-            Hold your phone in front of you
-          </ThemedText>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>Hold your phone in front of you</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>
-            {'\u2022'}
-          </ThemedText>
-          <ThemedText>
-            Remove your glasses for the photo only
-          </ThemedText>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>Remove your glasses for the photo only</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>
-            {'\u2022'}
-          </ThemedText>
-          <ThemedText>
-            Be the only person in the photo
-          </ThemedText>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>Be the only person in the photo</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>
-            {'\u2022'}
-          </ThemedText>
-          <ThemedText>
-            Look like the photo on your BC Services Card or photo ID
-          </ThemedText>
+          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+          <ThemedText>Look like the photo on your BC Services Card or photo ID</ThemedText>
         </View>
       </View>
       <View style={styles.controlsContainer}>

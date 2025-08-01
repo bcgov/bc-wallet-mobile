@@ -16,7 +16,7 @@ type SetupStepsScreenProps = {
 
 const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const { ColorPallet, Spacing, TextTheme } = useTheme()
+  const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -28,17 +28,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     itemSeparator: {
       width: '100%',
       height: 8,
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     step: {
       paddingVertical: 24,
       paddingHorizontal: 24,
-      backgroundColor: ColorPallet.brand.secondaryBackground,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
     },
     contentContainer: {
       marginTop: 16,
@@ -106,7 +106,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           onPress: () => {},
           style: 'cancel',
         },
-      ],
+      ]
     )
   }
 
@@ -122,21 +122,21 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         accessibilityLabel={'Step 1'}
         style={[
           styles.step,
-          { backgroundColor: registered ? ColorPallet.brand.secondaryBackground : ColorPallet.brand.primary },
+          { backgroundColor: registered ? ColorPalette.brand.secondaryBackground : ColorPalette.brand.primary },
         ]}
       >
         <View style={styles.titleRow}>
           <ThemedText
             variant={'headingFour'}
-            style={{ marginRight: 16, color: registered ? TextTheme.headingFour.color : ColorPallet.brand.text }}
+            style={{ marginRight: 16, color: registered ? TextTheme.headingFour.color : ColorPalette.brand.text }}
             accessibilityLabel={t('Unified.Steps.Step1')}
           >
             {t('Unified.Steps.Step1')}
           </ThemedText>
-          {registered ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
+          {registered ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
         </View>
         <View>
-          <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPallet.brand.text }}>
+          <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPalette.brand.text }}>
             {registered ? `ID: BC Services Card (${serialNumber})` : t('Unified.Steps.ScanOrTakePhotos')}
           </ThemedText>
         </View>
@@ -152,7 +152,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           <ThemedText variant={'headingFour'} style={{ marginRight: Spacing.md }}>
             {t('Unified.Steps.Step2')}
           </ThemedText>
-          {registered ? <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} /> : null}
+          {registered ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
         </View>
         <View>
           <ThemedText>
@@ -170,7 +170,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           styles.step,
           {
             backgroundColor:
-              registered && !emailConfirmed ? ColorPallet.brand.primary : ColorPallet.brand.secondaryBackground,
+              registered && !emailConfirmed ? ColorPalette.brand.primary : ColorPalette.brand.secondaryBackground,
           },
         ]}
         disabled={!registered || emailConfirmed}
@@ -181,18 +181,18 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             variant={'headingFour'}
             style={{
               marginRight: Spacing.md,
-              color: registered && !emailConfirmed ? ColorPallet.brand.text : TextTheme.normal.color,
+              color: registered && !emailConfirmed ? ColorPalette.brand.text : TextTheme.normal.color,
             }}
           >
             {t('Unified.Steps.Step3')}
           </ThemedText>
           {registered && emailConfirmed ? (
-            <Icon name={'check-circle'} size={24} color={ColorPallet.semantic.success} />
+            <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} />
           ) : null}
         </View>
         <View style={styles.contentEmailContainer}>
           <ThemedText
-            style={{ color: registered && !emailConfirmed ? ColorPallet.brand.text : TextTheme.normal.color }}
+            style={{ color: registered && !emailConfirmed ? ColorPalette.brand.text : TextTheme.normal.color }}
           >
             {registered && emailConfirmed ? `Email: ${emailAddress}` : 'Email Address'}
           </ThemedText>
@@ -204,7 +204,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               accessibilityLabel={'Edit'}
               hitSlop={hitSlop}
             >
-              <ThemedText style={{ color: ColorPallet.brand.link, textDecorationLine: 'underline' }}>Edit</ThemedText>
+              <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>Edit</ThemedText>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -222,20 +222,20 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         style={[
           styles.step,
           {
-            backgroundColor: registered ? ColorPallet.brand.primary : ColorPallet.brand.secondaryBackground,
+            backgroundColor: registered ? ColorPalette.brand.primary : ColorPalette.brand.secondaryBackground,
           },
         ]}
       >
         <View style={styles.titleRow}>
           <ThemedText
             variant={'headingFour'}
-            style={{ marginRight: 16, color: registered ? ColorPallet.brand.text : TextTheme.headingFour.color }}
+            style={{ marginRight: 16, color: registered ? ColorPalette.brand.text : TextTheme.headingFour.color }}
           >
             {t('Unified.Steps.Step4')}
           </ThemedText>
         </View>
         <View>
-          <ThemedText style={{ color: registered ? ColorPallet.brand.text : TextTheme.headingFour.color }}>
+          <ThemedText style={{ color: registered ? ColorPalette.brand.text : TextTheme.headingFour.color }}>
             {registered
               ? `Verify identity by ${store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
                   day: '2-digit',
@@ -254,17 +254,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               styles.step,
               styles.titleRow,
               {
-                backgroundColor: ColorPallet.brand.primary,
+                backgroundColor: ColorPalette.brand.primary,
                 justifyContent: 'space-between',
                 paddingVertical: Spacing.md,
               },
             ]}
             onPress={handleCheckStatus}
           >
-            <ThemedText variant={'headingFour'} style={{ color: ColorPallet.brand.text }}>
+            <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
               Check status
             </ThemedText>
-            <Icon name={'chevron-right'} color={ColorPallet.brand.text} size={32} />
+            <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
           </TouchableOpacity>
           <View style={styles.itemSeparator} />
           <TouchableOpacity
@@ -272,17 +272,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               styles.step,
               styles.titleRow,
               {
-                backgroundColor: ColorPallet.brand.primary,
+                backgroundColor: ColorPalette.brand.primary,
                 justifyContent: 'space-between',
                 paddingVertical: Spacing.md,
               },
             ]}
             onPress={handleCancelVerification}
           >
-            <ThemedText variant={'headingFour'} style={{ color: ColorPallet.brand.text }}>
+            <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
               Choose another way to verify
             </ThemedText>
-            <Icon name={'chevron-right'} color={ColorPallet.brand.text} size={32} />
+            <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
           </TouchableOpacity>
         </>
       ) : null}

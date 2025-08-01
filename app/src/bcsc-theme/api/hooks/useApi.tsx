@@ -32,7 +32,7 @@ const useApi = () => {
       metadata,
       jwks,
     }),
-    [config, pairing, registration, authorization, token, user, evidence],
+    [config, pairing, registration, authorization, token, user, evidence]
   )
 }
 

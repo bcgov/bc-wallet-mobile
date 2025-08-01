@@ -18,14 +18,14 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
   navigation,
 }: SerialInstructionsScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const { width } = useWindowDimensions()
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
       flex: 1,

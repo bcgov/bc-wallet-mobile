@@ -30,6 +30,7 @@ The foundation includes several key interfaces:
 ### 2. Workflow Provider (`providers/WorkflowProvider.tsx`)
 
 A React Context provider that:
+
 - Manages workflow state using React hooks and reducers
 - Provides the workflow engine API
 - Handles step completion and navigation
@@ -38,6 +39,7 @@ A React Context provider that:
 ### 3. Workflow Navigator (`components/WorkflowNavigator.tsx`)
 
 Integration layer with react-navigation:
+
 - Provides workflow-aware navigation options
 - Handles Android back button during workflows
 - Offers HOCs and hooks for screen integration
@@ -45,6 +47,7 @@ Integration layer with react-navigation:
 ### 4. Utilities (`utils/workflowUtils.ts`)
 
 Helper functions and builders:
+
 - `WorkflowBuilder`: Fluent API for creating workflows
 - `WorkflowUtils`: Progress calculation and validation
 - `WorkflowTemplates`: Common workflow patterns
@@ -86,23 +89,28 @@ const onboardingWorkflow: WorkflowDefinition = {
 ### 2. Using WorkflowBuilder
 
 ```typescript
-const credentialWorkflow = WorkflowBuilder
-  .create('credential-issuance', 'Receive Credential')
+const credentialWorkflow = WorkflowBuilder.create('credential-issuance', 'Receive Credential')
   .description('Review and accept a new credential')
   .pausable(true)
-  .addHeadlessStep(async (context) => {
-    // Validate connection
-    await validateConnection(context.data.connectionId)
-  }, { id: 'validate-connection', required: true })
+  .addHeadlessStep(
+    async (context) => {
+      // Validate connection
+      await validateConnection(context.data.connectionId)
+    },
+    { id: 'validate-connection', required: true }
+  )
   .addScreenStep(Screens.CredentialOffer, {
     id: 'review-offer',
     required: true,
     completionCondition: (ctx) => ctx.data.offerAccepted === true,
   })
-  .addHeadlessStep(async (context) => {
-    // Process credential
-    await processCredential(context.data.credentialId)
-  }, { id: 'process-credential', required: true })
+  .addHeadlessStep(
+    async (context) => {
+      // Process credential
+      await processCredential(context.data.credentialId)
+    },
+    { id: 'process-credential', required: true }
+  )
   .onComplete(async (context) => {
     context.navigation.navigate('Credentials')
   })
@@ -114,10 +122,10 @@ const credentialWorkflow = WorkflowBuilder
 ```typescript
 const CredentialOfferScreen: React.FC = withWorkflow((props) => {
   const { workflowContext, isWorkflowStep } = props
-  
+
   const handleAccept = async () => {
     await acceptCredential()
-    
+
     if (isWorkflowStep) {
       workflowContext.setData('offerAccepted', true)
       workflowContext.completeStep('review-offer')
@@ -163,7 +171,10 @@ The existing `useOnboardingState` hook can be extended to use the new workflow s
 ```typescript
 // Current approach
 const { onboardingState, activeScreen } = useOnboardingState(
-  store, config, termsVersion, generateOnboardingWorkflowSteps
+  store,
+  config,
+  termsVersion,
+  generateOnboardingWorkflowSteps
 )
 
 // Enhanced approach
@@ -179,18 +190,15 @@ useEffect(() => {
 
 ```typescript
 useEffect(() => {
-  const credentialOfferListener = DeviceEventEmitter.addListener(
-    EventTypes.CREDENTIAL_OFFER_RECEIVED,
-    (event) => {
-      engine.startWorkflow('credential-issuance', {
-        data: { 
-          credentialId: event.credentialId,
-          connectionId: event.connectionId 
-        }
-      })
-    }
-  )
-  
+  const credentialOfferListener = DeviceEventEmitter.addListener(EventTypes.CREDENTIAL_OFFER_RECEIVED, (event) => {
+    engine.startWorkflow('credential-issuance', {
+      data: {
+        credentialId: event.credentialId,
+        connectionId: event.connectionId,
+      },
+    })
+  })
+
   return () => credentialOfferListener.remove()
 }, [engine])
 ```
@@ -234,8 +242,8 @@ useEffect(() => {
 const { state } = useWorkflow()
 const progress = WorkflowUtils.getProgress(state.activeWorkflow)
 
-<ProgressBar 
-  progress={progress.percentage} 
+<ProgressBar
+  progress={progress.percentage}
   text={`${progress.completed} of ${progress.total} completed`}
 />
 ```
@@ -252,7 +260,7 @@ useEffect(() => {
 
 // Restore on app start
 useEffect(() => {
-  AsyncStorage.getItem('workflow-state').then(data => {
+  AsyncStorage.getItem('workflow-state').then((data) => {
     if (data) {
       const restoredState = WorkflowStorage.deserialize(data)
       // Resume workflow...
@@ -275,12 +283,12 @@ describe('Credential Issuance Workflow', () => {
 
   it('should handle step completion', async () => {
     const context = createMockWorkflowContext({
-      data: { credentialId: 'test-123' }
+      data: { credentialId: 'test-123' },
     })
-    
-    const step = workflow.steps.find(s => s.id === 'review-offer')
+
+    const step = workflow.steps.find((s) => s.id === 'review-offer')
     expect(step.completionCondition(context)).toBe(false)
-    
+
     context.setData('offerAccepted', true)
     expect(step.completionCondition(context)).toBe(true)
   })
@@ -293,15 +301,15 @@ describe('Credential Issuance Workflow', () => {
 describe('Workflow Integration', () => {
   it('should navigate through credential workflow', async () => {
     const mockEngine = createMockWorkflowEngine()
-    
+
     render(
       <WorkflowProvider engine={mockEngine}>
         <CredentialOfferScreen />
       </WorkflowProvider>
     )
-    
+
     fireEvent.press(screen.getByText('Accept Credential'))
-    
+
     expect(mockEngine.completeStep).toHaveBeenCalledWith('review-offer')
   })
 })

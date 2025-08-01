@@ -75,14 +75,14 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
   }
 
   const uploadPhotoEvidenceMetadata = async (
-    payload: VerificationPhotoUploadPayload,
+    payload: VerificationPhotoUploadPayload
   ): Promise<UploadEvidenceResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
@@ -93,13 +93,13 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
   }
   const uploadVideoEvidenceMetadata = async (
-    payload: VerificationVideoUploadPayload,
+    payload: VerificationVideoUploadPayload
   ): Promise<UploadEvidenceResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
@@ -110,7 +110,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -118,7 +118,7 @@ const useEvidenceApi = () => {
 
   const sendVerificationRequest = async (
     verificationRequestId: string,
-    payload: SendVerificationPayload,
+    payload: SendVerificationPayload
   ): Promise<VerificationStatusResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
@@ -129,7 +129,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -144,14 +144,14 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
   }
 
   const getVerificationRequestStatus = async (
-    verificationRequestId: string,
+    verificationRequestId: string
   ): Promise<VerificationStatusResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
@@ -161,7 +161,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -179,7 +179,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -195,7 +195,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })
@@ -213,7 +213,7 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        },
+        }
       )
       return data
     })

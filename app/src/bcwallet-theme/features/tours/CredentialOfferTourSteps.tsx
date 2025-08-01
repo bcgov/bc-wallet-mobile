@@ -10,7 +10,7 @@ export const credentialOfferTourSteps: TourStep[] = [
     Render: (props: RenderProps) => {
       const { currentTour, currentStep, next, stop, previous } = props
       const { t } = useTranslation()
-      const { ColorPallet, TextTheme } = useTheme()
+      const { ColorPalette, TextTheme } = useTheme()
       const { imageWidth, imageHeight } = useTourImageDimensions()
 
       return (
@@ -38,7 +38,7 @@ export const credentialOfferTourSteps: TourStep[] = [
           <Text
             style={{
               ...TextTheme.normal,
-              color: ColorPallet.notification.infoText,
+              color: ColorPalette.notification.infoText,
             }}
             allowFontScaling={false}
           >
