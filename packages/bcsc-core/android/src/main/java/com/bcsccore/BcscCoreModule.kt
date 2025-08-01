@@ -36,6 +36,8 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 import javax.crypto.SecretKey
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 // JWT/Nimbus imports
 import com.nimbusds.jose.jwk.JWK
@@ -798,6 +800,30 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     
     val mockRequestBody = "grant_type=urn:ietf:params:oauth:grant-type:device_code&device_code=$deviceCode&client_id=$clientId&code=$confirmationCode"
     promise.resolve(mockRequestBody)
+  }
+
+  @ReactMethod
+  override fun decodePayload(jweString: String, promise: Promise) {
+    promise.reject("E_NOT_IMPLEMENTED", "decodePayload not yet implemented on Android")
+  }
+
+  @ReactMethod
+  override fun createEvidenceRequestJWT(deviceCode: String, clientID: String, promise: Promise) {
+    promise.reject("E_NOT_IMPLEMENTED", "createEvidenceRequestJWT not yet implemented on Android")
+  }
+
+  @ReactMethod
+  override fun createQuickLoginJWT(
+    accessToken: String,
+    clientId: String,
+    issuer: String,
+    clientRefId: String,
+    key: ReadableMap?,
+    fcmDeviceToken: String,
+    deviceToken: String?,
+    promise: Promise
+  ) {
+    promise.reject("E_NOT_IMPLEMENTED", "createQuickLoginJWT not yet implemented on Android")
   }
   
   // MARK: - Account management methods

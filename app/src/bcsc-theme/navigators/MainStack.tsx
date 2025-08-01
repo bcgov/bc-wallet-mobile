@@ -6,6 +6,7 @@ import { View } from 'react-native'
 
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
+import AccountWebView from '../features/account/components/AccountWebView'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
 
@@ -41,6 +42,10 @@ const MainStack: React.FC = () => {
             headerBackTestID: testIdWithKey('Back'),
             headerRight,
           })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.AccountWebView}
+          component={AccountWebView}
         />
         <Stack.Screen
           name={BCSCScreens.PairingConfirmation}

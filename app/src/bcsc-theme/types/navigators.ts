@@ -9,6 +9,7 @@ export enum BCSCScreens {
   Home = 'BCSCHome',
   Services = 'BCSCServices',
   Account = 'BCSCAccount',
+  AccountWebView = 'BCSCAccountWebView',
   Settings = 'BCSCSettings',
   SetupSteps = 'BCSCSetupSteps',
   IdentitySelection = 'BCSCIdentitySelection',
@@ -45,6 +46,7 @@ export type BCSCTabStackParams = {
 
 export type BCSCRootStackParams = {
   [BCSCStacks.TabStack]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCScreens.AccountWebView]: { url: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
 }

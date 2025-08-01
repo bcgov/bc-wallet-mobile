@@ -6,6 +6,8 @@ import useAuthorizationApi from './useAuthorizationApi'
 import useTokenApi from './useTokens'
 import useUserApi from './useUserApi'
 import useEvidenceApi from './useEvidenceApi'
+import useMetadataApi from './useMetadataApi'
+import useJwksApi from './useJwksApi'
 
 const useApi = () => {
   const config = useConfigApi()
@@ -15,6 +17,8 @@ const useApi = () => {
   const token = useTokenApi()
   const user = useUserApi()
   const evidence = useEvidenceApi()
+  const metadata = useMetadataApi()
+  const jwks = useJwksApi()
 
   return useMemo(
     () => ({
@@ -25,6 +29,8 @@ const useApi = () => {
       token,
       user,
       evidence,
+      metadata,
+      jwks,
     }),
     [config, pairing, registration, authorization, token, user, evidence],
   )

@@ -1,5 +1,2 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-npm run pre-commit-lint
-npm run typecheck
+yarn pre-commit-lint
+yarn typecheck
