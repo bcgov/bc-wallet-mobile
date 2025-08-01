@@ -108,6 +108,15 @@ export const ColorPalette: IColorPalette = {
 // Using the bifoldTheme as a base, override the specific style properties for the BCWallet theme.
 export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
   .setColorPalette(ColorPalette)
+  // General overrides
+  .withOverrides({
+    Spacing: Spacing,
+    themeName: BCThemeNames.BCWallet,
+    heavyOpacity: heavyOpacity,
+    borderRadius: borderRadius,
+    borderWidth: borderWidth,
+    maxFontSizeMultiplier: maxFontSizeMultiplier,
+  })
   // TextTheme overrides
   .withOverrides((theme) => ({
     TextTheme: {
@@ -480,39 +489,4 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       },
     },
   }))
-  // General overrides
-  .withOverrides({
-    Spacing: Spacing,
-    themeName: BCThemeNames.BCWallet,
-    heavyOpacity: heavyOpacity,
-    borderRadius: borderRadius,
-    borderWidth: borderWidth,
-    maxFontSizeMultiplier: maxFontSizeMultiplier,
-  })
   .build()
-
-/**
- * TODO: Remove these once the ThemeBuilder is fully implemented for BCWallet and BCSC
- *
- * These are temporary exports to maintain compatibility with existing code.
- * Once the ThemeBuilder is implemented for BCSC, these will not be needed.
- * BCSC will extend the BCWalletTheme and use the same theme structure.
- */
-export const TextTheme = BCWalletTheme.TextTheme
-export const Buttons = BCWalletTheme.Buttons
-export const Inputs = BCWalletTheme.Inputs
-export const ChatTheme = BCWalletTheme.ChatTheme
-export const ListItems = BCWalletTheme.ListItems
-export const TabTheme = BCWalletTheme.TabTheme
-export const HomeTheme = BCWalletTheme.HomeTheme
-export const NavigationTheme = BCWalletTheme.NavigationTheme
-export const SettingsTheme = BCWalletTheme.SettingsTheme
-export const OnboardingTheme = BCWalletTheme.OnboardingTheme
-export const DialogTheme = BCWalletTheme.DialogTheme
-export const LoadingTheme = BCWalletTheme.LoadingTheme
-export const PINEnterTheme = BCWalletTheme.PINEnterTheme
-export const PINInputTheme = BCWalletTheme.PINInputTheme
-export const Assets = BCWalletTheme.Assets
-export const InputInlineMessage = BCWalletTheme.InputInlineMessage
-export const CredentialCardShadowTheme = BCWalletTheme.CredentialCardShadowTheme
-export const SelectedCredTheme = BCWalletTheme.SelectedCredTheme

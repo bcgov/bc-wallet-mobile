@@ -1,5 +1,4 @@
 import { IColorPalette, INotificationColors, ThemeBuilder } from '@bifold/core'
-
 import Logo from '@assets/img/logo-with-text-dark.svg'
 import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
 import { BCThemeNames } from '@/constants'
@@ -55,6 +54,9 @@ export const BCSCColorPalette: IColorPalette = {
 
 export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
   .setColorPalette(BCSCColorPalette)
+  .withOverrides({
+    themeName: BCThemeNames.BCSC,
+  })
   // TextTheme overrides
   .withOverrides((theme) => ({
     TextTheme: {
@@ -431,8 +433,5 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         logo: Logo as React.FC,
       },
     },
-  })
-  .withOverrides({
-    themeName: BCThemeNames.BCSC,
   })
   .build()
