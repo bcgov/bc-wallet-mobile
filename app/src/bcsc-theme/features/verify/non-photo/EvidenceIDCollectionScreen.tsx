@@ -3,12 +3,9 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
-import RectangularMask from '@/bcsc-theme/components/RectangularMask'
-import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { Button, ButtonType, Text, ThemedText, useStore, useTheme } from '@bifold/core'
 import { TextInput, View } from 'react-native'
-import { BCSCState, BCState } from '@/store'
+import { BCState } from '@/store'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 
 type EvidenceIDCollectionScreenProps = {

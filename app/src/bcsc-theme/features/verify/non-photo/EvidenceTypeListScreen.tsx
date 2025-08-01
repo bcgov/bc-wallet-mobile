@@ -44,7 +44,8 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
+      // backgroundColor: ColorPalette.brand.primaryBackground,
+      padding: Spacing.lg,
     },
     scrollView: {
       flex: 1,
@@ -55,9 +56,10 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
     itemSeparator: {
-      width: '100%',
-      height: 3,
+      height: 2,
+      width: '95%',
       backgroundColor: ColorPalette.brand.primaryBackground,
+      alignSelf: 'center', // Centers the separator
     },
     cardSection: {
       paddingVertical: 24,
@@ -76,34 +78,39 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <View>
+      <View style={{ marginBottom: Spacing.lg }}>
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
           Choose photo ID
         </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>
-          Use an ID that has the same name as on your BC Services Card.
-        </ThemedText>
+        <ThemedText>Use an ID that has the same name as on your BC Services Card.</ThemedText>
       </View>
-      <View>
-        <SectionList
-          sections={data || []}
-          renderSectionHeader={(item) => <ThemedText>{item.section.title}</ThemedText>}
-          renderItem={(data) => (
-            <TouchableOpacity
-              onPress={() => {
-                // navigate to the next screen with the correct data
-                navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
-              }}
-              testID={testIdWithKey('Step1')}
-              style={[styles.cardSection, { backgroundColor: ColorPalette.brand.secondaryBackground }]}
-            >
-              <View>
-                <ThemedText>{data.item.evidence_type_label}</ThemedText>
-              </View>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
+      <SectionList
+        sections={data || []}
+        ItemSeparatorComponent={() => (
+          <View style={{ backgroundColor: ColorPalette.brand.secondaryBackground }}>
+            <View style={styles.itemSeparator} />
+          </View>
+        )}
+        renderSectionHeader={(item) => (
+          <ThemedText style={[styles.cardSection]} variant={'headingFour'}>
+            {item.section.title}
+          </ThemedText>
+        )}
+        renderItem={(data) => (
+          <TouchableOpacity
+            onPress={() => {
+              // navigate to the next screen with the correct data
+              navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
+            }}
+            testID={testIdWithKey('Step1')}
+            style={[styles.cardSection]}
+          >
+            <View>
+              <ThemedText>{data.item.evidence_type_label}</ThemedText>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
     </SafeAreaView>
   )
 }
