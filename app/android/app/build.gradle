@@ -116,7 +116,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "ca.bc.gov.id.servicescard.dev"
+        applicationId "ca.bc.gov.BCWallet"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1

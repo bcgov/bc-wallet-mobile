@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:1008044298583:android:56bf7c25b882152a44ae12",
         "android_client_info": {
-          "package_name": "ca.bc.gov.id.servicescard.dev"
+          "package_name": "ca.bc.gov.BCWallet"
         }
       },
       "oauth_client": [
