@@ -53,11 +53,10 @@ const MaskedCamera = ({
       paddingHorizontal: Spacing.lg,
     },
     instructionText: {
-      color: 'white',
       backgroundColor: 'transparent',
       position: 'absolute',
       fontWeight: 'normal',
-      top: 0,
+      top: Spacing.lg,
       left: 0,
       right: 0,
       zIndex: 5,
@@ -78,8 +77,6 @@ const MaskedCamera = ({
       width: 64,
       height: 64,
       borderRadius: 30,
-      backgroundColor: 'white',
-      borderColor: '#CCC',
       borderWidth: 2,
     },
   })
@@ -160,8 +157,12 @@ const MaskedCamera = ({
         />
       </MaskedView>
       <View style={styles.instructionText}>
-        <ThemedText variant={'headingFour'}>{cameraLabel}</ThemedText>
-        <ThemedText variant={'headingFour'}>{cameraInstructions}</ThemedText>
+        <ThemedText style={{ color: 'white' }} variant={'headingThree'}>
+          {cameraLabel}
+        </ThemedText>
+        <ThemedText style={{ color: 'white' }} variant={'headingThree'}>
+          {cameraInstructions}
+        </ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>

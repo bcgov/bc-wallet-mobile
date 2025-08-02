@@ -3,7 +3,6 @@ import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScrollView } from 'react-native-gesture-handler'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
 import BulletPointWithText from '@/components/BulletPointWithText'
@@ -16,7 +15,7 @@ type IDPhotoInformationScreenProps = {
 const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScreenProps) => {
   const { cardType } = route.params
   const { ColorPalette, Spacing } = useTheme()
-  const { width, height } = useWindowDimensions()
+  const { height } = useWindowDimensions()
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,

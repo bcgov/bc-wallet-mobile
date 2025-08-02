@@ -28,7 +28,7 @@ const RectangularMask: React.FC<RectangularMaskProps> = ({
       width: maskWidth,
       height: maskHeight,
       backgroundColor: 'black',
-      borderRadius: 8, // Slight rounding for ID card corners
+      borderRadius: 16, // Slight rounding for ID card corners
       borderWidth: 2,
       borderColor: 'white',
     },
