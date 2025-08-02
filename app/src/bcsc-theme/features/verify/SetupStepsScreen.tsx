@@ -9,6 +9,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -16,7 +17,7 @@ type SetupStepsScreenProps = {
 
 const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { Spacing, TextTheme, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -141,6 +142,21 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           </ThemedText>
         </View>
       </TouchableOpacity>
+      {registered && store.bcsc.cardType === BCSCCardType.NonPhoto && (
+        <TouchableOpacity
+          onPress={() => navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)}
+          style={[
+            styles.step,
+            { backgroundColor: registered ? ColorPalette.brand.secondaryBackground : ColorPalette.brand.primary },
+          ]}
+        >
+          <View>
+            <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPalette.brand.text }}>
+              {'Additional identification required for non-photo BC Services Card.'}
+            </ThemedText>
+          </View>
+        </TouchableOpacity>
+      )}
       <View style={styles.itemSeparator} />
       <TouchableOpacity
         testID={testIdWithKey('Step2')}
@@ -295,6 +311,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [undefined] })
             dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [undefined] })
             dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.UPDATE_EVIDENCE_PATHS, payload: [undefined] })
           }}
           testID={testIdWithKey('ResetData')}
           accessibilityLabel={'Reset data'}

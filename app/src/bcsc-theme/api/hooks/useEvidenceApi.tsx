@@ -33,7 +33,7 @@ export interface VerificationStatusResponseData {
 }
 
 export interface VerificationPhotoUploadPayload {
-  label: 'front' | 'back'
+  label: string
   content_type: string
   content_length: number
   date: number
@@ -56,6 +56,40 @@ export interface UploadEvidenceResponseData {
   upload_uri: string
 }
 
+export interface EvidenceImageSide {
+  image_side_name: 'FRONT_SIDE' | 'BACK_SIDE'
+  image_side_label: string
+  image_side_tip: string
+}
+
+export interface EvidenceType {
+  evidence_type: string
+  has_photo: boolean
+  group: 'BRITISH COLUMBIA' | 'CANADA, OR OTHER LOCATION IN CANADA' | 'UNITED STATES' | 'OTHER COUNTRIES'
+  group_sort_order: number
+  sort_order: number
+  collection_form: 'FIRST' | 'SECOND' | 'BOTH'
+  document_reference_input_mask: string // a regex mask for ID document reference input, number only can indicate to use a number only keyboard
+  document_reference_label: string
+  document_reference_sample: string
+  image_sides: EvidenceImageSide[]
+  evidence_type_label: string
+}
+export interface EvidenceMetadataResponseData {
+  processes: {
+    process: 'IDIM L3 Remote Non-BCSC Identity Verification' | 'IDIM L3 Remote Non-photo BCSC Identity Verification'
+    evidence_types: EvidenceType[]
+  }[]
+}
+export interface EvidenceMetadataPayload {
+  type: string
+  number: string
+  images: VerificationPhotoUploadPayload[]
+  barcodes?: {
+    type: string
+  }[]
+}
+
 const useEvidenceApi = () => {
   const [store] = useStore<BCState>()
 
@@ -63,6 +97,11 @@ const useEvidenceApi = () => {
     const code = store.bcsc.deviceCode
     if (!code) throw new Error('Device code is missing. Re install the app and setup try again.')
     return code
+  }
+
+  const getEvidenceMetadata = async (): Promise<EvidenceMetadataResponseData> => {
+    const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`)
+    return data
   }
   // This needs ot be called for the process to start
   const createVerificationRequest = async (): Promise<VerificationResponseData> => {
@@ -247,6 +286,22 @@ const useEvidenceApi = () => {
     })
   }
 
+  const sendEvidenceMetadata = async (payload: EvidenceMetadataPayload): Promise<UploadEvidenceResponseData[]> => {
+    return withAccount(async (account) => {
+      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.post<UploadEvidenceResponseData[]>(
+        `${apiClient.endpoints.evidence}/v1/documents`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      return data
+    })
+  }
+
   return {
     createVerificationRequest,
     uploadPhotoEvidenceMetadata,
@@ -259,6 +314,8 @@ const useEvidenceApi = () => {
     getVerificationRequestPrompts,
     createEmailVerification,
     sendEmailVerificationCode,
+    getEvidenceMetadata,
+    sendEvidenceMetadata,
   }
 }
 
