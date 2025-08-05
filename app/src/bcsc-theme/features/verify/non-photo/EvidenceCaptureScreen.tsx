@@ -60,13 +60,16 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   }
 
   const handleAcceptPhoto = async () => {
+    // TODO: (al) an issue with accepting a photo, then navigating back, will add a new photo to the list
+    // I think if it is being navigated back from the EvidenceCollectionScreen that it needs to reset the state and take both pictures again
     if (!currentPhotoPath || !currentSide) return
+
     const photoMetadata = await getPhotoMetadata(currentPhotoPath)
-    photoMetadata.label = currentSide.image_side_label
+    photoMetadata.label = currentSide.image_side_name
     const newPhotos = [...capturedPhotos, photoMetadata]
     setCapturedPhotos(newPhotos)
+
     if (isLastSide) {
-      console.log('Captured photos:', newPhotos)
       dispatch({
         type: BCDispatchAction.UPDATE_EVIDENCE_PATHS,
         payload: [newPhotos],

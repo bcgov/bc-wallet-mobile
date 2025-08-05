@@ -13,6 +13,7 @@ import {
   VerificationPrompt,
   VerificationVideoUploadPayload,
 } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { PhotoMetadata } from './bcsc-theme/utils/file-info'
 
 export interface IASEnvironment {
   name: string
@@ -58,7 +59,7 @@ export interface BCSCState {
   bookmarks: string[]
   verificationRequestId?: string
   verificationRequestSha?: string
-  evidenceMetadata: VerificationPhotoUploadPayload[]
+  evidenceMetadata: PhotoMetadata[]
 }
 
 export enum Mode {
@@ -393,7 +394,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.UPDATE_EVIDENCE_PATHS: {
       const evidence = (action?.payload || []).pop() ?? undefined
-      console.log('Evidence paths updated:', evidence)
       const bcsc = {
         ...state.bcsc,
         evidenceMetadata: evidence,
