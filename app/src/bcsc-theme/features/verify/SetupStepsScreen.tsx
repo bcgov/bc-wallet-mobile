@@ -73,9 +73,20 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const handleCheckStatus = async () => {
     const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId!)
     if (status === 'verified') {
-      const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode!, store.bcsc.userCode!)
+      const { refresh_token, bcsc_devices_count } = await token.checkDeviceCodeStatus(
+        store.bcsc.deviceCode!,
+        store.bcsc.userCode!
+      )
+
       if (refresh_token) {
         dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+      }
+
+      if (bcsc_devices_count !== undefined) {
+        dispatch({
+          type: BCDispatchAction.UPDATE_DEVICE_COUNT,
+          payload: [bcsc_devices_count],
+        })
       }
       navigation.navigate(BCSCScreens.VerificationSuccess)
     } else {

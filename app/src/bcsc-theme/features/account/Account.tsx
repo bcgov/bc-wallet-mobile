@@ -116,8 +116,12 @@ const Account: React.FC = () => {
           <AccountField label={'Email address'} value={store.bcsc.email ?? ''} />
 
           <View style={styles.buttonsContainer}>
-            {/* TODO (bm): Add device count to the button title */}
-            <SectionButton onPress={handleMyDevicesPress} title={`My devices`} />
+            <SectionButton
+              onPress={handleMyDevicesPress}
+              title={
+                store.bcsc.bcscDevicesCount !== undefined ? `My devices (${store.bcsc.bcscDevicesCount})` : 'My devices'
+              }
+            />
             <SectionButton
               onPress={handleAllAccountDetailsPress}
               title="All account details"

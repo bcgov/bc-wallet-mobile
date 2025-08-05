@@ -7,12 +7,17 @@ import Config from 'react-native-config'
 
 import { TokenStatusResponseData } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
+import { getDeviceCountFromIdToken } from '../utils/get-device-count'
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
   }
+}
+
+export interface TokenStatusResponseDataWithDeviceCount extends TokenStatusResponseData {
+  bcsc_devices_count?: number
 }
 
 interface BCSCEndpoints {
@@ -117,7 +122,7 @@ class BCSCService {
     }
   }
 
-  async fetchAccessToken(): Promise<TokenStatusResponseData> {
+  async fetchAccessToken(): Promise<TokenStatusResponseDataWithDeviceCount> {
     return withAccount(async () => {
       if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
         // refresh token should be saved when a device is authorized with IAS
@@ -169,7 +174,7 @@ class BCSCService {
     return config
   }
 
-  async getTokensForRefreshToken(refreshToken: string): Promise<TokenStatusResponseData> {
+  async getTokensForRefreshToken(refreshToken: string): Promise<TokenStatusResponseDataWithDeviceCount> {
     return withAccount(async (account) => {
       const { issuer, clientID } = account
       const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, refreshToken)
@@ -177,7 +182,10 @@ class BCSCService {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
       this.tokens = tokenResponse.data
-      return tokenResponse.data
+
+      const bcsc_devices_count = await getDeviceCountFromIdToken(tokenResponse.data.id_token, this.logger)
+
+      return { ...tokenResponse.data, bcsc_devices_count }
     })
   }
 

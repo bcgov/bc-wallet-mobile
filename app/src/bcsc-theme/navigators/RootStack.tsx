@@ -76,8 +76,16 @@ const BCSCRootStack: React.FC = () => {
         }
 
         if (token) {
-          logger.info('token found')
-          await client.getTokensForRefreshToken(token)
+          const tokenData = await client.getTokensForRefreshToken(token)
+
+          // Update device count if available
+          if (tokenData.bcsc_devices_count !== undefined) {
+            dispatch({
+              type: BCDispatchAction.UPDATE_DEVICE_COUNT,
+              payload: [tokenData.bcsc_devices_count],
+            })
+          }
+
           dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
         }
       } catch (error) {
