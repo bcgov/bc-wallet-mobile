@@ -10,7 +10,7 @@ import Home from '../features/home/Home'
 import Services from '../features/services/Services'
 import Settings from '../features/settings/Settings'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
-import HelpHeaderButton from '../components/HelpHeaderButton'
+import createHelpHeaderButton from '../components/HelpHeaderButton'
 
 type TabBarIconProps = {
   focused: boolean
@@ -85,7 +85,8 @@ const BCSCTabStack: React.FC = () => {
             title: '',
             headerShown: true,
             headerLeft: () => null,
-            headerRight: () => <HelpHeaderButton helpUrl={''} />,
+            // TODO(bm): Add real help URL
+            headerRight: createHelpHeaderButton({ helpUrl: '' }),
           }}
         />
         <Tab.Screen

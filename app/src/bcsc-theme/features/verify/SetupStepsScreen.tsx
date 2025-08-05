@@ -71,11 +71,20 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }
 
   const handleCheckStatus = async () => {
-    const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId!)
+    if (!store.bcsc.verificationRequestId) {
+      throw new Error('Verification request ID is missing')
+    }
+
+    const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId)
+
     if (status === 'verified') {
+      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
+        throw new Error('Device code or user code is missing for verification')
+      }
+
       const { refresh_token, bcsc_devices_count } = await token.checkDeviceCodeStatus(
-        store.bcsc.deviceCode!,
-        store.bcsc.userCode!
+        store.bcsc.deviceCode,
+        store.bcsc.userCode
       )
 
       if (refresh_token) {

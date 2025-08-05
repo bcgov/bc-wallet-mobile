@@ -1,16 +1,7 @@
-import {
-  ButtonLocation,
-  IconButton,
-  testIdWithKey,
-  useDefaultStackOptions,
-  useStore,
-  useTheme,
-  useTour,
-} from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
+import { testIdWithKey, useDefaultStackOptions, useStore, useTheme, useTour } from '@bifold/core'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { HeaderBackButton, HeaderBackButtonProps } from '@react-navigation/elements'
 import { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 
 import ManualPairingCode from '../features/pairing/ManualPairing'
@@ -20,27 +11,38 @@ import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigator
 import BCSCTabStack from './TabStack'
 import client from '../api/client'
 import { BCDispatchAction, BCState } from '@/store'
+import createHelpHeaderButton from '../components/HelpHeaderButton'
+
+const createHeaderBackButton = (navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.WebView>) => {
+  // Declared so that it has a display name for debugging purposes
+  const HeaderLeft = (props: HeaderBackButtonProps) => {
+    const [, dispatch] = useStore<BCState>()
+    const handleBackPress = () => {
+      // Refresh when leaving webviews in case account / device action was taken within the webview
+      if (client.tokens?.refresh_token) {
+        client.getTokensForRefreshToken(client.tokens?.refresh_token).then((tokenData) => {
+          if (tokenData.bcsc_devices_count !== undefined) {
+            dispatch({
+              type: BCDispatchAction.UPDATE_DEVICE_COUNT,
+              payload: [tokenData.bcsc_devices_count],
+            })
+          }
+        })
+      }
+      navigation.goBack()
+    }
+
+    return <HeaderBackButton {...props} onPress={handleBackPress} />
+  }
+  return HeaderLeft
+}
 
 const MainStack: React.FC = () => {
-  const { t } = useTranslation()
   const { currentStep } = useTour()
-  const [, dispatch] = useStore<BCState>()
   const theme = useTheme()
   const Stack = createStackNavigator<BCSCRootStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
-
-  const headerRight = () => (
-    <IconButton
-      buttonLocation={ButtonLocation.Right}
-      accessibilityLabel={t('Global.Help')}
-      testID={testIdWithKey('Help')}
-      onPress={() => {
-        // TODO: Implement help functionality
-      }}
-      icon={'help-circle-outline'}
-    />
-  )
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -60,7 +62,8 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             headerBackTitleVisible: false,
-            headerRight,
+            // TODO(bm): Add real help URL
+            headerRight: createHelpHeaderButton({ helpUrl: '' }),
           })}
         />
         <Stack.Screen
@@ -70,25 +73,7 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: route.params.title,
             headerBackTestID: testIdWithKey('Back'),
-            headerLeft: (props: HeaderBackButtonProps) => (
-              <HeaderBackButton
-                {...props}
-                onPress={() => {
-                  // Refresh when leaving webviews in case account / device action was taken within the webview
-                  if (client.tokens?.refresh_token) {
-                    client.getTokensForRefreshToken(client.tokens?.refresh_token).then((tokenData) => {
-                      if (tokenData.bcsc_devices_count !== undefined) {
-                        dispatch({
-                          type: BCDispatchAction.UPDATE_DEVICE_COUNT,
-                          payload: [tokenData.bcsc_devices_count],
-                        })
-                      }
-                    })
-                  }
-                  navigation.goBack()
-                }}
-              />
-            ),
+            headerLeft: createHeaderBackButton(navigation),
           })}
         />
         <Stack.Screen
