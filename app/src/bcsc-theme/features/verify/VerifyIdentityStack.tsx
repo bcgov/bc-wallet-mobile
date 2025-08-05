@@ -37,7 +37,7 @@ const VerifyIdentityStack = () => {
         component={SetupStepsScreen}
         options={{
           title: 'Setup Steps',
-          headerRight: HelpHeaderButton,
+          headerRight: () => <HelpHeaderButton helpUrl={''} />,
           headerLeft: () => null,
         }}
       />
@@ -52,12 +52,12 @@ const VerifyIdentityStack = () => {
       <Stack.Screen
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
-        options={{ title: 'Choose How to Verify', headerRight: HelpHeaderButton }}
+        options={{ title: 'Choose How to Verify', headerRight: () => <HelpHeaderButton helpUrl={''} />, }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
-        options={{ headerRight: HelpHeaderButton }}
+        options={{ headerRight: () => <HelpHeaderButton helpUrl={''} />, }}
       />
       <Stack.Screen
         name={BCSCScreens.InformationRequired}
