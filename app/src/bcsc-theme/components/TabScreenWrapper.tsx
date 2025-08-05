@@ -3,12 +3,16 @@ import React, { PropsWithChildren } from 'react'
 import { ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const TabScreenWrapper: React.FC<PropsWithChildren> = ({ children }) => {
+interface TabScreenWrapperProps extends PropsWithChildren {
+  edges?: ('top' | 'left' | 'right' | 'bottom')[]
+}
+
+const TabScreenWrapper: React.FC<TabScreenWrapperProps> = ({ edges = ['top', 'left', 'right' ], children }) => {
   const { ColorPalette } = useTheme()
 
   return (
     <SafeAreaView
-      edges={['top', 'left', 'right']}
+      edges={edges}
       style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>{children}</ScrollView>

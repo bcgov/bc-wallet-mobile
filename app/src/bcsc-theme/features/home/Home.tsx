@@ -30,7 +30,6 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  // Fetch user info and update the user state
   useEffect(() => {
     const asyncEffect = async () => {
       try {
@@ -58,12 +57,16 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     },
   })
 
+  const handleWhereToUsePress = () => {
+    navigation.navigate(BCSCScreens.Services)
+  }
+
   const handlePairingCodePress = () => {
     navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
   }
 
   return (
-    <TabScreenWrapper>
+    <TabScreenWrapper edges={['left', 'right']}>
       {loading ? (
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
@@ -75,7 +78,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
               title={mockFindTitle}
               description={mockFindDescription}
               style={{ marginBottom: Spacing.md }}
-              onPress={() => null}
+              onPress={handleWhereToUsePress}
             />
             <SectionButton title={mockLogInTitle} description={mockLogInDescription} onPress={handlePairingCodePress} />
           </View>

@@ -963,16 +963,6 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun decodePayload(jweString: String, promise: Promise) {
-    promise.reject("E_NOT_IMPLEMENTED", "decodePayload not yet implemented on Android")
-  }
-
-  @ReactMethod
-  override fun createEvidenceRequestJWT(deviceCode: String, clientID: String, promise: Promise) {
-    promise.reject("E_NOT_IMPLEMENTED", "createEvidenceRequestJWT not yet implemented on Android")
-  }
-
-  @ReactMethod
   override fun createQuickLoginJWT(
     accessToken: String,
     clientId: String,

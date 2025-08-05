@@ -1,7 +1,12 @@
 import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
+import { Linking } from 'react-native'
 
-const HelpHeaderButton = () => {
+type HelpHeaderButtonProps = {
+  helpUrl?: string
+}
+
+const HelpHeaderButton = ({ helpUrl }: HelpHeaderButtonProps) => {
   const { t } = useTranslation()
 
   return (
@@ -10,7 +15,7 @@ const HelpHeaderButton = () => {
       icon={'help-circle'}
       accessibilityLabel={t('PersonCredential.HelpLink')}
       testID={testIdWithKey('Help')}
-      onPress={() => null}
+      onPress={() => helpUrl && Linking.openURL(helpUrl)}
     />
   )
 }

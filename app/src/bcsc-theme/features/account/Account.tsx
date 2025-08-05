@@ -1,43 +1,37 @@
-import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useTheme, ThemedText, useStore } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
-import AccountPhoto from './components/AccountPhoto'
-import AccountField from './components/AccountField'
+import client from '@/bcsc-theme/api/client'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
-import { BCState } from '@/store'
-import { BCSCScreens, BCSCRootStackParams } from '@/bcsc-theme/types/navigators'
-import client from '@/bcsc-theme/api/client'
-import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
-import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
-import { JWK } from '@/bcsc-theme/api/hooks/useJwksApi'
-import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
+import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
+import useQuickLoginUrl from '@/bcsc-theme/hooks/useQuickLoginUrl'
+import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCState } from '@/store'
+import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useCallback, useEffect, useState } from 'react'
+import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native'
+import AccountField from './components/AccountField'
+import AccountPhoto from './components/AccountPhoto'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
-
-const mockWarning = `This cannot be used as photo ID, a driver's licence, or a health card.`
 
 const Account: React.FC = () => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
-  const { user, jwks, metadata } = useApi()
+  const { user } = useApi()
   const navigation = useNavigation<AccountNavigationProp>()
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<UserInfoResponseData | null>(null)
   const [pictureUri, setPictureUri] = useState<string>()
-  const [publicKey, setPublicKey] = useState<JWK | null>(null)
-  const [clientMetadata, setClientMetadata] = useState<ClientMetadata[]>([])
-  const deviceCount = 1
+  const url = useQuickLoginUrl('account/')
+
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   useEffect(() => {
     const asyncEffect = async () => {
       try {
         setLoading(true)
-
         const userInfo = await user.getUserInfo()
         let picture = ''
         if (userInfo.picture) {
@@ -45,99 +39,37 @@ const Account: React.FC = () => {
         }
         setUserInfo(userInfo)
         setPictureUri(picture)
-
-        const key = await jwks.getFirstJwk()
-        if (!key) {
-          throw new Error('No JWK found')
-        }
-        setPublicKey(key)
-        const clients = await metadata.getClientMetadata()
-        setClientMetadata(clients)
       } catch (error) {
-        console.error('Error fetching user info, client metadata, or key:', error)
-        // TODO: Handle error appropriately, e.g., show an alert or log it
+        logger.error(`Error fetching user info, client metadata, or key: ${error}`)
       } finally {
         setLoading(false)
       }
     }
 
     asyncEffect()
-  }, [user])
+  }, [user, logger])
 
-  const getLoginHintForEndpoint = async (endpoint: string) => {
-    const { apnsToken, fcmDeviceToken } = await getNotificationTokens()
-    const account = await getAccount()
-
-    if (!account?.clientID || !account?.issuer) {
-      throw new Error('Account information is missing or incomplete')
-    }
-
-    if (!client.tokens?.access_token) {
-      throw new Error('Access token is missing')
-    }
-
-    const uri = `${client.baseURL}/${endpoint}`
-    console.log('uri:', uri)
-    const validClients = clientMetadata.filter(c => c.client_uri === uri)
-    console.log('validClients:', validClients)
-    const clientRefId = clientMetadata.filter(c => c.client_uri === uri)[0].client_ref_id
-
-    console.log('Creating JWT with:')
-    console.log('- clientID:', account.clientID)
-    console.log('- issuer:', account.issuer)
-    console.log('- clientRefId:', clientRefId)
-    console.log('- access_token length:', client.tokens.access_token.length)
-    console.log('- fcmDeviceToken length:', fcmDeviceToken.length)
-    console.log('- apnsToken:', apnsToken ? `${apnsToken.length} chars` : 'null')
-    console.log('- key:', publicKey)
-
-    if (!publicKey) {
-      throw new Error('No JWK available for encryption')
-    }
-
-    const hint = await createQuickLoginJWT(
-      client.tokens.access_token,
-      account.clientID,
-      account.issuer,
-      clientRefId,
-      publicKey,
-      fcmDeviceToken,
-      apnsToken
-    )
-    
-    return hint
-  }
-
-  const handleMyDevicesPress = async () => {
+  const handleMyDevicesPress = useCallback(async () => {
     try {
       const fullUrl = `${client.baseURL}/account/embedded/devices`
-      console.log('Full URL length:', fullUrl.length)
-      console.log('Full URL:', fullUrl)
-
-      navigation.navigate(BCSCScreens.AccountWebView, {
+      navigation.navigate(BCSCScreens.WebView, {
         url: fullUrl,
+        title: 'Manage Devices',
       })
     } catch (error) {
-      console.error('Error creating login hint for My Devices:', error)
+      logger.error(`Error navigating to My Devices webview: ${error}`)
     }
-  }
+  }, [navigation, logger])
 
-  const handleAllAccountDetailsPress = async () => {
+  const handleAllAccountDetailsPress = useCallback(async () => {
     try {
-      const loginHint = await getLoginHintForEndpoint('account/')
-      const encodedHint = encodeURIComponent(loginHint)
-
-      const fullUrl = `${client.baseURL}/login/initiate?login_hint=${encodedHint}`
-      console.log('Full URL length:', fullUrl.length)
-      console.log('Full URL:', fullUrl)
-
-      navigation.navigate(BCSCScreens.AccountWebView, {
-        url: fullUrl,
-      })
+      if (url) {
+        await Linking.openURL(url)
+      }
     } catch (error) {
-      console.error('Error creating login hint for All Account Details:', error)
+      logger.error(`Error opening All Account Details: ${error}`)
     }
-  }
+  }, [url, logger])
 
   const styles = StyleSheet.create({
     container: {
@@ -174,7 +106,9 @@ const Account: React.FC = () => {
               {userInfo?.family_name}, {userInfo?.given_name}
             </ThemedText>
           </View>
-          <ThemedText style={styles.warning}>{mockWarning}</ThemedText>
+          <ThemedText
+            style={styles.warning}
+          >{`This cannot be used as photo ID, a driver's licence, or a health card.`}</ThemedText>
           <AccountField label={'App expiry date'} value={userInfo?.card_expiry ?? ''} />
           <AccountField label={'Account type'} value={userInfo?.card_type ?? ''} />
           <AccountField label={'Address'} value={userInfo?.address?.formatted ?? ''} />
@@ -182,7 +116,8 @@ const Account: React.FC = () => {
           <AccountField label={'Email address'} value={store.bcsc.email ?? ''} />
 
           <View style={styles.buttonsContainer}>
-            <SectionButton onPress={handleMyDevicesPress} title={`My devices (${deviceCount})`} />
+            {/* TODO (bm): Add device count to the button title */}
+            <SectionButton onPress={handleMyDevicesPress} title={`My devices`} />
             <SectionButton
               onPress={handleAllAccountDetailsPress}
               title="All account details"
