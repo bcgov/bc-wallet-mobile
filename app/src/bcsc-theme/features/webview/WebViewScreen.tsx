@@ -17,19 +17,25 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
   const { url } = route.params
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const handleError = useCallback((syntheticEvent: WebViewErrorEvent) => {
-    const { nativeEvent } = syntheticEvent
-    logger.error('WebView Error:', nativeEvent)
-  }, [logger])
+  const handleError = useCallback(
+    (syntheticEvent: WebViewErrorEvent) => {
+      const { nativeEvent } = syntheticEvent
+      logger.error('WebView Error:', nativeEvent)
+    },
+    [logger]
+  )
 
-  const handleHttpError = useCallback((syntheticEvent: WebViewHttpErrorEvent) => {
-    const { nativeEvent } = syntheticEvent
-    logger.error('WebView HTTP Error:', {
-      url: nativeEvent.url,
-      statusCode: nativeEvent.statusCode,
-      description: nativeEvent.description
-    })
-  }, [logger])
+  const handleHttpError = useCallback(
+    (syntheticEvent: WebViewHttpErrorEvent) => {
+      const { nativeEvent } = syntheticEvent
+      logger.error('WebView HTTP Error:', {
+        url: nativeEvent.url,
+        statusCode: nativeEvent.statusCode,
+        description: nativeEvent.description,
+      })
+    },
+    [logger]
+  )
 
   const styles = StyleSheet.create({
     container: {
@@ -44,7 +50,7 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <WebView
-        source={{ uri: url, headers: { 'Authorization': `Bearer ${client.tokens?.access_token}` } }}
+        source={{ uri: url, headers: { Authorization: `Bearer ${client.tokens?.access_token}` } }}
         style={styles.webview}
         startInLoadingState={true}
         javaScriptEnabled={true}

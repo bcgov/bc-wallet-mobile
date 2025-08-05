@@ -7,14 +7,11 @@ interface TabScreenWrapperProps extends PropsWithChildren {
   edges?: ('top' | 'left' | 'right' | 'bottom')[]
 }
 
-const TabScreenWrapper: React.FC<TabScreenWrapperProps> = ({ edges = ['top', 'left', 'right' ], children }) => {
+const TabScreenWrapper: React.FC<TabScreenWrapperProps> = ({ edges = ['top', 'left', 'right'], children }) => {
   const { ColorPalette } = useTheme()
 
   return (
-    <SafeAreaView
-      edges={edges}
-      style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}
-    >
+    <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>{children}</ScrollView>
     </SafeAreaView>
   )

@@ -46,7 +46,7 @@ export type BCSCTabStackParams = {
 
 export type BCSCRootStackParams = {
   [BCSCStacks.TabStack]: NavigatorScreenParams<BCSCTabStackParams>
-  [BCSCScreens.WebView]: { url: string, title: string }
+  [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
 }

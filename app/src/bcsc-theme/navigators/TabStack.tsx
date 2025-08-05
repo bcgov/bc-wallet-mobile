@@ -85,7 +85,7 @@ const BCSCTabStack: React.FC = () => {
             title: '',
             headerShown: true,
             headerLeft: () => null,
-            headerRight: () => <HelpHeaderButton helpUrl={''} />
+            headerRight: () => <HelpHeaderButton helpUrl={''} />,
           }}
         />
         <Tab.Screen

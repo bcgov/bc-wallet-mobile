@@ -16,7 +16,9 @@ export type JWKResponseData = {
 
 const useJwksApi = () => {
   const getJwks = useCallback(async (): Promise<Keys> => {
-    const { data: { keys } } = await apiClient.get<JWKResponseData>(apiClient.endpoints.jwksURI)
+    const {
+      data: { keys },
+    } = await apiClient.get<JWKResponseData>(apiClient.endpoints.jwksURI)
     return keys
   }, [])
 
@@ -30,7 +32,7 @@ const useJwksApi = () => {
       getJwks,
       getFirstJwk,
     }),
-    [getJwks, getFirstJwk],
+    [getJwks, getFirstJwk]
   )
 }
 
