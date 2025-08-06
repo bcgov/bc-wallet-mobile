@@ -54,7 +54,6 @@ class BCSCService {
         'Content-Type': 'application/json',
       },
     })
-
     // Default test environment for endpoints
     this.endpoints = {
       pairDeviceWithQRCodeSupported: true,
@@ -86,7 +85,8 @@ class BCSCService {
     this.client.interceptors.response.use(undefined, (error: AxiosError) => {
       this.logger.error(`${error.name}: ${error.code}`, {
         message: `IAS API Error: ${error.message}`,
-        error: error.response?.data,
+        data: error.response?.data,
+        headers: error.response?.headers,
       })
       return Promise.reject(error)
     })
