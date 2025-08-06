@@ -55,14 +55,18 @@ react {
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
 // Fix for react-native-vector-icons task dependency issue
-// Ensure copyReactNativeVectorIconFonts runs before tasks that depend on it
 afterEvaluate {
     def copyFontsTask = tasks.findByName('copyReactNativeVectorIconFonts')
-    if (copyFontsTask != null) {
-        tasks.whenTaskAdded { task ->
-            if (task.name.contains('Release') && (task.name.contains('mergeResources') || task.name.contains('processResources') || task.name.contains('Lint'))) {
-                task.dependsOn copyFontsTask
-            }
+    def lintTask = tasks.findByName('generateReleaseLintVitalReportModel')
+    
+    if (copyFontsTask != null && lintTask != null) {
+        lintTask.dependsOn copyFontsTask
+    }
+    
+    // Also fix other potential lint tasks that might have the same issue
+    tasks.withType(com.android.build.gradle.internal.lint.LintModelWriterTask) { task ->
+        if (copyFontsTask != null) {
+            task.dependsOn copyFontsTask
         }
     }
 }
