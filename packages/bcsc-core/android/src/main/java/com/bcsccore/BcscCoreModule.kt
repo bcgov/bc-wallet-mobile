@@ -975,6 +975,35 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   ) {
     promise.reject("E_NOT_IMPLEMENTED", "createQuickLoginJWT not yet implemented on Android")
   }
+
+  @ReactMethod
+  override fun clearKeychain(promise: Promise) {
+    promise.reject("E_NOT_IMPLEMENTED", "clearKeychain not yet implemented on Android")
+  }
+
+  @ReactMethod
+  override fun generateKeyPair(promise: Promise) {
+    promise.reject("E_NOT_IMPLEMENTED", "generateKeyPair not yet implemented on Android")
+  }
+
+  @ReactMethod
+  override fun createClientAssertionJWT(
+    audience: String,
+    issuer: String,
+    subject: String,
+    additionalClaims: ReadableMap?,
+    promise: Promise
+  ) {
+    promise.reject("E_NOT_IMPLEMENTED", "createClientAssertionJWT not yet implemented on Android")
+  }
+
+  @ReactMethod
+  override fun signJWT(
+    payload: ReadableMap,
+    promise: Promise
+  ) {
+    promise.reject("E_NOT_IMPLEMENTED", "signJWT not yet implemented on Android")
+  }
   
   // MARK: - Account management methods
   /**

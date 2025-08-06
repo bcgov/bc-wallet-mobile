@@ -19,6 +19,8 @@ const useAuthorizationApi = () => {
         card_serial_number: serial,
         birth_date: birthdate.toISOString().split('T')[0],
         scope: 'openid profile address offline_access',
+        // optionally take id_token_hint
+        id_token_hint: id_token_hint || undefined,
       }
       apiClient.logger.info(`Registration body: ${JSON.stringify(body, null, 2)}`)
       const { data } = await apiClient.post<VerifyInPersonResponseData>(apiClient.endpoints.deviceAuthorization, body, {

@@ -10,10 +10,11 @@ import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { StackNavigationProp } from '@react-navigation/stack'
-import { BCState, BCDispatchAction } from '@/store'
+import { BCState, BCDispatchAction, Address } from '@/store'
 
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import Form, { FormField } from '@/components/Form'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 
 type UpdateAddressScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.UpdateAddressScreen>
@@ -21,16 +22,17 @@ type UpdateAddressScreenProps = {
 
 const UpdateAddressScreen: React.FC<UpdateAddressScreenProps> = () => {
   const { t } = useTranslation()
-  const { ColorPallet, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { authorization } = useApi()
   
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      backgroundColor: ColorPallet.brand.primaryBackground,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
       flex: 1,
@@ -67,17 +69,10 @@ const UpdateAddressScreen: React.FC<UpdateAddressScreenProps> = () => {
         required: t('Form.RequiredField', 'This field is required'),
       },
     },
+    // this should be a dropdown in the future
     {
       name: 'province',
       label: t('Unified.Address.Province', 'Province'),
-      type: 'text',
-      validation: {
-        required: t('Form.RequiredField', 'This field is required'),
-      },
-    },
-    {
-      name: 'country',
-      label: t('Unified.Address.Country', 'Country'),
       type: 'text',
       validation: {
         required: t('Form.RequiredField', 'This field is required'),
@@ -104,22 +99,53 @@ const UpdateAddressScreen: React.FC<UpdateAddressScreenProps> = () => {
   const formDefaults = {
     // for non bcsc card flows, when these values are not in the store the defaults should auto populate
     // from a contact card on ios or from the equivalent on android
-    streetLine1: store.bcsc?.address.streetLine1 || '',
-    streetLine2: store.bcsc?.address.streetLine2 || '',
-    city: store.bcsc?.address.city || '',
-    province: store.bcsc?.address.province || '',
-    country: store.bcsc?.address.country || '',
-    postalCode: store.bcsc?.address.postalCode || '',
+    streetLine1: store.bcsc?.address?.street_address || '',
+    streetLine2: '', // split at newline if there is one
+    city: store.bcsc?.address?.locality || '',
+    province: store.bcsc?.address?.region || '',
+    postalCode: store.bcsc?.address?.postal_code || '',
   }
 
-  console.log(store.bcsc.address)
+  logger.info(`Current address in store: ${JSON.stringify(store.bcsc.address, null, 2)}`)
+
+  const formatAddress = (address: Record<string, string>): Address => {
+    //convert address from form to openid format
+    return {
+      street_address: `${address.streetLine1}${address?.streetLine2 ? '\n' + address.streetLine2 : ''}`,
+      locality: address.city,
+      region: address.province,
+      postal_code: address.postalCode,
+      country: 'CA' //only accepts CA
+    }
+  }
 
   const onSubmit = async (data: Record<string, any>) => {
+    const formattedAddress = formatAddress(data)
     try {
-      dispatch( { type : BCDispatchAction.UPDATE_ADDRESS, payload: [data] })
+      dispatch({ type: BCDispatchAction.UPDATE_ADDRESS, payload: [formattedAddress] })
+      
+      const audience = 'https://idsit.gov.bc.ca/device/' // This should come from config
+      
+    //   const id_token_hint = await jwt.createAddressJWT(audience, {
+    //     familyName: 'SURNAMESON', 
+    //     birthdate: '2000-01-01', 
+    //     address: formattedAddress,
+    //     givenName: 'GIVENONEY', 
+    //     gender: 'unknown' // all needs to come from user info ^
+    //   })
+
+      const id_token_hint = 'this is a placeholder'
+
+      logger.info(`JWT: ${id_token_hint}`)
+
+      // hardcoded values for now
+      const response = await authorization.authorizeDevice('C75102720', new Date('2000-01-01'), id_token_hint)
+      logger.info(`Self-attestation successful: ${JSON.stringify(response, null, 2)}`)
+      
       // navigation.navigate(BCSCScreens.NextScreen)
     } catch (error) {
-      logger.error(`Error updating address: ${error}`)
+    //   logger.error(`Error updating address: ${JSON.stringify(error, null, 2)}`)
+        console.error(error)
     }
   }
 

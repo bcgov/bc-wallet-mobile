@@ -48,7 +48,7 @@ const Form: React.FC<FormProps> = ({
         defaultValues,
         mode: 'onChange'
     })
-    const { ColorPallet, Spacing } = useTheme()
+    const { ColorPalette, Spacing } = useTheme()
 
     const styles = StyleSheet.create({
         container: {
@@ -59,7 +59,7 @@ const Form: React.FC<FormProps> = ({
             marginBottom: Spacing.md,
         },
         errorText: {
-            color: ColorPallet.semantic.error,
+            color: ColorPalette.semantic.error,
             marginTop: Spacing.xs,
         },
         submitButton: {
