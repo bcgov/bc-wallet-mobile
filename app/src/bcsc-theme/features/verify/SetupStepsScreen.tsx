@@ -142,21 +142,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           </ThemedText>
         </View>
       </TouchableOpacity>
-      {registered && store.bcsc.cardType === BCSCCardType.NonPhoto && (
-        <TouchableOpacity
-          onPress={() => navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)}
-          style={[
-            styles.step,
-            { backgroundColor: registered ? ColorPalette.brand.secondaryBackground : ColorPalette.brand.primary },
-          ]}
-        >
-          <View>
-            <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPalette.brand.text }}>
-              {'Additional identification required for non-photo BC Services Card.'}
-            </ThemedText>
-          </View>
-        </TouchableOpacity>
-      )}
       <View style={styles.itemSeparator} />
       <TouchableOpacity
         testID={testIdWithKey('Step2')}

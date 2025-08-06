@@ -68,7 +68,7 @@ export interface EvidenceType {
   group: 'BRITISH COLUMBIA' | 'CANADA, OR OTHER LOCATION IN CANADA' | 'UNITED STATES' | 'OTHER COUNTRIES'
   group_sort_order: number
   sort_order: number
-  collection_form: 'FIRST' | 'SECOND' | 'BOTH'
+  collection_order: 'FIRST' | 'SECOND' | 'BOTH'
   document_reference_input_mask: string // a regex mask for ID document reference input, number only can indicate to use a number only keyboard
   document_reference_label: string
   document_reference_sample: string

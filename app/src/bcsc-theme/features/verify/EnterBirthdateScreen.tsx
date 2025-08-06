@@ -21,6 +21,7 @@ import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type EnterBirthdateScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EnterBirthdate>
@@ -77,12 +78,17 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [user_code] })
       dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
 
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: BCSCScreens.SetupSteps }],
-        })
-      )
+      // TODO: (al) navigation here will need to change when the Other card type is selected (non-photo non bc card)
+      if (store.bcsc.cardType === BCSCCardType.NonPhoto) {
+        navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
+      } else {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCScreens.SetupSteps }],
+          })
+        )
+      }
     } catch (error) {
       logger.error(`Error during BCSC verification: ${error}`)
       navigation.navigate(BCSCScreens.MismatchedSerial)

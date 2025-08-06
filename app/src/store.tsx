@@ -9,6 +9,7 @@ import {
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
 import {
+  EvidenceType,
   VerificationPhotoUploadPayload,
   VerificationPrompt,
   VerificationVideoUploadPayload,
@@ -60,6 +61,7 @@ export interface BCSCState {
   verificationRequestId?: string
   verificationRequestSha?: string
   evidenceMetadata: PhotoMetadata[]
+  evidenceTypes: EvidenceType[]
 }
 
 export enum Mode {
@@ -107,6 +109,7 @@ enum BCSCDispatchAction {
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
   UPDATE_EVIDENCE_PATHS = 'bcsc/updateEvidencePaths',
+  ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
 }
 
 enum ModeDispatchAction {
@@ -182,6 +185,7 @@ const bcscState: BCSCState = {
   verificationRequestId: undefined,
   verificationRequestSha: undefined,
   evidenceMetadata: [],
+  evidenceTypes: [],
 }
 
 export enum BCLocalStorageKeys {
@@ -397,6 +401,18 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = {
         ...state.bcsc,
         evidenceMetadata: evidence,
+      }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.ADD_EVIDENCE_TYPE: {
+      const evidenceType = (action?.payload || []).pop() ?? undefined
+      const bcsc = {
+        ...state.bcsc,
+        evidenceTypes: [...(state.bcsc.evidenceTypes || []), evidenceType],
       }
       const newState = { ...state, bcsc }
 

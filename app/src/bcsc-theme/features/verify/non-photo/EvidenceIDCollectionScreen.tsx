@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { Button, ButtonType, Text, ThemedText, useStore, useTheme } from '@bifold/core'
 import { TextInput, View } from 'react-native'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import RNFS from 'react-native-fs'
 import { Buffer } from 'buffer'
@@ -25,6 +25,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [currentDocumentNumber, setCurrentDocumentNumber] = useState('')
 
   const handleOnContinue = async () => {
+    // This just needs to store the document number with the evidence metadata, right?
+    // if the evidenceType selected is FIRST, then it needs to navigate back to the evidence type list screen
+    // if there are TWO evidenceTypes selected and satisfy FIRST AND SECOND, then navigate back to steps
+    // if the evidenceType selected is BOTH, then it needs navigate back to the setup steps
     if (store.bcsc.evidenceMetadata) {
       const evidenceMetadata = store.bcsc.evidenceMetadata
 
