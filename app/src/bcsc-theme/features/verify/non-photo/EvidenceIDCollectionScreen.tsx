@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { Button, ButtonType, Text, ThemedText, useStore, useTheme } from '@bifold/core'
 import { TextInput, View } from 'react-native'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import RNFS from 'react-native-fs'
 import { Buffer } from 'buffer'
@@ -17,68 +17,70 @@ type EvidenceIDCollectionScreenProps = {
 }
 
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
-  const [store] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const { Inputs } = useTheme()
-  const { evidence } = useApi()
   const { cardType } = route.params
 
   const [currentDocumentNumber, setCurrentDocumentNumber] = useState('')
 
   const handleOnContinue = async () => {
-    // This just needs to store the document number with the evidence metadata, right?
-    // if the evidenceType selected is FIRST, then it needs to navigate back to the evidence type list screen
-    // if there are TWO evidenceTypes selected and satisfy FIRST AND SECOND, then navigate back to steps
-    // if the evidenceType selected is BOTH, then it needs navigate back to the setup steps
-    if (store.bcsc.evidenceMetadata) {
-      const evidenceMetadata = store.bcsc.evidenceMetadata
+    dispatch({
+      type: BCDispatchAction.UPDATE_EVIDENCE_DOCUMENT_NUMBER,
+      payload: [{ evidenceType: route.params.cardType, documentNumber: currentDocumentNumber }],
+    })
+    //TODO: (al) this all needs to be moved into the video verify steps...
+    // if (store.bcsc.additionalEvidenceData.length > 0) {
+    //   const evidenceMetadata = store.bcsc.evidenceMetadata
 
-      const response = await evidence.sendEvidenceMetadata({
-        type: cardType.evidence_type,
-        number: currentDocumentNumber,
-        // remove file_path from metadata before sending
-        images: evidenceMetadata.map(({ file_path, ...metadata }) => ({ ...metadata })),
+    //   // this stuff needs to be moved into the video verify steps...
+    //   // so we will need, the evidence metadata, the document ID and the path to the images
+    //   const response = await evidence.sendEvidenceMetadata({
+    //     type: cardType.evidence_type,
+    //     number: currentDocumentNumber,
+    //     // remove file_path from metadata before sending
+    //     images: evidenceMetadata.map(({ file_path, ...metadata }) => ({ ...metadata })),
+    //   })
+
+    //   // Create upload promises for each image
+    //   const uploadPromises = evidenceMetadata.map(async (metadata) => {
+    //     const foundItem = response.find((item) => item.label === metadata.label)
+    //     if (!foundItem) {
+    //       throw new Error(`No upload URL found for ${metadata.label}`)
+    //     }
+
+    //     try {
+    //       // Read the image file into bytes
+    //       const base64Data = await RNFS.readFile(metadata.file_path, 'base64')
+    //       const imageBytes = Buffer.from(base64Data, 'base64')
+
+    //       // Upload the image to the provided URL
+    //       await evidence.uploadPhotoEvidenceBinary(foundItem.upload_uri, imageBytes)
+
+    //       return {
+    //         label: metadata.label,
+    //         success: true,
+    //       }
+    //     } catch (error) {
+    //       console.error(`Failed to upload ${metadata.label}:`, error)
+    //       return {
+    //         label: metadata.label,
+    //         success: false,
+    //         error,
+    //       }
+    //     }
+    //   })
+
+    //   // Wait for all uploads to complete
+    //   await Promise.all(uploadPromises)
+
+    //   // if the promises don't throw an error, we can assume the upload was successful
+    // }
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EvidenceTypeList }],
       })
-
-      // Create upload promises for each image
-      const uploadPromises = evidenceMetadata.map(async (metadata) => {
-        const foundItem = response.find((item) => item.label === metadata.label)
-        if (!foundItem) {
-          throw new Error(`No upload URL found for ${metadata.label}`)
-        }
-
-        try {
-          // Read the image file into bytes
-          const base64Data = await RNFS.readFile(metadata.file_path, 'base64')
-          const imageBytes = Buffer.from(base64Data, 'base64')
-
-          // Upload the image to the provided URL
-          await evidence.uploadPhotoEvidenceBinary(foundItem.upload_uri, imageBytes)
-
-          return {
-            label: metadata.label,
-            success: true,
-          }
-        } catch (error) {
-          console.error(`Failed to upload ${metadata.label}:`, error)
-          return {
-            label: metadata.label,
-            success: false,
-            error,
-          }
-        }
-      })
-
-      // Wait for all uploads to complete
-      await Promise.all(uploadPromises)
-
-      // if the promises don't throw an error, we can assume the upload was successful
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: BCSCScreens.SetupSteps }],
-        })
-      )
-    }
+    )
   }
 
   return (

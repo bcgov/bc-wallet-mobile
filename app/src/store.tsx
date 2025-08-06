@@ -60,8 +60,13 @@ export interface BCSCState {
   bookmarks: string[]
   verificationRequestId?: string
   verificationRequestSha?: string
-  evidenceMetadata: PhotoMetadata[]
-  evidenceTypes: EvidenceType[]
+  additionalEvidenceData: AdditionalEvidenceData[]
+}
+
+export interface AdditionalEvidenceData {
+  evidenceType: EvidenceType
+  metadata: PhotoMetadata[]
+  documentNumber: string
 }
 
 export enum Mode {
@@ -108,8 +113,10 @@ enum BCSCDispatchAction {
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
-  UPDATE_EVIDENCE_PATHS = 'bcsc/updateEvidencePaths',
   ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
+  UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
+  UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
+  CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
 }
 
 enum ModeDispatchAction {
@@ -184,8 +191,7 @@ const bcscState: BCSCState = {
   refreshToken: undefined,
   verificationRequestId: undefined,
   verificationRequestSha: undefined,
-  evidenceMetadata: [],
-  evidenceTypes: [],
+  additionalEvidenceData: [],
 }
 
 export enum BCLocalStorageKeys {
@@ -396,28 +402,54 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
-    case BCSCDispatchAction.UPDATE_EVIDENCE_PATHS: {
-      const evidence = (action?.payload || []).pop() ?? undefined
+    case BCSCDispatchAction.ADD_EVIDENCE_TYPE: {
+      const evidenceType: EvidenceType = (action?.payload || []).pop()
+      const newEvidenceData: AdditionalEvidenceData = {
+        evidenceType,
+        metadata: [],
+        documentNumber: '',
+      }
       const bcsc = {
         ...state.bcsc,
-        evidenceMetadata: evidence,
+        additionalEvidenceData: [...state.bcsc.additionalEvidenceData, newEvidenceData],
       }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
       return newState
     }
-    case BCSCDispatchAction.ADD_EVIDENCE_TYPE: {
-      const evidenceType = (action?.payload || []).pop() ?? undefined
-      const bcsc = {
-        ...state.bcsc,
-        evidenceTypes: [...(state.bcsc.evidenceTypes || []), evidenceType],
-      }
+
+    case BCSCDispatchAction.UPDATE_EVIDENCE_METADATA: {
+      const { evidenceType, metadata }: { evidenceType: EvidenceType; metadata: PhotoMetadata[] } =
+        (action?.payload || []).pop() ?? {}
+
+      const updatedEvidenceData = state.bcsc.additionalEvidenceData.map((item) =>
+        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, metadata } : item
+      )
+
+      const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
 
+    case BCSCDispatchAction.UPDATE_EVIDENCE_DOCUMENT_NUMBER: {
+      const { evidenceType, documentNumber }: { evidenceType: EvidenceType; documentNumber: string } =
+        (action?.payload || []).pop() ?? {}
+
+      const updatedEvidenceData = state.bcsc.additionalEvidenceData.map((item) =>
+        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, documentNumber } : item
+      )
+
+      const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.CLEAR_ADDITIONAL_EVIDENCE: {
+      const bcsc = { ...state.bcsc, additionalEvidenceData: [] }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     default:

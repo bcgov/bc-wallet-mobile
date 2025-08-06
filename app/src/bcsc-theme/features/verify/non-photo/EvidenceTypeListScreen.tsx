@@ -63,29 +63,24 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     // filter data based on the selected card type (process)
 
     if (data) {
-      const cards: Record<string, EvidenceType[]> = {}
+      let cards: Record<string, EvidenceType[]> = {}
       const selectedProcess =
         store.bcsc.cardType === BCSCCardType.NonPhoto ? BCSCCardProcess.BCSCNonPhoto : BCSCCardProcess.NonBCSC
-      data.processes.forEach((process) => {
+      data.processes.forEach((p) => {
         // only show card that matches the selected process
-        if (process.process === selectedProcess) {
-          process.evidence_types.forEach((evidenceType) => {
-            if (store.bcsc.evidenceTypes.length > 0) {
-              if (evidenceType.collection_order === 'BOTH' || evidenceType.collection_order === 'SECOND') {
-                if (!cards[evidenceType.group]) {
-                  cards[evidenceType.group] = [evidenceType]
-                } else {
-                  cards[evidenceType.group].push(evidenceType)
-                }
-              }
-            } else {
-              if (evidenceType.collection_order === 'BOTH' || evidenceType.collection_order === 'FIRST') {
-                if (!cards[evidenceType.group]) {
-                  cards[evidenceType.group] = [evidenceType]
-                } else {
-                  cards[evidenceType.group].push(evidenceType)
-                }
-              }
+        if (p.process === selectedProcess) {
+          // for each evidence EvidenceTypeList
+          p.evidence_types.forEach((e) => {
+            if (
+              store.bcsc.additionalEvidenceData.length > 0 &&
+              (e.collection_order === 'BOTH' || e.collection_order === 'SECOND')
+            ) {
+              cards = addToEvidenceDictionary(cards, e)
+            } else if (
+              store.bcsc.additionalEvidenceData.length === 0 &&
+              (e.collection_order === 'BOTH' || e.collection_order === 'FIRST')
+            ) {
+              cards = addToEvidenceDictionary(cards, e)
             }
           })
         }
@@ -102,13 +97,22 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     }
   }, [data])
 
+  const addToEvidenceDictionary = (cards: Record<string, EvidenceType[]>, e: EvidenceType) => {
+    if (!cards[e.group]) {
+      cards[e.group] = [e]
+    } else {
+      cards[e.group].push(e)
+    }
+    return cards
+  }
+
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
   }
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      {store.bcsc.evidenceTypes.length > 0 ? (
+      {store.bcsc.additionalEvidenceData.length > 0 ? (
         <View style={{ marginBottom: Spacing.lg }}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
             Choose photo ID
@@ -141,7 +145,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
               // navigate to the next screen with the correct data
               dispatch({
                 type: BCDispatchAction.ADD_EVIDENCE_TYPE,
-                payload: [data.item],
+                payload: [{ evidenceType: data.item as EvidenceType }],
               })
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
             }}

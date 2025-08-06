@@ -297,6 +297,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [undefined] })
             dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [undefined] })
             dispatch({ type: BCDispatchAction.UPDATE_EVIDENCE_PATHS, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.ADD_EVIDENCE_TYPE, payload: [undefined] })
           }}
           testID={testIdWithKey('ResetData')}
           accessibilityLabel={'Reset data'}
