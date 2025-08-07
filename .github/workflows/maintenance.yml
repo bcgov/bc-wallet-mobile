@@ -22,7 +22,7 @@ jobs:
           days-before-stale: 270 # 9 months
           days-before-close: 30 # 1 month
           stale-issue-label: stale
-          exempt-issue-labels: help wanted
+          exempt-issue-labels: help wanted,external-dependency
           exempt-pr-labels: dependencies
           stale-issue-message: >
             This issue has been inactive for a while, so it's
