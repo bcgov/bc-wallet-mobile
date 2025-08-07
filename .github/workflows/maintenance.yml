@@ -23,7 +23,7 @@ jobs:
           days-before-close: 30 # 1 month
           stale-issue-label: stale
           exempt-issue-labels: help wanted
-          exempt-pr-labels: external-dependency
+          exempt-pr-labels: dependencies
           stale-issue-message: >
             This issue has been inactive for a while, so it's
             been marked as "stale." If you're still working on

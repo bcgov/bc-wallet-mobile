@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react'
 import { getDynamicClientRegistrationBody, setAccount, AccountSecurityMethod, getAccount } from 'react-native-bcsc-core'
 
 import apiClient from '../client'
@@ -37,7 +38,7 @@ export interface RegistrationResponseData {
 }
 
 const useRegistrationApi = () => {
-  const register = async () => {
+  const register = useCallback(async () => {
     const account = await getAccount()
     // If an account already exists, we don't need to register again
     if (account) return
@@ -46,6 +47,7 @@ const useRegistrationApi = () => {
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
     const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
       headers: { 'Content-Type': 'application/json' },
+      skipBearerAuth: true,
     })
     await setAccount({
       clientID: data.client_id,
@@ -53,9 +55,9 @@ const useRegistrationApi = () => {
       securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
     })
     return data
-  }
+  }, [])
 
-  const updateRegistration = async (clientId: string) => {
+  const updateRegistration = useCallback(async (clientId: string) => {
     const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
     const { data } = await apiClient.put<RegistrationResponseData>(
@@ -64,19 +66,22 @@ const useRegistrationApi = () => {
       { headers: { 'Content-Type': 'application/json' } }
     )
     return data
-  }
+  }, [])
 
-  const deleteRegistration = async (clientId: string) => {
+  const deleteRegistration = useCallback(async (clientId: string) => {
     const { status } = await apiClient.delete(`${apiClient.endpoints.registration}/${clientId}`)
     // 200 level status codes indicate success
     return { success: status > 199 && status < 300 }
-  }
+  }, [])
 
-  return {
-    register,
-    updateRegistration,
-    deleteRegistration,
-  }
+  return useMemo(
+    () => ({
+      register,
+      updateRegistration,
+      deleteRegistration,
+    }),
+    [register, updateRegistration, deleteRegistration]
+  )
 }
 
 export default useRegistrationApi
