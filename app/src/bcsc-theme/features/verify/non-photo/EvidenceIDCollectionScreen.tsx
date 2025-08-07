@@ -17,7 +17,7 @@ type EvidenceIDCollectionScreenProps = {
 }
 
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const { Inputs } = useTheme()
   const { cardType } = route.params
 
@@ -28,59 +28,28 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       type: BCDispatchAction.UPDATE_EVIDENCE_DOCUMENT_NUMBER,
       payload: [{ evidenceType: route.params.cardType, documentNumber: currentDocumentNumber }],
     })
-    //TODO: (al) this all needs to be moved into the video verify steps...
-    // if (store.bcsc.additionalEvidenceData.length > 0) {
-    //   const evidenceMetadata = store.bcsc.evidenceMetadata
 
-    //   // this stuff needs to be moved into the video verify steps...
-    //   // so we will need, the evidence metadata, the document ID and the path to the images
-    //   const response = await evidence.sendEvidenceMetadata({
-    //     type: cardType.evidence_type,
-    //     number: currentDocumentNumber,
-    //     // remove file_path from metadata before sending
-    //     images: evidenceMetadata.map(({ file_path, ...metadata }) => ({ ...metadata })),
-    //   })
+    const hasPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => {
+      return item.evidenceType.has_photo
+    })
 
-    //   // Create upload promises for each image
-    //   const uploadPromises = evidenceMetadata.map(async (metadata) => {
-    //     const foundItem = response.find((item) => item.label === metadata.label)
-    //     if (!foundItem) {
-    //       throw new Error(`No upload URL found for ${metadata.label}`)
-    //     }
-
-    //     try {
-    //       // Read the image file into bytes
-    //       const base64Data = await RNFS.readFile(metadata.file_path, 'base64')
-    //       const imageBytes = Buffer.from(base64Data, 'base64')
-
-    //       // Upload the image to the provided URL
-    //       await evidence.uploadPhotoEvidenceBinary(foundItem.upload_uri, imageBytes)
-
-    //       return {
-    //         label: metadata.label,
-    //         success: true,
-    //       }
-    //     } catch (error) {
-    //       console.error(`Failed to upload ${metadata.label}:`, error)
-    //       return {
-    //         label: metadata.label,
-    //         success: false,
-    //         error,
-    //       }
-    //     }
-    //   })
-
-    //   // Wait for all uploads to complete
-    //   await Promise.all(uploadPromises)
-
-    //   // if the promises don't throw an error, we can assume the upload was successful
-    // }
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 1,
-        routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EvidenceTypeList }],
-      })
-    )
+    if (hasPhotoEvidence) {
+      // we have photo evidence available, take the user back to the setup steps
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.SetupSteps }],
+        })
+      )
+    } else {
+      // if no photo evidence is required, navigate back to the evidence list screen
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 1,
+          routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EvidenceTypeList }],
+        })
+      )
+    }
   }
 
   return (

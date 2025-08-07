@@ -50,21 +50,61 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       const videoBase64 = await RNFS.readFile(store.bcsc.videoPath!, 'base64')
       const videoBytes = new Uint8Array(Buffer.from(videoBase64, 'base64'))
 
-      // Send photo and video metadata to API
+      // Process additional evidence data
+      const additionalEvidence = store.bcsc.additionalEvidenceData
+      const evidenceUploadPromises: Promise<any>[] = []
+      const evidenceUploadUris: string[] = []
+
+      // Process each piece of additional evidence
+      for (const evidenceItem of additionalEvidence) {
+        // Upload metadata for each evidence type to get upload URIs
+        const metadataPayload = {
+          type: evidenceItem.evidenceType.evidence_type,
+          number: evidenceItem.documentNumber,
+          images: evidenceItem.metadata.map(({ file_path, ...metadata }) => metadata),
+        }
+
+        const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)
+
+        // For each metadata item, find matching upload URI and upload binary
+        for (const metadataItem of evidenceItem.metadata) {
+          const matchingResponse = evidenceMetadataResponse.find(
+            (response: any) => response.label === metadataItem.label
+          )
+
+          if (matchingResponse) {
+            // Read the image file and convert to bytes
+            const imageBase64 = await RNFS.readFile(metadataItem.file_path, 'base64')
+            const imageBytes = new Uint8Array(Buffer.from(imageBase64, 'base64'))
+
+            // Add upload promise
+            evidenceUploadPromises.push(evidence.uploadPhotoEvidenceBinary(matchingResponse.upload_uri, imageBytes))
+
+            // Store upload URI for final verification request
+            evidenceUploadUris.push(matchingResponse.upload_uri)
+          }
+        }
+      }
+
+      // Send photo and video metadata to API (existing code)
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
         evidence.uploadPhotoEvidenceMetadata(store.bcsc.photoMetadata!),
         evidence.uploadVideoEvidenceMetadata(store.bcsc.videoMetadata!),
       ])
 
-      // Upload photo and video bytes to the respective URIs
+      // Upload all binaries in parallel (photo, video, and additional evidence)
       await Promise.all([
         evidence.uploadPhotoEvidenceBinary(photoMetadataResponse.upload_uri, photoBytes),
         evidence.uploadVideoEvidenceBinary(videoMetadataResponse.upload_uri, videoBytes),
+        ...evidenceUploadPromises, // Spread the additional evidence upload promises
       ])
+
+      // Combine all upload URIs for final verification request
+      const allUploadUris = [photoMetadataResponse.upload_uri, videoMetadataResponse.upload_uri, ...evidenceUploadUris]
 
       // Send final verification request
       await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
-        upload_uris: [photoMetadataResponse.upload_uri, videoMetadataResponse.upload_uri],
+        upload_uris: allUploadUris,
         sha256: store.bcsc.verificationRequestSha!,
       })
 
