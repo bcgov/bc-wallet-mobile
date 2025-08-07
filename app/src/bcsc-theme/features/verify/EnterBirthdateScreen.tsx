@@ -36,6 +36,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const [loading, setLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
   const { authorization } = useApi()
+  const [pickerState, setPickerState] = useState<'idle' | 'spinning'>('idle')
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -117,7 +118,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
             mode={'date'}
             date={date}
             onDateChange={setDate}
-            maximumDate={today}
+            onStateChange={setPickerState}
           />
         </View>
       </ScrollView>
@@ -126,7 +127,12 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
           title={t('Global.Done')}
           accessibilityLabel={t('Global.Done')}
           testID={testIdWithKey('Done')}
-          onPress={onSubmit}
+          onPress={() => {
+            if (pickerState === 'spinning') {
+              return
+            }
+            onSubmit()
+          }}
           buttonType={ButtonType.Primary}
           disabled={loading}
         >

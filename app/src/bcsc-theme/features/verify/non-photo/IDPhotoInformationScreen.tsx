@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
 import BulletPointWithText from '@/components/BulletPointWithText'
+import { ScrollView } from 'react-native-gesture-handler'
 
 type IDPhotoInformationScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IDPhotoInformation>
@@ -15,7 +16,6 @@ type IDPhotoInformationScreenProps = {
 const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScreenProps) => {
   const { cardType } = route.params
   const { ColorPalette, Spacing } = useTheme()
-  const { height } = useWindowDimensions()
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
@@ -35,7 +35,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
     imageContainer: {
       alignItems: 'center',
       marginBottom: Spacing.md,
-      height: height / 2, // Set container to 1/3 of screen height
+      height: 200,
       justifyContent: 'center',
     },
     image: {
@@ -45,32 +45,34 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
     },
   })
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <View style={styles.imageContainer}>
-        <Image source={SCAN_ID_IMAGE} style={styles.image} />
-      </View>
-      <View>
-        <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>
-          {'Take a photo of your ID. An agent will look at this photo when verifying your identity.'}
-        </ThemedText>
-        <BulletPointWithText text={'Center your ID within the frame'} />
-        <BulletPointWithText text={'Have no other objects in the photo'} />
-        <BulletPointWithText text={'Make sure the entire ID is visible'} />
-        <BulletPointWithText text={'Make sure the image is clear without any glare or shadows'} />
-      </View>
-      <View style={{ marginTop: Spacing.md }}>
-        <Button
-          title={'Take photo of ID'}
-          accessibilityLabel={'Take photo of ID'}
-          testID={''}
-          onPress={() => {
-            navigation.navigate(BCSCScreens.EvidenceCapture, {
-              cardType: cardType,
-            })
-          }}
-          buttonType={ButtonType.Primary}
-        />
-      </View>
+    <SafeAreaView style={styles.pageContainer} edges={['left', 'right']}>
+      <ScrollView>
+        <View style={styles.imageContainer}>
+          <Image source={SCAN_ID_IMAGE} style={styles.image} />
+        </View>
+        <View>
+          <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>
+            {'Take a photo of your ID. An agent will look at this photo when verifying your identity.'}
+          </ThemedText>
+          <BulletPointWithText text={'Center your ID within the frame'} />
+          <BulletPointWithText text={'Have no other objects in the photo'} />
+          <BulletPointWithText text={'Make sure the entire ID is visible'} />
+          <BulletPointWithText text={'Make sure the image is clear without any glare or shadows'} />
+        </View>
+        <View style={{ marginTop: Spacing.md }}>
+          <Button
+            title={'Take photo of ID'}
+            accessibilityLabel={'Take photo of ID'}
+            testID={''}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.EvidenceCapture, {
+                cardType: cardType,
+              })
+            }}
+            buttonType={ButtonType.Primary}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }

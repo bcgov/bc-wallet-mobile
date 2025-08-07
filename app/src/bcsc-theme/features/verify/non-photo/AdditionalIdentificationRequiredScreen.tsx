@@ -24,7 +24,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
     },
     scrollView: {
       flex: 1,
-      padding: Spacing.lg,
+      paddingHorizontal: Spacing.lg,
     },
     controlsContainer: {
       margin: Spacing.md,
@@ -33,7 +33,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
     },
   })
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.pageContainer} edges={['left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View
           style={{
@@ -41,10 +41,10 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
             alignSelf: 'center',
             borderRadius: 12,
             padding: Spacing.sm,
-            margin: Spacing.xl,
+            margin: Spacing.lg,
           }}
         >
-          <CardDetails {...{ height: 100, width: 180 }} />
+          <CardDetails {...{ height: 80, width: 160 }} />
         </View>
         <View style={{ marginBottom: Spacing.lg }}>
           <ThemedText variant={'headingFour'}>

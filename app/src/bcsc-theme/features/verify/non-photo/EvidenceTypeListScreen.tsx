@@ -38,6 +38,11 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
       flex: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
+    sectionSeparator: {
+      height: 10,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
+      alignSelf: 'center', // Centers the separator
+    },
     itemSeparator: {
       height: 2,
       width: '95%',
@@ -129,6 +134,9 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
       <SectionList
         sections={evidenceSections || []}
+        SectionSeparatorComponent={({ trailingItem }) =>
+          trailingItem ? null : <View style={styles.sectionSeparator} />
+        }
         ItemSeparatorComponent={() => (
           <View style={{ backgroundColor: ColorPalette.brand.secondaryBackground }}>
             <View style={styles.itemSeparator} />
@@ -145,7 +153,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
               // navigate to the next screen with the correct data
               dispatch({
                 type: BCDispatchAction.ADD_EVIDENCE_TYPE,
-                payload: [{ evidenceType: data.item as EvidenceType }],
+                payload: [data.item as EvidenceType],
               })
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
             }}

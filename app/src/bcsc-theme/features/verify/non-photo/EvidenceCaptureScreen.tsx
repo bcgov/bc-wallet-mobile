@@ -62,10 +62,6 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
       setCaptureState('CAPTURING')
       setCurrentPhotoPath(undefined)
       setCapturedPhotos([])
-      dispatch({
-        type: BCDispatchAction.UPDATE_EVIDENCE_METADATA,
-        payload: [{ evidenceType: route.params.cardType, metadata: [] }],
-      })
     }, [])
   )
 

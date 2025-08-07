@@ -43,13 +43,12 @@ const MaskedCamera = ({
       flex: 1,
     },
     controlsContainer: {
+      flex: 1,
       position: 'absolute',
       bottom: 30,
-      left: 0,
-      right: 0,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-evenly',
+      justifyContent: 'space-between',
       paddingHorizontal: Spacing.lg,
     },
     instructionText: {
@@ -166,13 +165,13 @@ const MaskedCamera = ({
       </View>
       <View style={styles.controlsContainer}>
         <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
-          <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
+          <ThemedText style={{ color: ColorPalette.grayscale.white }}>Cancel</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
           <View style={styles.captureButtonInner} />
         </TouchableOpacity>
         {hasTorch ? (
-          <TouchableOpacity style={{ flex: 1 }} onPress={toggleTorch}>
+          <TouchableOpacity style={{ flex: 1, alignItems: 'flex-end' }} onPress={toggleTorch}>
             <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
           </TouchableOpacity>
         ) : (

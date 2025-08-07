@@ -6,9 +6,6 @@ import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { Button, ButtonType, Text, ThemedText, useStore, useTheme } from '@bifold/core'
 import { TextInput, View } from 'react-native'
 import { BCDispatchAction, BCState } from '@/store'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import RNFS from 'react-native-fs'
-import { Buffer } from 'buffer'
 import { CommonActions } from '@react-navigation/native'
 
 type EvidenceIDCollectionScreenProps = {

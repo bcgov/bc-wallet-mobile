@@ -117,6 +117,7 @@ enum BCSCDispatchAction {
   UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
+  CLEAR_BCSC = 'bcsc/clearBCSC',
 }
 
 enum ModeDispatchAction {
@@ -448,6 +449,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
     case BCSCDispatchAction.CLEAR_ADDITIONAL_EVIDENCE: {
       const bcsc = { ...state.bcsc, additionalEvidenceData: [] }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.CLEAR_BCSC: {
+      const bcsc = { ...bcscState }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
