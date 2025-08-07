@@ -25,6 +25,19 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const emailAddress = store.bcsc.email ?? null
   const emailConfirmed = store.bcsc.emailConfirmed ?? false
   const registered = useMemo(() => serialNumber && emailAddress, [serialNumber, emailAddress])
+  const isNonPhotoCard = useMemo(() => store.bcsc.cardType === BCSCCardType.NonPhoto, [store.bcsc.cardType])
+  const hasAdditionalPhotoEvidence = useMemo(
+    () => store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo),
+    [store.bcsc.additionalEvidenceData]
+  )
+  const needsAdditionalEvidence = useMemo(
+    () => isNonPhotoCard && !hasAdditionalPhotoEvidence,
+    [isNonPhotoCard, hasAdditionalPhotoEvidence]
+  )
+  const canProceedToVerification = useMemo(
+    () => registered && !store.bcsc.pendingVerification && !needsAdditionalEvidence,
+    [registered, store.bcsc.pendingVerification, needsAdditionalEvidence]
+  )
 
   const styles = StyleSheet.create({
     container: {
@@ -142,6 +155,19 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           </ThemedText>
         </View>
       </TouchableOpacity>
+      {/* Only show if NonPhoto is selected and no additional photo evidence is available */}
+      {registered && needsAdditionalEvidence && (
+        <TouchableOpacity
+          onPress={() => navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)}
+          style={[styles.step, { backgroundColor: ColorPalette.brand.primary }]}
+        >
+          <View>
+            <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPalette.brand.text }}>
+              {'Additional identification required for non-photo BC Services Card.'}
+            </ThemedText>
+          </View>
+        </TouchableOpacity>
+      )}
       <View style={styles.itemSeparator} />
       <TouchableOpacity
         testID={testIdWithKey('Step2')}
@@ -213,36 +239,45 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <View style={styles.itemSeparator} />
       <TouchableOpacity
         onPress={() => {
-          if (registered && !store.bcsc.pendingVerification) {
+          if (canProceedToVerification) {
             navigation.navigate(BCSCScreens.VerificationMethodSelection)
           }
         }}
         testID={testIdWithKey('Step4')}
         accessibilityLabel={t('Unified.Steps.Step4')}
-        disabled={!registered || store.bcsc.pendingVerification}
+        disabled={!canProceedToVerification}
         style={[
           styles.step,
           {
-            backgroundColor: registered ? ColorPalette.brand.primary : ColorPalette.brand.secondaryBackground,
+            backgroundColor: canProceedToVerification
+              ? ColorPalette.brand.primary
+              : ColorPalette.brand.secondaryBackground,
           },
         ]}
       >
         <View style={styles.titleRow}>
           <ThemedText
             variant={'headingFour'}
-            style={{ marginRight: 16, color: registered ? ColorPalette.brand.text : TextTheme.headingFour.color }}
+            style={{
+              marginRight: 16,
+              color: canProceedToVerification ? ColorPalette.brand.text : TextTheme.headingFour.color,
+            }}
           >
             {t('Unified.Steps.Step4')}
           </ThemedText>
         </View>
         <View>
-          <ThemedText style={{ color: registered ? ColorPalette.brand.text : TextTheme.headingFour.color }}>
-            {registered
+          <ThemedText
+            style={{ color: canProceedToVerification ? ColorPalette.brand.text : TextTheme.headingFour.color }}
+          >
+            {canProceedToVerification
               ? `Verify identity by ${store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
                   day: '2-digit',
                   month: 'long',
                   year: 'numeric',
                 })}`
+              : needsAdditionalEvidence
+              ? 'Complete additional identification first'
               : 'Verify identity'}
           </ThemedText>
         </View>
@@ -292,12 +327,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <Button
           title={'Reset data'}
           onPress={() => {
-            dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.UPDATE_EVIDENCE_PATHS, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.ADD_EVIDENCE_TYPE, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [undefined] })
           }}
           testID={testIdWithKey('ResetData')}
           accessibilityLabel={'Reset data'}

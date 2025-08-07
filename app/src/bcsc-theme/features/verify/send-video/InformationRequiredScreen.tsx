@@ -1,7 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, useAnimatedComponents, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
@@ -17,6 +17,7 @@ type InformationRequiredScreenProps = {
 
 const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProps) => {
   const { Spacing } = useTheme()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
   const [loading, setLoading] = useState(false)
   const uploadedBoth = useMemo(
@@ -45,10 +46,12 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       // Fetch photo and convert into bytes
       const jpegBytes = await RNFS.readFile(store.bcsc.photoPath!, 'base64')
       const photoBytes = new Uint8Array(Buffer.from(jpegBytes, 'base64'))
+      logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
 
       // Fetch video and convert into bytes
       const videoBase64 = await RNFS.readFile(store.bcsc.videoPath!, 'base64')
       const videoBytes = new Uint8Array(Buffer.from(videoBase64, 'base64'))
+      logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
 
       // Process additional evidence data
       const additionalEvidence = store.bcsc.additionalEvidenceData
@@ -65,7 +68,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         }
 
         const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)
-
+        logger.debug(`Evidence metadata for ${metadataPayload.type}`)
         // For each metadata item, find matching upload URI and upload binary
         for (const metadataItem of evidenceItem.metadata) {
           const matchingResponse = evidenceMetadataResponse.find(
@@ -76,6 +79,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
             // Read the image file and convert to bytes
             const imageBase64 = await RNFS.readFile(metadataItem.file_path, 'base64')
             const imageBytes = new Uint8Array(Buffer.from(imageBase64, 'base64'))
+            logger.debug(`Evidence metadata ${metadataItem.label}: ${imageBytes.length}`)
 
             // Add upload promise
             evidenceUploadPromises.push(evidence.uploadPhotoEvidenceBinary(matchingResponse.upload_uri, imageBytes))
@@ -86,11 +90,12 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         }
       }
 
-      // Send photo and video metadata to API (existing code)
+      // Send photo and video metadata to API
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
         evidence.uploadPhotoEvidenceMetadata(store.bcsc.photoMetadata!),
         evidence.uploadVideoEvidenceMetadata(store.bcsc.videoMetadata!),
       ])
+      logger.debug(`Photo/ Video metadata responded`)
 
       // Upload all binaries in parallel (photo, video, and additional evidence)
       await Promise.all([
@@ -98,6 +103,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         evidence.uploadVideoEvidenceBinary(videoMetadataResponse.upload_uri, videoBytes),
         ...evidenceUploadPromises, // Spread the additional evidence upload promises
       ])
+      logger.debug(`Uploaded all binaries`)
 
       // Combine all upload URIs for final verification request
       const allUploadUris = [photoMetadataResponse.upload_uri, videoMetadataResponse.upload_uri, ...evidenceUploadUris]
@@ -107,6 +113,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         upload_uris: allUploadUris,
         sha256: store.bcsc.verificationRequestSha!,
       })
+      logger.debug(`Completed verification request`)
 
       dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [true] })
       navigation.dispatch(
@@ -116,7 +123,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         })
       )
     } catch (error) {
-      // TODO: Handle error, e.g., show an alert or log the error
+      logger.error('Error during sending information to Service BC', { error })
     } finally {
       setLoading(false)
     }
@@ -131,7 +138,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           }}
           title={'Photo of your face'}
           actionLabel={'Take Photo'}
-          thumbnailUri={`file://${store.bcsc.photoPath}`}
+          thumbnailUri={store.bcsc.photoPath && `file://${store.bcsc.photoPath}`}
           style={{ borderBottomWidth: 0 }}
         />
         <TakeMediaButton
