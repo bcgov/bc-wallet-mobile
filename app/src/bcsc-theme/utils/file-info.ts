@@ -1,4 +1,3 @@
-import { VerificationPhotoUploadPayload } from '../api/hooks/useEvidenceApi'
 import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import { Buffer } from 'buffer'

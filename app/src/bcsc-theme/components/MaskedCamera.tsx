@@ -121,7 +121,8 @@ const MaskedCamera = ({
     navigation.goBack()
   }
   const onError = (error: any) => {
-    console.log('OOPS, there was a camera error')
+    logger.error(`Camera error: ${error}`)
+    Alert.alert('Camera Error', 'An error occurred while using the camera. Please try again.')
   }
 
   const takePhoto = async () => {
@@ -139,11 +140,11 @@ const MaskedCamera = ({
       Alert.alert('Error', 'Failed to take photo. Please try again.')
     }
   }
-  const defaultMask = () => <CircularMask />
+  const DefaultMask = <CircularMask />
 
   return (
     <View style={{ flex: 1, backgroundColor: 'black', position: 'relative' }}>
-      <MaskedView style={{ flex: 1, backgroundColor: 'black' }} maskElement={cameraMask || defaultMask()}>
+      <MaskedView style={{ flex: 1, backgroundColor: 'black' }} maskElement={cameraMask || DefaultMask}>
         <Camera
           ref={cameraRef}
           style={styles.camera}

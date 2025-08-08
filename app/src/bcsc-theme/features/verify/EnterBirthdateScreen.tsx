@@ -99,7 +99,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
     // if successful, navigation reset to setup steps screen
     // if not successful, navigate to mismatch screen
-  }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger])
+  }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger, store.bcsc.cardType])
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>

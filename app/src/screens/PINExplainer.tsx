@@ -1,5 +1,4 @@
 import BulletPointWithText from '@/components/BulletPointWithText'
-import BulletPoint from '@/components/BulletPointWithText'
 import { useTheme, testIdWithKey, ThemedText, Button, ButtonType } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'

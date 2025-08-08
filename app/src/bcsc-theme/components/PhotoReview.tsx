@@ -2,7 +2,7 @@ import { Button, ButtonType, testIdWithKey, useAnimatedComponents, useTheme } fr
 import { useState } from 'react'
 import { Image, StyleSheet, View } from 'react-native'
 
-interface PhotoReviewProps {
+type PhotoReviewProps = {
   photoPath: string
   onAccept: () => Promise<void>
   onRetake: () => void

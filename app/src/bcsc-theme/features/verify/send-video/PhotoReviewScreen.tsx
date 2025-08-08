@@ -1,15 +1,11 @@
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { BCDispatchAction, BCState } from '@/store'
-import { VerificationPhotoUploadPayload } from '@bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { getFileInfo, getPhotoMetadata } from '@bcsc-theme/utils/file-info'
+import { getPhotoMetadata } from '@bcsc-theme/utils/file-info'
 import { TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Buffer } from 'buffer'
 import { StyleSheet } from 'react-native'
-import { hashBase64 } from 'react-native-bcsc-core'
-import RNFS from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoReviewScreenProps = {

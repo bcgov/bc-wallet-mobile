@@ -1,8 +1,7 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import { useCallback, useState } from 'react'
-import { EvidenceType, VerificationPhotoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import RectangularMask from '@/bcsc-theme/components/RectangularMask'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
@@ -17,11 +16,16 @@ type EvidenceCaptureScreenProps = {
   route: { params: { cardType: EvidenceType } }
 }
 
+enum CaptureState {
+  CAPTURING = 'CAPTURING',
+  REVIEWING = 'REVIEWING',
+}
+
 const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps) => {
   const { cardType } = route.params
   const [, dispatch] = useStore<BCState>()
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [captureState, setCaptureState] = useState<'CAPTURING' | 'REVIEWING'>('CAPTURING')
+  const [captureState, setCaptureState] = useState<CaptureState>(CaptureState.CAPTURING)
   const [currentPhotoPath, setCurrentPhotoPath] = useState<string>()
   const [capturedPhotos, setCapturedPhotos] = useState<PhotoMetadata[]>([])
   const { width } = useWindowDimensions()
@@ -59,7 +63,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     useCallback(() => {
       // Reset state when navigating to this screen
       setCurrentIndex(0)
-      setCaptureState('CAPTURING')
+      setCaptureState(CaptureState.CAPTURING)
       setCurrentPhotoPath(undefined)
       setCapturedPhotos([])
     }, [])
@@ -67,7 +71,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
 
   const handlePhotoTaken = (path: string) => {
     setCurrentPhotoPath(path)
-    setCaptureState('REVIEWING')
+    setCaptureState(CaptureState.REVIEWING)
   }
 
   const handleAcceptPhoto = async () => {
@@ -90,13 +94,13 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
     } else {
       // Move to next side
       setCurrentIndex((prev) => prev + 1)
-      setCaptureState('CAPTURING')
+      setCaptureState(CaptureState.CAPTURING)
       setCurrentPhotoPath(undefined)
     }
   }
 
   const handleRetakePhoto = () => {
-    setCaptureState('CAPTURING')
+    setCaptureState(CaptureState.CAPTURING)
     setCurrentPhotoPath(undefined)
   }
 
@@ -107,7 +111,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
 
   return (
     <>
-      {captureState === 'CAPTURING' ? (
+      {captureState === CaptureState.CAPTURING ? (
         <View style={styles.container}>
           <MaskedCamera
             navigation={navigation}

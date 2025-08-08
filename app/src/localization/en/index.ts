@@ -273,6 +273,19 @@ const translation = {
       "LimitedAccess": "Limited access to services",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a photo ID.",
       "ChooseID": "Choose ID",
+    },
+    "IDPhotoInformation": {
+      "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity.",
+      "IDPhotoInstructionsBullet1": "Center your ID within the frame",
+      "IDPhotoInstructionsBullet2": "Have no other objects in the photo",
+      "IDPhotoInstructionsBullet3": "Make sure the entire ID is visible",
+      "IDPhotoInstructionsBullet4": "Make sure the image is clear without any glare or shadows",
+      "TakePhoto": "Take photo of ID",
+    },
+    "EvidenceTypeList": {
+      "Heading": "Choose photo ID",
+      "Description": "Use an ID that has the same name as on your BC Services Card.",
+      "FirstID": "Choose your first ID",
     }
   },
   "RemoteLogging": {

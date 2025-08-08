@@ -64,7 +64,9 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         const metadataPayload = {
           type: evidenceItem.evidenceType.evidence_type,
           number: evidenceItem.documentNumber,
-          images: evidenceItem.metadata.map(({ file_path, ...metadata }) => metadata),
+          images: evidenceItem.metadata.map((data) => {
+            return { ...data, file_path: undefined }
+          }),
         }
 
         const evidenceMetadataResponse = await evidence.sendEvidenceMetadata(metadataPayload)

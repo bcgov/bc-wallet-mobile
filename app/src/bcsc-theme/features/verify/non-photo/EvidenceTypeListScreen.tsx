@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { ActivityIndicator, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -10,6 +10,7 @@ import { EvidenceMetadataResponseData, EvidenceType } from '@/bcsc-theme/api/hoo
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCCardProcess } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { useTranslation } from 'react-i18next'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -17,18 +18,22 @@ type EvidenceTypeListScreenProps = {
 
 const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigation }: EvidenceTypeListScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
+  const { t } = useTranslation()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { evidence } = useApi()
   const [store, dispatch] = useStore<BCState>()
   const [evidenceSections, setEvidenceSections] = useState<{ title: string; data: EvidenceType[] }[]>([])
   const { data, load, isLoading } = useDataLoader<EvidenceMetadataResponseData>(() => evidence.getEvidenceMetadata(), {
-    onError: (error: unknown) => console.log(error),
+    onError: (error: unknown) => {
+      logger.error(`Error loading evidence metadata: ${error}`)
+    },
   })
 
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
       justifyContent: 'space-between',
-      padding: Spacing.lg,
+      padding: Spacing.md,
     },
     scrollView: {
       flex: 1,
@@ -62,7 +67,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
 
   useEffect(() => {
     // filter data based on the selected card type (process)
@@ -100,7 +105,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
       setEvidenceSections(mappedData)
     }
-  }, [data])
+  }, [data, store.bcsc.additionalEvidenceData.length, store.bcsc.cardType])
 
   const addToEvidenceDictionary = (cards: Record<string, EvidenceType[]>, e: EvidenceType) => {
     if (!cards[e.group]) {
@@ -120,14 +125,14 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
       {store.bcsc.additionalEvidenceData.length > 0 ? (
         <View style={{ marginBottom: Spacing.lg }}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            Choose photo ID
+            {t('EvidenceTypeList.Heading')}
           </ThemedText>
-          <ThemedText>Use an ID that has the same name as on your BC Services Card.</ThemedText>
+          <ThemedText>{t('EvidenceTypeList.Description')}</ThemedText>
         </View>
       ) : (
         <View style={{ marginBottom: Spacing.lg }}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            Choose your first ID
+            {t('EvidenceTypeList.FirstID')}
           </ThemedText>
         </View>
       )}

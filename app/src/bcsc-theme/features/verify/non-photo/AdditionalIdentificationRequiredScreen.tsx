@@ -1,7 +1,7 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { ScrollView } from 'react-native-gesture-handler'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -63,9 +63,9 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           <BulletPointWithText translationKey={t('CheckYourIDBullet3')} iconColor={ColorPalette.brand.icon} />
         </View>
         <View style={{ marginBottom: Spacing.lg }}>
-          <View style={{ flexDirection: 'row' }}>
+          <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
             <ThemedText variant={'headingFour'}>{t('LimitedAccessToServices')}</ThemedText>
-            <TouchableOpacity onPress={() => console.log('OPEN SO COOL WEBVIEW')}>
+            <TouchableOpacity onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}>
               <Icon color={ColorPalette.brand.primary} size={24} name={'open-in-new'} />
             </TouchableOpacity>
           </View>

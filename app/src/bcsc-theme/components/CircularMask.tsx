@@ -1,7 +1,7 @@
 import { View, StyleSheet, useWindowDimensions } from 'react-native'
 import { useTheme } from '@bifold/core'
 
-interface CircularMaskProps {
+export interface CircularMaskProps {
   maskWidth?: number
   maskHeight?: number
   maskBorderRadius?: number
