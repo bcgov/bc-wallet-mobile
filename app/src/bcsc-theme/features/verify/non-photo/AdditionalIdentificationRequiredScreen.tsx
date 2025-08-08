@@ -49,33 +49,39 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
           <CardDetails {...{ height: 80, width: 160 }} />
         </View>
         <View style={{ marginBottom: Spacing.lg }}>
-          <ThemedText variant={'headingFour'}>{t('PhotoRequired')}</ThemedText>
-          <ThemedText>{t('PhotoRequiredDescription')}</ThemedText>
+          <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.PhotoRequired')}</ThemedText>
+          <ThemedText>{t('Unified.AdditionalEvidence.PhotoRequiredDescription')}</ThemedText>
         </View>
         <View style={{ marginBottom: Spacing.lg }}>
-          <ThemedText variant={'headingFour'}>{t('CheckYourID')}</ThemedText>
-          <BulletPointWithText translationKey={t('CheckYourIDBullet1')} iconColor={ColorPalette.brand.icon} />
+          <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.CheckYourID')}</ThemedText>
           <BulletPointWithText
-            translationKey={t('CheckYourIDBullet2')}
+            translationKey={t('Unified.AdditionalEvidence.CheckYourIDBullet1')}
+            iconColor={ColorPalette.brand.icon}
+          />
+          <BulletPointWithText
+            translationKey={t('Unified.AdditionalEvidence.CheckYourIDBullet2')}
             iconColor={ColorPalette.brand.icon}
             iconSize={Spacing.sm}
           />
-          <BulletPointWithText translationKey={t('CheckYourIDBullet3')} iconColor={ColorPalette.brand.icon} />
+          <BulletPointWithText
+            translationKey={t('Unified.AdditionalEvidence.CheckYourIDBullet3')}
+            iconColor={ColorPalette.brand.icon}
+          />
         </View>
         <View style={{ marginBottom: Spacing.lg }}>
           <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
-            <ThemedText variant={'headingFour'}>{t('LimitedAccessToServices')}</ThemedText>
+            <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.LimitedAccess')}</ThemedText>
             <TouchableOpacity onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}>
-              <Icon color={ColorPalette.brand.primary} size={24} name={'open-in-new'} />
+              <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
             </TouchableOpacity>
           </View>
-          <ThemedText>{t('LimitedAccessToServicesDescription')}</ThemedText>
+          <ThemedText>{t('Unified.AdditionalEvidence.LimitedAccessDescription')}</ThemedText>
         </View>
         <View style={{ marginTop: Spacing.md }}>
           <Button
-            title={t('ChooseID')}
-            accessibilityLabel={t('ChooseID')}
-            testID={testIdWithKey(t('ChooseID'))}
+            title={t('Unified.AdditionalEvidence.ChooseID')}
+            accessibilityLabel={t('Unified.AdditionalEvidence.ChooseID')}
+            testID={testIdWithKey(t('Unified.AdditionalEvidence.ChooseID'))}
             onPress={() => {
               navigation.navigate(BCSCScreens.EvidenceTypeList)
             }}

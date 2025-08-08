@@ -144,6 +144,23 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     )
   }
 
+  const getVerificationStep4Text = (): string => {
+    if (canProceedToVerification) {
+      const expirationDate = store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+      return `Verify identity by ${expirationDate}`
+    }
+
+    if (needsAdditionalEvidence) {
+      return 'Complete additional identification first'
+    }
+
+    return 'Verify identity'
+  }
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -151,26 +168,42 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           if (!registered) {
             navigation.navigate(BCSCScreens.IdentitySelection)
           }
+
+          if (needsAdditionalEvidence) {
+            navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
+          }
         }}
         testID={testIdWithKey('Step1')}
         accessibilityLabel={'Step 1'}
         style={[
           styles.step,
-          { backgroundColor: registered ? ColorPalette.brand.secondaryBackground : ColorPalette.brand.primary },
+          {
+            backgroundColor:
+              registered && !needsAdditionalEvidence
+                ? ColorPalette.brand.secondaryBackground
+                : ColorPalette.brand.primary,
+          },
         ]}
       >
         <View style={styles.titleRow}>
           <ThemedText
             variant={'headingFour'}
-            style={{ marginRight: 16, color: registered ? TextTheme.headingFour.color : ColorPalette.brand.text }}
+            style={{
+              marginRight: 16,
+              color: registered && !needsAdditionalEvidence ? TextTheme.headingFour.color : ColorPalette.brand.text,
+            }}
             accessibilityLabel={t('Unified.Steps.Step1')}
           >
             {t('Unified.Steps.Step1')}
           </ThemedText>
-          {registered ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
+          {registered && !needsAdditionalEvidence ? (
+            <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} />
+          ) : null}
         </View>
         <View>
-          <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPalette.brand.text }}>
+          <ThemedText
+            style={{ color: registered && !needsAdditionalEvidence ? TextTheme.normal.color : ColorPalette.brand.text }}
+          >
             {registered ? `ID: BC Services Card (${serialNumber})` : t('Unified.Steps.ScanOrTakePhotos')}
           </ThemedText>
         </View>
@@ -179,12 +212,23 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       {registered && needsAdditionalEvidence && (
         <TouchableOpacity
           onPress={() => navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)}
-          style={[styles.step, { backgroundColor: ColorPalette.brand.primary }]}
+          style={[
+            styles.step,
+            {
+              backgroundColor: ColorPalette.brand.primary,
+              borderTopColor: ColorPalette.brand.secondaryBackground,
+              borderTopWidth: Spacing.xs,
+            },
+          ]}
         >
-          <View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
             <ThemedText style={{ color: ColorPalette.brand.text }}>
+              <ThemedText style={{ color: ColorPalette.brand.text }} variant={'bold'}>
+                {'Add second ID: '}
+              </ThemedText>
               {'Additional identification required for non-photo BC Services Card.'}
             </ThemedText>
+            <Icon name={'chevron-right'} size={24} color={ColorPalette.brand.text} style={{ alignSelf: 'center' }} />
           </View>
         </TouchableOpacity>
       )}
@@ -290,15 +334,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           <ThemedText
             style={{ color: canProceedToVerification ? ColorPalette.brand.text : TextTheme.headingFour.color }}
           >
-            {canProceedToVerification
-              ? `Verify identity by ${store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })}`
-              : needsAdditionalEvidence
-              ? 'Complete additional identification first'
-              : 'Verify identity'}
+            {getVerificationStep4Text()}
           </ThemedText>
         </View>
       </TouchableOpacity>

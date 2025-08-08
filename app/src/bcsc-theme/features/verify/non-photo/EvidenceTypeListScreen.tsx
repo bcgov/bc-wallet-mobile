@@ -125,14 +125,14 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
       {store.bcsc.additionalEvidenceData.length > 0 ? (
         <View style={{ marginBottom: Spacing.lg }}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('EvidenceTypeList.Heading')}
+            {t('Unified.EvidenceTypeList.Heading')}
           </ThemedText>
-          <ThemedText>{t('EvidenceTypeList.Description')}</ThemedText>
+          <ThemedText>{t('Unified.EvidenceTypeList.Description')}</ThemedText>
         </View>
       ) : (
         <View style={{ marginBottom: Spacing.lg }}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('EvidenceTypeList.FirstID')}
+            {t('Unified.EvidenceTypeList.FirstID')}
           </ThemedText>
         </View>
       )}
@@ -162,7 +162,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
               })
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
             }}
-            testID={testIdWithKey('Step1')}
+            testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}
             style={[styles.cardSection]}
           >
             <View>

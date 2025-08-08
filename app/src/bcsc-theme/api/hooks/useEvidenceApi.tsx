@@ -101,7 +101,12 @@ const useEvidenceApi = () => {
   }, [store.bcsc.deviceCode])
 
   const getEvidenceMetadata = useCallback(async (): Promise<EvidenceMetadataResponseData> => {
-    const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`)
+    console.log('DONT TELL ME THIS BROKE YOU SOME BICH')
+    console.log(`${apiClient.endpoints.evidence}/metadata`)
+    const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`, {
+      // Evidence endpoints do not require a full access token
+      skipBearerAuth: true,
+    })
     return data
   }, [])
 
@@ -335,6 +340,7 @@ const useEvidenceApi = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            skipBearerAuth: true,
           }
         )
         return data
@@ -372,7 +378,6 @@ const useEvidenceApi = () => {
       createEmailVerification,
       sendEmailVerificationCode,
       sendEvidenceMetadata,
-      ,
       getEvidenceMetadata,
     ]
   )

@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -54,18 +54,18 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
         </View>
         <View>
           <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>
-            {t('IDPhotoInformation.Heading')}
+            {t('Unified.IDPhotoInformation.Heading')}
           </ThemedText>
-          <BulletPointWithText translationKey={t('IDPhotoInformation.IDPhotoInstructionsBullet1')} />
-          <BulletPointWithText translationKey={t('IDPhotoInformation.IDPhotoInstructionsBullet2')} />
-          <BulletPointWithText translationKey={t('IDPhotoInformation.IDPhotoInstructionsBullet3')} />
-          <BulletPointWithText translationKey={t('IDPhotoInformation.IDPhotoInstructionsBullet4')} />
+          <BulletPointWithText translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet1')} />
+          <BulletPointWithText translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet2')} />
+          <BulletPointWithText translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet3')} />
+          <BulletPointWithText translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet4')} />
         </View>
         <View style={{ marginTop: Spacing.md }}>
           <Button
-            title={t('IDPhotoInformation.TakePhoto')}
-            accessibilityLabel={t('IDPhotoInformation.TakePhoto')}
-            testID={''}
+            title={t('Unified.IDPhotoInformation.TakePhoto')}
+            accessibilityLabel={t('Unified.IDPhotoInformation.TakePhoto')}
+            testID={testIdWithKey('IDPhotoInformationTakePhoto')}
             onPress={() => {
               navigation.navigate(BCSCScreens.EvidenceCapture, {
                 cardType: cardType,

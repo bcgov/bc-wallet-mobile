@@ -79,7 +79,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [user_code] })
       dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
 
-      // TODO: (al) navigation here will need to change when the Other card type is selected (non-photo non bc card)
       if (store.bcsc.cardType === BCSCCardType.NonPhoto) {
         navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
       } else {
