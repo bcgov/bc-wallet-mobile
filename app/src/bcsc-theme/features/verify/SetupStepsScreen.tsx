@@ -162,7 +162,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           style={[styles.step, { backgroundColor: ColorPalette.brand.primary }]}
         >
           <View>
-            <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPalette.brand.text }}>
+            <ThemedText style={{ color: ColorPalette.brand.text }}>
               {'Additional identification required for non-photo BC Services Card.'}
             </ThemedText>
           </View>

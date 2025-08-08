@@ -262,6 +262,18 @@ const translation = {
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
       "InputLabel": "Birthdate",
     },
+    "AdditionalEvidence": {
+      "Heading": "Additional ID required",
+      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it.",
+      "PhotoRequiredDescription": "It's needed to verify your identity. You'll be asked to provide one or two government-issued IDs.",
+      "CheckYourID": "Check your ID",
+      "CheckYourIDBullet1": "<b>Has the same name as on your BC Services Card</b>",
+      "CheckYourIDBullet2": "<b>Has a recent photo</b>",
+      "CheckYourIDBullet3": "<b>Is not expired</b>",
+      "LimitedAccess": "Limited access to services",
+      "LimitedAccessDescription": "Some services only accept the app when it's set up with a photo ID.",
+      "ChooseID": "Choose ID",
+    }
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting",

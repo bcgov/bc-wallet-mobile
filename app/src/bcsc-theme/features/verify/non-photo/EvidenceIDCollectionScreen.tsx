@@ -31,7 +31,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     })
 
     if (hasPhotoEvidence) {
-      // we have photo evidence available, take the user back to the setup steps
+      // we have photo evidence, take the user back to the setup steps
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -39,7 +39,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         })
       )
     } else {
-      // if no photo evidence is required, navigate back to the evidence list screen
+      // if no photo evidence is available, navigate back to the evidence list screen
       navigation.dispatch(
         CommonActions.reset({
           index: 1,

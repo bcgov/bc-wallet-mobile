@@ -47,8 +47,8 @@ const PINExplainer: React.FC<PINExplainerProps> = ({ continueCreatePIN }) => {
         <ThemedText style={{ marginBottom: Spacing.md }} variant="headingThree">
           {t('PINCreate.Explainer.PrimaryHeading')}
         </ThemedText>
-        <BulletPointWithText text={t('PINCreate.Explainer.Bullet1')} bold />
-        <BulletPointWithText text={t('PINCreate.Explainer.Bullet2')} bold />
+        <BulletPointWithText translationKey={'PINCreate.Explainer.Bullet1'} />
+        <BulletPointWithText translationKey={'PINCreate.Explainer.Bullet2'} />
       </ScrollView>
       <View style={style.footer}>
         <Button
