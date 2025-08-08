@@ -11,6 +11,7 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReadableType
 import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.module.annotations.ReactModule
@@ -41,7 +42,12 @@ import javax.crypto.spec.SecretKeySpec
 
 // JWT/Nimbus imports
 import com.nimbusds.jose.JWEObject
+import com.nimbusds.jose.JWEHeader
+import com.nimbusds.jose.JWEAlgorithm
+import com.nimbusds.jose.EncryptionMethod
+import com.nimbusds.jose.Payload
 import com.nimbusds.jose.crypto.RSADecrypter
+import com.nimbusds.jose.crypto.RSAEncrypter
 import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jwt.JWTClaimsSet
 
@@ -1002,7 +1008,106 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     payload: ReadableMap,
     promise: Promise
   ) {
-    promise.reject("E_NOT_IMPLEMENTED", "signJWT not yet implemented on Android")
+    try {
+      // Convert ReadableMap payload to JWTClaimsSet
+      val claimsSetBuilder = JWTClaimsSet.Builder()
+      
+      // Iterate through the payload and add claims
+      val payloadIterator = payload.keySetIterator()
+      while (payloadIterator.hasNextKey()) {
+        val key = payloadIterator.nextKey()
+        val value = when (payload.getType(key)) {
+          ReadableType.String -> payload.getString(key)
+          ReadableType.Number -> {
+            val doubleValue = payload.getDouble(key)
+            if (doubleValue == doubleValue.toInt().toDouble()) {
+              doubleValue.toInt()
+            } else {
+              doubleValue
+            }
+          }
+          ReadableType.Boolean -> payload.getBoolean(key)
+          ReadableType.Array -> {
+            // Convert ReadableArray to List for JWT claims
+            val array = payload.getArray(key)
+            val list = mutableListOf<Any>()
+            for (i in 0 until array!!.size()) {
+              when (array.getType(i)) {
+                ReadableType.String -> list.add(array.getString(i))
+                ReadableType.Number -> {
+                  val doubleValue = array.getDouble(i)
+                  list.add(if (doubleValue == doubleValue.toInt().toDouble()) doubleValue.toInt() else doubleValue)
+                }
+                ReadableType.Boolean -> list.add(array.getBoolean(i))
+                else -> list.add(array.getString(i) ?: "")
+              }
+            }
+            list
+          }
+          ReadableType.Map -> {
+            // Convert nested ReadableMap to Map for JWT claims
+            val nestedMap = payload.getMap(key)
+            convertReadableMapToMap(nestedMap!!)
+          }
+          else -> payload.getString(key) ?: ""
+        }
+        
+        claimsSetBuilder.claim(key, value)
+      }
+      
+      val claimsSet = claimsSetBuilder.build()
+      
+      // Sign the JWT using bcsc-keypair-port
+      val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
+      
+      Log.d(NAME, "signJWT: Successfully signed JWT")
+      promise.resolve(signedJWT)
+      
+    } catch (e: BcscException) {
+      Log.e(NAME, "signJWT: BCSC signing error: ${e.devMessage}", e)
+      promise.reject("E_BCSC_SIGNING_ERROR", "Error signing JWT with bcsc-keypair-port: ${e.devMessage}", e)
+    } catch (e: Exception) {
+      Log.e(NAME, "signJWT: Unexpected error: ${e.message}", e)
+      promise.reject("E_JWT_SIGNING_ERROR", "Unexpected error signing JWT: ${e.message}", e)
+    }
+  }
+
+  /**
+   * Encrypts a JWT string using the provided public key 
+   * @param jwt The JWT string to encrypt
+   * @param jwkMap The public key in JWK format (from React Native)
+   * @return The encrypted JWT string (JWE format)
+   */
+  private fun encryptJWTWithPublicKey(
+    jwt: String,
+    jwkMap: ReadableMap
+  ): String {
+    try {
+      // Convert JWK ReadableMap to PublicKey
+      val publicKey = convertJWKMapToPublicKey(jwkMap)
+      
+      // Create JWE object with RSA-OAEP-256 and A256GCM (matching iOS implementation)
+      val jweObject = JWEObject(
+        JWEHeader.Builder(
+          JWEAlgorithm.RSA_OAEP_256,
+          EncryptionMethod.A256GCM
+        ).build(),
+        Payload(jwt)
+      )
+      
+      // Create RSA encrypter with the public key
+      val rsaEncrypter = RSAEncrypter(publicKey as java.security.interfaces.RSAPublicKey)
+      
+      // Encrypt the JWE
+      jweObject.encrypt(rsaEncrypter)
+      
+      // Serialize and return the encrypted JWT
+      return jweObject.serialize()
+      
+    } catch (e: Exception) {
+      Log.e(NAME, "Failed to encrypt JWT with public key: ${e.message}", e)
+      throw e
+    }
   }
   
   // MARK: - Account management methods
@@ -1196,5 +1301,78 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       // Final fallback to a default UUID
       "00000000-0000-0000-0000-000000000000"
     }
+  }
+
+  /**
+   * Converts a React Native ReadableMap JWK to a Java PublicKey
+   * @param jwkMap The JWK as a ReadableMap from React Native
+   * @return The Java PublicKey object
+   */
+  private fun convertJWKMapToPublicKey(jwkMap: ReadableMap): PublicKey {
+    try {
+      // Convert ReadableMap to JSON string
+      val jwkJson = convertReadableMapToMap(jwkMap)
+      
+      // Create JWK from the map
+      val jwk = JWK.parse(JSONObject(jwkJson).toString())
+      
+      // Convert JWK to PublicKey
+      return jwk.toRSAKey().toPublicKey()
+      
+    } catch (e: Exception) {
+      Log.e(NAME, "Failed to convert JWK map to PublicKey: ${e.message}", e)
+      throw IllegalArgumentException("Invalid JWK format: ${e.message}", e)
+    }
+  }
+
+  /**
+   * Gets the current public key from the bcsc-keypair-port
+   * @return The current public key
+   */
+  private fun getCurrentPublicKey(): PublicKey? {
+    return try {
+      val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+      currentKeyPair.getKeyPair()?.public
+    } catch (e: BcscException) {
+      Log.e(NAME, "Failed to get current public key: ${e.devMessage}", e)
+      null
+    }
+  }
+  private fun convertReadableMapToMap(readableMap: ReadableMap): Map<String, Any> {
+    val map = mutableMapOf<String, Any>()
+    val iterator = readableMap.keySetIterator()
+    
+    while (iterator.hasNextKey()) {
+      val key = iterator.nextKey()
+      val value = when (readableMap.getType(key)) {
+        ReadableType.String -> readableMap.getString(key) ?: ""
+        ReadableType.Number -> {
+          val doubleValue = readableMap.getDouble(key)
+          if (doubleValue == doubleValue.toInt().toDouble()) doubleValue.toInt() else doubleValue
+        }
+        ReadableType.Boolean -> readableMap.getBoolean(key)
+        ReadableType.Array -> {
+          val array = readableMap.getArray(key)
+          val list = mutableListOf<Any>()
+          for (i in 0 until array!!.size()) {
+            when (array.getType(i)) {
+              ReadableType.String -> list.add(array.getString(i))
+              ReadableType.Number -> {
+                val doubleValue = array.getDouble(i)
+                list.add(if (doubleValue == doubleValue.toInt().toDouble()) doubleValue.toInt() else doubleValue)
+              }
+              ReadableType.Boolean -> list.add(array.getBoolean(i))
+              else -> list.add(array.getString(i) ?: "")
+            }
+          }
+          list
+        }
+        ReadableType.Map -> convertReadableMapToMap(readableMap.getMap(key)!!)
+        else -> readableMap.getString(key) ?: ""
+      }
+      map[key] = value
+    }
+    
+    return map
   }
 }

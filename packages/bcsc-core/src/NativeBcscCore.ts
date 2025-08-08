@@ -95,6 +95,7 @@ export interface Spec extends TurboModule {
     deviceToken?: string
   ): Promise<string>;
   hashBase64(base64: string): Promise<string>;
+  signJWT(payload: string): Promise<string>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

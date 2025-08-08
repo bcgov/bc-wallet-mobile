@@ -20,8 +20,6 @@ abstract class BcscCoreSpec internal constructor(context: ReactApplicationContex
   abstract fun createEvidenceRequestJWT(deviceCode: String, clientID: String, promise: Promise)
   abstract fun hashBase64(base64: String, promise: Promise)
   abstract fun decodePayload(jweString: String, promise: Promise)
-
-  // Missing from current spec, present in BcscCore.swift:
   abstract fun clearKeychain(promise: Promise)
   abstract fun generateKeyPair(promise: Promise)
   abstract fun createClientAssertionJWT(audience: String, issuer: String, subject: String, additionalClaims: com.facebook.react.bridge.ReadableMap?, promise: Promise)

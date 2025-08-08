@@ -16,6 +16,7 @@ import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/n
 import Form, { FormField } from '@/components/Form'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 
+
 type UpdateAddressScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.UpdateAddressScreen>
 }
@@ -95,12 +96,10 @@ const UpdateAddressScreen: React.FC<UpdateAddressScreenProps> = () => {
     },
   ]
 
-  //get default values from store if available
   const formDefaults = {
-    // for non bcsc card flows, when these values are not in the store the defaults should auto populate
-    // from a contact card on ios or from the equivalent on android
-    streetLine1: store.bcsc?.address?.street_address || '',
-    streetLine2: '', // split at newline if there is one
+    // TODO(TL): these defaults should auto-populate from the user's contact card on IOS or Android
+    streetLine1: store.bcsc?.address?.street_address?.split('\n')[0] || '',
+    streetLine2: store.bcsc?.address?.street_address?.split('\n')[1] || '',
     city: store.bcsc?.address?.locality || '',
     province: store.bcsc?.address?.region || '',
     postalCode: store.bcsc?.address?.postal_code || '',
@@ -111,11 +110,11 @@ const UpdateAddressScreen: React.FC<UpdateAddressScreenProps> = () => {
   const formatAddress = (address: Record<string, string>): Address => {
     //convert address from form to openid format
     return {
-      street_address: `${address.streetLine1}${address?.streetLine2 ? '\n' + address.streetLine2 : ''}`,
-      locality: address.city,
-      region: address.province,
+      street_address: `${address.streetLine1}${address?.streetLine2 ? '\n' + address.streetLine2 : ''}`.toUpperCase(),
+      country: 'CA', //only accepts CA
+      locality: address.city.toUpperCase(),
       postal_code: address.postalCode,
-      country: 'CA' //only accepts CA
+      region: address.province.toUpperCase(),
     }
   }
 
@@ -123,29 +122,19 @@ const UpdateAddressScreen: React.FC<UpdateAddressScreenProps> = () => {
     const formattedAddress = formatAddress(data)
     try {
       dispatch({ type: BCDispatchAction.UPDATE_ADDRESS, payload: [formattedAddress] })
-      
-      const audience = 'https://idsit.gov.bc.ca/device/' // This should come from config
-      
-    //   const id_token_hint = await jwt.createAddressJWT(audience, {
-    //     familyName: 'SURNAMESON', 
-    //     birthdate: '2000-01-01', 
-    //     address: formattedAddress,
-    //     givenName: 'GIVENONEY', 
-    //     gender: 'unknown' // all needs to come from user info ^
-    //   })
-
-      const id_token_hint = 'this is a placeholder'
-
-      logger.info(`JWT: ${id_token_hint}`)
-
+            
+      const id_token_hint = {
+        address: formattedAddress,
+      }
       // hardcoded values for now
-      const response = await authorization.authorizeDevice('C75102720', new Date('2000-01-01'), id_token_hint)
+      const response = await authorization.authorizeDevice(undefined, new Date('2000-01-01'), id_token_hint)
       logger.info(`Self-attestation successful: ${JSON.stringify(response, null, 2)}`)
       
-      // navigation.navigate(BCSCScreens.NextScreen)
+      navigation.navigate(BCSCScreens.NextScreen)
     } catch (error) {
-    //   logger.error(`Error updating address: ${JSON.stringify(error, null, 2)}`)
+      logger.error(`Error updating address: ${JSON.stringify(error, null, 2)}`)
         console.error(error)
+        console.error(error.response?.data || error.message || 'Unknown error')
     }
   }
 

@@ -48,6 +48,7 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.ManualSerial} component={ManualSerialScreen} />
       <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
+      <Stack.Screen name={BCSCScreens.UpdateAddressScreen} component={UpdateAddressScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
       <Stack.Screen name={BCSCScreens.EnterEmailScreen} component={EnterEmailScreen} />
       <Stack.Screen name={BCSCScreens.EmailConfirmationScreen} component={EmailConfirmationScreen} />
@@ -87,58 +88,6 @@ const VerifyIdentityStack = () => {
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
-        <Stack.Screen
-          name={BCSCScreens.SetupSteps}
-          component={SetupStepsScreen}
-          options={{
-            title: 'Setup Steps',
-            headerRight: HelpHeaderButton,
-            headerLeft: () => null,
-          }}
-        />
-        <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
-        <Stack.Screen name={BCSCScreens.SerialInstructions} component={SerialInstructionsScreen} />
-        <Stack.Screen name={BCSCScreens.ManualSerial} component={ManualSerialScreen} />
-        <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
-        <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
-        <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
-        <Stack.Screen name={BCSCScreens.EnterEmailScreen} component={EnterEmailScreen} />
-        <Stack.Screen name={BCSCScreens.EmailConfirmationScreen} component={EmailConfirmationScreen} />
-        <Stack.Screen name={BCSCScreens.UpdateAddressScreen} component={UpdateAddressScreen} />
-        <Stack.Screen
-          name={BCSCScreens.VerificationMethodSelection}
-          component={VerificationMethodSelectionScreen}
-          options={{ title: 'Choose How to Verify', headerRight: HelpHeaderButton }}
-        />
-        <Stack.Screen
-          name={BCSCScreens.VerifyInPerson}
-          component={VerifyInPersonScreen}
-          options={{ headerRight: HelpHeaderButton }}
-        />
-        <Stack.Screen
-          name={BCSCScreens.InformationRequired}
-          component={InformationRequiredScreen}
-          options={{ title: 'Information Required' }}
-        />
-        <Stack.Screen name={BCSCScreens.PhotoInstructions} component={PhotoInstructionsScreen} />
-        <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={BCSCScreens.PhotoReview} component={PhotoReviewScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={BCSCScreens.VideoInstructions} component={VideoInstructionsScreen} />
-        <Stack.Screen name={BCSCScreens.TakeVideo} component={TakeVideoScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={BCSCScreens.VideoReview} component={VideoReviewScreen} options={{ headerShown: false }} />
-        <Stack.Screen name={BCSCScreens.PendingReview} component={PendingReviewScreen} />
-        <Stack.Screen name={BCSCScreens.VideoTooLong} component={VideoTooLongScreen} options={{ headerShown: false }} />
-        <Stack.Screen
-          name={BCSCScreens.SuccessfullySent}
-          component={SuccessfullySentScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name={BCSCScreens.VerificationSuccess}
-          component={VerificationSuccessScreen}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
   )
 }
 

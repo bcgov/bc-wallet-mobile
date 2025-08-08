@@ -275,20 +275,18 @@ export const createQuickLoginJWT = async (
 };
 
 /**
- * Retrieves the registration token (idToken) - currently commented out but ready for use.
- * @returns A promise that resolves to a TokenInfo object containing the idToken, or null if not found.
+ * Signs a JWT with the given payload.
+ * @param payload The payload to include in the JWT.
+ * @returns A promise that resolves to the signed JWT string.
  */
-export const getRegistrationToken = async (): Promise<TokenInfo | null> => {
-  // Uncomment when ready to use:
-  // const nativeToken = await BcscCore.getToken(TokenType.Registration as number);
-  // if (!nativeToken) {
-  //   return null;
-  // }
-  // return {
-  //   ...nativeToken,
-  //   type: nativeToken.type as TokenType,
-  // };
+export const signJWT = async (
+  payload: Record<string, any>): Promise<string> => {
+  return BcscCore.signJWT(payload);
+};
 
-  // For now, return null
-  return null;
+export const encryptJWTWithPublicKey = async (
+  jwt: string,
+  jwkMap: Record<string, any>
+): Promise<string> => {
+  return BcscCore.encryptJWTWithPublicKey(jwt, jwkMap);
 };
