@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react'
 import { useStore } from '@bifold/core'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -93,18 +94,19 @@ export interface EvidenceMetadataPayload {
 const useEvidenceApi = () => {
   const [store] = useStore<BCState>()
 
-  const _getDeviceCode = () => {
+  const _getDeviceCode = useCallback(() => {
     const code = store.bcsc.deviceCode
     if (!code) throw new Error('Device code is missing. Re install the app and setup try again.')
     return code
-  }
+  }, [store.bcsc.deviceCode])
 
-  const getEvidenceMetadata = async (): Promise<EvidenceMetadataResponseData> => {
+  const getEvidenceMetadata = useCallback(async (): Promise<EvidenceMetadataResponseData> => {
     const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`)
     return data
-  }
+  }, [])
+
   // This needs ot be called for the process to start
-  const createVerificationRequest = async (): Promise<VerificationResponseData> => {
+  const createVerificationRequest = useCallback(async (): Promise<VerificationResponseData> => {
     return withAccount(async (account) => {
       const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.post<VerificationResponseData>(
@@ -114,209 +116,266 @@ const useEvidenceApi = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          // Evidence endpoints do not require a full access token
+          skipBearerAuth: true,
         }
       )
       return data
     })
-  }
+  }, [_getDeviceCode])
 
-  const uploadPhotoEvidenceMetadata = async (
-    payload: VerificationPhotoUploadPayload
-  ): Promise<UploadEvidenceResponseData> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.post<UploadEvidenceResponseData>(
-        `${apiClient.endpoints.evidence}/v1/photos`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      return data
-    })
-  }
-  const uploadVideoEvidenceMetadata = async (
-    payload: VerificationVideoUploadPayload
-  ): Promise<UploadEvidenceResponseData> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.post<UploadEvidenceResponseData>(
-        `${apiClient.endpoints.evidence}/v1/videos`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      return data
-    })
-  }
+  const uploadPhotoEvidenceMetadata = useCallback(
+    async (payload: VerificationPhotoUploadPayload): Promise<UploadEvidenceResponseData> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.post<UploadEvidenceResponseData>(
+          `${apiClient.endpoints.evidence}/v1/photos`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
+  const uploadVideoEvidenceMetadata = useCallback(
+    async (payload: VerificationVideoUploadPayload): Promise<UploadEvidenceResponseData> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.post<UploadEvidenceResponseData>(
+          `${apiClient.endpoints.evidence}/v1/videos`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
 
-  const sendVerificationRequest = async (
-    verificationRequestId: string,
-    payload: SendVerificationPayload
-  ): Promise<VerificationStatusResponseData> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.put<VerificationStatusResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      return data
-    })
-  }
+  const sendVerificationRequest = useCallback(
+    async (
+      verificationRequestId: string,
+      payload: SendVerificationPayload
+    ): Promise<VerificationStatusResponseData> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.put<VerificationStatusResponseData>(
+          `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
 
-  const getVerificationRequestPrompts = async (verificationRequestId: string): Promise<VerificationResponseData> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.get<VerificationResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      return data
-    })
-  }
+  const getVerificationRequestPrompts = useCallback(
+    async (verificationRequestId: string): Promise<VerificationResponseData> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.get<VerificationResponseData>(
+          `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
 
-  const getVerificationRequestStatus = async (
-    verificationRequestId: string
-  ): Promise<VerificationStatusResponseData> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.get<VerificationStatusResponseData>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      return data
-    })
-  }
+  const getVerificationRequestStatus = useCallback(
+    async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.get<VerificationStatusResponseData>(
+          `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
 
   // This is only valid once sendVerificationRequest has been called
   // meaning the user has uploaded their photo, video and document evidence
   // In the mean time the ID is 'held' for the time being and discarded if the user backs out
-  const cancelVerificationRequest = async (verificationRequestId: string): Promise<any> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.delete<any>(
-        `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      return data
-    })
-  }
-
-  const createEmailVerification = async (email: string): Promise<any> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.post<any>(
-        `${apiClient.endpoints.evidence}/v1/emails`,
-        { email_address: email },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      return data
-    })
-  }
-
-  const sendEmailVerificationCode = async (code: string, emailAddressId: string): Promise<void> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.put<void>(
-        `${apiClient.endpoints.evidence}/v1/emails/${emailAddressId}`,
-        {
-          verification_code: code,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-      return data
-    })
-  }
-
-  const uploadPhotoEvidenceBinary = async (url: string, binaryData: any): Promise<any> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.put<any>(url, binaryData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'image/jpeg',
-          Accept: 'image/jpeg',
-        },
+  const cancelVerificationRequest = useCallback(
+    async (verificationRequestId: string): Promise<any> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.delete<any>(
+          `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
       })
-      return data
-    })
-  }
+    },
+    [_getDeviceCode]
+  )
 
-  const uploadVideoEvidenceBinary = async (url: string, binaryData: any): Promise<any> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.put<any>(url, binaryData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'video/mp4',
-          Accept: 'video/mp4',
-        },
+  const createEmailVerification = useCallback(
+    async (email: string): Promise<any> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.post<any>(
+          `${apiClient.endpoints.evidence}/v1/emails`,
+          { email_address: email },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
       })
-      return data
-    })
-  }
+    },
+    [_getDeviceCode]
+  )
 
-  const sendEvidenceMetadata = async (payload: EvidenceMetadataPayload): Promise<UploadEvidenceResponseData[]> => {
-    return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-      const { data } = await apiClient.post<UploadEvidenceResponseData[]>(
-        `${apiClient.endpoints.evidence}/v1/documents`,
-        payload,
-        {
+  const sendEmailVerificationCode = useCallback(
+    async (code: string, emailAddressId: string): Promise<void> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.put<void>(
+          `${apiClient.endpoints.evidence}/v1/emails/${emailAddressId}`,
+          {
+            verification_code: code,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
+
+  const uploadPhotoEvidenceBinary = useCallback(
+    async (url: string, binaryData: any): Promise<any> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.put<any>(url, binaryData, {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'image/jpeg',
+            Accept: 'image/jpeg',
           },
-        }
-      )
-      return data
-    })
-  }
+          skipBearerAuth: true,
+        })
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
 
-  return {
-    createVerificationRequest,
-    uploadPhotoEvidenceMetadata,
-    uploadVideoEvidenceMetadata,
-    uploadPhotoEvidenceBinary,
-    uploadVideoEvidenceBinary,
-    sendVerificationRequest,
-    getVerificationRequestStatus,
-    cancelVerificationRequest,
-    getVerificationRequestPrompts,
-    createEmailVerification,
-    sendEmailVerificationCode,
-    getEvidenceMetadata,
-    sendEvidenceMetadata,
-  }
+  const uploadVideoEvidenceBinary = useCallback(
+    async (url: string, binaryData: any): Promise<any> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.put<any>(url, binaryData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'video/mp4',
+            Accept: 'video/mp4',
+          },
+          skipBearerAuth: true,
+        })
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
+
+  const sendEvidenceMetadata = useCallback(
+    async (payload: EvidenceMetadataPayload): Promise<UploadEvidenceResponseData[]> => {
+      return withAccount(async (account) => {
+        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.post<UploadEvidenceResponseData[]>(
+          `${apiClient.endpoints.evidence}/v1/documents`,
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
+
+  return useMemo(
+    () => ({
+      createVerificationRequest,
+      uploadPhotoEvidenceMetadata,
+      uploadVideoEvidenceMetadata,
+      uploadPhotoEvidenceBinary,
+      uploadVideoEvidenceBinary,
+      sendVerificationRequest,
+      getVerificationRequestStatus,
+      cancelVerificationRequest,
+      getVerificationRequestPrompts,
+      createEmailVerification,
+      sendEmailVerificationCode,
+      sendEvidenceMetadata,
+      getEvidenceMetadata,
+    }),
+    [
+      createVerificationRequest,
+      uploadPhotoEvidenceMetadata,
+      uploadVideoEvidenceMetadata,
+      uploadPhotoEvidenceBinary,
+      uploadVideoEvidenceBinary,
+      sendVerificationRequest,
+      getVerificationRequestStatus,
+      cancelVerificationRequest,
+      getVerificationRequestPrompts,
+      createEmailVerification,
+      sendEmailVerificationCode,
+      sendEvidenceMetadata,
+      ,
+      getEvidenceMetadata,
+    ]
+  )
 }
 
 export default useEvidenceApi
