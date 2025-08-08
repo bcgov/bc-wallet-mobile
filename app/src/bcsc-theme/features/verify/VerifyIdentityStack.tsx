@@ -21,6 +21,11 @@ import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
 import PendingReviewScreen from './send-video/PendingReviewScreen'
 import SuccessfullySentScreen from './send-video/SuccessfullySentScreen'
+import AdditionalIdentificationRequiredScreen from './non-photo/AdditionalIdentificationRequiredScreen'
+import IDPhotoInformationScreen from './non-photo/IDPhotoInformationScreen'
+import EvidenceTypeListScreen from './non-photo/EvidenceTypeListScreen'
+import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
+import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
@@ -85,6 +90,14 @@ const VerifyIdentityStack = () => {
         component={VerificationSuccessScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name={BCSCScreens.AdditionalIdentificationRequired}
+        component={AdditionalIdentificationRequiredScreen}
+      />
+      <Stack.Screen name={BCSCScreens.IDPhotoInformation} component={IDPhotoInformationScreen} />
+      <Stack.Screen name={BCSCScreens.EvidenceTypeList} component={EvidenceTypeListScreen} />
+      <Stack.Screen name={BCSCScreens.EvidenceCapture} component={EvidenceCaptureScreen} />
+      <Stack.Screen name={BCSCScreens.EvidenceIDCollection} component={EvidenceIDCollectionScreen} />
     </Stack.Navigator>
   )
 }

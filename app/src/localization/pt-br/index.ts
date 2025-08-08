@@ -259,6 +259,31 @@ const translation = {
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (PT-BR)",
       "InputLabel": "Birthdate (PT-BR)",
     },
+    "AdditionalEvidence": {
+      "Heading": "Additional ID required (PT-BR)",
+      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it. (PT-BR)",
+      "PhotoRequiredDescription": "It's needed to verify your identity. You'll be asked to provide one or two government-issued IDs. (PT-BR)",
+      "CheckYourID": "Check your ID (PT-BR)",
+      "CheckYourIDBullet1": "<b>Has the same name as on your BC Services Card</b> (PT-BR)",
+      "CheckYourIDBullet2": "<b>Has a recent photo</b> (PT-BR)",
+      "CheckYourIDBullet3": "<b>Is not expired</b> (PT-BR)",
+      "LimitedAccess": "Limited access to services (PT-BR)",
+      "LimitedAccessDescription": "Some services only accept the app when it's set up with a photo ID. (PT-BR)",
+      "ChooseID": "Choose ID (PT-BR)",
+    },
+    "IDPhotoInformation": {
+      "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity. (PT-BR)",
+      "IDPhotoInstructionsBullet1": "Center your ID within the frame (PT-BR)",
+      "IDPhotoInstructionsBullet2": "Have no other objects in the photo (PT-BR)",
+      "IDPhotoInstructionsBullet3": "Make sure the entire ID is visible (PT-BR)",
+      "IDPhotoInstructionsBullet4": "Make sure the image is clear without any glare or shadows (PT-BR)",
+      "TakePhoto": "Take photo of ID (PT-BR)",
+    },
+    "EvidenceTypeList": {
+      "Heading": "Choose photo ID (PT-BR)",
+      "Description": "Use an ID that has the same name as on your BC Services Card. (PT-BR)",
+      "FirstID": "Choose your first ID (PT-BR)",
+    }
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting (PT-BR)",

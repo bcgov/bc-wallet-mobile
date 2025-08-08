@@ -262,6 +262,31 @@ const translation = {
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
       "InputLabel": "Birthdate",
     },
+    "AdditionalEvidence": {
+      "Heading": "Additional ID required",
+      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it.",
+      "PhotoRequiredDescription": "It's needed to verify your identity. You'll be asked to provide one or two government-issued IDs.",
+      "CheckYourID": "Check your ID",
+      "CheckYourIDBullet1": "<b>Has the same name as on your BC Services Card</b>",
+      "CheckYourIDBullet2": "<b>Has a recent photo</b>",
+      "CheckYourIDBullet3": "<b>Is not expired</b>",
+      "LimitedAccess": "Limited access to services",
+      "LimitedAccessDescription": "Some services only accept the app when it's set up with a photo ID.",
+      "ChooseID": "Choose ID",
+    },
+    "IDPhotoInformation": {
+      "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity.",
+      "IDPhotoInstructionsBullet1": "Center your ID within the frame",
+      "IDPhotoInstructionsBullet2": "Have no other objects in the photo",
+      "IDPhotoInstructionsBullet3": "Make sure the entire ID is visible",
+      "IDPhotoInstructionsBullet4": "Make sure the image is clear without any glare or shadows",
+      "TakePhoto": "Take photo of ID",
+    },
+    "EvidenceTypeList": {
+      "Heading": "Choose photo ID",
+      "Description": "Use an ID that has the same name as on your BC Services Card.",
+      "FirstID": "Choose your first ID",
+    }
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting",

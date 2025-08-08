@@ -9,10 +9,12 @@ import {
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
 import {
+  EvidenceType,
   VerificationPhotoUploadPayload,
   VerificationPrompt,
   VerificationVideoUploadPayload,
 } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { PhotoMetadata } from './bcsc-theme/utils/file-info'
 
 export interface IASEnvironment {
   name: string
@@ -58,7 +60,14 @@ export interface BCSCState {
   bookmarks: string[]
   verificationRequestId?: string
   verificationRequestSha?: string
+  additionalEvidenceData: AdditionalEvidenceData[]
   bcscDevicesCount?: number
+}
+
+export interface AdditionalEvidenceData {
+  evidenceType: EvidenceType
+  metadata: PhotoMetadata[]
+  documentNumber: string
 }
 
 export enum Mode {
@@ -105,6 +114,11 @@ enum BCSCDispatchAction {
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
+  ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
+  UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
+  UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
+  CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
+  CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_DEVICE_COUNT = 'bcsc/updateDeviceCount',
 }
 
@@ -180,6 +194,7 @@ const bcscState: BCSCState = {
   refreshToken: undefined,
   verificationRequestId: undefined,
   verificationRequestSha: undefined,
+  additionalEvidenceData: [],
 }
 
 export enum BCLocalStorageKeys {
@@ -395,6 +410,62 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
 
+      return newState
+    }
+    case BCSCDispatchAction.ADD_EVIDENCE_TYPE: {
+      const evidenceType: EvidenceType = (action?.payload || []).pop()
+      const newEvidenceData: AdditionalEvidenceData = {
+        evidenceType,
+        metadata: [],
+        documentNumber: '',
+      }
+      const bcsc = {
+        ...state.bcsc,
+        additionalEvidenceData: [...state.bcsc.additionalEvidenceData, newEvidenceData],
+      }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_EVIDENCE_METADATA: {
+      const { evidenceType, metadata }: { evidenceType: EvidenceType; metadata: PhotoMetadata[] } =
+        (action?.payload || []).pop() ?? {}
+
+      const updatedEvidenceData = state.bcsc.additionalEvidenceData.map((item) =>
+        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, metadata } : item
+      )
+
+      const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_EVIDENCE_DOCUMENT_NUMBER: {
+      const { evidenceType, documentNumber }: { evidenceType: EvidenceType; documentNumber: string } =
+        (action?.payload || []).pop() ?? {}
+
+      const updatedEvidenceData = state.bcsc.additionalEvidenceData.map((item) =>
+        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, documentNumber } : item
+      )
+
+      const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.CLEAR_ADDITIONAL_EVIDENCE: {
+      const bcsc = { ...state.bcsc, additionalEvidenceData: [] }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.CLEAR_BCSC: {
+      const bcsc = { ...bcscState }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     default:
