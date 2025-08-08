@@ -11,12 +11,10 @@ import AgentProvider from '@credo-ts/react-hooks'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, DeviceEventEmitter } from 'react-native'
-import { getToken, TokenType } from 'react-native-bcsc-core'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-import { BCDispatchAction, BCState } from '@/store'
-import client from '../api/client'
-import useApi from '../api/hooks/useApi'
+import { BCState } from '@/store'
+import useInitializeBcscApi from '../hooks/useInitializeBcscApi'
 import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import BCSCMainStack from './MainStack'
 
@@ -40,64 +38,13 @@ const BCSCRootStack: React.FC = () => {
   ])
   const { agent, initializeAgent, shutdownAndClearAgentIfExists } = useAgentSetup()
   const [onboardingComplete, setOnboardingComplete] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const { registration } = useApi()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  const { loading } = useInitializeBcscApi()
 
   const shouldRenderMainStack = useMemo(
     () => onboardingComplete && store.authentication.didAuthenticate,
     [onboardingComplete, store.authentication.didAuthenticate]
   )
-
-  // TODO move into a hook
-  useEffect(() => {
-    registration.register().catch((error) => {
-      logger.error(`Error during registration: ${error}`)
-      // Handle error appropriately, e.g., show an alert or log it
-    })
-
-    if (!store.stateLoaded) {
-      return
-    }
-
-    const checkIfVerified = async () => {
-      try {
-        setLoading(true)
-        let token
-        // take response and build the data
-        if (!store.bcsc.refreshToken) {
-          // fetch token data and save it son
-          const tokenInfo = await getToken(TokenType.Refresh)
-          token = tokenInfo?.token
-          // TODO: Get device code from bscs core package
-          dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [token] })
-        } else {
-          token = store.bcsc.refreshToken
-        }
-
-        if (token) {
-          const tokenData = await client.getTokensForRefreshToken(token)
-
-          // Update device count if available
-          if (tokenData.bcsc_devices_count !== undefined) {
-            dispatch({
-              type: BCDispatchAction.UPDATE_DEVICE_COUNT,
-              payload: [tokenData.bcsc_devices_count],
-            })
-          }
-
-          dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
-        }
-      } catch (error) {
-        logger.error(`Error setting API client tokens: ${error}`)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkIfVerified()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   useEffect(() => {
     // if user gets locked out, erase agent

@@ -18,7 +18,9 @@ const useJwksApi = () => {
   const getJwks = useCallback(async (): Promise<Keys> => {
     const {
       data: { keys },
-    } = await apiClient.get<JWKResponseData>(apiClient.endpoints.jwksURI)
+    } = await apiClient.get<JWKResponseData>(apiClient.endpoints.jwksURI, {
+      skipBearerAuth: true, // this endpoint does not require an access token
+    })
     return keys
   }, [])
 

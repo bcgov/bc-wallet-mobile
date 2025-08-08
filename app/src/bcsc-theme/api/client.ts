@@ -20,16 +20,16 @@ export interface TokenStatusResponseDataWithDeviceCount extends TokenStatusRespo
   bcsc_devices_count?: number
 }
 
-interface BCSCEndpoints {
-  // METADATA
+interface BCSCConfig {
   pairDeviceWithQRCodeSupported: boolean
   maximumAccountsPerDevice: number
   allowedIdentificationProcesses: string[]
   credentialFlowsSupported: string
-  multipleAccountsSupported: false
+  multipleAccountsSupported: boolean
   attestationTimeToLive: number
+}
 
-  // ENDPOINTS
+interface BCSCEndpoints {
   attestation: string
   issuer: string
   authorization: string
@@ -48,6 +48,7 @@ class BCSCService {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
   endpoints: BCSCEndpoints
+  config: BCSCConfig
   baseURL: string
   tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
 
@@ -60,8 +61,8 @@ class BCSCService {
       },
     })
 
-    // Default test environment for endpoints
-    this.endpoints = {
+    // fallback config
+    this.config = {
       pairDeviceWithQRCodeSupported: true,
       maximumAccountsPerDevice: 0,
       allowedIdentificationProcesses: [
@@ -72,41 +73,74 @@ class BCSCService {
       credentialFlowsSupported: 'default_web_flow, bcwallet_initiated, bcsc_initiated',
       multipleAccountsSupported: false,
       attestationTimeToLive: 60,
-      attestation: 'https://idsit.gov.bc.ca/device/attestations',
-      issuer: 'https://idsit.gov.bc.ca/device/',
-      authorization: 'https://idsit.gov.bc.ca/device/authorize',
-      userInfo: 'https://idsit.gov.bc.ca/device/userinfo',
-      deviceAuthorization: 'https://idsit.gov.bc.ca/device/devicecode',
-      jwksURI: 'https://idsit.gov.bc.ca/device/jwk',
-      registration: 'https://idsit.gov.bc.ca/device/register',
-      clientMetadata: 'https://idsit.gov.bc.ca/device/clients/metadata',
-      savedServices: 'https://idsit.gov.bc.ca/device/services',
-      token: 'https://idsit.gov.bc.ca/device/token',
-      credential: 'https://idsit.gov.bc.ca/credentials/v1/person',
-      evidence: 'https://idsit.gov.bc.ca/evidence',
+    }
+
+    // fallback endpoints
+    this.endpoints = {
+      attestation: `${this.baseURL}/device/attestations`,
+      issuer: `${this.baseURL}/device/`,
+      authorization: `${this.baseURL}/device/authorize`,
+      userInfo: `${this.baseURL}/device/userinfo`,
+      deviceAuthorization: `${this.baseURL}/device/devicecode`,
+      jwksURI: `${this.baseURL}/device/jwk`,
+      registration: `${this.baseURL}/device/register`,
+      clientMetadata: `${this.baseURL}/device/clients/metadata`,
+      savedServices: `${this.baseURL}/device/services`,
+      token: `${this.baseURL}/device/token`,
+      credential: `${this.baseURL}/credentials/v1/person`,
+      evidence: `${this.baseURL}/evidence`,
     }
 
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
     this.client.interceptors.response.use(undefined, (error: AxiosError) => {
-      this.logger.error(`${error.name}: ${error.code}`, {
-        message: `IAS API Error: ${error.message}`,
-        error: error.response?.data,
-      })
+      const errorDetails = {
+        name: error.name,
+        message: error.message,
+        code: error.code,
+
+        request: {
+          method: error.config?.method?.toUpperCase(),
+          url: error.config?.url,
+          baseURL: error.config?.baseURL,
+          headers: error.config?.headers,
+          data: error.config?.data,
+          params: error.config?.params,
+        },
+
+        response: error.response
+          ? {
+              status: error.response.status,
+              statusText: error.response.statusText,
+              headers: error.response.headers,
+              data: error.response.data,
+            }
+          : null,
+
+        isTimeout: error.code === 'ECONNABORTED',
+        isNetworkError: !error.response && !error.code,
+
+        stack: error.stack,
+      }
+
+      this.logger.error(`API Error:\n${JSON.stringify(errorDetails, null, 2)}`)
+
       return Promise.reject(error)
     })
   }
 
-  async fetchEndpoints(url: string) {
-    const response = await this.get<any>(`${url}/device/.well-known/openid-configuration`)
-    this.endpoints = {
+  async fetchEndpointsAndConfig(url: string) {
+    const response = await this.get<any>(`${url}/device/.well-known/openid-configuration`, { skipBearerAuth: true })
+    this.config = {
       pairDeviceWithQRCodeSupported: response.data['pair_device_with_qrcode_supported'],
       maximumAccountsPerDevice: response.data['maximum_accounts_per_device'],
       allowedIdentificationProcesses: response.data['allowed_identification_processes'],
       credentialFlowsSupported: response.data['credential_flows_supported'],
       multipleAccountsSupported: response.data['multiple_accounts_supported'],
       attestationTimeToLive: response.data['attestation_time_to_live'],
+    }
 
+    this.endpoints = {
       attestation: response.data['attestation_endpoint'],
       issuer: response.data['issuer'],
       authorization: response.data['authorization_endpoint'],
@@ -118,7 +152,8 @@ class BCSCService {
       savedServices: response.data['saved_services_endpoint'],
       token: response.data['token_endpoint'],
       credential: response.data['credential_endpoint'],
-      evidence: 'https://idsit.gov.bc.ca/evidence', // this comes from /device/devicecode if an evidence flag is provided to that call
+      // TODO(bm): request backend team to add evidence endpoint to the response
+      evidence: `${this.baseURL}/evidence`,
     }
   }
 
@@ -151,17 +186,6 @@ class BCSCService {
       return config
     }
 
-    // skip processing if request is made to token or endpoint URL or initial registration
-    if (
-      config.url?.endsWith('/device/.well-known/openid-configuration') || // this endpoint is open
-      config.url?.endsWith('/device/token') || // this endpoint does not require an access token to fetch a token
-      config.url?.endsWith('/device/register') || // this endpoint registers the user and grants an access token
-      config.url?.endsWith('/device/devicecode') || // this endpoint registers the device before an access token is granted
-      config.url?.includes('/evidence') // the evidence endpoints are used to verify a user, so the user will not have an access token yet
-    ) {
-      return config
-    }
-
     if (!this.tokens || this.isTokenExpired(this.tokens.access_token)) {
       this.tokens = await this.fetchAccessToken()
     }
@@ -180,6 +204,7 @@ class BCSCService {
       const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, refreshToken)
       const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        skipBearerAuth: true,
       })
       this.tokens = tokenResponse.data
 
@@ -207,10 +232,5 @@ class BCSCService {
 }
 
 const client = new BCSCService()
-client.fetchEndpoints(client.baseURL).catch((error) => {
-  client.logger.error('Failed to fetch BCSC endpoints', {
-    message: error instanceof Error ? error.message : String(error),
-  })
-})
 
 export default client
