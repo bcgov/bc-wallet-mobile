@@ -61,9 +61,20 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         throw new Error('Device code or user code is missing in the store.')
       }
 
-      const data = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
-      if (data.refresh_token) {
-        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [data.refresh_token] })
+      const { refresh_token, bcsc_devices_count } = await token.checkDeviceCodeStatus(
+        store.bcsc.deviceCode,
+        store.bcsc.userCode
+      )
+      if (refresh_token) {
+        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+
+        if (bcsc_devices_count !== undefined) {
+          dispatch({
+            type: BCDispatchAction.UPDATE_DEVICE_COUNT,
+            payload: [bcsc_devices_count],
+          })
+        }
+
         navigation.navigate(BCSCScreens.VerificationSuccess)
       } else {
         setError(true)

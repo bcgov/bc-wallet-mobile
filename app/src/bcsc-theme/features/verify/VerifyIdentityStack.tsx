@@ -2,7 +2,6 @@ import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/n
 import { useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import SetupStepsScreen from './SetupStepsScreen'
-import HelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import SerialInstructionsScreen from './SerialInstructionsScreen'
 import ManualSerialScreen from './ManualSerialScreen'
@@ -29,6 +28,7 @@ import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
 import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
+import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -42,7 +42,8 @@ const VerifyIdentityStack = () => {
         component={SetupStepsScreen}
         options={{
           title: 'Setup Steps',
-          headerRight: HelpHeaderButton,
+          // TODO(bm): Add real help URL
+          headerRight: createHelpHeaderButton({ helpUrl: '' }),
           headerLeft: () => null,
         }}
       />
@@ -57,12 +58,14 @@ const VerifyIdentityStack = () => {
       <Stack.Screen
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
-        options={{ title: 'Choose How to Verify', headerRight: HelpHeaderButton }}
+        // TODO(bm): Add real help URL
+        options={{ title: 'Choose How to Verify', headerRight: createHelpHeaderButton({ helpUrl: '' }) }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
-        options={{ headerRight: HelpHeaderButton }}
+        // TODO(bm): Add real help URL
+        options={{ headerRight: createHelpHeaderButton({ helpUrl: '' }) }}
       />
       <Stack.Screen
         name={BCSCScreens.InformationRequired}

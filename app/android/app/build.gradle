@@ -54,6 +54,23 @@ react {
 
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
+// Fix for react-native-vector-icons task dependency issue
+afterEvaluate {
+    def copyFontsTask = tasks.findByName('copyReactNativeVectorIconFonts')
+    def lintTask = tasks.findByName('generateReleaseLintVitalReportModel')
+    
+    if (copyFontsTask != null && lintTask != null) {
+        lintTask.dependsOn copyFontsTask
+    }
+    
+    // Also fix other potential lint tasks that might have the same issue
+    tasks.withType(com.android.build.gradle.internal.lint.LintModelWriterTask) { task ->
+        if (copyFontsTask != null) {
+            task.dependsOn copyFontsTask
+        }
+    }
+}
+
 
 /**
  * Run Proguard to shrink the Java bytecode in release builds.
@@ -90,8 +107,12 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
     defaultConfig {
@@ -143,6 +164,8 @@ dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
 
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
+    
     implementation 'net.java.dev.jna:jna:5.14.0'
     
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"

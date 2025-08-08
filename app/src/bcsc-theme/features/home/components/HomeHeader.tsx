@@ -12,11 +12,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ name }) => {
 
   const styles = StyleSheet.create({
     container: {
-      padding: Spacing.lg,
-    },
-    helpContainer: {
-      justifyContent: 'flex-end',
-      alignItems: 'flex-end',
+      padding: Spacing.md,
     },
     idContainer: {
       justifyContent: 'center',
@@ -26,9 +22,6 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ name }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.helpContainer}>
-        <Icon name={'help-circle'} size={24} color={TextTheme.normal.color} />
-      </View>
       <View style={styles.idContainer}>
         <Icon name={'card-account-details'} size={40} color={TextTheme.normal.color} />
         <ThemedText variant={'headingThree'}>{name}</ThemedText>
