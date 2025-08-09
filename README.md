@@ -326,3 +326,22 @@ Ensure you have your emulator's front and back camera set to use different sourc
 ### Debugging in VSCode and Android Emulator
 
 [![](https://img.youtube.com/vi/UE66n7HOIAg/0.jpg)](https://www.youtube.com/watch?v=UE66n7HOIAg)
+
+## AI Documentation
+
+BC Wallet Mobile includes comprehensive machine-readable documentation designed for AI systems to understand and work with the codebase effectively. This documentation provides structured information about the project's architecture, APIs, security requirements, and development workflows.
+
+**📁 [AI Documentation System](./.ai-documentation/README.md)**
+
+The AI documentation includes:
+- **Project Metadata**: Architecture, technology stack, and features
+- **API Documentation**: Complete interface documentation for all modules
+- **Development Workflows**: Setup, coding standards, and processes
+- **Security Analysis**: Threat model, compliance, and security practices
+- **Configuration Guide**: Environment setup and tool configuration
+
+This documentation is particularly useful for:
+- AI development agents working on the codebase
+- New developers onboarding to the project
+- Understanding the complete project architecture
+- Following security and compliance requirements
