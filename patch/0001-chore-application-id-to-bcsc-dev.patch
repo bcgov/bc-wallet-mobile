@@ -1,0 +1,40 @@
+From 736596b3fcc6926fc04e0bb2f9e7badec0cfc4b6 Mon Sep 17 00:00:00 2001
+From: "Jason C. Leach" <jason.leach@fullboar.ca>
+Date: Fri, 1 Aug 2025 13:41:45 -0700
+Subject: [PATCH] chore: application id to bcsc dev
+
+Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
+---
+ app/android/app/build.gradle         | 2 +-
+ app/android/app/google-services.json | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/app/android/app/build.gradle b/app/android/app/build.gradle
+index 17d1efc6..a2fe13fc 100644
+--- a/app/android/app/build.gradle
++++ b/app/android/app/build.gradle
+@@ -95,7 +95,7 @@ android {
+     }
+ 
+     defaultConfig {
+-        applicationId "ca.bc.gov.BCWallet"
++        applicationId "ca.bc.gov.id.servicescard.dev"
+         minSdkVersion rootProject.ext.minSdkVersion
+         targetSdkVersion rootProject.ext.targetSdkVersion
+         versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1
+diff --git a/app/android/app/google-services.json b/app/android/app/google-services.json
+index a3a58790..13071b8f 100644
+--- a/app/android/app/google-services.json
++++ b/app/android/app/google-services.json
+@@ -9,7 +9,7 @@
+       "client_info": {
+         "mobilesdk_app_id": "1:1008044298583:android:56bf7c25b882152a44ae12",
+         "android_client_info": {
+-          "package_name": "ca.bc.gov.BCWallet"
++          "package_name": "ca.bc.gov.id.servicescard.dev"
+         }
+       },
+       "oauth_client": [
+-- 
+2.49.0
+
