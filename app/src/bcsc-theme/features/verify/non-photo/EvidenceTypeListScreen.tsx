@@ -1,6 +1,6 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { ActivityIndicator, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
@@ -11,7 +11,6 @@ import { BCDispatchAction, BCState } from '@/store'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCCardProcess } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { useTranslation } from 'react-i18next'
-import { Pressable } from 'react-native'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
