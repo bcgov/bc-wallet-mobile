@@ -1,6 +1,5 @@
 import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { Linking } from 'react-native'
 
 type HelpHeaderButtonProps = {
   helpAction?: () => void

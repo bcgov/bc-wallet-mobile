@@ -21,9 +21,13 @@ interface SectionData {
   data: EvidenceType[]
 }
 
-const SectionSeparator = () => {
+const SectionSeparator = ({ trailingItem }: { trailingItem?: boolean }) => {
   const { ColorPalette } = useTheme()
-  return <View style={{ height: 10, backgroundColor: ColorPalette.brand.secondaryBackground, alignSelf: 'center' }} />
+  if (trailingItem) {
+    return <View style={{ height: 10, backgroundColor: ColorPalette.brand.secondaryBackground, alignSelf: 'center' }} />
+  } else {
+    return null
+  }
 }
 
 const ItemSeparator = () => {
@@ -152,8 +156,8 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
       <SectionList
         sections={evidenceSections || []}
-        SectionSeparatorComponent={({ trailingItem }) => (trailingItem ? null : <SectionSeparator />)}
-        ItemSeparatorComponent={() => <ItemSeparator />}
+        SectionSeparatorComponent={SectionSeparator}
+        ItemSeparatorComponent={ItemSeparator}
         renderSectionHeader={(item) => (
           <ThemedText style={[styles.cardSection, { color: ColorPalette.brand.primary }]} variant={'headingFour'}>
             {item.section.title}
