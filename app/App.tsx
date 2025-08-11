@@ -13,6 +13,8 @@ import {
   ThemeProvider,
   toastConfig,
   TourProvider,
+  ErrorBoundaryWrapper,
+  bifoldLoggerInstance,
 } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
 import { useNavigationContainerRef } from '@react-navigation/native'
@@ -63,31 +65,33 @@ const App = () => {
   }, [])
 
   return (
-    <ContainerProvider value={bcwContainer}>
-      <StoreProvider initialState={initialState} reducer={reducer}>
-        <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
-          <NavContainer navigationRef={navigationRef}>
-            <AnimatedComponentsProvider value={animatedComponents}>
-              <AuthProvider>
-                <NetworkProvider>
-                  <ErrorModal enableReport />
-                  <WebDisplay
-                    destinationUrl={surveyMonkeyUrl}
-                    exitUrl={surveyMonkeyExitUrl}
-                    visible={surveyVisible}
-                    onClose={() => setSurveyVisible(false)}
-                  />
-                  <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                    <Root />
-                  </TourProvider>
-                  <Toast topOffset={15} config={toastConfig} />
-                </NetworkProvider>
-              </AuthProvider>
-            </AnimatedComponentsProvider>
-          </NavContainer>
-        </ThemeProvider>
-      </StoreProvider>
-    </ContainerProvider>
+    <ErrorBoundaryWrapper logger={bifoldLoggerInstance}>
+      <ContainerProvider value={bcwContainer}>
+        <StoreProvider initialState={initialState} reducer={reducer}>
+          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
+            <NavContainer navigationRef={navigationRef}>
+              <AnimatedComponentsProvider value={animatedComponents}>
+                <AuthProvider>
+                  <NetworkProvider>
+                    <ErrorModal enableReport />
+                    <WebDisplay
+                      destinationUrl={surveyMonkeyUrl}
+                      exitUrl={surveyMonkeyExitUrl}
+                      visible={surveyVisible}
+                      onClose={() => setSurveyVisible(false)}
+                    />
+                    <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                      <Root />
+                    </TourProvider>
+                    <Toast topOffset={15} config={toastConfig} />
+                  </NetworkProvider>
+                </AuthProvider>
+              </AnimatedComponentsProvider>
+            </NavContainer>
+          </ThemeProvider>
+        </StoreProvider>
+      </ContainerProvider>
+    </ErrorBoundaryWrapper>
   )
 }
 
