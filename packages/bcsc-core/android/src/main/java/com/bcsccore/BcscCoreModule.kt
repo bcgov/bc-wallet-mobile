@@ -36,6 +36,8 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 import javax.crypto.SecretKey
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 // JWT/Nimbus imports
 import com.nimbusds.jose.JWEObject
@@ -958,6 +960,20 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       Log.e(NAME, "decodePayload: Unexpected error: ${e.message}", e)
       promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", e)
     }
+  }
+
+  @ReactMethod
+  override fun createQuickLoginJWT(
+    accessToken: String,
+    clientId: String,
+    issuer: String,
+    clientRefId: String,
+    key: ReadableMap?,
+    fcmDeviceToken: String,
+    deviceToken: String?,
+    promise: Promise
+  ) {
+    promise.reject("E_NOT_IMPLEMENTED", "createQuickLoginJWT not yet implemented on Android")
   }
   
   // MARK: - Account management methods

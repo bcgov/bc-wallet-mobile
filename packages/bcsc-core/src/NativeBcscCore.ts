@@ -27,6 +27,14 @@ export type NativeToken = {
   expiry?: number | null; // Timestamp or null
 };
 
+export type JWK = {
+  kty: string;
+  e: string;
+  kid: string;
+  alg: string;
+  n: string;
+};
+
 export enum AccountSecurityMethod {
   PinNoDeviceAuth = 'app_pin_no_device_authn',
   PinWithDeviceAuth = 'app_pin_has_device_authn',
@@ -75,8 +83,17 @@ export interface Spec extends TurboModule {
     issuer: string,
     confirmationCode: string
   ): Promise<string | null>;
-  decodePayload(jweString: string): Promise<string>
-  createEvidenceRequestJWT(deviceCode: string, clientID: string): Promise<string>
+  decodePayload(jweString: string): Promise<string>;
+  createEvidenceRequestJWT(deviceCode: string, clientID: string): Promise<string>;
+  createQuickLoginJWT(
+    accessToken: string,
+    clientId: string,
+    issuer: string,
+    clientRefId: string,
+    key: JWK,
+    fcmDeviceToken: string,
+    deviceToken?: string
+  ): Promise<string>;
   hashBase64(base64: string): Promise<string>;
 }
 

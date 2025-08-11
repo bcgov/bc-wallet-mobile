@@ -367,8 +367,7 @@ jobs:
           VERSION_NAME: ${{ env.appBuildVersion }}
         run: |
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
-          ./gradlew bundleRelease && \
-          ./gradlew assembleRelease && \
+          ./gradlew bundleRelease assembleRelease --no-parallel && \
           find . -type f -name '*.apk'
 
       #      - name: Publish to GitHub Packages Registry

@@ -1,6 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
-import NativeBcscCoreSpec, { type NativeAccount } from './NativeBcscCore';
-export type { NativeAccount } from './NativeBcscCore';
+import NativeBcscCoreSpec, { type NativeAccount, type JWK } from './NativeBcscCore';
+export type { NativeAccount, JWK } from './NativeBcscCore';
 export { AccountSecurityMethod } from './NativeBcscCore';
 export interface TokenInfo {
   id: string;
@@ -248,6 +248,30 @@ export const createEvidenceRequestJWT = async (deviceCode: string, clientID: str
 
 export const hashBase64 = async (base64: string): Promise<string> => {
   return BcscCore.hashBase64(base64);
+};
+
+/**
+ * Creates a quick login JWT assertion matching the format used in ias-ios app.
+ * This creates a signed JWT with device info claims and access token nonce, following QuickLoginProtocol pattern.
+ * @param accessToken The access token to include in the nonce
+ * @param clientId The client ID (used for both iss claim)
+ * @param issuer The issuer/audience for the JWT
+ * @param clientRefId The client reference ID (used for client_ref_id claim)
+ * @param key The JWK public key object for encryption
+ * @param fcmDeviceToken The FCM device token for push notifications
+ * @param deviceToken The device token (APNS token on iOS, optional)
+ * @returns A promise that resolves to the signed and encrypted JWT string
+ */
+export const createQuickLoginJWT = async (
+  accessToken: string,
+  clientId: string,
+  issuer: string,
+  clientRefId: string,
+  key: JWK,
+  fcmDeviceToken: string,
+  deviceToken?: string
+): Promise<string> => {
+  return BcscCore.createQuickLoginJWT(accessToken, clientId, issuer, clientRefId, key, fcmDeviceToken, deviceToken);
 };
 
 /**
