@@ -7,6 +7,8 @@ import {
   IColorPalette,
   bifoldTheme,
   ThemeBuilder,
+  ITheme,
+  DeepPartial,
 } from '@bifold/core'
 import React from 'react'
 
@@ -347,7 +349,6 @@ export const BCWalletTheme = new ThemeBuilder(bifoldTheme)
       Buttons: {
         critical: {
           backgroundColor: '#D8292F',
-          test: '',
         },
         criticalText: {
           ...theme.TextTheme.normal,
