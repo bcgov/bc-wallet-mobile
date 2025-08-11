@@ -1,5 +1,6 @@
 import { View, StyleSheet, useWindowDimensions } from 'react-native'
 import { useTheme } from '@bifold/core'
+import React from 'react'
 
 export interface CircularMaskProps {
   maskWidth?: number

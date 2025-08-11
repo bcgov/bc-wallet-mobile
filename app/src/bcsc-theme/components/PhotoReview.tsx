@@ -1,5 +1,5 @@
 import { Button, ButtonType, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Image, StyleSheet, View } from 'react-native'
 
 type PhotoReviewProps = {

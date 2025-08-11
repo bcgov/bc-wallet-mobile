@@ -110,11 +110,11 @@ class BCSCService {
 
         response: error.response
           ? {
-            status: error.response.status,
-            statusText: error.response.statusText,
-            headers: error.response.headers,
-            data: error.response.data,
-          }
+              status: error.response.status,
+              statusText: error.response.statusText,
+              headers: error.response.headers,
+              data: error.response.data,
+            }
           : null,
 
         isTimeout: error.code === 'ECONNABORTED',

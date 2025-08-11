@@ -2,6 +2,7 @@ import { ThemedText, useTheme } from '@bifold/core'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Trans, useTranslation } from 'react-i18next'
+import React from 'react'
 interface BoldedBulletPointProps {
   translationKey: string
   iconSize?: number

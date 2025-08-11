@@ -40,7 +40,7 @@ export enum BCSCScreens {
   IDPhotoInformation = 'BCSCIDPhotoInformation',
   EvidenceTypeList = 'EvidenceTypeList',
   EvidenceCapture = 'BCSCEvidenceCapture',
-  EvidenceIDCollection = 'BCSCEvidenceIDCollection'
+  EvidenceIDCollection = 'BCSCEvidenceIDCollection',
 }
 
 export type BCSCTabStackParams = {
@@ -72,7 +72,7 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.InformationRequired]: undefined
   [BCSCScreens.PhotoInstructions]: undefined
   [BCSCScreens.TakePhoto]: { deviceSide: 'front' | 'back'; cameraLabel: string; cameraInstructions: string }
-  [BCSCScreens.PhotoReview]: { photoPath: string, }
+  [BCSCScreens.PhotoReview]: { photoPath: string }
   [BCSCScreens.VideoInstructions]: undefined
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }

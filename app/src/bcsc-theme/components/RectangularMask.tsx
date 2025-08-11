@@ -1,5 +1,6 @@
 import { useWindowDimensions, View, StyleSheet } from 'react-native'
 import { useTheme } from '@bifold/core'
+import React from 'react'
 
 interface RectangularMaskProps {
   aspectRatio?: number // Default CR80 card ratio is 1.59

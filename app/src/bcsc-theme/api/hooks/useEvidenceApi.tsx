@@ -101,8 +101,6 @@ const useEvidenceApi = () => {
   }, [store.bcsc.deviceCode])
 
   const getEvidenceMetadata = useCallback(async (): Promise<EvidenceMetadataResponseData> => {
-    console.log('DONT TELL ME THIS BROKE YOU SOME BICH')
-    console.log(`${apiClient.endpoints.evidence}/metadata`)
     const { data } = await apiClient.get<EvidenceMetadataResponseData>(`${apiClient.endpoints.evidence}/metadata`, {
       // Evidence endpoints do not require a full access token
       skipBearerAuth: true,

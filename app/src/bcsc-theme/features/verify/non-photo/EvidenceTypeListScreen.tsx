@@ -4,7 +4,7 @@ import { ActivityIndicator, SectionList, StyleSheet, TouchableOpacity, View } fr
 import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { EvidenceMetadataResponseData, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCDispatchAction, BCState } from '@/store'
@@ -81,17 +81,32 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     load()
   }, [load])
 
-  useEffect(() => {
-    // filter data based on the selected card type (process)
+  const shouldAddEvidence = useCallback(
+    (card: EvidenceType): boolean => {
+      const { collection_order } = card
+      // If no additional evidence is present, the user is seeing this screen for the first time
+      if (store.bcsc.additionalEvidenceData.length === 0) {
+        return collection_order === 'BOTH' || collection_order === 'FIRST'
+      } else {
+        return collection_order === 'BOTH' || collection_order === 'SECOND'
+      }
+    },
+    [store.bcsc.additionalEvidenceData.length]
+  )
 
+  useEffect(() => {
     if (!data) return
+
+    // filter data based on the selected card type (process)
     let cards: Record<string, EvidenceType[]> = {}
     const selectedProcess =
       store.bcsc.cardType === BCSCCardType.NonPhoto ? BCSCCardProcess.BCSCNonPhoto : BCSCCardProcess.NonBCSC
     data.processes.forEach((p) => {
       // only show card that matches the selected process
       if (p.process === selectedProcess) {
-        // for each evidence EvidenceTypeList
+        // for each card, check if the user should be seeing them or not
+        // list is filtered differently based on when the user seeing this screen
+        // first and second runs will show slightly different cards
         p.evidence_types.forEach((e) => {
           if (shouldAddEvidence(e)) {
             cards = addToEvidenceDictionary(cards, e)
@@ -101,17 +116,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     })
     const mappedData = mapEvidenceToSections(cards)
     setEvidenceSections(mappedData)
-  }, [data, store.bcsc.additionalEvidenceData.length, store.bcsc.cardType])
-
-  const shouldAddEvidence = (card: EvidenceType): boolean => {
-    const { collection_order } = card
-    // If no additional evidence is present, the user is seeing this screen for the first time
-    if (store.bcsc.additionalEvidenceData.length === 0) {
-      return collection_order === 'BOTH' || collection_order === 'FIRST'
-    } else {
-      return collection_order === 'BOTH' || collection_order === 'SECOND'
-    }
-  }
+  }, [data, store.bcsc.cardType, shouldAddEvidence])
 
   const mapEvidenceToSections = (cards: Record<string, EvidenceType[]>): SectionData[] => {
     const mappedData: { title: string; data: EvidenceType[] }[] = []
