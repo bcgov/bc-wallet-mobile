@@ -1,4 +1,5 @@
 import { Platform } from 'react-native'
+import { renderHook } from '@testing-library/react-native'
 
 jest.mock('@bcsc-theme/api/client', () => {
   return {
@@ -16,7 +17,7 @@ describe('useConfigApi', () => {
     jest.clearAllMocks()
   })
 
-  const config = useConfigApi()
+  const config = renderHook(() => useConfigApi()).result.current
 
   describe('getServerStatus', () => {
     it('calls the correct endpoint for android', async () => {

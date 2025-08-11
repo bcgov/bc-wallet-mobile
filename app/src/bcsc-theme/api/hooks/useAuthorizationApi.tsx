@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
@@ -10,7 +11,7 @@ export interface VerifyInPersonResponseData {
 
 const useAuthorizationApi = () => {
   // TODO: fetch evidence API endpoint from this endpoint
-  const authorizeDevice = async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData> => {
+  const authorizeDevice = useCallback(async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData> => {
     return withAccount<VerifyInPersonResponseData>(async (account) => {
       const body = {
         response_type: 'device_code',
@@ -22,14 +23,18 @@ const useAuthorizationApi = () => {
       apiClient.logger.info(`Registration body: ${JSON.stringify(body, null, 2)}`)
       const { data } = await apiClient.post<VerifyInPersonResponseData>(apiClient.endpoints.deviceAuthorization, body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        skipBearerAuth: true,
       })
       return data
     })
-  }
+  }, [])
 
-  return {
-    authorizeDevice,
-  }
+  return useMemo(
+    () => ({
+      authorizeDevice,
+    }),
+    [authorizeDevice]
+  )
 }
 
 export default useAuthorizationApi

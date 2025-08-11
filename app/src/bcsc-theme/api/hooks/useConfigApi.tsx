@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react'
 import apiClient from '../client'
 import { Platform } from 'react-native'
 
@@ -24,7 +25,7 @@ const useConfigApi = () => {
    *
    * @returns {*} {Promise<ServerStatusResponseData>} A promise that resolves to the server status data.
    */
-  const getServerStatus = async () => {
+  const getServerStatus = useCallback(async () => {
     // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
     const { data } = await apiClient.get<ServerStatusResponseData>(
       `${apiClient.baseURL}/cardtap/v3/status/${Platform.OS}/mobile_card`,
@@ -33,18 +34,21 @@ const useConfigApi = () => {
       }
     )
     return data
-  }
+  }, [])
 
-  const getTermsOfUse = async () => {
+  const getTermsOfUse = useCallback(async () => {
     // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
     const { data } = await apiClient.get<TermsOfUseResponseData>(`${apiClient.baseURL}/cardtap/v3/terms`)
     return data
-  }
+  }, [])
 
-  return {
-    getServerStatus,
-    getTermsOfUse,
-  }
+  return useMemo(
+    () => ({
+      getServerStatus,
+      getTermsOfUse,
+    }),
+    [getServerStatus, getTermsOfUse]
+  )
 }
 
 export default useConfigApi
