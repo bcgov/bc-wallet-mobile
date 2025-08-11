@@ -56,10 +56,22 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
           <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>
             {t('Unified.IDPhotoInformation.Heading')}
           </ThemedText>
-          <BulletPointWithText translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet1')} />
-          <BulletPointWithText translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet2')} />
-          <BulletPointWithText translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet3')} />
-          <BulletPointWithText translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet4')} />
+          <BulletPointWithText
+            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet1')}
+            iconColor={ColorPalette.grayscale.white}
+          />
+          <BulletPointWithText
+            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet2')}
+            iconColor={ColorPalette.grayscale.white}
+          />
+          <BulletPointWithText
+            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet3')}
+            iconColor={ColorPalette.grayscale.white}
+          />
+          <BulletPointWithText
+            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet4')}
+            iconColor={ColorPalette.grayscale.white}
+          />
         </View>
         <View style={{ marginTop: Spacing.md }}>
           <Button
