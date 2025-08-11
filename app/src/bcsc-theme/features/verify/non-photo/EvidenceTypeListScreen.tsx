@@ -11,6 +11,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCCardProcess } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { useTranslation } from 'react-i18next'
+import { Pressable } from 'react-native'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -169,7 +170,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
           </ThemedText>
         )}
         renderItem={(data) => (
-          <TouchableOpacity
+          <Pressable
             onPress={() => {
               // navigate to the next screen with the correct data
               dispatch({
@@ -179,12 +180,15 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
               navigation.navigate(BCSCScreens.IDPhotoInformation, { cardType: data.item })
             }}
             testID={testIdWithKey(`EvidenceTypeListItem ${data.item.evidence_type_label}`)}
-            style={[styles.cardSection]}
+            style={({ pressed }) => [
+              styles.cardSection,
+              pressed && { backgroundColor: ColorPalette.brand.primaryLight, opacity: 0.8 },
+            ]}
           >
             <View>
               <ThemedText>{data.item.evidence_type_label}</ThemedText>
             </View>
-          </TouchableOpacity>
+          </Pressable>
         )}
       />
     </SafeAreaView>
