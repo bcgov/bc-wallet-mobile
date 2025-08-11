@@ -10,7 +10,7 @@ import CircularMask from './CircularMask'
 type MaskedCameraProps = {
   navigation: any
   cameraFace: 'front' | 'back'
-  cameraInstructions: string
+  cameraInstructions?: string
   cameraLabel?: string
   cameraMask?: React.ReactElement
   onPhotoTaken: (path: string) => void
@@ -160,7 +160,7 @@ const MaskedCamera = ({
         <ThemedText style={{ color: 'white' }} variant={'headingThree'}>
           {cameraLabel}
         </ThemedText>
-        <ThemedText style={{ color: 'white' }} variant={'headingThree'}>
+        <ThemedText style={{ color: 'white' }} variant={'headingFour'}>
           {cameraInstructions}
         </ThemedText>
       </View>

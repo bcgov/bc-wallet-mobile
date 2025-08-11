@@ -55,7 +55,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
         </Button>
         <View style={styles.secondButton}>
           <Button
-            buttonType={ButtonType.Secondary}
+            buttonType={ButtonType.Tertiary}
             onPress={onRetake}
             testID={testIdWithKey(`RetakePhoto`)}
             title={'Retake photo'}

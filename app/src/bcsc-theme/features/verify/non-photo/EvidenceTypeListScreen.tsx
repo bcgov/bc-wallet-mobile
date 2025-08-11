@@ -24,9 +24,9 @@ interface SectionData {
 const SectionSeparator = ({ trailingItem }: { trailingItem?: boolean }) => {
   const { ColorPalette } = useTheme()
   if (trailingItem) {
-    return <View style={{ height: 10, backgroundColor: ColorPalette.brand.secondaryBackground, alignSelf: 'center' }} />
-  } else {
     return null
+  } else {
+    return <View style={{ height: 10, backgroundColor: ColorPalette.brand.secondaryBackground, alignSelf: 'center' }} />
   }
 }
 

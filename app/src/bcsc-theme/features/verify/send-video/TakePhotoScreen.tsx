@@ -31,8 +31,7 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"
-        cameraInstructions="Position your face within the oval and press the button on the screen"
-        cameraLabel="Take a photo of your face"
+        cameraLabel="Position your face within the oval and press the button on the screen"
         cameraMask={<CircularMask />}
         onPhotoTaken={handlePhotoTaken}
       />

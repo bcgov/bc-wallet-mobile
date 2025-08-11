@@ -3,7 +3,17 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { Button, ButtonType, Text, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  testIdWithKey,
+  Text,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { TextInput, View } from 'react-native'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions } from '@react-navigation/native'
@@ -120,7 +130,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           <Button
             title="Continue"
             accessibilityLabel={'Continue'}
-            testID={''}
+            testID={testIdWithKey('EvidenceIDCollectionContinue')}
             buttonType={ButtonType.Primary}
             onPress={handleOnContinue}
           />
@@ -128,8 +138,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         <Button
           title="Cancel"
           accessibilityLabel={'Cancel'}
-          testID={''}
-          buttonType={ButtonType.Secondary}
+          testID={testIdWithKey('EvidenceIDCollectionCancel')}
+          buttonType={ButtonType.Tertiary}
           onPress={() => navigation.goBack()}
         />
       </View>
