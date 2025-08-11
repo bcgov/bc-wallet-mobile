@@ -16,6 +16,25 @@ type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
 }
 
+interface SectionData {
+  title: string
+  data: EvidenceType[]
+}
+
+const SectionSeparator = () => {
+  const { ColorPalette } = useTheme()
+  return <View style={{ height: 10, backgroundColor: ColorPalette.brand.secondaryBackground, alignSelf: 'center' }} />
+}
+
+const ItemSeparator = () => {
+  const { ColorPalette } = useTheme()
+  return (
+    <View
+      style={{ height: 2, width: '95%', backgroundColor: ColorPalette.brand.primaryBackground, alignSelf: 'center' }}
+    />
+  )
+}
+
 const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigation }: EvidenceTypeListScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
@@ -43,17 +62,6 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
       flex: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
-    sectionSeparator: {
-      height: 10,
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      alignSelf: 'center', // Centers the separator
-    },
-    itemSeparator: {
-      height: 2,
-      width: '95%',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      alignSelf: 'center', // Centers the separator
-    },
     cardSection: {
       paddingVertical: 24,
       paddingHorizontal: 24,
@@ -72,40 +80,45 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
   useEffect(() => {
     // filter data based on the selected card type (process)
 
-    if (data) {
-      let cards: Record<string, EvidenceType[]> = {}
-      const selectedProcess =
-        store.bcsc.cardType === BCSCCardType.NonPhoto ? BCSCCardProcess.BCSCNonPhoto : BCSCCardProcess.NonBCSC
-      data.processes.forEach((p) => {
-        // only show card that matches the selected process
-        if (p.process === selectedProcess) {
-          // for each evidence EvidenceTypeList
-          p.evidence_types.forEach((e) => {
-            if (
-              store.bcsc.additionalEvidenceData.length > 0 &&
-              (e.collection_order === 'BOTH' || e.collection_order === 'SECOND')
-            ) {
-              cards = addToEvidenceDictionary(cards, e)
-            } else if (
-              store.bcsc.additionalEvidenceData.length === 0 &&
-              (e.collection_order === 'BOTH' || e.collection_order === 'FIRST')
-            ) {
-              cards = addToEvidenceDictionary(cards, e)
-            }
-          })
-        }
-      })
-      const mappedData: { title: string; data: EvidenceType[] }[] = []
-      Object.keys(cards).forEach((key) => {
-        mappedData.push({
-          title: key,
-          data: cards[key],
+    if (!data) return
+    let cards: Record<string, EvidenceType[]> = {}
+    const selectedProcess =
+      store.bcsc.cardType === BCSCCardType.NonPhoto ? BCSCCardProcess.BCSCNonPhoto : BCSCCardProcess.NonBCSC
+    data.processes.forEach((p) => {
+      // only show card that matches the selected process
+      if (p.process === selectedProcess) {
+        // for each evidence EvidenceTypeList
+        p.evidence_types.forEach((e) => {
+          if (shouldAddEvidence(e)) {
+            cards = addToEvidenceDictionary(cards, e)
+          }
         })
-      })
-
-      setEvidenceSections(mappedData)
-    }
+      }
+    })
+    const mappedData = mapEvidenceToSections(cards)
+    setEvidenceSections(mappedData)
   }, [data, store.bcsc.additionalEvidenceData.length, store.bcsc.cardType])
+
+  const shouldAddEvidence = (card: EvidenceType): boolean => {
+    const { collection_order } = card
+    // If no additional evidence is present, the user is seeing this screen for the first time
+    if (store.bcsc.additionalEvidenceData.length === 0) {
+      return collection_order === 'BOTH' || collection_order === 'FIRST'
+    } else {
+      return collection_order === 'BOTH' || collection_order === 'SECOND'
+    }
+  }
+
+  const mapEvidenceToSections = (cards: Record<string, EvidenceType[]>): SectionData[] => {
+    const mappedData: { title: string; data: EvidenceType[] }[] = []
+    Object.keys(cards).forEach((key) => {
+      mappedData.push({
+        title: key,
+        data: cards[key],
+      })
+    })
+    return mappedData
+  }
 
   const addToEvidenceDictionary = (cards: Record<string, EvidenceType[]>, e: EvidenceType) => {
     if (!cards[e.group]) {
@@ -139,14 +152,8 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
       <SectionList
         sections={evidenceSections || []}
-        SectionSeparatorComponent={({ trailingItem }) =>
-          trailingItem ? null : <View style={styles.sectionSeparator} />
-        }
-        ItemSeparatorComponent={() => (
-          <View style={{ backgroundColor: ColorPalette.brand.secondaryBackground }}>
-            <View style={styles.itemSeparator} />
-          </View>
-        )}
+        SectionSeparatorComponent={({ trailingItem }) => (trailingItem ? null : <SectionSeparator />)}
+        ItemSeparatorComponent={() => <ItemSeparator />}
         renderSectionHeader={(item) => (
           <ThemedText style={[styles.cardSection, { color: ColorPalette.brand.primary }]} variant={'headingFour'}>
             {item.section.title}

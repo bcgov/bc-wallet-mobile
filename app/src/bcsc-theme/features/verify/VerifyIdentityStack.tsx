@@ -43,14 +43,29 @@ const VerifyIdentityStack = () => {
         options={{
           title: 'Setup Steps',
           // TODO(bm): Add real help URL
-          headerRight: createHelpHeaderButton({ helpUrl: '' }),
+          headerRight: createHelpHeaderButton({}),
           headerLeft: () => null,
         }}
       />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
-      <Stack.Screen name={BCSCScreens.SerialInstructions} component={SerialInstructionsScreen} />
-      <Stack.Screen name={BCSCScreens.ManualSerial} component={ManualSerialScreen} />
-      <Stack.Screen name={BCSCScreens.ScanSerial} component={ScanSerialScreen} />
+      <Stack.Screen
+        name={BCSCScreens.SerialInstructions}
+        component={SerialInstructionsScreen}
+        // TODO: (al) add actual help page/modal/link
+        options={{ headerRight: createHelpHeaderButton({}) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ManualSerial}
+        component={ManualSerialScreen}
+        // TODO: (al) add actual help page/modal/link
+        options={{ headerRight: createHelpHeaderButton({}) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ScanSerial}
+        component={ScanSerialScreen}
+        // TODO: (al) add actual help page/modal/link
+        options={{ headerRight: createHelpHeaderButton({}) }}
+      />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
       <Stack.Screen name={BCSCScreens.EnterEmailScreen} component={EnterEmailScreen} />
@@ -59,13 +74,13 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
         // TODO(bm): Add real help URL
-        options={{ title: 'Choose How to Verify', headerRight: createHelpHeaderButton({ helpUrl: '' }) }}
+        options={{ title: 'Choose How to Verify', headerRight: createHelpHeaderButton({}) }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
         // TODO(bm): Add real help URL
-        options={{ headerRight: createHelpHeaderButton({ helpUrl: '' }) }}
+        options={{ headerRight: createHelpHeaderButton({}) }}
       />
       <Stack.Screen
         name={BCSCScreens.InformationRequired}
@@ -93,11 +108,33 @@ const VerifyIdentityStack = () => {
       <Stack.Screen
         name={BCSCScreens.AdditionalIdentificationRequired}
         component={AdditionalIdentificationRequiredScreen}
+        // TODO: (al) add actual help page/modal/link
+        options={{ headerRight: createHelpHeaderButton({}) }}
       />
-      <Stack.Screen name={BCSCScreens.IDPhotoInformation} component={IDPhotoInformationScreen} />
-      <Stack.Screen name={BCSCScreens.EvidenceTypeList} component={EvidenceTypeListScreen} />
-      <Stack.Screen name={BCSCScreens.EvidenceCapture} component={EvidenceCaptureScreen} />
-      <Stack.Screen name={BCSCScreens.EvidenceIDCollection} component={EvidenceIDCollectionScreen} />
+      <Stack.Screen
+        name={BCSCScreens.IDPhotoInformation}
+        component={IDPhotoInformationScreen}
+        // TODO: (al) add actual help page/modal/link
+        options={{ headerRight: createHelpHeaderButton({}) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.EvidenceTypeList}
+        component={EvidenceTypeListScreen}
+        // TODO: (al) add actual help page/modal/link
+        options={{ headerRight: createHelpHeaderButton({}) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.EvidenceCapture}
+        component={EvidenceCaptureScreen}
+        // TODO: (al) add actual help page/modal/link
+        options={{ headerRight: createHelpHeaderButton({}) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.EvidenceIDCollection}
+        component={EvidenceIDCollectionScreen}
+        // TODO: (al) add actual help page/modal/link
+        options={{ headerRight: createHelpHeaderButton({}) }}
+      />
     </Stack.Navigator>
   )
 }
