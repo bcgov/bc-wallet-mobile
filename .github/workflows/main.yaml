@@ -257,6 +257,7 @@ jobs:
           cat app/ios/AriesBifold/AriesBifold.entitlements
 
       - name: Create prod signing credentials
+        if: false # Temporarily disabled for development --- IGNORE ---
         uses: ./.github/workflows/actions/create-ios-sig-creds
         with:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
@@ -279,6 +280,7 @@ jobs:
           archive
 
       - name: Save cache for derived data
+        if: false # Temporarily disabled for development --- IGNORE ---
         id: cache-dd-save
         uses: actions/cache/save@v4
         with:
@@ -286,13 +288,15 @@ jobs:
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
       - name: Export produciton archive
+        if: false # Temporarily disabled for development --- IGNORE ---
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           export_options: options.plist
           ouput_artifact_ref: ios-artifact
 
       - name: Ship to iTunes
-        if: github.ref_name == 'main'
+        if: false # Temporarily disabled for development --- IGNORE ---
+        # if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
