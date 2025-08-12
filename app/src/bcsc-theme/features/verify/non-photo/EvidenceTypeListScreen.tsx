@@ -1,6 +1,6 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { ActivityIndicator, SectionList, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, SectionList, StyleSheet, View } from 'react-native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
