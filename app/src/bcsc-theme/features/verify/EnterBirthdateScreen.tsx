@@ -21,6 +21,7 @@ import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type EnterBirthdateScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EnterBirthdate>
@@ -35,6 +36,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const [loading, setLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
   const { authorization } = useApi()
+  const [pickerState, setPickerState] = useState<'idle' | 'spinning'>('idle')
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -77,12 +79,16 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [user_code] })
       dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
 
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: BCSCScreens.SetupSteps }],
-        })
-      )
+      if (store.bcsc.cardType === BCSCCardType.NonPhoto) {
+        navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
+      } else {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: BCSCScreens.SetupSteps }],
+          })
+        )
+      }
     } catch (error) {
       logger.error(`Error during BCSC verification: ${error}`)
       navigation.navigate(BCSCScreens.MismatchedSerial)
@@ -92,7 +98,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
     // if successful, navigation reset to setup steps screen
     // if not successful, navigate to mismatch screen
-  }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger])
+  }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger, store.bcsc.cardType])
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
@@ -111,7 +117,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
             mode={'date'}
             date={date}
             onDateChange={setDate}
-            maximumDate={today}
+            onStateChange={setPickerState}
           />
         </View>
       </ScrollView>
@@ -120,7 +126,12 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
           title={t('Global.Done')}
           accessibilityLabel={t('Global.Done')}
           testID={testIdWithKey('Done')}
-          onPress={onSubmit}
+          onPress={() => {
+            if (pickerState === 'spinning') {
+              return
+            }
+            onSubmit()
+          }}
           buttonType={ButtonType.Primary}
           disabled={loading}
         >

@@ -63,7 +63,7 @@ const MainStack: React.FC = () => {
             headerShown: true,
             headerBackTitleVisible: false,
             // TODO(bm): Add real help URL
-            headerRight: createHelpHeaderButton({ helpUrl: '' }),
+            headerRight: createHelpHeaderButton({}),
           })}
         />
         <Stack.Screen
