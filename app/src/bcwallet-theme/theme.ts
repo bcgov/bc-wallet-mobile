@@ -88,6 +88,7 @@ export const BrandColors: IBrandColors = {
   modalTertiaryBackground: '#FFFFFF',
   modalIcon: GrayscaleColors.darkGrey,
   link: '#1A5A96',
+  credentialLink: '#1A5A96',
   unorderedList: GrayscaleColors.darkGrey,
   unorderedListModal: GrayscaleColors.darkGrey,
   text: GrayscaleColors.white,

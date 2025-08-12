@@ -1,7 +1,6 @@
 import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCState } from '@/store'
-import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
-import { BannerMessage } from '@bifold/core/lib/typescript/src/components/views/Banner'
+import { DispatchAction, TOKENS, useServices, useStore, BannerMessage } from '@bifold/core'
 import { useEffect } from 'react'
 
 /**
