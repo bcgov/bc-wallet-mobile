@@ -259,6 +259,31 @@ const translation = {
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared. (FR)",
       "InputLabel": "Birthdate (FR)",
     },
+    "AdditionalEvidence": {
+      "Heading": "Additional ID required (FR)",
+      "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it. (FR)",
+      "PhotoRequiredDescription": "It's needed to verify your identity. You'll be asked to provide one or two government-issued IDs. (FR)",
+      "CheckYourID": "Check your ID (FR)",
+      "CheckYourIDBullet1": "Has the same name as on your BC Services Card (FR)",
+      "CheckYourIDBullet2": "Has a recent photo (FR)",
+      "CheckYourIDBullet3": "Is not expired (FR)",
+      "LimitedAccess": "Limited access to services (FR)",
+      "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (FR)",
+      "ChooseID": "Choose ID (FR)",
+    },
+    "IDPhotoInformation": {
+      "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity. (FR)",
+      "IDPhotoInstructionsBullet1": "Center your ID within the frame (FR)",
+      "IDPhotoInstructionsBullet2": "Have no other objects in the photo (FR)",
+      "IDPhotoInstructionsBullet3": "Make sure the entire ID is visible (FR)",
+      "IDPhotoInstructionsBullet4": "Make sure the image is clear without any glare or shadows (FR)",
+      "TakePhoto": "Take photo of ID (FR)",
+    },
+    "EvidenceTypeList": {
+      "Heading": "Choose photo ID (FR)",
+      "Description": "Use an ID that has the same name as on your BC Services Card. (FR)",
+      "FirstID": "Choose your first ID (FR)",
+    }
   },
   "RemoteLogging": {
     "ScreenTitle": "Dépannage à distance",

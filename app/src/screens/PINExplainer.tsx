@@ -1,46 +1,9 @@
+import BulletPointWithText from '@/components/BulletPointWithText'
 import { useTheme, testIdWithKey, ThemedText, Button, ButtonType } from '@bifold/core'
 import React from 'react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialIcons'
-
-interface BoldedBulletPointProps {
-  i18nKey: string
-}
-
-const BoldedBulletPoint: React.FC<BoldedBulletPointProps> = ({ i18nKey }) => {
-  const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
-
-  const styles = StyleSheet.create({
-    container: {
-      marginVertical: Spacing.sm,
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-    },
-    iconContainer: {
-      margin: Spacing.sm,
-    },
-  })
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.iconContainer}>
-        <Icon name={'circle'} size={Spacing.sm} color={ColorPalette.brand.modalIcon} />
-      </View>
-      <ThemedText style={{ flexShrink: 1 }}>
-        <Trans
-          i18nKey={i18nKey}
-          components={{
-            b: <ThemedText variant="bold" />,
-          }}
-          t={t}
-        />
-      </ThemedText>
-    </View>
-  )
-}
 
 export interface PINExplainerProps {
   continueCreatePIN: () => void
@@ -83,8 +46,8 @@ const PINExplainer: React.FC<PINExplainerProps> = ({ continueCreatePIN }) => {
         <ThemedText style={{ marginBottom: Spacing.md }} variant="headingThree">
           {t('PINCreate.Explainer.PrimaryHeading')}
         </ThemedText>
-        <BoldedBulletPoint i18nKey={'PINCreate.Explainer.Bullet1'} />
-        <BoldedBulletPoint i18nKey={'PINCreate.Explainer.Bullet2'} />
+        <BulletPointWithText translationKey={'PINCreate.Explainer.Bullet1'} />
+        <BulletPointWithText translationKey={'PINCreate.Explainer.Bullet2'} />
       </ScrollView>
       <View style={style.footer}>
         <Button

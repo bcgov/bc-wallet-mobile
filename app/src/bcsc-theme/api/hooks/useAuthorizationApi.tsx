@@ -2,11 +2,17 @@ import { useCallback, useMemo } from 'react'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
+export enum BCSCCardProcess {
+  BCSC = 'IDIM L3 Remote BCSC Photo Identity Verification',
+  BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
+  NonBCSC = 'IDIM L3 Remote Non-BCSC Identity Verification',
+}
 export interface VerifyInPersonResponseData {
   device_code: string
   user_code: string
   verified_email: string
   expires_in: number
+  process: BCSCCardProcess
 }
 
 const useAuthorizationApi = () => {

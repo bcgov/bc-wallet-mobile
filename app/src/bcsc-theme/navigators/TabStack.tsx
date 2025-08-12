@@ -86,7 +86,7 @@ const BCSCTabStack: React.FC = () => {
             headerShown: true,
             headerLeft: () => null,
             // TODO(bm): Add real help URL
-            headerRight: createHelpHeaderButton({ helpUrl: '' }),
+            headerRight: createHelpHeaderButton({}),
           }}
         />
         <Tab.Screen

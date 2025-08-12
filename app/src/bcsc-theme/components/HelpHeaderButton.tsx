@@ -1,13 +1,12 @@
 import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { Linking } from 'react-native'
 
 type HelpHeaderButtonProps = {
-  helpUrl?: string
+  helpAction?: () => void
 }
 
 // Currying function to avoid re-rendering in nav stacks
-const createHelpHeaderButton = ({ helpUrl }: HelpHeaderButtonProps) => {
+const createHelpHeaderButton = ({ helpAction }: HelpHeaderButtonProps) => {
   // Declared so that it has a display name for debugging purposes
   const HeaderRight = () => {
     const { t } = useTranslation()
@@ -18,7 +17,7 @@ const createHelpHeaderButton = ({ helpUrl }: HelpHeaderButtonProps) => {
         icon={'help-circle'}
         accessibilityLabel={t('PersonCredential.HelpLink')}
         testID={testIdWithKey('Help')}
-        onPress={() => helpUrl && Linking.openURL(helpUrl)}
+        onPress={() => helpAction && helpAction()}
       />
     )
   }

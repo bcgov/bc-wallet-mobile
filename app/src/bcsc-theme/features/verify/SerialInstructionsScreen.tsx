@@ -66,7 +66,7 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
             accessibilityLabel={t('Unified.Instructions.EnterManually')}
             testID={testIdWithKey('EnterManually')}
             onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
-            buttonType={ButtonType.Secondary}
+            buttonType={ButtonType.Tertiary}
           />
         </View>
       </View>
