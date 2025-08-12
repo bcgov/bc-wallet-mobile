@@ -377,7 +377,7 @@ jobs:
           echo "Patching for Single App build"
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
-          git am < ./patch/0001-chore-application-id-to-bcsc-dev.patch
+          git am < ./patch/0001-chore-app-to-bcsc-dev.patch
 
       - name: Create release keystore
         working-directory: app/android/app
