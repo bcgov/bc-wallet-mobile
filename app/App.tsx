@@ -14,7 +14,6 @@ import {
   toastConfig,
   TourProvider,
   ErrorBoundaryWrapper,
-  bifoldLoggerInstance,
 } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
 import { useNavigationContainerRef } from '@react-navigation/native'
@@ -34,6 +33,7 @@ import { themes } from '@/theme'
 import tours from '@bcwallet-theme/features/tours'
 import WebDisplay from '@screens/WebDisplay'
 import { AppContainer } from './container-imp'
+import BCLogger from '@/utils/logger'
 
 initLanguages(localization)
 
@@ -65,7 +65,7 @@ const App = () => {
   }, [])
 
   return (
-    <ErrorBoundaryWrapper logger={bifoldLoggerInstance}>
+    <ErrorBoundaryWrapper logger={BCLogger}>
       <ContainerProvider value={bcwContainer}>
         <StoreProvider initialState={initialState} reducer={reducer}>
           <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
