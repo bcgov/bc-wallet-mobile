@@ -433,7 +433,7 @@ jobs:
             app/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload Android artifact
-        if: github.ref_name == 'main'
+        # if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
           name: android-artifact
@@ -442,6 +442,7 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
+        if: false # Temporarily disabled for development --- IGNORE ---
         # if: github.ref_name == 'main'
         working-directory: app/android
         env:
