@@ -442,7 +442,6 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        if: false # Temporarily disabled for development --- IGNORE ---
         # if: github.ref_name == 'main'
         working-directory: app/android
         env:
