@@ -52,9 +52,7 @@ class BCSCService {
   baseURL: string
   tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
 
-  constructor(baseURL: string = String(Config.IAS_URL)) {
-    console.log(`BCSCService initialized with URL: ${baseURL}, config is ${Config.IAS_URL}, ${BCLogger}`)
-
+  constructor(baseURL: string = String(Config.IAS_URL ?? 'https://idsit.gov.bc.ca')) {
     this.baseURL = baseURL
     this.logger = BCLogger
     this.client = axios.create({
@@ -63,7 +61,7 @@ class BCSCService {
       },
     })
 
-    this.logger.info(`BCSCService initialized with URL: ${this.baseURL}, config is ${Config.IAS_URL}`)
+    this.logger.info(`BCSCService initialized with URL: ${this.baseURL}`)
 
     // fallback config
     this.config = {
