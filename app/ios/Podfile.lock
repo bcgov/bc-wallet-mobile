@@ -153,6 +153,7 @@ PODS:
     - React
     - React-callinvoker
     - React-Core
+  - JitsiWebRTC (124.0.2)
   - libevent (2.1.12)
   - nanopb (2.30908.0):
     - nanopb/decode (= 2.30908.0)
@@ -1070,6 +1071,9 @@ PODS:
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
+  - react-native-webrtc (124.0.6):
+    - JitsiWebRTC (~> 124.0.0)
+    - React-Core
   - react-native-webview (13.10.7):
     - glog
     - RCT-Folly (= 2022.05.16.00)
@@ -1349,6 +1353,7 @@ DEPENDENCIES:
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - react-native-tcp-socket (from `../node_modules/react-native-tcp-socket`)
   - react-native-video (from `../node_modules/react-native-video`)
+  - react-native-webrtc (from `../node_modules/react-native-webrtc`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -1404,6 +1409,7 @@ SPEC REPOS:
     - GoogleAppMeasurement
     - GoogleDataTransport
     - GoogleUtilities
+    - JitsiWebRTC
     - libevent
     - nanopb
     - PromisesObjC
@@ -1498,6 +1504,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-tcp-socket"
   react-native-video:
     :path: "../node_modules/react-native-video"
+  react-native-webrtc:
+    :path: "../node_modules/react-native-webrtc"
   react-native-webview:
     :path: "../node_modules/react-native-webview"
   React-nativeconfig:
@@ -1601,6 +1609,7 @@ SPEC CHECKSUMS:
   GoogleUtilities: ea963c370a38a8069cc5f7ba4ca849a60b6d7d15
   hermes-engine: d992945b77c506e5164e6a9a77510c9d57472c59
   indy-vdr: aada31078a9ed270dd618fadb4cf69bcdc333d68
+  JitsiWebRTC: b47805ab5668be38e7ee60e2258f49badfe8e1d0
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
@@ -1637,6 +1646,7 @@ SPEC CHECKSUMS:
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   react-native-tcp-socket: ae8abcfebc071216302a09d9ed1e375d4e877484
   react-native-video: d74d94fbaeee3c0d8f6570173289f43fe210066f
+  react-native-webrtc: 96fdff9e3a942ed88cafe01898da1c93fd628957
   react-native-webview: f802f655c8446404bb0c134da9335a8cf667e8cb
   React-nativeconfig: 8fd29a35a3e4e8c37682d976667663d834ba6165
   React-NativeModulesApple: 83d7077877f8eda8e1b6055b3f8f16f7db8463b5

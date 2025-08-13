@@ -28,6 +28,7 @@ import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
 import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
+import LiveCallScreen from './live-call/LiveCallScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 
 const VerifyIdentityStack = () => {
@@ -135,6 +136,7 @@ const VerifyIdentityStack = () => {
         // TODO: (al) add actual help page/modal/link
         options={{ headerRight: createHelpHeaderButton({}) }}
       />
+      <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   )
 }

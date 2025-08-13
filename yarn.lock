@@ -5921,6 +5921,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pexip/infinity-api@npm:^19.1.2":
+  version: 19.1.2
+  resolution: "@pexip/infinity-api@npm:19.1.2"
+  checksum: 10c0/1a2e47fd424e66ffbffdf364d451e46ed29647fd94ab175c41efcfcf8846528a49ac484055d894aaac789f8d137f0d09f0344500781170ae2dbb84736f06a3e3
+  languageName: node
+  linkType: hard
+
 "@pkgjs/parseargs@npm:^0.11.0":
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
@@ -10989,7 +10996,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base64-js@npm:*, base64-js@npm:^1.0.2, base64-js@npm:^1.2.3, base64-js@npm:^1.3.0, base64-js@npm:^1.3.1, base64-js@npm:^1.5.1":
+"base64-js@npm:*, base64-js@npm:1.5.1, base64-js@npm:^1.0.2, base64-js@npm:^1.2.3, base64-js@npm:^1.3.0, base64-js@npm:^1.3.1, base64-js@npm:^1.5.1":
   version: 1.5.1
   resolution: "base64-js@npm:1.5.1"
   checksum: 10c0/f23823513b63173a001030fae4f2dabe283b99a9d324ade3ad3d148e218134676f1ee8568c877cd79ec1c53158dcf2d2ba527a97c606618928ba99dd930102bf
@@ -11087,6 +11094,7 @@ __metadata:
     "@hyperledger/aries-askar-react-native": "npm:0.2.3"
     "@hyperledger/indy-vdr-react-native": "npm:0.2.2"
     "@hyperledger/indy-vdr-shared": "npm:0.2.2"
+    "@pexip/infinity-api": "npm:^19.1.2"
     "@react-native-async-storage/async-storage": "npm:~1.22.3"
     "@react-native-clipboard/clipboard": "npm:~1.16.3"
     "@react-native-community/netinfo": "npm:~11.3.3"
@@ -11191,6 +11199,7 @@ __metadata:
     react-native-vector-icons: "npm:~10.0.3"
     react-native-video: "npm:~6.16.1"
     react-native-vision-camera: "npm:~4.3.2"
+    react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:~13.10.7"
     react-test-renderer: "npm:~18.2.0"
     reflect-metadata: "npm:~0.1.14"
@@ -13774,7 +13783,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
+"debug@npm:4, debug@npm:4.3.4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.2, debug@npm:^4.3.3, debug@npm:^4.3.4":
   version: 4.3.4
   resolution: "debug@npm:4.3.4"
   dependencies:
@@ -15845,6 +15854,13 @@ __metadata:
   version: 1.8.1
   resolution: "etag@npm:1.8.1"
   checksum: 10c0/12be11ef62fb9817314d790089a0a49fae4e1b50594135dcb8076312b7d7e470884b5100d249b28c18581b7fd52f8b485689ffae22a11ed9ec17377a33a08f84
+  languageName: node
+  linkType: hard
+
+"event-target-shim@npm:6.0.2":
+  version: 6.0.2
+  resolution: "event-target-shim@npm:6.0.2"
+  checksum: 10c0/e40b89effb1bd0fdd44dd198e3b61669c2bff89b680a8156c50480b5df8d4364208d1db09fbe823211005651558415691cb3ff72c22618eb154e55282b8b0481
   languageName: node
   linkType: hard
 
@@ -25497,6 +25513,19 @@ __metadata:
     react-native-worklets-core:
       optional: true
   checksum: 10c0/a388fa15586cb11425b76cbdaf3f49dff4d8d8a45d4c9a1c5504b89d792b6afbc5a01d9f680b4554b965d2d7cbd217b69f5a32a8f81956e27dd30536be27f341
+  languageName: node
+  linkType: hard
+
+"react-native-webrtc@npm:~124.0.6":
+  version: 124.0.6
+  resolution: "react-native-webrtc@npm:124.0.6"
+  dependencies:
+    base64-js: "npm:1.5.1"
+    debug: "npm:4.3.4"
+    event-target-shim: "npm:6.0.2"
+  peerDependencies:
+    react-native: ">=0.60.0"
+  checksum: 10c0/303c2c1f371b9be5cb0f11285cf80c9bf6e7dfc88a760a4c97f9c29b1cddc8b4954ffd611e00835401980ad46b239c9617253552a97950098afb62c49bbdf9cb
   languageName: node
   linkType: hard
 
