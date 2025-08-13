@@ -62,6 +62,10 @@ const App = () => {
     SplashScreen.hide()
   }, [])
 
+  useEffect(() => {
+    console.log('APP FIRST RENDER')
+  }, [])
+
   return (
     <ContainerProvider value={bcwContainer}>
       <StoreProvider initialState={initialState} reducer={reducer}>
@@ -90,5 +94,7 @@ const App = () => {
     </ContainerProvider>
   )
 }
+
+console.log('APP BUNDLE LOADED??')
 
 export default App
