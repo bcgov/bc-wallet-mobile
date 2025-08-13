@@ -15,7 +15,8 @@ type VerificationMethodSelectionScreenProps = {
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
-  const [loading, setLoading] = useState(false)
+  const [sendVideoLoading, setSendVideoLoading] = useState(false)
+  const [liveCallLoading, setLiveCallLoading] = useState(false)
   const { evidence } = useApi()
 
   const styles = StyleSheet.create({
@@ -27,7 +28,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
   const handlePressSendVideo = async () => {
     try {
-      setLoading(true)
+      setSendVideoLoading(true)
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
@@ -36,7 +37,19 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       // TODO: Handle error, e.g., show an alert or log the error
       return
     } finally {
-      setLoading(false)
+      setSendVideoLoading(false)
+    }
+  }
+
+  const handlePressLiveCall = async () => {
+    try {
+      setLiveCallLoading(true)
+      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate loading
+      navigation.navigate(BCSCScreens.LiveCall)
+    } catch (error) {
+      // TODO: Handle error, e.g., show an alert or log the error
+    } finally {
+      setLiveCallLoading(false)
     }
   }
 
@@ -48,8 +61,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         icon={'send'}
         onPress={handlePressSendVideo}
         style={{ marginBottom: Spacing.xxl }}
-        loading={loading}
-        disabled={loading}
+        loading={sendVideoLoading}
+        disabled={sendVideoLoading || liveCallLoading}
       />
       <ThemedText
         variant={'bold'}
@@ -61,16 +74,17 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         title={'Video call'}
         description={`We will verify your identity during a video call.`}
         icon={'video'}
-        onPress={() => null}
+        onPress={handlePressLiveCall}
         style={{ borderBottomWidth: 0 }}
-        disabled={loading}
+        loading={liveCallLoading}
+        disabled={liveCallLoading || sendVideoLoading}
       />
       <VerifyMethodActionButton
         title={'In person'}
         description={`Find out where to go and what to bring.`}
         icon={'account'}
         onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
-        disabled={loading}
+        disabled={liveCallLoading || sendVideoLoading}
       />
     </SafeAreaView>
   )

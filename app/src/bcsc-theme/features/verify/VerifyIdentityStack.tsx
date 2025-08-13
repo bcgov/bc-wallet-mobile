@@ -28,6 +28,7 @@ import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
 import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
+import LiveCallScreen from './live-call/LiveCallScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { HelpCentreUrl } from '@/constants'
 import WebViewScreen from '../webview/WebViewScreen'
@@ -159,6 +160,7 @@ const VerifyIdentityStack = () => {
           headerLeft: createWebviewHeaderBackButton(navigation),
         })}
       />
+      <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
     </Stack.Navigator>
   )
 }

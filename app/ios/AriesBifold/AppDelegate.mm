@@ -1,5 +1,6 @@
 #import "AppDelegate.h"
 
+#import <WebRTCModule.h>
 #import <Firebase.h>
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
@@ -11,6 +12,9 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  // allows camera in background for video calling (WebRTC)
+  [WebRTCModuleOptions sharedInstance].enableMultitaskingCameraAccess = YES;
+
   [FIRApp configure];
   self.moduleName = @"BCWallet";
   // You can add your custom initial props in the dictionary below.
