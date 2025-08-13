@@ -221,7 +221,7 @@ jobs:
         working-directory: app/ios
         env:
           CURRENT_PROJECT_VERSION: ${{ env.APP_BUILD_NUMBER }}
-          MARKETING_VERSION: ${{ env.appBCWalletBuildVersion }}
+          MARKETING_VERSION: ${{ env.APP_VERSION }}
         run: |
           agvtool new-version ${CURRENT_PROJECT_VERSION} && \
           agvtool new-marketing-version ${MARKETING_VERSION}
