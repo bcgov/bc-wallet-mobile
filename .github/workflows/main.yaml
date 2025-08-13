@@ -250,7 +250,6 @@ jobs:
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
           echo "IAS_URL=${IAS_URL}" >>.env
-          cat .env | grep "IAS_URL"
 
       - name: Update APS environment
         run: |
