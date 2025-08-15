@@ -54,16 +54,13 @@ class MainActivity : ReactActivity() {
      * (aka React 18) with two boolean flags.
      */
     override fun createReactActivityDelegate(): ReactActivityDelegate {
-        Log.d(TAG, "createReactActivityDelegate: Creating delegate")
         return object : DefaultReactActivityDelegate(
             this,
             mainComponentName,
             DefaultNewArchitectureEntryPoint.fabricEnabled
         ) {
             override fun onCreate(savedInstanceState: Bundle?) {
-                Log.d(TAG, "ReactActivityDelegate.onCreate: Starting")
                 super.onCreate(savedInstanceState)
-                Log.d(TAG, "ReactActivityDelegate.onCreate: Completed")
             }
         }
     }
