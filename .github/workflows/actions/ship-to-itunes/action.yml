@@ -11,7 +11,7 @@ inputs:
   app_store_connect_private_key:
     description: |
       The iTunes Connect private key.
-    requred: true
+    required: true
   version_code:
     description: |
       The build number for the release notes. i.e 1471
@@ -19,7 +19,7 @@ inputs:
   version_name:
     description: |
       The version name for the release notes. i.e 1.0.1
-    requred: true
+    required: true
 
 runs:
   using: composite
