@@ -1,5 +1,5 @@
 #!/bin/sh
-set -xaou pipefail
+set -eau -o pipefail
 
 KEY_PATH=$RUNNER_TEMP/AuthKey.p9
 
