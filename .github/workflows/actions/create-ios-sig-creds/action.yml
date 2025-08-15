@@ -10,12 +10,11 @@ inputs:
   certificate_password:
     description: |
       The password for importing the certificate.
-    requred: true
-  provisioning_profile:
+    required: true
+  app_store_connect_private_key:
     description: |
-      The Base64 encoded provisioning profile to use for 
-      signing the archive. This should be in mobileprovision format.
-    requred: true
+      The private key for the App Store Connect API.
+    required: true
 
 runs:
   using: composite
@@ -27,10 +26,9 @@ runs:
       run: |
         scripts/makekc.sh ${{ inputs.certificate_password }}
 
-      # https://docs.github.com/en/actions/deployment/deploying-xcode-applications/installing-an-apple-certificate-on-macos-runners-for-xcode-development
-    - name: Create Provisioning Profile
+    - name: Build API AuthKey
       shell: bash
       env:
-        PROVISIONING_PROFILE: ${{ inputs.provisioning_profile }}
+        AUTHKEY_P8: ${{ inputs.app_store_connect_private_key }}
       run: |
-        scripts/makepp.sh
+        scripts/makeauthkey.sh
