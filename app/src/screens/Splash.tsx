@@ -103,7 +103,6 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   )
 
   useEffect(() => {
-    console.log('OK WE ARE WITHIN THE CONTEXT OF THIS')
     setStep(1)
     if (initializing.current || !store.authentication.didAuthenticate) {
       return

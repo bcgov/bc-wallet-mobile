@@ -64,10 +64,6 @@ const App = () => {
     SplashScreen.hide()
   }, [])
 
-  useEffect(() => {
-    console.log('APP FIRST RENDER')
-  }, [])
-
   return (
     <ErrorBoundaryWrapper logger={BCLogger}>
       <ContainerProvider value={bcwContainer}>
@@ -98,7 +94,5 @@ const App = () => {
     </ErrorBoundaryWrapper>
   )
 }
-
-console.log('APP BUNDLE LOADED??')
 
 export default App

@@ -14,24 +14,11 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 class MainActivity : ReactActivity() {
 
-    companion object {
-        private const val TAG = "BC_WALLET_TIMING"
-    }
-
     // react-native-screens override
     // https://github.com/software-mansion/react-native-screens#android
     override fun onCreate(savedInstanceState: Bundle?) {
-        Log.d(TAG, "onCreate: Starting MainActivity")
-        val startTime = System.currentTimeMillis()
-        
-        Log.d(TAG, "onCreate: Showing splash screen")
         SplashScreen.show(this)
-        
-        Log.d(TAG, "onCreate: Calling super.onCreate")
         super.onCreate(null)
-
-        val endTime = System.currentTimeMillis()
-        Log.d(TAG, "onCreate: Completed in ${endTime - startTime}ms")
     }
 
     /**
@@ -46,21 +33,8 @@ class MainActivity : ReactActivity() {
     }
 
     override fun onStart() {
-        Log.d(TAG, "onStart: Activity starting")
         super.onStart()
         removeNotifications()
-        Log.d(TAG, "onStart: Activity started")
-    }
-
-
-    override fun onResume() {
-        Log.d(TAG, "onResume: Activity resuming")
-        super.onResume()
-        Log.d(TAG, "onResume: Activity resumed")
-
-        // Log React Native bridge state
-        val reactInstanceManager = reactNativeHost.reactInstanceManager
-        Log.d(TAG, "onResume: ReactInstanceManager state: ${reactInstanceManager.lifecycleState}")
     }
 
     override fun onRestart() {
@@ -72,10 +46,7 @@ class MainActivity : ReactActivity() {
      * Returns the name of the main component registered from JavaScript. This is used to schedule
      * rendering of the component.
      */
-    override fun getMainComponentName(): String {
-        Log.d(TAG, "getMainComponentName: Returning BCWallet")
-        return "BCWallet"
-    }
+    override fun getMainComponentName(): String = "BCWallet"
 
     /**
      * Returns the instance of the [ReactActivityDelegate]. Here we use a util class

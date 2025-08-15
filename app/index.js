@@ -33,11 +33,4 @@ import App from './App'
 import { name as appName } from './app.json'
 
 
-const startTime = Date.now()
-
-const AppWithPerf = () => {
-  console.log(`Bundle execution time: ${Date.now() - startTime}ms`)
-  return <App />
-}
-
-AppRegistry.registerComponent(appName, () => AppWithPerf)
+AppRegistry.registerComponent(appName, () => App)
