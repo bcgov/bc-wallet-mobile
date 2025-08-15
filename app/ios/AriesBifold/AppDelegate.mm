@@ -1,6 +1,6 @@
 #import "AppDelegate.h"
 
-#import <WebRTCModule.h>
+#import <WebRTCModuleOptions.h>
 #import <Firebase.h>
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
