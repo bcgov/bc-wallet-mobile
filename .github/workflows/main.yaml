@@ -142,11 +142,13 @@ jobs:
             echo "android_package_name=ca.bc.gov.BCWallet" >> "$GITHUB_OUTPUT"
           fi
   build-ios:
-    needs: [check-secrets, check-vars, early-exit-check]
+    needs: [check-secrets, check-vars, early-exit-check, set-build-vars]
     if: ${{ needs.early-exit-check.outputs.should_skip_build != 'true' }}
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
+      APP_VERSION: ${{ needs.set-build-vars.outputs.app_version }}
+      IS_SINGLE_APP_BUILD: ${{ needs.set-build-vars.outputs.is_single_app_build }}
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -257,24 +259,31 @@ jobs:
           cat app/ios/AriesBifold/AriesBifold.entitlements
 
       - name: Create prod signing credentials
-        if: false # Temporarily disabled for development --- IGNORE ---
+        # if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/create-ios-sig-creds
         with:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
-          provisioning_profile: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
 
       - name: Archive build
         working-directory: app/ios
+        env:
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
+          XCCONFIG_FILE: ${{ env.IS_SINGLE_APP_BUILD == 'true' && 'release-sa.xcconfig' || 'release.xcconfig' }}
         run: |
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
-          -allowProvisioningUpdates \
           -configuration Release \
-          -xcconfig ../../release.xcconfig \
+          -xcconfig ../../${XCCONFIG_FILE} \
           -derivedDataPath xbuild \
           -archivePath ../../AriesBifold.xcarchive \
+          -allowProvisioningUpdates \
+          -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p9" \
+          -authenticationKeyID "$APP_STORE_CONNECT_KEY_IDENTIFIER" \
+          -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
           -sdk iphoneos \
           -verbose \
           archive
@@ -287,7 +296,7 @@ jobs:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
-      - name: Export produciton archive
+      - name: Export production archive
         if: false # Temporarily disabled for development --- IGNORE ---
         uses: ./.github/workflows/actions/export-ios-archive
         with:
