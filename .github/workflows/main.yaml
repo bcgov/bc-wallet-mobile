@@ -277,7 +277,7 @@ jobs:
           -workspace AriesBifold.xcworkspace \
           -scheme AriesBifold \
           -configuration Release \
-          -xcconfig ../../${XCCONFIG_FILE} \
+          -xcconfig ../../release.xcconfig \
           -derivedDataPath xbuild \
           -archivePath ../../AriesBifold.xcarchive \
           -allowProvisioningUpdates \
