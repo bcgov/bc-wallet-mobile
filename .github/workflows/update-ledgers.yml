@@ -1,39 +1,40 @@
-name: Update ledgers
+name: Ledgers
 description: Update Aries ledgers
 
 on:
-  push:
-    branches: [main]
-
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, labeled]
 
-runs:
-  steps:
-    - name: Checkout bc-wallet-mobile
-      uses: actions/checkout@v4
+jobs:
+  update-ledgers:
+    runs-on: ubuntu-22.04
+    name: Update Indy ledgers
+    steps:
+      - name: Checkout bc-wallet-mobile
+        uses: actions/checkout@v4
 
-    - name: Setup NodeJS
-      uses: ./.github/workflows/actions/setup-node
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
 
-    - name: Install dependencies
-      working-directory: app
-      run: yarn install --immutable
+      - name: Install dependencies
+        working-directory: app
+        run: yarn install --immutable
 
-    - name: Update Indy ledgers
-      run: node app/scripts/refresh-ledgers.js
+      - name: Update Indy ledgers
+        run: node app/scripts/refresh-ledgers.js
 
-    - name: Commit and push changes
-      run: |
-        git config --local user.name "GitHub Actions"
-        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Commit and push changes
+        run: |
+          git config --local user.name "GitHub Actions"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-        if [[ -n $(git status --porcelain app/src/configs/ledgers/indy/ledgers.json) ]]; then
-          git add app/src/configs/ledgers/indy/ledgers.json
+          if [[ -n $(git status --porcelain app/src/configs/ledgers/indy/ledgers.json) ]]; then
+            git add app/src/configs/ledgers/indy/ledgers.json
 
-          git commit -snm "chore(bot): updated Indy ledgers json file"
+            git commit -snm "chore(bot): updated Indy ledgers json file"
 
-          git push
-        else
-          echo "ledgers.json is up to date, no changes to commit."
-        fi
+            git push
+          else
+            echo "ledgers.json is up to date, no changes to commit."
+          fi
