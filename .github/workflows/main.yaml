@@ -296,7 +296,6 @@ jobs:
           ouput_artifact_ref: ios-artifact
 
       - name: Ship to iTunes
-        if: false # Temporarily disabled for development --- IGNORE ---
         # if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
@@ -306,7 +305,6 @@ jobs:
           version_code: ${{ env.APP_BUILD_NUMBER }}
           version_name: ${{ env.appBCWalletBuildVersion }}
       - name: Save cache for derived data
-        if: false # Temporarily disabled for development --- IGNORE ---
         id: cache-dd-save
         uses: actions/cache/save@v4
         with:
