@@ -71,6 +71,7 @@ import {
   RemoteDebuggingState,
   initialState,
 } from './src/store'
+import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
@@ -116,6 +117,7 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.SCREEN_BIOMETRY, Biometry)
     this._container.registerInstance(TOKENS.SCREEN_SCAN, Scan)
     this._container.registerInstance(TOKENS.SCREEN_ONBOARDING_ITEM, Onboarding)
+    this._container.registerInstance(TOKENS.UTIL_LEDGERS, filePersistedLedgers)
 
     this._container.registerInstance(TOKENS.CRED_HELP_ACTION_OVERRIDES, [
       {
