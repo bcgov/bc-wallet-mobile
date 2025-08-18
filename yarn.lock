@@ -3068,9 +3068,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+<<<<<<< HEAD
 "@bifold/core@npm:2.4.0":
   version: 2.4.0
   resolution: "@bifold/core@npm:2.4.0"
+=======
+"@bifold/core@npm:2.4.5":
+  version: 2.4.5
+  resolution: "@bifold/core@npm:2.4.5"
+>>>>>>> c10bd62 (feat: script now populating ledger JSON file)
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.13
     "@credo-ts/askar": 0.5.13
@@ -3145,6 +3151,7 @@ __metadata:
     uuid: ~9.0.1
   bin:
     bifold: bin/bifold
+<<<<<<< HEAD
   checksum: 10c0/5f59e1ae1bbbae828c2e0653308f781790171344cc76a68fe78b2cc5475ea48478989bc5a9e2d8ae656cfb4cc9246dbf4428c979e5f52e13edd51af371f5791d
   languageName: node
   linkType: hard
@@ -3152,12 +3159,22 @@ __metadata:
 "@bifold/oca@npm:2.4.0":
   version: 2.4.0
   resolution: "@bifold/oca@npm:2.4.0"
+=======
+  checksum: 10c0/978bf016b91604d3a14d197e45e18d08a9d6fd01a3d532bf98621bb294bf7245bdfb286283df04726c3d34f6f7763cab9d35441ec0cf59fcca2dc50631df62dc
+  languageName: node
+  linkType: hard
+
+"@bifold/oca@npm:2.4.5":
+  version: 2.4.5
+  resolution: "@bifold/oca@npm:2.4.5"
+>>>>>>> c10bd62 (feat: script now populating ledger JSON file)
   dependencies:
     "@credo-ts/anoncreds": "npm:0.5.13"
     "@credo-ts/core": "npm:0.5.13"
     axios: "npm:~1.4.0"
     lodash.startcase: "npm:~4.4.0"
     react-native-fs: "npm:~2.20.0"
+<<<<<<< HEAD
   checksum: 10c0/a1c51e11fd165226a0a925f138d4396b64eb1d55ccd59de5ce54444428d1b279238f83df7d14335fddf414afde357cf93dd9fda84574779be1223661b27a602c
   languageName: node
   linkType: hard
@@ -3177,6 +3194,27 @@ __metadata:
   resolution: "@bifold/remote-logs@npm:2.4.0"
   dependencies:
     "@bifold/core": "npm:2.4.0"
+=======
+  checksum: 10c0/81a80e6e26e20a936ce2be3385675ebf0d3bcc62e7bd8d81e916d55c524b9e8d5e2a8d06924be5fb0dea20c468569c1a32ab56f1d6f89ba25306aa8fe4c91e72
+  languageName: node
+  linkType: hard
+
+"@bifold/react-native-attestation@npm:2.4.5":
+  version: 2.4.5
+  resolution: "@bifold/react-native-attestation@npm:2.4.5"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/c36e7199ba2d8ca01f4ccfbd88cdd810acbe935629182ce5274fa355e9d48a7ec338aeb1ef6743f775ebad76492537373208809edd33f1b44e07992a8a4961a6
+  languageName: node
+  linkType: hard
+
+"@bifold/remote-logs@npm:2.4.5":
+  version: 2.4.5
+  resolution: "@bifold/remote-logs@npm:2.4.5"
+  dependencies:
+    "@bifold/core": "npm:2.4.5"
+>>>>>>> c10bd62 (feat: script now populating ledger JSON file)
     "@credo-ts/core": "npm:0.5.13"
     axios: "npm:~1.4.0"
     buffer: "npm:~6.0.3"
@@ -3190,6 +3228,7 @@ __metadata:
     react: ~18.3.1
     react-native: 0.73.11
     react-native-logs: ~5.1.0
+<<<<<<< HEAD
   checksum: 10c0/0744ac9cc8519835b3aba6e081e4f946fe81334993e8dbd09bf40cecf2447382311f4e40a6864f7900a42e55a3e8b26f650dd9c60452abc583c691798a3c2a88
   languageName: node
   linkType: hard
@@ -3197,13 +3236,26 @@ __metadata:
 "@bifold/verifier@npm:2.3.0":
   version: 2.3.0
   resolution: "@bifold/verifier@npm:2.3.0"
+=======
+  checksum: 10c0/0c325ac5ccf272af23f2077f08b40a9eac0f2489c92c0213031909d7d6b7e65bf14cadef73682c1ad53d9a80d634afcb96d1e37821bc4a200548b64563b65262
+  languageName: node
+  linkType: hard
+
+"@bifold/verifier@npm:2.4.5":
+  version: 2.4.5
+  resolution: "@bifold/verifier@npm:2.4.5"
+>>>>>>> c10bd62 (feat: script now populating ledger JSON file)
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.13
     "@credo-ts/core": 0.5.13
     "@credo-ts/react-hooks": 0.6.0
     "@hyperledger/anoncreds-shared": 0.2.4
     react: ~18.3.1
+<<<<<<< HEAD
   checksum: 10c0/2879f7345b4fc20a9124783c8ce6fe4ca1750c419231fca75798b2cc2696ddd184a1596d2bb6aec3a8814811f2c373ad48c9a1978a8d8ea42c14d3d2fcb341d5
+=======
+  checksum: 10c0/85500bcb258ee311999dfe757eafafc8b09c44a116bc609819f4e87dd2267d9e5eb4eaa9063a67ca24649a44a9039740cceaeee23165e47b264c01d4bba8ac00
+>>>>>>> c10bd62 (feat: script now populating ledger JSON file)
   languageName: node
   linkType: hard
 
@@ -11057,11 +11109,19 @@ __metadata:
     "@babel/core": "npm:~7.22.20"
     "@babel/preset-env": "npm:~7.22.20"
     "@babel/runtime": "npm:~7.23.9"
+<<<<<<< HEAD
     "@bifold/core": "npm:2.4.0"
     "@bifold/oca": "npm:2.4.0"
     "@bifold/react-native-attestation": "npm:2.4.0"
     "@bifold/remote-logs": "npm:2.4.0"
     "@bifold/verifier": "npm:2.3.0"
+=======
+    "@bifold/core": "npm:2.4.5"
+    "@bifold/oca": "npm:2.4.5"
+    "@bifold/react-native-attestation": "npm:2.4.5"
+    "@bifold/remote-logs": "npm:2.4.5"
+    "@bifold/verifier": "npm:2.4.5"
+>>>>>>> c10bd62 (feat: script now populating ledger JSON file)
     "@commitlint/cli": "npm:~11.0.0"
     "@credo-ts/anoncreds": "npm:0.5.13"
     "@credo-ts/askar": "npm:0.5.13"

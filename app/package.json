@@ -37,14 +37,23 @@
     "storybook": "start-storybook -p 7007",
     "build-storybook": "build-storybook",
     "ios:setup": "bundle install && cd ios && bundle exec pod install",
-    "gradle:write-locks": "cd android && ./gradlew app:dependencies --write-locks"
+    "gradle:write-locks": "cd android && ./gradlew app:dependencies --write-locks",
+    "ledgers": "node scripts/refresh-ledgers.cjs"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@bifold/core": "2.4.0",
     "@bifold/oca": "2.4.0",
     "@bifold/react-native-attestation": "2.4.0",
     "@bifold/remote-logs": "2.4.0",
     "@bifold/verifier": "2.3.0",
+=======
+    "@bifold/core": "2.4.5",
+    "@bifold/oca": "2.4.5",
+    "@bifold/react-native-attestation": "2.4.5",
+    "@bifold/remote-logs": "2.4.5",
+    "@bifold/verifier": "2.4.5",
+>>>>>>> c10bd62 (feat: script now populating ledger JSON file)
     "@credo-ts/anoncreds": "0.5.13",
     "@credo-ts/askar": "0.5.13",
     "@credo-ts/core": "0.5.13",
