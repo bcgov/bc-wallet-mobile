@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # ensures full history is available
+          ref: ${{ github.ref }}   # checks out the branch that triggered the workflow
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -22,12 +25,11 @@ jobs:
       - name: Cache app node_modules
         uses: actions/cache@v3
         with:
-          path: |
-            app/node_modules
-          # Cache will be invalidated if package.json or yarn.lock changes
-          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
+          path: .yarn/cache
+          # Cache will be invalidated if yarn.lock changes
+          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-app-node_modules-
+            ${{ runner.os }}-yarn-
 
       - name: Install dependencies
         working-directory: app
@@ -46,7 +48,7 @@ jobs:
 
             git commit -snm "chore(bot): updated Indy ledgers json file"
 
-            git push
+            git push origin HEAD:${{ github.ref }}
           else
             echo "ledgers.json is up to date, no changes to commit."
           fi
