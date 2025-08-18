@@ -21,7 +21,7 @@ const fileSystem = {
  */
 async function main() {
   const indyLedgers = [
-    { ledgerId: IndyLedger.BCOVRIN_TEST, isProduction: false },
+    { ledgerId: IndyLedger.BCOVRIN_TEST, isProduction: true },
     { ledgerId: IndyLedger.CANDY_DEV_NETWORK, isProduction: false },
     { ledgerId: IndyLedger.CANDY_TEST_NETWORK, isProduction: false },
     { ledgerId: IndyLedger.CANDY_PRODUCTION_NETWORK, isProduction: true },

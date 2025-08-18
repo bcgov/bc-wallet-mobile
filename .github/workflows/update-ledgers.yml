@@ -1,5 +1,7 @@
 name: Ledgers
 description: Update Aries ledgers
+permissions:
+  contents: write
 
 on:
   pull_request:
