@@ -1,9 +1,9 @@
 name: Code Quality
 
 on:
-  push:
-    # branches: [main]
-    # types: [opened, synchronize, reopened, labeled]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled]
 
 jobs:
   lint:
