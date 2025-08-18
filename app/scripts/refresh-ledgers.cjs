@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const { getIndyLedgers, IndyLedger, writeIndyLedgersToFile } = require('@bifold/core/lib/commonjs/utils/ledger')
 
-const LEDGERS_JSON_FILE = 'src/configs/ledgers/indy/ledgers.json'
+const LEDGERS_JSON_FILE = 'app/src/configs/ledgers/indy/ledgers.json'
 
 const fileSystem = {
   writeFile: (filePath, data) => fs.writeFileSync(filePath, data, 'utf8'),
