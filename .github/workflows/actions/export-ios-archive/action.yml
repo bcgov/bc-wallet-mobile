@@ -24,6 +24,10 @@ runs:
         -archivePath AriesBifold.xcarchive \
         -exportPath export \
         -exportOptionsPlist ./${{ inputs.export_options }} \
+        -authenticationKeyPath "$KEY_FILE_PATH" \
+        -authenticationKeyID "$KEY_ID" \
+        -authenticationKeyIssuerID "$ISSUER_ID" \
+        -allowProvisioningUpdates \
         -verbose
 
     - name: Upload signed artifact
