@@ -288,19 +288,11 @@ jobs:
           -verbose \
           archive
 
-      - name: Save cache for derived data
-        if: false # Temporarily disabled for development --- IGNORE ---
-        id: cache-dd-save
-        uses: actions/cache/save@v4
-        with:
-          path: app/ios/xbuild/Build
-          key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
-
       - name: Export production archive
-        if: false # Temporarily disabled for development --- IGNORE ---
+        # if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          export_options: options.plist
+          export_options: export-options.plist
           ouput_artifact_ref: ios-artifact
 
       - name: Ship to iTunes
@@ -313,6 +305,13 @@ jobs:
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
           version_code: ${{ env.APP_BUILD_NUMBER }}
           version_name: ${{ env.appBCWalletBuildVersion }}
+      - name: Save cache for derived data
+        if: false # Temporarily disabled for development --- IGNORE ---
+        id: cache-dd-save
+        uses: actions/cache/save@v4
+        with:
+          path: app/ios/xbuild/Build
+          key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
       - name: Send notification for iOS failure
         if: failure() && github.ref_name == 'main'
