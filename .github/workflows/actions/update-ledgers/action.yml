@@ -3,6 +3,8 @@ description: Update Aries ledgers
 
 on:
   push:
+    branches:
+      - '**'
   # pull_request:
   #   branches: [main]
   #   types: [opened, synchronize, reopened, labeled]
