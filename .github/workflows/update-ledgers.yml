@@ -3,16 +3,18 @@ description: Update Aries ledgers
 
 on:
   push:
-    branches:
-      - '**'
-  # pull_request:
-  #   branches: [main]
-  #   types: [opened, synchronize, reopened, labeled]
+    branches: [main]
+
+  pull_request:
+    branches: [main]
 
 runs:
   steps:
     - name: Checkout bc-wallet-mobile
       uses: actions/checkout@v4
+
+    - name: Setup NodeJS
+      uses: ./.github/workflows/actions/setup-node
 
     - name: Install dependencies
       working-directory: app
