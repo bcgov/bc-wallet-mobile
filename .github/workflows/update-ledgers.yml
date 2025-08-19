@@ -38,17 +38,41 @@ jobs:
       - name: Update Indy ledgers
         run: node app/scripts/refresh-ledgers.cjs
 
-      - name: Commit and push changes
-        run: |
-          git config --local user.name "GitHub Actions"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - uses: stefanzweifel/git-auto-commit-action@v6
+        with:
+          # Optional. Commit message for the created commit.
+          # Defaults to "Apply automatic changes"
+          commit_message: "chore(bot): updated Indy ledgers json file"
 
-          if [[ -n $(git status --porcelain app/src/configs/ledgers/indy/ledgers.json) ]]; then
-            git add app/src/configs/ledgers/indy/ledgers.json
+          # Optional. Options used by `git-commit`.
+          # See https://git-scm.com/docs/git-commit#_options
+          commit_options: '--no-verify --signoff'
 
-            git commit -s -m "chore(bot): updated Indy ledgers json file" --no-verify
+          # Optional glob pattern of files which should be added to the commit
+          # Defaults to all (.)
+          # See the `pathspec`-documentation for git
+          # - https://git-scm.com/docs/git-add#Documentation/git-add.txt-ltpathspecgt82308203
+          # - https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
+          file_pattern: 'app/src/configs/ledgers/indy/ledgers.json'
 
-            git push origin HEAD:${{ github.head_ref }}
-          else
-            echo "ledgers.json is up to date, no changes to commit."
-          fi
+          # Optional. Option used by `git-status` to determine if the repository is
+          # dirty. See https://git-scm.com/docs/git-status#_options
+          status_options: '--porcelain app/src/configs/ledgers/indy/ledgers.json'
+
+          # Optional. Disable dirty check and always try to create a commit and push
+          skip_dirty_check: false
+      #
+      # - name: Commit and push changes
+      #   run: |
+      #     git config --local user.name "GitHub Actions"
+      #     git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      #
+      #     if [[ -n $(git status --porcelain app/src/configs/ledgers/indy/ledgers.json) ]]; then
+      #       git add app/src/configs/ledgers/indy/ledgers.json
+      #
+      #       git commit -s -m "chore(bot): updated Indy ledgers json file" --no-verify
+      #
+      #       git push origin HEAD:${{ github.head_ref }}
+      #     else
+      #       echo "ledgers.json is up to date, no changes to commit."
+      #     fi
