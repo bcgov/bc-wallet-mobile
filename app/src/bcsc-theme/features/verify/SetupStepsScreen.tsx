@@ -9,6 +9,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -16,7 +17,7 @@ type SetupStepsScreenProps = {
 
 const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { Spacing, TextTheme, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -24,6 +25,19 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const emailAddress = store.bcsc.email ?? null
   const emailConfirmed = store.bcsc.emailConfirmed ?? false
   const registered = useMemo(() => serialNumber && emailAddress, [serialNumber, emailAddress])
+  const isNonPhotoCard = useMemo(() => store.bcsc.cardType === BCSCCardType.NonPhoto, [store.bcsc.cardType])
+  const hasAdditionalPhotoEvidence = useMemo(
+    () => store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo),
+    [store.bcsc.additionalEvidenceData]
+  )
+  const needsAdditionalEvidence = useMemo(
+    () => isNonPhotoCard && !hasAdditionalPhotoEvidence,
+    [isNonPhotoCard, hasAdditionalPhotoEvidence]
+  )
+  const canProceedToVerification = useMemo(
+    () => registered && !store.bcsc.pendingVerification && !needsAdditionalEvidence,
+    [registered, store.bcsc.pendingVerification, needsAdditionalEvidence]
+  )
 
   const styles = StyleSheet.create({
     container: {
@@ -71,11 +85,31 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }
 
   const handleCheckStatus = async () => {
-    const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId!)
+    if (!store.bcsc.verificationRequestId) {
+      throw new Error('Verification request ID is missing')
+    }
+
+    const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId)
+
     if (status === 'verified') {
-      const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode!, store.bcsc.userCode!)
+      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
+        throw new Error('Device code or user code is missing for verification')
+      }
+
+      const { refresh_token, bcsc_devices_count } = await token.checkDeviceCodeStatus(
+        store.bcsc.deviceCode,
+        store.bcsc.userCode
+      )
+
       if (refresh_token) {
         dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+      }
+
+      if (bcsc_devices_count !== undefined) {
+        dispatch({
+          type: BCDispatchAction.UPDATE_DEVICE_COUNT,
+          payload: [bcsc_devices_count],
+        })
       }
       navigation.navigate(BCSCScreens.VerificationSuccess)
     } else {
@@ -110,6 +144,23 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     )
   }
 
+  const getVerificationStep4Text = (): string => {
+    if (canProceedToVerification) {
+      const expirationDate = store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      })
+      return `Verify identity by ${expirationDate}`
+    }
+
+    if (needsAdditionalEvidence) {
+      return 'Complete additional identification first'
+    }
+
+    return 'Verify identity'
+  }
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
@@ -117,30 +168,70 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           if (!registered) {
             navigation.navigate(BCSCScreens.IdentitySelection)
           }
+
+          if (needsAdditionalEvidence) {
+            navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
+          }
         }}
         testID={testIdWithKey('Step1')}
         accessibilityLabel={'Step 1'}
         style={[
           styles.step,
-          { backgroundColor: registered ? ColorPalette.brand.secondaryBackground : ColorPalette.brand.primary },
+          {
+            backgroundColor:
+              registered && !needsAdditionalEvidence
+                ? ColorPalette.brand.secondaryBackground
+                : ColorPalette.brand.primary,
+          },
         ]}
       >
         <View style={styles.titleRow}>
           <ThemedText
             variant={'headingFour'}
-            style={{ marginRight: 16, color: registered ? TextTheme.headingFour.color : ColorPalette.brand.text }}
+            style={{
+              marginRight: 16,
+              color: registered && !needsAdditionalEvidence ? TextTheme.headingFour.color : ColorPalette.brand.text,
+            }}
             accessibilityLabel={t('Unified.Steps.Step1')}
           >
             {t('Unified.Steps.Step1')}
           </ThemedText>
-          {registered ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
+          {registered && !needsAdditionalEvidence ? (
+            <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} />
+          ) : null}
         </View>
         <View>
-          <ThemedText style={{ color: registered ? TextTheme.normal.color : ColorPalette.brand.text }}>
+          <ThemedText
+            style={{ color: registered && !needsAdditionalEvidence ? TextTheme.normal.color : ColorPalette.brand.text }}
+          >
             {registered ? `ID: BC Services Card (${serialNumber})` : t('Unified.Steps.ScanOrTakePhotos')}
           </ThemedText>
         </View>
       </TouchableOpacity>
+      {/* Only show if NonPhoto is selected and no additional photo evidence is available */}
+      {registered && needsAdditionalEvidence && (
+        <TouchableOpacity
+          onPress={() => navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)}
+          style={[
+            styles.step,
+            {
+              backgroundColor: ColorPalette.brand.primary,
+              borderTopColor: ColorPalette.brand.secondaryBackground,
+              borderTopWidth: Spacing.xs,
+            },
+          ]}
+        >
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <ThemedText style={{ color: ColorPalette.brand.text }}>
+              <ThemedText style={{ color: ColorPalette.brand.text }} variant={'bold'}>
+                {'Add second ID: '}
+              </ThemedText>
+              {'Additional identification required for non-photo BC Services Card.'}
+            </ThemedText>
+            <Icon name={'chevron-right'} size={24} color={ColorPalette.brand.text} style={{ alignSelf: 'center' }} />
+          </View>
+        </TouchableOpacity>
+      )}
       <View style={styles.itemSeparator} />
       <TouchableOpacity
         testID={testIdWithKey('Step2')}
@@ -212,37 +303,38 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <View style={styles.itemSeparator} />
       <TouchableOpacity
         onPress={() => {
-          if (registered && !store.bcsc.pendingVerification) {
+          if (canProceedToVerification) {
             navigation.navigate(BCSCScreens.VerificationMethodSelection)
           }
         }}
         testID={testIdWithKey('Step4')}
         accessibilityLabel={t('Unified.Steps.Step4')}
-        disabled={!registered || store.bcsc.pendingVerification}
+        disabled={!canProceedToVerification}
         style={[
           styles.step,
           {
-            backgroundColor: registered ? ColorPalette.brand.primary : ColorPalette.brand.secondaryBackground,
+            backgroundColor: canProceedToVerification
+              ? ColorPalette.brand.primary
+              : ColorPalette.brand.secondaryBackground,
           },
         ]}
       >
         <View style={styles.titleRow}>
           <ThemedText
             variant={'headingFour'}
-            style={{ marginRight: 16, color: registered ? ColorPalette.brand.text : TextTheme.headingFour.color }}
+            style={{
+              marginRight: 16,
+              color: canProceedToVerification ? ColorPalette.brand.text : TextTheme.headingFour.color,
+            }}
           >
             {t('Unified.Steps.Step4')}
           </ThemedText>
         </View>
         <View>
-          <ThemedText style={{ color: registered ? ColorPalette.brand.text : TextTheme.headingFour.color }}>
-            {registered
-              ? `Verify identity by ${store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                })}`
-              : 'Verify identity'}
+          <ThemedText
+            style={{ color: canProceedToVerification ? ColorPalette.brand.text : TextTheme.headingFour.color }}
+          >
+            {getVerificationStep4Text()}
           </ThemedText>
         </View>
       </TouchableOpacity>
@@ -291,10 +383,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <Button
           title={'Reset data'}
           onPress={() => {
-            dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.CLEAR_ADDITIONAL_EVIDENCE, payload: [undefined] })
           }}
           testID={testIdWithKey('ResetData')}
           accessibilityLabel={'Reset data'}

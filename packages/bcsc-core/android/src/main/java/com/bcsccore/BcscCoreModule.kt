@@ -36,8 +36,12 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.UUID
 import javax.crypto.SecretKey
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 // JWT/Nimbus imports
+import com.nimbusds.jose.JWEObject
+import com.nimbusds.jose.crypto.RSADecrypter
 import com.nimbusds.jose.jwk.JWK
 import com.nimbusds.jwt.JWTClaimsSet
 
@@ -890,6 +894,86 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       Log.e(NAME, "hashBase64: Unexpected error: ${e.message}", e)
       promise.reject("E_HASH_ERROR", "Unexpected error hashing base64: ${e.message}", e)
     }
+  }
+
+  @ReactMethod
+  override fun decodePayload(jweString: String, promise: Promise) {
+    try {
+      // Get the current (latest) key pair for decryption
+      val currentKeyPair = keyPairSource.getCurrentBcscKeyPair()
+      
+      if (currentKeyPair.getKeyPair()?.private == null) {
+        promise.reject("E_NO_KEYS_FOUND", "No private key available for decryption")
+        return
+      }
+      
+      // Parse the JWE object
+      val jweObject = JWEObject.parse(jweString)
+      
+      // Create RSA decrypter with the private key
+      val rsaDecrypter = RSADecrypter(currentKeyPair.getKeyPair()!!.private)
+      
+      // Decrypt the JWE to get the JWT payload
+      jweObject.decrypt(rsaDecrypter)
+      val jwtPayload = jweObject.payload.toString()
+      
+      // Parse the JWT to extract and decode the payload (claims)
+      val jwtSegments = jwtPayload.split(".")
+      if (jwtSegments.size < 2) {
+        promise.reject("E_INVALID_JWT", "Invalid JWT format in decrypted payload")
+        return
+      }
+      
+      // Get the payload segment (second segment) and decode it
+      var base64Payload = jwtSegments[1]
+      
+      // Add padding if necessary (base64url to base64 conversion)
+      val requiredLength = (4 * kotlin.math.ceil(base64Payload.length / 4.0)).toInt()
+      val paddingLength = requiredLength - base64Payload.length
+      if (paddingLength > 0) {
+        base64Payload += "=".repeat(paddingLength)
+      }
+      
+      // Convert base64url to base64 (replace URL-safe characters)
+      base64Payload = base64Payload.replace("-", "+").replace("_", "/")
+      
+      // Decode the base64 payload
+      val decodedBytes = android.util.Base64.decode(base64Payload, android.util.Base64.DEFAULT)
+      val decodedPayload = String(decodedBytes, Charsets.UTF_8)
+      
+      Log.d(NAME, "decodePayload: Successfully decoded JWE payload")
+      promise.resolve(decodedPayload)
+      
+    } catch (e: BcscException) {
+      Log.e(NAME, "decodePayload: BCSC key error: ${e.devMessage}", e)
+      promise.reject("E_BCSC_DECODE_ERROR", "Error accessing key for JWE decryption: ${e.devMessage}", e)
+    } catch (e: java.text.ParseException) {
+      Log.e(NAME, "decodePayload: JWE parse error: ${e.message}", e)
+      promise.reject("E_JWE_PARSE_ERROR", "Invalid JWE format", e)
+    } catch (e: com.nimbusds.jose.JOSEException) {
+      Log.e(NAME, "decodePayload: JWE decryption error: ${e.message}", e)
+      promise.reject("E_JWE_DECRYPT_ERROR", "Failed to decrypt JWE", e)
+    } catch (e: IllegalArgumentException) {
+      Log.e(NAME, "decodePayload: Base64 decode error: ${e.message}", e)
+      promise.reject("E_BASE64_DECODE_ERROR", "Failed to decode base64 payload", e)
+    } catch (e: Exception) {
+      Log.e(NAME, "decodePayload: Unexpected error: ${e.message}", e)
+      promise.reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", e)
+    }
+  }
+
+  @ReactMethod
+  override fun createQuickLoginJWT(
+    accessToken: String,
+    clientId: String,
+    issuer: String,
+    clientRefId: String,
+    key: ReadableMap?,
+    fcmDeviceToken: String,
+    deviceToken: String?,
+    promise: Promise
+  ) {
+    promise.reject("E_NOT_IMPLEMENTED", "createQuickLoginJWT not yet implemented on Android")
   }
   
   // MARK: - Account management methods

@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react'
 import { signPairingCode } from 'react-native-bcsc-core'
 import apiClient from '../client'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
@@ -10,7 +11,7 @@ export interface PairingCodeLoginResponseData {
 }
 
 const usePairingApi = () => {
-  const loginByPairingCode = async (code: string) => {
+  const loginByPairingCode = useCallback(async (code: string) => {
     return withAccount<PairingCodeLoginResponseData>(async (account) => {
       const { issuer, clientID } = account
       const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
@@ -23,11 +24,14 @@ const usePairingApi = () => {
       )
       return { success: true }
     })
-  }
+  }, [])
 
-  return {
-    loginByPairingCode,
-  }
+  return useMemo(
+    () => ({
+      loginByPairingCode,
+    }),
+    [loginByPairingCode]
+  )
 }
 
 export default usePairingApi

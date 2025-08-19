@@ -10,6 +10,7 @@ import Home from '../features/home/Home'
 import Services from '../features/services/Services'
 import Settings from '../features/settings/Settings'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
+import createHelpHeaderButton from '../components/HelpHeaderButton'
 
 type TabBarIconProps = {
   focused: boolean
@@ -69,7 +70,7 @@ const BCSCTabStack: React.FC = () => {
           tabBarStyle: TabTheme.tabBarStyle,
           tabBarActiveTintColor: TabTheme.tabBarActiveTintColor,
           tabBarInactiveTintColor: TabTheme.tabBarInactiveTintColor,
-          header: () => null,
+          headerShown: false,
         }}
       >
         <Tab.Screen
@@ -81,6 +82,11 @@ const BCSCTabStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Home',
             tabBarTestID: testIdWithKey('Home'),
+            title: '',
+            headerShown: true,
+            headerLeft: () => null,
+            // TODO(bm): Add real help URL
+            headerRight: createHelpHeaderButton({}),
           }}
         />
         <Tab.Screen

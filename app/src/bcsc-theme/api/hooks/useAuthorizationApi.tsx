@@ -1,16 +1,23 @@
+import { useCallback, useMemo } from 'react'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
+export enum BCSCCardProcess {
+  BCSC = 'IDIM L3 Remote BCSC Photo Identity Verification',
+  BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
+  NonBCSC = 'IDIM L3 Remote Non-BCSC Identity Verification',
+}
 export interface VerifyInPersonResponseData {
   device_code: string
   user_code: string
   verified_email: string
   expires_in: number
+  process: BCSCCardProcess
 }
 
 const useAuthorizationApi = () => {
   // TODO: fetch evidence API endpoint from this endpoint
-  const authorizeDevice = async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData> => {
+  const authorizeDevice = useCallback(async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData> => {
     return withAccount<VerifyInPersonResponseData>(async (account) => {
       const body = {
         response_type: 'device_code',
@@ -22,14 +29,18 @@ const useAuthorizationApi = () => {
       apiClient.logger.info(`Registration body: ${JSON.stringify(body, null, 2)}`)
       const { data } = await apiClient.post<VerifyInPersonResponseData>(apiClient.endpoints.deviceAuthorization, body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        skipBearerAuth: true,
       })
       return data
     })
-  }
+  }, [])
 
-  return {
-    authorizeDevice,
-  }
+  return useMemo(
+    () => ({
+      authorizeDevice,
+    }),
+    [authorizeDevice]
+  )
 }
 
 export default useAuthorizationApi
