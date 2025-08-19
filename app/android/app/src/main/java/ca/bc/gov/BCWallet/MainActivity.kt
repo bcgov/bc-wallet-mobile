@@ -3,12 +3,10 @@ package ca.bc.gov.BCWallet
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.facebook.react.ReactActivity
 import org.devio.rn.splashscreen.SplashScreen
 import com.facebook.react.ReactActivityDelegate
-import com.facebook.react.bridge.ReactContext
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
