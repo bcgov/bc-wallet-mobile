@@ -293,7 +293,7 @@ jobs:
         # if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          export_options: export-options.plist
+          export_options: export-options-sa.plist
           ouput_artifact_ref: ios-artifact
 
       - name: Ship to iTunes
