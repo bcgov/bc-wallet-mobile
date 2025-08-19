@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
+    android:background="@color/white"
     android:layout_height="match_parent">
     <ImageView
         android:src="@mipmap/ic_launcher"
@@ -9,6 +10,6 @@
         android:layout_centerInParent="true"
         android:scaleType="fitCenter"
         android:adjustViewBounds="true"
-        android:maxWidth="150dp"
+        android:maxWidth="160dp"
         />
 </RelativeLayout>
