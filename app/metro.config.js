@@ -12,6 +12,7 @@ const packageDirs = [
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/verifier')),
   fs.realpathSync(path.join(__dirname, 'node_modules', '@bifold/react-native-attestation')),
   fs.realpathSync(path.join(__dirname, 'node_modules', 'react-native-bcsc-core')),
+  fs.realpathSync(path.join(__dirname, 'node_modules', '@credo-ts/webvh')),
 ]
 
 const watchFolders = [...packageDirs]
@@ -33,6 +34,11 @@ for (const packageDir of packageDirs) {
     return acc
   }, extraNodeModules)
 }
+
+// Ensure metro never resolves nested copies of core libs from within @credo-ts/webvh
+const webvhDir = fs.realpathSync(path.join(__dirname, 'node_modules', '@credo-ts/webvh'))
+extraExclusionlist.push(path.join(webvhDir, 'node_modules', '@credo-ts', 'core'))
+extraExclusionlist.push(path.join(webvhDir, 'node_modules', '@credo-ts', 'anoncreds'))
 
 module.exports = (async () => {
   const {
