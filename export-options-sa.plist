@@ -14,7 +14,7 @@
 	<string>L796QSLV3E</string>
 	<key>thinning</key>
 	<string>&lt;none&gt;</string>
-		<key>provisioningProfiles</key>
+	<key>provisioningProfiles</key>
 	<dict>
 		<key>ca.bc.gov.iddev.servicescard</key>
 		<string>a0e39c54-738a-4a81-ac49-ce029f59129d</string>
