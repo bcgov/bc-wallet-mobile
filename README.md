@@ -50,6 +50,22 @@ React Native environment setup instructions are documented [here](https://reactn
 
 Following along, you should end up using Android SDK Platform 33 with Android 13 (API Level 33) for Android development and/or iOS 11 for iOS development.
 
+
+## Additional Setup for Android Studio
+
+Once you've followed the setup steps for React Native we have a few more things we need to do inside android studio, to smooth out the development experience. 
+
+1. Open Android Studio and open the folder a `~/bc-wallet-mobile/app/android`
+2. Open Android Studio settings, then select `Build, Execution, Deployment` -> `Build Tools` -> `Gradle`
+3. You should see a few field inputs, update the Gradle SDK field to the same version of Java you downloaded earlier in the Prequisite Software steps 
+![Android Studio Gradle Setting](/docs/android-studio-java-setting.png)
+
+
+
+
+// need to take a screen shot of how to get there
+// you'll need to open the project, navigate to the compile/ build settings and specify the java version you installed from a previous step
+
 ## Installing npm modules and pods
 
 Next, install the npm modules needed to build and test BC Wallet from the root of the repository:
