@@ -127,6 +127,10 @@ const Account: React.FC = () => {
               title="All account details"
               description={'View your account activity, manage your email address, and more.'}
             />
+            <SectionButton
+              onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
+              title="Remove account"
+            />
           </View>
         </View>
       )}

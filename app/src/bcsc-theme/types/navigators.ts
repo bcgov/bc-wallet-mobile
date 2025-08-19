@@ -4,6 +4,7 @@ import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
+  AccountStack = 'BCSCAccountStack',
 }
 
 export enum BCSCScreens {
@@ -41,6 +42,7 @@ export enum BCSCScreens {
   EvidenceTypeList = 'EvidenceTypeList',
   EvidenceCapture = 'BCSCEvidenceCapture',
   EvidenceIDCollection = 'BCSCEvidenceIDCollection',
+  RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
 }
 
 export type BCSCTabStackParams = {
@@ -52,9 +54,14 @@ export type BCSCTabStackParams = {
 
 export type BCSCRootStackParams = {
   [BCSCStacks.TabStack]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCStacks.AccountStack]: NavigatorScreenParams<BCSCAccountStackParams>
   [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
+}
+
+export type BCSCAccountStackParams = {
+  [BCSCScreens.RemoveAccountConfirmation]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {
