@@ -265,7 +265,7 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.APPLE_APP_STORE_PROVISIONING_PROFILE_SADEV_BASE64 || secrets.APPLE_APP_STORE_PROVISIONING_PROFILE_BASE64 }}
+          provisioning_profile: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 || secrets.BUILD_PROVISION_PROFILE_BASE64 }}
 
       - name: Archive build
         working-directory: app/ios
