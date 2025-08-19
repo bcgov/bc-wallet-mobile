@@ -6,6 +6,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "react-native-bcsc-core": ["../packages/bcsc-core/src/index"],
       "@/*": ["src/*"],
       "@assets/*": ["src/assets/*"],
       "@bcwallet-theme/*": ["src/bcwallet-theme/*"],

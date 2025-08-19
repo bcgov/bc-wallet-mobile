@@ -1,0 +1,15 @@
+diff --git a/package.json b/package.json
+index 2bac336949dfc9bf0c4bc67b7800f4abf38a9d08..8abab78122903110b2dc44da72916f20322c1566 100644
+--- a/package.json
++++ b/package.json
+@@ -17,8 +17,8 @@
+     "didwebvh-ts": "^2.5.3",
+     "json-canonicalize": "^1.2.0",
+     "tsyringe": "^4.8.0",
+-    "@credo-ts/anoncreds": "0.5.17-alpha-20250818210456",
+-    "@credo-ts/core": "0.5.17-alpha-20250818210456"
++    "@credo-ts/anoncreds": "0.5.13",
++    "@credo-ts/core": "0.5.13"
+   },
+   "devDependencies": {
+     "rimraf": "^4.4.0",
