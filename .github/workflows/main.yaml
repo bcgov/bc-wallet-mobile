@@ -266,6 +266,13 @@ jobs:
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
           provisioning_profile: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 || secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+      - name: Patch for Single App build
+        if: ${{ env.IS_SINGLE_APP_BUILD == 'true' }}
+        run: |
+          echo "Patching for Single App build"
+          git config user.email "github-action@users.noreply.github.com"
+          git config user.name "GitHub Actions"
+          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
 
       - name: Archive build
         working-directory: app/ios
@@ -392,7 +399,7 @@ jobs:
           echo "Patching for Single App build"
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
-          git am < ./patch/0001-chore-app-to-bcsc-dev.patch
+          git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
 
       - name: Create release keystore
         working-directory: app/android/app
