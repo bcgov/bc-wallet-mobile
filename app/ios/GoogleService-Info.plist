@@ -2,18 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>27280337469-sandmglpe2viuf4p5u122tp4kc0hgqb7.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.27280337469-sandmglpe2viuf4p5u122tp4kc0hgqb7</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCL37I5zpWEauPopROBm6d64bGDiimAvZE</string>
+	<string>AIzaSyBYE9-AFaGgXjS9wMXxkQcvR0gb-1L36ak</string>
 	<key>GCM_SENDER_ID</key>
-	<string>1008044298583</string>
+	<string>27280337469</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>ca.bc.gov.BCWallet</string>
+	<string>ca.bc.gov.iddev.servicescard</string>
 	<key>PROJECT_ID</key>
-	<string>bc-wallet-mobile</string>
+	<string>bcsc-ios-app</string>
 	<key>STORAGE_BUCKET</key>
-	<string>bc-wallet-mobile.appspot.com</string>
+	<string>bcsc-ios-app.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +29,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1008044298583:ios:76bfc02e8a3c04f844ae12</string>
+	<string>1:27280337469:ios:d17c95af9612ae764dd854</string>
+	<key>DATABASE_URL</key>
+	<string>https://bcsc-ios-app.firebaseio.com</string>
 </dict>
 </plist>

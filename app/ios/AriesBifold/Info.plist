@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>BC Wallet</string>
+	<string>BC Services Card</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -69,7 +69,7 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>$(PRODUCT_NAME) wants to use your FaceID/TouchID to authenticate your identity</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We include this permission because a library our app uses references it, even though we don't use it directly</string>
+	<string>We include this permission because a library our app uses references it, even though we don&apos;t use it directly</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>$(PRODUCT_NAME) needs access to your microphone to enable video calls</string>
 	<key>UIAppFonts</key>
