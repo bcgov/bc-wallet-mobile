@@ -38,7 +38,7 @@ jobs:
         with:
           path: .yarn/cache
           # Cache will be invalidated if yarn.lock changes
-          key: ${{ runner.os }}-yarn-${{ hashFiles('app/yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
 
@@ -49,7 +49,8 @@ jobs:
       - name: Update Indy ledgers
         run: node app/scripts/refresh-ledgers.cjs
 
-      - uses: stefanzweifel/git-auto-commit-action@v6
+      # note: picking a specific commit SHA to ensure the action is not updated unexpectedly and satisfies the SonarQube security requirements
+      - uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0
         with:
           # Optional. Commit message for the created commit.
           # Defaults to "Apply automatic changes"
