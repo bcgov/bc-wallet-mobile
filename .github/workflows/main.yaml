@@ -291,6 +291,10 @@ jobs:
 
       - name: Export production archive
         # if: github.ref_name == 'main'
+        env:
+          KEY_FILE_PATH: "${{ runner.temp }}/AuthKey.p9"
+          KEY_ID: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 || secrets.APP_STORE_CONNECT_KEY_IDENTIFIER }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           export_options: export-options-sa.plist
