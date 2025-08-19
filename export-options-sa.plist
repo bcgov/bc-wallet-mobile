@@ -14,5 +14,10 @@
 	<false/>
 	<key>uploadSymbols</key>
 	<true/>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>ca.bc.gov.iddev.servicescard</key>
+		<string>a0e39c54-738a-4a81-ac49-ce029f59129d</string>
+	</dict>
 </dict>
 </plist>
