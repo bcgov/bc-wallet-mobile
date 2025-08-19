@@ -1,12 +1,23 @@
+# Update Indy Ledgers Strategy
+#
+# When does this workflow run?
+#   - When a pull request is opened or updated that modifies the `app/scripts/refresh-ledgers.cjs` script or the workflow file itself.
+#
+# When does this worflow create a commit?
+#   - When the workflow detects changes in the `app/src/configs/ledgers/indy/ledgers.json` file after running the `refresh-ledgers.cjs` script.
+#
+
 name: Ledgers
 description: Update Aries ledgers
+
 permissions:
   contents: write
 
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, labeled]
+  push:
+    paths:
+      - 'app/scripts/refresh-ledgers.cjs'
+      - '.github/workflows/update-ledgers.yml'
 
 jobs:
   update-ledgers:
@@ -61,18 +72,3 @@ jobs:
 
           # Optional. Disable dirty check and always try to create a commit and push
           skip_dirty_check: false
-      #
-      # - name: Commit and push changes
-      #   run: |
-      #     git config --local user.name "GitHub Actions"
-      #     git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      #
-      #     if [[ -n $(git status --porcelain app/src/configs/ledgers/indy/ledgers.json) ]]; then
-      #       git add app/src/configs/ledgers/indy/ledgers.json
-      #
-      #       git commit -s -m "chore(bot): updated Indy ledgers json file" --no-verify
-      #
-      #       git push origin HEAD:${{ github.head_ref }}
-      #     else
-      #       echo "ledgers.json is up to date, no changes to commit."
-      #     fi
