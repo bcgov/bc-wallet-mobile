@@ -16,8 +16,8 @@ jobs:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0       # ensures full history is available
-          ref: ${{ github.ref }}   # checks out the branch that triggered the workflow
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -46,9 +46,9 @@ jobs:
           if [[ -n $(git status --porcelain app/src/configs/ledgers/indy/ledgers.json) ]]; then
             git add app/src/configs/ledgers/indy/ledgers.json
 
-            git commit -snm "chore(bot): updated Indy ledgers json file"
+            git commit -n -s -m "chore(bot): updated Indy ledgers json file"
 
-            git push origin HEAD:${{ github.ref }}
+            git push origin HEAD:refs/pull/${{ github.event.pull_request.number }}/merge
           else
             echo "ledgers.json is up to date, no changes to commit."
           fi
