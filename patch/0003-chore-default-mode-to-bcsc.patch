@@ -1,0 +1,26 @@
+From 07bec3fbbec6af91cf6281b39b771413ce09c883 Mon Sep 17 00:00:00 2001
+From: "Jason C. Leach" <jason.leach@fullboar.ca>
+Date: Wed, 20 Aug 2025 16:54:03 -0700
+Subject: [PATCH] chore: default mode to bcsc
+
+Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
+---
+ app/src/store.tsx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/app/src/store.tsx b/app/src/store.tsx
+index 104e4d41..cabd61b7 100644
+--- a/app/src/store.tsx
++++ b/app/src/store.tsx
+@@ -216,7 +216,7 @@ export const initialState: BCState = {
+   developer: developerState,
+   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
+   bcsc: bcscState,
+-  mode: Mode.BCWallet,
++  mode: Mode.BCSC,
+ }
+ 
+ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
+-- 
+2.49.0
+
