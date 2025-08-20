@@ -1,4 +1,4 @@
-From 3153e26433745b1e0975fbc87ed0dff138a8f39f Mon Sep 17 00:00:00 2001
+From 555679429aaf6ec8be06b80d654938e2eecb98f5 Mon Sep 17 00:00:00 2001
 From: "Jason C. Leach" <jason.leach@fullboar.ca>
 Date: Tue, 19 Aug 2025 15:43:19 -0700
 Subject: [PATCH] chore: ios app to bcsc dev
@@ -8,8 +8,9 @@ Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
  app/ios/AriesBifold.xcodeproj/project.pbxproj |  18 +++++++++---------
  .../xcschemes/AriesBifold.xcscheme            |   6 +++---
  app/ios/AriesBifold/Info.plist                |   4 ++--
+ app/ios/GoogleService-Info.plist              |  18 ++++++++++++------
  .../AppIcon.appiconset/iTunesArtwork.png      | Bin 40899 -> 26160 bytes
- 4 files changed, 14 insertions(+), 14 deletions(-)
+ 5 files changed, 26 insertions(+), 20 deletions(-)
 
 diff --git a/app/ios/AriesBifold.xcodeproj/project.pbxproj b/app/ios/AriesBifold.xcodeproj/project.pbxproj
 index 7cbd6bc4..276ca261 100644
@@ -136,6 +137,49 @@ index 5ecad104..2e5913cf 100644
  	<key>NSMicrophoneUsageDescription</key>
  	<string>$(PRODUCT_NAME) needs access to your microphone to enable video calls</string>
  	<key>UIAppFonts</key>
+diff --git a/app/ios/GoogleService-Info.plist b/app/ios/GoogleService-Info.plist
+index 0d2b4e52..e4b0a7bc 100644
+--- a/app/ios/GoogleService-Info.plist
++++ b/app/ios/GoogleService-Info.plist
+@@ -2,18 +2,22 @@
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
++	<key>CLIENT_ID</key>
++	<string>27280337469-sandmglpe2viuf4p5u122tp4kc0hgqb7.apps.googleusercontent.com</string>
++	<key>REVERSED_CLIENT_ID</key>
++	<string>com.googleusercontent.apps.27280337469-sandmglpe2viuf4p5u122tp4kc0hgqb7</string>
+ 	<key>API_KEY</key>
+-	<string>AIzaSyCL37I5zpWEauPopROBm6d64bGDiimAvZE</string>
++	<string>AIzaSyBYE9-AFaGgXjS9wMXxkQcvR0gb-1L36ak</string>
+ 	<key>GCM_SENDER_ID</key>
+-	<string>1008044298583</string>
++	<string>27280337469</string>
+ 	<key>PLIST_VERSION</key>
+ 	<string>1</string>
+ 	<key>BUNDLE_ID</key>
+-	<string>ca.bc.gov.BCWallet</string>
++	<string>ca.bc.gov.iddev.servicescard</string>
+ 	<key>PROJECT_ID</key>
+-	<string>bc-wallet-mobile</string>
++	<string>bcsc-ios-app</string>
+ 	<key>STORAGE_BUCKET</key>
+-	<string>bc-wallet-mobile.appspot.com</string>
++	<string>bcsc-ios-app.appspot.com</string>
+ 	<key>IS_ADS_ENABLED</key>
+ 	<false></false>
+ 	<key>IS_ANALYTICS_ENABLED</key>
+@@ -25,6 +29,8 @@
+ 	<key>IS_SIGNIN_ENABLED</key>
+ 	<true></true>
+ 	<key>GOOGLE_APP_ID</key>
+-	<string>1:1008044298583:ios:76bfc02e8a3c04f844ae12</string>
++	<string>1:27280337469:ios:d17c95af9612ae764dd854</string>
++	<key>DATABASE_URL</key>
++	<string>https://bcsc-ios-app.firebaseio.com</string>
+ </dict>
+ </plist>
+\ No newline at end of file
 diff --git a/app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork.png b/app/ios/Media.xcassets/AppIcon.appiconset/iTunesArtwork.png
 index 0643d71a48eb9ed5e2b2e73dd1f4405a95030d72..3271b1c4aa016c8a37d021b3eaa6d3ca09a15305 100644
 GIT binary patch
