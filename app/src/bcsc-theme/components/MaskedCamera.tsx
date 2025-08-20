@@ -157,10 +157,10 @@ const MaskedCamera = ({
         />
       </MaskedView>
       <View style={styles.instructionText}>
-        <ThemedText style={{ color: 'white' }} variant={'headingThree'}>
+        <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
           {cameraLabel}
         </ThemedText>
-        <ThemedText style={{ color: 'white' }} variant={'headingFour'}>
+        <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
           {cameraInstructions}
         </ThemedText>
       </View>

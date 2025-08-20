@@ -242,8 +242,8 @@ export const decodePayload = async (jweString: string): Promise<any> => {
   return BcscCore.decodePayload(jweString);
 };
 
-export const createEvidenceRequestJWT = async (deviceCode: string, clientID: string): Promise<string> => {
-  return BcscCore.createEvidenceRequestJWT(deviceCode, clientID);
+export const createPreVerificationJWT = async (deviceCode: string, clientID: string): Promise<string> => {
+  return BcscCore.createPreVerificationJWT(deviceCode, clientID);
 };
 
 export const hashBase64 = async (base64: string): Promise<string> => {

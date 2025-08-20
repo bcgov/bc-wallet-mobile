@@ -282,6 +282,11 @@ const translation = {
       "IDPhotoInstructionsBullet4": "Make sure the image is clear without any glare or shadows",
       "TakePhoto": "Take photo of ID",
     },
+    "VideoTips": {
+      "PrivatePlace": "Find a private place to talk",
+      "OnlyPerson": "Be the only person in the video",
+      "RemoveGlasses": "Remove your glasses (if possible)"
+    },
     "EvidenceTypeList": {
       "Heading": "Choose photo ID",
       "Description": "Use an ID that has the same name as on your BC Services Card.",

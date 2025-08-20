@@ -6,12 +6,14 @@ import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import CircularMask from '@/bcsc-theme/components/CircularMask'
+import { RouteProp } from '@react-navigation/native'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
+  route: RouteProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
 }
 
-const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
+const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
@@ -23,6 +25,7 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     // Navigate to photo review screen with the photo data
     navigation.navigate(BCSCScreens.PhotoReview, {
       photoPath: path,
+      forLiveCall: route.params.forLiveCall,
     })
   }
 
