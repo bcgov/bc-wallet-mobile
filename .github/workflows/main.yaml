@@ -498,7 +498,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   ship-to-saucelabs:
-    if: github.ref_name == 'main'
+    # if: github.ref_name == 'main'
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     strategy:
