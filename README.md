@@ -61,11 +61,6 @@ Once you've followed the setup steps for React Native we have a few more things 
 ![Android Studio Gradle Setting](/docs/android-studio-java-setting.png)
 
 
-
-
-// need to take a screen shot of how to get there
-// you'll need to open the project, navigate to the compile/ build settings and specify the java version you installed from a previous step
-
 ## Installing npm modules and pods
 
 Next, install the npm modules needed to build and test BC Wallet from the root of the repository:
