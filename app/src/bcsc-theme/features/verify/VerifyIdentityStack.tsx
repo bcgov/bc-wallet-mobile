@@ -1,6 +1,6 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { useDefaultStackOptions, useTheme } from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
+import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme } from '@bifold/core'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import SetupStepsScreen from './SetupStepsScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import SerialInstructionsScreen from './SerialInstructionsScreen'
@@ -29,11 +29,38 @@ import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
+import { useCallback } from 'react'
+import { HelpCenterUrl } from '@/constants'
+import { useNavigation } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
   const theme = useTheme()
+  const { t } = useTranslation()
+  const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const defaultStackOptions = useDefaultStackOptions(theme)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  /**
+   * Handles navigation to the Help Centre webview.
+   *
+   * @param {string} helpCentreUrl - The URL of the Help Centre page to navigate to.
+   * @returns {*} {Promise<void>}
+   */
+  const handleHelpCentreNavigation = useCallback(
+    async (helpCentreUrl: string) => {
+      try {
+        navigation.navigate(BCSCScreens.WebView, {
+          url: helpCentreUrl,
+          title: t('HelpCentre.Title'),
+        })
+      } catch (error) {
+        logger.error(`Error navigating to Help Center webview: ${error}`)
+      }
+    },
+    [navigation, logger, t]
+  )
 
   return (
     <Stack.Navigator screenOptions={{ ...defaultStackOptions, headerShown: true, title: '' }}>
@@ -43,7 +70,9 @@ const VerifyIdentityStack = () => {
         options={{
           title: 'Setup Steps',
           // TODO(bm): Add real help URL
-          headerRight: createHelpHeaderButton({}),
+          headerRight: createHelpHeaderButton({
+            helpAction: () => handleHelpCentreNavigation(HelpCenterUrl.howToSetup),
+          }),
           headerLeft: () => null,
         }}
       />
@@ -52,19 +81,19 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.SerialInstructions}
         component={SerialInstructionsScreen}
         // TODO: (al) add actual help page/modal/link
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{ headerRight: createHelpHeaderButton({ helpAction }) }}
       />
       <Stack.Screen
         name={BCSCScreens.ManualSerial}
         component={ManualSerialScreen}
         // TODO: (al) add actual help page/modal/link
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{ headerRight: createHelpHeaderButton({ helpAction }) }}
       />
       <Stack.Screen
         name={BCSCScreens.ScanSerial}
         component={ScanSerialScreen}
         // TODO: (al) add actual help page/modal/link
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{ headerRight: createHelpHeaderButton({ helpAction }) }}
       />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
@@ -74,13 +103,20 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
         // TODO(bm): Add real help URL
-        options={{ title: 'Choose How to Verify', headerRight: createHelpHeaderButton({}) }}
+        options={{
+          title: 'Choose How to Verify',
+          headerRight: createHelpHeaderButton({
+            helpAction: () => setHelpCenterUrl(HelpCenterUrl.verificationMethods),
+          }),
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
         // TODO(bm): Add real help URL
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{
+          headerRight: createHelpHeaderButton({ helpAction: () => setHelpCenterUrl(HelpCenterUrl.verifyInPerson) }),
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.InformationRequired}
@@ -109,31 +145,31 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.AdditionalIdentificationRequired}
         component={AdditionalIdentificationRequiredScreen}
         // TODO: (al) add actual help page/modal/link
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{ headerRight: createHelpHeaderButton({ helpAction }) }}
       />
       <Stack.Screen
         name={BCSCScreens.IDPhotoInformation}
         component={IDPhotoInformationScreen}
         // TODO: (al) add actual help page/modal/link
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{ headerRight: createHelpHeaderButton({ helpAction }) }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceTypeList}
         component={EvidenceTypeListScreen}
         // TODO: (al) add actual help page/modal/link
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{ headerRight: createHelpHeaderButton({ helpAction }) }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceCapture}
         component={EvidenceCaptureScreen}
         // TODO: (al) add actual help page/modal/link
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{ headerRight: createHelpHeaderButton({ helpAction }) }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceIDCollection}
         component={EvidenceIDCollectionScreen}
         // TODO: (al) add actual help page/modal/link
-        options={{ headerRight: createHelpHeaderButton({}) }}
+        options={{ headerRight: createHelpHeaderButton({ helpAction }) }}
       />
     </Stack.Navigator>
   )
