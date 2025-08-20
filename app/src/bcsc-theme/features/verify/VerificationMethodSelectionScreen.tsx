@@ -44,8 +44,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const handlePressLiveCall = async () => {
     try {
       setLiveCallLoading(true)
-      await new Promise((resolve) => setTimeout(resolve, 2000)) // Simulate loading
-      navigation.navigate(BCSCScreens.LiveCall)
+      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate loading
+      navigation.navigate(BCSCScreens.BeforeYouCall)
     } catch (error) {
       // TODO: Handle error, e.g., show an alert or log the error
     } finally {

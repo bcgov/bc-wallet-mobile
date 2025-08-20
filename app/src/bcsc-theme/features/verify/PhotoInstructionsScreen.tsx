@@ -4,14 +4,17 @@ import SelfieImage from '@assets/img/selfie_example.png'
 import { Image, StyleSheet, View } from 'react-native'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { RouteProp } from '@react-navigation/native'
 
 const SELFIE_IMAGE = Image.resolveAssetSource(SelfieImage).uri
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.PhotoInstructions>
+  route: RouteProp<BCSCVerifyIdentityStackParams, BCSCScreens.PhotoInstructions>
 }
 
-const PhotoInstructionsScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
+const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {
+  const { forLiveCall } = route.params
   const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
@@ -69,7 +72,7 @@ const PhotoInstructionsScreen = ({ navigation }: PhotoInstructionsScreenProps) =
           buttonType={ButtonType.Primary}
           title={'Take Photo of Face'}
           onPress={() => {
-            navigation.navigate(BCSCScreens.TakePhoto, { deviceSide: 'front', cameraInstructions: '', cameraLabel: '' })
+            navigation.navigate(BCSCScreens.TakePhoto, { deviceSide: 'front', cameraInstructions: '', cameraLabel: '', forLiveCall })
           }}
           testID={'TakePhotoButton'}
           accessibilityLabel={'Take Photo of Face'}

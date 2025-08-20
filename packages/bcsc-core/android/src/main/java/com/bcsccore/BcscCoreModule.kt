@@ -845,7 +845,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun createEvidenceRequestJWT(deviceCode: String, clientID: String, promise: Promise) {
+  override fun createPreVerificationJWT(deviceCode: String, clientID: String, promise: Promise) {
     try {
       // Create JWT claims set for evidence request (matching iOS implementation)
       val claimsSet = JWTClaimsSet.Builder()
@@ -856,15 +856,15 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       // Sign the JWT using bcsc-keypair-port
       val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
       
-      Log.d(NAME, "createEvidenceRequestJWT: Successfully created evidence request JWT")
+      Log.d(NAME, "createPreVerificationJWT: Successfully created pre-verification JWT")
       promise.resolve(signedJWT)
       
     } catch (e: BcscException) {
-      Log.e(NAME, "createEvidenceRequestJWT: BCSC signing error: ${e.devMessage}", e)
-      promise.reject("E_BCSC_EVIDENCE_JWT_ERROR", "Error creating evidence request JWT with bcsc-keypair-port: ${e.devMessage}", e)
+      Log.e(NAME, "createPreVerificationJWT: BCSC signing error: ${e.devMessage}", e)
+      promise.reject("E_BCSC_EVIDENCE_JWT_ERROR", "Error creating pre-verification JWT with bcsc-keypair-port: ${e.devMessage}", e)
     } catch (e: Exception) {
-      Log.e(NAME, "createEvidenceRequestJWT: Unexpected error: ${e.message}", e)
-      promise.reject("E_EVIDENCE_JWT_ERROR", "Unexpected error creating evidence request JWT: ${e.message}", e)
+      Log.e(NAME, "createPreVerificationJWT: Unexpected error: ${e.message}", e)
+      promise.reject("E_EVIDENCE_JWT_ERROR", "Unexpected error creating pre-verification JWT: ${e.message}", e)
     }
   }
 

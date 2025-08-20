@@ -2,96 +2,78 @@ import { useCallback, useMemo } from 'react'
 import { useStore } from '@bifold/core'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
-import { createEvidenceRequestJWT } from 'react-native-bcsc-core'
+import { createPreVerificationJWT } from 'react-native-bcsc-core'
 import { BCState } from '@/store'
 
-export interface VerificationPrompt {
-  id: number
-  prompt: string
+type SessionStatusType = 'session_granted' | 'session_not_granted' | 'session_failed' | 'session_ended'
+type CallStatusType =
+  | 'call_ringing'
+  | 'call_media_pending'
+  | 'call_in_call'
+  | 'call_ended'
+  | 'call_error'
+  | 'call_dropped'
+  | 'call_reconnected'
+
+export interface VideoSession {
+  client_id: string
+  gateway_uri: string
+  session_id: string
+  session_token: string
+  destination: string
+  device_code: string
+  status: SessionStatusType
+  status_date: number // seconds from epoch
+  created_date: number // seconds from epoch
 }
 
-export interface VerificationPromptUploadPayload {
-  id: number
-  prompted_at: number // this provides the index/ order in which the prompt was given. 0 is the first prompt, 1 is the second prompt show ect.
-}
-export interface VerificationResponseData {
-  id: string
-  sha256: string
-  prompts: VerificationPrompt[]
+export interface VideoCall {
+  session_id: string
+  call_id: string
+  status: CallStatusType
+  status_date: number // seconds from epoch
 }
 
-export interface SendVerificationPayload {
-  upload_uris: string[]
-  sha256: string
+export interface VideoDestination {
+  destinationId: number
+  videoDestinationConfigId: number
+  destinationName: string
+  destinationAddress: string
+  maxActiveSessions: number
+  maxInactiveSeconds: number
+  destinationPriority: number
+  numberOfAgents: number
+  effectiveStartDate: number
+  videoDestinationConfig: {
+    videoDestinationConfigId: number
+    videoClientId: string
+    videoGatewayUrl: string
+    videoDestTruststore: string
+    truststorePassword: string
+    videoClientKeystore: string
+    keystorePassword: string
+    clientCertAlias: string
+    effectiveStartDate: number
+    effectiveEndDate: number | null
+  }
 }
 
-export interface VerificationStatusResponseData {
-  id: string
-  status: 'pending' | 'verified' | 'cancelled'
-  status_message?: string
-  expires_in?: string
-  avg_turnaround_time_message?: string
+export type VideoDestinations = VideoDestination[]
+
+export interface ServicePeriod {
+  start_day: string // e.g. "MONDAY"
+  end_day: string   // e.g. "MONDAY"
+  start_time: string // e.g. "05:00"
+  end_time: string    // e.g. "23:59"
 }
 
-export interface VerificationPhotoUploadPayload {
-  label: string
-  content_type: string
-  content_length: number
-  date: number
-  sha256: string // hashed copy of the photo
-  filename?: string
+export interface ServiceHours {
+  time_zone: string
+  regular_service_periods: ServicePeriod[]
+  service_unavailable_periods: ServicePeriod[]
 }
 
-export interface VerificationVideoUploadPayload {
-  content_type: string
-  content_length: number
-  date: number // epoch timestamp in seconds
-  sha256: string // hashed copy of the video
-  duration: number // video duration in seconds
-  prompts: VerificationPromptUploadPayload[]
-  filename?: string
-}
-
-export interface UploadEvidenceResponseData {
-  label: string
-  upload_uri: string
-}
-
-export interface EvidenceImageSide {
-  image_side_name: 'FRONT_SIDE' | 'BACK_SIDE'
-  image_side_label: string
-  image_side_tip: string
-}
-
-export interface EvidenceType {
-  evidence_type: string
-  has_photo: boolean
-  group: 'BRITISH COLUMBIA' | 'CANADA, OR OTHER LOCATION IN CANADA' | 'UNITED STATES' | 'OTHER COUNTRIES'
-  group_sort_order: number
-  sort_order: number
-  collection_order: 'FIRST' | 'SECOND' | 'BOTH'
-  document_reference_input_mask: string // a regex mask for ID document reference input, number only can indicate to use a number only keyboard
-  document_reference_label: string
-  document_reference_sample: string
-  image_sides: EvidenceImageSide[]
-  evidence_type_label: string
-}
-export interface EvidenceMetadataResponseData {
-  processes: {
-    process: 'IDIM L3 Remote Non-BCSC Identity Verification' | 'IDIM L3 Remote Non-photo BCSC Identity Verification'
-    evidence_types: EvidenceType[]
-  }[]
-}
-export interface EvidenceMetadataPayload {
-  type: string
-  number: string
-  images: VerificationPhotoUploadPayload[]
-  barcodes?: {
-    type: string
-  }[]
-}
-
-const useEvidenceApi = () => {
+const useVideoCallApi = () => {
   const [store] = useStore<BCState>()
 
   const _getDeviceCode = useCallback(() => {
@@ -100,12 +82,36 @@ const useEvidenceApi = () => {
     return code
   }, [store.bcsc.deviceCode])
 
-  const getVerificationRequestStatus = useCallback(
-    async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
+  const createVideoSession = useCallback(
+    async (): Promise<VideoSession> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-        const { data } = await apiClient.get<VerificationStatusResponseData>(
-          `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
+        const deviceCode = _getDeviceCode()
+        const body = { client_id: account.clientID, device_code: deviceCode }
+        const token = await createPreVerificationJWT(deviceCode, account.clientID)
+        const { data } = await apiClient.post<VideoSession>(
+          `${apiClient.endpoints.video}/v1/sessions/`,
+          body,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    []
+  )
+
+  const updateVideoSessionStatus = useCallback(
+    async (sessionId: string, status: SessionStatusType): Promise<VideoSession> => {
+      return withAccount(async (account) => {
+        const body = { status }
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.put<VideoSession>(
+          `${apiClient.endpoints.video}/v1/sessions/${sessionId}`,
+          body,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -119,13 +125,91 @@ const useEvidenceApi = () => {
     [_getDeviceCode]
   )
 
-  const sendEvidenceMetadata = useCallback(
-    async (payload: EvidenceMetadataPayload): Promise<UploadEvidenceResponseData[]> => {
+  const createVideoCall = useCallback(
+    async (sessionId: string): Promise<VideoCall> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
-        const { data } = await apiClient.post<UploadEvidenceResponseData[]>(
-          `${apiClient.endpoints.evidence}/v1/documents`,
-          payload,
+        const body = { session_id: sessionId }
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.post<VideoCall>(
+          `${apiClient.endpoints.video}/v1/sessions/${sessionId}/calls/`,
+          body,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
+
+  const updateVideoCallStatus = useCallback(
+    async (sessionId: string, callId: string, status: CallStatusType, clientCallId?: string): Promise<VideoCall> => {
+      return withAccount(async (account) => {
+        const body = { status, ...(clientCallId && { client_call_id: clientCallId }) }
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.put<VideoCall>(
+          `${apiClient.endpoints.video}/v1/sessions/${sessionId}/calls/${callId}`,
+          body,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
+
+  const endVideoSession = useCallback(
+    async (sessionId: string): Promise<void> => {
+      return withAccount(async (account) => {
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+        await apiClient.delete(
+          `${apiClient.endpoints.video}/v1/sessions/${sessionId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+      })
+    },
+    [_getDeviceCode]
+  )
+
+  const getVideoDestinations = useCallback(
+    async (): Promise<VideoDestinations> => {
+      return withAccount(async (account) => {
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.get<VideoDestinations>(
+          `${apiClient.endpoints.video}/v1/destinations`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            skipBearerAuth: true,
+          }
+        )
+        return data
+      })
+    },
+    [_getDeviceCode]
+  )
+
+  const getServiceHours = useCallback(
+    async (): Promise<ServiceHours> => {
+      return withAccount(async (account) => {
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+        const { data } = await apiClient.get<ServiceHours>(
+          `${apiClient.endpoints.video}/video/v1/service_hours`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -141,36 +225,24 @@ const useEvidenceApi = () => {
 
   return useMemo(
     () => ({
-      createVerificationRequest,
-      uploadPhotoEvidenceMetadata,
-      uploadVideoEvidenceMetadata,
-      uploadPhotoEvidenceBinary,
-      uploadVideoEvidenceBinary,
-      sendVerificationRequest,
-      getVerificationRequestStatus,
-      cancelVerificationRequest,
-      getVerificationRequestPrompts,
-      createEmailVerification,
-      sendEmailVerificationCode,
-      sendEvidenceMetadata,
-      getEvidenceMetadata,
+      createVideoSession,
+      updateVideoSessionStatus,
+      createVideoCall,
+      updateVideoCallStatus,
+      endVideoSession,
+      getVideoDestinations,
+      getServiceHours,
     }),
     [
-      createVerificationRequest,
-      uploadPhotoEvidenceMetadata,
-      uploadVideoEvidenceMetadata,
-      uploadPhotoEvidenceBinary,
-      uploadVideoEvidenceBinary,
-      sendVerificationRequest,
-      getVerificationRequestStatus,
-      cancelVerificationRequest,
-      getVerificationRequestPrompts,
-      createEmailVerification,
-      sendEmailVerificationCode,
-      sendEvidenceMetadata,
-      getEvidenceMetadata,
+      createVideoSession,
+      updateVideoSessionStatus,
+      createVideoCall,
+      updateVideoCallStatus,
+      endVideoSession,
+      getVideoDestinations,
+      getServiceHours,
     ]
   )
 }
 
-export default useEvidenceApi
+export default useVideoCallApi
