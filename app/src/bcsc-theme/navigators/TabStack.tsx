@@ -13,7 +13,7 @@ import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { HelpCenterUrl } from '@/constants'
+import { HelpCentreUrl } from '@/constants'
 import { useTranslation } from 'react-i18next'
 
 type TabBarIconProps = {
@@ -74,7 +74,7 @@ const BCSCTabStack: React.FC = () => {
    * @returns {*} {Promise<void>}
    */
   const handleHelpCentreNavigation = useCallback(
-    async (helpCentreUrl: string) => {
+    async (helpCentreUrl: HelpCentreUrl) => {
       try {
         navigation.navigate(BCSCScreens.WebView, {
           url: helpCentreUrl,
@@ -112,7 +112,7 @@ const BCSCTabStack: React.FC = () => {
             title: '',
             headerShown: true,
             headerLeft: () => null,
-            headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCenterUrl.home) }),
+            headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
           }}
         />
         <Tab.Screen

@@ -29,16 +29,16 @@ export const appleAppStoreUrl = 'https://apps.apple.com/ca/app/bc-wallet/id15873
 export const googlePlayStoreUrl = 'https://play.google.com/store/apps/details?id=ca.bc.gov.BCWallet&hl=en-CA'
 export const appHelpUrl = 'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-wallet/help'
 
-export const HelpCenterUrl = {
-  home: 'https://id.gov.bc.ca/static/help/topics.html',
-  howToSetup: `https://id.gov.bc.ca/static/help/setup_app.html`,
-  verificationMethods: `https://id.gov.bc.ca/static/help/verify_why.html#section-options-app`,
-  // verifySendVideo: `https://id.gov.bc.ca/static/help/verify_why.html#section-send`,
-  // verifyInVideoCall: `https://id.gov.bc.ca/static/help/verify_why.html#section-call`,
-  verifyInPerson: `https://id.gov.bc.ca/static/help/verify_why.html#section-inperson`,
-} as const
-
 export const BCThemeNames = {
   BCWallet: 'bcwallet',
   BCSC: 'bcsc',
 } as const
+
+export enum HelpCentreUrl {
+  _ROOT = 'https://id.gov.bc.ca/static/help',
+  HOME = `${HelpCentreUrl._ROOT}/topics.html`,
+  HOW_TO_SETUP = `${HelpCentreUrl._ROOT}/setup_app.html`,
+  ACCEPTED_IDENTITY_DOCUMENTS = `${HelpCentreUrl._ROOT}/accepted-id.html`,
+  VERIFICATION_METHODS = `${HelpCentreUrl._ROOT}/verify_why.html#section-options-app`,
+  VERIFY_IN_PERSON = `${HelpCentreUrl._ROOT}/verify_why.html#section-inperson`,
+}
