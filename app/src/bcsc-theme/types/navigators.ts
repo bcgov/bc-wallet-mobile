@@ -45,7 +45,6 @@ export enum BCSCScreens {
 
 export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
-  [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.Services]: undefined
   [BCSCScreens.Account]: undefined
   [BCSCScreens.Settings]: undefined

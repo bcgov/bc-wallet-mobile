@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { TOKENS, useDefaultStackOptions, useServices, useTheme } from '@bifold/core'
+import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme } from '@bifold/core'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import SetupStepsScreen from './SetupStepsScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
@@ -33,6 +33,8 @@ import { useCallback } from 'react'
 import { HelpCentreUrl } from '@/constants'
 import { useNavigation } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
+import WebViewScreen from '../webview/WebViewScreen'
+import { createHeaderBackButton } from '@/bcsc-theme/navigators/MainStack'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -179,6 +181,17 @@ const VerifyIdentityStack = () => {
         options={{
           headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
         }}
+      />
+
+      <Stack.Screen
+        name={BCSCScreens.WebView}
+        component={WebViewScreen}
+        options={({ route, navigation }) => ({
+          headerShown: true,
+          title: route.params.title,
+          headerBackTestID: testIdWithKey('Back'),
+          headerLeft: createHeaderBackButton(navigation),
+        })}
       />
     </Stack.Navigator>
   )
