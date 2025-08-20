@@ -13,7 +13,7 @@ import client from '../api/client'
 import { BCDispatchAction, BCState } from '@/store'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 
-const createHeaderBackButton = (navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.WebView>) => {
+export const createHeaderBackButton = (navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.WebView>) => {
   // Declared so that it has a display name for debugging purposes
   const HeaderLeft = (props: HeaderBackButtonProps) => {
     const [, dispatch] = useStore<BCState>()
