@@ -35,10 +35,9 @@ export const BCThemeNames = {
 } as const
 
 export enum HelpCentreUrl {
-  _ROOT = 'https://id.gov.bc.ca/static/help',
-  HOME = `${HelpCentreUrl._ROOT}/topics.html`,
-  HOW_TO_SETUP = `${HelpCentreUrl._ROOT}/setup_app.html`,
-  ACCEPTED_IDENTITY_DOCUMENTS = `${HelpCentreUrl._ROOT}/accepted-id.html`,
-  VERIFICATION_METHODS = `${HelpCentreUrl._ROOT}/verify_why.html#section-options-app`,
-  VERIFY_IN_PERSON = `${HelpCentreUrl._ROOT}/verify_why.html#section-inperson`,
+  HOME = 'https://id.gov.bc.ca/static/help/topics.html',
+  HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html',
+  ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html',
+  VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html#section-options-app',
+  VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html#section-inperson',
 }
