@@ -9,7 +9,7 @@ import Account from '../features/account/Account'
 import Home from '../features/home/Home'
 import Services from '../features/services/Services'
 import Settings from '../features/settings/Settings'
-import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
+import { BCSCRootStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -57,8 +57,8 @@ const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
   const { TabTheme } = useTheme()
   const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<BCSCTabStackParams>>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams, BCSCScreens.WebView>>()
 
   // this style should be moved to the theme file here and in Bifold
   const styles = StyleSheet.create({
