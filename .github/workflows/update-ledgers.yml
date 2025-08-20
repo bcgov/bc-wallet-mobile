@@ -1,0 +1,75 @@
+# Update Indy Ledgers Strategy
+#
+# When does this workflow run?
+#   - When a pull request is opened or updated that modifies the `app/scripts/refresh-ledgers.cjs` script or the workflow file itself.
+#
+# When does this worflow create a commit?
+#   - When the workflow detects changes in the `app/src/configs/ledgers/indy/ledgers.json` file after running the `refresh-ledgers.cjs` script.
+#
+
+name: Ledgers
+description: Update Aries ledgers
+
+permissions:
+  contents: write
+
+on:
+  push:
+    paths:
+      - 'app/scripts/refresh-ledgers.cjs'
+      - '.github/workflows/update-ledgers.yml'
+
+jobs:
+  update-ledgers:
+    runs-on: ubuntu-22.04
+    name: Update Indy ledgers
+    steps:
+      - name: Checkout bc-wallet-mobile
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup NodeJS
+        uses: ./.github/workflows/actions/setup-node
+
+      - name: Cache app node_modules
+        uses: actions/cache@v3
+        with:
+          path: .yarn/cache
+          # Cache will be invalidated if yarn.lock changes
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        working-directory: app
+        run: yarn install --immutable
+
+      - name: Update Indy ledgers
+        run: node app/scripts/refresh-ledgers.cjs
+
+      # note: picking a specific commit SHA to ensure the action is not updated unexpectedly and satisfies the SonarQube security requirements
+      - uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0
+        with:
+          # Optional. Commit message for the created commit.
+          # Defaults to "Apply automatic changes"
+          commit_message: "chore(bot): updated Indy ledgers json file"
+
+          # Optional. Options used by `git-commit`.
+          # See https://git-scm.com/docs/git-commit#_options
+          commit_options: '--no-verify --signoff'
+
+          # Optional glob pattern of files which should be added to the commit
+          # Defaults to all (.)
+          # See the `pathspec`-documentation for git
+          # - https://git-scm.com/docs/git-add#Documentation/git-add.txt-ltpathspecgt82308203
+          # - https://git-scm.com/docs/gitglossary#Documentation/gitglossary.txt-aiddefpathspecapathspec
+          file_pattern: 'app/src/configs/ledgers/indy/ledgers.json'
+
+          # Optional. Option used by `git-status` to determine if the repository is
+          # dirty. See https://git-scm.com/docs/git-status#_options
+          status_options: '--porcelain app/src/configs/ledgers/indy/ledgers.json'
+
+          # Optional. Disable dirty check and always try to create a commit and push
+          skip_dirty_check: false
