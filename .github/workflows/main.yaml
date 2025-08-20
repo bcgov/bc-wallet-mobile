@@ -2,8 +2,8 @@ name: Native Build & Test
 
 env:
   APP_BUILD_NUMBER: ${{ github.run_number }}
-  APP_BC_WALLET_BUILD_VERSION: "1.0.25"
-  APP_SINGLE_APP_BUILD_VERSION: "3.15.0"
+  # APP_BC_WALLET_BUILD_VERSION: "1.0.25"
+  # APP_SINGLE_APP_BUILD_VERSION: "3.15.0"
 
 on:
   workflow_dispatch:
@@ -118,36 +118,32 @@ jobs:
             echo "result=false" >> $GITHUB_OUTPUT
           fi
 
-  set-build-vars:
-    runs-on: ubuntu-latest
-    outputs:
-      app_version: ${{ steps.set-vars.outputs.app_version }}
-      is_single_app_build: ${{ steps.set-vars.outputs.is_single_app_build }}
-      android_package_name: ${{ steps.set-vars.outputs.android_package_name }}
-    steps:
-      - name: Set App Version Vars
-        id: set-vars
-        run: |
-          RUN_NUMBER=${{ github.run_number }}
-          if [ $((RUN_NUMBER % 2)) -eq 1 ]; then
-            echo "Odd run number detected, using Single App build settings."
-            echo "app_version=${{ env.APP_SINGLE_APP_BUILD_VERSION }}" >> "$GITHUB_OUTPUT"
-            echo "is_single_app_build=true" >> "$GITHUB_OUTPUT"
-            echo "android_package_name=ca.bc.gov.id.servicescard.dev" >> "$GITHUB_OUTPUT"
-          else
-            echo "Even run number detected, using BC Wallet build settings."
-            echo "app_version=${{ env.APP_BC_WALLET_BUILD_VERSION }}" >> "$GITHUB_OUTPUT"
-            echo "is_single_app_build=false" >> "$GITHUB_OUTPUT"
-            echo "android_package_name=ca.bc.gov.BCWallet" >> "$GITHUB_OUTPUT"
-          fi
   build-ios:
-    needs: [check-secrets, check-vars, early-exit-check, set-build-vars]
+    needs: [check-secrets, check-vars, early-exit-check]
     if: ${{ needs.early-exit-check.outputs.should_skip_build != 'true' }}
+    strategy:
+      matrix:
+        include:
+          - build_type: "bc-wallet"
+            app_version: "1.0.25"
+            is_single_app_build: "false"
+            patch_file: ""
+            provisioning_profile_secret: "BUILD_PROVISION_PROFILE_BASE64"
+            xcconfig_file: "release.xcconfig"
+            export_options: "export-options-bcw.plist"
+            artifact_name: "ios-bc-wallet-artifact"
+          - build_type: "single-app"
+            app_version: "3.15.0"
+            is_single_app_build: "true"
+            patch_file: "./patch/0002-chore-ios-app-to-bcsc-dev.patch"
+            provisioning_profile_secret: "BUILD_PROVISION_PROFILE_SADEV_BASE64"
+            xcconfig_file: "release.xcconfig"
+            export_options: "export-options-sa.plist"
+            artifact_name: "ios-single-app-artifact"
     env:
       REACT_NATIVE_NODE_BINARY: $(which node)
       NODE_BINARY: $(which node)
-      APP_VERSION: ${{ needs.set-build-vars.outputs.app_version }}
-      IS_SINGLE_APP_BUILD: ${{ needs.set-build-vars.outputs.is_single_app_build }}
+      APP_VERSION: ${{ matrix.app_version }}
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
@@ -219,12 +215,13 @@ jobs:
           git diff ios/Podfile.lock
 
       - name: Patch for Single App build
-        if: ${{ env.IS_SINGLE_APP_BUILD == 'true' }}
+        if: ${{ matrix.is_single_app_build == 'true' }}
         run: |
           echo "Patching for Single App build"
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
-          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
+          git am < ${{ matrix.patch_file }}
+
       - name: Bump Build No.
         working-directory: app/ios
         env:
@@ -271,14 +268,14 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 || secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          provisioning_profile: ${{ secrets[matrix.provisioning_profile_secret] }}
 
       - name: Archive build
         working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_IDENTIFIER: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
-          XCCONFIG_FILE: ${{ env.IS_SINGLE_APP_BUILD == 'true' && 'release-sa.xcconfig' || 'release.xcconfig' }}
+          XCCONFIG_FILE: ${{ matrix.xcconfig_file }}
         run: |
           xcodebuild \
           -workspace AriesBifold.xcworkspace \
@@ -299,8 +296,8 @@ jobs:
         # if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
-          export_options: ${{ env.IS_SINGLE_APP_BUILD == 'true' && 'export-options-sa.plist' || 'export-options-bcw.plist' }}
-          ouput_artifact_ref: ios-artifact
+          export_options: ${{ matrix.export_options }}
+          ouput_artifact_ref: ${{ matrix.artifact_name }}
 
       - name: Ship to iTunes
         # if: github.ref_name == 'main'
@@ -310,7 +307,8 @@ jobs:
           app_store_connect_key_identifier: ${{ secrets.APP_STORE_CONNECT_KEY_IDENTIFIER_95 }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
           version_code: ${{ env.APP_BUILD_NUMBER }}
-          version_name: ${{ env.appBCWalletBuildVersion }}
+          version_name: ${{ env.APP_VERSION }}
+
       - name: Save cache for derived data
         id: cache-dd-save
         uses: actions/cache/save@v4
@@ -322,22 +320,42 @@ jobs:
         if: failure() && github.ref_name == 'main'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
-          job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
+          job_title: "BC Wallet iOS Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
           job_status: ${{ job.status }}
           webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
-    needs: [check-secrets, check-vars, early-exit-check, set-build-vars]
+    needs: [check-secrets, check-vars, early-exit-check]
     if: ${{ needs.early-exit-check.outputs.should_skip_build != 'true' }}
+    strategy:
+      matrix:
+        include:
+          - build_type: "bc-wallet"
+            app_version: "1.0.25"
+            is_single_app_build: "false"
+            android_package_name: "ca.bc.gov.BCWallet"
+            patch_file: ""
+            jks_base64_secret: "PLAY_STORE_JKS_BASE64"
+            jks_alias_secret: "PLAY_STORE_JKS_ALIAS"
+            jks_passwd_secret: "PLAY_STORE_JKS_PASSWD"
+            artifact_name: "android-bc-wallet-artifact"
+          - build_type: "single-app"
+            app_version: "3.15.0"
+            is_single_app_build: "true"
+            android_package_name: "ca.bc.gov.id.servicescard.dev"
+            patch_file: "./patch/0001-chore-android-app-to-bcsc-dev.patch"
+            jks_base64_secret: "PLAY_STORE_JKS_BASE64_SADEV"
+            jks_alias_secret: "PLAY_STORE_JKS_ALIAS_SADEV"
+            jks_passwd_secret: "PLAY_STORE_JKS_PASSWD_SADEV"
+            artifact_name: "android-single-app-artifact"
     runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
     env:
-      APP_VERSION: ${{ needs.set-build-vars.outputs.app_version }}
-      IS_SINGLE_APP_BUILD: ${{ needs.set-build-vars.outputs.is_single_app_build }}
-      ANDROID_PACKAGE_NAME: ${{ needs.set-build-vars.outputs.android_package_name }}
+      APP_VERSION: ${{ matrix.app_version }}
+      ANDROID_PACKAGE_NAME: ${{ matrix.android_package_name }}
     steps:
       - uses: actions/checkout@v4
 
@@ -389,19 +407,19 @@ jobs:
           echo "IAS_URL=${IAS_URL}" >>.env
 
       - name: Patch for Single App build
-        if: ${{ env.IS_SINGLE_APP_BUILD == 'true' }}
+        if: ${{ matrix.is_single_app_build == 'true' }}
         run: |
           echo "Patching for Single App build"
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
-          git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
+          git am < ${{ matrix.patch_file }}
 
       - name: Create release keystore
         working-directory: app/android/app
         env:
-          PLAY_STORE_JKS_BASE64: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.PLAY_STORE_JKS_BASE64_SADEV || secrets.PLAY_STORE_JKS_BASE64 }}
-          PLAY_STORE_JKS_ALIAS: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.PLAY_STORE_JKS_ALIAS_SADEV || secrets.PLAY_STORE_JKS_ALIAS }}
-          PLAY_STORE_JKS_PASSWD: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.PLAY_STORE_JKS_PASSWD_SADEV || secrets.PLAY_STORE_JKS_PASSWD }}
+          PLAY_STORE_JKS_BASE64: ${{ secrets[matrix.jks_base64_secret] }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
         run: |
           echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
@@ -419,8 +437,8 @@ jobs:
       - name: Android release build
         working-directory: app/android
         env:
-          PLAY_STORE_JKS_ALIAS: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.PLAY_STORE_JKS_ALIAS_SADEV || secrets.PLAY_STORE_JKS_ALIAS }}
-          PLAY_STORE_JKS_PASSWD: ${{ env.IS_SINGLE_APP_BUILD == 'true' && secrets.PLAY_STORE_JKS_PASSWD_SADEV || secrets.PLAY_STORE_JKS_PASSWD }}
+          PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
+          PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
@@ -440,7 +458,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android
+          name: android-${{ matrix.build_type }}
           path: |
             app/android/app/build/outputs/bundle/release/app-release.aab
             app/android/app/build/outputs/apk/release/app-release.apk
@@ -449,7 +467,7 @@ jobs:
         # if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
-          name: android-artifact
+          name: ${{ matrix.artifact_name }}
           path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
@@ -474,7 +492,7 @@ jobs:
         if: failure() && github.ref_name == 'main'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
-          job_title: "BC Wallet Android Build - Run number ${{ github.run_number }}"
+          job_title: "BC Wallet Android Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
           job_status: ${{ job.status }}
           webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -483,44 +501,67 @@ jobs:
     if: github.ref_name == 'main'
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - platform: "ios"
+            build_type: "bc-wallet"
+            artifact_ref: "ios-bc-wallet-artifact"
+            sauce_labs_name: "BCWallet-${{ github.run_number }}.ipa"
+            sauce_labs_description: "iOS BC Wallet App"
+            artifact_name: "BCWallet.ipa"
+          - platform: "ios"
+            build_type: "single-app"
+            artifact_ref: "ios-single-app-artifact"
+            sauce_labs_name: "BCWallet-SingleApp-${{ github.run_number }}.ipa"
+            sauce_labs_description: "iOS BC Wallet Single App"
+            artifact_name: "BCWallet.ipa"
+          - platform: "android"
+            build_type: "bc-wallet"
+            artifact_ref: "android-bc-wallet-artifact"
+            sauce_labs_name: "BCWallet-${{ github.run_number }}.aab"
+            sauce_labs_description: "Android BC Wallet App"
+            artifact_name: "app-release.aab"
+          - platform: "android"
+            build_type: "single-app"
+            artifact_ref: "android-single-app-artifact"
+            sauce_labs_name: "BCWallet-SingleApp-${{ github.run_number }}.aab"
+            sauce_labs_description: "Android BC Wallet Single App"
+            artifact_name: "app-release.aab"
     steps:
       - uses: actions/checkout@v4
 
-      - name: Ship iOS Artifact to SauceLabs
+      - name: Ship Artifact to SauceLabs
         uses: ./.github/workflows/actions/ship-to-saucelabs
         with:
           sauce_labs_username: ${{ secrets.SAUCE_USERNAME }}
           sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
-          sauce_labs_name: BCWallet-${{ github.run_number }}.ipa
-          sauce_labs_description: iOS BC Wallet App
-          artifact_ref: ios-artifact
-          artifact_name: BCWallet.ipa
-
-      - name: Ship Android Artifact to SauceLabs
-        uses: ./.github/workflows/actions/ship-to-saucelabs
-        with:
-          sauce_labs_username: ${{ secrets.SAUCE_USERNAME }}
-          sauce_labs_password: ${{ secrets.SAUCE_ACCESS_KEY }}
-          sauce_labs_name: BCWallet-${{ github.run_number }}.aab
-          sauce_labs_description: Android BC Wallet App
-          artifact_ref: android-artifact
-          artifact_name: app-release.aab
+          sauce_labs_name: ${{ matrix.sauce_labs_name }}
+          sauce_labs_description: ${{ matrix.sauce_labs_description }}
+          artifact_ref: ${{ matrix.artifact_ref }}
+          artifact_name: ${{ matrix.artifact_name }}
 
   run-on-device-tests:
     if: github.ref_name == 'main'
     needs: [ship-to-saucelabs]
     runs-on: ubuntu-22.04
     strategy:
-      max-parallel: 2
+      max-parallel: 4
       fail-fast: false
       matrix:
         include:
           - mobile-platform: "-p Android"
             app-file-name: "-a BCWallet-${{ github.run_number }}.aab"
-            report-project: "android-one-device-smoke"
+            report-project: "android-bc-wallet-one-device-smoke"
+          - mobile-platform: "-p Android"
+            app-file-name: "-a BCWallet-SingleApp-${{ github.run_number }}.aab"
+            report-project: "android-single-app-one-device-smoke"
           - mobile-platform: "-p iOS"
             app-file-name: "-a BCWallet-${{ github.run_number }}.ipa"
-            report-project: "ios-one-device-smoke"
+            report-project: "ios-bc-wallet-one-device-smoke"
+          - mobile-platform: "-p iOS"
+            app-file-name: "-a BCWallet-SingleApp-${{ github.run_number }}.ipa"
+            report-project: "ios-single-app-one-device-smoke"
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
