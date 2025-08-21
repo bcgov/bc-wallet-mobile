@@ -9,6 +9,7 @@ export const connect = async (
 ): Promise<any> => {
   let callUuid: string
 
+  console.log('Getting local media stream...')
   const localStream = await mediaDevices.getUserMedia({
     audio: true,
     video: {
@@ -16,18 +17,27 @@ export const connect = async (
       facingMode: 'user',
     },
   })
+  console.log('Local media stream obtained.')
 
+  console.log('Requesting Infinity token...')
   let response = await requestInfinityToken(req)
+  console.log('Infinity token response:', response)
 
   if (response.status !== 200) {
+    console.log('Failed to get Infinity token. Status:', response.status)
     Alert.alert('Cannot establish the connection. Check the PIN.')
     throw new Error('Cannot authenticate')
   }
 
   const participantUuid = response.data.result.participant_uuid
   const token = response.data.result.token
+  console.log('Participant UUID:', participantUuid)
+  console.log('Token:', token)
 
+  console.log('Creating peer connection...')
   const peerConnection = await createPeerConnection(localStream)
+  console.log('Peer connection created.')
+
   peerConnection.addEventListener('connectionstatechange', (_event) => {
     console.log('Received connectionstatechange')
     console.log(peerConnection.connectionState)
@@ -65,8 +75,12 @@ export const connect = async (
     console.log('Received track')
     req.onRemoteStream(event.streams[0])
   })
-  const offer = await createOffer(peerConnection)
 
+  console.log('Creating offer...')
+  const offer = await createOffer(peerConnection)
+  console.log('Offer created:', offer)
+
+  console.log('Calling Infinity with offer...')
   response = await callToInfinity({
     nodeUrl: req.nodeUrl,
     conferenceAlias: req.conferenceAlias,
@@ -74,8 +88,10 @@ export const connect = async (
     token,
     offer,
   })
+  console.log('Call to Infinity response:', response)
 
   if (response.status !== 200) {
+    console.log('Failed to call Infinity. Status:', response.status)
     Alert.alert('Cannot establish the connection. Check the PIN.')
     throw new Error('Cannot authenticate')
   }
@@ -85,14 +101,23 @@ export const connect = async (
   console.log(response.data.result)
 
   // Send the offer to infinity and get the answer
+  console.log('Setting local description...')
   peerConnection.setLocalDescription(offer)
+  console.log('Local description set.')
 
+  console.log('Setting remote description...')
   peerConnection.setRemoteDescription({
     sdp: response.data.result.sdp,
     type: 'answer',
   })
+  console.log('Remote description set.')
 
-  return localStream
+  return {
+    localStream,
+    callUuid,
+    participantUuid,
+    peerConnection
+  }
 }
 
 const requestInfinityToken = async (request: ConnectionRequest): Promise<any> => {
