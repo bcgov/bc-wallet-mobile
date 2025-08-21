@@ -91,9 +91,9 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.EvidenceTypeList]: undefined
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType }
-  [BCSCScreens.BeforeYouCall]: undefined
+  [BCSCScreens.BeforeYouCall]: { formattedHours?: string }
   [BCSCScreens.StartCall]: undefined
-  [BCSCScreens.CallBusyOrClosed]: { busy: boolean }
+  [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours?: string }
   [BCSCScreens.LiveCall]: undefined
   [BCSCScreens.VerifyNotComplete]: undefined
 }

@@ -1,119 +1,25 @@
-import useVideoCallApi from '@/bcsc-theme/api/hooks/useVideoCallApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import {
-  Button,
-  ButtonType,
-  testIdWithKey,
-  ThemedText,
-  useTheme
-} from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
+import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useState } from 'react'
-import { Alert, ScrollView, StyleSheet, View } from 'react-native'
+import { useMemo } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type BeforeYouCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.BeforeYouCall>
+  route: RouteProp<BCSCVerifyIdentityStackParams, BCSCScreens.BeforeYouCall>
 }
 
-const BeforeYouCallScreen = ({ navigation }: BeforeYouCallScreenProps) => {
+const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const { isWifiEnabled } = useNetInfo()
-  const [isCheckingService, setIsCheckingService] = useState(false)
-  const [serviceStatus, setServiceStatus] = useState<{
-    available: boolean
-    message: string
-    hoursText: string
-  }>({ available: true, message: '', hoursText: 'Monday to Friday\n7:30am - 5:00pm Pacific Time' })
+  const { type: networkType, isConnected } = useNetInfo()
+  const { formattedHours } = route.params || {}
 
-  const videoCallApi = useVideoCallApi()
-
-  useEffect(() => {
-    checkServiceAvailability()
-  }, [])
-
-  const checkServiceAvailability = async () => {
-    try {
-      setIsCheckingService(true)
-
-      // Check destinations and service hours
-      const [destinations, serviceHours] = await Promise.all([
-        videoCallApi.getVideoDestinations(),
-        videoCallApi.getServiceHours(),
-      ])
-
-      // Check if any agents are available
-      const availableDestination = destinations.find((dest) => dest.numberOfAgents > 0)
-
-      if (!availableDestination) {
-        setServiceStatus({
-          available: false,
-          message: 'Video calling service is currently unavailable. No agents are online.',
-          hoursText: formatServiceHours(serviceHours),
-        })
-      } else {
-        // Check if within service hours
-        const isWithinServiceHours = checkIfWithinServiceHours(serviceHours)
-
-        if (!isWithinServiceHours) {
-          setServiceStatus({
-            available: false,
-            message: 'Video calling service is outside of operating hours.',
-            hoursText: formatServiceHours(serviceHours),
-          })
-        } else {
-          setServiceStatus({
-            available: true,
-            message: `${availableDestination.numberOfAgents} agent${
-              availableDestination.numberOfAgents > 1 ? 's' : ''
-            } available`,
-            hoursText: formatServiceHours(serviceHours),
-          })
-        }
-      }
-    } catch (error) {
-      console.warn('Error checking service availability:', error)
-      setServiceStatus({
-        available: false,
-        message: 'Unable to check service availability. Please try again later.',
-        hoursText: 'Monday to Friday\n7:30am - 5:00pm Pacific Time',
-      })
-    } finally {
-      setIsCheckingService(false)
-    }
-  }
-
-  const formatServiceHours = (serviceHours: any): string => {
-    if (!serviceHours?.regular_service_periods?.length) {
-      return 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
-    }
-
-    // Format service hours from API response
-    // This is a simplified version - you might want more sophisticated formatting
-    const periods = serviceHours.regular_service_periods
-    const timezone = serviceHours.time_zone || 'Pacific Time'
-
-    return periods
-      .map(
-        (period: any) =>
-          `${period.start_day} to ${period.end_day}\n${period.start_time} - ${period.end_time} ${timezone}`
-      )
-      .join('\n')
-  }
-
-  const checkIfWithinServiceHours = (serviceHours: any): boolean => {
-    // Simplified check - in production you'd want proper timezone handling
-    const now = new Date()
-    const currentHour = now.getHours()
-    const currentDay = now.getDay() // 0 = Sunday, 1 = Monday, etc.
-
-    // Basic check for Monday-Friday, 7:30 AM - 5:00 PM
-    if (currentDay === 0 || currentDay === 6) return false // Weekend
-    if (currentHour < 7 || currentHour >= 17) return false // Outside hours
-
-    return true
-  }
+  // Use the passed formatted hours or fallback to default
+  const hoursText = formattedHours || 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+  const isCellular = useMemo(() => networkType === 'cellular' && isConnected === true, [networkType, isConnected])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -132,15 +38,6 @@ const BeforeYouCallScreen = ({ navigation }: BeforeYouCallScreenProps) => {
   })
 
   const onPressContinue = async () => {
-    if (!serviceStatus.available) {
-      Alert.alert(
-        'Service Unavailable',
-        'Video calling service is currently unavailable. Please try again during service hours.',
-        [{ text: 'OK' }]
-      )
-      return
-    }
-
     navigation.navigate(BCSCScreens.TakePhoto, {
       forLiveCall: true,
       deviceSide: 'front',
@@ -155,25 +52,14 @@ const BeforeYouCallScreen = ({ navigation }: BeforeYouCallScreenProps) => {
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
           Before you call
         </ThemedText>
         <ThemedText variant={'headingFour'}>Wi-Fi Recommended</ThemedText>
         <ThemedText>
-          {isWifiEnabled ? '' : `The app detected you're on a cellular network. `}Standard data charges apply for calls
-          over a cellular network.
-        </ThemedText>
-
-        <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          Service Status
-        </ThemedText>
-        <ThemedText
-          style={{
-            color: serviceStatus.available ? ColorPalette.semantic.success : ColorPalette.semantic.error,
-          }}
-        >
-          {isCheckingService ? 'Checking service availability...' : serviceStatus.message}
+          {isCellular ? "The app detected you're on a cellular network. " : ''}
+          Standard data charges may apply for calls over a cellular network.
         </ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
@@ -184,7 +70,7 @@ const BeforeYouCallScreen = ({ navigation }: BeforeYouCallScreenProps) => {
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
           Hours of Service
         </ThemedText>
-        <ThemedText>{serviceStatus.hoursText}</ThemedText>
+        <ThemedText>{hoursText}</ThemedText>
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
           Contact Centre Privacy
         </ThemedText>
@@ -200,8 +86,7 @@ const BeforeYouCallScreen = ({ navigation }: BeforeYouCallScreenProps) => {
             accessibilityLabel={'Continue'}
             title={'Continue'}
             onPress={onPressContinue}
-            disabled={!serviceStatus.available || isCheckingService}
-          ></Button>
+          />
           <Button
             buttonType={ButtonType.Tertiary}
             testID={testIdWithKey('Assistance')}

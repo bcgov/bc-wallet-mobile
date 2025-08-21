@@ -1,4 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useVideoCallApi from '@/bcsc-theme/api/hooks/useVideoCallApi'
+import { formatServiceHours, checkIfWithinServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
@@ -18,6 +20,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
   const { evidence } = useApi()
+  const videoCallApi = useVideoCallApi()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -44,10 +47,48 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const handlePressLiveCall = async () => {
     try {
       setLiveCallLoading(true)
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate loading
-      navigation.navigate(BCSCScreens.BeforeYouCall)
+
+      // Check destinations and service hours
+      const [destinations, serviceHours] = await Promise.all([
+        videoCallApi.getVideoDestinations(),
+        videoCallApi.getServiceHours(),
+      ])
+
+      const formattedHours = formatServiceHours(serviceHours)
+
+      // Check if any agents are available
+      const availableDestination = destinations.find((dest) => dest.destination_name === 'Test Harness Queue Destination')
+
+      if (!availableDestination) {
+        // No agents available - service is busy
+        navigation.navigate(BCSCScreens.CallBusyOrClosed, { 
+          busy: true,
+          formattedHours
+        })
+        return
+      }
+
+      // Check if within service hours
+      const isWithinServiceHours = checkIfWithinServiceHours(serviceHours)
+
+      if (!isWithinServiceHours) {
+        // Outside service hours - service is closed
+        navigation.navigate(BCSCScreens.CallBusyOrClosed, { 
+          busy: false,
+          formattedHours
+        })
+        return
+      }
+
+      // Service is available - proceed to BeforeYouCall
+      navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
+
     } catch (error) {
-      // TODO: Handle error, e.g., show an alert or log the error
+      console.warn('Error checking service availability:', error)
+      // On error, default to BeforeYouCall screen with fallback hours
+      navigation.navigate(BCSCScreens.BeforeYouCall, { 
+        formattedHours: 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+      })
     } finally {
       setLiveCallLoading(false)
     }

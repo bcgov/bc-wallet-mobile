@@ -282,7 +282,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       borderRadius: Spacing.sm,
       overflow: 'hidden',
       borderWidth: 1,
-      borderColor: ColorPalette.brand.primary,
+      borderColor: ColorPalette.grayscale.white,
     },
     selfieVideo: {
       flex: 1,
@@ -291,10 +291,10 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
   return (
     <View style={styles.container}>
-      {remoteStream && <RTCView style={styles.agentVideo} objectFit={'cover'} streamURL={remoteStream.toURL()} />}
+      {remoteStream && <RTCView style={styles.agentVideo} objectFit={'contain'} streamURL={remoteStream.toURL()} />}
 
       <View style={styles.controlsAndSelfieContainer}>
-        {localStream && !videoHidden && (
+        {localStream && (
           <View style={styles.selfieVideoContainer}>
             <RTCView mirror style={styles.selfieVideo} objectFit={'cover'} streamURL={localStream.toURL()} />
           </View>
@@ -303,7 +303,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         <View style={styles.controlsContainer}>
           <IconButton
             onPress={toggleMute}
-            primaryColor={ColorPalette.brand.primary}
+            primaryColor={ColorPalette.grayscale.white}
             secondaryColor={'transparent'}
             size={iconSize}
             iconName={onMute ? 'microphone-off' : 'microphone'}
@@ -312,7 +312,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
           />
           <IconButton
             onPress={toggleVideo}
-            primaryColor={ColorPalette.brand.primary}
+            primaryColor={ColorPalette.grayscale.white}
             secondaryColor={'transparent'}
             size={iconSize}
             iconName={videoHidden ? 'video-off' : 'video'}

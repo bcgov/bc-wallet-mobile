@@ -17,11 +17,13 @@ type CallStatusType =
 
 export interface VideoSession {
   client_id: string
-  gateway_uri: string
-  session_id: string
-  session_token: string
-  destination: string
   device_code: string
+  session_id: string
+  destination_host: string
+  room_name: string,
+  room_alias: string,
+  guest_pin: string,
+  queue_position: number,
   status: SessionStatusType
   status_date: number // seconds from epoch
   created_date: number // seconds from epoch
@@ -35,27 +37,12 @@ export interface VideoCall {
 }
 
 export interface VideoDestination {
-  destinationId: number
-  videoDestinationConfigId: number
-  destinationName: string
-  destinationAddress: string
-  maxActiveSessions: number
-  maxInactiveSeconds: number
-  destinationPriority: number
-  numberOfAgents: number
-  effectiveStartDate: number
-  videoDestinationConfig: {
-    videoDestinationConfigId: number
-    videoClientId: string
-    videoGatewayUrl: string
-    videoDestTruststore: string
-    truststorePassword: string
-    videoClientKeystore: string
-    keystorePassword: string
-    clientCertAlias: string
-    effectiveStartDate: number
-    effectiveEndDate: number | null
-  }
+  max_active_sessions?: number 
+  max_inactive_seconds?: number
+  number_of_agents?: number
+  destination_name: string
+  destination_priority: number
+  destination_host?: string
 }
 
 export type VideoDestinations = VideoDestination[]
@@ -89,7 +76,7 @@ const useVideoCallApi = () => {
         const body = { client_id: account.clientID, device_code: deviceCode }
         const token = await createPreVerificationJWT(deviceCode, account.clientID)
         const { data } = await apiClient.post<VideoSession>(
-          `${apiClient.endpoints.video}/v1/sessions/`,
+          `${apiClient.endpoints.video}/v2/sessions/`,
           body,
           {
             headers: {
@@ -110,7 +97,7 @@ const useVideoCallApi = () => {
         const body = { status }
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.put<VideoSession>(
-          `${apiClient.endpoints.video}/v1/sessions/${sessionId}`,
+          `${apiClient.endpoints.video}/v2/sessions/${sessionId}`,
           body,
           {
             headers: {
@@ -126,12 +113,22 @@ const useVideoCallApi = () => {
   )
 
   const createVideoCall = useCallback(
-    async (sessionId: string): Promise<VideoCall> => {
+    async (sessionId: string, clientCallId?: string, status: CallStatusType = 'call_ringing'): Promise<VideoCall> => {
       return withAccount(async (account) => {
-        const body = { session_id: sessionId }
+        // Include both client_call_id and status (matching iOS implementation)
+        const body: any = { 
+          session_id: sessionId,
+          status: status
+        }
+        if (clientCallId && clientCallId.trim() !== '') {
+          body.client_call_id = clientCallId
+        }
+        
+        console.log('Creating video call with body:', JSON.stringify(body, null, 2))
+        
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<VideoCall>(
-          `${apiClient.endpoints.video}/v1/sessions/${sessionId}/calls/`,
+          `${apiClient.endpoints.video}/v2/sessions/${sessionId}/calls/`,
           body,
           {
             headers: {
@@ -149,10 +146,15 @@ const useVideoCallApi = () => {
   const updateVideoCallStatus = useCallback(
     async (sessionId: string, callId: string, status: CallStatusType, clientCallId?: string): Promise<VideoCall> => {
       return withAccount(async (account) => {
-        const body = { status, ...(clientCallId && { client_call_id: clientCallId }) }
+        // Only include client_call_id if it's a non-empty string
+        const body: any = { status }
+        if (clientCallId && clientCallId.trim() !== '') {
+          body.client_call_id = clientCallId
+        }
+        
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.put<VideoCall>(
-          `${apiClient.endpoints.video}/v1/sessions/${sessionId}/calls/${callId}`,
+          `${apiClient.endpoints.video}/v2/sessions/${sessionId}/calls/${callId}`,
           body,
           {
             headers: {
@@ -172,7 +174,7 @@ const useVideoCallApi = () => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         await apiClient.delete(
-          `${apiClient.endpoints.video}/v1/sessions/${sessionId}`,
+          `${apiClient.endpoints.video}/v2/sessions/${sessionId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -190,7 +192,7 @@ const useVideoCallApi = () => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.get<VideoDestinations>(
-          `${apiClient.endpoints.video}/v1/destinations`,
+          `${apiClient.endpoints.video}/v2/destinations`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -209,7 +211,7 @@ const useVideoCallApi = () => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.get<ServiceHours>(
-          `${apiClient.endpoints.video}/video/v1/service_hours`,
+          `${apiClient.endpoints.video}/v2/service_hours`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
