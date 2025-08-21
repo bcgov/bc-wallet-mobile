@@ -1,7 +1,7 @@
 From 07bec3fbbec6af91cf6281b39b771413ce09c883 Mon Sep 17 00:00:00 2001
 From: "Jason C. Leach" <jason.leach@fullboar.ca>
 Date: Wed, 20 Aug 2025 16:54:03 -0700
-Subject: [PATCH] chore: default mode to bcsc
+Subject: [PATCH] chore: common default mode to bcsc
 
 Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
 ---
