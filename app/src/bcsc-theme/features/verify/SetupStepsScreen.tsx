@@ -166,6 +166,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <TouchableOpacity
         onPress={() => {
           if (!registered) {
+            dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
             navigation.navigate(BCSCScreens.IdentitySelection)
           }
 
