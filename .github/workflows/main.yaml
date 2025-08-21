@@ -2,8 +2,6 @@ name: Native Build & Test
 
 env:
   APP_BUILD_NUMBER: ${{ github.run_number }}
-  # APP_BC_WALLET_BUILD_VERSION: "1.0.25"
-  # APP_SINGLE_APP_BUILD_VERSION: "3.15.0"
 
 on:
   workflow_dispatch:
