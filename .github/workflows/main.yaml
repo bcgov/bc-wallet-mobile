@@ -257,7 +257,9 @@ jobs:
           cat app/ios/AriesBifold/AriesBifold.entitlements
 
       - name: Create prod signing credentials
-        if: github.ref_name == 'main'
+        # This step will no work in a `fork` because it will not have access
+        # to org and repo secrets.
+        if: github.event.pull_request.head.repo.fork != true
         uses: ./.github/workflows/actions/create-ios-sig-creds
         with:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
@@ -266,7 +268,7 @@ jobs:
           provisioning_profile: ${{ secrets[matrix.provisioning_profile_secret] }}
 
       - name: Archive build
-        if: github.ref_name == 'main'
+        if: github.event.pull_request.head.repo.fork != true
         working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -312,7 +314,7 @@ jobs:
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
       - name: Send notification for iOS failure
-        if: failure() && github.ref_name == 'main'
+        if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
           job_title: "BC Wallet iOS Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
@@ -407,6 +409,9 @@ jobs:
           git am < ./patch/0003-chore-common-default-mode-to-bcsc.patch
 
       - name: Create release keystore
+        # This step will not work in a `fork` because it will not have access
+        # to org and repo secrets.
+        if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android/app
         env:
           PLAY_STORE_JKS_BASE64: ${{ secrets[matrix.jks_base64_secret] }}
@@ -417,16 +422,8 @@ jobs:
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
           grep "SHA1"
 
-      #      - name: Android debug build
-      #        if: github.ref_name != 'main' || needs.check-android-secrets.outputs.isReleaseBuild != 'true'
-      #        working-directory: app/android
-      #        env:
-      #          VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
-      #          VERSION_NAME: ${{ env.APP_VERSION }}
-      #        run: |
-      #          ./gradlew --no-daemon bundleRelease
-
       - name: Android release build
+        if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
           PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
@@ -438,22 +435,20 @@ jobs:
           ./gradlew bundleRelease assembleRelease --no-parallel && \
           find . -type f -name '*.apk'
 
-      #      - name: Publish to GitHub Packages Registry
-      #        run: mvn deploy:deploy-file -s $GITHUB_WORKSPACE/settings.xml -DgroupId=com.github.bcgov -DartifactId=bc-wallet -Dclassifier=android -DrepositoryId=github -Durl=https://maven.pkg.github.com/$GITHUB_REPOSITORY -Dversion=${{ env.appBCWalletBuildVersion }}.${{ env.APP_BUILD_NUMBER }} -DgeneratePom=false -Dpackaging=aab -Dfile=app/android/app/build/outputs/bundle/release/app-release.aab
-      #        env:
-      #          GITHUB_TOKEN: ${{ github.token }}
-
       - name: List Artifacts
         run: |
           find . -type f -name '*.apk'
 
       - name: Upload artifact
+        if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
           name: android-${{ matrix.build_type }}
           path: |
             app/android/app/build/outputs/bundle/release/app-release.aab
             app/android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload Android artifact
         if: github.ref_name == 'main'
@@ -481,7 +476,7 @@ jobs:
           GOOGLE_API_CREDENTIALS="./android/api_keys.json" npx @bcgov/gpublish
 
       - name: Send notification for Android failure
-        if: failure() && github.ref_name == 'main'
+        if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
           job_title: "BC Wallet Android Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
