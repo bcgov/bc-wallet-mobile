@@ -2,25 +2,25 @@ import client from '@/bcsc-theme/api/client'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { BrandColors } from '@/bcwallet-theme/theme'
-import { BCState } from '@/store'
-import { ThemedText, TOKENS, useServices, useStore, useTheme, Button, ButtonType } from '@bifold/core'
+import { BCDispatchAction, BCState } from '@/store'
+import { ThemedText, useStore, useTheme, Button, ButtonType } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { set } from 'mockdate'
 import React, { useCallback, useEffect, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
+import { getAccount } from 'react-native-bcsc-core'
 
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
 const RemoveAccountConfirmationScreen: React.FC = () => {
   const { Spacing } = useTheme()
-  const { user } = useApi()
+  // const { user } = useApi()
   const navigation = useNavigation<AccountNavigationProp>()
-  const [loading, setLoading] = useState(true)
-
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
+  // const { useTokenApi } = useApi()
+  // const { checkDeviceCodeStatus } = useTokenApi()
+  const [store, dispatch] = useStore<BCState>()
+  
 
   const styles = StyleSheet.create({
     container: {
@@ -38,7 +38,8 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   })
 
   const handleRemoveAccount = () => {
-    console.log('Not implemented')
+    dispatch({ type: BCDispatchAction.CLEAR_BCSC })
+
   }
 
   return (
