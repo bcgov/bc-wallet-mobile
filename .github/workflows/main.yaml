@@ -257,7 +257,7 @@ jobs:
           cat app/ios/AriesBifold/AriesBifold.entitlements
 
       - name: Create prod signing credentials
-        # if: github.ref_name == 'main'
+        if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/create-ios-sig-creds
         with:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
@@ -287,14 +287,14 @@ jobs:
           archive
 
       - name: Export production archive
-        # if: github.ref_name == 'main'
+        if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           export_options: ${{ matrix.export_options }}
           ouput_artifact_ref: ${{ matrix.artifact_name }}
 
       - name: Ship to iTunes
-        # if: github.ref_name == 'main'
+        if: github.ref_name == 'main'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -455,7 +455,7 @@ jobs:
             app/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload Android artifact
-        # if: github.ref_name == 'main'
+        if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
@@ -464,7 +464,7 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        # if: github.ref_name == 'main'
+        if: github.ref_name == 'main'
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -489,7 +489,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   ship-to-saucelabs:
-    # if: github.ref_name == 'main'
+    if: github.ref_name == 'main'
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     strategy:
