@@ -266,6 +266,7 @@ jobs:
           provisioning_profile: ${{ secrets[matrix.provisioning_profile_secret] }}
 
       - name: Archive build
+        if: github.ref_name == 'main'
         working-directory: app/ios
         env:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
