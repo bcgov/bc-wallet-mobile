@@ -124,12 +124,10 @@ jobs:
         include:
           - build_type: "bc-wallet"
             app_version: "1.0.25"
-            provisioning_profile_secret: "BUILD_PROVISION_PROFILE_BASE64"
             export_options: "export-options-bcw.plist"
             artifact_name: "ios-bc-wallet-artifact"
           - build_type: "single-app"
             app_version: "4.0.0"
-            provisioning_profile_secret: "BUILD_PROVISION_PROFILE_SADEV_BASE64"
             export_options: "export-options-sa.plist"
             artifact_name: "ios-single-app-artifact"
     env:
@@ -263,7 +261,7 @@ jobs:
           certificate: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
           certificate_password: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
           app_store_connect_private_key: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY_95 }}
-          provisioning_profile: ${{ secrets[matrix.provisioning_profile_secret] }}
+          provisioning_profile: ${{ matrix.build_type == 'bc-wallet' && secrets.BUILD_PROVISION_PROFILE_BASE64 || secrets.BUILD_PROVISION_PROFILE_SADEV_BASE64 }}
 
       - name: Archive build
         if: github.event.pull_request.head.repo.fork != true
@@ -412,9 +410,9 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android/app
         env:
-          PLAY_STORE_JKS_BASE64: ${{ secrets[matrix.jks_base64_secret] }}
-          PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
+          PLAY_STORE_JKS_BASE64: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_BASE64 || secrets.PLAY_STORE_JKS_BASE64_SADEV }}
+          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
+          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
         run: |
           echo "${PLAY_STORE_JKS_BASE64}" | base64 -d >release.keystore && \
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
@@ -424,8 +422,8 @@ jobs:
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
         env:
-          PLAY_STORE_JKS_ALIAS: ${{ secrets[matrix.jks_alias_secret] }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets[matrix.jks_passwd_secret] }}
+          PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
+          PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
