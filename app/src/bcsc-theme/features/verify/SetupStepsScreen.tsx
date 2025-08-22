@@ -1,7 +1,7 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { hitSlop } from '@/constants'
@@ -161,17 +161,44 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     return 'Verify identity'
   }
 
+  /**
+   * Returns the subtext for Step 1 of the verification process.
+   *
+   * @returns {string[]} An array of strings representing the subtext for Step 1.
+   */
+  const getVerificationStep1SubText = useCallback((): string[] => {
+    // if the card type is Other (multiple non BCSC cards), show each card type label
+    if (store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length > 0) {
+      return store.bcsc.additionalEvidenceData.map((evidence) => `ID: ${evidence.evidenceType.evidence_type_label}`)
+    }
+
+    // if the card is registered, show the bcsc serial number
+    if (registered) {
+      return [`ID: BC Services Card (${serialNumber})`]
+    }
+
+    // otherwise, show the default text
+    return [t('Unified.Steps.ScanOrTakePhotos')]
+  }, [registered, serialNumber, store.bcsc.additionalEvidenceData, store.bcsc.cardType, t])
+
   return (
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
+          if (store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length > 0) {
+            navigation.navigate(BCSCScreens.EvidenceTypeList)
+            return
+          }
+
           if (!registered) {
             dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
             navigation.navigate(BCSCScreens.IdentitySelection)
+            return
           }
 
           if (needsAdditionalEvidence) {
             navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
+            return
           }
         }}
         testID={testIdWithKey('Step1')}
@@ -202,11 +229,40 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           ) : null}
         </View>
         <View>
-          <ThemedText
-            style={{ color: registered && !needsAdditionalEvidence ? TextTheme.normal.color : ColorPalette.brand.text }}
-          >
-            {registered ? `ID: BC Services Card (${serialNumber})` : t('Unified.Steps.ScanOrTakePhotos')}
-          </ThemedText>
+          {getVerificationStep1SubText().map((text, id) => (
+            <ThemedText
+              key={`${text}-${id}`}
+              style={{
+                color: registered && !needsAdditionalEvidence ? TextTheme.normal.color : ColorPalette.brand.text,
+              }}
+            >
+              {text}
+            </ThemedText>
+          ))}
+          {
+            // show additional text if a second card is required
+            store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1 ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginTop: 32,
+                  marginBottom: 0,
+                  justifyContent: 'space-between',
+                }}
+              >
+                <ThemedText
+                  style={{
+                    fontWeight: 'bold',
+                    color: ColorPalette.brand.text,
+                  }}
+                >
+                  Add second ID
+                </ThemedText>
+                <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
+              </View>
+            ) : null
+          }
         </View>
       </TouchableOpacity>
       {/* Only show if NonPhoto is selected and no additional photo evidence is available */}
