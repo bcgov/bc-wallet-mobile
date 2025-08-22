@@ -1,5 +1,5 @@
 #!/bin/sh
-set -xaou pipefail
+set -eau -o pipefail
 
 CERT_PATH=$RUNNER_TEMP/certificates.p12
 KC_NAME=cicd.keychain
