@@ -185,7 +185,11 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
-          if (store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length > 0) {
+          if (
+            !registered &&
+            store.bcsc.cardType === BCSCCardType.Other &&
+            store.bcsc.additionalEvidenceData.length > 0
+          ) {
             navigation.navigate(BCSCScreens.EvidenceTypeList)
             return
           }
