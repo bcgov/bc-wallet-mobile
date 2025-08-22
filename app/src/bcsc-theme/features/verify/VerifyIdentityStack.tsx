@@ -31,7 +31,7 @@ import EmailConfirmationScreen from './email/EmailConfirmationScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { HelpCentreUrl } from '@/constants'
 import WebViewScreen from '../webview/WebViewScreen'
-import { createHeaderBackButton } from '@/bcsc-theme/navigators/MainStack'
+import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -156,7 +156,7 @@ const VerifyIdentityStack = () => {
           headerShown: true,
           title: route.params.title,
           headerBackTestID: testIdWithKey('Back'),
-          headerLeft: createHeaderBackButton(navigation),
+          headerLeft: createWebviewHeaderBackButton(navigation),
         })}
       />
     </Stack.Navigator>

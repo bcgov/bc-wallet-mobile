@@ -1,42 +1,15 @@
-import { testIdWithKey, useDefaultStackOptions, useStore, useTheme, useTour } from '@bifold/core'
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { HeaderBackButton, HeaderBackButtonProps } from '@react-navigation/elements'
+import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
+import { createStackNavigator } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { View } from 'react-native'
-
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
-import client from '../api/client'
-import { BCDispatchAction, BCState } from '@/store'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { HelpCentreUrl } from '@/constants'
-
-export const createHeaderBackButton = (navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.WebView>) => {
-  // Declared so that it has a display name for debugging purposes
-  const HeaderLeft = (props: HeaderBackButtonProps) => {
-    const [, dispatch] = useStore<BCState>()
-    const handleBackPress = () => {
-      // Refresh when leaving webviews in case account / device action was taken within the webview
-      if (client.tokens?.refresh_token) {
-        client.getTokensForRefreshToken(client.tokens?.refresh_token).then((tokenData) => {
-          if (tokenData.bcsc_devices_count !== undefined) {
-            dispatch({
-              type: BCDispatchAction.UPDATE_DEVICE_COUNT,
-              payload: [tokenData.bcsc_devices_count],
-            })
-          }
-        })
-      }
-      navigation.goBack()
-    }
-
-    return <HeaderBackButton {...props} onPress={handleBackPress} />
-  }
-  return HeaderLeft
-}
+import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -73,7 +46,7 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: route.params.title,
             headerBackTestID: testIdWithKey('Back'),
-            headerLeft: createHeaderBackButton(navigation),
+            headerLeft: createWebviewHeaderBackButton(navigation),
           })}
         />
         <Stack.Screen
