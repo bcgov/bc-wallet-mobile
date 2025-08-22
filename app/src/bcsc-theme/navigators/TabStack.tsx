@@ -3,7 +3,6 @@ import React from 'react'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
 import { testIdWithKey, useTheme } from '@bifold/core'
 import Account from '../features/account/Account'
 import Home from '../features/home/Home'
@@ -11,6 +10,7 @@ import Services from '../features/services/Services'
 import Settings from '../features/settings/Settings'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
+import { HelpCentreUrl } from '@/constants'
 
 type TabBarIconProps = {
   focused: boolean
@@ -85,8 +85,7 @@ const BCSCTabStack: React.FC = () => {
             title: '',
             headerShown: true,
             headerLeft: () => null,
-            // TODO(bm): Add real help URL
-            headerRight: createHelpHeaderButton({}),
+            headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           }}
         />
         <Tab.Screen
