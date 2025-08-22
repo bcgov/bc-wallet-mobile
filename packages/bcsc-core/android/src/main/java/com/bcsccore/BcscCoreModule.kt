@@ -439,7 +439,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
         // Always overwrite the accounts file with the new single account
         try {
           accountsFile.parentFile?.mkdirs() // Ensure directory exists
-          FileWriter(accountsFile).use { writer ->
+          FileWriter(accountsFile as File).use { writer ->
             writer.write(accountsArray.toString())
             writer.flush()
           }
@@ -975,6 +975,32 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   ) {
     promise.reject("E_NOT_IMPLEMENTED", "createQuickLoginJWT not yet implemented on Android")
   }
+
+  /**
+   * Method to remove the current account.
+   * Removes the current account from the accounts file by accountId
+   */
+  @ReactMethod
+  override fun removeAccount(promise: Promise) {
+    try {
+      Log.d(NAME, "removeAccount - Starting account removal process")
+      
+      val account = getAccountSync()
+      val accountId = account?.getString("id")
+      
+      if (accountId != null) {
+        Log.d(NAME, "removeAccount - Removing data for account ID: $accountId")
+        removeAccountFromFile(accountId)
+        Log.d(NAME, "removeAccount - Successfully removed account data")
+      } else {
+        Log.d(NAME, "removeAccount - No account found to remove")
+      }
+      promise.resolve(null)
+    } catch (e: Exception) {
+      Log.e(NAME, "removeAccount - Error removing account: ${e.message}", e)
+      promise.reject("E_REMOVE_ACCOUNT_ERROR", "Failed to remove account: ${e.message}", e)
+    }
+  }
   
   // MARK: - Account management methods
   /**
@@ -1168,4 +1194,50 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       "00000000-0000-0000-0000-000000000000"
     }
   }
+
+  /**
+   * Remove the specific account entry by UUID from the accounts file
+   * @param accountId The UUID of the account to remove
+   */
+  private fun removeAccountFromFile(accountId: String) {
+    try {
+      val accountsFile = File(reactApplicationContext.filesDir, "accounts")
+      if (!accountsFile.exists()) {
+        Log.d(NAME, "removeAccountFromFile - Accounts file does not exist")
+        return
+      }
+      val existingContent = accountsFile.readText()
+      Log.d(NAME, "removeAccountFromFile - Current accounts file content: $existingContent")
+      
+      val accountsArray = JSONArray(existingContent)
+      val updatedAccountsArray = JSONArray()
+
+      // Copy all accounts except where UUID == accountId
+      var removedCount = 0
+      for (i in 0 until accountsArray.length()) {
+        val accountObj = accountsArray.getJSONObject(i)
+        val uuid = accountObj.optString("uuid", "")
+        
+        if (uuid != accountId) {
+          updatedAccountsArray.put(accountObj)
+        } else {
+          removedCount++
+          Log.d(NAME, "removeAccountFromFile - Found and removing account with UUID: $uuid")
+        }
+      }
+      
+      // Write back updated accounts array 
+      FileWriter(accountsFile).use { writer ->
+        writer.write(updatedAccountsArray.toString())
+        writer.flush()
+      }
+      
+      Log.d(NAME, "removeAccountFromFile - Removed $removedCount account(s), " +
+                  "${updatedAccountsArray.length()} account(s) remaining")
+      
+    } catch (e: Exception) {
+      Log.w(NAME, "removeAccountFromFile - Error removing account from file: ${e.message}", e)
+    }
+  }
+
 }

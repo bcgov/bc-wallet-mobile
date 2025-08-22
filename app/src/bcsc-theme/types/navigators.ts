@@ -4,7 +4,6 @@ import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
-  AccountStack = 'BCSCAccountStack',
 }
 
 export enum BCSCScreens {
@@ -54,13 +53,9 @@ export type BCSCTabStackParams = {
 
 export type BCSCRootStackParams = {
   [BCSCStacks.TabStack]: NavigatorScreenParams<BCSCTabStackParams>
-  [BCSCStacks.AccountStack]: NavigatorScreenParams<BCSCAccountStackParams>
   [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
-}
-
-export type BCSCAccountStackParams = {
   [BCSCScreens.RemoveAccountConfirmation]: undefined
 }
 
