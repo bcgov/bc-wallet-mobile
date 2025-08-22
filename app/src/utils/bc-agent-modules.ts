@@ -8,6 +8,7 @@ import {
   V1CredentialProtocol,
   V1ProofProtocol,
 } from '@credo-ts/anoncreds'
+import type { AnonCredsRegistry } from '@credo-ts/anoncreds'
 import { AskarModule } from '@credo-ts/askar'
 import {
   Agent,
@@ -15,6 +16,7 @@ import {
   AutoAcceptProof,
   ConnectionsModule,
   CredentialsModule,
+  DidResolver,
   DidsModule,
   DifPresentationExchangeProofFormatService,
   MediationRecipientModule,
@@ -23,6 +25,7 @@ import {
   V2CredentialProtocol,
   V2ProofProtocol,
 } from '@credo-ts/core'
+import { WebvhDidResolver, WebVhAnonCredsRegistry } from '@credo-ts/webvh'
 import { DrpcModule } from '@credo-ts/drpc'
 import { IndyVdrAnonCredsRegistry, IndyVdrModule, IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 import { PushNotificationsApnsModule, PushNotificationsFcmModule } from '@credo-ts/push-notifications'
@@ -77,7 +80,7 @@ export function getBCAgentModules({
     }),
     anoncreds: new AnonCredsModule({
       anoncreds,
-      registries: [new IndyVdrAnonCredsRegistry()],
+      registries: [new IndyVdrAnonCredsRegistry(), new WebVhAnonCredsRegistry() as unknown as AnonCredsRegistry],
     }),
     indyVdr: new IndyVdrModule({
       indyVdr,
@@ -118,17 +121,22 @@ export function getBCAgentModules({
     }),
     pushNotificationsFcm: new PushNotificationsFcmModule(),
     pushNotificationsApns: new PushNotificationsApnsModule(),
-    dids: new DidsModule(),
+    dids: new DidsModule({
+      resolvers: [new WebvhDidResolver() as unknown as DidResolver],
+    }),
     drpc: new DrpcModule(),
   }
 
   if (enableProxy && proxyBaseUrl) {
     modules.anoncreds = new AnonCredsModule({
       anoncreds,
-      registries: [new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings })],
+      registries: [
+        new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings }),
+        new WebVhAnonCredsRegistry() as unknown as AnonCredsRegistry,
+      ],
     })
     modules.dids = new DidsModule({
-      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl })],
+      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl }), new WebvhDidResolver() as unknown as DidResolver],
     })
   }
 
