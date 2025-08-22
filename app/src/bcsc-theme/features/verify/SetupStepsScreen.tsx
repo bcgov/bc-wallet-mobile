@@ -1,7 +1,7 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useMemo } from 'react'
+import React, { useCallback } from 'react'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { hitSlop } from '@/constants'
@@ -21,23 +21,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const serialNumber = store.bcsc.serial ?? null
-  const emailAddress = store.bcsc.email ?? null
-  const emailConfirmed = store.bcsc.emailConfirmed ?? false
-  const registered = useMemo(() => serialNumber && emailAddress, [serialNumber, emailAddress])
-  const isNonPhotoCard = useMemo(() => store.bcsc.cardType === BCSCCardType.NonPhoto, [store.bcsc.cardType])
-  const hasAdditionalPhotoEvidence = useMemo(
-    () => store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo),
-    [store.bcsc.additionalEvidenceData]
-  )
-  const needsAdditionalEvidence = useMemo(
-    () => isNonPhotoCard && !hasAdditionalPhotoEvidence,
-    [isNonPhotoCard, hasAdditionalPhotoEvidence]
-  )
-  const canProceedToVerification = useMemo(
-    () => registered && !store.bcsc.pendingVerification && !needsAdditionalEvidence,
-    [registered, store.bcsc.pendingVerification, needsAdditionalEvidence]
-  )
+
+  const bcscSerialNumber = store.bcsc.serial || null
+  const emailAddress = store.bcsc.email || null
+  const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
+  const bcscRegistered = Boolean(bcscSerialNumber || emailAddress)
+  const dualIdRegistered = store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length >= 2
+  const registered = bcscRegistered || dualIdRegistered
+  const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
+  const hasAdditionalPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)
+  const needsAdditionalEvidence = isNonPhotoCard && !hasAdditionalPhotoEvidence
+  const canProceedToVerification = registered && !store.bcsc.pendingVerification && !needsAdditionalEvidence
 
   const styles = StyleSheet.create({
     container: {
@@ -172,21 +166,41 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       return store.bcsc.additionalEvidenceData.map((evidence) => `ID: ${evidence.evidenceType.evidence_type_label}`)
     }
 
-    // if the card is registered, show the bcsc serial number
-    if (registered) {
-      return [`ID: BC Services Card (${serialNumber})`]
+    // if the bcsc card is registered, show the bcsc serial number
+    if (bcscRegistered) {
+      return [`ID: BC Services Card (${bcscSerialNumber})`]
     }
 
     // otherwise, show the default text
     return [t('Unified.Steps.ScanOrTakePhotos')]
-  }, [registered, serialNumber, store.bcsc.additionalEvidenceData, store.bcsc.cardType, t])
+  }, [bcscRegistered, bcscSerialNumber, store.bcsc.additionalEvidenceData, store.bcsc.cardType, t])
+
+  /**
+   * Returns the subtext for Step 4 of the verification process based on registration status.
+   *
+   * @param {boolean} bcscIsRegistered - Indicates if the BC Services Card is registered.
+   * @param {boolean} dualIdIsRegistered - Indicates if dual ID is registered.
+   * @returns {*} {string} The subtext for Step 4.
+   */
+  const getVerificationStep4SubText = (bcscIsRegistered: boolean, dualIdIsRegistered: boolean): string => {
+    if (bcscIsRegistered) {
+      return 'Address: Residential address from your BC Services Card will be used'
+    }
+
+    // QUESTION (MD): Is this possible? Or do we need workflow screen to input address if dual ID is registered?
+    if (dualIdIsRegistered) {
+      return 'Address: Residential address from your IDs will be used'
+    }
+
+    return 'Residential address'
+  }
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
           if (
-            !registered &&
+            !dualIdRegistered &&
             store.bcsc.cardType === BCSCCardType.Other &&
             store.bcsc.additionalEvidenceData.length > 0
           ) {
@@ -261,6 +275,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
                     color: ColorPalette.brand.text,
                   }}
                 >
+                  {/* TODO (MD): Add this to loalization translations */}
                   Add second ID
                 </ThemedText>
                 <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
@@ -307,11 +322,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           {registered ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
         </View>
         <View>
-          <ThemedText>
-            {registered
-              ? 'Address: Residential address from your BC Services Card will be used'
-              : 'Residential address'}
-          </ThemedText>
+          <ThemedText>{getVerificationStep4SubText(bcscRegistered, dualIdRegistered)}</ThemedText>
         </View>
       </TouchableOpacity>
       <View style={styles.itemSeparator} />

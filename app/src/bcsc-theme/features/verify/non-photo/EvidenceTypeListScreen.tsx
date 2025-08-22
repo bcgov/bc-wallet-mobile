@@ -88,10 +88,16 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
       if (store.bcsc.additionalEvidenceData.length === 0) {
         return collection_order === 'BOTH' || collection_order === 'FIRST'
       } else {
-        return collection_order === 'BOTH' || collection_order === 'SECOND'
+        return (
+          (collection_order === 'BOTH' || collection_order === 'SECOND') &&
+          // if the user is seeing this screen for the second time, we only show cards that are not already selected
+          !store.bcsc.additionalEvidenceData.some(
+            (evidence) => evidence.evidenceType.evidence_type_label === card.evidence_type_label
+          )
+        )
       }
     },
-    [store.bcsc.additionalEvidenceData.length]
+    [store.bcsc.additionalEvidenceData]
   )
 
   useEffect(() => {
