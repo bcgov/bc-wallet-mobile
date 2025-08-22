@@ -59,6 +59,7 @@ export type BCSCRootStackParams = {
 
 export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.SetupSteps]: undefined
+  [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
   [BCSCScreens.ManualSerial]: undefined
