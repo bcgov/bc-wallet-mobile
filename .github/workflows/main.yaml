@@ -14,8 +14,6 @@ on:
   pull_request:
     branches: [main]
 
-# noop 1
-
 jobs:
   check-secrets:
     runs-on: ubuntu-22.04
@@ -481,6 +479,27 @@ jobs:
           job_status: ${{ job.status }}
           webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-summary:
+    runs-on: ubuntu-latest
+    needs:
+      - build-android
+      - build-ios
+    if: always()
+    steps:
+      - name: Check matrix results
+        run: |
+          if [ "${{ needs.build-android.result }}" != "success" ]; then
+            echo "Android build(s) failed"
+            exit 1
+          fi
+
+          if [ "${{ needs.build-ios.result }}" != "success" ]; then
+            echo "iOS build(s) failed"
+            exit 1
+          fi
+
+          echo "✅ All builds passed!"
 
   ship-to-saucelabs:
     if: github.ref_name == 'main'
