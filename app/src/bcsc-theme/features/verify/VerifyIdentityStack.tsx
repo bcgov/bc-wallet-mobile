@@ -1,6 +1,6 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme } from '@bifold/core'
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
+import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
+import { createStackNavigator } from '@react-navigation/stack'
 import SetupStepsScreen from './SetupStepsScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import SerialInstructionsScreen from './SerialInstructionsScreen'
@@ -29,40 +29,14 @@ import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
-import { useCallback } from 'react'
 import { HelpCentreUrl } from '@/constants'
-import { useNavigation } from '@react-navigation/native'
-import { useTranslation } from 'react-i18next'
 import WebViewScreen from '../webview/WebViewScreen'
 import { createHeaderBackButton } from '@/bcsc-theme/navigators/MainStack'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
   const theme = useTheme()
-  const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
-  /**
-   * Handles navigation to the Help Centre webview.
-   *
-   * @param {string} helpCentreUrl - The URL of the Help Centre page to navigate to.
-   * @returns {*} {Promise<void>}
-   */
-  const handleHelpCentreNavigation = useCallback(
-    async (helpCentreUrl: HelpCentreUrl) => {
-      try {
-        navigation.navigate(BCSCScreens.WebView, {
-          url: helpCentreUrl,
-          title: t('HelpCentre.Title'),
-        })
-      } catch (error) {
-        logger.error(`Error navigating to Help Center webview: ${error}`)
-      }
-    },
-    [navigation, logger, t]
-  )
 
   return (
     <Stack.Navigator screenOptions={{ ...defaultStackOptions, headerShown: true, title: '' }}>
@@ -71,9 +45,7 @@ const VerifyIdentityStack = () => {
         component={SetupStepsScreen}
         options={{
           title: 'Setup Steps',
-          headerRight: createHelpHeaderButton({
-            helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOW_TO_SETUP),
-          }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOW_TO_SETUP }),
           headerLeft: () => null,
         }}
       />
@@ -82,21 +54,21 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.SerialInstructions}
         component={SerialInstructionsScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.ManualSerial}
         component={ManualSerialScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.ScanSerial}
         component={ScanSerialScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
@@ -108,18 +80,14 @@ const VerifyIdentityStack = () => {
         component={VerificationMethodSelectionScreen}
         options={{
           title: 'Choose How to Verify',
-          headerRight: createHelpHeaderButton({
-            helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.VERIFICATION_METHODS),
-          }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFICATION_METHODS }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
         options={{
-          headerRight: createHelpHeaderButton({
-            helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.VERIFY_IN_PERSON),
-          }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFY_IN_PERSON }),
         }}
       />
       <Stack.Screen
@@ -149,37 +117,35 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.AdditionalIdentificationRequired}
         component={AdditionalIdentificationRequiredScreen}
         options={{
-          headerRight: createHelpHeaderButton({
-            helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS),
-          }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.IDPhotoInformation}
         component={IDPhotoInformationScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceTypeList}
         component={EvidenceTypeListScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceCapture}
         component={EvidenceCaptureScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceIDCollection}
         component={EvidenceIDCollectionScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
 

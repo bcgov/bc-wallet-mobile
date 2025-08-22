@@ -12,6 +12,7 @@ import BCSCTabStack from './TabStack'
 import client from '../api/client'
 import { BCDispatchAction, BCState } from '@/store'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
+import { HelpCentreUrl } from '@/constants'
 
 export const createHeaderBackButton = (navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.WebView>) => {
   // Declared so that it has a display name for debugging purposes
@@ -62,8 +63,7 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             headerBackTitleVisible: false,
-            // TODO(bm): Add real help URL
-            headerRight: createHelpHeaderButton({}),
+            headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           })}
         />
         <Stack.Screen

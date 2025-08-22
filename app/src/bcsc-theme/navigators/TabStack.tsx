@@ -1,20 +1,16 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import React, { useCallback } from 'react'
+import React from 'react'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
-import { testIdWithKey, TOKENS, useServices, useTheme } from '@bifold/core'
+import { testIdWithKey, useTheme } from '@bifold/core'
 import Account from '../features/account/Account'
 import Home from '../features/home/Home'
 import Services from '../features/services/Services'
 import Settings from '../features/settings/Settings'
-import { BCSCRootStackParams, BCSCScreens, BCSCTabStackParams } from '../types/navigators'
+import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { HelpCentreUrl } from '@/constants'
-import { useTranslation } from 'react-i18next'
 
 type TabBarIconProps = {
   focused: boolean
@@ -56,9 +52,6 @@ const createTabBarIcon = (label: string, iconName: string): React.FC<TabBarIconP
 const BCSCTabStack: React.FC = () => {
   const Tab = createBottomTabNavigator<BCSCTabStackParams>()
   const { TabTheme } = useTheme()
-  const { t } = useTranslation()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams, BCSCScreens.WebView>>()
 
   // this style should be moved to the theme file here and in Bifold
   const styles = StyleSheet.create({
@@ -66,26 +59,6 @@ const BCSCTabStack: React.FC = () => {
       flex: 1,
     },
   })
-
-  /**
-   * Handles navigation to the Help Centre webview.
-   *
-   * @param {string} helpCentreUrl - The URL of the Help Centre page to navigate to.
-   * @returns {*} {Promise<void>}
-   */
-  const handleHelpCentreNavigation = useCallback(
-    async (helpCentreUrl: HelpCentreUrl) => {
-      try {
-        navigation.navigate(BCSCScreens.WebView, {
-          url: helpCentreUrl,
-          title: t('HelpCentre.Title'),
-        })
-      } catch (error) {
-        logger.error(`Error navigating to Help Center webview: ${error}`)
-      }
-    },
-    [navigation, logger, t]
-  )
 
   return (
     <>
@@ -112,7 +85,7 @@ const BCSCTabStack: React.FC = () => {
             title: '',
             headerShown: true,
             headerLeft: () => null,
-            headerRight: createHelpHeaderButton({ helpAction: () => handleHelpCentreNavigation(HelpCentreUrl.HOME) }),
+            headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           }}
         />
         <Tab.Screen
