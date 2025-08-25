@@ -13,6 +13,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
+import { useTranslation } from 'react-i18next'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
@@ -25,6 +26,7 @@ const Account: React.FC = () => {
   const [userInfo, setUserInfo] = useState<UserInfoResponseData | null>(null)
   const [pictureUri, setPictureUri] = useState<string>()
   const url = useQuickLoginUrl('account/')
+  const { t } = useTranslation()
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -129,7 +131,7 @@ const Account: React.FC = () => {
             />
             <SectionButton
               onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
-              title="Remove account"
+              title={t('Unified.Account.RemoveAccount')}
             />
           </View>
         </View>

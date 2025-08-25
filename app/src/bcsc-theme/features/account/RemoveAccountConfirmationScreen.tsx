@@ -7,6 +7,7 @@ import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import * as BcscCore from '@/../../packages/bcsc-core/src/index'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useTranslation } from 'react-i18next'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
@@ -16,6 +17,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const [, dispatch] = useStore<BCState>()
   const { registration } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     container: {
@@ -50,12 +52,22 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.textContainer}>
-        <ThemedText variant={'headingThree'}>{'Remove account From this app?'}</ThemedText>
-        <ThemedText>{"To use this app again, you'll need to provide your ID and verify your identity"}</ThemedText>
+        <ThemedText variant={'headingThree'}>{t('Unified.Account.RemoveAccountTitle')}</ThemedText>
+        <ThemedText>{t('Unified.Account.RemoveAccountParagraph')}</ThemedText>
       </View>
       <View style={styles.buttonsContainer}>
-        <Button buttonType={ButtonType.Critical} title={'Remove Account'} onPress={handleRemoveAccount} />
-        <Button buttonType={ButtonType.Secondary} title={'Cancel'} onPress={() => navigation.goBack()} />
+        <Button
+          accessibilityLabel={t('Unified.Account.RemoveAccount')}
+          buttonType={ButtonType.Critical}
+          title={t('Unified.Account.RemoveAccount')}
+          onPress={handleRemoveAccount}
+        />
+        <Button
+          accessibilityLabel={t('Global.Cancel')}
+          buttonType={ButtonType.Secondary}
+          title={t('Global.Cancel')}
+          onPress={() => navigation.goBack()}
+        />
       </View>
     </View>
   )
