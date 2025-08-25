@@ -22,7 +22,6 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       padding: Spacing.md,
-      //   backgroundColor: BrandColors.primaryBackground,
       flex: 1,
     },
     buttonsContainer: {
