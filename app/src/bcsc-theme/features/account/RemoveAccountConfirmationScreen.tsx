@@ -1,6 +1,6 @@
 import { BCSCRootStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { ThemedText, useStore, useTheme, Button, ButtonType, useServices, TOKENS } from '@bifold/core'
+import { ThemedText, useStore, useTheme, Button, ButtonType, useServices, TOKENS, DispatchAction } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -42,7 +42,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
       await registration.register()
 
       // log out
-      dispatch({ type: 'authentication/didAuthenticate', payload: [false] })
+      dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
     } catch (error: unknown) {
       logger.error(error)
     }

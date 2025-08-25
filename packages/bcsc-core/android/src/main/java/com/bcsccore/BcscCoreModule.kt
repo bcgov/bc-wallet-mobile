@@ -439,7 +439,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
         // Always overwrite the accounts file with the new single account
         try {
           accountsFile.parentFile?.mkdirs() // Ensure directory exists
-          FileWriter(accountsFile as File).use { writer ->
+          FileWriter(accountsFile).use { writer ->
             writer.write(accountsArray.toString())
             writer.flush()
           }
