@@ -39,11 +39,18 @@ export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
+export interface UserMetadata {
+  firstName: string
+  lastName: string
+  middleNames?: string
+}
+
 export interface BCSCState {
   verified: boolean
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
+  userMetadata?: UserMetadata
   email?: string
   emailConfirmed?: boolean
   deviceCode?: string
@@ -120,6 +127,7 @@ enum BCSCDispatchAction {
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_DEVICE_COUNT = 'bcsc/updateDeviceCount',
+  UPDATE_USER_METADATA = 'bcsc/updateUserMetadata',
 }
 
 enum ModeDispatchAction {
@@ -451,6 +459,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       )
 
       const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_USER_METADATA: {
+      const userMetadata: UserMetadata = (action?.payload || []).pop()
+
+      const bcsc = { ...state.bcsc, userMetadata }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

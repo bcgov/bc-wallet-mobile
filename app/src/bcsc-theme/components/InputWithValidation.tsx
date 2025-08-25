@@ -1,5 +1,5 @@
+import { useTheme } from '@bifold/core'
 import { ThemedText } from '@bifold/core/src/components/texts/ThemedText'
-import { ColorPalette, Inputs } from '@bifold/core/src/theme'
 import { StyleProp, TextInput, TextStyle, View } from 'react-native'
 
 // TODO (MD): Support number inputs and other types of inputs
@@ -8,26 +8,29 @@ import { StyleProp, TextInput, TextStyle, View } from 'react-native'
 type InputWIthValidationProps = {
   value: string
   onChange: (value: string) => void
-  inputLabel: string
-  inputLabelProps?: StyleProp<TextStyle>
-  inputSubtext?: string
-  inputSubtextProps?: StyleProp<TextStyle>
-  inputValidationError?: string
-  inputValidationErrorProps?: StyleProp<TextStyle>
+  label: string
+  subtext?: string
+  error?: string
+  labelProps?: StyleProp<TextStyle>
   inputProps?: StyleProp<TextStyle>
+  subtextProps?: StyleProp<TextStyle>
+  errorProps?: StyleProp<TextStyle>
 }
 
 export const InputWithValidation: React.FC<InputWIthValidationProps> = (props: InputWIthValidationProps) => {
+  const { Inputs, ColorPalette } = useTheme()
+
   return (
     <View>
-      <ThemedText variant={'labelTitle'} style={[{ marginBottom: 8 }, props.inputLabelProps]}>
-        {props.inputLabel}
+      <ThemedText variant={'labelTitle'} style={[{ marginBottom: 8 }, props.labelProps]}>
+        {props.label}
       </ThemedText>
+
       <TextInput
         style={[
           {
             ...Inputs.textInput,
-            borderColor: props.inputValidationError ? ColorPalette.semantic.error : Inputs.textInput.borderColor,
+            borderColor: props.error ? ColorPalette.semantic.error : Inputs.textInput.borderColor,
           },
           props.inputProps,
         ]}
@@ -37,7 +40,7 @@ export const InputWithValidation: React.FC<InputWIthValidationProps> = (props: I
         }}
       />
 
-      {props.inputValidationError ? (
+      {props.error ? (
         <ThemedText
           style={[
             {
@@ -45,16 +48,16 @@ export const InputWithValidation: React.FC<InputWIthValidationProps> = (props: I
               color: ColorPalette.semantic.error,
               fontSize: 12,
             },
-            props.inputValidationErrorProps,
+            props.errorProps,
           ]}
         >
-          {props.inputValidationError}
+          {props.error}
         </ThemedText>
       ) : null}
 
-      {props.inputSubtext ? (
-        <ThemedText style={{ marginTop: 8 }} variant={'labelSubtitle'}>
-          {props.inputSubtext}
+      {props.subtext ? (
+        <ThemedText style={[{ marginTop: 8 }, props.errorProps]} variant={'labelSubtitle'}>
+          {props.subtext}
         </ThemedText>
       ) : null}
     </View>
