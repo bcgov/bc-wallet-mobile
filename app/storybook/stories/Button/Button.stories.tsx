@@ -2,7 +2,8 @@
 import { components, ThemeProvider } from '@bifold/core'
 import { storiesOf } from '@storybook/react-native'
 import React from 'react'
-import { SafeAreaView, ScrollView, Text, View } from 'react-native'
+import { ScrollView, Text, View } from 'react-native'
+import {SafeAreaView} from 'react-native-safe-area-context'
 
 import { BCThemeNames } from '@/constants'
 import { themes } from '@/theme'
