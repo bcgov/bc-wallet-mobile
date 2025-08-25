@@ -2,6 +2,7 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowDisablePreview">true</item>
         <!-- Customize your theme here. -->
     </style>
 

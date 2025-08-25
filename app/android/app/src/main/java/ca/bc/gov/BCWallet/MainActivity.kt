@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.core.app.NotificationManagerCompat
 import com.facebook.react.ReactActivity
+import org.devio.rn.splashscreen.SplashScreen
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import com.facebook.react.defaults.DefaultReactActivityDelegate
@@ -14,6 +15,7 @@ class MainActivity : ReactActivity() {
     // react-native-screens override
     // https://github.com/software-mansion/react-native-screens#android
     override fun onCreate(savedInstanceState: Bundle?) {
+        SplashScreen.show(this)
         super.onCreate(null)
     }
 
@@ -49,12 +51,17 @@ class MainActivity : ReactActivity() {
      * [DefaultReactActivityDelegate] which allows you to easily enable Fabric and Concurrent React
      * (aka React 18) with two boolean flags.
      */
-    override fun createReactActivityDelegate(): ReactActivityDelegate =
-        DefaultReactActivityDelegate(
+    override fun createReactActivityDelegate(): ReactActivityDelegate {
+        return object : DefaultReactActivityDelegate(
             this,
             mainComponentName,
             DefaultNewArchitectureEntryPoint.fabricEnabled
-        )
+        ) {
+            override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+            }
+        }
+    }
 
     /**
      * Clears notification badges etc. on app open
