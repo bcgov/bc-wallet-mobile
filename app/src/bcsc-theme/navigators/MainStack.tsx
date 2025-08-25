@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { View } from 'react-native'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
+import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
@@ -55,6 +56,14 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             headerLeft: () => null,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.RemoveAccountConfirmation}
+          component={RemoveAccountConfirmationScreen}
+          options={() => ({
+            headerShown: true,
+            headerBackTitleVisible: false,
           })}
         />
       </Stack.Navigator>

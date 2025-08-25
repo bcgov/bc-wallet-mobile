@@ -283,6 +283,11 @@ const translation = {
       "Heading": "Choose photo ID (PT-BR)",
       "Description": "Use an ID that has the same name as on your BC Services Card. (PT-BR)",
       "FirstID": "Choose your first ID (PT-BR)",
+    },
+    "Account": {
+      "RemoveAccount": "Remove account (PT-BR)",
+      "RemoveAccountTitle": "Remove account from this app? (PT-BR)",
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)"
     }
   },
   "RemoteLogging": {
