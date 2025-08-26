@@ -68,7 +68,7 @@ const App = () => {
     <ErrorBoundaryWrapper logger={BCLogger}>
       <ContainerProvider value={bcwContainer}>
         <StoreProvider initialState={initialState} reducer={reducer}>
-          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
+          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCSC}>
             <NavContainer navigationRef={navigationRef}>
               <AnimatedComponentsProvider value={animatedComponents}>
                 <AuthProvider>

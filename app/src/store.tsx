@@ -246,7 +246,7 @@ export const initialState: BCState = {
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
   bcsc: bcscState,
-  mode: Mode.BCWallet,
+  mode: Mode.BCSC,
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
