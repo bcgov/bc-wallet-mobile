@@ -4,7 +4,7 @@ import { ThemedText, useStore, useTheme, Button, ButtonType, useServices, TOKENS
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet, View, Platform } from 'react-native'
 import * as BcscCore from '@/../../packages/bcsc-core/src/index'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useTranslation } from 'react-i18next'
@@ -35,14 +35,17 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
 
   const handleRemoveAccount = async () => {
     try {
-      dispatch({ type: BCDispatchAction.CLEAR_BCSC })
-      await BcscCore.removeAccount()
-
-      // refresh accounts file with new account
-      await registration.register()
-
-      // log out
-      dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
+      // Todo(TL): needs implementation on ios https://github.com/bcgov/bc-wallet-mobile/issues/2636
+      if (Platform.OS === 'android') {
+        await BcscCore.removeAccount()
+        dispatch({ type: BCDispatchAction.CLEAR_BCSC })
+        // refresh accounts file with new account
+        await registration.register()
+        // log out
+        dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
+      } else {
+        logger.info('removeAccount not implemented on IOS')
+      }
     } catch (error: unknown) {
       logger.error(error)
     }
