@@ -50,7 +50,6 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
-  userMetadata?: UserMetadata
   email?: string
   emailConfirmed?: boolean
   deviceCode?: string
@@ -75,6 +74,7 @@ export interface AdditionalEvidenceData {
   evidenceType: EvidenceType
   metadata: PhotoMetadata[]
   documentNumber: string
+  userMetadata?: UserMetadata
 }
 
 export enum Mode {
@@ -123,11 +123,11 @@ enum BCSCDispatchAction {
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
   ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
   UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
+  UPDATE_EVIDENCE_USER_METADATA = 'bcsc/updateEvidenceUserMetadata',
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_DEVICE_COUNT = 'bcsc/updateDeviceCount',
-  UPDATE_USER_METADATA = 'bcsc/updateUserMetadata',
 }
 
 enum ModeDispatchAction {
@@ -464,10 +464,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
 
-    case BCSCDispatchAction.UPDATE_USER_METADATA: {
-      const userMetadata: UserMetadata = (action?.payload || []).pop()
+    case BCSCDispatchAction.UPDATE_EVIDENCE_USER_METADATA: {
+      const { evidenceType, userMetadata }: { evidenceType: EvidenceType; userMetadata: UserMetadata } =
+        (action?.payload || []).pop() ?? {}
 
-      const bcsc = { ...state.bcsc, userMetadata }
+      const updatedEvidenceData = state.bcsc.additionalEvidenceData.map((item) =>
+        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, userMetadata } : item
+      )
+
+      const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

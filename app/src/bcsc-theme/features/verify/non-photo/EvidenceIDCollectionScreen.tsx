@@ -9,6 +9,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions } from '@react-navigation/native'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { useTranslation } from 'react-i18next'
 
 type EvidenceCollectionFormState = {
   documentNumber: string
@@ -50,15 +51,14 @@ const evidenceInitialState: EvidenceCollectionFormState = {
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { t } = useTranslation()
   const { cardType } = route.params
 
   const [evidenceErrors, setEvidenceErrors] = useState<EvidenceCollectionFormErrors>({})
   const [evidence, setEvidence] = useState<EvidenceCollectionFormState>(evidenceInitialState)
 
   const additionalEvidenceRequired =
-    store.bcsc.cardType === BCSCCardType.Other &&
-    store.bcsc.additionalEvidenceData.length === 1 &&
-    !store.bcsc.userMetadata
+    store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1
 
   /**
    * Handles changes to the form fields.
@@ -79,9 +79,13 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
    * @param {string} value - The document number to validate.
    * @returns {boolean} True if the document number is valid, false otherwise.
    */
-  const validateDocumentNumber = (value: string): boolean => {
+  const isDocumentNumberValid = (value: string): boolean => {
     if (!cardType.document_reference_input_mask || !value) {
       return true // No validation needed if no mask or empty value
+    }
+
+    if (!value) {
+      return false
     }
 
     try {
@@ -96,10 +100,14 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   /**
    * Validates the birth date format (YYYY-MM-DD) and checks if it's a valid date.
    *
-   * @param {string} value - The birth date to validate.
+   * @param {string} [value] - The birth date to validate.
    * @returns {boolean} True if the birth date is valid, false otherwise.
    */
-  const validateDate = (value: string): boolean => {
+  const isDateValid = (value?: string): boolean => {
+    if (!value) {
+      return false
+    }
+
     const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
 
     if (!regex.test(value)) {
@@ -120,8 +128,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const validateEvidence = (values: EvidenceCollectionFormState, additionalEvidenceRequired: boolean) => {
     const errors: EvidenceCollectionFormErrors = {}
 
-    if (!values.documentNumber || !validateDocumentNumber(values.documentNumber)) {
-      errors.documentNumber = 'Please enter a valid document number'
+    if (!isDocumentNumberValid(values.documentNumber)) {
+      errors.documentNumber = t('EvidenceIDCollection.DocumentNumberError')
     }
 
     if (!additionalEvidenceRequired) {
@@ -129,19 +137,19 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     }
 
     if (!values.firstName) {
-      errors.firstName = 'Please enter a first name'
+      errors.firstName = t('EvidenceIDCollection.FirstNameError')
     }
 
     if (!values.lastName) {
-      errors.lastName = 'Please enter a last name'
+      errors.lastName = t('EvidenceIDCollection.LastNameError')
     }
 
-    if (!values.birthDate || !validateDate(values.birthDate)) {
-      errors.birthDate = 'Please enter a valid birth date using format: YYYY-MM-DD'
+    if (!isDateValid(values.birthDate)) {
+      errors.birthDate = t('EvidenceIDCollection.BirthDateError')
     }
 
     if (values.middleNames && values.middleNames.split(' ').length > 2) {
-      errors.middleNames = 'Please enter up to two middle names'
+      errors.middleNames = t('EvidenceIDCollection.MiddleNamesError')
     }
 
     return errors
@@ -164,10 +172,11 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       return
     }
 
+    // update the store with the collected user metadata evidence
     if (additionalEvidenceRequired) {
       dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [evidence.birthDate] })
       dispatch({
-        type: BCDispatchAction.UPDATE_USER_METADATA,
+        type: BCDispatchAction.UPDATE_EVIDENCE_USER_METADATA,
         payload: [{ firstName: evidence.firstName, lastName: evidence.lastName, middleNames: evidence.middleNames }],
       })
     }
@@ -214,7 +223,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             value={evidence.documentNumber}
             onChange={(value) => handleChange('documentNumber', value)}
             error={evidenceErrors.documentNumber}
-            subtext={`For example: ${cardType.document_reference_sample}`}
+            subtext={`${t('EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
           />
 
           {additionalEvidenceRequired ? (
@@ -224,7 +233,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
                 value={evidence.lastName}
                 onChange={(value) => handleChange('lastName', value)}
                 error={evidenceErrors.lastName}
-                subtext={'Also known as surname or family name'}
+                subtext={t('EvidenceIDCollection.LastNameSubtext')}
               />
 
               <InputWithValidation
@@ -232,7 +241,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
                 value={evidence.firstName}
                 onChange={(value) => handleChange('firstName', value)}
                 error={evidenceErrors.firstName}
-                subtext={'Your first given name'}
+                subtext={t('EvidenceIDCollection.FirstNameSubtext')}
               />
 
               <InputWithValidation
@@ -240,7 +249,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
                 value={evidence.middleNames}
                 onChange={(value) => handleChange('middleNames', value)}
                 error={evidenceErrors.middleNames}
-                subtext={'Additional given names. Only up to 2 are needed.'}
+                subtext={t('EvidenceIDCollection.MiddleNamesSubtext')}
               />
 
               <InputWithValidation
@@ -248,7 +257,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
                 value={evidence.birthDate}
                 onChange={(value) => handleChange('birthDate', value)}
                 error={evidenceErrors.birthDate}
-                subtext={'Format: YYYY-MM-DD'}
+                subtext={t('EvidenceIDCollection.BirthDateSubtext')}
               />
             </>
           ) : null}

@@ -286,6 +286,26 @@ const translation = {
       "Heading": "Choose photo ID",
       "Description": "Use an ID that has the same name as on your BC Services Card.",
       "FirstID": "Choose your first ID",
+    },
+    "EvidenceIDCollection": {
+      "DocumentNumberSubtext": "For example:",
+      "DocumentNumberError": "Please enter a valid document number",
+
+      "FirstNameLabel": "First name",
+      "FirstNameSubtext": "Your first given name",
+      "FirstNameError": "Please enter a first name",
+
+      "LastNameLabel": "Last name",
+      "LastNameError": "Please enter a last name",
+      "LastNameSubtext": "Also known as surname or family name",
+
+      "BirthDateLabel": "Birth date",
+      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format",
+      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
+
+      "MiddleNamesLabel": "Middle names",
+      "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
+      "MiddleNamesError": "Please enter up to two middle names",
     }
   },
   "RemoteLogging": {

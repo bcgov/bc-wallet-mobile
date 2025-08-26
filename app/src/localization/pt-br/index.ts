@@ -283,6 +283,26 @@ const translation = {
       "Heading": "Choose photo ID (PT-BR)",
       "Description": "Use an ID that has the same name as on your BC Services Card. (PT-BR)",
       "FirstID": "Choose your first ID (PT-BR)",
+    },
+    "EvidenceIDCollection": {
+      "DocumentNumberSubtext": "For example: (PT-BR)",
+      "DocumentNumberError": "Please enter a valid document number (PT-BR)",
+
+      "FirstNameLabel": "First name (PT-BR)",
+      "FirstNameSubtext": "Your first given name (PT-BR)",
+      "FirstNameError": "Please enter a first name (PT-BR)",
+
+      "LastNameLabel": "Last name (PT-BR)",
+      "LastNameError": "Please enter a last name (PT-BR)",
+      "LastNameSubtext": "Also known as surname or family name (PT-BR)",
+
+      "BirthDateLabel": "Birth date (PT-BR)",
+      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format (PT-BR)",
+      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (PT-BR)",
+
+      "MiddleNamesLabel": "Middle names (PT-BR)",
+      "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (PT-BR)",
+      "MiddleNamesError": "Please enter up to two middle names (PT-BR)",
     }
   },
   "RemoteLogging": {

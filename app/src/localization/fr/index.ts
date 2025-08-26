@@ -283,6 +283,26 @@ const translation = {
       "Heading": "Choose photo ID (FR)",
       "Description": "Use an ID that has the same name as on your BC Services Card. (FR)",
       "FirstID": "Choose your first ID (FR)",
+    },
+    "EvidenceIDCollection": {
+      "DocumentNumberSubtext": "For example: (FR)",
+      "DocumentNumberError": "Please enter a valid document number (FR)",
+
+      "FirstNameLabel": "First name (FR)",
+      "FirstNameSubtext": "Your first given name (FR)",
+      "FirstNameError": "Please enter a first name (FR)",
+
+      "LastNameLabel": "Last name (FR)",
+      "LastNameError": "Please enter a last name (FR)",
+      "LastNameSubtext": "Also known as surname or family name (FR)",
+
+      "BirthDateLabel": "Birth date (FR)",
+      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format (FR)",
+      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (FR)",
+
+      "MiddleNamesLabel": "Middle names (FR)",
+      "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (FR)",
+      "MiddleNamesError": "Please enter up to two middle names (FR)",
     }
   },
   "RemoteLogging": {
