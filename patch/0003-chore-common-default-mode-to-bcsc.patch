@@ -1,13 +1,27 @@
-From 07bec3fbbec6af91cf6281b39b771413ce09c883 Mon Sep 17 00:00:00 2001
+From b155394a341faa66c34b06e30fc890ace0673ab5 Mon Sep 17 00:00:00 2001
 From: "Jason C. Leach" <jason.leach@fullboar.ca>
-Date: Wed, 20 Aug 2025 16:54:03 -0700
+Date: Tue, 26 Aug 2025 11:43:14 -0700
 Subject: [PATCH] chore: common default mode to bcsc
 
 Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
 ---
+ app/App.tsx       | 2 +-
  app/src/store.tsx | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/app/App.tsx b/app/App.tsx
+index da1e87bf..b5d58351 100644
+--- a/app/App.tsx
++++ b/app/App.tsx
+@@ -68,7 +68,7 @@ const App = () => {
+     <ErrorBoundaryWrapper logger={BCLogger}>
+       <ContainerProvider value={bcwContainer}>
+         <StoreProvider initialState={initialState} reducer={reducer}>
+-          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
++          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCSC}>
+             <NavContainer navigationRef={navigationRef}>
+               <AnimatedComponentsProvider value={animatedComponents}>
+                 <AuthProvider>
 diff --git a/app/src/store.tsx b/app/src/store.tsx
 index 104e4d41..cabd61b7 100644
 --- a/app/src/store.tsx
