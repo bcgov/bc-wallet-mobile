@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
+import { createDeviceAuthTokenHintJWT, DeviceAuthTokenHint } from '@/bcsc-theme/utils/device-auth-token-hint'
 
 export enum BCSCCardProcess {
   BCSC = 'IDIM L3 Remote BCSC Photo Identity Verification',
@@ -26,11 +27,34 @@ const useAuthorizationApi = () => {
         birth_date: birthdate.toISOString().split('T')[0],
         scope: 'openid profile address offline_access',
       }
-      apiClient.logger.info(`Registration body: ${JSON.stringify(body, null, 2)}`)
+
+      apiClient.logger.info('Registration body:', body)
+
       const { data } = await apiClient.post<VerifyInPersonResponseData>(apiClient.endpoints.deviceAuthorization, body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,
       })
+
+      return data
+    })
+  }, [])
+
+  const authorizeDeviceWithTokenHint = useCallback(async (tokenHint: DeviceAuthTokenHint) => {
+    return withAccount<VerifyInPersonResponseData>(async (account) => {
+      const body = {
+        response_type: 'device_code',
+        client_id: account.clientID,
+        id_token_hint: createDeviceAuthTokenHintJWT(tokenHint),
+        scope: 'openid profile address offline_access',
+      }
+
+      apiClient.logger.info('Registration body:', body)
+
+      const { data } = await apiClient.post<VerifyInPersonResponseData>(apiClient.endpoints.deviceAuthorization, body, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        skipBearerAuth: true,
+      })
+
       return data
     })
   }, [])
@@ -38,8 +62,9 @@ const useAuthorizationApi = () => {
   return useMemo(
     () => ({
       authorizeDevice,
+      authorizeDeviceWithTokenHint,
     }),
-    [authorizeDevice]
+    [authorizeDevice, authorizeDeviceWithTokenHint]
   )
 }
 
