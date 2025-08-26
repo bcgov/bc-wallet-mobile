@@ -982,23 +982,29 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
    */
   @ReactMethod
   override fun removeAccount(promise: Promise) {
+    Log.d(NAME, "removeAccount - Starting account removal process")
+    val account: WritableMap?
     try {
-      Log.d(NAME, "removeAccount - Starting account removal process")
-      
-      val account = getAccountSync()
-      val accountId = account?.getString("id")
-      
-      if (accountId != null) {
+      account = getAccountSync()
+    } catch (e: Exception) {
+      Log.e(NAME, "removeAccount - Error retrieving account: ${e.message}", e)
+      promise.reject("E_GET_ACCOUNT_ERROR", "Failed to retrieve account: ${e.message}", e)
+      return
+    }
+    val accountId = account?.getString("id")
+    if (accountId != null) {
+      try {
         Log.d(NAME, "removeAccount - Removing data for account ID: $accountId")
         removeAccountFromFile(accountId)
         Log.d(NAME, "removeAccount - Successfully removed account data")
-      } else {
-        Log.d(NAME, "removeAccount - No account found to remove")
+        promise.resolve(null)
+      } catch (e: Exception) {
+        Log.e(NAME, "removeAccount - Error removing account: ${e.message}", e)
+        promise.reject("E_REMOVE_ACCOUNT_ERROR", "Failed to remove account: ${e.message}", e)
       }
+    } else {
+      Log.d(NAME, "removeAccount - No account found to remove")
       promise.resolve(null)
-    } catch (e: Exception) {
-      Log.e(NAME, "removeAccount - Error removing account: ${e.message}", e)
-      promise.reject("E_REMOVE_ACCOUNT_ERROR", "Failed to remove account: ${e.message}", e)
     }
   }
   
