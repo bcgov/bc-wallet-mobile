@@ -483,12 +483,18 @@ jobs:
   build-summary:
     runs-on: ubuntu-latest
     needs:
+      - early-exit-check
       - build-android
       - build-ios
     if: always()
     steps:
       - name: Check matrix results
         run: |
+          if [ "${{ needs.early-exit-check.outputs.should_skip_build }}" == "true" ]; then
+            echo "✅ Nothing to build. Early exit okay"
+            exit 0
+          fi
+
           if [ "${{ needs.build-android.result }}" != "success" ]; then
             echo "Android build(s) failed"
             exit 1
