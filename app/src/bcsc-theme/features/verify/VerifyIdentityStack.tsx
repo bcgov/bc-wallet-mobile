@@ -29,6 +29,7 @@ import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
+import { ResidentialAddressScreen } from './ResidentialAddressScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -135,6 +136,8 @@ const VerifyIdentityStack = () => {
         // TODO: (al) add actual help page/modal/link
         options={{ headerRight: createHelpHeaderButton({}) }}
       />
+
+      <Stack.Screen name={BCSCScreens.ResidentialAddressScreen} component={ResidentialAddressScreen} />
     </Stack.Navigator>
   )
 }

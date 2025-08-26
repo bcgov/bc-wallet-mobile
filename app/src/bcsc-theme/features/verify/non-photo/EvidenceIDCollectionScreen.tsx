@@ -41,9 +41,9 @@ const evidenceInitialState: EvidenceCollectionFormState = {
 }
 
 /**
- * Screen for collecting ID evidence information from the user.
+ * Screen for collecting ID formState information from the user.
  *
- * Note: Depending on which card type is selected, additional evidence fields may be required. ie: First name, last name, birth date, etc.
+ * Note: Depending on which card type is selected, additional formState fields may be required. ie: First name, last name, birth date, etc.
  *
  * @param {EvidenceIDCollectionScreenProps} props - The props for the screen, including navigation and route parameters.
  * @returns {*} {JSX.Element} The rendered EvidenceIDCollectionScreen component.
@@ -54,8 +54,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const { t } = useTranslation()
   const { cardType } = route.params
 
-  const [evidenceErrors, setEvidenceErrors] = useState<EvidenceCollectionFormErrors>({})
-  const [evidence, setEvidence] = useState<EvidenceCollectionFormState>(evidenceInitialState)
+  const [formState, setFormState] = useState<EvidenceCollectionFormState>(evidenceInitialState)
+  const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
   const additionalEvidenceRequired =
     store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1
@@ -68,9 +68,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
    * @returns {*} {void}
    */
   const handleChange = (field: keyof EvidenceCollectionFormState, value: string) => {
-    setEvidence((prev) => ({ ...prev, [field]: value.trim() }))
+    setFormState((prev) => ({ ...prev, [field]: value }))
     // clear field-specific error on change
-    setEvidenceErrors((prev) => ({ ...prev, [field]: undefined }))
+    setFormErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
   /**
@@ -119,10 +119,10 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   /**
-   * Validates the evidence form fields.
+   * Validates the formState form fields.
    *
    * @param {EvidenceCollectionFormState} values - The current form values.
-   * @param {boolean} additionalEvidenceRequired - Whether additional evidence fields are required.
+   * @param {boolean} additionalEvidenceRequired - Whether additional formState fields are required.
    * @returns {*} {EvidenceCollectionFormErrors} An object containing validation errors
    */
   const validateEvidence = (values: EvidenceCollectionFormState, additionalEvidenceRequired: boolean) => {
@@ -131,25 +131,20 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     if (!isDocumentNumberValid(values.documentNumber)) {
       errors.documentNumber = t('EvidenceIDCollection.DocumentNumberError')
     }
-
     if (!additionalEvidenceRequired) {
       return errors
     }
-
     if (!values.firstName) {
-      errors.firstName = t('EvidenceIDCollection.FirstNameError')
+      errors.firstName = t('Unified.EvidenceIDCollection.FirstNameError')
     }
-
     if (!values.lastName) {
-      errors.lastName = t('EvidenceIDCollection.LastNameError')
+      errors.lastName = t('Unified.EvidenceIDCollection.LastNameError')
     }
-
     if (!isDateValid(values.birthDate)) {
-      errors.birthDate = t('EvidenceIDCollection.BirthDateError')
+      errors.birthDate = t('Unified.EvidenceIDCollection.BirthDateError')
     }
-
     if (values.middleNames && values.middleNames.split(' ').length > 2) {
-      errors.middleNames = t('EvidenceIDCollection.MiddleNamesError')
+      errors.middleNames = t('Unified.EvidenceIDCollection.MiddleNamesError')
     }
 
     return errors
@@ -162,28 +157,38 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
    */
   const handleOnContinue = async () => {
     // clear previous validation errors
-    setEvidenceErrors({})
+    setFormErrors({})
 
-    const evidenceFormErrors = validateEvidence(evidence, additionalEvidenceRequired)
+    const evidenceFormErrors = validateEvidence(formState, additionalEvidenceRequired)
 
     // if there are validation errors, display them and do not proceed
     if (Object.keys(evidenceFormErrors).length > 0) {
-      setEvidenceErrors(evidenceFormErrors)
+      setFormErrors(evidenceFormErrors)
       return
     }
 
-    // update the store with the collected user metadata evidence
+    // update the store with the collected user metadata formState
     if (additionalEvidenceRequired) {
-      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [evidence.birthDate] })
+      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [formState.birthDate] })
       dispatch({
         type: BCDispatchAction.UPDATE_EVIDENCE_USER_METADATA,
-        payload: [{ firstName: evidence.firstName, lastName: evidence.lastName, middleNames: evidence.middleNames }],
+        payload: [
+          {
+            evidenceType: route.params.cardType,
+            userMetadata: {
+              // trim whitespace from names just in case
+              firstName: formState.firstName.trim(),
+              lastName: formState.lastName.trim(),
+              middleNames: formState.middleNames.trim(),
+            },
+          },
+        ],
       })
     }
 
     dispatch({
       type: BCDispatchAction.UPDATE_EVIDENCE_DOCUMENT_NUMBER,
-      payload: [{ evidenceType: route.params.cardType, documentNumber: evidence.documentNumber }],
+      payload: [{ evidenceType: route.params.cardType, documentNumber: formState.documentNumber }],
     })
 
     const hasPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => {
@@ -191,7 +196,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     })
 
     if (hasPhotoEvidence) {
-      // we have photo evidence, take the evidence back to the setup steps
+      // we have photo formState, take the formState back to the setup steps
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -201,7 +206,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       return
     }
 
-    // if no photo evidence is available, navigate back to the evidence list screen
+    // if no photo formState is available, navigate back to the formState list screen
     navigation.dispatch(
       CommonActions.reset({
         index: 1,
@@ -220,44 +225,44 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
         <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
           <InputWithValidation
             label={cardType.document_reference_label}
-            value={evidence.documentNumber}
+            value={formState.documentNumber}
             onChange={(value) => handleChange('documentNumber', value)}
-            error={evidenceErrors.documentNumber}
-            subtext={`${t('EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
+            error={formErrors.documentNumber}
+            subtext={`${t('Unified.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
           />
 
           {additionalEvidenceRequired ? (
             <>
               <InputWithValidation
-                label={'Last name'}
-                value={evidence.lastName}
+                label={t('Unified.EvidenceIDCollection.LastNameLabel')}
+                value={formState.lastName}
                 onChange={(value) => handleChange('lastName', value)}
-                error={evidenceErrors.lastName}
-                subtext={t('EvidenceIDCollection.LastNameSubtext')}
+                error={formErrors.lastName}
+                subtext={t('Unified.EvidenceIDCollection.LastNameSubtext')}
               />
 
               <InputWithValidation
-                label={'First name'}
-                value={evidence.firstName}
+                label={t('Unified.EvidenceIDCollection.FirstNameLabel')}
+                value={formState.firstName}
                 onChange={(value) => handleChange('firstName', value)}
-                error={evidenceErrors.firstName}
-                subtext={t('EvidenceIDCollection.FirstNameSubtext')}
+                error={formErrors.firstName}
+                subtext={t('Unified.EvidenceIDCollection.FirstNameSubtext')}
               />
 
               <InputWithValidation
-                label={'Middle names'}
-                value={evidence.middleNames}
+                label={t('Unified.EvidenceIDCollection.MiddleNamesLabel')}
+                value={formState.middleNames}
                 onChange={(value) => handleChange('middleNames', value)}
-                error={evidenceErrors.middleNames}
-                subtext={t('EvidenceIDCollection.MiddleNamesSubtext')}
+                error={formErrors.middleNames}
+                subtext={t('Unified.EvidenceIDCollection.MiddleNamesSubtext')}
               />
 
               <InputWithValidation
-                label={'Birth date'}
-                value={evidence.birthDate}
+                label={t('Unified.EvidenceIDCollection.BirthDateLabel')}
+                value={formState.birthDate}
                 onChange={(value) => handleChange('birthDate', value)}
-                error={evidenceErrors.birthDate}
-                subtext={t('EvidenceIDCollection.BirthDateSubtext')}
+                error={formErrors.birthDate}
+                subtext={t('Unified.EvidenceIDCollection.BirthDateSubtext')}
               />
             </>
           ) : null}

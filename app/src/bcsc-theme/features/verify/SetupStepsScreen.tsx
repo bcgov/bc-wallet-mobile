@@ -2,7 +2,6 @@ import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/na
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
-
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { hitSlop } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
@@ -26,12 +25,13 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const emailAddress = store.bcsc.email || null
   const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
   const bcscRegistered = Boolean(bcscSerialNumber || emailAddress)
-  const dualIdRegistered = store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length >= 2
+  const dualIdRegistered = store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 2
   const registered = bcscRegistered || dualIdRegistered
   const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
   const hasAdditionalPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)
   const needsAdditionalEvidence = isNonPhotoCard && !hasAdditionalPhotoEvidence
   const canProceedToVerification = registered && !store.bcsc.pendingVerification && !needsAdditionalEvidence
+  const hasRequiredAddressMetadata = Boolean(bcscRegistered || (dualIdRegistered && store.bcsc.deviceCode))
 
   const styles = StyleSheet.create({
     container: {
@@ -312,14 +312,26 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <TouchableOpacity
         testID={testIdWithKey('Step2')}
         accessibilityLabel={t('Unified.Steps.Step2')}
-        style={styles.step}
-        disabled={!registered}
+        style={[
+          styles.step,
+          {
+            backgroundColor: hasRequiredAddressMetadata
+              ? ColorPalette.brand.secondaryBackground
+              : ColorPalette.brand.primary,
+          },
+        ]}
+        disabled={hasRequiredAddressMetadata}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.ResidentialAddressScreen)
+        }}
       >
         <View style={styles.titleRow}>
           <ThemedText variant={'headingFour'} style={{ marginRight: Spacing.md }}>
             {t('Unified.Steps.Step2')}
           </ThemedText>
-          {registered ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
+          {hasRequiredAddressMetadata ? (
+            <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} />
+          ) : null}
         </View>
         <View>
           <ThemedText>{getVerificationStep4SubText(bcscRegistered, dualIdRegistered)}</ThemedText>

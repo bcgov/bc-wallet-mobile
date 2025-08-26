@@ -16,6 +16,8 @@ export interface VerifyInPersonResponseData {
   process: BCSCCardProcess
 }
 
+type AuthorizeDeviceTokenHint = Omit<DeviceAuthTokenHint, 'clientId' | 'audience'>
+
 const useAuthorizationApi = () => {
   // TODO: fetch evidence API endpoint from this endpoint
   const authorizeDevice = useCallback(async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData> => {
@@ -39,12 +41,21 @@ const useAuthorizationApi = () => {
     })
   }, [])
 
-  const authorizeDeviceWithTokenHint = useCallback(async (tokenHint: DeviceAuthTokenHint) => {
+  const authorizeDeviceWithTokenHint = useCallback(async (tokenHint: AuthorizeDeviceTokenHint) => {
     return withAccount<VerifyInPersonResponseData>(async (account) => {
       const body = {
         response_type: 'device_code',
         client_id: account.clientID,
-        id_token_hint: createDeviceAuthTokenHintJWT(tokenHint),
+        id_token_hint: createDeviceAuthTokenHintJWT({
+          clientId: account.clientID,
+          audience: account.issuer,
+          address: tokenHint.address,
+          firstName: tokenHint.firstName,
+          lastName: tokenHint.lastName,
+          birthDate: tokenHint.birthDate,
+          middleNames: tokenHint.middleNames,
+          gender: tokenHint.gender,
+        }),
         scope: 'openid profile address offline_access',
       }
 
