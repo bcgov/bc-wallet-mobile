@@ -8,6 +8,8 @@ import { StyleSheet, View, Platform } from 'react-native'
 import * as BcscCore from '@/../../packages/bcsc-core/src/index'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useTranslation } from 'react-i18next'
+import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { getAccount } from 'react-native-bcsc-core'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
@@ -18,6 +20,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const { registration } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+  const { deleteRegistration } = useRegistrationApi()
 
   const styles = StyleSheet.create({
     container: {
@@ -34,20 +37,59 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   })
 
   const handleRemoveAccount = async () => {
+    // Todo(TL): needs implementation on ios https://github.com/bcgov/bc-wallet-mobile/issues/2636
+    // remove this conditional block when implemented
+    if (Platform.OS !== 'android') {
+      logger.info('removeAccount not implemented on iOS')
+      return
+    }
+
+    const account = await getAccount()
+    if (!account?.clientID) {
+      logger.error('Account is null or missing clientID - cannot proceed with deletion')
+      return
+    }
+
+    logger.info(`Starting account deletion for clientID: ${account.clientID}`)
+
+    let serverDeleteSucceeded = false
     try {
-      // Todo(TL): needs implementation on ios https://github.com/bcgov/bc-wallet-mobile/issues/2636
-      if (Platform.OS === 'android') {
-        await BcscCore.removeAccount()
-        dispatch({ type: BCDispatchAction.CLEAR_BCSC })
-        // refresh accounts file with new account
-        await registration.register()
-        // log out
-        dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
-      } else {
-        logger.info('removeAccount not implemented on IOS')
+      logger.info('Attempting IAS account deletion...')
+      const deleteRequestResult = await deleteRegistration(account.clientID)
+
+      if (!deleteRequestResult?.success) {
+        throw new Error(`Delete request failed: ${JSON.stringify(deleteRequestResult)}`)
       }
+
+      serverDeleteSucceeded = true
+      logger.info(`IAS deletion request successful: ${JSON.stringify(deleteRequestResult)}`)
+
+      logger.info('Clearing local account file...')
+      await BcscCore.removeAccount()
+      logger.info('Local account file cleared successfully')
+
+      dispatch({ type: BCDispatchAction.CLEAR_BCSC })
+      logger.info('BCSC state cleared')
+
+      logger.info('Registering new account...')
+      await registration.register()
+      logger.info('Registration completed successfully')
+
+      logger.info('Logging out user...')
+      dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
+
+      logger.info('Account removal process completed successfully')
     } catch (error: unknown) {
-      logger.error(error)
+      if (serverDeleteSucceeded) {
+        // Server deletion succeeded but local cleanup failed
+        logger.error('Server deletion succeeded but local cleanup failed:', error)
+
+        // TODO(TL): The account is in a partially deleted state here.
+        // We could recommend the user reinstalls the app or we could implement some recovery mechanism.
+      } else {
+        // The deletion fails outright, everything is still in tact here
+        logger.error('IAS delete request failed, local account remains intact:', error)
+      }
     }
   }
 
