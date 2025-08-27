@@ -124,8 +124,6 @@ export const ResidentialAddressScreen = () => {
       },
     })
 
-    console.log(deviceAuth)
-
     const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
     dispatch({
       type: BCDispatchAction.UPDATE_EMAIL,
@@ -154,6 +152,30 @@ export const ResidentialAddressScreen = () => {
             value={formState.streetAddress}
             onChange={(value) => handleChange('streetAddress', value)}
             error={formErrors.streetAddress}
+            subtext={t('')}
+          />
+
+          <InputWithValidation
+            label={'City'}
+            value={formState.city}
+            onChange={(value) => handleChange('city', value)}
+            error={formErrors.city}
+            subtext={t('')}
+          />
+
+          <InputWithValidation
+            label={'Province'}
+            value={formState.province}
+            onChange={(value) => handleChange('province', value)}
+            error={formErrors.province}
+            subtext={t('')}
+          />
+
+          <InputWithValidation
+            label={'Postal code'}
+            value={formState.postalCode}
+            onChange={(value) => handleChange('postalCode', value)}
+            error={formErrors.postalCode}
             subtext={t('')}
           />
 

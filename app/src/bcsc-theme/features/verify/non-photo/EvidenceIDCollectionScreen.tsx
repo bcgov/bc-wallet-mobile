@@ -169,7 +169,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
     // update the store with the collected user metadata formState
     if (additionalEvidenceRequired) {
-      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [formState.birthDate] })
+      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [new Date(formState.birthDate)] })
       dispatch({
         type: BCDispatchAction.UPDATE_EVIDENCE_USER_METADATA,
         payload: [
