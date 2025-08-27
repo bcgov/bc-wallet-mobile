@@ -1,8 +1,8 @@
 import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useEffect, useState, useRef } from 'react'
-import { StyleSheet, View, Text, Alert, TouchableOpacity } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import MaskedView from '@react-native-masked-view/masked-view'
+import { useEffect, useRef, useState } from 'react'
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
 import CircularMask from './CircularMask'
@@ -143,41 +143,43 @@ const MaskedCamera = ({
   const DefaultMask = <CircularMask />
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'black', position: 'relative' }}>
-      <MaskedView style={{ flex: 1, backgroundColor: 'black' }} maskElement={cameraMask || DefaultMask}>
-        <Camera
-          ref={cameraRef}
-          style={styles.camera}
-          device={device}
-          isActive={isActive}
-          photo={true}
-          onInitialized={() => setIsActive(true)}
-          onError={onError}
-          torch={torchOn ? 'on' : 'off'}
-        />
-      </MaskedView>
-      <View style={styles.instructionText}>
-        <ThemedText style={{ color: 'white' }} variant={'headingThree'}>
-          {cameraLabel}
-        </ThemedText>
-        <ThemedText style={{ color: 'white' }} variant={'headingFour'}>
-          {cameraInstructions}
-        </ThemedText>
-      </View>
-      <View style={styles.controlsContainer}>
-        <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
-          <ThemedText style={{ color: ColorPalette.grayscale.white }}>Cancel</ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
-          <View style={styles.captureButtonInner} />
-        </TouchableOpacity>
-        {hasTorch ? (
-          <TouchableOpacity style={{ flex: 1, alignItems: 'flex-end' }} onPress={toggleTorch}>
-            <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
+    <View style={styles.container}>
+      <View style={{ flex: 1, backgroundColor: 'black', position: 'relative' }}>
+        <MaskedView style={{ flex: 1, backgroundColor: 'black' }} maskElement={cameraMask || DefaultMask}>
+          <Camera
+            ref={cameraRef}
+            style={styles.camera}
+            device={device}
+            isActive={isActive}
+            photo={true}
+            onInitialized={() => setIsActive(true)}
+            onError={onError}
+            torch={torchOn ? 'on' : 'off'}
+          />
+        </MaskedView>
+        <View style={styles.instructionText}>
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
+            {cameraLabel}
+          </ThemedText>
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
+            {cameraInstructions}
+          </ThemedText>
+        </View>
+        <View style={styles.controlsContainer}>
+          <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
+            <ThemedText style={{ color: ColorPalette.grayscale.white }}>Cancel</ThemedText>
           </TouchableOpacity>
-        ) : (
-          <View style={{ flex: 1 }} />
-        )}
+          <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
+            <View style={styles.captureButtonInner} />
+          </TouchableOpacity>
+          {hasTorch ? (
+            <TouchableOpacity style={{ flex: 1, alignItems: 'flex-end' }} onPress={toggleTorch}>
+              <Icon size={24} name={torchOn ? 'flash' : 'flash-off'} color={ColorPalette.grayscale.white} />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ flex: 1 }} />
+          )}
+        </View>
       </View>
     </View>
   )

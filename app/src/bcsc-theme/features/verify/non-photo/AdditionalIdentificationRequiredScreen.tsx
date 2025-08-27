@@ -1,13 +1,13 @@
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointWithText from '@/components/BulletPointWithText'
+import CardDetails from '@assets/img/card-details.svg'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScrollView } from 'react-native-gesture-handler'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import CardDetails from '@assets/img/card-details.svg'
-import BulletPointWithText from '@/components/BulletPointWithText'
 import { useTranslation } from 'react-i18next'
+import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ScrollView } from 'react-native-gesture-handler'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type AdditionalIdentificationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -21,12 +21,11 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
-      justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
-      flex: 1,
       paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.lg,
     },
     controlsContainer: {
       margin: Spacing.md,
@@ -35,7 +34,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
     },
   })
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['left', 'right']}>
+    <SafeAreaView style={styles.pageContainer} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View
           style={{

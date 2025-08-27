@@ -1,6 +1,7 @@
 import { Button, ButtonType, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
 import { Image, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoReviewProps = {
   photoPath: string
@@ -40,30 +41,32 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
   }
 
   return (
-    <View style={styles.contentContainer}>
-      <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
-      <View style={styles.controlsContainer}>
-        <Button
-          buttonType={ButtonType.Primary}
-          onPress={handleAccept}
-          testID={testIdWithKey(`UsePhoto`)}
-          title={'Use this photo'}
-          accessibilityLabel={'Use this photo'}
-          disabled={loading}
-        >
-          {loading && <ButtonLoading />}
-        </Button>
-        <View style={styles.secondButton}>
+    <SafeAreaView edges={['left', 'right', 'bottom']}>
+      <View style={styles.contentContainer}>
+        <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
+        <View style={styles.controlsContainer}>
           <Button
-            buttonType={ButtonType.Tertiary}
-            onPress={onRetake}
-            testID={testIdWithKey(`RetakePhoto`)}
-            title={'Retake photo'}
-            accessibilityLabel={'Retake photo'}
-          />
+            buttonType={ButtonType.Primary}
+            onPress={handleAccept}
+            testID={testIdWithKey(`UsePhoto`)}
+            title={'Use this photo'}
+            accessibilityLabel={'Use this photo'}
+            disabled={loading}
+          >
+            {loading && <ButtonLoading />}
+          </Button>
+          <View style={styles.secondButton}>
+            <Button
+              buttonType={ButtonType.Tertiary}
+              onPress={onRetake}
+              testID={testIdWithKey(`RetakePhoto`)}
+              title={'Retake photo'}
+              accessibilityLabel={'Retake photo'}
+            />
+          </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

@@ -1,13 +1,13 @@
+import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointWithText from '@/components/BulletPointWithText'
+import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Image, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
-import BulletPointWithText from '@/components/BulletPointWithText'
-import { ScrollView } from 'react-native-gesture-handler'
 import { useTranslation } from 'react-i18next'
+import { Image, StyleSheet, View } from 'react-native'
+import { ScrollView } from 'react-native-gesture-handler'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type IDPhotoInformationScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IDPhotoInformation>
@@ -21,9 +21,8 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
-      justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
-      margin: Spacing.lg,
+      paddingHorizontal: Spacing.md,
     },
     scrollView: {
       flex: 1,
@@ -48,7 +47,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   })
   return (
     <SafeAreaView style={styles.pageContainer} edges={['left', 'right']}>
-      <ScrollView>
+      <ScrollView style={{ paddingBottom: Spacing.xl }}>
         <View style={styles.imageContainer}>
           <Image source={SCAN_ID_IMAGE} style={styles.image} />
         </View>

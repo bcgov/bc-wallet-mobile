@@ -2,10 +2,10 @@ import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/n
 
 import { StackNavigationProp } from '@react-navigation/stack'
 
+import CircularMask from '@/bcsc-theme/components/CircularMask'
+import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
-import CircularMask from '@/bcsc-theme/components/CircularMask'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
