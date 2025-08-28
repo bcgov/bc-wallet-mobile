@@ -247,12 +247,14 @@ export const decodePayload = async (jweString: string): Promise<any> => {
 };
 
 /**
- * Creates a signed JWT with the provided claims.
+ * Creates a device signed JWT with the provided claims.
  *
  * @param {JWTClaims} claims - An object containing the JWT claims
  * @returns {*} {Promise<string>}
  */
-export const createSignedJWT = async (claims: JWTClaims): Promise<string> => {
+export const createDeviceSignedJWT = async (
+  claims: JWTClaims
+): Promise<string> => {
   return BcscCore.createSignedJWT(claims);
 };
 
