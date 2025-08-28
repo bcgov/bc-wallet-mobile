@@ -17,6 +17,7 @@ abstract class BcscCoreSpec internal constructor(context: ReactApplicationContex
   abstract fun getDynamicClientRegistrationBody(fcmDeviceToken: String, deviceToken: String?, promise: Promise)
   abstract fun getDeviceCodeRequestBody(deviceCode: String, clientId: String, issuer: String, confirmationCode: String, promise: Promise)
   abstract fun createQuickLoginJWT(accessToken: String, clientId: String, issuer: String, clientRefId: String, key: com.facebook.react.bridge.ReadableMap?, fcmDeviceToken: String, deviceToken: String?, promise: Promise)
+  abstract fun createSignedJWT(claims: com.facebook.react.bridge.ReadableMap, promise: Promise)
   abstract fun createEvidenceRequestJWT(deviceCode: String, clientID: String, promise: Promise)
   abstract fun hashBase64(base64: String, promise: Promise)
   abstract fun decodePayload(jweString: String, promise: Promise)

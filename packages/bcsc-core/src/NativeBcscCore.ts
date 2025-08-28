@@ -35,6 +35,15 @@ export type JWK = {
   n: string;
 };
 
+export type JWTClaims = {
+  iss: string;
+  aud: string;
+  sub: string;
+  iat: number;
+  exp: number;
+  [key: string]: any;
+};
+
 export enum AccountSecurityMethod {
   PinNoDeviceAuth = 'app_pin_no_device_authn',
   PinWithDeviceAuth = 'app_pin_has_device_authn',
@@ -84,7 +93,10 @@ export interface Spec extends TurboModule {
     confirmationCode: string
   ): Promise<string | null>;
   decodePayload(jweString: string): Promise<string>;
-  createEvidenceRequestJWT(deviceCode: string, clientID: string): Promise<string>;
+  createEvidenceRequestJWT(
+    deviceCode: string,
+    clientID: string
+  ): Promise<string>;
   createQuickLoginJWT(
     accessToken: string,
     clientId: string,
@@ -95,6 +107,7 @@ export interface Spec extends TurboModule {
     deviceToken?: string
   ): Promise<string>;
   hashBase64(base64: string): Promise<string>;
+  createSignedJWT(claims: JWTClaims): Promise<string>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

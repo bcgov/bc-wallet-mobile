@@ -2,6 +2,7 @@ import { NativeModules, Platform } from 'react-native';
 import NativeBcscCoreSpec, {
   type NativeAccount,
   type JWK,
+  type JWTClaims,
 } from './NativeBcscCore';
 export type { NativeAccount, JWK } from './NativeBcscCore';
 export { AccountSecurityMethod } from './NativeBcscCore';
@@ -243,6 +244,16 @@ export const getDeviceCodeRequestBody = async (
 
 export const decodePayload = async (jweString: string): Promise<any> => {
   return BcscCore.decodePayload(jweString);
+};
+
+/**
+ * Creates a signed JWT with the provided claims.
+ *
+ * @param {JWTClaims} claims - An object containing the JWT claims
+ * @returns {*} {Promise<string>}
+ */
+export const createSignedJWT = async (claims: JWTClaims): Promise<string> => {
+  return BcscCore.createSignedJWT(claims);
 };
 
 export const createEvidenceRequestJWT = async (
