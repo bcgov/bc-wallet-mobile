@@ -60,6 +60,8 @@ import com.bcsccore.fileport.FileReaderFactory
 import com.bcsccore.fileport.decryption.DecryptedFileData
 import com.bcsccore.fileport.decryption.DecryptedFileReader
 import com.bcsccore.fileport.decryption.DecryptionException
+import com.facebook.react.bridge.Dynamic
+import com.facebook.react.bridge.ReadableType
 
 /**
  * BC Services Card React Native Module
@@ -628,6 +630,37 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     return accountJson
   }
 
+    private fun dynamicToAny(dynamic: Dynamic): Any? {
+        return when (dynamic.type) {
+            ReadableType.Null -> null
+            ReadableType.Boolean -> dynamic.asBoolean()
+            ReadableType.Number -> dynamic.asDouble()
+            ReadableType.String -> dynamic.asString()
+            ReadableType.Map -> {
+                val map = dynamic.asMap()
+                map?.let {
+                    val result = mutableMapOf<String, Any?>()
+                    val iterator = it.keySetIterator()
+                    while (iterator.hasNextKey()) {
+                        val key = iterator.nextKey()
+                        result[key] = dynamicToAny(it.getDynamic(key))
+                    }
+                    result
+                }
+            }
+            ReadableType.Array -> {
+                val arr = dynamic.asArray()
+                arr?.let {
+                    val result = mutableListOf<Any?>()
+                    for (i in 0 until it.size()) {
+                        result.add(dynamicToAny(it.getDynamic(i)))
+                    }
+                    result
+                }
+            }
+        }
+    }
+
   @ReactMethod
   override fun getRefreshTokenRequestBody(issuer: String, clientID: String, refreshToken: String, promise: Promise) {
     // Validate all parameters are provided
@@ -871,15 +904,15 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   @ReactMethod
   override fun createSignedJWT(claims: ReadableMap, promise: Promise) {
     try {
-      // Create JWT claims set for evidence request (matching iOS implementation)
+      // Create JWT claims from the ReadableMap
       val claimsSetBuilder = JWTClaimsSet.Builder()
 
       val iterator = claims.keySetIterator()
 
       while (iterator.hasNextKey()) {
         val key = iterator.nextKey()
-        val value = claims.getDynamic(key)
-        claimsSetBuilder.claim(key, value)
+        val dynamic = claims.getDynamic(key)
+        claimsSetBuilder.claim(key, dynamicToAny(dynamic))
       }
 
       val claimsSet = claimsSetBuilder.build()
@@ -887,15 +920,15 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       // Sign the JWT using bcsc-keypair-port
       val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
 
-      Log.d(NAME, "createSignedJWT: Successfully created evidence request JWT")
+      Log.d(NAME, "createSignedJWT: Successfully created JWT")
       promise.resolve(signedJWT)
 
     } catch (e: BcscException) {
       Log.e(NAME, "createSignedJWT: BCSC signing error: ${e.devMessage}", e)
-      promise.reject("E_BCSC_EVIDENCE_JWT_ERROR", "Error creating evidence request JWT with bcsc-keypair-port: ${e.devMessage}", e)
+      promise.reject("E_BCSC_CREATE_JWT_ERROR", "Error creating JWT with bcsc-keypair-port: ${e.devMessage}", e)
     } catch (e: Exception) {
       Log.e(NAME, "createSignedJWT: Unexpected error: ${e.message}", e)
-      promise.reject("E_EVIDENCE_JWT_ERROR", "Unexpected error creating evidence request JWT: ${e.message}", e)
+      promise.reject("E_BCSC_CREATE_JWT_ERROR", "Unexpected error creating JWT: ${e.message}", e)
     }
   }
 
