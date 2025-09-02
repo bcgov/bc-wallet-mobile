@@ -39,10 +39,24 @@ export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
-export interface UserMetadata {
-  firstName: string
-  lastName: string
-  middleNames?: string
+/**
+ * Collection of metadata needed when a user is registering for the application
+ * using non-bcsc identification cards. ie: drivers license + birth certificate etc...
+ * These properties are then sent to IAS to authorize the user's device.
+ */
+export interface NonBCSCUserMetadata {
+  name?: {
+    first: string
+    last: string
+    middle?: string
+  }
+  address?: {
+    streetAddress: string
+    postalCode: string
+    city: string
+    province: string // TODO (MD): Use province codes
+    country: 'CA' // currently we only support Canada
+  }
 }
 
 export interface BCSCState {
@@ -54,6 +68,7 @@ export interface BCSCState {
   emailConfirmed?: boolean
   deviceCode?: string
   userCode?: string
+  userMetadata?: NonBCSCUserMetadata
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
   prompts?: VerificationPrompt[]
@@ -74,7 +89,6 @@ export interface AdditionalEvidenceData {
   evidenceType: EvidenceType
   metadata: PhotoMetadata[]
   documentNumber: string
-  userMetadata?: UserMetadata
 }
 
 export enum Mode {
@@ -123,7 +137,8 @@ enum BCSCDispatchAction {
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
   ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
   UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
-  UPDATE_EVIDENCE_USER_METADATA = 'bcsc/updateEvidenceUserMetadata',
+  UPDATE_USER_NAME_METADATA = 'bcsc/updateUserMetadataName',
+  UPDATE_USER_ADDRESS_METADATA = 'bcsc/updateUserMetadataAddress',
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
@@ -197,6 +212,7 @@ const bcscState: BCSCState = {
   bookmarks: [],
   email: undefined,
   userCode: undefined,
+  userMetadata: undefined,
   deviceCode: undefined,
   deviceCodeExpiresAt: undefined,
   refreshToken: undefined,
@@ -464,15 +480,33 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
 
-    case BCSCDispatchAction.UPDATE_EVIDENCE_USER_METADATA: {
-      const { evidenceType, userMetadata }: { evidenceType: EvidenceType; userMetadata: UserMetadata } =
-        (action?.payload || []).pop() ?? {}
+    case BCSCDispatchAction.UPDATE_USER_NAME_METADATA: {
+      const userName: NonBCSCUserMetadata['name'] = (action?.payload || []).pop()
 
-      const updatedEvidenceData = state.bcsc.additionalEvidenceData.map((item) =>
-        item.evidenceType.evidence_type === evidenceType.evidence_type ? { ...item, userMetadata } : item
-      )
+      const bcsc = {
+        ...state.bcsc,
+        userMetadata: {
+          name: userName,
+          address: state.bcsc.userMetadata?.address,
+        },
+      }
 
-      const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_USER_ADDRESS_METADATA: {
+      const userAddress: NonBCSCUserMetadata['address'] = (action?.payload || []).pop()
+
+      const bcsc = {
+        ...state.bcsc,
+        userMetadata: {
+          name: state.bcsc.userMetadata?.name,
+          address: userAddress,
+        },
+      }
+
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

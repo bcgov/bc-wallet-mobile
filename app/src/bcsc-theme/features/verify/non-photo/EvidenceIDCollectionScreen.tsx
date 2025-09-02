@@ -3,7 +3,17 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useState } from 'react'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { Button, ButtonType, testIdWithKey, Text, ThemedText, TOKENS, useServices, useStore } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  KeyboardView,
+  testIdWithKey,
+  Text,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+} from '@bifold/core'
 import { ScrollView, View } from 'react-native'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions } from '@react-navigation/native'
@@ -26,14 +36,6 @@ type EvidenceIDCollectionScreenProps = {
   route: { params: { cardType: EvidenceType } }
 }
 
-const evidenceInitialState: EvidenceCollectionFormState = {
-  documentNumber: '',
-  firstName: '',
-  lastName: '',
-  middleNames: '',
-  birthDate: '',
-}
-
 /**
  * Screen for collecting ID formState information from the user.
  *
@@ -48,7 +50,13 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const { t } = useTranslation()
   const { cardType } = route.params
 
-  const [formState, setFormState] = useState<EvidenceCollectionFormState>(evidenceInitialState)
+  const [formState, setFormState] = useState<EvidenceCollectionFormState>({
+    documentNumber: '', // make the user re-enter every time
+    firstName: store.bcsc.userMetadata?.name?.first ?? '',
+    middleNames: store.bcsc.userMetadata?.name?.middle ?? '',
+    lastName: store.bcsc.userMetadata?.name?.last ?? '',
+    birthDate: store.bcsc.birthdate?.toISOString().split('T')[0] ?? '',
+  })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
   const additionalEvidenceRequired =
@@ -74,8 +82,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
    * @returns {boolean} True if the document number is valid, false otherwise.
    */
   const isDocumentNumberValid = (value: string): boolean => {
-    if (!cardType.document_reference_input_mask || !value) {
-      return true // No validation needed if no mask or empty value
+    // no validation needed if no mask and empty value
+    if (!cardType.document_reference_input_mask && !value) {
+      return true
     }
 
     if (!value) {
@@ -123,7 +132,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     const errors: EvidenceCollectionFormErrors = {}
 
     if (!isDocumentNumberValid(values.documentNumber)) {
-      errors.documentNumber = t('EvidenceIDCollection.DocumentNumberError')
+      errors.documentNumber = t('Unified.EvidenceIDCollection.DocumentNumberError')
     }
     if (!additionalEvidenceRequired) {
       return errors
@@ -164,17 +173,15 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     // update the store with the collected user metadata formState
     if (additionalEvidenceRequired) {
       dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [new Date(formState.birthDate)] })
+
       dispatch({
-        type: BCDispatchAction.UPDATE_EVIDENCE_USER_METADATA,
+        type: BCDispatchAction.UPDATE_USER_NAME_METADATA,
         payload: [
           {
-            evidenceType: route.params.cardType,
-            userMetadata: {
-              // trim whitespace from names just in case
-              firstName: formState.firstName.trim(),
-              lastName: formState.lastName.trim(),
-              middleNames: formState.middleNames.trim(),
-            },
+            // trim whitespace from names just in case
+            first: formState.firstName.trim(),
+            last: formState.lastName.trim(),
+            middle: formState.middleNames.trim(),
           },
         ],
       })
@@ -210,76 +217,80 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 16 }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <ThemedText variant={'headingOne'}>{cardType.evidence_type_label}</ThemedText>
-        <ThemedText style={{ paddingVertical: 16 }}>
-          Enter the information <Text style={{ fontWeight: 'bold' }}>{'exactly as shown'}</Text> on the ID.
-        </ThemedText>
-        <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
-          <InputWithValidation
-            label={cardType.document_reference_label}
-            value={formState.documentNumber}
-            onChange={(value) => handleChange('documentNumber', value)}
-            error={formErrors.documentNumber}
-            subtext={`${t('Unified.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
-          />
+    <SafeAreaView style={{ flex: 1, padding: 16 }} edges={['bottom', 'left', 'right']}>
+      <KeyboardView>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <ThemedText variant={'headingOne'}>{cardType.evidence_type_label}</ThemedText>
+          <ThemedText style={{ paddingVertical: 16 }}>
+            Enter the information <Text style={{ fontWeight: 'bold' }}>{'exactly as shown'}</Text> on the ID.
+          </ThemedText>
+          <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
+            <InputWithValidation
+              label={cardType.document_reference_label}
+              value={formState.documentNumber}
+              onChange={(value) => handleChange('documentNumber', value)}
+              error={formErrors.documentNumber}
+              subtext={`${t('Unified.EvidenceIDCollection.DocumentNumberSubtext')} ${
+                cardType.document_reference_sample
+              }`}
+            />
 
-          {additionalEvidenceRequired ? (
-            <>
-              <InputWithValidation
-                label={t('Unified.EvidenceIDCollection.LastNameLabel')}
-                value={formState.lastName}
-                onChange={(value) => handleChange('lastName', value)}
-                error={formErrors.lastName}
-                subtext={t('Unified.EvidenceIDCollection.LastNameSubtext')}
-              />
+            {additionalEvidenceRequired ? (
+              <>
+                <InputWithValidation
+                  label={t('Unified.EvidenceIDCollection.LastNameLabel')}
+                  value={formState.lastName}
+                  onChange={(value) => handleChange('lastName', value)}
+                  error={formErrors.lastName}
+                  subtext={t('Unified.EvidenceIDCollection.LastNameSubtext')}
+                />
 
-              <InputWithValidation
-                label={t('Unified.EvidenceIDCollection.FirstNameLabel')}
-                value={formState.firstName}
-                onChange={(value) => handleChange('firstName', value)}
-                error={formErrors.firstName}
-                subtext={t('Unified.EvidenceIDCollection.FirstNameSubtext')}
-              />
+                <InputWithValidation
+                  label={t('Unified.EvidenceIDCollection.FirstNameLabel')}
+                  value={formState.firstName}
+                  onChange={(value) => handleChange('firstName', value)}
+                  error={formErrors.firstName}
+                  subtext={t('Unified.EvidenceIDCollection.FirstNameSubtext')}
+                />
 
-              <InputWithValidation
-                label={t('Unified.EvidenceIDCollection.MiddleNamesLabel')}
-                value={formState.middleNames}
-                onChange={(value) => handleChange('middleNames', value)}
-                error={formErrors.middleNames}
-                subtext={t('Unified.EvidenceIDCollection.MiddleNamesSubtext')}
-              />
+                <InputWithValidation
+                  label={t('Unified.EvidenceIDCollection.MiddleNamesLabel')}
+                  value={formState.middleNames}
+                  onChange={(value) => handleChange('middleNames', value)}
+                  error={formErrors.middleNames}
+                  subtext={t('Unified.EvidenceIDCollection.MiddleNamesSubtext')}
+                />
 
-              <InputWithValidation
-                label={t('Unified.EvidenceIDCollection.BirthDateLabel')}
-                value={formState.birthDate}
-                onChange={(value) => handleChange('birthDate', value)}
-                error={formErrors.birthDate}
-                subtext={t('Unified.EvidenceIDCollection.BirthDateSubtext')}
+                <InputWithValidation
+                  label={t('Unified.EvidenceIDCollection.BirthDateLabel')}
+                  value={formState.birthDate}
+                  onChange={(value) => handleChange('birthDate', value)}
+                  error={formErrors.birthDate}
+                  subtext={t('Unified.EvidenceIDCollection.BirthDateSubtext')}
+                />
+              </>
+            ) : null}
+          </View>
+          <View style={{ marginTop: 48, width: '100%' }}>
+            <View style={{ marginBottom: 20 }}>
+              <Button
+                title="Continue"
+                accessibilityLabel={'Continue'}
+                testID={testIdWithKey('EvidenceIDCollectionContinue')}
+                buttonType={ButtonType.Primary}
+                onPress={handleOnContinue}
               />
-            </>
-          ) : null}
-        </View>
-        <View style={{ marginTop: 48, width: '100%' }}>
-          <View style={{ marginBottom: 20 }}>
+            </View>
             <Button
-              title="Continue"
-              accessibilityLabel={'Continue'}
-              testID={testIdWithKey('EvidenceIDCollectionContinue')}
-              buttonType={ButtonType.Primary}
-              onPress={handleOnContinue}
+              title="Cancel"
+              accessibilityLabel={'Cancel'}
+              testID={testIdWithKey('EvidenceIDCollectionCancel')}
+              buttonType={ButtonType.Tertiary}
+              onPress={() => navigation.goBack()}
             />
           </View>
-          <Button
-            title="Cancel"
-            accessibilityLabel={'Cancel'}
-            testID={testIdWithKey('EvidenceIDCollectionCancel')}
-            buttonType={ButtonType.Tertiary}
-            onPress={() => navigation.goBack()}
-          />
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardView>
     </SafeAreaView>
   )
 }

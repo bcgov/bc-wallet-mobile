@@ -1,11 +1,11 @@
-import { useTheme } from '@bifold/core'
+import { testIdWithKey, useTheme } from '@bifold/core'
 import { ThemedText } from '@bifold/core/src/components/texts/ThemedText'
 import { StyleProp, TextInput, TextStyle, View } from 'react-native'
 
-// TODO (MD): Support number inputs and other types of inputs
-// TODO (MD): Add testIds and accessability labels
+// NOTE (MD): This is a first pass at this component, I assume eventually we will need to modify this to
+// accept number inputs as well.
 
-type InputWIthValidationProps = {
+type InputWithValidationProps = {
   value: string
   onChange: (value: string) => void
   label: string
@@ -17,7 +17,13 @@ type InputWIthValidationProps = {
   errorProps?: StyleProp<TextStyle>
 }
 
-export const InputWithValidation: React.FC<InputWIthValidationProps> = (props: InputWIthValidationProps) => {
+/**
+ * A stateless input component with, labels, subtext and validation enabled.
+ *
+ * @param {InputWithValidationProps} props - Input props
+ * @returns {*} {JSX.Element}
+ */
+export const InputWithValidation: React.FC<InputWithValidationProps> = (props: InputWithValidationProps) => {
   const { Inputs, ColorPalette } = useTheme()
 
   return (
@@ -38,6 +44,8 @@ export const InputWithValidation: React.FC<InputWIthValidationProps> = (props: I
         onChange={(e) => {
           props.onChange(e.nativeEvent.text)
         }}
+        accessibilityLabel={props.label}
+        testID={testIdWithKey(props.label)}
       />
 
       {props.error ? (

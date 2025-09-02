@@ -26,7 +26,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const emailAddress = store.bcsc.email || null
   const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
   const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
-  const isDualIdCards = store.bcsc.cardType === BCSCCardType.Other
 
   // card registration state
   const bcscRegistered = Boolean(bcscSerialNumber)
@@ -40,7 +39,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   // step completion state
   const Step1IdsCompleted = registered && !needsAdditionalEvidence
   const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
-  const Step3EmailCompleted = Boolean(isDualIdCards ? emailAddress : emailAddress && emailConfirmed)
+  const Step3EmailCompleted = Boolean(emailAddress && emailConfirmed)
   const Step4VerificationAllowed =
     !store.bcsc.pendingVerification && Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted
 

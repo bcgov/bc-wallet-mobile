@@ -1,7 +1,17 @@
 import useAuthorizationApi from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, KeyboardView, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  KeyboardView,
+  testIdWithKey,
+  ThemedText,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
+import { TOKENS } from '@bifold/core/src/container-api'
 import { useNavigation } from '@react-navigation/native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,13 +27,6 @@ type ResidentialAddressFormState = {
 
 type ResidentialAddressFormErrors = Partial<ResidentialAddressFormState>
 
-const initialFormState: ResidentialAddressFormState = {
-  streetAddress: '',
-  city: '',
-  province: '',
-  postalCode: '',
-}
-
 /**
  * Screen for collecting residential address information from the user.
  *
@@ -35,8 +38,14 @@ export const ResidentialAddressScreen = () => {
   const { ColorPalette, Spacing } = useTheme()
   const navigation = useNavigation()
   const authorization = useAuthorizationApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const [formState, setFormState] = useState<ResidentialAddressFormState>(initialFormState)
+  const [formState, setFormState] = useState<ResidentialAddressFormState>({
+    streetAddress: store.bcsc.userMetadata?.address?.streetAddress ?? '',
+    city: store.bcsc.userMetadata?.address?.city ?? '',
+    province: store.bcsc.userMetadata?.address?.province ?? '',
+    postalCode: store.bcsc.userMetadata?.address?.postalCode ?? '',
+  })
   const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
 
   const styles = StyleSheet.create({
@@ -48,12 +57,7 @@ export const ResidentialAddressScreen = () => {
     scrollView: {
       flex: 1,
       padding: Spacing.md,
-    },
-    lineBreak: {
-      height: 8,
-      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-      width: '100%',
-      marginBottom: Spacing.md,
+      gap: 32,
     },
   })
 
@@ -101,14 +105,41 @@ export const ResidentialAddressScreen = () => {
       return
     }
 
-    if (!store.bcsc.birthdate || !store.bcsc.additionalEvidenceData[0]?.userMetadata) {
-      // TODO (MD): Better error handling for sad path
-      throw new Error('Missing required user information from store')
+    // A1: update user metadata
+    // QUESTION: Does updating the data here make sense if the IAS device auth is tied to the previous values?
+    // If no: swap this block (A1) and the check for the deviceCode (A2)
+    dispatch({
+      type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
+      payload: [
+        {
+          streetAddress: formState.streetAddress,
+          postalCode: formState.postalCode,
+          city: formState.city,
+          province: formState.province,
+          country: 'CA',
+        },
+      ],
+    })
+
+    // A2: device is already authorized
+    if (store.bcsc.deviceCode) {
+      navigation.goBack()
+    }
+
+    // missing required user attributes
+    // making the assumption that the user metatdata has been prviously saved ie: Step 2
+    if (!store.bcsc.birthdate || !store.bcsc.userMetadata?.name) {
+      logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected', {
+        birthdate: store.bcsc.birthdate,
+        name: store.bcsc.userMetadata?.name,
+      })
+
+      throw new Error('Missing prerequisite user attributes')
     }
 
     const deviceAuth = await authorization.authorizeDeviceWithTokenHint({
-      firstName: store.bcsc.additionalEvidenceData[0].userMetadata.firstName,
-      lastName: store.bcsc.additionalEvidenceData[0].userMetadata.lastName,
+      firstName: store.bcsc.userMetadata.name.first,
+      lastName: store.bcsc.userMetadata.name.last,
       birthDate: store.bcsc.birthdate.toISOString().split('T')[0],
       address: {
         streetAddress: formState.streetAddress,
@@ -119,31 +150,28 @@ export const ResidentialAddressScreen = () => {
       },
     })
 
+    // QUESTION (MD): What is the correct value for this?
     const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
-    dispatch({
-      type: BCDispatchAction.UPDATE_EMAIL,
-      payload: [{ email: deviceAuth.verified_email, emailConfirmed: !!deviceAuth.verified_email }],
-    })
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
     dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
   }
 
+  // TODO (MD): Add localizations for inputs
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <KeyboardView>
         <ScrollView contentContainerStyle={styles.scrollView}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.Address.Heading', 'Update Your Address')}
+            {t('Unified.Address.Heading', 'Address')}
           </ThemedText>
 
           <ThemedText style={{ marginBottom: Spacing.sm }}>
-            {t('Unified.Address.Paragraph', 'Please provide your current address information.')}
+            {t('Unified.Address.Paragraph', 'Enter the address of where you live.')}
           </ThemedText>
-          <View style={styles.lineBreak} />
 
           <InputWithValidation
-            label={'Street address'}
+            label={'Street Line 1'}
             value={formState.streetAddress}
             onChange={(value) => handleChange('streetAddress', value)}
             error={formErrors.streetAddress}
@@ -159,7 +187,7 @@ export const ResidentialAddressScreen = () => {
           />
 
           <InputWithValidation
-            label={'Province'}
+            label={'Province or Territory'}
             value={formState.province}
             onChange={(value) => handleChange('province', value)}
             error={formErrors.province}
@@ -167,7 +195,7 @@ export const ResidentialAddressScreen = () => {
           />
 
           <InputWithValidation
-            label={'Postal code'}
+            label={'Postal Code'}
             value={formState.postalCode}
             onChange={(value) => handleChange('postalCode', value)}
             error={formErrors.postalCode}
@@ -184,14 +212,6 @@ export const ResidentialAddressScreen = () => {
                 onPress={handleSubmit}
               />
             </View>
-
-            <Button
-              title="Cancel"
-              accessibilityLabel={'Cancel'}
-              testID={testIdWithKey('ResidentialAddressCancel')}
-              buttonType={ButtonType.Tertiary}
-              onPress={() => navigation.goBack()}
-            />
           </View>
         </ScrollView>
       </KeyboardView>
