@@ -1,9 +1,5 @@
 import { NativeModules, Platform } from 'react-native';
-import NativeBcscCoreSpec, {
-  type NativeAccount,
-  type JWK,
-  type JWTClaims,
-} from './NativeBcscCore';
+import NativeBcscCoreSpec, { type NativeAccount, type JWK, type JWTClaims } from './NativeBcscCore';
 export type { NativeAccount, JWK } from './NativeBcscCore';
 export { AccountSecurityMethod } from './NativeBcscCore';
 export interface TokenInfo {
@@ -63,9 +59,7 @@ const LINKING_ERROR =
 // @ts-expect-error global.__turboModuleProxy is a global variable injected by TurboModuleProxy
 const isTurboModuleEnabled = global.__turboModuleProxy != null;
 
-const BcscCoreModule = isTurboModuleEnabled
-  ? NativeBcscCoreSpec
-  : NativeModules.BcscCore;
+const BcscCoreModule = isTurboModuleEnabled ? NativeBcscCoreSpec : NativeModules.BcscCore;
 
 const BcscCore =
   BcscCoreModule ??
@@ -101,9 +95,7 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.
  *          For Registration tokens, returns null for now.
  */
-export const getToken = async (
-  tokenType: TokenType
-): Promise<TokenInfo | null> => {
+export const getToken = async (tokenType: TokenType): Promise<TokenInfo | null> => {
   // For Registration token type, return null for now as requested
   if (tokenType === TokenType.Registration) {
     return null;
@@ -128,9 +120,7 @@ export const getToken = async (
  * @param account The Account object to set as the current account (without id, which will be generated).
  * @returns A promise that resolves when the account has been successfully set.
  */
-export const setAccount = async (
-  account: Omit<NativeAccount, 'id'>
-): Promise<void> => {
+export const setAccount = async (account: Omit<NativeAccount, 'id'>): Promise<void> => {
   return BcscCore.setAccount(account);
 };
 
@@ -160,9 +150,7 @@ export const getRefreshTokenRequestBody = async (
 ): Promise<string | null> => {
   // Validate all parameters are provided
   if (!issuer || !clientID || !refreshToken) {
-    throw new Error(
-      'All parameters (issuer, clientID, refreshToken) are required'
-    );
+    throw new Error('All parameters (issuer, clientID, refreshToken) are required');
   }
 
   return BcscCore.getRefreshTokenRequestBody(issuer, clientID, refreshToken);
@@ -185,13 +173,7 @@ export const signPairingCode = async (
   fcmDeviceToken: string,
   deviceToken?: string
 ): Promise<string | null> => {
-  return BcscCore.signPairingCode(
-    code,
-    issuer,
-    clientID,
-    fcmDeviceToken,
-    deviceToken
-  );
+  return BcscCore.signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken);
 };
 
 /**
@@ -229,17 +211,10 @@ export const getDeviceCodeRequestBody = async (
 ): Promise<string | null> => {
   // Validate all parameters are provided
   if (!deviceCode || !clientId || !issuer || !confirmationCode) {
-    throw new Error(
-      'All parameters (deviceCode, clientId, issuer, confirmationCode) are required'
-    );
+    throw new Error('All parameters (deviceCode, clientId, issuer, confirmationCode) are required');
   }
 
-  return BcscCore.getDeviceCodeRequestBody(
-    deviceCode,
-    clientId,
-    issuer,
-    confirmationCode
-  );
+  return BcscCore.getDeviceCodeRequestBody(deviceCode, clientId, issuer, confirmationCode);
 };
 
 export const decodePayload = async (jweString: string): Promise<any> => {
@@ -252,9 +227,7 @@ export const decodePayload = async (jweString: string): Promise<any> => {
  * @param {JWTClaims} claims - An object containing the JWT claims
  * @returns {*} {Promise<string>}
  */
-export const createDeviceSignedJWT = async (
-  claims: JWTClaims
-): Promise<string> => {
+export const createDeviceSignedJWT = async (claims: JWTClaims): Promise<string> => {
   return BcscCore.createSignedJWT(claims);
 };
 
