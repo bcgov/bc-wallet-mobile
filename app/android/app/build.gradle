@@ -75,7 +75,7 @@ afterEvaluate {
 /**
  * Run Proguard to shrink the Java bytecode in release builds.
  */
-def enableProguardInReleaseBuilds = false
+def enableProguardInReleaseBuilds = true
 
 /**
  * The preferred build flavor of JavaScriptCore.
@@ -135,10 +135,19 @@ android {
             keyPassword 'android'
         }
         release {
-            storeFile = file("release.keystore")
-            storePassword System.getenv("PLAY_STORE_JKS_PASSWD")
-            keyAlias System.getenv("PLAY_STORE_JKS_ALIAS")
-            keyPassword System.getenv("PLAY_STORE_JKS_PASSWD")
+            if (System.getenv("PLAY_STORE_JKS_PASSWD")) {
+                // Production signing (CI/CD)
+                storeFile = file("release.keystore")
+                storePassword System.getenv("PLAY_STORE_JKS_PASSWD")
+                keyAlias System.getenv("PLAY_STORE_JKS_ALIAS")
+                keyPassword System.getenv("PLAY_STORE_JKS_PASSWD")
+            } else {
+                // Local development signing
+                storeFile file('debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
         }
     }
     buildTypes {
