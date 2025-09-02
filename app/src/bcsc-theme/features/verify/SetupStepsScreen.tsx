@@ -21,21 +21,28 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  // store + card attributes
   const bcscSerialNumber = store.bcsc.serial || null
   const emailAddress = store.bcsc.email || null
   const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
-  const bcscRegistered = Boolean(bcscSerialNumber || emailAddress)
+  const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
+  const isDualIdCards = store.bcsc.cardType === BCSCCardType.Other
+
+  // card registration state
+  const bcscRegistered = Boolean(bcscSerialNumber)
   const dualIdRegistered = store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 2
   const registered = bcscRegistered || dualIdRegistered
-  const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
+
+  // evidence collection state
   const hasAdditionalPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)
   const needsAdditionalEvidence = isNonPhotoCard && !hasAdditionalPhotoEvidence
-  const canProceedToVerification = registered && !store.bcsc.pendingVerification && !needsAdditionalEvidence
 
-  const step1IdsCompleted = registered && !needsAdditionalEvidence
-  const step2AddressCompleted = Boolean(bcscRegistered || (dualIdRegistered && store.bcsc.deviceCode))
-  const step3EmailCompleted = emailConfirmed
-  const step4VerificationCompleted = true // Placeholder for future use
+  // step completion state
+  const Step1IdsCompleted = registered && !needsAdditionalEvidence
+  const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
+  const Step3EmailCompleted = Boolean(isDualIdCards ? emailAddress : emailAddress && emailConfirmed)
+  const Step4VerificationAllowed =
+    !store.bcsc.pendingVerification && Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted
 
   const styles = StyleSheet.create({
     container: {
@@ -142,8 +149,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     )
   }
 
-  const getVerificationStep4Text = (): string => {
-    if (canProceedToVerification) {
+  const getVerificationStep4Text = useCallback(() => {
+    if (Step4VerificationAllowed) {
       const expirationDate = store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
         day: '2-digit',
         month: 'long',
@@ -157,10 +164,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     }
 
     return 'Verify identity'
-  }
+  }, [Step4VerificationAllowed, needsAdditionalEvidence, store.bcsc.deviceCodeExpiresAt])
 
   /**
-   * Returns the subtext for Step 1 of the verification process.
+   * Returns the subtext for Step 1 (Identification) of the verification process.
    *
    * @returns {string[]} An array of strings representing the subtext for Step 1.
    */
@@ -180,24 +187,24 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }, [bcscRegistered, bcscSerialNumber, store.bcsc.additionalEvidenceData, store.bcsc.cardType, t])
 
   /**
-   * Returns the subtext for Step 2 of the verification process.
+   * Returns the subtext for Step 2 (Residential Address) of the verification process.
+   *
+   * TODO (MD): Localization / translations for these return values
    *
    * @param {boolean} bcscIsRegistered - Indicates if the BC Services Card is registered.
-   * @param {boolean} dualIdIsRegistered - Indicates if dual ID is registered.
    * @returns {*} {string} The subtext for Step 2.
    */
-  const getVerificationStep2SubText = (bcscIsRegistered: boolean, dualIdIsRegistered: boolean): string => {
-    if (bcscIsRegistered) {
+  const getVerificationStep2SubText = useCallback(() => {
+    if (bcscRegistered && emailAddress) {
       return 'Address: Residential address from your BC Services Card will be used'
     }
 
-    // QUESTION (MD): Is this possible? Or do we need workflow screen to input address if dual ID is registered?
-    if (dualIdIsRegistered) {
-      return 'Residential address'
+    if (dualIdRegistered && emailAddress) {
+      return 'Address: Residential address saved'
     }
 
     return 'Residential address'
-  }
+  }, [bcscRegistered, dualIdRegistered, emailAddress])
 
   return (
     <View style={styles.container}>
@@ -225,11 +232,11 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         }}
         testID={testIdWithKey('Step1')}
         accessibilityLabel={'Step 1'}
-        disabled={step1IdsCompleted}
+        disabled={Step1IdsCompleted}
         style={[
           styles.step,
           {
-            backgroundColor: step1IdsCompleted ? ColorPalette.brand.secondaryBackground : ColorPalette.brand.primary,
+            backgroundColor: Step1IdsCompleted ? ColorPalette.brand.secondaryBackground : ColorPalette.brand.primary,
           },
         ]}
       >
@@ -238,20 +245,20 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             variant={'headingFour'}
             style={{
               marginRight: 16,
-              color: step1IdsCompleted ? TextTheme.headingFour.color : ColorPalette.brand.text,
+              color: Step1IdsCompleted ? TextTheme.headingFour.color : ColorPalette.brand.text,
             }}
             accessibilityLabel={t('Unified.Steps.Step1')}
           >
             {t('Unified.Steps.Step1')}
           </ThemedText>
-          {step1IdsCompleted ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
+          {Step1IdsCompleted ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
         </View>
         <View>
           {getVerificationStep1SubText().map((text, id) => (
             <ThemedText
               key={`${text}-${id}`}
               style={{
-                color: step1IdsCompleted ? TextTheme.normal.color : ColorPalette.brand.text,
+                color: Step1IdsCompleted ? TextTheme.normal.color : ColorPalette.brand.text,
               }}
             >
               {text}
@@ -318,12 +325,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           styles.step,
           {
             backgroundColor:
-              step1IdsCompleted && !step2AddressCompleted
+              Step1IdsCompleted && !Step2AddressCompleted
                 ? ColorPalette.brand.primary
                 : ColorPalette.brand.secondaryBackground,
           },
         ]}
-        disabled={!step1IdsCompleted}
+        disabled={!Step1IdsCompleted}
         onPress={() => {
           navigation.navigate(BCSCScreens.ResidentialAddressScreen)
         }}
@@ -333,22 +340,22 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             variant={'headingFour'}
             style={{
               marginRight: Spacing.md,
-              color: step1IdsCompleted && !step2AddressCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
+              color: Step1IdsCompleted && !Step2AddressCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
             }}
           >
             {t('Unified.Steps.Step2')}
           </ThemedText>
-          {step2AddressCompleted ? (
+          {Step2AddressCompleted ? (
             <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} />
           ) : null}
         </View>
         <View>
           <ThemedText
             style={{
-              color: step1IdsCompleted && !step2AddressCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
+              color: Step1IdsCompleted && !Step2AddressCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
             }}
           >
-            {getVerificationStep2SubText(bcscRegistered, dualIdRegistered)}
+            {getVerificationStep2SubText()}
           </ThemedText>
         </View>
       </TouchableOpacity>
@@ -361,10 +368,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         style={[
           styles.step,
           {
-            backgroundColor: step3EmailCompleted ? ColorPalette.brand.primary : ColorPalette.brand.secondaryBackground,
+            backgroundColor: Step3EmailCompleted ? ColorPalette.brand.primary : ColorPalette.brand.secondaryBackground,
           },
         ]}
-        disabled={!step3EmailCompleted}
+        disabled={!Step3EmailCompleted}
         onPress={handleEmailStepPress}
       >
         <View style={styles.titleRow}>
@@ -372,18 +379,18 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             variant={'headingFour'}
             style={{
               marginRight: Spacing.md,
-              color: step3EmailCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
+              color: Step3EmailCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
             }}
           >
             {t('Unified.Steps.Step3')}
           </ThemedText>
-          {step3EmailCompleted ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
+          {Step3EmailCompleted ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
         </View>
         <View style={styles.contentEmailContainer}>
-          <ThemedText style={{ color: step3EmailCompleted ? ColorPalette.brand.text : TextTheme.normal.color }}>
-            {step3EmailCompleted ? `Email: ${emailAddress}` : 'Email Address'}
+          <ThemedText style={{ color: Step3EmailCompleted ? ColorPalette.brand.text : TextTheme.normal.color }}>
+            {Step3EmailCompleted ? `Email: ${emailAddress}` : 'Email Address'}
           </ThemedText>
-          {step3EmailCompleted ? (
+          {Step3EmailCompleted ? (
             <TouchableOpacity
               style={styles.contentEmailButton}
               onPress={handleEmailStepPress}
@@ -401,17 +408,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
       <TouchableOpacity
         onPress={() => {
-          if (canProceedToVerification) {
+          if (Step4VerificationAllowed) {
             navigation.navigate(BCSCScreens.VerificationMethodSelection)
           }
         }}
         testID={testIdWithKey('Step4')}
         accessibilityLabel={t('Unified.Steps.Step4')}
-        disabled={!canProceedToVerification}
+        disabled={!Step4VerificationAllowed}
         style={[
           styles.step,
           {
-            backgroundColor: canProceedToVerification
+            backgroundColor: Step4VerificationAllowed
               ? ColorPalette.brand.primary
               : ColorPalette.brand.secondaryBackground,
           },
@@ -422,7 +429,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             variant={'headingFour'}
             style={{
               marginRight: 16,
-              color: canProceedToVerification ? ColorPalette.brand.text : TextTheme.headingFour.color,
+              color: Step4VerificationAllowed ? ColorPalette.brand.text : TextTheme.headingFour.color,
             }}
           >
             {t('Unified.Steps.Step4')}
@@ -430,7 +437,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         </View>
         <View>
           <ThemedText
-            style={{ color: canProceedToVerification ? ColorPalette.brand.text : TextTheme.headingFour.color }}
+            style={{ color: Step4VerificationAllowed ? ColorPalette.brand.text : TextTheme.headingFour.color }}
           >
             {getVerificationStep4Text()}
           </ThemedText>

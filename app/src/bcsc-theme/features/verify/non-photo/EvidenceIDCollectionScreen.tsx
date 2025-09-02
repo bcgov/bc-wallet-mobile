@@ -19,13 +19,7 @@ type EvidenceCollectionFormState = {
   birthDate: string
 }
 
-type EvidenceCollectionFormErrors = {
-  documentNumber?: string
-  firstName?: string
-  lastName?: string
-  middleNames?: string
-  birthDate?: string
-}
+type EvidenceCollectionFormErrors = Partial<EvidenceCollectionFormState>
 
 type EvidenceIDCollectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceIDCollection>

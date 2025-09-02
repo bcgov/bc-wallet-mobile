@@ -15,12 +15,7 @@ type ResidentialAddressFormState = {
   postalCode: string
 }
 
-type ResidentialAddressFormErrors = {
-  streetAddress?: string
-  city?: string
-  province?: string
-  postalCode?: string
-}
+type ResidentialAddressFormErrors = Partial<ResidentialAddressFormState>
 
 const initialFormState: ResidentialAddressFormState = {
   streetAddress: '',
