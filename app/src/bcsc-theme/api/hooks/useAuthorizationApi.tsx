@@ -11,6 +11,7 @@ export enum BCSCCardProcess {
   BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
   NonBCSC = 'IDIM L3 Remote Non-BCSC Identity Verification',
 }
+
 export interface VerifyInPersonResponseData {
   process: BCSCCardProcess
   user_code: string
@@ -39,23 +40,8 @@ interface AuthorizeDeviceUnknownBCSCConfig {
     city: string
     province: 'AB' | 'BC' | 'MB' | 'NB' | 'NL' | 'NT' | 'NS' | 'NU' | 'ON' | 'PE' | 'QC' | 'SK' | 'YT'
   }
-  gender?: string
+  gender?: 'male' | 'female' | 'unknown'
   middleNames?: string // space delimited names
-}
-
-/**
- * Checks if an error matches the schema of the "already registered" error
- *
- * @param {any} error - The error to check
- * @returns {*} {boolean}
- */
-function deviceIsAlreadyRegisteredError(error: any): boolean {
-  return (
-    isAxiosError(error) &&
-    error.response?.status === 400 &&
-    error.response?.data.error === INVALID_REGISTRATION_REQUEST &&
-    String(error.response?.data.error_description).includes('client is in invalid statue')
-  )
 }
 
 const useAuthorizationApi = () => {
@@ -78,7 +64,7 @@ const useAuthorizationApi = () => {
         scope: 'openid profile address offline_access',
       }
 
-      apiClient.logger.info('Registration body: ', body)
+      apiClient.logger.info('useAuthorizationApi.authorizeDevice.body', body)
 
       const { data } = await apiClient.post<VerifyInPersonResponseData>(apiClient.endpoints.deviceAuthorization, body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -94,7 +80,8 @@ const useAuthorizationApi = () => {
   /**
    * Authorize a device with an unknown BCSC card.
    *
-   * Note: Subsequent requests to this endpoint will fail, as the device is already registered.
+   * Note: This request will return null if called multiple times for the same device.
+   * First response will return the Verification response, which must be stored and persisted.
    *
    * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
    * @returns {*} {VerifyUnknownBCSCResponseData | null} - Returns the response data or null if already registered
@@ -122,12 +109,12 @@ const useAuthorizationApi = () => {
               region: config.address.province,
               country: 'CA',
             },
-            gender: config.gender,
+            gender: config.gender ?? 'unknown',
             middle_name: config.middleNames,
           }),
         }
 
-        apiClient.logger.info(`Registration body:`, body)
+        apiClient.logger.info('useAuthorizationApi.authorizeDeviceWithUnknownBCSC.body', body)
 
         try {
           const { data } = await apiClient.post<VerifyUnknownBCSCResponseData>(
@@ -146,8 +133,7 @@ const useAuthorizationApi = () => {
            * useful to be able to determine if the request failed or if the device
            * has previously been registered
            */
-          console.log(deviceIsAlreadyRegisteredError(error))
-          if (deviceIsAlreadyRegisteredError(error)) {
+          if (isDeviceRegistered(error)) {
             return null
           }
 
@@ -168,3 +154,21 @@ const useAuthorizationApi = () => {
 }
 
 export default useAuthorizationApi
+
+// Helper functions
+
+/**
+ * Checks if an error matches the structure of when a device is registered.
+ *
+ * @param {any} error - The error to check
+ * @returns {*} {boolean}
+ */
+function isDeviceRegistered(error: any): boolean {
+  return (
+    isAxiosError(error) &&
+    error.response?.status === 400 &&
+    error.response?.data.error === INVALID_REGISTRATION_REQUEST &&
+    // "client is in invalid statue" OR "client is in invalid state"
+    String(error.response?.data.error_description).includes('client is in invalid')
+  )
+}
