@@ -21,7 +21,7 @@ export default defineConfig([
       'prettier/prettier': [
         'error',
         {
-          printWidth: 100,
+          printWidth: 120,
           quoteProps: 'consistent',
           singleQuote: true,
           tabWidth: 2,

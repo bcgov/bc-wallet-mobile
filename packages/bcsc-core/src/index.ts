@@ -231,10 +231,7 @@ export const createDeviceSignedJWT = async (claims: JWTClaims): Promise<string> 
   return BcscCore.createSignedJWT(claims);
 };
 
-export const createEvidenceRequestJWT = async (
-  deviceCode: string,
-  clientID: string
-): Promise<string> => {
+export const createEvidenceRequestJWT = async (deviceCode: string, clientID: string): Promise<string> => {
   return BcscCore.createEvidenceRequestJWT(deviceCode, clientID);
 };
 
@@ -263,15 +260,7 @@ export const createQuickLoginJWT = async (
   fcmDeviceToken: string,
   deviceToken?: string
 ): Promise<string> => {
-  return BcscCore.createQuickLoginJWT(
-    accessToken,
-    clientId,
-    issuer,
-    clientRefId,
-    key,
-    fcmDeviceToken,
-    deviceToken
-  );
+  return BcscCore.createQuickLoginJWT(accessToken, clientId, issuer, clientRefId, key, fcmDeviceToken, deviceToken);
 };
 
 /**
