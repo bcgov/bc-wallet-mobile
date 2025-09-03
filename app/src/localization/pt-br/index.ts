@@ -271,6 +271,15 @@ const translation = {
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (PT-BR)",
       "ChooseID": "Choose ID (PT-BR)",
     },
+    "DualNonBCSCEvidence": {
+      "Heading": "You must provide two government-issued IDs (PT-BR)",
+      "Description": "It's needed to verify your identity. (PT-BR)",
+      "CheckYourID": "Check your IDs (PT-BR)",
+      "CheckYourIDBullet1": "Both IDs should have the same name (PT-BR)",
+      "CheckYourIDBullet2": "At least one must be issued in Canada (PT-BR)",
+      "CheckYourIDBullet3": "One must have a recent photo (PT-BR)",
+      "CheckYourIDBullet4": "Both must not be expired (PT-BR)",
+    },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity. (PT-BR)",
       "IDPhotoInstructionsBullet1": "Center your ID within the frame (PT-BR)",

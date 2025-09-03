@@ -221,8 +221,14 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
+          if (!nonBcscRegistered && store.bcsc.additionalEvidenceData.length === 1) {
+            navigation.navigate(BCSCScreens.EvidenceTypeList)
+            return
+          }
+
           if (!registered) {
             navigation.navigate(BCSCScreens.IdentitySelection)
+            return
           }
 
           if (needsAdditionalEvidence) {

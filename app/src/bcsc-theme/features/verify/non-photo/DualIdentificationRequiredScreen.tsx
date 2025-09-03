@@ -52,33 +52,26 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
           <CardDetails {...{ height: 80, width: 160 }} />
         </View>
         <View style={{ marginBottom: Spacing.lg }}>
-          {/* <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.PhotoRequired')}</ThemedText> */}
-          <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.PhotoRequired')}</ThemedText>
-          <ThemedText>{t('Unified.AdditionalEvidence.PhotoRequiredDescription')}</ThemedText>
+          <ThemedText variant={'headingFour'}>{t('Unified.DualNonBCSCEvidence.Heading')}</ThemedText>
+          <ThemedText>{t('Unified.DualNonBCSCEvidence.Description')}</ThemedText>
         </View>
         <View style={{ marginBottom: Spacing.lg }}>
-          <ThemedText variant={'headingFour'}>TODO: Swap localization of this file</ThemedText>
+          <ThemedText variant={'headingFour'}>{t('Unified.DualNonBCSCEvidence.CheckYourID')}</ThemedText>
           <BulletPointWithText
-            translationKey={t('Unified.AdditionalEvidence.CheckYourIDBullet1')}
+            translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet1')}
             iconColor={ColorPalette.brand.icon}
           />
           <BulletPointWithText
-            translationKey={t('Unified.AdditionalEvidence.CheckYourIDBullet2')}
-            iconColor={ColorPalette.brand.icon}
-            iconSize={Spacing.sm}
-          />
-          <BulletPointWithText
-            translationKey={t('Unified.AdditionalEvidence.CheckYourIDBullet2')}
+            translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet2')}
             iconColor={ColorPalette.brand.icon}
             iconSize={Spacing.sm}
           />
           <BulletPointWithText
-            translationKey={t('Unified.AdditionalEvidence.CheckYourIDBullet2')}
+            translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet3')}
             iconColor={ColorPalette.brand.icon}
-            iconSize={Spacing.sm}
           />
           <BulletPointWithText
-            translationKey={t('Unified.AdditionalEvidence.CheckYourIDBullet3')}
+            translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet4')}
             iconColor={ColorPalette.brand.icon}
           />
         </View>
