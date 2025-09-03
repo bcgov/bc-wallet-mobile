@@ -1,5 +1,6 @@
 import useAuthorizationApi from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import { getProvinceCode } from '@/bcsc-theme/utils/get-province-code'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
@@ -74,10 +75,17 @@ export const ResidentialAddressScreen = () => {
     setFormErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
+  /**
+   * Validates the Residential Address form and returns the errors
+   *
+   * @param {ResidentialAddressFormState} values - The form values to validate
+   * @returns {*} ResidentialAddressFormErrors
+   */
   const validateForm = (values: ResidentialAddressFormState): ResidentialAddressFormErrors => {
     // TODO (MD): Invesigate a proper schema validation library if this gets more complex ie: yup, zod, etc.
     const errors: ResidentialAddressFormErrors = {}
 
+    // TODO (MD): Add localizations for this form
     if (!values.streetAddress) {
       errors.streetAddress = t('Unified.Address.StreetAddressRequired')
     }
@@ -86,6 +94,9 @@ export const ResidentialAddressScreen = () => {
     }
     if (!values.province) {
       errors.province = t('Unified.Address.ProvinceRequired')
+    }
+    if (values.province && !getProvinceCode(values.province)) {
+      errors.province = t('Unified.Address.InvalidProvince')
     }
     // TODO (MD): Add postal code format validation
     if (!values.postalCode) {
@@ -122,7 +133,7 @@ export const ResidentialAddressScreen = () => {
     })
 
     // A2: device is already authorized
-    if (store.bcsc.deviceCode) {
+    if (store.bcsc.deviceCode && store.bcsc.deviceCodeExpiresAt) {
       navigation.goBack()
     }
 
