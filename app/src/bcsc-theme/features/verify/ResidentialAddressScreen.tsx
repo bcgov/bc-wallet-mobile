@@ -171,6 +171,7 @@ export const ResidentialAddressScreen = () => {
           </ThemedText>
 
           <InputWithValidation
+            id={'streetAddress1'}
             label={'Street Line 1'}
             value={formState.streetAddress}
             onChange={(value) => handleChange('streetAddress', value)}
@@ -179,6 +180,7 @@ export const ResidentialAddressScreen = () => {
           />
 
           <InputWithValidation
+            id={'city'}
             label={'City'}
             value={formState.city}
             onChange={(value) => handleChange('city', value)}
@@ -187,6 +189,7 @@ export const ResidentialAddressScreen = () => {
           />
 
           <InputWithValidation
+            id={'province'}
             label={'Province or Territory'}
             value={formState.province}
             onChange={(value) => handleChange('province', value)}
@@ -195,6 +198,7 @@ export const ResidentialAddressScreen = () => {
           />
 
           <InputWithValidation
+            id={'postalCode'}
             label={'Postal Code'}
             value={formState.postalCode}
             onChange={(value) => handleChange('postalCode', value)}

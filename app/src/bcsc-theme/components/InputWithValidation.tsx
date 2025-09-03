@@ -6,6 +6,7 @@ import { StyleProp, TextInput, TextStyle, View } from 'react-native'
 // accept number inputs as well.
 
 type InputWithValidationProps = {
+  id: string // unique input identifier
   value: string
   onChange: (value: string) => void
   label: string
@@ -18,7 +19,9 @@ type InputWithValidationProps = {
 }
 
 /**
- * A stateless input component with, labels, subtext and validation enabled.
+ * An input component which includes a label, input, subtext and error props.
+ *
+ * Note: This also includes the equivalent styling props for each section for customization.
  *
  * @param {InputWithValidationProps} props - Input props
  * @returns {*} {JSX.Element}
@@ -28,7 +31,11 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
 
   return (
     <View>
-      <ThemedText variant={'labelTitle'} style={[{ marginBottom: 8 }, props.labelProps]}>
+      <ThemedText
+        variant={'labelTitle'}
+        style={[{ marginBottom: 8 }, props.labelProps]}
+        testID={testIdWithKey(`${props.id}-label`)}
+      >
         {props.label}
       </ThemedText>
 
@@ -44,8 +51,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         onChange={(e) => {
           props.onChange(e.nativeEvent.text)
         }}
-        accessibilityLabel={props.label}
-        testID={testIdWithKey(props.label)}
+        testID={testIdWithKey(`${props.id}-input`)}
       />
 
       {props.error ? (
@@ -58,13 +64,18 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
             },
             props.errorProps,
           ]}
+          testID={testIdWithKey(`${props.id}-error`)}
         >
           {props.error}
         </ThemedText>
       ) : null}
 
       {props.subtext && !props.error ? (
-        <ThemedText style={[{ marginTop: 8 }, props.errorProps]} variant={'labelSubtitle'}>
+        <ThemedText
+          style={[{ marginTop: 8 }, props.errorProps]}
+          variant={'labelSubtitle'}
+          testID={testIdWithKey(`${props.id}-subtext`)}
+        >
           {props.subtext}
         </ThemedText>
       ) : null}

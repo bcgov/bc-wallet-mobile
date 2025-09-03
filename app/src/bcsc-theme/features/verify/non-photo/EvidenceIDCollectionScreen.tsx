@@ -226,6 +226,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
           </ThemedText>
           <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
             <InputWithValidation
+              id={'documentNumber'}
               label={cardType.document_reference_label}
               value={formState.documentNumber}
               onChange={(value) => handleChange('documentNumber', value)}
@@ -238,6 +239,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             {additionalEvidenceRequired ? (
               <>
                 <InputWithValidation
+                  id={'lastName'}
                   label={t('Unified.EvidenceIDCollection.LastNameLabel')}
                   value={formState.lastName}
                   onChange={(value) => handleChange('lastName', value)}
@@ -246,6 +248,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
                 />
 
                 <InputWithValidation
+                  id={'firstName'}
                   label={t('Unified.EvidenceIDCollection.FirstNameLabel')}
                   value={formState.firstName}
                   onChange={(value) => handleChange('firstName', value)}
@@ -254,6 +257,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
                 />
 
                 <InputWithValidation
+                  id={'middleNames'}
                   label={t('Unified.EvidenceIDCollection.MiddleNamesLabel')}
                   value={formState.middleNames}
                   onChange={(value) => handleChange('middleNames', value)}
@@ -262,6 +266,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
                 />
 
                 <InputWithValidation
+                  id={'birthDate'}
                   label={t('Unified.EvidenceIDCollection.BirthDateLabel')}
                   value={formState.birthDate}
                   onChange={(value) => handleChange('birthDate', value)}

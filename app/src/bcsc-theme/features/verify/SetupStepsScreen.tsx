@@ -26,15 +26,16 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const emailAddress = store.bcsc.email || null
   const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
   const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
+  const isNonBCSCCards = store.bcsc.cardType === BCSCCardType.Other
 
   // card registration state
-  const bcscRegistered = Boolean(bcscSerialNumber)
-  const dualIdRegistered = store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 2
-  const registered = bcscRegistered || dualIdRegistered
+  const bcscRegistered = Boolean(bcscSerialNumber && emailAddress)
+  const nonBcscRegistered = isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 2
+  const registered = bcscRegistered || nonBcscRegistered
 
   // evidence collection state
   const hasAdditionalPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)
-  const needsAdditionalEvidence = isNonPhotoCard && !hasAdditionalPhotoEvidence
+  const needsAdditionalEvidence = (isNonPhotoCard || isNonBCSCCards) && !hasAdditionalPhotoEvidence
 
   // step completion state
   const Step1IdsCompleted = registered && !needsAdditionalEvidence
@@ -148,7 +149,52 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     )
   }
 
-  const getVerificationStep4Text = useCallback(() => {
+  /**
+   * Returns the subtext for Step 1 (Identification) of the verification process.
+   *
+   * @returns {*} {string[]} An array of strings representing the subtext for Step 1.
+   */
+  const getVerificationStep1Subtext = useCallback((): string[] => {
+    // if the card type is Other (multiple non BCSC cards), show each card type label
+    if (isNonBCSCCards && store.bcsc.additionalEvidenceData.length > 0) {
+      return store.bcsc.additionalEvidenceData.map((evidence) => `ID: ${evidence.evidenceType.evidence_type_label}`)
+    }
+
+    // if the bcsc card is registered, show the bcsc serial number
+    if (bcscRegistered) {
+      return [`ID: BC Services Card (${bcscSerialNumber})`]
+    }
+
+    // otherwise, show the default text
+    return [t('Unified.Steps.ScanOrTakePhotos')]
+  }, [bcscRegistered, bcscSerialNumber, store.bcsc.additionalEvidenceData, isNonBCSCCards, t])
+
+  /**
+   * Returns the subtext for Step 2 (Residential Address) of the verification process.
+   *
+   * TODO (MD): Localization / translations for these return values
+   *
+   * @param {boolean} bcscIsRegistered - Indicates if the BC Services Card is registered.
+   * @returns {*} {string} The subtext for Step 2.
+   */
+  const getVerificationStep2Subtext = useCallback(() => {
+    if (bcscRegistered) {
+      return 'Address: Residential address from your BC Services Card will be used'
+    }
+
+    if (nonBcscRegistered && store.bcsc.userMetadata?.address) {
+      return 'Address: Residential address saved'
+    }
+
+    return 'Residential address'
+  }, [bcscRegistered, nonBcscRegistered, store.bcsc.userMetadata?.address])
+
+  /**
+   * Returns the subtext for Step 4 (Verify Identity) of the verification process.
+   *
+   * @returns {*} {string} The subtext for step 4
+   */
+  const getVerificationStep4Subtext = useCallback(() => {
     if (Step4VerificationAllowed) {
       const expirationDate = store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
         day: '2-digit',
@@ -165,59 +211,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     return 'Verify identity'
   }, [Step4VerificationAllowed, needsAdditionalEvidence, store.bcsc.deviceCodeExpiresAt])
 
-  /**
-   * Returns the subtext for Step 1 (Identification) of the verification process.
-   *
-   * @returns {string[]} An array of strings representing the subtext for Step 1.
-   */
-  const getVerificationStep1SubText = useCallback((): string[] => {
-    // if the card type is Other (multiple non BCSC cards), show each card type label
-    if (store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length > 0) {
-      return store.bcsc.additionalEvidenceData.map((evidence) => `ID: ${evidence.evidenceType.evidence_type_label}`)
-    }
-
-    // if the bcsc card is registered, show the bcsc serial number
-    if (bcscRegistered) {
-      return [`ID: BC Services Card (${bcscSerialNumber})`]
-    }
-
-    // otherwise, show the default text
-    return [t('Unified.Steps.ScanOrTakePhotos')]
-  }, [bcscRegistered, bcscSerialNumber, store.bcsc.additionalEvidenceData, store.bcsc.cardType, t])
-
-  /**
-   * Returns the subtext for Step 2 (Residential Address) of the verification process.
-   *
-   * TODO (MD): Localization / translations for these return values
-   *
-   * @param {boolean} bcscIsRegistered - Indicates if the BC Services Card is registered.
-   * @returns {*} {string} The subtext for Step 2.
-   */
-  const getVerificationStep2SubText = useCallback(() => {
-    if (bcscRegistered && emailAddress) {
-      return 'Address: Residential address from your BC Services Card will be used'
-    }
-
-    if (dualIdRegistered && emailAddress) {
-      return 'Address: Residential address saved'
-    }
-
-    return 'Residential address'
-  }, [bcscRegistered, dualIdRegistered, emailAddress])
-
   return (
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
-          if (
-            !dualIdRegistered &&
-            store.bcsc.cardType === BCSCCardType.Other &&
-            store.bcsc.additionalEvidenceData.length > 0
-          ) {
-            navigation.navigate(BCSCScreens.EvidenceTypeList)
-            return
-          }
-
           if (!registered) {
             dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
             navigation.navigate(BCSCScreens.IdentitySelection)
@@ -253,7 +250,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           {Step1IdsCompleted ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
         </View>
         <View>
-          {getVerificationStep1SubText().map((text, id) => (
+          {getVerificationStep1Subtext().map((text, id) => (
             <ThemedText
               key={`${text}-${id}`}
               style={{
@@ -354,7 +351,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               color: Step1IdsCompleted && !Step2AddressCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
             }}
           >
-            {getVerificationStep2SubText()}
+            {getVerificationStep2Subtext()}
           </ThemedText>
         </View>
       </TouchableOpacity>
@@ -438,7 +435,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           <ThemedText
             style={{ color: Step4VerificationAllowed ? ColorPalette.brand.text : TextTheme.headingFour.color }}
           >
-            {getVerificationStep4Text()}
+            {getVerificationStep4Subtext()}
           </ThemedText>
         </View>
       </TouchableOpacity>
