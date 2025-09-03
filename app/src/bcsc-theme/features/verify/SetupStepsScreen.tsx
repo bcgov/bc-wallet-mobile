@@ -35,13 +35,13 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
   // evidence collection state
   const hasAdditionalPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)
-  const needsAdditionalEvidence = (isNonPhotoCard || isNonBCSCCards) && !hasAdditionalPhotoEvidence
+  const needsAdditionalEvidence = isNonPhotoCard && !hasAdditionalPhotoEvidence
 
   // step completion state
   const Step1IdsCompleted = registered && !needsAdditionalEvidence
   const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
   const Step3EmailCompleted = Boolean(emailAddress && emailConfirmed)
-  const Step4VerificationAllowed =
+  const Step4VerificationEnabled =
     !store.bcsc.pendingVerification && Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted
 
   const styles = StyleSheet.create({
@@ -182,12 +182,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       return 'Address: Residential address from your BC Services Card will be used'
     }
 
-    if (nonBcscRegistered && store.bcsc.userMetadata?.address) {
+    if (nonBcscRegistered && store.bcsc.userMetadata?.address && store.bcsc.deviceCode) {
       return 'Address: Residential address saved'
     }
 
     return 'Residential address'
-  }, [bcscRegistered, nonBcscRegistered, store.bcsc.userMetadata?.address])
+  }, [bcscRegistered, nonBcscRegistered, store.bcsc.userMetadata?.address, store.bcsc.deviceCode])
 
   /**
    * Returns the subtext for Step 4 (Verify Identity) of the verification process.
@@ -195,8 +195,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    * @returns {*} {string} The subtext for step 4
    */
   const getVerificationStep4Subtext = useCallback(() => {
-    if (Step4VerificationAllowed) {
-      const expirationDate = store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
+    if (Step4VerificationEnabled && store.bcsc.deviceCodeExpiresAt) {
+      const expirationDate = store.bcsc.deviceCodeExpiresAt.toLocaleString('en-CA', {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
@@ -204,26 +204,29 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       return `Verify identity by ${expirationDate}`
     }
 
+    if (Step4VerificationEnabled && !store.bcsc.deviceCodeExpiresAt) {
+      // TODO (MD): Handle this unhappy path eventually
+      // Give instructions to either reset their form, or resubmit the missing piece
+      throw new Error('Invalid setup steps detected, missing device code epiration.')
+    }
+
     if (needsAdditionalEvidence) {
       return 'Complete additional identification first'
     }
 
     return 'Verify identity'
-  }, [Step4VerificationAllowed, needsAdditionalEvidence, store.bcsc.deviceCodeExpiresAt])
+  }, [Step4VerificationEnabled, needsAdditionalEvidence, store.bcsc.deviceCodeExpiresAt])
 
   return (
     <View style={styles.container}>
       <TouchableOpacity
         onPress={() => {
           if (!registered) {
-            dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
             navigation.navigate(BCSCScreens.IdentitySelection)
-            return
           }
 
           if (needsAdditionalEvidence) {
             navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
-            return
           }
         }}
         testID={testIdWithKey('Step1')}
@@ -404,17 +407,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
       <TouchableOpacity
         onPress={() => {
-          if (Step4VerificationAllowed) {
+          if (Step4VerificationEnabled) {
             navigation.navigate(BCSCScreens.VerificationMethodSelection)
           }
         }}
         testID={testIdWithKey('Step4')}
         accessibilityLabel={t('Unified.Steps.Step4')}
-        disabled={!Step4VerificationAllowed}
+        disabled={!Step4VerificationEnabled}
         style={[
           styles.step,
           {
-            backgroundColor: Step4VerificationAllowed
+            backgroundColor: Step4VerificationEnabled
               ? ColorPalette.brand.primary
               : ColorPalette.brand.secondaryBackground,
           },
@@ -425,7 +428,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             variant={'headingFour'}
             style={{
               marginRight: 16,
-              color: Step4VerificationAllowed ? ColorPalette.brand.text : TextTheme.headingFour.color,
+              color: Step4VerificationEnabled ? ColorPalette.brand.text : TextTheme.headingFour.color,
             }}
           >
             {t('Unified.Steps.Step4')}
@@ -433,7 +436,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         </View>
         <View>
           <ThemedText
-            style={{ color: Step4VerificationAllowed ? ColorPalette.brand.text : TextTheme.headingFour.color }}
+            style={{ color: Step4VerificationEnabled ? ColorPalette.brand.text : TextTheme.headingFour.color }}
           >
             {getVerificationStep4Subtext()}
           </ThemedText>
@@ -486,6 +489,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <Button
           title={'Reset data'}
           onPress={() => {
+            dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
             dispatch({ type: BCDispatchAction.CLEAR_ADDITIONAL_EVIDENCE, payload: [undefined] })
           }}
           testID={testIdWithKey('ResetData')}

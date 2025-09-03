@@ -33,6 +33,7 @@ import { ResidentialAddressScreen } from './ResidentialAddressScreen'
 import { HelpCentreUrl } from '@/constants'
 import WebViewScreen from '../webview/WebViewScreen'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
+import DualIdentificationRequiredScreen from './non-photo/DualIdentificationRequiredScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -117,6 +118,13 @@ const VerifyIdentityStack = () => {
       <Stack.Screen
         name={BCSCScreens.AdditionalIdentificationRequired}
         component={AdditionalIdentificationRequiredScreen}
+        options={{
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS }),
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.DualIdentificationRequired}
+        component={DualIdentificationRequiredScreen}
         options={{
           headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS }),
         }}

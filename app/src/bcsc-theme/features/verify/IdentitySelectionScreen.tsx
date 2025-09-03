@@ -87,7 +87,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 
   const onPressOtherID = useCallback(() => {
     dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Other] })
-    navigation.navigate(BCSCScreens.EvidenceTypeList)
+    navigation.navigate(BCSCScreens.DualIdentificationRequired)
   }, [dispatch, navigation])
 
   const cardButtons = useMemo(() => {
