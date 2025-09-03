@@ -35,6 +35,15 @@ export type JWK = {
   n: string;
 };
 
+export type JWTClaims = {
+  iss: string;
+  aud: string;
+  sub: string;
+  iat: number;
+  exp: number;
+  [key: string]: any;
+};
+
 export enum AccountSecurityMethod {
   PinNoDeviceAuth = 'app_pin_no_device_authn',
   PinWithDeviceAuth = 'app_pin_has_device_authn',
@@ -61,11 +70,7 @@ export interface Spec extends TurboModule {
   getToken(tokenType: number): Promise<NativeToken | null>;
   getAccount(): Promise<NativeAccount | null>;
   setAccount(account: Omit<NativeAccount, 'id'>): Promise<void>;
-  getRefreshTokenRequestBody(
-    issuer: string,
-    clientID: string,
-    refreshToken: string
-  ): Promise<string | null>;
+  getRefreshTokenRequestBody(issuer: string, clientID: string, refreshToken: string): Promise<string | null>;
   signPairingCode(
     code: string,
     issuer: string,
@@ -73,10 +78,7 @@ export interface Spec extends TurboModule {
     fcmDeviceToken: string,
     deviceToken?: string
   ): Promise<string | null>;
-  getDynamicClientRegistrationBody(
-    fcmDeviceToken: string,
-    deviceToken?: string
-  ): Promise<string | null>;
+  getDynamicClientRegistrationBody(fcmDeviceToken: string, deviceToken?: string): Promise<string | null>;
   getDeviceCodeRequestBody(
     deviceCode: string,
     clientId: string,
@@ -95,6 +97,7 @@ export interface Spec extends TurboModule {
     deviceToken?: string
   ): Promise<string>;
   hashBase64(base64: string): Promise<string>;
+  createSignedJWT(claims: JWTClaims): Promise<string>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('BcscCore');

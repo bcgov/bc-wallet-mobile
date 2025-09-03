@@ -1,22 +1,59 @@
 import { useCallback, useMemo } from 'react'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
+import { createDeviceSignedJWT } from 'react-native-bcsc-core'
+import { isAxiosError } from 'axios'
+
+const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
 
 export enum BCSCCardProcess {
   BCSC = 'IDIM L3 Remote BCSC Photo Identity Verification',
   BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
   NonBCSC = 'IDIM L3 Remote Non-BCSC Identity Verification',
 }
+
 export interface VerifyInPersonResponseData {
-  device_code: string
+  process: BCSCCardProcess
   user_code: string
+  device_code: string
   verified_email: string
   expires_in: number
-  process: BCSCCardProcess
+}
+
+export interface VerifyUnknownBCSCResponseData {
+  process: BCSCCardProcess.NonBCSC
+  user_code: string
+  evidence_upload_uri: string
+  device_code: string
+  verification_options: string
+  verification_uri: string
+  expires_in: number
+}
+
+interface AuthorizeDeviceUnknownBCSCConfig {
+  firstName: string
+  lastName: string
+  birthdate: string
+  address: {
+    streetAddress: string
+    postalCode: string
+    city: string
+    province: 'AB' | 'BC' | 'MB' | 'NB' | 'NL' | 'NT' | 'NS' | 'NU' | 'ON' | 'PE' | 'QC' | 'SK' | 'YT'
+  }
+  gender?: 'male' | 'female' | 'unknown'
+  middleNames?: string // space delimited names
 }
 
 const useAuthorizationApi = () => {
-  // TODO: fetch evidence API endpoint from this endpoint
+  /**
+   * Authorize a device with a known BCSC card.
+   *
+   * TODO: fetch evidence API endpoint from this endpoint
+   *
+   * @param {string} serial - BCSC serial number
+   * @param {Date} birthdate - Users birth date
+   * @returns {*} {VerifyInPersonResponseData}
+   */
   const authorizeDevice = useCallback(async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData> => {
     return withAccount<VerifyInPersonResponseData>(async (account) => {
       const body = {
@@ -26,21 +63,112 @@ const useAuthorizationApi = () => {
         birth_date: birthdate.toISOString().split('T')[0],
         scope: 'openid profile address offline_access',
       }
-      apiClient.logger.info(`Registration body: ${JSON.stringify(body, null, 2)}`)
+
+      apiClient.logger.info('useAuthorizationApi.authorizeDevice.body', body)
+
       const { data } = await apiClient.post<VerifyInPersonResponseData>(apiClient.endpoints.deviceAuthorization, body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,
       })
+
+      // TODO (MD): Should we also check here if the request fails due to being previously registered?
+
       return data
     })
   }, [])
 
+  /**
+   * Authorize a device with an unknown BCSC card.
+   *
+   * Note: This request will return null if called multiple times for the same device.
+   * First response will return the Verification response, which must be stored and persisted.
+   *
+   * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
+   * @returns {*} {VerifyUnknownBCSCResponseData | null} - Returns the response data or null if already registered
+   */
+  const authorizeDeviceWithUnknownBCSC = useCallback(
+    async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<VerifyUnknownBCSCResponseData | null> => {
+      return withAccount<VerifyUnknownBCSCResponseData | null>(async (account) => {
+        const body = {
+          client_id: account.clientID,
+          response_type: 'device_code',
+          scope: 'openid profile address offline_access',
+          id_token_hint: await createDeviceSignedJWT({
+            iss: account.clientID,
+            aud: account.issuer,
+            sub: account.clientID,
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + 60 * 10, // ten minutes
+            family_name: config.lastName,
+            given_name: config.firstName,
+            birthdate: config.birthdate,
+            address: {
+              street_address: config.address.streetAddress,
+              postal_code: config.address.postalCode,
+              locality: config.address.city,
+              region: config.address.province,
+              country: 'CA',
+            },
+            gender: config.gender ?? 'unknown',
+            middle_name: config.middleNames,
+          }),
+        }
+
+        apiClient.logger.info('useAuthorizationApi.authorizeDeviceWithUnknownBCSC.body', body)
+
+        try {
+          const { data } = await apiClient.post<VerifyUnknownBCSCResponseData>(
+            apiClient.endpoints.deviceAuthorization,
+            body,
+            {
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              skipBearerAuth: true,
+            }
+          )
+
+          return data
+        } catch (error) {
+          /**
+           * if already registered, return null for workflow convienience
+           * useful to be able to determine if the request failed or if the device
+           * has previously been registered
+           */
+          if (isDeviceRegistered(error)) {
+            return null
+          }
+
+          throw error
+        }
+      })
+    },
+    []
+  )
+
   return useMemo(
     () => ({
       authorizeDevice,
+      authorizeDeviceWithUnknownBCSC,
     }),
-    [authorizeDevice]
+    [authorizeDevice, authorizeDeviceWithUnknownBCSC]
   )
 }
 
 export default useAuthorizationApi
+
+// Helper functions
+
+/**
+ * Checks if an error matches the structure of when a device is registered.
+ *
+ * @param {any} error - The error to check
+ * @returns {*} {boolean}
+ */
+function isDeviceRegistered(error: any): boolean {
+  return (
+    isAxiosError(error) &&
+    error.response?.status === 400 &&
+    error.response?.data.error === INVALID_REGISTRATION_REQUEST &&
+    // "client is in invalid statue" OR "client is in invalid state"
+    String(error.response?.data.error_description).includes('client is in invalid')
+  )
+}
