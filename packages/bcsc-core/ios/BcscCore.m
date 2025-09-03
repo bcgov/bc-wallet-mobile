@@ -68,4 +68,8 @@ RCT_EXTERN_METHOD(createQuickLoginJWT:(NSString *)accessToken
                   deviceToken:(NSString * _Nullable)deviceToken
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
+
+RCT_EXTERN_METHOD(createSignedJWT:(NSDictionary *)claims
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
 @end
