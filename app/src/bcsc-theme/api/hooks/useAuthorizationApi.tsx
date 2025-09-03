@@ -3,6 +3,7 @@ import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
 import { createDeviceSignedJWT } from 'react-native-bcsc-core'
 import { isAxiosError } from 'axios'
+import { ProvinceCode } from '@/bcsc-theme/utils/get-province-code'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
 
@@ -38,7 +39,7 @@ interface AuthorizeDeviceUnknownBCSCConfig {
     streetAddress: string
     postalCode: string
     city: string
-    province: 'AB' | 'BC' | 'MB' | 'NB' | 'NL' | 'NT' | 'NS' | 'NU' | 'ON' | 'PE' | 'QC' | 'SK' | 'YT'
+    province: ProvinceCode
   }
   gender?: 'male' | 'female' | 'unknown'
   middleNames?: string // space delimited names

@@ -41,8 +41,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const Step1IdsCompleted = registered && !needsAdditionalEvidence
   const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
   const Step3EmailCompleted = Boolean(emailAddress && emailConfirmed)
-  const Step4VerificationEnabled =
-    !store.bcsc.pendingVerification && Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted
+
+  const Step4VerificationEnabled = !store.bcsc.pendingVerification
 
   const styles = StyleSheet.create({
     container: {
@@ -373,10 +373,13 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         style={[
           styles.step,
           {
-            backgroundColor: Step3EmailCompleted ? ColorPalette.brand.primary : ColorPalette.brand.secondaryBackground,
+            backgroundColor:
+              Step2AddressCompleted && !Step3EmailCompleted
+                ? ColorPalette.brand.secondaryBackground
+                : ColorPalette.brand.primary,
           },
         ]}
-        disabled={!Step3EmailCompleted}
+        disabled={false}
         onPress={handleEmailStepPress}
       >
         <View style={styles.titleRow}>
@@ -384,15 +387,16 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             variant={'headingFour'}
             style={{
               marginRight: Spacing.md,
-              color: Step3EmailCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
+              color: Step3EmailCompleted ? TextTheme.normal.color : ColorPalette.brand.text,
             }}
           >
             {t('Unified.Steps.Step3')}
           </ThemedText>
           {Step3EmailCompleted ? <Icon name={'check-circle'} size={24} color={ColorPalette.semantic.success} /> : null}
         </View>
+
         <View style={styles.contentEmailContainer}>
-          <ThemedText style={{ color: Step3EmailCompleted ? ColorPalette.brand.text : TextTheme.normal.color }}>
+          <ThemedText style={{ color: Step3EmailCompleted ? TextTheme.normal.color : ColorPalette.brand.text }}>
             {Step3EmailCompleted ? `Email: ${emailAddress}` : 'Email Address'}
           </ThemedText>
           {Step3EmailCompleted ? (

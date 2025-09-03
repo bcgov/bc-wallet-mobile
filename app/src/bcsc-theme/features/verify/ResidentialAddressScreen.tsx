@@ -1,6 +1,7 @@
 import useAuthorizationApi from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
-import { getProvinceCode } from '@/bcsc-theme/utils/get-province-code'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { getProvinceCode, ProvinceCode } from '@/bcsc-theme/utils/get-province-code'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
@@ -13,7 +14,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { TOKENS } from '@bifold/core/src/container-api'
-import { useNavigation } from '@react-navigation/native'
+import { CommonActions, useNavigation } from '@react-navigation/native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -135,6 +136,7 @@ export const ResidentialAddressScreen = () => {
     // A2: device is already authorized
     if (store.bcsc.deviceCode && store.bcsc.deviceCodeExpiresAt) {
       navigation.goBack()
+      return
     }
 
     // missing required user attributes
@@ -148,24 +150,40 @@ export const ResidentialAddressScreen = () => {
       throw new Error('Missing prerequisite user attributes')
     }
 
-    const deviceAuth = await authorization.authorizeDeviceWithTokenHint({
+    // TODO (MD): Handle if this request fails, but is not a registration error. ie: failed network request
+    const deviceAuth = await authorization.authorizeDeviceWithUnknownBCSC({
       firstName: store.bcsc.userMetadata.name.first,
       lastName: store.bcsc.userMetadata.name.last,
-      birthDate: store.bcsc.birthdate.toISOString().split('T')[0],
+      birthdate: store.bcsc.birthdate.toISOString().split('T')[0],
+      middleNames: store.bcsc.userMetadata.name.middle,
       address: {
         streetAddress: formState.streetAddress,
-        locality: formState.city,
-        region: formState.province,
+        city: formState.city,
+        province: formState.province as ProvinceCode, // field has been validated already
         postalCode: formState.postalCode,
-        country: 'CA',
       },
     })
 
-    // QUESTION (MD): What is the correct value for this?
+    // device has already been registered
+    if (deviceAuth === null) {
+      navigation.goBack()
+      return
+    }
+
+    logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
+
+    // QUESTION (MD): What is the correct value for expiresAt?
     const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
     dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
+
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: BCSCScreens.SetupSteps }],
+      })
+    )
   }
 
   // TODO (MD): Add localizations for inputs
