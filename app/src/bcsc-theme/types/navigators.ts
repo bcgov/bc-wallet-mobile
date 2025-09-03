@@ -41,6 +41,7 @@ export enum BCSCScreens {
   EvidenceTypeList = 'EvidenceTypeList',
   EvidenceCapture = 'BCSCEvidenceCapture',
   EvidenceIDCollection = 'BCSCEvidenceIDCollection',
+  RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
 }
 
 export type BCSCTabStackParams = {
@@ -55,6 +56,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
+  [BCSCScreens.RemoveAccountConfirmation]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {

@@ -3,6 +3,8 @@ import { getDynamicClientRegistrationBody, setAccount, AccountSecurityMethod, ge
 
 import apiClient from '../client'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { BCDispatchAction, BCState } from '@/store'
+import { useStore } from '@bifold/core'
 
 export interface RegistrationResponseData {
   client_id: string
@@ -38,6 +40,8 @@ export interface RegistrationResponseData {
 }
 
 const useRegistrationApi = () => {
+  const [state, dispatch] = useStore<BCState>()
+
   const register = useCallback(async () => {
     const account = await getAccount()
     // If an account already exists, we don't need to register again
@@ -49,13 +53,19 @@ const useRegistrationApi = () => {
       headers: { 'Content-Type': 'application/json' },
       skipBearerAuth: true,
     })
+
+    dispatch({
+      type: BCDispatchAction.UPDATE_REGISTRATION_ACCESS_TOKEN,
+      payload: [{ registrationAccessToken: data.registration_access_token }],
+    })
+
     await setAccount({
       clientID: data.client_id,
       issuer: apiClient.endpoints.issuer,
       securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
     })
     return data
-  }, [])
+  }, [dispatch])
 
   const updateRegistration = useCallback(async (clientId: string) => {
     const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
@@ -68,11 +78,22 @@ const useRegistrationApi = () => {
     return data
   }, [])
 
-  const deleteRegistration = useCallback(async (clientId: string) => {
-    const { status } = await apiClient.delete(`${apiClient.endpoints.registration}/${clientId}`)
-    // 200 level status codes indicate success
-    return { success: status > 199 && status < 300 }
-  }, [])
+  const deleteRegistration = useCallback(
+    async (clientId: string) => {
+      const registrationAccessToken = state.bcsc.registrationAccessToken
+
+      const { status } = await apiClient.delete(`${apiClient.endpoints.registration}/${clientId}`, {
+        skipBearerAuth: true,
+        headers: {
+          Authorization: `Bearer ${registrationAccessToken}`,
+        },
+      })
+
+      // 200 level status codes indicate success
+      return { success: status > 199 && status < 300 }
+    },
+    [state.bcsc.registrationAccessToken]
+  )
 
   return useMemo(
     () => ({
