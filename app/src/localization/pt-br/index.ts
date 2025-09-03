@@ -323,6 +323,9 @@ const translation = {
     "Heading": "Update BC Wallet to the latest version (PT-BR)",
     "Body": "BC Wallet was updated with new improvements. Update your app now to enjoy the latest features and enhancements. (PT-BR)",
   },
+  "HelpCentre": {
+    "Title": "Help Centre (PT-BR)",
+  }
 }
 
 export default translation
