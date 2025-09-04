@@ -332,6 +332,11 @@ const translation = {
       "PostalCodeLabel": "Postal Code (PT-BR)",
       "PostalCodeSubtext": "Your postal code in format A1A 2B2 (PT-BR)",
       "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format (PT-BR)"
+    },
+    "Account": {
+      "RemoveAccount": "Remove account (PT-BR)",
+      "RemoveAccountTitle": "Remove account from this app? (PT-BR)",
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)"
     }
   },
   "RemoteLogging": {

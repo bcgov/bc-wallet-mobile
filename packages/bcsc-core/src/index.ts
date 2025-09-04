@@ -281,3 +281,11 @@ export const getRegistrationToken = async (): Promise<TokenInfo | null> => {
   // For now, return null
   return null;
 };
+
+/**
+ * Removes the current account from the accounts file
+ * @returns A promise that resolves when the account has been successfully removed.
+ */
+export const removeAccount = async (): Promise<void> => {
+  return BcscCore.removeAccount();
+};

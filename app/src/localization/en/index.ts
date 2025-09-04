@@ -335,6 +335,11 @@ const translation = {
       "PostalCodeLabel": "Postal Code",
       "PostalCodeSubtext": "Your postal code in format A1A 2B2",
       "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format"
+    },
+    "Account": {
+      "RemoveAccount": "Remove account",
+      "RemoveAccountTitle": "Remove account from this app?",
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity."
     }
   },
   "RemoteLogging": {
