@@ -141,7 +141,7 @@ export const ResidentialAddressScreen = () => {
     }
 
     // missing required user attributes
-    // making the assumption that the user metatdata has been prviously saved ie: Step 2
+    // making the assumption that the user metadata has been previously saved ie: Step 2
     if (!store.bcsc.birthdate || !store.bcsc.userMetadata?.name) {
       logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected', {
         birthdate: store.bcsc.birthdate,
