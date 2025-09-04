@@ -89,7 +89,7 @@ export const ResidentialAddressScreen = () => {
     const errors: ResidentialAddressFormErrors = {}
 
     // allows: h2t-1b8 / h2z 1b8 / H2Z1B8
-    // dissallows: leading Z,W or to contain D, F, I, O, Q or U
+    // disallows: leading Z,W or to contain D, F, I, O, Q or U
     const postalCodeRegex = new RegExp(/^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVXY][ -]?\d[ABCEGHJKLMNPRSTVXY]\d$/i)
 
     if (!values.streetAddress) {
