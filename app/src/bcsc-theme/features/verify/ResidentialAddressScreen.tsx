@@ -123,10 +123,10 @@ export const ResidentialAddressScreen = () => {
       type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
       payload: [
         {
-          streetAddress: formState.streetAddress,
-          postalCode: formState.postalCode,
-          city: formState.city,
-          province: formState.province,
+          streetAddress: formState.streetAddress.trim(),
+          postalCode: formState.postalCode.trim(),
+          city: formState.city.trim(),
+          province: getProvinceCode(formState.province.trim()),
           country: 'CA',
         },
       ],
