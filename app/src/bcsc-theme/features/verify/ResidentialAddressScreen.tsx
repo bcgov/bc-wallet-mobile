@@ -85,7 +85,7 @@ export const ResidentialAddressScreen = () => {
    * @returns {*} ResidentialAddressFormErrors
    */
   const validateForm = (values: ResidentialAddressFormState): ResidentialAddressFormErrors => {
-    // TODO (MD): Invesigate a proper schema validation library if this gets more complex ie: yup, zod, etc.
+    // TODO (MD): Investigate a proper schema validation library if this gets more complex ie: yup, zod, etc.
     const errors: ResidentialAddressFormErrors = {}
 
     // allows: h2t-1b8 / h2z 1b8 / H2Z1B8
