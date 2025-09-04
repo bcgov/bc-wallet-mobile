@@ -63,7 +63,7 @@ const ProvinceCodeMap = {
  */
 export function getProvinceCode(province: string): ProvinceCode | null {
   // remove all spaces and trim
-  const squishedProvince = province.replace(' ', '').trim() as keyof typeof ProvinceCodeMap
+  const squishedProvince = province.replace(/\s+/g, '').trim() as keyof typeof ProvinceCodeMap
 
   const provinceCode = ProvinceCodeMap[squishedProvince]
 
