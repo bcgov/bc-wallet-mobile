@@ -72,7 +72,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
 
       {props.subtext && !props.error ? (
         <ThemedText
-          style={[{ marginTop: 8 }, props.errorProps]}
+          style={[{ marginTop: 8 }, props.subtextProps]}
           variant={'labelSubtitle'}
           testID={testIdWithKey(`${props.id}-subtext`)}
         >
