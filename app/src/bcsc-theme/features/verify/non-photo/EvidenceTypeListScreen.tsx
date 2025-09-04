@@ -144,26 +144,43 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     return cards
   }
 
+  /**
+   * Generates the heading and description text based on the current state of evidence selection.
+   *
+   * @returns {[string, string]} An array containing the heading and description text.
+   */
+  const getEvidenceHeadingAndDescription = useCallback(() => {
+    const evidenceCount = store.bcsc.additionalEvidenceData.length
+    const isNonBCSCCard = store.bcsc.cardType === BCSCCardType.Other
+
+    if (evidenceCount === 1 && isNonBCSCCard) {
+      // Choose your second ID
+      return [t('Unified.EvidenceTypeList.SecondID'), t('Unified.EvidenceTypeList.NonBCSCDescription')]
+    }
+
+    if (evidenceCount === 1 && !isNonBCSCCard) {
+      // Choose photo ID
+      return [t('Unified.EvidenceTypeList.Heading'), t('Unified.EvidenceTypeList.Description')]
+    }
+
+    // Choose your first ID
+    return [t('Unified.EvidenceTypeList.FirstID'), '']
+  }, [store.bcsc.additionalEvidenceData.length, store.bcsc.cardType, t])
+
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
   }
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      {store.bcsc.additionalEvidenceData.length > 0 ? (
-        <View style={{ marginBottom: Spacing.lg }}>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.EvidenceTypeList.Heading')}
-          </ThemedText>
-          <ThemedText>{t('Unified.EvidenceTypeList.Description')}</ThemedText>
-        </View>
-      ) : (
-        <View style={{ marginBottom: Spacing.lg }}>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.EvidenceTypeList.FirstID')}
-          </ThemedText>
-        </View>
-      )}
+      <View style={{ marginBottom: Spacing.lg }}>
+        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+          {getEvidenceHeadingAndDescription()[0]}
+        </ThemedText>
+        {getEvidenceHeadingAndDescription()[1] ? (
+          <ThemedText style={{ marginBottom: Spacing.md }}>{getEvidenceHeadingAndDescription()[1]}</ThemedText>
+        ) : null}
+      </View>
 
       <SectionList
         sections={evidenceSections || []}

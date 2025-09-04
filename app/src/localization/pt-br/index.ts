@@ -291,7 +291,9 @@ const translation = {
     "EvidenceTypeList": {
       "Heading": "Choose photo ID (PT-BR)",
       "Description": "Use an ID that has the same name as on your BC Services Card. (PT-BR)",
+      "NonBCSCDescription": "Use an ID that has the same name as your first ID. (PT-BR)",
       "FirstID": "Choose your first ID (PT-BR)",
+      "SecondID": "Choose your second ID (PT-BR)"
     },
     "EvidenceIDCollection": {
       "DocumentNumberSubtext": "For example: (PT-BR)",

@@ -9,6 +9,7 @@ import {
   KeyboardView,
   testIdWithKey,
   ThemedText,
+  ToastType,
   useServices,
   useStore,
   useTheme,
@@ -19,6 +20,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
 
 type ResidentialAddressFormState = {
   streetAddress: string
@@ -161,6 +163,14 @@ export const ResidentialAddressScreen = () => {
         province: getProvinceCode(formState.province) as ProvinceCode, // field has already been validated,
         postalCode: formState.postalCode,
       },
+    })
+
+    Toast.show({
+      type: ToastType.Success,
+      text1: 'Address saved',
+      bottomOffset: Spacing.lg,
+      autoHide: true,
+      visibilityTime: 1500,
     })
 
     // device has already been registered

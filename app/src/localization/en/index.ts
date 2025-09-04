@@ -294,7 +294,9 @@ const translation = {
     "EvidenceTypeList": {
       "Heading": "Choose photo ID",
       "Description": "Use an ID that has the same name as on your BC Services Card.",
+      "NonBCSCDescription": "Use an ID that has the same name as your first ID.",
       "FirstID": "Choose your first ID",
+      "SecondID": "Choose your second ID"
     },
     "EvidenceIDCollection": {
       "DocumentNumberSubtext": "For example:",

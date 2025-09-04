@@ -75,7 +75,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       navigation.navigate(BCSCScreens.EmailConfirmationScreen, { emailAddressId: email_address_id })
     } catch (error: any) {
       setError('Error submitting email')
-      logger.error(`Error submitting email: ${error.message}`)
+
+      logger.error('Error submitting email', error)
     } finally {
       setLoading(false)
     }

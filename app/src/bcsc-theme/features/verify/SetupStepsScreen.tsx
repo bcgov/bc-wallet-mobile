@@ -15,6 +15,18 @@ type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
 }
 
+/**
+ * The SetupStepsScreen component displays the steps required for setting up identity verification for BCSC.
+ *
+ * Currently this supports several flows:
+ *    1. BCSC card with photo
+ *    2. BCSC combo card with photo
+ *    3. BCSC card without photo (requires second ID)
+ *    4. Non-BCSC cards (requires two IDs)
+ *
+ * @param {SetupStepsScreenProps} props - The props for the component, including navigation.
+ * @returns {*} {JSX.Element} The rendered SetupStepsScreen component.
+ */
 const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
@@ -35,7 +47,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const nonPhotoBcscNeedsAdditionalCard = isNonPhotoCard && missingPhotoId
 
   // card registration state
-  const bcscRegistered = Boolean(bcscSerialNumber && emailAddress)
+  const bcscRegistered = Boolean(!isNonBCSCCards && bcscSerialNumber && emailAddress)
   const nonBcscRegistered = isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 2
   const registered = bcscRegistered || nonBcscRegistered
 
@@ -219,12 +231,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       throw new Error('Invalid setup steps detected, missing device code expiration.')
     }
 
-    if (missingPhotoId) {
+    if (nonPhotoBcscNeedsAdditionalCard) {
       return 'Complete additional identification first'
     }
 
     return 'Verify identity'
-  }, [Step4VerificationEnabled, missingPhotoId, store.bcsc.deviceCodeExpiresAt])
+  }, [Step4VerificationEnabled, store.bcsc.deviceCodeExpiresAt, nonPhotoBcscNeedsAdditionalCard])
 
   return (
     <View style={styles.container}>
@@ -240,12 +252,13 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             navigation.navigate(BCSCScreens.EvidenceTypeList)
             return
           }
+          if (nonPhotoBcscNeedsAdditionalCard) {
+            navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
+            return
+          }
           if (!registered) {
             navigation.navigate(BCSCScreens.IdentitySelection)
             return
-          }
-          if (nonPhotoBcscNeedsAdditionalCard) {
-            navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
           }
         }}
       >

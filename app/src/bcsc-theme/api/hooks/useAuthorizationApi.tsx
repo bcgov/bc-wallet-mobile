@@ -112,9 +112,8 @@ const useAuthorizationApi = () => {
               region: config.address.province,
               country: 'CA',
             },
-            // IAS says to use 'unknown' as default
+            // IAS requests 'unknown' when not specified
             gender: config.gender ?? 'unknown',
-            // IAS
             middle_name: config.middleNames,
           }),
         }
