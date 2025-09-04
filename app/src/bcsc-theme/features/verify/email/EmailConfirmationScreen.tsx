@@ -129,6 +129,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   const handleGoToEmail = () => {
     let url = 'mailto:'
 
+    // On IOS we can open the mail application directly
     if (Platform.OS === 'ios') {
       url = 'message://'
     }
