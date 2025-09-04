@@ -51,6 +51,7 @@ const useAuthorizationApi = () => {
    *
    * TODO: fetch evidence API endpoint from this endpoint
    *
+   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301615517/5.1.1+Evidence+API`
    * @param {string} serial - BCSC serial number
    * @param {Date} birthdate - Users birth date
    * @returns {*} {VerifyInPersonResponseData}
@@ -84,6 +85,7 @@ const useAuthorizationApi = () => {
    * Note: This request will return null if called multiple times for the same device.
    * First response will return the Verification response, which must be stored and persisted.
    *
+   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301615517/5.1.1+Evidence+API`
    * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
    * @returns {*} {VerifyUnknownBCSCResponseData | null} - Returns the response data or null if already registered
    */
@@ -110,7 +112,9 @@ const useAuthorizationApi = () => {
               region: config.address.province,
               country: 'CA',
             },
+            // IAS says to use 'unknown' as default
             gender: config.gender ?? 'unknown',
+            // IAS
             middle_name: config.middleNames,
           }),
         }

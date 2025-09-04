@@ -29,23 +29,24 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
   const isNonBCSCCards = store.bcsc.cardType === BCSCCardType.Other
 
+  // additional ID requirements
+  const missingPhotoId = !store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)
+  const nonBcscNeedsAdditionalCard = isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 1
+  const nonPhotoBcscNeedsAdditionalCard = isNonPhotoCard && missingPhotoId
+
   // card registration state
   const bcscRegistered = Boolean(bcscSerialNumber && emailAddress)
   const nonBcscRegistered = isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 2
   const registered = bcscRegistered || nonBcscRegistered
 
-  // evidence collection state
-  const needsAdditionalCard =
-    (isNonPhotoCard && !store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)) ||
-    (isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 1)
-
   // step completion state
-  const Step1IdsCompleted = registered && !needsAdditionalCard
+  const Step1IdsCompleted = registered && !nonBcscNeedsAdditionalCard && !nonPhotoBcscNeedsAdditionalCard
   const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
   const Step3EmailCompleted = Boolean(emailAddress && emailConfirmed)
   const Step4VerificationCompleted = store.bcsc.verified
 
-  const Step4VerificationEnabled = !store.bcsc.pendingVerification
+  const Step4VerificationEnabled =
+    Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted && !store.bcsc.pendingVerification
 
   const styles = StyleSheet.create({
     container: {
@@ -76,7 +77,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     },
     contentEmailContainer: {
       flexDirection: 'row',
-      alignItems: 'center',
       justifyContent: 'space-between',
     },
     contentEmail: {
@@ -215,17 +215,16 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     }
 
     if (Step4VerificationEnabled && !store.bcsc.deviceCodeExpiresAt) {
-      // TODO (MD): Handle this unhappy path eventually
-      // Give instructions to either reset their form, or resubmit the missing piece
+      // developer error, should not be possible to reach this state
       throw new Error('Invalid setup steps detected, missing device code expiration.')
     }
 
-    if (needsAdditionalCard) {
+    if (missingPhotoId) {
       return 'Complete additional identification first'
     }
 
     return 'Verify identity'
-  }, [Step4VerificationEnabled, needsAdditionalCard, store.bcsc.deviceCodeExpiresAt])
+  }, [Step4VerificationEnabled, missingPhotoId, store.bcsc.deviceCodeExpiresAt])
 
   return (
     <View style={styles.container}>
@@ -237,24 +236,22 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         isComplete={Step1IdsCompleted}
         isFocused={true}
         onPress={() => {
-          if (!nonBcscRegistered && store.bcsc.additionalEvidenceData.length === 1) {
+          if (nonBcscNeedsAdditionalCard) {
             navigation.navigate(BCSCScreens.EvidenceTypeList)
             return
           }
-
           if (!registered) {
             navigation.navigate(BCSCScreens.IdentitySelection)
             return
           }
-
-          if (needsAdditionalCard) {
+          if (nonPhotoBcscNeedsAdditionalCard) {
             navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
           }
         }}
       >
         {
           // show additional text if a second card is required
-          needsAdditionalCard ? (
+          nonBcscNeedsAdditionalCard || nonPhotoBcscNeedsAdditionalCard ? (
             <View>
               <View style={styles.addSecondIdTextContainer}>
                 <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>Add second ID</ThemedText>
@@ -296,22 +293,31 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       >
         {
           <View style={styles.contentEmailContainer}>
-            <ThemedText style={{ color: Step3EmailCompleted ? TextTheme.normal.color : ColorPalette.brand.text }}>
-              {Step3EmailCompleted ? `Email: ${emailAddress}` : 'Email Address'}
-            </ThemedText>
             {Step3EmailCompleted ? (
-              <TouchableOpacity
-                style={styles.contentEmailButton}
-                onPress={handleEmailStepPress}
-                testID={testIdWithKey('EditEmail')}
-                accessibilityLabel={'Edit'}
-                hitSlop={hitSlop}
+              <>
+                <ThemedText style={{ color: TextTheme.normal.color }}>{`Email: ${emailAddress}`}</ThemedText>
+                <TouchableOpacity
+                  style={styles.contentEmailButton}
+                  onPress={handleEmailStepPress}
+                  testID={testIdWithKey('EditEmail')}
+                  accessibilityLabel={'Edit'}
+                  hitSlop={hitSlop}
+                >
+                  <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
+                    Edit
+                  </ThemedText>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <ThemedText
+                style={{
+                  color:
+                    Step2AddressCompleted && !Step3EmailCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
+                }}
               >
-                <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
-                  Edit
-                </ThemedText>
-              </TouchableOpacity>
-            ) : null}
+                Email Address
+              </ThemedText>
+            )}
           </View>
         }
       </SetupStep>
@@ -326,9 +332,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         // verification is the final step, ensure all other steps complete before proceeding
         isFocused={Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted && Step4VerificationEnabled}
         onPress={() => {
-          if (Step4VerificationEnabled) {
-            navigation.navigate(BCSCScreens.VerificationMethodSelection)
-          }
+          navigation.navigate(BCSCScreens.VerificationMethodSelection)
         }}
       />
 

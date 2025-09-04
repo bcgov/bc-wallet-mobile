@@ -86,22 +86,21 @@ export const ResidentialAddressScreen = () => {
     // TODO (MD): Invesigate a proper schema validation library if this gets more complex ie: yup, zod, etc.
     const errors: ResidentialAddressFormErrors = {}
 
-    // TODO (MD): Add localizations for this form
+    // allows: h2t-1b8 / h2z 1b8 / H2Z1B8
+    // dissallows: leading Z,W or to contain D, F, I, O, Q or U
+    const postalCodeRegex = new RegExp(/^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVXY][ -]?\d[ABCEGHJKLMNPRSTVXY]\d$/i)
+
     if (!values.streetAddress) {
       errors.streetAddress = t('Unified.Address.StreetAddressRequired')
     }
     if (!values.city) {
       errors.city = t('Unified.Address.CityRequired')
     }
-    if (!values.province) {
-      errors.province = t('Unified.Address.ProvinceRequired')
+    if (!getProvinceCode(values.province)) {
+      errors.province = t('Unified.Address.ProvinceInvalid')
     }
-    if (values.province && !getProvinceCode(values.province)) {
-      errors.province = t('Unified.Address.InvalidProvince')
-    }
-    // TODO (MD): Add postal code format validation
-    if (!values.postalCode) {
-      errors.postalCode = t('Unified.Address.PostalCodeRequired')
+    if (!postalCodeRegex.test(values.postalCode)) {
+      errors.postalCode = t('Unified.Address.PostalCodeInvalid')
     }
 
     return errors
@@ -135,7 +134,7 @@ export const ResidentialAddressScreen = () => {
 
     // A2: device is already authorized
     if (store.bcsc.deviceCode && store.bcsc.deviceCodeExpiresAt) {
-      navigation.goBack()
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
       return
     }
 
@@ -159,14 +158,15 @@ export const ResidentialAddressScreen = () => {
       address: {
         streetAddress: formState.streetAddress,
         city: formState.city,
-        province: formState.province as ProvinceCode, // field has been validated already
+        province: getProvinceCode(formState.province) as ProvinceCode, // field has already been validated,
         postalCode: formState.postalCode,
       },
     })
 
     // device has already been registered
     if (deviceAuth === null) {
-      navigation.goBack()
+      logger.info(`Device has already been registered`)
+      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
       return
     }
 
@@ -178,61 +178,53 @@ export const ResidentialAddressScreen = () => {
     dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
 
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: BCSCScreens.SetupSteps }],
-      })
-    )
+    navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
   }
 
-  // TODO (MD): Add localizations for inputs
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <KeyboardView>
         <ScrollView contentContainerStyle={styles.scrollView}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.Address.Heading', 'Address')}
+            {t('Unified.Address.Heading')}
           </ThemedText>
 
-          <ThemedText style={{ marginBottom: Spacing.sm }}>
-            {t('Unified.Address.Paragraph', 'Enter the address of where you live.')}
-          </ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.Address.Paragraph')}</ThemedText>
 
           <InputWithValidation
             id={'streetAddress1'}
-            label={'Street Line 1'}
+            label={t('Unified.Address.StreetAddressLabel')}
             value={formState.streetAddress}
             onChange={(value) => handleChange('streetAddress', value)}
             error={formErrors.streetAddress}
-            subtext={t('')}
+            subtext={t('Unified.Address.StreetAddressSubtext')}
           />
 
           <InputWithValidation
             id={'city'}
-            label={'City'}
+            label={t('Unified.Address.CityLabel')}
             value={formState.city}
             onChange={(value) => handleChange('city', value)}
             error={formErrors.city}
-            subtext={t('')}
+            subtext={t('Unified.Address.CitySubtext')}
           />
 
           <InputWithValidation
             id={'province'}
-            label={'Province or Territory'}
+            label={t('Unified.Address.ProvinceLabel')}
             value={formState.province}
             onChange={(value) => handleChange('province', value)}
             error={formErrors.province}
-            subtext={t('')}
+            subtext={t('Unified.Address.ProvinceSubtext')}
           />
 
           <InputWithValidation
             id={'postalCode'}
-            label={'Postal Code'}
+            label={t('Unified.Address.PostalCodeLabel')}
             value={formState.postalCode}
             onChange={(value) => handleChange('postalCode', value)}
             error={formErrors.postalCode}
-            subtext={t('')}
+            subtext={t('Unified.Address.PostalCodeSubtext')}
           />
 
           <View style={{ marginTop: 48, width: '100%' }}>

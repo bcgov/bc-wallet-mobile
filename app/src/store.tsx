@@ -15,6 +15,7 @@ import {
   VerificationVideoUploadPayload,
 } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
+import { ProvinceCode } from './bcsc-theme/utils/get-province-code'
 
 export interface IASEnvironment {
   name: string
@@ -54,7 +55,7 @@ export interface NonBCSCUserMetadata {
     streetAddress: string
     postalCode: string
     city: string
-    province: string // TODO (MD): Use province codes
+    province: ProvinceCode
     country: 'CA' // currently we only support Canada
   }
 }

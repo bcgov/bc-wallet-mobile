@@ -315,6 +315,26 @@ const translation = {
       "MiddleNamesLabel": "Middle names",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
       "MiddleNamesError": "Please enter up to two middle names",
+    },
+    "Address": {
+      "Heading": "Address",
+      "Paragraph": "Enter the address of where you live.",
+
+      "StreetAddressLabel": "Street Line 1",
+      "StreetAddressSubtext": "Your residential street address",
+      "StreetAddressRequired": "Please enter a street address",
+
+      "CityLabel": "City",
+      "CitySubtext": "The city of your current address",
+      "CityRequired": "Please enter a city",
+
+      "ProvinceLabel": "Province or Territory",
+      "ProvinceSubtext": "The province or territory of your current address",
+      "ProvinceInvalid": "Please enter a valid Canadian province or territory",
+
+      "PostalCodeLabel": "Postal Code",
+      "PostalCodeSubtext": "Your postal code in format A1A 2B2",
+      "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format"
     }
   },
   "RemoteLogging": {
@@ -337,7 +357,7 @@ const translation = {
   },
   "HelpCentre": {
     "Title": "Help Centre"
-  }
+  },
 }
 
 export default translation

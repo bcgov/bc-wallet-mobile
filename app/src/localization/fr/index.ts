@@ -312,6 +312,26 @@ const translation = {
       "MiddleNamesLabel": "Middle names (FR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (FR)",
       "MiddleNamesError": "Please enter up to two middle names (FR)",
+    },
+    "Address": {
+      "Heading": "Address (FR)",
+      "Paragraph": "Enter the address of where you live. (FR)",
+
+      "StreetAddressLabel": "Street Line 1 (FR)",
+      "StreetAddressSubtext": "Your residential street address (FR)",
+      "StreetAddressRequired": "Please enter a street address (FR)",
+
+      "CityLabel": "City (FR)",
+      "CitySubtext": "The city of your current address (FR)",
+      "CityRequired": "Please enter a city (FR)",
+
+      "ProvinceLabel": "Province or Territory (FR)",
+      "ProvinceSubtext": "The province or territory of your current address (FR)",
+      "ProvinceInvalid": "Please enter a valid Canadian province or territory (FR)",
+
+      "PostalCodeLabel": "Postal Code (FR)",
+      "PostalCodeSubtext": "Your postal code in format A1A 2B2 (FR)",
+      "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format (FR)"
     }
   },
   "RemoteLogging": {
