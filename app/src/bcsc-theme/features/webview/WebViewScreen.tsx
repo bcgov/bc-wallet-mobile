@@ -1,12 +1,12 @@
-import React, { useCallback } from 'react'
-import { StyleSheet } from 'react-native'
-import { WebView } from 'react-native-webview'
-import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import client from '@/bcsc-theme/api/client'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
+import React, { useCallback } from 'react'
+import { StyleSheet } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { WebView } from 'react-native-webview'
+import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
 import { BCSCRootStackParams, BCSCScreens } from '../../types/navigators'
-import client from '@/bcsc-theme/api/client'
 
 export interface WebViewScreenProps {
   route: RouteProp<BCSCRootStackParams, BCSCScreens.WebView>
@@ -20,7 +20,7 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
   const handleError = useCallback(
     (syntheticEvent: WebViewErrorEvent) => {
       const { nativeEvent } = syntheticEvent
-      logger.error('WebView Error:', nativeEvent)
+      logger.error('WebView Error:', { ...nativeEvent })
     },
     [logger]
   )
