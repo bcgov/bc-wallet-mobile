@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { SetupStep } from './components/SetupStep'
 import { hitSlop } from '@/constants'
+import { useSetupSteps } from '@/hooks/useSetupSteps'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -34,31 +35,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  // store + card attributes
-  const bcscSerialNumber = store.bcsc.serial || null
-  const emailAddress = store.bcsc.email || null
-  const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
-  const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
-  const isNonBCSCCards = store.bcsc.cardType === BCSCCardType.Other
-
-  // additional ID requirements
-  const missingPhotoId = !store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)
-  const nonBcscNeedsAdditionalCard = isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 1
-  const nonPhotoBcscNeedsAdditionalCard = isNonPhotoCard && missingPhotoId
-
-  // card registration state
-  const bcscRegistered = Boolean(!isNonBCSCCards && bcscSerialNumber && emailAddress)
-  const nonBcscRegistered = isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 2
-  const registered = bcscRegistered || nonBcscRegistered
-
-  // step completion state
-  const Step1IdsCompleted = registered && !nonBcscNeedsAdditionalCard && !nonPhotoBcscNeedsAdditionalCard
-  const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
-  const Step3EmailCompleted = Boolean(emailAddress && emailConfirmed)
-  const Step4VerificationCompleted = store.bcsc.verified
-
-  const Step4VerificationEnabled =
-    Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted && !store.bcsc.pendingVerification
+  // tracks the current step state (completed and focused)
+  const step = useSetupSteps()
 
   const styles = StyleSheet.create({
     container: {
@@ -178,18 +156,18 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    */
   const getVerificationStep1Subtext = useCallback((): string[] => {
     // if the card type is Other (multiple non BCSC cards), show each card type label
-    if (isNonBCSCCards && store.bcsc.additionalEvidenceData.length > 0) {
+    if (store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length > 0) {
       return store.bcsc.additionalEvidenceData.map((evidence) => `ID: ${evidence.evidenceType.evidence_type_label}`)
     }
 
     // if the bcsc card is registered, show the bcsc serial number
-    if (bcscRegistered) {
-      return [`ID: BC Services Card (${bcscSerialNumber})`]
+    if (step.id.completed && store.bcsc.serial) {
+      return [`ID: BC Services Card (${store.bcsc.serial})`]
     }
 
     // otherwise, show the default text
     return [t('Unified.Steps.ScanOrTakePhotos')]
-  }, [bcscRegistered, bcscSerialNumber, store.bcsc.additionalEvidenceData, isNonBCSCCards, t])
+  }, [store.bcsc.cardType, store.bcsc.additionalEvidenceData, store.bcsc.serial, step.id.completed, t])
 
   /**
    * Returns the subtext for Step 2 (Residential Address) of the verification process.
@@ -200,7 +178,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    * @returns {*} {string} The subtext for Step 2.
    */
   const getVerificationStep2Subtext = useCallback(() => {
-    if (bcscRegistered) {
+    if (step.id.completed && store.bcsc.serial) {
       return 'Address: Residential address from your BC Services Card will be used'
     }
 
@@ -209,7 +187,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     }
 
     return 'Residential address'
-  }, [bcscRegistered, store.bcsc.userMetadata?.address, store.bcsc.deviceCode])
+  }, [step.id.completed, store.bcsc.serial, store.bcsc.userMetadata?.address, store.bcsc.deviceCode])
 
   /**
    * Returns the subtext for Step 4 (Verify Identity) of the verification process.
@@ -217,7 +195,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    * @returns {*} {string} The subtext for step 4
    */
   const getVerificationStep4Subtext = useCallback(() => {
-    if (Step4VerificationEnabled && store.bcsc.deviceCodeExpiresAt) {
+    if (step.verify.focused && !store.bcsc.deviceCodeExpiresAt) {
+      // developer error, should not be possible to reach this state
+      throw new Error('Invalid setup steps detected, missing device code expiration.')
+    }
+
+    if (step.verify.focused && store.bcsc.deviceCodeExpiresAt) {
       const expirationDate = store.bcsc.deviceCodeExpiresAt.toLocaleString('en-CA', {
         day: '2-digit',
         month: 'long',
@@ -226,17 +209,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       return `Verify identity by ${expirationDate}`
     }
 
-    if (Step4VerificationEnabled && !store.bcsc.deviceCodeExpiresAt) {
-      // developer error, should not be possible to reach this state
-      throw new Error('Invalid setup steps detected, missing device code expiration.')
-    }
-
-    if (nonPhotoBcscNeedsAdditionalCard) {
+    if (step.id.nonPhotoBcscNeedsAdditionalCard) {
       return 'Complete additional identification first'
     }
 
     return 'Verify identity'
-  }, [Step4VerificationEnabled, store.bcsc.deviceCodeExpiresAt, nonPhotoBcscNeedsAdditionalCard])
+  }, [step.verify.focused, step.id.nonPhotoBcscNeedsAdditionalCard, store.bcsc.deviceCodeExpiresAt])
 
   return (
     <View style={styles.container}>
@@ -245,18 +223,18 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <SetupStep
         title={'Step 1'}
         subtext={getVerificationStep1Subtext()}
-        isComplete={Step1IdsCompleted}
-        isFocused={true}
+        isComplete={step.id.completed}
+        isFocused={step.id.focused}
         onPress={() => {
-          if (nonBcscNeedsAdditionalCard) {
+          if (step.id.nonBcscNeedsAdditionalCard) {
             navigation.navigate(BCSCScreens.EvidenceTypeList)
             return
           }
-          if (nonPhotoBcscNeedsAdditionalCard) {
+          if (step.id.nonPhotoBcscNeedsAdditionalCard) {
             navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
             return
           }
-          if (!registered) {
+          if (!step.id.completed) {
             navigation.navigate(BCSCScreens.IdentitySelection)
             return
           }
@@ -264,7 +242,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       >
         {
           // show additional text if a second card is required
-          nonBcscNeedsAdditionalCard || nonPhotoBcscNeedsAdditionalCard ? (
+          step.id.nonBcscNeedsAdditionalCard || step.id.nonPhotoBcscNeedsAdditionalCard ? (
             <View>
               <View style={styles.addSecondIdTextContainer}>
                 <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>Add second ID</ThemedText>
@@ -272,7 +250,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               </View>
               {
                 // QUESTION (MD): Do we want the same for the non bcsc card verification?
-                isNonPhotoCard ? (
+                store.bcsc.cardType === BCSCCardType.NonPhoto ? (
                   <ThemedText>{'Additional identification required for non-photo BC Services Card.'}</ThemedText>
                 ) : null
               }
@@ -287,8 +265,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <SetupStep
         title={'Step 2'}
         subtext={[getVerificationStep2Subtext()]}
-        isComplete={Step2AddressCompleted}
-        isFocused={Step1IdsCompleted && !Step2AddressCompleted}
+        isComplete={step.address.completed}
+        isFocused={step.address.focused}
         onPress={() => {
           navigation.navigate(BCSCScreens.ResidentialAddressScreen)
         }}
@@ -300,15 +278,15 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <SetupStep
         title={'Step 3'}
         subtext={[]}
-        isComplete={Step3EmailCompleted}
-        isFocused={Step2AddressCompleted && !Step3EmailCompleted}
+        isComplete={step.email.completed}
+        isFocused={step.email.focused}
         onPress={handleEmailStepPress}
       >
         {
           <View style={styles.contentEmailContainer}>
-            {Step3EmailCompleted ? (
+            {step.email.completed ? (
               <>
-                <ThemedText style={{ color: TextTheme.normal.color }}>{`Email: ${emailAddress}`}</ThemedText>
+                <ThemedText style={{ color: TextTheme.normal.color }}>{`Email: ${store.bcsc.email}`}</ThemedText>
                 <TouchableOpacity
                   style={styles.contentEmailButton}
                   onPress={handleEmailStepPress}
@@ -324,8 +302,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             ) : (
               <ThemedText
                 style={{
-                  color:
-                    Step2AddressCompleted && !Step3EmailCompleted ? ColorPalette.brand.text : TextTheme.normal.color,
+                  color: step.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
                 }}
               >
                 Email Address
@@ -341,9 +318,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       <SetupStep
         title={'Step 4'}
         subtext={[getVerificationStep4Subtext()]}
-        isComplete={Step4VerificationCompleted}
-        // verification is the final step, ensure all other steps complete before proceeding
-        isFocused={Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted && Step4VerificationEnabled}
+        isComplete={step.verify.completed}
+        isFocused={step.verify.focused}
         onPress={() => {
           navigation.navigate(BCSCScreens.VerificationMethodSelection)
         }}
