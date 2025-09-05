@@ -1,16 +1,15 @@
-import { useTheme } from '@bifold/core'
+import { QRScannerTorch, useTheme } from '@bifold/core'
 import React, { useEffect, useRef, useState } from 'react'
-import { StyleSheet, View, ViewStyle, useWindowDimensions, ColorValue } from 'react-native'
+import { ColorValue, StyleSheet, View, ViewStyle, useWindowDimensions } from 'react-native'
 import {
   Camera,
-  useCameraPermission,
-  useCameraDevice,
-  useCodeScanner,
-  CodeType,
   Code,
   CodeScannerFrame,
+  CodeType,
+  useCameraDevice,
+  useCameraPermission,
+  useCodeScanner,
 } from 'react-native-vision-camera'
-import QRScannerTorch from '@bifold/core/src/components/misc/QRScannerTorch'
 
 const overlayTint: ColorValue = 'rgba(0, 0, 0, 0.4)'
 
