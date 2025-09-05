@@ -155,19 +155,25 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    * @returns {*} {string[]} An array of strings representing the subtext for Step 1.
    */
   const getVerificationStep1Subtext = useCallback((): string[] => {
-    // if the card type is Other (multiple non BCSC cards), show each card type label
-    if (store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length > 0) {
-      return store.bcsc.additionalEvidenceData.map((evidence) => `ID: ${evidence.evidenceType.evidence_type_label}`)
-    }
+    const cards: string[] = []
 
     // if the bcsc card is registered, show the bcsc serial number
     if (step.id.completed && store.bcsc.serial) {
-      return [`ID: BC Services Card (${store.bcsc.serial})`]
+      cards.push(`ID: BC Services Card (${store.bcsc.serial})`)
+    }
+
+    // if the user has added additional evidence, add each to the list
+    for (const evidence of store.bcsc.additionalEvidenceData) {
+      cards.push(`ID: ${evidence.evidenceType.evidence_type_label} (${evidence.documentNumber})`)
+    }
+
+    if (cards.length) {
+      return cards
     }
 
     // otherwise, show the default text
     return [t('Unified.Steps.ScanOrTakePhotos')]
-  }, [store.bcsc.cardType, store.bcsc.additionalEvidenceData, store.bcsc.serial, step.id.completed, t])
+  }, [store.bcsc.additionalEvidenceData, store.bcsc.serial, step.id.completed, t])
 
   /**
    * Returns the subtext for Step 2 (Residential Address) of the verification process.
@@ -195,11 +201,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    * @returns {*} {string} The subtext for step 4
    */
   const getVerificationStep4Subtext = useCallback(() => {
-    if (step.verify.focused && !store.bcsc.deviceCodeExpiresAt) {
-      // developer error, should not be possible to reach this state
-      throw new Error('Invalid setup steps detected, missing device code expiration.')
-    }
-
     if (step.verify.focused && store.bcsc.deviceCodeExpiresAt) {
       const expirationDate = store.bcsc.deviceCodeExpiresAt.toLocaleString('en-CA', {
         day: '2-digit',

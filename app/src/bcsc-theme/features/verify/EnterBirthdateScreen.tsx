@@ -66,17 +66,21 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     try {
       setLoading(true)
       dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [date] })
-      const { expires_in, user_code, device_code, verified_email } = await authorization.authorizeDevice(
-        store.bcsc.serial,
-        date
-      )
-      const expiresAt = new Date(Date.now() + expires_in * 1000)
+      const deviceAuth = await authorization.authorizeDevice(store.bcsc.serial, date)
+
+      // device already authorized
+      if (deviceAuth === null) {
+        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
+        return
+      }
+
+      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
       dispatch({
         type: BCDispatchAction.UPDATE_EMAIL,
-        payload: [{ email: verified_email, emailConfirmed: !!verified_email }],
+        payload: [{ email: deviceAuth.verified_email, emailConfirmed: !!deviceAuth.verified_email }],
       })
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [device_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [user_code] })
+      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
+      dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
       dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
 
       if (store.bcsc.cardType === BCSCCardType.NonPhoto) {

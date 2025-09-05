@@ -54,30 +54,48 @@ const useAuthorizationApi = () => {
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301615517/5.1.1+Evidence+API`
    * @param {string} serial - BCSC serial number
    * @param {Date} birthdate - Users birth date
-   * @returns {*} {VerifyInPersonResponseData}
+   * @returns {*} {VerifyInPersonResponseData | null}
    */
-  const authorizeDevice = useCallback(async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData> => {
-    return withAccount<VerifyInPersonResponseData>(async (account) => {
-      const body = {
-        response_type: 'device_code',
-        client_id: account.clientID,
-        card_serial_number: serial,
-        birth_date: birthdate.toISOString().split('T')[0],
-        scope: 'openid profile address offline_access',
-      }
+  const authorizeDevice = useCallback(
+    async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData | null> => {
+      return withAccount<VerifyInPersonResponseData | null>(async (account) => {
+        const body = {
+          response_type: 'device_code',
+          client_id: account.clientID,
+          card_serial_number: serial,
+          birth_date: birthdate.toISOString().split('T')[0],
+          scope: 'openid profile address offline_access',
+        }
 
-      apiClient.logger.info('useAuthorizationApi.authorizeDevice.body', body)
+        apiClient.logger.info('useAuthorizationApi.authorizeDevice.body', body)
 
-      const { data } = await apiClient.post<VerifyInPersonResponseData>(apiClient.endpoints.deviceAuthorization, body, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        skipBearerAuth: true,
+        try {
+          const { data } = await apiClient.post<VerifyInPersonResponseData>(
+            apiClient.endpoints.deviceAuthorization,
+            body,
+            {
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              skipBearerAuth: true,
+            }
+          )
+
+          return data
+        } catch (error) {
+          /**
+           * if already registered, return null for workflow convienience
+           * useful to be able to determine if the request failed or if the device
+           * has previously been registered
+           */
+          if (isDeviceRegistered(error)) {
+            return null
+          }
+
+          throw error
+        }
       })
-
-      // TODO (MD): Should we also check here if the request fails due to being previously registered?
-
-      return data
-    })
-  }, [])
+    },
+    []
+  )
 
   /**
    * Authorize a device with an unknown BCSC card.

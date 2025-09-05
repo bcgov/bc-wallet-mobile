@@ -36,7 +36,7 @@ export const useSetupSteps = (store: BCState) => {
   const Step1IdsCompleted = bcscRegistered || nonBcscRegistered
   const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
   const Step3EmailCompleted = Boolean(emailAddress && emailConfirmed)
-  const Step4VerificationCompleted = store.bcsc.verified
+  const Step4VerificationCompleted = store.bcsc.verified && !store.bcsc.pendingVerification
 
   return useMemo(
     () => ({
@@ -61,12 +61,7 @@ export const useSetupSteps = (store: BCState) => {
       // step 4: verify identity (in person, video or live call)
       verify: {
         completed: Step4VerificationCompleted,
-        focused:
-          Step1IdsCompleted &&
-          Step2AddressCompleted &&
-          Step3EmailCompleted &&
-          !Step4VerificationCompleted &&
-          !store.bcsc.pendingVerification,
+        focused: Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted && !Step4VerificationCompleted,
       },
     }),
     [
@@ -76,7 +71,6 @@ export const useSetupSteps = (store: BCState) => {
       Step4VerificationCompleted,
       nonBcscNeedsAdditionalCard,
       nonPhotoBcscNeedsAdditionalCard,
-      store.bcsc.pendingVerification,
     ]
   )
 }
