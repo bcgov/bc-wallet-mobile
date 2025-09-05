@@ -29,9 +29,11 @@ import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
+import { ResidentialAddressScreen } from './ResidentialAddressScreen'
 import { HelpCentreUrl } from '@/constants'
 import WebViewScreen from '../webview/WebViewScreen'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
+import DualIdentificationRequiredScreen from './non-photo/DualIdentificationRequiredScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -121,6 +123,13 @@ const VerifyIdentityStack = () => {
         }}
       />
       <Stack.Screen
+        name={BCSCScreens.DualIdentificationRequired}
+        component={DualIdentificationRequiredScreen}
+        options={{
+          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS }),
+        }}
+      />
+      <Stack.Screen
         name={BCSCScreens.IDPhotoInformation}
         component={IDPhotoInformationScreen}
         options={{
@@ -159,6 +168,8 @@ const VerifyIdentityStack = () => {
           headerLeft: createWebviewHeaderBackButton(navigation),
         })}
       />
+
+      <Stack.Screen name={BCSCScreens.ResidentialAddressScreen} component={ResidentialAddressScreen} />
     </Stack.Navigator>
   )
 }

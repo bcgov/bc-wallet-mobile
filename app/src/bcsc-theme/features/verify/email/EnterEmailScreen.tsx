@@ -2,7 +2,17 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, KeyboardView, ThemedText, useAnimatedComponents, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  KeyboardView,
+  ThemedText,
+  TOKENS,
+  useAnimatedComponents,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { Alert, StyleSheet, View } from 'react-native'
@@ -26,6 +36,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const [error, setError] = useState<string | null>(null)
   const { cardType } = route.params
   const { ButtonLoading } = useAnimatedComponents()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -62,8 +73,10 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       const { email_address_id } = await evidence.createEmailVerification(email)
       dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email, emailConfirmed: false }] })
       navigation.navigate(BCSCScreens.EmailConfirmationScreen, { emailAddressId: email_address_id })
-    } catch (error) {
+    } catch (error: any) {
       setError('Error submitting email')
+
+      logger.error('Error submitting email', error)
     } finally {
       setLoading(false)
     }
