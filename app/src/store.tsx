@@ -62,6 +62,7 @@ export interface BCSCState {
   verificationRequestSha?: string
   additionalEvidenceData: AdditionalEvidenceData[]
   bcscDevicesCount?: number
+  registrationAccessToken?: string
 }
 
 export interface AdditionalEvidenceData {
@@ -120,6 +121,7 @@ enum BCSCDispatchAction {
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_DEVICE_COUNT = 'bcsc/updateDeviceCount',
+  UPDATE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateRegistrationAccessToken',
 }
 
 enum ModeDispatchAction {
@@ -464,6 +466,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.CLEAR_BCSC: {
       const bcsc = { ...bcscState }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_REGISTRATION_ACCESS_TOKEN: {
+      const { registrationAccessToken } = (action?.payload || []).pop() ?? {}
+      const bcsc = { ...state.bcsc, registrationAccessToken }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

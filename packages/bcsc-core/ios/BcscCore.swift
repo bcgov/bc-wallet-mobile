@@ -359,6 +359,35 @@ class BcscCore: NSObject {
     resolve(serializedJWT)
   }
 
+    /// Creates a JWT for evidence request using device code and client ID.
+    ///
+    /// - Parameters:
+    ///   - claims: The raw claims as a dictionary
+    /// - Resolves: The hashed string in hexadecimal format.
+    /// - Rejects: An error if the input is not valid base64 or if hashing fails.
+    @objc
+    func createSignedJWT(
+      _ claims: NSDictionary,
+      resolve: @escaping RCTPromiseResolveBlock,
+      reject: @escaping RCTPromiseRejectBlock
+    ) {
+      let builder = JWTClaimsSet.builder()
+
+      // Add any additional claims
+      for (key, value) in claims {
+          print(key, value)
+          builder.claim(name: key as! String, value: value)
+      }
+
+      let payload = builder.build()
+
+      guard let serializedJWT = signJWT(payload: payload, reject: reject) else {
+        return // Error already handled by signJWT
+      }
+
+      resolve(serializedJWT)
+    }
+
   @objc
   func setAccount(
     _ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock,
@@ -741,7 +770,7 @@ class BcscCore: NSObject {
   @objc
   func createQuickLoginJWT(
     _ accessToken: String, clientId: String, issuer: String, clientRefId: String,
-    key: NSDictionary, fcmDeviceToken: String, deviceToken: String?, 
+    key: NSDictionary, fcmDeviceToken: String, deviceToken: String?,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
   ) {
 
@@ -786,12 +815,12 @@ class BcscCore: NSObject {
     // Encrypt the signed JWT with the provided public key
     do {
       let encryptedJWT = try encryptJWTWithPublicKey(serializedJWT: signedJWT, publicKey: publicKey, reject: reject)
-      
+
       guard let finalJWT = encryptedJWT else {
         reject("E_JWT_ENCRYPTION_FAILED", "Failed to encrypt JWT", nil)
         return
       }
-      
+
       resolve(finalJWT)
     } catch {
       reject(
@@ -898,7 +927,7 @@ class BcscCore: NSObject {
         header: JWEHeader(alg: JWEAlgorithm.RSA1_5, enc: EncryptionMethod.A128CBC_HS256),
         payload: serializedJWT)
       let encrypter = RSAEncrypter(publicKey: publicKey)
-      
+
       try jwe.encrypt(withEncrypter: encrypter)
       return try jwe.serialize()
     } catch {
