@@ -1,16 +1,22 @@
-import useVideoCallFlow from '@/bcsc-theme/api/hooks/useVideoCallFlow'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import ProgressBar from '@/components/ProgressBar'
+import { BCDispatchAction, BCState } from '@/store'
 import Mountains from '@assets/img/mountains-circle.svg'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { BannerSection } from '@bifold/core/src/components/views/Banner'
+import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ColorValue, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { RTCView, MediaStreamTrack } from 'react-native-webrtc'
+import { MediaStreamTrack, RTCView } from 'react-native-webrtc'
+import { formatCallTime } from './utils/formatCallTime'
 
-type IconButtonProps = {
+type CallIconButtonProps = {
   onPress: () => void
   primaryColor: ColorValue
   secondaryColor: ColorValue
@@ -20,7 +26,15 @@ type IconButtonProps = {
   testIDKey: string
 }
 
-const IconButton = ({ onPress, primaryColor, secondaryColor, size, iconName, label, testIDKey }: IconButtonProps) => {
+const CallIconButton = ({
+  onPress,
+  primaryColor,
+  secondaryColor,
+  size,
+  iconName,
+  label,
+  testIDKey,
+}: CallIconButtonProps) => {
   const { Spacing } = useTheme()
   const styles = StyleSheet.create({
     iconButton: {
@@ -50,7 +64,12 @@ const IconButton = ({ onPress, primaryColor, secondaryColor, size, iconName, lab
   )
 }
 
-const LoadingView = ({ onCancel, message }: { onCancel: () => void; message?: string }) => {
+type LoadingViewProps = {
+  onCancel: () => void
+  message?: string
+}
+
+const LoadingView = ({ onCancel, message }: LoadingViewProps) => {
   const { Spacing, ColorPalette } = useTheme()
   const [progressPercent, setProgressPercent] = useState(0)
   const [delayReached, setDelayReached] = useState(false)
@@ -129,26 +148,130 @@ type LiveCallScreenProps = {
 
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
+  const [store, dispatch] = useStore<BCState>()
   const { ColorPalette, Spacing } = useTheme()
   const iconSize = useMemo(() => width / 6, [width])
   const [videoHidden, setVideoHidden] = useState(false)
   const [onMute, setOnMute] = useState(false)
+  const [callStartTime, setCallStartTime] = useState<number | null>(null)
+  const [callTimer, setCallTimer] = useState<string>('')
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const { token } = useApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const {
-    flowState,
-    session,
-    call,
-    error,
-    localStream,
-    remoteStream,
-    startVideoCall,
-    endCall: endVideoCall,
-    retryConnection,
-    isConnecting,
-    isCreatingSession,
-  } = useVideoCallFlow()
+  const leaveCall = useCallback(async () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+    }
+    setCallStartTime(null)
+    setCallTimer('')
 
-  // Handle actual muting of audio tracks
+    try {
+      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
+        throw new Error('Missing device or user code')
+      }
+
+      const { refresh_token, bcsc_devices_count } = await token.checkDeviceCodeStatus(
+        store.bcsc.deviceCode,
+        store.bcsc.userCode
+      )
+
+      if (refresh_token) {
+        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
+      }
+
+      if (bcsc_devices_count !== undefined) {
+        dispatch({
+          type: BCDispatchAction.UPDATE_DEVICE_COUNT,
+          payload: [bcsc_devices_count],
+        })
+      }
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: BCSCScreens.VerificationSuccess }],
+        })
+      )
+    } catch (error) {
+      logger.info('User not verified')
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 2,
+          routes: [
+            { name: BCSCScreens.SetupSteps },
+            { name: BCSCScreens.VerificationMethodSelection },
+            { name: BCSCScreens.VerifyNotComplete },
+          ],
+        })
+      )
+    }
+  }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger])
+
+  const { flowState, error, localStream, remoteStream, startVideoCall, cleanup, retryConnection, isInBackground } =
+    useVideoCallFlow(leaveCall)
+
+  const inCall = useMemo(() => flowState === 'in_call', [flowState])
+
+  useEffect(() => {
+    if (flowState === 'in_call' && !callStartTime) {
+      const startTime = Date.now()
+      setCallStartTime(startTime)
+    } else if (flowState !== 'in_call' && callStartTime) {
+      setCallStartTime(null)
+      setCallTimer('')
+    }
+  }, [flowState, callStartTime])
+
+  useEffect(() => {
+    if (callStartTime) {
+      const updateTimer = () => {
+        const now = Date.now()
+        const elapsedSeconds = Math.floor((now - callStartTime) / 1000)
+        setCallTimer(formatCallTime(elapsedSeconds))
+      }
+
+      updateTimer()
+
+      timerIntervalRef.current = setInterval(updateTimer, 1000)
+
+      return () => {
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current)
+          timerIntervalRef.current = null
+        }
+      }
+    } else {
+      setCallTimer('')
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+        timerIntervalRef.current = null
+      }
+    }
+  }, [callStartTime])
+
+  useEffect(() => {
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current)
+      }
+    }
+  }, [])
+
+  const banner: { type: 'warning' | 'error'; title: string } | null = useMemo(() => {
+    if (isInBackground) {
+      return { type: 'warning', title: 'Video will resume when you return to this app' }
+    }
+    if (videoHidden) {
+      return { type: 'error', title: `Agent can't see you while your video is off` }
+    }
+    if (onMute) {
+      return { type: 'error', title: `Agent can't hear you while your microphone is muted` }
+    }
+
+    return null
+  }, [isInBackground, onMute, videoHidden])
+
   useEffect(() => {
     if (localStream) {
       const audioTracks = localStream.getAudioTracks()
@@ -158,7 +281,6 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [onMute, localStream])
 
-  // Handle actual hiding of video tracks
   useEffect(() => {
     if (localStream) {
       const videoTracks = localStream.getVideoTracks()
@@ -168,25 +290,24 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [videoHidden, localStream])
 
-  // Toggle mute functionality
-  const toggleMute = () => {
-    setOnMute(prev => !prev)
-  }
+  const toggleMute = useCallback(() => {
+    setOnMute((prev) => !prev)
+  }, [])
 
-  // Toggle video functionality  
-  const toggleVideo = () => {
-    setVideoHidden(prev => !prev)
-  }
+  const toggleVideo = useCallback(() => {
+    setVideoHidden((prev) => !prev)
+  }, [])
 
   useEffect(() => {
-    startVideoCall()
-  }, [startVideoCall])
+    // only start call automatically once (flow state doesn't go back to idle)
+    if (flowState === 'idle') {
+      startVideoCall()
+      InCallManager.start({ media: 'video', auto: true })
+    }
+  }, [flowState, startVideoCall])
 
-  // Show different states based on flow
-  const getStateMessage = () => {
+  const stateMessage = useMemo(() => {
     switch (flowState) {
-      case 'checking_availability':
-        return 'Checking service availability...'
       case 'creating_session':
         return 'Creating video session...'
       case 'connecting_webrtc':
@@ -194,60 +315,64 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       case 'waiting_for_agent':
         return 'Waiting for an agent to join...'
       case 'in_call':
-        return null // Show video interface
+        return null
       case 'error':
         return error?.message || 'An error occurred'
       default:
         return 'Initializing...'
     }
-  }
+  }, [flowState, error])
 
-  const handleEndCall = () => {
-    endVideoCall()
-  }
-
-  // Show loading/error states
-  if (flowState !== 'in_call') {
-    const stateMessage = getStateMessage()
-
-    if (flowState === 'error' && error) {
-      return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground, padding: Spacing.md }}>
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Icon name="alert-circle" size={64} color={ColorPalette.semantic.error} />
-            <ThemedText variant={'headingTwo'} style={{ marginTop: Spacing.lg, textAlign: 'center' }}>
-              Connection Error
-            </ThemedText>
-            <ThemedText style={{ marginTop: Spacing.md, textAlign: 'center' }}>{error.message}</ThemedText>
-          </View>
-          <View style={{ gap: Spacing.sm }}>
-            {error.retryable && (
-              <Button
-                buttonType={ButtonType.Primary}
-                onPress={retryConnection}
-                title={'Try Again'}
-                accessibilityLabel={'Try Again'}
-                testID={testIdWithKey('TryAgain')}
-              />
-            )}
-            <Button
-              buttonType={ButtonType.Secondary}
-              onPress={() => navigation.goBack()}
-              title={'Go Back'}
-              accessibilityLabel={'Go Back'}
-              testID={testIdWithKey('GoBack')}
-            />
-          </View>
-        </SafeAreaView>
-      )
+  const handleEndCall = useCallback(async () => {
+    try {
+      await cleanup()
+      await leaveCall()
+    } catch (error) {
+      logger.error('Error while leaving video call', error)
     }
+  }, [cleanup, leaveCall, logger])
 
-    // Show loading state with progress
+  if (flowState === 'error') {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground, padding: Spacing.md }}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Icon name="alert-circle" size={64} color={ColorPalette.semantic.error} />
+          <ThemedText variant={'headingTwo'} style={{ marginTop: Spacing.lg, textAlign: 'center' }}>
+            Connection Error
+          </ThemedText>
+          <ThemedText style={{ marginTop: Spacing.md, textAlign: 'center' }}>{stateMessage}</ThemedText>
+        </View>
+        <View style={{ gap: Spacing.sm }}>
+          {error?.retryable && (
+            <Button
+              buttonType={ButtonType.Primary}
+              onPress={retryConnection}
+              title={'Try Again'}
+              accessibilityLabel={'Try Again'}
+              testID={testIdWithKey('TryAgain')}
+            />
+          )}
+          <Button
+            buttonType={ButtonType.Secondary}
+            onPress={() => navigation.goBack()}
+            title={'Go Back'}
+            accessibilityLabel={'Go Back'}
+            testID={testIdWithKey('GoBack')}
+          />
+        </View>
+      </SafeAreaView>
+    )
+  }
+
+  if (flowState !== 'in_call') {
     return <LoadingView onCancel={handleEndCall} message={stateMessage || undefined} />
   }
 
-  // In-call video interface
   const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: 'black',
+    },
     agentVideo: {
       position: 'absolute',
       top: 0,
@@ -255,18 +380,15 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       right: 0,
       bottom: 0,
       flex: 1,
-      backgroundColor: 'black',
     },
-    container: {
-      flex: 1,
-      backgroundColor: 'black',
-    },
-    controlsAndSelfieContainer: {
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-      left: 0,
-      flex: 1,
+    // just helpful labels, no properties needed
+    upperContainer: {},
+    lowerContainer: {},
+    timeAndLabelContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      padding: Spacing.md,
+      backgroundColor: ColorPalette.notification.popupOverlay,
     },
     controlsContainer: {
       flexDirection: 'row',
@@ -276,13 +398,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       backgroundColor: ColorPalette.notification.popupOverlay,
     },
     selfieVideoContainer: {
-      margin: Spacing.md,
       width: width / 4,
       height: (width / 4) * 1.5,
-      borderRadius: Spacing.sm,
       overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: ColorPalette.grayscale.white,
     },
     selfieVideo: {
       flex: 1,
@@ -293,43 +411,62 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     <View style={styles.container}>
       {remoteStream && <RTCView style={styles.agentVideo} objectFit={'contain'} streamURL={remoteStream.toURL()} />}
 
-      <View style={styles.controlsAndSelfieContainer}>
-        {localStream && (
-          <View style={styles.selfieVideoContainer}>
-            <RTCView mirror style={styles.selfieVideo} objectFit={'cover'} streamURL={localStream.toURL()} />
+      <SafeAreaView edges={['top']} style={{ flex: 0, backgroundColor: ColorPalette.notification.popupOverlay }} />
+      <SafeAreaView edges={['left', 'right']} style={{ flex: 1, justifyContent: 'space-between' }}>
+        <View style={styles.upperContainer}>
+          <View style={styles.timeAndLabelContainer}>
+            <ThemedText>{inCall ? 'Service BC' : 'In Queue'}</ThemedText>
+            {callTimer ? <ThemedText>{callTimer}</ThemedText> : null}
           </View>
-        )}
-
-        <View style={styles.controlsContainer}>
-          <IconButton
-            onPress={toggleMute}
-            primaryColor={ColorPalette.grayscale.white}
-            secondaryColor={'transparent'}
-            size={iconSize}
-            iconName={onMute ? 'microphone-off' : 'microphone'}
-            label={onMute ? 'Unmute' : 'Mute'}
-            testIDKey={'Mute'}
-          />
-          <IconButton
-            onPress={toggleVideo}
-            primaryColor={ColorPalette.grayscale.white}
-            secondaryColor={'transparent'}
-            size={iconSize}
-            iconName={videoHidden ? 'video-off' : 'video'}
-            label={videoHidden ? 'Show Video' : 'Hide Video'}
-            testIDKey={'Video'}
-          />
-          <IconButton
-            onPress={handleEndCall}
-            primaryColor={ColorPalette.grayscale.white}
-            secondaryColor={ColorPalette.semantic.error}
-            size={iconSize}
-            iconName={'phone-cancel'}
-            label={'End Call'}
-            testIDKey={'EndCall'}
-          />
+          {banner ? (
+            <BannerSection
+              type={banner.type}
+              title={banner.title}
+              id={'notice-banner'}
+              dismissible={false}
+              variant={'detail'}
+            />
+          ) : null}
         </View>
-      </View>
+        <View style={styles.lowerContainer}>
+          {localStream && !videoHidden && (
+            <View style={styles.selfieVideoContainer}>
+              <RTCView mirror style={styles.selfieVideo} objectFit={'cover'} streamURL={localStream.toURL()} />
+            </View>
+          )}
+
+          <View style={styles.controlsContainer}>
+            <CallIconButton
+              onPress={toggleMute}
+              primaryColor={ColorPalette.grayscale.white}
+              secondaryColor={'transparent'}
+              size={iconSize}
+              iconName={onMute ? 'microphone-off' : 'microphone'}
+              label={onMute ? 'Unmute' : 'Mute'}
+              testIDKey={'Mute'}
+            />
+            <CallIconButton
+              onPress={toggleVideo}
+              primaryColor={ColorPalette.grayscale.white}
+              secondaryColor={'transparent'}
+              size={iconSize}
+              iconName={videoHidden ? 'video-off' : 'video'}
+              label={videoHidden ? 'Show Video' : 'Hide Video'}
+              testIDKey={'Video'}
+            />
+            <CallIconButton
+              onPress={handleEndCall}
+              primaryColor={ColorPalette.grayscale.white}
+              secondaryColor={ColorPalette.semantic.error}
+              size={iconSize}
+              iconName={'phone-cancel'}
+              label={'End Call'}
+              testIDKey={'EndCall'}
+            />
+          </View>
+        </View>
+      </SafeAreaView>
+      <SafeAreaView edges={['bottom']} style={{ flex: 0, backgroundColor: ColorPalette.notification.popupOverlay }} />
     </View>
   )
 }

@@ -65,7 +65,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
           Find a Private Place to Talk
         </ThemedText>
-        <ThemedText>Make sure you'll be the only person in the video.</ThemedText>
+        <ThemedText>{`Make sure you'll be the only person in the video.`}</ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
           Hours of Service

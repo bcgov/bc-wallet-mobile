@@ -29,7 +29,7 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
   })
 
   const onPressTrouble = () => {
-    // TODO
+    // TODO (bm): Help webview here, not sure which url
   }
 
   const onPressSendVideo = () => {

@@ -12,7 +12,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  // allows camera in background for video calling (WebRTC)
+  // allows background WebRTC
   [WebRTCModuleOptions sharedInstance].enableMultitaskingCameraAccess = YES;
 
   [FIRApp configure];
@@ -24,7 +24,7 @@
   // Because certain file operations can reset resource values, we
   // excluded file’s resource values each time the application starts.
   [self excludeDotAFJFolderFromBackup];
-  
+
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 

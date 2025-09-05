@@ -14,7 +14,7 @@ type PhotoReviewScreenProps = {
 }
 
 const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { photoPath, forLiveCall } = route.params
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -29,20 +29,6 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       flexGrow: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
-    contentContainer: {
-      flexGrow: 1,
-    },
-    controlsContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: Spacing.md,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
-    },
   })
 
   const onPressUse = async () => {
@@ -51,7 +37,6 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
 
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
 
-      console.log('forLiveCall: ', forLiveCall)
       if (forLiveCall) {
         navigation.dispatch(CommonActions.reset({
           index: 3,

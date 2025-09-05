@@ -1,10 +1,10 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from "@/bcsc-theme/types/navigators"
-import BulletPointWithText from "@/components/BulletPointWithText"
-import { BCState } from "@/store"
-import { useStore, useTheme, ThemedText, Button, ButtonType } from "@bifold/core"
-import { StackNavigationProp } from "@react-navigation/stack"
-import { Image, StyleSheet, View } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointWithText from '@/components/BulletPointWithText'
+import { BCState } from '@/store'
+import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { Image, ScrollView, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type StartCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.StartCall>
@@ -48,14 +48,16 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
-      <View style={styles.contentContainer}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
         <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
-        <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>Start a video call with a Service BC agent. They will verify your identity to finish setting up this app.</ThemedText>
+        <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
+          Start a video call with a Service BC agent. They will verify your identity to finish setting up this app.
+        </ThemedText>
         <ThemedText style={{ marginTop: Spacing.lg }}>You should:</ThemedText>
-        <BulletPointWithText translationKey={"Unified.VideoTips.PrivatePlace"} />
-        <BulletPointWithText translationKey={"Unified.VideoTips.OnlyPerson"} />
-        <BulletPointWithText translationKey={"Unified.VideoTips.RemoveGlasses"} />
-      </View>
+        <BulletPointWithText translationKey={'Unified.VideoTips.PrivatePlace'} />
+        <BulletPointWithText translationKey={'Unified.VideoTips.OnlyPerson'} />
+        <BulletPointWithText translationKey={'Unified.VideoTips.RemoveGlasses'} />
+      </ScrollView>
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}

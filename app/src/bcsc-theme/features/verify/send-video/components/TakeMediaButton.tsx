@@ -29,6 +29,12 @@ const TakeMediaButton = ({ onPress, title, actionLabel, thumbnailUri, style = {}
       minHeight: thumbnailHeight, // needed to constrain the thumbnail
       ...style,
     },
+    title: {
+      fontWeight: 'normal',
+      flex: 1,
+      flexWrap: 'wrap',
+      paddingRight: Spacing.md,
+    },
     actionContainer: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -52,7 +58,7 @@ const TakeMediaButton = ({ onPress, title, actionLabel, thumbnailUri, style = {}
       testID={testIdWithKey(actionLabel)}
       accessibilityLabel={actionLabel}
     >
-      <ThemedText variant={'headingFour'} style={{ fontWeight: 'normal' }}>
+      <ThemedText variant={'headingFour'} style={styles.title}>
         {title}
       </ThemedText>
       <View style={styles.actionContainer}>

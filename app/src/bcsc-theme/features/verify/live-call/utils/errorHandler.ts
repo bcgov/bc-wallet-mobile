@@ -1,6 +1,6 @@
-import { Alert } from 'react-native'
+import { BifoldLogger } from '@bifold/core'
 
-export type VideoCallErrorType = 'service_unavailable' | 'connection_failed' | 'session_failed' | 'call_failed' | 'network_error' | 'permission_denied'
+export type VideoCallErrorType = 'connection_failed' | 'session_failed' | 'call_failed' | 'network_error' | 'permission_denied'
 
 export interface VideoCallError {
   type: VideoCallErrorType
@@ -10,11 +10,10 @@ export interface VideoCallError {
 }
 
 export const VideoCallErrorHandler = {
-  // Create standardized error objects
   createError: (
     type: VideoCallErrorType, 
     message: string, 
-    retryable = true, 
+    retryable = false, 
     technicalDetails?: string
   ): VideoCallError => ({
     type,
@@ -23,66 +22,7 @@ export const VideoCallErrorHandler = {
     technicalDetails
   }),
 
-  // Handle different error types with appropriate user messaging
-  handleError: (error: VideoCallError): void => {
-    console.warn(`Video Call Error [${error.type}]:`, error.message, error.technicalDetails)
-    
-    switch (error.type) {
-      case 'service_unavailable':
-        // These are handled by navigation to CallBusyOrClosedScreen
-        break
-      case 'permission_denied':
-        Alert.alert(
-          'Camera/Microphone Access Required',
-          'Please enable camera and microphone permissions in your device settings to use video calling.',
-          [{ text: 'OK' }]
-        )
-        break
-      case 'connection_failed':
-        if (error.retryable) {
-          Alert.alert(
-            'Connection Failed',
-            `${error.message}\n\nPlease check your internet connection and try again.`,
-            [{ text: 'OK' }]
-          )
-        }
-        break
-      case 'session_failed':
-      case 'call_failed':
-        if (error.retryable) {
-          Alert.alert(
-            'Session Error',
-            `${error.message}\n\nThis may be a temporary issue. Please try again.`,
-            [{ text: 'OK' }]
-          )
-        }
-        break
-      case 'network_error':
-        Alert.alert(
-          'Network Error',
-          'Unable to connect to the video service. Please check your internet connection and try again.',
-          [{ text: 'OK' }]
-        )
-        break
-    }
-  },
-
-  // Common error scenarios
   errors: {
-    serviceUnavailable: (agentCount = 0): VideoCallError => ({
-      type: 'service_unavailable',
-      message: agentCount === 0 
-        ? 'No agents are currently available. Please try again later.' 
-        : 'All agents are currently busy. Please try again in a few minutes.',
-      retryable: true
-    }),
-
-    serviceOutsideHours: (): VideoCallError => ({
-      type: 'service_unavailable', 
-      message: 'Video calling service is outside of operating hours.',
-      retryable: true
-    }),
-
     connectionTimeout: (): VideoCallError => ({
       type: 'connection_failed',
       message: 'Connection to video service timed out.',
@@ -98,8 +38,8 @@ export const VideoCallErrorHandler = {
 
     sessionCreationFailed: (details?: string): VideoCallError => ({
       type: 'session_failed',
-      message: 'Failed to create video session.',
-      retryable: true,
+      message: 'Service is unavailable.',
+      retryable: false,
       technicalDetails: details
     }),
 
@@ -130,8 +70,7 @@ export const VideoCallErrorHandler = {
     })
   },
 
-  // Log errors for debugging
-  logError: (error: VideoCallError, context?: string): void => {
+  logError: (error: VideoCallError, logger: BifoldLogger, context?: string): void => {
     const logData = {
       timestamp: new Date().toISOString(),
       context: context || 'unknown',
@@ -140,11 +79,8 @@ export const VideoCallErrorHandler = {
       retryable: error.retryable,
       technicalDetails: error.technicalDetails
     }
-    
-    console.error('Video Call Error Log:', JSON.stringify(logData, null, 2))
-    
-    // In production, you might want to send this to a logging service
-    // logToService(logData)
+
+    logger.error('Video Call Error:', JSON.stringify(logData, null, 2))
   }
 }
 

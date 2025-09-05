@@ -1,11 +1,10 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useVideoCallApi from '@/bcsc-theme/api/hooks/useVideoCallApi'
 import { formatServiceHours, checkIfWithinServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
@@ -19,8 +18,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const [, dispatch] = useStore<BCState>()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
-  const { evidence } = useApi()
-  const videoCallApi = useVideoCallApi()
+  const { evidence, video: videoCallApi } = useApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -44,11 +43,10 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     }
   }
 
-  const handlePressLiveCall = async () => {
+  const handlePressLiveCall = useCallback(async () => {
     try {
       setLiveCallLoading(true)
 
-      // Check destinations and service hours
       const [destinations, serviceHours] = await Promise.all([
         videoCallApi.getVideoDestinations(),
         videoCallApi.getServiceHours(),
@@ -56,11 +54,9 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
       const formattedHours = formatServiceHours(serviceHours)
 
-      // Check if any agents are available
       const availableDestination = destinations.find((dest) => dest.destination_name === 'Test Harness Queue Destination')
 
       if (!availableDestination) {
-        // No agents available - service is busy
         navigation.navigate(BCSCScreens.CallBusyOrClosed, { 
           busy: true,
           formattedHours
@@ -68,11 +64,9 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         return
       }
 
-      // Check if within service hours
       const isWithinServiceHours = checkIfWithinServiceHours(serviceHours)
 
       if (!isWithinServiceHours) {
-        // Outside service hours - service is closed
         navigation.navigate(BCSCScreens.CallBusyOrClosed, { 
           busy: false,
           formattedHours
@@ -80,19 +74,17 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         return
       }
 
-      // Service is available - proceed to BeforeYouCall
       navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
 
     } catch (error) {
-      console.warn('Error checking service availability:', error)
-      // On error, default to BeforeYouCall screen with fallback hours
+      logger.warn('Error checking service availability:', error)
       navigation.navigate(BCSCScreens.BeforeYouCall, { 
         formattedHours: 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
       })
     } finally {
       setLiveCallLoading(false)
     }
-  }
+  }, [videoCallApi, logger, navigation])
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>

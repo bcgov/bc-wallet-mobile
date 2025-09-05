@@ -172,20 +172,17 @@ const VerifyIdentityStack = () => {
       <Stack.Screen
         name={BCSCScreens.StartCall}
         component={StartCallScreen}
-        // TODO (bm): Add real help URL
         options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
       <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name={BCSCScreens.VerifyNotComplete}
         component={VerifyNotCompleteScreen}
-        // TODO (bm): Add real help URL
         options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
       <Stack.Screen
         name={BCSCScreens.CallBusyOrClosed}
         component={CallBusyOrClosedScreen}
-        // TODO (bm): Add real help URL
         options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
     </Stack.Navigator>

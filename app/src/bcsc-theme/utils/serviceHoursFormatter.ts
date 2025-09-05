@@ -1,16 +1,14 @@
 import { ServiceHours } from '../api/hooks/useVideoCallApi'
 
+// TODO (bm): proper implementation
 export const formatServiceHours = (serviceHours: ServiceHours): string => {
   if (!serviceHours?.regular_service_periods?.length) {
     return 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
   }
 
-  // For now, hardcode the user-friendly format since we know it's Monday-Friday
-  // In the future, this could be enhanced to dynamically parse the API response
   const timezone = serviceHours.time_zone || 'America/Vancouver'
   const timezoneDisplay = timezone === 'America/Vancouver' ? 'Pacific Time' : timezone
   
-  // Get the first period to extract times (assuming consistent hours Monday-Friday)
   const firstPeriod = serviceHours.regular_service_periods[0]
   if (firstPeriod) {
     const startTime = formatTime12Hour(firstPeriod.start_time)
@@ -18,7 +16,6 @@ export const formatServiceHours = (serviceHours: ServiceHours): string => {
     return `Monday to Friday\n${startTime} - ${endTime} ${timezoneDisplay}`
   }
   
-  // Fallback to hardcoded format
   return 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
 }
 
@@ -34,14 +31,55 @@ export const formatTime12Hour = (time24: string): string => {
 }
 
 export const checkIfWithinServiceHours = (serviceHours: ServiceHours): boolean => {
-  // Simplified check - in production you'd want proper timezone handling
+  if (!serviceHours?.regular_service_periods?.length) {
+    return false
+  }
+
+  const timezone = serviceHours.time_zone || 'America/Vancouver'
   const now = new Date()
-  const currentHour = now.getHours()
-  const currentDay = now.getDay() // 0 = Sunday, 1 = Monday, etc.
+  let currentTime: Date
+  if (timezone === 'America/Vancouver') {
+    const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000)
+    const pacificOffset = -8 * 60 * 60000
+    currentTime = new Date(utcTime + pacificOffset)
+  } else {
+    currentTime = now
+  }
 
-  // Basic check for Monday-Friday, 7:30 AM - 5:00 PM
-  if (currentDay === 0 || currentDay === 6) return false // Weekend
-  if (currentHour < 7 || currentHour >= 17) return false // Outside hours
+  const currentDay = currentTime.getDay() // 0 = Sunday, 1 = Monday, etc.
+  const currentHour = currentTime.getHours()
+  const currentMinute = currentTime.getMinutes()
+  const currentTimeInMinutes = currentHour * 60 + currentMinute
 
-  return true
+  const dayMap: { [key: string]: number } = {
+    'SUNDAY': 0, 'MONDAY': 1, 'TUESDAY': 2, 'WEDNESDAY': 3,
+    'THURSDAY': 4, 'FRIDAY': 5, 'SATURDAY': 6
+  }
+
+  for (const period of serviceHours.regular_service_periods) {
+    const startDay = dayMap[period.start_day.toUpperCase()] ?? -1
+    const endDay = dayMap[period.end_day.toUpperCase()] ?? -1
+    
+    if (startDay === -1 || endDay === -1) continue // Invalid day format
+    
+    const isWithinDayRange = startDay <= endDay 
+      ? (currentDay >= startDay && currentDay <= endDay)
+      : (currentDay >= startDay || currentDay <= endDay) // Handles week wrapping
+    
+    if (!isWithinDayRange) continue
+    
+    const [startHour, startMin] = period.start_time.split(':').map(Number)
+    const [endHour, endMin] = period.end_time.split(':').map(Number)
+    
+    if (isNaN(startHour) || isNaN(startMin) || isNaN(endHour) || isNaN(endMin)) continue
+    
+    const startTimeInMinutes = startHour * 60 + startMin
+    const endTimeInMinutes = endHour * 60 + endMin
+    
+    if (currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes < endTimeInMinutes) {
+      return true
+    }
+  }
+
+  return false
 }
