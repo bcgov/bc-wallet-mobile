@@ -1,6 +1,5 @@
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCState } from '@/store'
-import { useStore } from '@bifold/core'
 import { useMemo } from 'react'
 
 /**
@@ -12,15 +11,14 @@ import { useMemo } from 'react'
  *
  * @returns {*} An object containing the completion and focus state of each step.
  */
-export const useSetupSteps = () => {
-  const [store] = useStore<BCState>()
-
+export const useSetupSteps = (store: BCState) => {
   // store + card attributes
   const bcscSerialNumber = store.bcsc.serial || null
   const emailAddress = store.bcsc.email || null
   const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
   const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
   const isNonBCSCCards = store.bcsc.cardType === BCSCCardType.Other
+  const isNoneCard = store.bcsc.cardType === BCSCCardType.None
 
   // additional ID requirements
   const missingPhotoId = !store.bcsc.additionalEvidenceData.some((item) => item.evidenceType.has_photo)
@@ -28,12 +26,14 @@ export const useSetupSteps = () => {
   const nonPhotoBcscNeedsAdditionalCard = isNonPhotoCard && missingPhotoId
 
   // card registration state
-  const bcscRegistered = Boolean(!isNonBCSCCards && bcscSerialNumber && emailAddress)
-  const nonBcscRegistered = isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 2
-  const registered = bcscRegistered || nonBcscRegistered
+  const bcscRegistered = Boolean(
+    !isNonBCSCCards && !isNoneCard && bcscSerialNumber && emailAddress && !nonPhotoBcscNeedsAdditionalCard
+  )
+  const nonBcscRegistered =
+    isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 2 && !nonBcscNeedsAdditionalCard
 
   // step completion states
-  const Step1IdsCompleted = registered && !nonBcscNeedsAdditionalCard && !nonPhotoBcscNeedsAdditionalCard
+  const Step1IdsCompleted = bcscRegistered || nonBcscRegistered
   const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
   const Step3EmailCompleted = Boolean(emailAddress && emailConfirmed)
   const Step4VerificationCompleted = store.bcsc.verified

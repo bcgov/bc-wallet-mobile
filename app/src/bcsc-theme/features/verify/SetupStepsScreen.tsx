@@ -36,7 +36,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // tracks the current step state (completed and focused)
-  const step = useSetupSteps()
+  const step = useSetupSteps(store)
 
   const styles = StyleSheet.create({
     container: {
