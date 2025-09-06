@@ -231,8 +231,8 @@ export const createDeviceSignedJWT = async (claims: JWTClaims): Promise<string> 
   return BcscCore.createSignedJWT(claims);
 };
 
-export const createEvidenceRequestJWT = async (deviceCode: string, clientID: string): Promise<string> => {
-  return BcscCore.createEvidenceRequestJWT(deviceCode, clientID);
+export const createPreVerificationJWT = async (deviceCode: string, clientID: string): Promise<string> => {
+  return BcscCore.createPreVerificationJWT(deviceCode, clientID);
 };
 
 export const hashBase64 = async (base64: string): Promise<string> => {

@@ -136,7 +136,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       <View style={styles.mediaContainer}>
         <TakeMediaButton
           onPress={() => {
-            navigation.navigate(BCSCScreens.PhotoInstructions)
+            navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
           }}
           title={'Photo of your face'}
           actionLabel={'Take Photo'}

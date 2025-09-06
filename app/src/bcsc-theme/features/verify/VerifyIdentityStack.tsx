@@ -12,9 +12,9 @@ import VerifyInPersonScreen from './in-person/VerifyInPersonScreen'
 import MismatchedSerialScreen from './MismatchedSerialScreen'
 import VerificationSuccessScreen from './VerificationSuccessScreen'
 import InformationRequiredScreen from './send-video/InformationRequiredScreen'
-import PhotoInstructionsScreen from './send-video/PhotoInstructionsScreen'
-import TakePhotoScreen from './send-video/TakePhotoScreen'
-import PhotoReviewScreen from './send-video/PhotoReviewScreen'
+import PhotoInstructionsScreen from './PhotoInstructionsScreen'
+import TakePhotoScreen from './TakePhotoScreen'
+import PhotoReviewScreen from './PhotoReviewScreen'
 import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
@@ -28,10 +28,15 @@ import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
 import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
 import EnterEmailScreen from './email/EnterEmailScreen'
 import EmailConfirmationScreen from './email/EmailConfirmationScreen'
+import LiveCallScreen from './live-call/LiveCallScreen'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { HelpCentreUrl } from '@/constants'
 import WebViewScreen from '../webview/WebViewScreen'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
+import StartCallScreen from './live-call/StartCallScreen'
+import BeforeYouCallScreen from './live-call/BeforeYouCallScreen'
+import VerifyNotCompleteScreen from './live-call/VerifyNotComplete'
+import CallBusyOrClosedScreen from './live-call/CallBusyOrClosedScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -158,6 +163,27 @@ const VerifyIdentityStack = () => {
           headerBackTestID: testIdWithKey('Back'),
           headerLeft: createWebviewHeaderBackButton(navigation),
         })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.BeforeYouCall}
+        component={BeforeYouCallScreen}
+        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.StartCall}
+        component={StartCallScreen}
+        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+      />
+      <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.VerifyNotComplete}
+        component={VerifyNotCompleteScreen}
+        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.CallBusyOrClosed}
+        component={CallBusyOrClosedScreen}
+        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
     </Stack.Navigator>
   )

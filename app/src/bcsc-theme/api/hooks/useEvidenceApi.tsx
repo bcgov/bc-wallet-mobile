@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { useStore } from '@bifold/core'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
-import { createEvidenceRequestJWT } from 'react-native-bcsc-core'
+import { createPreVerificationJWT } from 'react-native-bcsc-core'
 import { BCState } from '@/store'
 
 export interface VerificationPrompt {
@@ -111,7 +111,7 @@ const useEvidenceApi = () => {
   // This needs ot be called for the process to start
   const createVerificationRequest = useCallback(async (): Promise<VerificationResponseData> => {
     return withAccount(async (account) => {
-      const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+      const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
       const { data } = await apiClient.post<VerificationResponseData>(
         `${apiClient.endpoints.evidence}/v1/verifications`,
         null,
@@ -130,7 +130,7 @@ const useEvidenceApi = () => {
   const uploadPhotoEvidenceMetadata = useCallback(
     async (payload: VerificationPhotoUploadPayload): Promise<UploadEvidenceResponseData> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<UploadEvidenceResponseData>(
           `${apiClient.endpoints.evidence}/v1/photos`,
           payload,
@@ -149,7 +149,7 @@ const useEvidenceApi = () => {
   const uploadVideoEvidenceMetadata = useCallback(
     async (payload: VerificationVideoUploadPayload): Promise<UploadEvidenceResponseData> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<UploadEvidenceResponseData>(
           `${apiClient.endpoints.evidence}/v1/videos`,
           payload,
@@ -172,7 +172,7 @@ const useEvidenceApi = () => {
       payload: SendVerificationPayload
     ): Promise<VerificationStatusResponseData> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.put<VerificationStatusResponseData>(
           `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
           payload,
@@ -192,7 +192,7 @@ const useEvidenceApi = () => {
   const getVerificationRequestPrompts = useCallback(
     async (verificationRequestId: string): Promise<VerificationResponseData> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.get<VerificationResponseData>(
           `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}/prompts`,
           {
@@ -211,7 +211,7 @@ const useEvidenceApi = () => {
   const getVerificationRequestStatus = useCallback(
     async (verificationRequestId: string): Promise<VerificationStatusResponseData> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.get<VerificationStatusResponseData>(
           `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
           {
@@ -233,7 +233,7 @@ const useEvidenceApi = () => {
   const cancelVerificationRequest = useCallback(
     async (verificationRequestId: string): Promise<any> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.delete<any>(
           `${apiClient.endpoints.evidence}/v1/verifications/${verificationRequestId}`,
           {
@@ -252,7 +252,7 @@ const useEvidenceApi = () => {
   const createEmailVerification = useCallback(
     async (email: string): Promise<any> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<any>(
           `${apiClient.endpoints.evidence}/v1/emails`,
           { email_address: email },
@@ -272,7 +272,7 @@ const useEvidenceApi = () => {
   const sendEmailVerificationCode = useCallback(
     async (code: string, emailAddressId: string): Promise<void> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.put<void>(
           `${apiClient.endpoints.evidence}/v1/emails/${emailAddressId}`,
           {
@@ -294,7 +294,7 @@ const useEvidenceApi = () => {
   const uploadPhotoEvidenceBinary = useCallback(
     async (url: string, binaryData: any): Promise<any> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.put<any>(url, binaryData, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -312,7 +312,7 @@ const useEvidenceApi = () => {
   const uploadVideoEvidenceBinary = useCallback(
     async (url: string, binaryData: any): Promise<any> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.put<any>(url, binaryData, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -330,7 +330,7 @@ const useEvidenceApi = () => {
   const sendEvidenceMetadata = useCallback(
     async (payload: EvidenceMetadataPayload): Promise<UploadEvidenceResponseData[]> => {
       return withAccount(async (account) => {
-        const token = await createEvidenceRequestJWT(_getDeviceCode(), account.clientID)
+        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<UploadEvidenceResponseData[]>(
           `${apiClient.endpoints.evidence}/v1/documents`,
           payload,

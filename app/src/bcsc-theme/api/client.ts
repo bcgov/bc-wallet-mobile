@@ -42,6 +42,7 @@ interface BCSCEndpoints {
   token: string
   credential: string
   evidence: string
+  video: string
 }
 
 class BCSCService {
@@ -93,6 +94,7 @@ class BCSCService {
       token: `${this.baseURL}/device/token`,
       credential: `${this.baseURL}/credentials/v1/person`,
       evidence: `${this.baseURL}/evidence`,
+      video: `${this.baseURL}/video`,
     }
 
     // Add interceptors
@@ -156,8 +158,9 @@ class BCSCService {
       savedServices: response.data['saved_services_endpoint'],
       token: response.data['token_endpoint'],
       credential: response.data['credential_endpoint'],
-      // TODO(bm): request backend team to add evidence endpoint to the response
+      // TODO(bm): request backend team to add evidence and video endpoints to the response
       evidence: `${this.baseURL}/evidence`,
+      video: `${this.baseURL}/video`,
     }
   }
 
