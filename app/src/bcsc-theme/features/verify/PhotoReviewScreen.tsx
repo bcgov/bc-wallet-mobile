@@ -38,15 +38,17 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
 
       if (forLiveCall) {
-        navigation.dispatch(CommonActions.reset({
-          index: 3,
-          routes: [
-            { name: BCSCScreens.SetupSteps },
-            { name: BCSCScreens.VerificationMethodSelection },
-            { name: BCSCScreens.PhotoInstructions, params: { forLiveCall: true } },
-            { name: BCSCScreens.StartCall }
-          ]
-        }))
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 3,
+            routes: [
+              { name: BCSCScreens.SetupSteps },
+              { name: BCSCScreens.VerificationMethodSelection },
+              { name: BCSCScreens.PhotoInstructions, params: { forLiveCall: true } },
+              { name: BCSCScreens.StartCall },
+            ],
+          })
+        )
         return
       }
 

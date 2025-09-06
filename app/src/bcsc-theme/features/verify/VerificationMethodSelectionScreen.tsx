@@ -54,12 +54,14 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
       const formattedHours = formatServiceHours(serviceHours)
 
-      const availableDestination = destinations.find((dest) => dest.destination_name === 'Test Harness Queue Destination')
+      const availableDestination = destinations.find(
+        (dest) => dest.destination_name === 'Test Harness Queue Destination'
+      )
 
       if (!availableDestination) {
-        navigation.navigate(BCSCScreens.CallBusyOrClosed, { 
+        navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: true,
-          formattedHours
+          formattedHours,
         })
         return
       }
@@ -67,19 +69,18 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       const isWithinServiceHours = checkIfWithinServiceHours(serviceHours)
 
       if (!isWithinServiceHours) {
-        navigation.navigate(BCSCScreens.CallBusyOrClosed, { 
+        navigation.navigate(BCSCScreens.CallBusyOrClosed, {
           busy: false,
-          formattedHours
+          formattedHours,
         })
         return
       }
 
       navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
-
     } catch (error) {
       logger.warn('Error checking service availability:', error)
-      navigation.navigate(BCSCScreens.BeforeYouCall, { 
-        formattedHours: 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+      navigation.navigate(BCSCScreens.BeforeYouCall, {
+        formattedHours: 'Monday to Friday\n7:30am - 5:00pm Pacific Time',
       })
     } finally {
       setLiveCallLoading(false)

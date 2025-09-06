@@ -6,7 +6,7 @@ import {
   refreshToken,
   requestToken,
   withPin,
-  withToken
+  withToken,
 } from '@pexip/infinity-api'
 import { MediaStream, RTCIceCandidate, RTCPeerConnection, mediaDevices } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'

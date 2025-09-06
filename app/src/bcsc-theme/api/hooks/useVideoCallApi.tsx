@@ -20,10 +20,10 @@ export interface VideoSession {
   device_code: string
   session_id: string
   destination_host: string
-  room_name: string,
-  room_alias: string,
-  guest_pin: string,
-  queue_position: number,
+  room_name: string
+  room_alias: string
+  guest_pin: string
+  queue_position: number
   status: SessionStatusType
   status_date: number // seconds from epoch
   created_date: number // seconds from epoch
@@ -38,7 +38,7 @@ export interface VideoCall {
 }
 
 export interface VideoDestination {
-  max_active_sessions?: number 
+  max_active_sessions?: number
   max_inactive_seconds?: number
   number_of_agents?: number
   destination_name: string
@@ -50,9 +50,9 @@ export type VideoDestinations = VideoDestination[]
 
 export interface ServicePeriod {
   start_day: string // e.g. "MONDAY"
-  end_day: string   // e.g. "MONDAY"
+  end_day: string // e.g. "MONDAY"
   start_time: string // e.g. "05:00"
-  end_time: string    // e.g. "23:59"
+  end_time: string // e.g. "23:59"
 }
 
 export interface ServiceHours {
@@ -70,27 +70,20 @@ const useVideoCallApi = () => {
     return code
   }, [store.bcsc.deviceCode])
 
-  const createVideoSession = useCallback(
-    async (): Promise<VideoSession> => {
-      return withAccount(async (account) => {
-        const deviceCode = _getDeviceCode()
-        const body = { client_id: account.clientID, device_code: deviceCode }
-        const token = await createPreVerificationJWT(deviceCode, account.clientID)
-        const { data } = await apiClient.post<VideoSession>(
-          `${apiClient.endpoints.video}/v2/sessions/`,
-          body,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            skipBearerAuth: true,
-          }
-        )
-        return data
+  const createVideoSession = useCallback(async (): Promise<VideoSession> => {
+    return withAccount(async (account) => {
+      const deviceCode = _getDeviceCode()
+      const body = { client_id: account.clientID, device_code: deviceCode }
+      const token = await createPreVerificationJWT(deviceCode, account.clientID)
+      const { data } = await apiClient.post<VideoSession>(`${apiClient.endpoints.video}/v2/sessions/`, body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        skipBearerAuth: true,
       })
-    },
-    [_getDeviceCode]
-  )
+      return data
+    })
+  }, [_getDeviceCode])
 
   const updateVideoSessionStatus = useCallback(
     async (sessionId: string, status: SessionStatusType): Promise<VideoSession> => {
@@ -116,12 +109,12 @@ const useVideoCallApi = () => {
   const createVideoCall = useCallback(
     async (sessionId: string, clientCallId: string, status: CallStatusType = 'call_ringing'): Promise<VideoCall> => {
       return withAccount(async (account) => {
-        const body = { 
+        const body = {
           session_id: sessionId,
           status: status,
-          client_call_id: clientCallId
+          client_call_id: clientCallId,
         }
-        
+
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.post<VideoCall>(
           `${apiClient.endpoints.video}/v2/sessions/${sessionId}/calls/`,
@@ -142,7 +135,7 @@ const useVideoCallApi = () => {
   const updateVideoCallStatus = useCallback(
     async (sessionId: string, clientCallId: string, status: CallStatusType): Promise<VideoCall> => {
       return withAccount(async (account) => {
-        const body = { status, client_call_id: clientCallId  }
+        const body = { status, client_call_id: clientCallId }
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
         const { data } = await apiClient.put<VideoCall>(
           `${apiClient.endpoints.video}/v2/sessions/${sessionId}/calls/${clientCallId}`,
@@ -164,57 +157,42 @@ const useVideoCallApi = () => {
     async (sessionId: string): Promise<void> => {
       return withAccount(async (account) => {
         const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
-        await apiClient.delete(
-          `${apiClient.endpoints.video}/v2/sessions/${sessionId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            skipBearerAuth: true,
-          }
-        )
+        await apiClient.delete(`${apiClient.endpoints.video}/v2/sessions/${sessionId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          skipBearerAuth: true,
+        })
       })
     },
     [_getDeviceCode]
   )
 
-  const getVideoDestinations = useCallback(
-    async (): Promise<VideoDestinations> => {
-      return withAccount(async (account) => {
-        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
-        const { data } = await apiClient.get<VideoDestinations>(
-          `${apiClient.endpoints.video}/v2/destinations`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            skipBearerAuth: true,
-          }
-        )
-        return data
+  const getVideoDestinations = useCallback(async (): Promise<VideoDestinations> => {
+    return withAccount(async (account) => {
+      const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.get<VideoDestinations>(`${apiClient.endpoints.video}/v2/destinations`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        skipBearerAuth: true,
       })
-    },
-    [_getDeviceCode]
-  )
+      return data
+    })
+  }, [_getDeviceCode])
 
-  const getServiceHours = useCallback(
-    async (): Promise<ServiceHours> => {
-      return withAccount(async (account) => {
-        const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
-        const { data } = await apiClient.get<ServiceHours>(
-          `${apiClient.endpoints.video}/v2/service_hours`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            skipBearerAuth: true,
-          }
-        )
-        return data
+  const getServiceHours = useCallback(async (): Promise<ServiceHours> => {
+    return withAccount(async (account) => {
+      const token = await createPreVerificationJWT(_getDeviceCode(), account.clientID)
+      const { data } = await apiClient.get<ServiceHours>(`${apiClient.endpoints.video}/v2/service_hours`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        skipBearerAuth: true,
       })
-    },
-    [_getDeviceCode]
-  )
+      return data
+    })
+  }, [_getDeviceCode])
 
   return useMemo(
     () => ({

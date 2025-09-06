@@ -418,13 +418,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
             <ThemedText>{inCall ? 'Service BC' : 'In Queue'}</ThemedText>
             {callTimer ? <ThemedText>{callTimer}</ThemedText> : null}
           </View>
-          {banner ? (
-            <BannerSection
-              type={banner.type}
-              title={banner.title}
-              dismissible={false}
-            />
-          ) : null}
+          {banner ? <BannerSection type={banner.type} title={banner.title} dismissible={false} /> : null}
         </View>
         <View style={styles.lowerContainer}>
           {localStream && !videoHidden && (

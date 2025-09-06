@@ -72,7 +72,12 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
           buttonType={ButtonType.Primary}
           title={'Take Photo of Face'}
           onPress={() => {
-            navigation.navigate(BCSCScreens.TakePhoto, { deviceSide: 'front', cameraInstructions: '', cameraLabel: '', forLiveCall })
+            navigation.navigate(BCSCScreens.TakePhoto, {
+              deviceSide: 'front',
+              cameraInstructions: '',
+              cameraLabel: '',
+              forLiveCall,
+            })
           }}
           testID={'TakePhotoButton'}
           accessibilityLabel={'Take Photo of Face'}

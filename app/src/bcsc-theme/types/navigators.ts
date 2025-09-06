@@ -79,8 +79,13 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.VerifyInPerson]: undefined
   [BCSCScreens.InformationRequired]: undefined
   [BCSCScreens.PhotoInstructions]: { forLiveCall: boolean }
-  [BCSCScreens.TakePhoto]: { deviceSide: 'front' | 'back'; cameraLabel: string; cameraInstructions: string; forLiveCall: boolean }
-  [BCSCScreens.PhotoReview]: { photoPath: string, forLiveCall: boolean }
+  [BCSCScreens.TakePhoto]: {
+    deviceSide: 'front' | 'back'
+    cameraLabel: string
+    cameraInstructions: string
+    forLiveCall: boolean
+  }
+  [BCSCScreens.PhotoReview]: { photoPath: string; forLiveCall: boolean }
   [BCSCScreens.VideoInstructions]: undefined
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
