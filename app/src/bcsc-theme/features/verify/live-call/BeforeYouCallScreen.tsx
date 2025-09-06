@@ -47,7 +47,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   }
 
   const onPressAssistance = () => {
-    // TODO (bm)
+    // TODO (bm): webview or external link here presumeably
   }
 
   return (

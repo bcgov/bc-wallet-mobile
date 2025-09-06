@@ -5,7 +5,6 @@ import ProgressBar from '@/components/ProgressBar'
 import { BCDispatchAction, BCState } from '@/store'
 import Mountains from '@assets/img/mountains-circle.svg'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { BannerSection } from '@bifold/core/src/components/views/Banner'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -15,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { MediaStreamTrack, RTCView } from 'react-native-webrtc'
 import { formatCallTime } from './utils/formatCallTime'
+import { AppBannerSection as BannerSection } from '@/bcsc-theme/components/AppBanner'
 
 type CallIconButtonProps = {
   onPress: () => void
@@ -193,7 +193,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
           routes: [{ name: BCSCScreens.VerificationSuccess }],
         })
       )
-    } catch (error) {
+    } catch {
       logger.info('User not verified')
       navigation.dispatch(
         CommonActions.reset({
@@ -422,9 +422,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
             <BannerSection
               type={banner.type}
               title={banner.title}
-              id={'notice-banner'}
               dismissible={false}
-              variant={'detail'}
             />
           ) : null}
         </View>

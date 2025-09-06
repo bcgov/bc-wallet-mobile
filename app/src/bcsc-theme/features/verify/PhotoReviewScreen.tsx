@@ -62,7 +62,6 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
       )
     } catch (error) {
       logger.error(`Error saving photo: ${error}`)
-      // TODO: Handle error, e.g., show an alert or log the error
     }
   }
 
