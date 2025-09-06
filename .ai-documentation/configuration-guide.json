@@ -1,0 +1,453 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BC Wallet Mobile - Configuration Documentation",
+  "description": "Comprehensive configuration documentation for all environments and tools",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-08",
+  "configurations": {
+    "environment": {
+      "development": {
+        "file": ".env.sample",
+        "description": "Development environment configuration template",
+        "variables": {
+          "OCA_URL": {
+            "description": "Overlay Capture Architecture bundles URL for credential schemas",
+            "example": "https://raw.githubusercontent.com/bcgov/aries-oca-bundles/main/",
+            "required": true,
+            "type": "string"
+          },
+          "MEDIATOR_URL": {
+            "description": "Aries mediator invitation URL for message routing",
+            "example": "https://mediator.example.com?c_i=base64_invitation",
+            "required": true,
+            "type": "string",
+            "security": "Contains connection invitation data"
+          },
+          "MEDIATOR_USE_PUSH_NOTIFICATIONS": {
+            "description": "Enable push notifications through mediator",
+            "example": "false",
+            "required": true,
+            "type": "boolean",
+            "default": false
+          },
+          "LOAD_STORYBOOK": {
+            "description": "Load Storybook component library instead of main app",
+            "example": "false",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          "PROOF_TEMPLATE_URL": {
+            "description": "URL for proof request templates",
+            "example": "https://proof-templates.example.com",
+            "required": false,
+            "type": "string"
+          },
+          "REMOTE_LOGGING_URL": {
+            "description": "Remote logging service endpoint",
+            "example": "https://logging.example.com/api",
+            "required": false,
+            "type": "string",
+            "security": "Logs may contain sensitive information"
+          },
+          "INDY_VDR_PROXY_URL": {
+            "description": "Indy VDR proxy service URL for ledger access",
+            "example": "https://indy-proxy.example.com",
+            "required": false,
+            "type": "string"
+          }
+        }
+      },
+      "production": {
+        "management": "GitHub Secrets and Variables",
+        "secrets": {
+          "APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64": {
+            "description": "Base64 encoded iOS signing certificate",
+            "usage": "iOS app signing in CI/CD"
+          },
+          "APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD": {
+            "description": "Password for iOS signing certificate",
+            "usage": "iOS app signing in CI/CD"
+          },
+          "BUILD_PROVISION_PROFILE_BASE64": {
+            "description": "Base64 encoded iOS provisioning profile",
+            "usage": "iOS app provisioning in CI/CD"
+          },
+          "PLAY_STORE_JKS_BASE64": {
+            "description": "Base64 encoded Android keystore",
+            "usage": "Android app signing in CI/CD"
+          },
+          "PLAY_STORE_JKS_ALIAS": {
+            "description": "Android keystore alias",
+            "usage": "Android app signing in CI/CD"
+          },
+          "PLAY_STORE_JKS_PASSWD": {
+            "description": "Android keystore password",
+            "usage": "Android app signing in CI/CD"
+          },
+          "MEDIATOR_URL": {
+            "description": "Production mediator URL",
+            "usage": "Production Aries message routing"
+          },
+          "IAS_PORTAL_URL": {
+            "description": "Identity Assurance Service portal URL",
+            "usage": "Government identity verification"
+          },
+          "IAS_AGENT_INVITE_URL": {
+            "description": "IAS agent invitation URL",
+            "usage": "Government identity verification"
+          },
+          "REMOTE_LOGGING_URL": {
+            "description": "Production logging service URL",
+            "usage": "Production error tracking and analytics"
+          },
+          "GOOGLE_API_CREDENTIALS_BASE64": {
+            "description": "Base64 encoded Google Play API credentials",
+            "usage": "Google Play Store deployment"
+          },
+          "APP_STORE_CONNECT_ISSUER_ID": {
+            "description": "App Store Connect API issuer ID",
+            "usage": "iTunes Connect deployment"
+          },
+          "APP_STORE_CONNECT_KEY_IDENTIFIER_95": {
+            "description": "App Store Connect API key identifier",
+            "usage": "iTunes Connect deployment"
+          },
+          "APP_STORE_CONNECT_PRIVATE_KEY_95": {
+            "description": "App Store Connect API private key",
+            "usage": "iTunes Connect deployment"
+          },
+          "SAUCE_USERNAME": {
+            "description": "SauceLabs username for device testing",
+            "usage": "Automated device testing"
+          },
+          "SAUCE_ACCESS_KEY": {
+            "description": "SauceLabs access key for device testing",
+            "usage": "Automated device testing"
+          },
+          "NGROK_AUTHTOKEN": {
+            "description": "Ngrok authentication token for tunneling",
+            "usage": "Android device testing with tunneling"
+          },
+          "ROCKETCHAT_WEBHOOK": {
+            "description": "RocketChat webhook URL for notifications",
+            "usage": "Build failure notifications"
+          },
+          "ALLURE_USERNAME": {
+            "description": "Allure test reporting username",
+            "usage": "Test result reporting"
+          },
+          "ALLURE_PASSWD": {
+            "description": "Allure test reporting password",
+            "usage": "Test result reporting"
+          }
+        },
+        "variables": {
+          "OCA_URL": {
+            "description": "Production OCA bundles URL",
+            "usage": "Credential schema definitions"
+          },
+          "PROOF_TEMPLATE_URL": {
+            "description": "Production proof template service URL",
+            "usage": "Proof request templates"
+          },
+          "MEDIATOR_USE_PUSH_NOTIFICATIONS": {
+            "description": "Enable push notifications in production",
+            "usage": "Production push notification configuration"
+          },
+          "INDY_VDR_PROXY_URL": {
+            "description": "Production Indy VDR proxy URL",
+            "usage": "Production ledger access"
+          },
+          "IAS_URL": {
+            "description": "Identity Assurance Service URL",
+            "usage": "Government identity verification"
+          }
+        }
+      }
+    },
+    "build": {
+      "typescript": {
+        "file": "tsconfig.json",
+        "description": "TypeScript compiler configuration",
+        "key_settings": {
+          "strict": true,
+          "target": "ES2020",
+          "lib": ["ES2020", "DOM"],
+          "moduleResolution": "node",
+          "allowSyntheticDefaultImports": true,
+          "esModuleInterop": true,
+          "skipLibCheck": true,
+          "resolveJsonModule": true
+        },
+        "paths": {
+          "@/*": ["./src/*"],
+          "@bifold/*": ["../node_modules/@bifold/*"],
+          "@bcsc-theme/*": ["./src/bcsc-theme/*"],
+          "@bcwallet-theme/*": ["./src/bcwallet-theme/*"]
+        }
+      },
+      "babel": {
+        "file": "babel.config.js",
+        "description": "Babel transpilation configuration",
+        "presets": [
+          "@react-native/babel-preset"
+        ],
+        "plugins": [
+          ["module-resolver", {
+            "root": ["./src"],
+            "alias": {
+              "@": "./src",
+              "@bifold": "../node_modules/@bifold",
+              "@bcsc-theme": "./src/bcsc-theme",
+              "@bcwallet-theme": "./src/bcwallet-theme"
+            }
+          }]
+        ]
+      },
+      "metro": {
+        "file": "metro.config.js",
+        "description": "Metro bundler configuration for React Native",
+        "key_settings": {
+          "transformer": {
+            "getTransformOptions": "Support for SVG transformations",
+            "svgTransform": "react-native-svg-transformer"
+          },
+          "resolver": {
+            "assetExts": "SVG and other asset extensions",
+            "sourceExts": "TypeScript and JavaScript extensions"
+          }
+        }
+      }
+    },
+    "quality": {
+      "eslint": {
+        "file": "eslint.config.mjs",
+        "description": "ESLint configuration for code quality",
+        "extends": [
+          "@eslint/js",
+          "typescript-eslint",
+          "react",
+          "react-hooks",
+          "import",
+          "jest"
+        ],
+        "rules": {
+          "security": "Security-focused linting rules",
+          "accessibility": "React Native accessibility rules",
+          "performance": "Performance optimization rules",
+          "bestPractices": "React and TypeScript best practices"
+        },
+        "overrides": [
+          {
+            "files": ["**/__tests__/**/*"],
+            "rules": "Jest-specific rules for test files"
+          }
+        ]
+      },
+      "prettier": {
+        "file": ".prettierrc",
+        "description": "Code formatting configuration",
+        "settings": {
+          "singleQuote": true,
+          "trailingComma": "es5",
+          "tabWidth": 2,
+          "semi": false,
+          "printWidth": 100
+        }
+      },
+      "commitlint": {
+        "file": "commitlint.config.js",
+        "description": "Commit message linting configuration",
+        "extends": ["@commitlint/config-conventional"],
+        "rules": {
+          "type-enum": [
+            "feat", "fix", "docs", "style", "refactor", 
+            "perf", "test", "build", "ci", "chore", "revert"
+          ],
+          "scope-case": "lower-case",
+          "subject-case": "lower-case"
+        }
+      }
+    },
+    "testing": {
+      "jest": {
+        "file": "jest.config.js",
+        "description": "Jest testing framework configuration",
+        "preset": "react-native",
+        "setupFiles": ["./jestSetup.js"],
+        "transformIgnorePatterns": [
+          "node_modules/(?!(react-native|@react-native|@react-navigation|@bifold)/)"
+        ],
+        "collectCoverageFrom": [
+          "src/**/*.{ts,tsx}",
+          "!src/**/*.d.ts",
+          "!src/**/__tests__/**",
+          "!src/**/node_modules/**"
+        ],
+        "coverageThreshold": {
+          "global": {
+            "branches": 80,
+            "functions": 80,
+            "lines": 80,
+            "statements": 80
+          }
+        }
+      },
+      "storybook": {
+        "file": ".storybook/main.js",
+        "description": "Storybook configuration for component documentation",
+        "stories": ["../src/**/*.stories.@(js|jsx|ts|tsx)"],
+        "addons": [
+          "@storybook/addon-ondevice-actions",
+          "@storybook/addon-ondevice-knobs"
+        ]
+      }
+    },
+    "native": {
+      "android": {
+        "gradle": {
+          "file": "android/build.gradle",
+          "description": "Android build configuration",
+          "key_settings": {
+            "compileSdkVersion": 33,
+            "buildToolsVersion": "33.0.0",
+            "minSdkVersion": 21,
+            "targetSdkVersion": 33,
+            "proguardFiles": "Code obfuscation configuration"
+          }
+        },
+        "permissions": {
+          "file": "android/app/src/main/AndroidManifest.xml",
+          "required": [
+            "INTERNET",
+            "USE_BIOMETRIC", 
+            "USE_FINGERPRINT",
+            "CAMERA",
+            "WRITE_EXTERNAL_STORAGE",
+            "RECEIVE_BOOT_COMPLETED"
+          ]
+        }
+      },
+      "ios": {
+        "project": {
+          "file": "ios/AriesBifold.xcodeproj",
+          "description": "Xcode project configuration",
+          "deployment_target": "11.0",
+          "architectures": ["arm64", "x86_64"]
+        },
+        "entitlements": {
+          "file": "ios/AriesBifold/AriesBifold.entitlements",
+          "capabilities": [
+            "Keychain sharing",
+            "Push notifications",
+            "Associated domains",
+            "App groups"
+          ]
+        },
+        "info_plist": {
+          "file": "ios/AriesBifold/Info.plist",
+          "key_settings": {
+            "NSCameraUsageDescription": "Camera access for QR code scanning",
+            "NSBiometricUsageDescription": "Biometric authentication for security",
+            "CFBundleDisplayName": "BC Wallet",
+            "CFBundleIdentifier": "ca.bc.gov.BCWallet"
+          }
+        }
+      }
+    },
+    "dependencies": {
+      "workspace": {
+        "file": "package.json",
+        "description": "Root workspace configuration",
+        "workspaces": ["app", "packages/*"],
+        "packageManager": "yarn@4.9.2",
+        "engines": {
+          "node": ">=20.19.2 <21.0.0",
+          "yarn": "^4.9.2"
+        }
+      },
+      "resolutions": {
+        "description": "Dependency version resolutions for security and compatibility",
+        "critical": {
+          "tsyringe": "4.8.0",
+          "nanoid": "3.3.7",
+          "react": "18.3.1",
+          "react-native": "0.73.11"
+        }
+      }
+    },
+    "security": {
+      "sonarcloud": {
+        "file": ".sonarcloud.properties",
+        "description": "SonarCloud static analysis configuration",
+        "organization": "bcgov",
+        "projectKey": "bcgov_bc-wallet-mobile"
+      },
+      "dependabot": {
+        "file": ".github/dependabot.yml",
+        "description": "Automated dependency updates configuration",
+        "package_ecosystem": "npm",
+        "schedule": "daily",
+        "security_updates": true
+      }
+    }
+  },
+  "environment_matrix": {
+    "development": {
+      "purpose": "Local development and testing",
+      "features": [
+        "Hot reloading",
+        "Debug builds",
+        "Local mediator",
+        "Storybook integration",
+        "Development certificates"
+      ],
+      "security": "Lower security for development convenience"
+    },
+    "staging": {
+      "purpose": "Pre-production testing and QA",
+      "features": [
+        "Production-like environment",
+        "Test credentials",
+        "SauceLabs testing",
+        "Performance monitoring"
+      ],
+      "security": "Production-level security with test data"
+    },
+    "production": {
+      "purpose": "Live app store releases",
+      "features": [
+        "Production credentials",
+        "Full security features",
+        "Performance optimization",
+        "Error tracking",
+        "Analytics"
+      ],
+      "security": "Maximum security configuration"
+    }
+  },
+  "best_practices": {
+    "configuration": [
+      "Use environment variables for sensitive configuration",
+      "Never commit secrets to source control",
+      "Use different configurations per environment",
+      "Validate configuration at startup",
+      "Document all configuration options"
+    ],
+    "security": [
+      "Rotate secrets regularly",
+      "Use least privilege access",
+      "Enable security scanning",
+      "Monitor configuration changes",
+      "Implement secure defaults"
+    ],
+    "maintenance": [
+      "Keep configurations up to date",
+      "Remove unused configuration",
+      "Test configuration changes",
+      "Document configuration changes",
+      "Version control configuration files"
+    ]
+  }
+}
