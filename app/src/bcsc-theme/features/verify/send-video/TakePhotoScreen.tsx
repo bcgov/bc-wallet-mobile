@@ -2,10 +2,9 @@ import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/n
 
 import { StackNavigationProp } from '@react-navigation/stack'
 
+import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
-import CircularMask from '@/bcsc-theme/components/CircularMask'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
@@ -32,7 +31,7 @@ const TakePhotoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         navigation={navigation}
         cameraFace="front"
         cameraLabel="Position your face within the oval and press the button on the screen"
-        cameraMask={<CircularMask />}
+        // maskType={MaskT.OVAL}
         onPhotoTaken={handlePhotoTaken}
       />
     </SafeAreaView>

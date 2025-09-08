@@ -4,12 +4,12 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useMemo } from 'react'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { hitSlop } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -383,7 +383,19 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <Button
           title={'Reset data'}
           onPress={() => {
-            dispatch({ type: BCDispatchAction.CLEAR_ADDITIONAL_EVIDENCE, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [undefined] })
+          }}
+          testID={testIdWithKey('ResetData')}
+          accessibilityLabel={'Reset data'}
+          buttonType={ButtonType.Secondary}
+        />
+      </View>
+      <View style={styles.itemSeparator} />
+      <View style={{ padding: Spacing.md }}>
+        <Button
+          title={'Masked Camera'}
+          onPress={() => {
+            navigation.navigate(BCSCScreens.TakePhoto)
           }}
           testID={testIdWithKey('ResetData')}
           accessibilityLabel={'Reset data'}

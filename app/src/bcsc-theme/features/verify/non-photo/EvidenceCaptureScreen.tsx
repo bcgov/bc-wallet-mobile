@@ -1,15 +1,14 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useState } from 'react'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
-import RectangularMask from '@/bcsc-theme/components/RectangularMask'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
-import { useStore, useTheme } from '@bifold/core'
-import { BCState, BCDispatchAction } from '@/store'
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
-import { StyleSheet, useWindowDimensions, View } from 'react-native'
+import { BCDispatchAction, BCState } from '@/store'
+import { MaskType, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useState } from 'react'
+import { StyleSheet, useWindowDimensions, View } from 'react-native'
 
 type EvidenceCaptureScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceCapture>
@@ -116,7 +115,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             cameraFace={'back'}
             cameraInstructions={currentSide.image_side_tip}
             cameraLabel={currentSide.image_side_label}
-            cameraMask={<RectangularMask />}
+            maskType={MaskType.ID_CARD}
             onPhotoTaken={handlePhotoTaken}
           />
           <View style={styles.reticleContainer}>
