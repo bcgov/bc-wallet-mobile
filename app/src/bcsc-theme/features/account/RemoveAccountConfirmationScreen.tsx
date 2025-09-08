@@ -37,13 +37,6 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   })
 
   const handleRemoveAccount = async () => {
-    // Todo(TL): needs implementation on ios https://github.com/bcgov/bc-wallet-mobile/issues/2636
-    // remove this conditional block when implemented
-    if (Platform.OS !== 'android') {
-      logger.info('removeAccount not implemented on iOS')
-      return
-    }
-
     const account = await getAccount()
     if (!account?.clientID) {
       logger.error('Account is null or missing clientID - cannot proceed with deletion')
