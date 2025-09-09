@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { formatServiceHours, checkIfWithinServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
+import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -78,9 +78,11 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
       navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
     } catch (error) {
-      logger.warn('Error checking service availability:', error)
-      navigation.navigate(BCSCScreens.BeforeYouCall, {
-        formattedHours: 'Monday to Friday\n7:30am - 5:00pm Pacific Time',
+      // Warn and default to it being closed
+      logger.warn('Error checking service availability:', { error })
+      navigation.navigate(BCSCScreens.CallBusyOrClosed, {
+        busy: false,
+        formattedHours: 'Unavailable',
       })
     } finally {
       setLiveCallLoading(false)

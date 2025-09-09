@@ -4,6 +4,7 @@ import { useNetInfo } from '@react-native-community/netinfo'
 import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -15,6 +16,7 @@ type BeforeYouCallScreenProps = {
 const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { type: networkType, isConnected } = useNetInfo()
+  const { t } = useTranslation()
   const { formattedHours } = route.params || {}
 
   // Use the passed formatted hours or fallback to default
@@ -54,44 +56,42 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          Before you call
+          {t('Unified.VideoCall.BeforeYouCallTitle')}
         </ThemedText>
-        <ThemedText variant={'headingFour'}>Wi-Fi Recommended</ThemedText>
+        <ThemedText variant={'headingFour'}>{t('Unified.VideoCall.WiFiRecommended')}</ThemedText>
         <ThemedText>
-          {isCellular ? "The app detected you're on a cellular network. " : ''}
-          Standard data charges may apply for calls over a cellular network.
+          {isCellular ? t('Unified.VideoCall.CellularNetworkWarning') : ''}
+          {t('Unified.VideoCall.StandardDataCharges')}
         </ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          Find a Private Place to Talk
+          {t('Unified.VideoCall.FindPrivatePlace')}
         </ThemedText>
-        <ThemedText>{`Make sure you'll be the only person in the video.`}</ThemedText>
+        <ThemedText>{t('Unified.VideoCall.MakeSureOnlyYou')}</ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          Hours of Service
+          {t('Unified.VideoCall.HoursOfService')}
         </ThemedText>
         <ThemedText>{hoursText}</ThemedText>
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          Contact Centre Privacy
+          {t('Unified.VideoCall.ContactCentrePrivacy')}
         </ThemedText>
-        <ThemedText>{`During a video call, Service BC will ask for and collect personal information. The personal information you will provide is collected for the purpose of verification of your BC Services Card. This information is collected under the authority of Section 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act (FIPPA).`}</ThemedText>
-        <ThemedText
-          style={{ marginTop: Spacing.md }}
-        >{`If you have further questions about privacy, please contact Chief Privacy Officer, 100 - 722 Johnson Street, Victoria, BC, V8W 1N1, or by phone\n250-405-3726`}</ThemedText>
+        <ThemedText>{t(`Unified.VideoCall.PrivacyNotice`)}</ThemedText>
+        <ThemedText style={{ marginTop: Spacing.md }}>{t(`Unified.VideoCall.PrivacyContactInfo`)}</ThemedText>
 
         <View style={styles.controlsContainer}>
           <Button
             buttonType={ButtonType.Primary}
             testID={testIdWithKey('Continue')}
-            accessibilityLabel={'Continue'}
-            title={'Continue'}
+            accessibilityLabel={t('Global.Continue')}
+            title={t('Global.Continue')}
             onPress={onPressContinue}
           />
           <Button
             buttonType={ButtonType.Tertiary}
             testID={testIdWithKey('Assistance')}
-            accessibilityLabel={'Need assistance?'}
-            title={'Need assistance?'}
+            accessibilityLabel={t('Unified.VideoCall.Assistance')}
+            title={t('Unified.VideoCall.Assistance')}
             onPress={onPressAssistance}
           />
         </View>

@@ -8,26 +8,13 @@ import {
   withPin,
   withToken,
 } from '@pexip/infinity-api'
-import { MediaStream, RTCIceCandidate, RTCPeerConnection, mediaDevices } from 'react-native-webrtc'
+import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
-import type { ConnectionRequest } from '../types/live-call'
-
-// Allow a few seconds for graceful reconnection
-const reconnectionGracePeriodMs = 3000
-const keepAliveIntervalMs = 30000
+import { keepAliveIntervalMs, reconnectionGracePeriodMs } from '../constants'
+import type { ConnectionRequest, ConnectResult } from '../types/live-call'
 
 // WebRTC Events need handlers even if we don't do anything with some of them
 const noop = () => {}
-
-export interface ConnectResult {
-  localStream: MediaStream
-  callUuid: string
-  participantUuid: string
-  peerConnection: RTCPeerConnection
-  disconnectPexip: () => Promise<void>
-  stopPexipKeepAlive: () => void
-  setAppInitiatedDisconnect: (value: boolean) => void
-}
 
 export const connect = async (
   req: ConnectionRequest & {
@@ -36,6 +23,7 @@ export const connect = async (
   },
   logger: BifoldLogger
 ): Promise<ConnectResult> => {
+  logger.info('Requesting user media (camera and microphone)...')
   const localStream = await mediaDevices.getUserMedia({
     audio: true,
     video: {
@@ -44,6 +32,7 @@ export const connect = async (
     },
   })
 
+  logger.info('Requesting Pexip Infinity token...')
   let response = await requestInfinityToken(req)
 
   if (response.status !== 200) {
@@ -53,6 +42,7 @@ export const connect = async (
   const participantUuid = response.data.result.participant_uuid
   let currentToken = response.data.result.token
 
+  logger.info('Creating WebRTC peer connection...')
   const peerConnection: RTCPeerConnection = await createPeerConnection(localStream)
 
   let connectionEstablished = false
@@ -63,14 +53,19 @@ export const connect = async (
 
   const handleDisconnect = () => {
     if (disconnectHandled || appInitiatedDisconnect) return
+    logger.info('Handling remote disconnect')
     disconnectHandled = true
     req.onRemoteDisconnect?.()
   }
 
   peerConnection.addEventListener('connectionstatechange', () => {
+    logger.info('Peer connection state changed', { state: peerConnection.connectionState })
+
     if (peerConnection.connectionState === 'connected') {
+      logger.info('WebRTC connection established successfully')
       connectionEstablished = true
       if (disconnectTimeout) {
+        logger.info('Clearing disconnect timeout due to successful reconnection')
         clearTimeout(disconnectTimeout)
         disconnectTimeout = null
       }
@@ -90,6 +85,7 @@ export const connect = async (
             peerConnection.connectionState === 'failed' ||
             peerConnection.connectionState === 'closed'
           ) {
+            logger.warn('Grace period expired, triggering disconnect', { state: peerConnection.connectionState })
             handleDisconnect()
           }
         }, reconnectionGracePeriodMs)
@@ -100,6 +96,8 @@ export const connect = async (
   peerConnection.addEventListener('icecandidateerror', noop)
 
   peerConnection.addEventListener('iceconnectionstatechange', () => {
+    logger.info('ICE connection state changed', { state: peerConnection.iceConnectionState })
+
     if (
       connectionEstablished &&
       remoteStreamReceived &&
@@ -114,6 +112,9 @@ export const connect = async (
             peerConnection.iceConnectionState === 'failed' ||
             peerConnection.iceConnectionState === 'closed'
           ) {
+            logger.warn('ICE grace period expired, triggering disconnect', {
+              iceState: peerConnection.iceConnectionState,
+            })
             handleDisconnect()
           }
         }, reconnectionGracePeriodMs)
@@ -129,8 +130,10 @@ export const connect = async (
     req.onRemoteStream(remoteStream)
   })
 
+  logger.info('Creating WebRTC offer...')
   const offer = await createOffer(peerConnection)
 
+  logger.info('Initiating WebRTC call to Pexip...')
   response = await callToInfinity({
     nodeUrl: req.nodeUrl,
     conferenceAlias: req.conferenceAlias,
@@ -144,9 +147,11 @@ export const connect = async (
   }
 
   const callUuid = response.data.result.call_uuid
+  logger.info('WebRTC call initiated successfully', { callUuid })
   peerConnection.addEventListener('icecandidate', (event) => {
     const iceCandidate = event.candidate
     if (iceCandidate != null) {
+      logger.info('Sending ICE candidate to Pexip')
       sendCandidate({
         nodeUrl: req.nodeUrl,
         conferenceAlias: req.conferenceAlias,
@@ -158,6 +163,7 @@ export const connect = async (
     }
   })
 
+  logger.info('Setting local and remote descriptions...')
   peerConnection.setLocalDescription(offer)
   peerConnection.setRemoteDescription({
     sdp: response.data.result.sdp,
@@ -165,6 +171,7 @@ export const connect = async (
   })
 
   const disconnectPexip = async () => {
+    logger.info('Disconnecting from Pexip call...', { callUuid })
     await disconnectCall({
       fetcher: withToken(fetch, currentToken),
       params: {
@@ -174,10 +181,13 @@ export const connect = async (
       },
       host: req.nodeUrl,
     })
+    logger.info('Pexip call disconnected successfully')
   }
 
+  logger.info('Starting Pexip keep-alive timer', { intervalMs: keepAliveIntervalMs })
   const keepAliveInterval = setInterval(async () => {
     try {
+      logger.info('Refreshing Pexip token...')
       const response = await refreshToken({
         fetcher: withToken(fetch, currentToken),
         params: {
@@ -188,19 +198,28 @@ export const connect = async (
 
       if (response.status === 200 && response.data?.result?.token) {
         currentToken = response.data.result.token
+        logger.info('Pexip token refreshed successfully')
+      } else {
+        logger.warn('Token refresh returned unexpected response', { status: response.status })
       }
     } catch (err) {
-      logger.error('Pexip token refresh failed:', err)
+      logger.error('Pexip token refresh failed:', err as Error)
     }
   }, keepAliveIntervalMs)
 
   const stopPexipKeepAlive = () => {
+    logger.info('Stopping Pexip keep-alive timer')
     clearInterval(keepAliveInterval)
   }
 
   const setAppInitiatedDisconnect = (value: boolean) => {
     appInitiatedDisconnect = value
   }
+
+  logger.info('Video call connection established successfully', {
+    callUuid,
+    participantUuid,
+  })
 
   return {
     localStream,

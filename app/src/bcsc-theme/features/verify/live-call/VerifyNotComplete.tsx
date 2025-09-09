@@ -5,12 +5,14 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useTranslation } from 'react-i18next'
 
 type VerifyNotCompleteScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerifyNotComplete>
 }
 
 const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) => {
+  const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const styles = StyleSheet.create({
     pageContainer: {
@@ -45,14 +47,16 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          Verify not complete
+          {t('Unified.VideoCall.VerifyNotComplete.Title')}
         </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>Your identity is not verified yet.</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>
+          {t('Unified.VideoCall.VerifyNotComplete.NotVerifiedYet')}
+        </ThemedText>
         <Button
           buttonType={ButtonType.Secondary}
           testID={testIdWithKey('Trouble')}
-          accessibilityLabel={'Having trouble?'}
-          title={'Having trouble?'}
+          accessibilityLabel={t('Unified.VideoCall.VerifyNotComplete.HavingTrouble')}
+          title={t('Unified.VideoCall.VerifyNotComplete.HavingTrouble')}
           onPress={onPressTrouble}
         >
           <Icon
@@ -62,23 +66,23 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
             size={24}
           />
         </Button>
-        <ThemedText
-          style={{ marginTop: Spacing.sm }}
-        >{`If you are having issues with audio or video, try out the following tips. If you're still having trouble, call us.`}</ThemedText>
+        <ThemedText style={{ marginTop: Spacing.sm }}>
+          {t('Unified.VideoCall.VerifyNotComplete.TroubleshootingTips')}
+        </ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
           testID={testIdWithKey('SendVideo')}
-          accessibilityLabel={'Send video instead'}
-          title={'Send video instead'}
+          accessibilityLabel={t('Unified.VideoCall.VerifyNotComplete.SendVideoInstead')}
+          title={t('Unified.VideoCall.VerifyNotComplete.SendVideoInstead')}
           onPress={onPressSendVideo}
         />
         <Button
           buttonType={ButtonType.Secondary}
           testID={testIdWithKey('TryAgain')}
-          accessibilityLabel={'Try again'}
-          title={'Try again'}
+          accessibilityLabel={t('Unified.VideoCall.VerifyNotComplete.TryAgain')}
+          title={t('Unified.VideoCall.VerifyNotComplete.TryAgain')}
           onPress={onPressSendVideo}
         />
       </View>

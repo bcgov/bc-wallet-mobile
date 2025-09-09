@@ -3,6 +3,7 @@ import { BCState } from '@/store'
 import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -13,9 +14,10 @@ type CallBusyOrClosedScreenProps = {
 
 const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
+  const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { busy, formattedHours } = route.params
-  const serviceHours = formattedHours || 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+  const serviceHours = formattedHours || t('Unified.VideoCall.DefaultHours')
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -49,35 +51,38 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }}>
-          {busy ? 'All agents are busy' : 'Call us later'}
+          {busy ? t('Unified.VideoCall.AllAgentsBusy') : t('Unified.VideoCall.CallUsLater')}
         </ThemedText>
 
         <ThemedText style={{ marginBottom: Spacing.lg }}>
-          {busy
-            ? `We're sorry your call couldn't be answered. All of our agents are busy at the moment. Please call us back during our hours of service.`
-            : `We are currently closed. To talk to one of our agents to verify by video, call us during our hours of service.`}
+          {busy ? t('Unified.VideoCall.AllAgentsBusyMessage') : t('Unified.VideoCall.CurrentlyClosedMessage')}
         </ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.sm }}>
-          Hours of Service
+          {t('Unified.VideoCall.HoursOfService')}
         </ThemedText>
         <ThemedText style={{ marginBottom: Spacing.md }}>{serviceHours}</ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          Reminder
+          {t('Unified.VideoCall.Reminder')}
         </ThemedText>
-        <ThemedText>{`You'll need to add your card again if you don't finish verifying by ${store.bcsc.deviceCodeExpiresAt?.toLocaleString(
-          'en-CA',
-          { month: 'long', day: 'numeric', year: 'numeric' }
-        )}.`}</ThemedText>
+        <ThemedText>
+          {t('Unified.VideoCall.AddCardAgainReminder', {
+            date: store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+          })}
+        </ThemedText>
       </View>
 
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
           testID={testIdWithKey('SendVideo')}
-          accessibilityLabel={'Send video instead'}
-          title={'Send video instead'}
+          accessibilityLabel={t('Unified.VideoCall.SendVideoInstead')}
+          title={t('Unified.VideoCall.SendVideoInstead')}
           onPress={onPressSendVideo}
         />
       </View>

@@ -5,29 +5,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppState } from 'react-native'
 import uuid from 'react-native-uuid'
 import { MediaStream } from 'react-native-webrtc'
-import { ConnectionRequest } from '../types/live-call'
-import { connect, ConnectResult } from '../utils/connect'
-import { VideoCallErrorHandler } from '../utils/errorHandler'
+import { keepAliveIntervalMs } from '../constants'
+import {
+  ConnectionRequest,
+  ConnectResult,
+  VideoCallBackgroundMode,
+  VideoCallError,
+  VideoCallErrorType,
+  VideoCallFlowState,
+} from '../types/live-call'
+import { connect } from '../utils/connect'
+import createVideoCallError from '../utils/createVideoCallError'
 
-export type VideoCallFlowState =
-  | 'idle'
-  | 'creating_session'
-  | 'connecting_webrtc'
-  | 'waiting_for_agent'
-  | 'in_call'
-  | 'call_ended'
-  | 'error'
-
-export interface VideoCallError {
-  type: 'connection_failed' | 'session_failed' | 'call_failed' | 'network_error' | 'permission_denied'
-  message: string
-  retryable: boolean
-  technicalDetails?: string
-}
-
-export interface VideoCallFlowResult {
+export interface VideoCallFlow {
   flowState: VideoCallFlowState
-  error: VideoCallError | null
+  videoCallError: VideoCallError | null
   isInBackground: boolean
 
   localStream: MediaStream | null
@@ -38,11 +30,11 @@ export interface VideoCallFlowResult {
   retryConnection: () => Promise<void>
 }
 
-const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult => {
-  const [flowState, setFlowState] = useState<VideoCallFlowState>('idle')
+const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
+  const [flowState, setFlowState] = useState<VideoCallFlowState>(VideoCallFlowState.IDLE)
   const [session, setSession] = useState<VideoSession | null>(null)
   const [clientCallId, setClientCallId] = useState<string | null>(null)
-  const [error, setError] = useState<VideoCallError | null>(null)
+  const [videoCallError, setVideoCallError] = useState<VideoCallError | null>(null)
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
   const [isInBackground, setIsInBackground] = useState(false)
@@ -53,19 +45,19 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { video } = useApi()
 
-  const backgroundMode: 'full_cleanup' | 'audio_only' | 'disabled' = useMemo(() => {
-    if (!isInBackground) return 'disabled'
+  const backgroundMode: VideoCallBackgroundMode = useMemo(() => {
+    if (!isInBackground) return VideoCallBackgroundMode.DISABLED
 
     if (
-      flowState === 'waiting_for_agent' ||
-      flowState === 'in_call' ||
-      flowState === 'connecting_webrtc' ||
-      flowState === 'creating_session'
+      flowState === VideoCallFlowState.WAITING_FOR_AGENT ||
+      flowState === VideoCallFlowState.IN_CALL ||
+      flowState === VideoCallFlowState.CONNECTING_WEBRTC ||
+      flowState === VideoCallFlowState.CREATING_SESSION
     ) {
-      return 'audio_only'
+      return VideoCallBackgroundMode.AUDIO_ONLY
     }
 
-    return 'full_cleanup'
+    return VideoCallBackgroundMode.FULL_CLEANUP
   }, [flowState, isInBackground])
 
   const stopAllMedia = useCallback(() => {
@@ -102,7 +94,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
       logger.info('Disconnecting from Pexip...')
       await connection?.disconnectPexip()
     } catch (error) {
-      logger.warn('Error disconnecting from Pexip:', error)
+      // Just warn as pexip call may already be disconnected from remote side and throw because of that
+      logger.warn('Error disconnecting from Pexip:', { error })
     }
 
     try {
@@ -112,7 +105,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
 
       await video.updateVideoCallStatus(session.session_id, clientCallId, 'call_ended')
     } catch (error) {
-      logger.warn(error)
+      // Just warn as this API call is not crucial for the flow, and cleanup may have already cleared session or clientCallId
+      logger.warn('Failed to update video call status:', { error })
     }
 
     try {
@@ -122,13 +116,15 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
 
       await video.endVideoSession(session.session_id)
     } catch (error) {
-      logger.warn(error)
+      // Just warn as this API call is not crucial for the flow, and cleanup may have already cleared session
+      logger.warn('Failed to end video session:', { error })
     }
 
     setSession(null)
     setClientCallId(null)
     setConnection(null)
-    setError(null)
+    setVideoCallError(null)
+    cleanupInProgressRef.current = false
   }, [video, stopAllMedia, clientCallId, session, connection, logger])
 
   const startBackendKeepAlive = useCallback(() => {
@@ -144,9 +140,10 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
           throw new Error('Missing session or call ID for keep-alive update')
         }
       } catch (error) {
-        logger.warn('Backend keep-alive update failed:', error)
+        // Just warn as one missed keep alive won't impact the call
+        logger.warn('Backend keep-alive update failed:', { error })
       }
-    }, 30000)
+    }, keepAliveIntervalMs)
 
     backendKeepAliveTimerRef.current = timer
   }, [session, clientCallId, video, logger])
@@ -156,15 +153,16 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
       await cleanup()
       await leaveCall()
     } catch (error) {
-      logger.warn('Error during remote disconnect:', error)
+      logger.warn(`Error during remote disconnect: ${error}`)
     }
   }, [cleanup, leaveCall, logger])
 
   const handleError = useCallback(
-    (error: VideoCallError) => {
-      VideoCallErrorHandler.logError(error, logger, 'useVideoCallFlow')
-      setError(error)
-      setFlowState('error')
+    (type: VideoCallErrorType, error: Error) => {
+      logger.error(`Video call error [${type}]:`, error)
+      const videoCallError = createVideoCallError(type, error?.toString())
+      setVideoCallError(videoCallError)
+      setFlowState(VideoCallFlowState.ERROR)
 
       stopAllMedia()
       setSession(null)
@@ -180,7 +178,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
       setSession(newSession)
       return newSession
     } catch (error) {
-      handleError(VideoCallErrorHandler.errors.sessionCreationFailed(error?.toString()))
+      handleError(VideoCallErrorType.SESSION_FAILED, error as Error)
       return null
     }
   }, [video, handleError])
@@ -200,7 +198,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
           pin: session.guest_pin,
           onRemoteStream: (stream: MediaStream) => {
             setRemoteStream(stream)
-            setFlowState('in_call')
+            setFlowState(VideoCallFlowState.IN_CALL)
           },
           onRemoteDisconnect: handleRemoteDisconnect,
         }
@@ -210,10 +208,10 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
         setConnection(result)
         setLocalStream(result.localStream)
 
-        setFlowState('waiting_for_agent')
+        setFlowState(VideoCallFlowState.WAITING_FOR_AGENT)
         return true
       } catch (error) {
-        handleError(VideoCallErrorHandler.errors.webRTCFailed(error?.toString()))
+        handleError(VideoCallErrorType.CONNECTION_FAILED, error as Error)
         return false
       }
     },
@@ -228,32 +226,28 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
         const call = await video.createVideoCall(sessionId, id, 'call_ringing')
         return call
       } catch (error) {
-        handleError(VideoCallErrorHandler.errors.callCreationFailed(error?.toString()))
+        handleError(VideoCallErrorType.CALL_FAILED, error as Error)
         return null
       }
     },
     [video, handleError]
   )
 
+  // all of the functions within catch their own errors
   const startVideoCall = useCallback(async () => {
-    try {
-      cleanupInProgressRef.current = false
+    setFlowState(VideoCallFlowState.CREATING_SESSION)
+    const newSession = await createSession()
+    if (!newSession) return
 
-      setFlowState('creating_session')
-      const newSession = await createSession()
-      if (!newSession) return
+    setFlowState(VideoCallFlowState.CONNECTING_WEBRTC)
+    const connected = await establishWebRTCConnection(newSession)
+    if (!connected) return
 
-      setFlowState('connecting_webrtc')
-      const connected = await establishWebRTCConnection(newSession)
-      if (!connected) return
+    const call = await createCall(newSession.session_id)
+    if (!call) return
+  }, [createSession, establishWebRTCConnection, createCall])
 
-      const call = await createCall(newSession.session_id)
-      if (!call) return
-    } catch (error) {
-      handleError(VideoCallErrorHandler.errors.unknownError(error?.toString()))
-    }
-  }, [createSession, establishWebRTCConnection, createCall, handleError])
-
+  // both functions within catch their own errors
   const retryConnection = useCallback(async () => {
     await cleanup()
     await startVideoCall()
@@ -281,7 +275,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
     if (!prevIsInBackgroundRef.current && isInBackground) {
       logger.info('Background transition...')
 
-      if (backgroundMode === 'full_cleanup') {
+      if (backgroundMode === VideoCallBackgroundMode.FULL_CLEANUP) {
         cleanup()
           .then(() => {
             leaveCall()
@@ -291,9 +285,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
           })
       }
 
-      if (backgroundMode === 'audio_only' && localStream) {
+      if (backgroundMode === VideoCallBackgroundMode.AUDIO_ONLY && localStream) {
         logger.info('Stopping video but keeping audio connection...')
-
         const videoTracks = localStream.getVideoTracks()
         videoTracks.forEach((track) => {
           track.enabled = false
@@ -305,8 +298,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
 
     if (prevIsInBackgroundRef.current && !isInBackground) {
       logger.info('Foreground transition...')
-
-      if (backgroundMode === 'disabled' && localStream) {
+      if (backgroundMode === VideoCallBackgroundMode.DISABLED && localStream) {
         const videoTracks = localStream.getVideoTracks()
         videoTracks.forEach((track) => {
           track.enabled = true
@@ -318,7 +310,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
   }, [isInBackground, backgroundMode, localStream, cleanup, leaveCall, logger])
 
   useEffect(() => {
-    if (flowState === 'in_call' && session && clientCallId) {
+    if (flowState === VideoCallFlowState.IN_CALL && session && clientCallId) {
       logger.info('Starting backend keep-alive timer...')
       startBackendKeepAlive()
     }
@@ -326,7 +318,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlowResult =
 
   return {
     flowState,
-    error,
+    videoCallError,
     localStream,
     remoteStream,
     isInBackground,

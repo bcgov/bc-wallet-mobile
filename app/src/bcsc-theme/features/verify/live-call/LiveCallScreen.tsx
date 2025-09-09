@@ -1,5 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { AppBannerSection as BannerSection } from '@/bcsc-theme/components/AppBanner'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
+import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import ProgressBar from '@/components/ProgressBar'
 import { BCDispatchAction, BCState } from '@/store'
@@ -8,13 +10,13 @@ import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, use
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ColorValue, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { MediaStreamTrack, RTCView } from 'react-native-webrtc'
 import { formatCallTime } from './utils/formatCallTime'
-import { AppBannerSection as BannerSection } from '@/bcsc-theme/components/AppBanner'
 
 type CallIconButtonProps = {
   onPress: () => void
@@ -71,6 +73,7 @@ type LoadingViewProps = {
 
 const LoadingView = ({ onCancel, message }: LoadingViewProps) => {
   const { Spacing, ColorPalette } = useTheme()
+  const { t } = useTranslation()
   const [progressPercent, setProgressPercent] = useState(0)
   const [delayReached, setDelayReached] = useState(false)
 
@@ -117,15 +120,15 @@ const LoadingView = ({ onCancel, message }: LoadingViewProps) => {
       <View style={styles.contentContainer}>
         <ProgressBar dark={true} progressPercent={progressPercent} />
         <ThemedText variant={'headingTwo'} style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
-          One moment please...
+          {t('Unified.VideoCall.OneMomentPlease')}
         </ThemedText>
         <ThemedText style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
-          {message || "We're setting things up for you"}
+          {message || t('Unified.VideoCall.SettingThingsUp')}
         </ThemedText>
         <Mountains style={{ alignSelf: 'center', marginVertical: Spacing.md }} height={200} width={200} />
         {delayReached ? (
           <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-            This is taking longer than usual. Please be patient.
+            {t('Unified.VideoCall.TakingLongerThanUsual')}
           </ThemedText>
         ) : null}
       </View>
@@ -133,8 +136,8 @@ const LoadingView = ({ onCancel, message }: LoadingViewProps) => {
         <Button
           buttonType={ButtonType.Primary}
           onPress={onCancel}
-          title={'Cancel'}
-          accessibilityLabel={'Cancel'}
+          title={t('Global.Cancel')}
+          accessibilityLabel={t('Global.Cancel')}
           testID={testIdWithKey('Cancel')}
         />
       </View>
@@ -149,7 +152,8 @@ type LiveCallScreenProps = {
 const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const { width } = useWindowDimensions()
   const [store, dispatch] = useStore<BCState>()
-  const { ColorPalette, Spacing } = useTheme()
+  const { ColorPalette, Spacing, NavigationTheme } = useTheme()
+  const { t } = useTranslation()
   const iconSize = useMemo(() => width / 6, [width])
   const [videoHidden, setVideoHidden] = useState(false)
   const [onMute, setOnMute] = useState(false)
@@ -208,16 +212,24 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger])
 
-  const { flowState, error, localStream, remoteStream, startVideoCall, cleanup, retryConnection, isInBackground } =
-    useVideoCallFlow(leaveCall)
+  const {
+    flowState,
+    videoCallError,
+    localStream,
+    remoteStream,
+    startVideoCall,
+    cleanup,
+    retryConnection,
+    isInBackground,
+  } = useVideoCallFlow(leaveCall)
 
-  const inCall = useMemo(() => flowState === 'in_call', [flowState])
+  const inCall = useMemo(() => flowState === VideoCallFlowState.IN_CALL, [flowState])
 
   useEffect(() => {
-    if (flowState === 'in_call' && !callStartTime) {
+    if (flowState === VideoCallFlowState.IN_CALL && !callStartTime) {
       const startTime = Date.now()
       setCallStartTime(startTime)
-    } else if (flowState !== 'in_call' && callStartTime) {
+    } else if (flowState !== VideoCallFlowState.IN_CALL && callStartTime) {
       setCallStartTime(null)
       setCallTimer('')
     }
@@ -260,17 +272,17 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
   const banner: { type: 'warning' | 'error'; title: string } | null = useMemo(() => {
     if (isInBackground) {
-      return { type: 'warning', title: 'Video will resume when you return to this app' }
+      return { type: 'warning', title: t('Unified.VideoCall.VideoWillResume') }
     }
     if (videoHidden) {
-      return { type: 'error', title: `Agent can't see you while your video is off` }
+      return { type: 'error', title: t('Unified.VideoCall.AgentCantSeeYou') }
     }
     if (onMute) {
-      return { type: 'error', title: `Agent can't hear you while your microphone is muted` }
+      return { type: 'error', title: t('Unified.VideoCall.AgentCantHearYou') }
     }
 
     return null
-  }, [isInBackground, onMute, videoHidden])
+  }, [isInBackground, onMute, videoHidden, t])
 
   useEffect(() => {
     if (localStream) {
@@ -300,7 +312,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
   useEffect(() => {
     // only start call automatically once (flow state doesn't go back to idle)
-    if (flowState === 'idle') {
+    if (flowState === VideoCallFlowState.IDLE) {
       startVideoCall()
       InCallManager.start({ media: 'video', auto: true })
     }
@@ -308,55 +320,55 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
 
   const stateMessage = useMemo(() => {
     switch (flowState) {
-      case 'creating_session':
-        return 'Creating video session...'
-      case 'connecting_webrtc':
-        return 'Connecting to video service...'
-      case 'waiting_for_agent':
-        return 'Waiting for an agent to join...'
-      case 'in_call':
+      case VideoCallFlowState.CREATING_SESSION:
+        return t('Unified.VideoCall.CreatingSession')
+      case VideoCallFlowState.CONNECTING_WEBRTC:
+        return t('Unified.VideoCall.ConnectingWebRTC')
+      case VideoCallFlowState.WAITING_FOR_AGENT:
+        return t('Unified.VideoCall.WaitingForAgent')
+      case VideoCallFlowState.IN_CALL:
         return null
-      case 'error':
-        return error?.message || 'An error occurred'
+      case VideoCallFlowState.ERROR:
+        return videoCallError?.message || t('Unified.VideoCall.GenericError')
       default:
-        return 'Initializing...'
+        return t('Unified.VideoCall.Initializing')
     }
-  }, [flowState, error])
+  }, [flowState, videoCallError, t])
 
   const handleEndCall = useCallback(async () => {
     try {
       await cleanup()
       await leaveCall()
     } catch (error) {
-      logger.error('Error while leaving video call', error)
+      logger.error('Error while leaving video call', error as Error)
     }
   }, [cleanup, leaveCall, logger])
 
-  if (flowState === 'error') {
+  if (flowState === VideoCallFlowState.ERROR) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground, padding: Spacing.md }}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <Icon name="alert-circle" size={64} color={ColorPalette.semantic.error} />
           <ThemedText variant={'headingTwo'} style={{ marginTop: Spacing.lg, textAlign: 'center' }}>
-            Connection Error
+            {t('Unified.VideoCall.ConnectionError')}
           </ThemedText>
           <ThemedText style={{ marginTop: Spacing.md, textAlign: 'center' }}>{stateMessage}</ThemedText>
         </View>
         <View style={{ gap: Spacing.sm }}>
-          {error?.retryable && (
+          {videoCallError?.retryable && (
             <Button
               buttonType={ButtonType.Primary}
               onPress={retryConnection}
-              title={'Try Again'}
-              accessibilityLabel={'Try Again'}
+              title={t('Unified.VideoCall.TryAgain')}
+              accessibilityLabel={t('Unified.VideoCall.TryAgain')}
               testID={testIdWithKey('TryAgain')}
             />
           )}
           <Button
             buttonType={ButtonType.Secondary}
             onPress={() => navigation.goBack()}
-            title={'Go Back'}
-            accessibilityLabel={'Go Back'}
+            title={t('Unified.VideoCall.GoBack')}
+            accessibilityLabel={t('Unified.VideoCall.GoBack')}
             testID={testIdWithKey('GoBack')}
           />
         </View>
@@ -364,7 +376,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     )
   }
 
-  if (flowState !== 'in_call') {
+  if (flowState !== VideoCallFlowState.IN_CALL) {
     return <LoadingView onCancel={handleEndCall} message={stateMessage || undefined} />
   }
 
@@ -394,7 +406,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       flexDirection: 'row',
       justifyContent: 'space-around',
       alignItems: 'center',
-      padding: Spacing.lg,
+      padding: Spacing.md,
       backgroundColor: ColorPalette.notification.popupOverlay,
     },
     selfieVideoContainer: {
@@ -411,7 +423,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     <View style={styles.container}>
       {remoteStream && <RTCView style={styles.agentVideo} objectFit={'contain'} streamURL={remoteStream.toURL()} />}
 
-      <SafeAreaView edges={['top']} style={{ flex: 0, backgroundColor: ColorPalette.notification.popupOverlay }} />
+      <SafeAreaView edges={['top']} style={{ flex: 0, backgroundColor: NavigationTheme.colors.primary }} />
       <SafeAreaView edges={['left', 'right']} style={{ flex: 1, justifyContent: 'space-between' }}>
         <View style={styles.upperContainer}>
           <View style={styles.timeAndLabelContainer}>
