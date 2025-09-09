@@ -36,7 +36,7 @@ jobs:
       - name: Cache app node_modules
         uses: actions/cache@v3
         with:
-          path: app/node_modules
+          path: .yarn/cache
           # Cache will be invalidated if yarn.lock changes
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
