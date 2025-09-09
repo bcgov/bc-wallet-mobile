@@ -23,12 +23,10 @@ jobs:
       - name: Cache app node_modules
         uses: actions/cache@v3
         with:
-          path: |
-            app/node_modules
-          # Cache will be invalidated if package.json or yarn.lock changes
-          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-app-node_modules-
+          path: app/node_modules
+          # Cache will be invalidated if yarn.lock changes
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install dependencies
         working-directory: app
@@ -80,12 +78,10 @@ jobs:
       - name: Cache app node_modules
         uses: actions/cache@v3
         with:
-          path: |
-            app/node_modules
-          # Cache will be invalidated if package.json or yarn.lock changes
-          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-app-node_modules-
+          path: app/node_modules
+          # Cache will be invalidated if yarn.lock changes
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install dependencies
         working-directory: app

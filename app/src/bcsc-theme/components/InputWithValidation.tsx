@@ -1,5 +1,5 @@
 import { testIdWithKey, useTheme } from '@bifold/core'
-import { ThemedText } from '@bifold/core/src/components/texts/ThemedText'
+import { ThemedText } from '@bifold/core'
 import { StyleProp, TextInput, TextStyle, View } from 'react-native'
 
 // NOTE (MD): This is a first pass at this component, I assume eventually we will need to modify this to

@@ -14,7 +14,7 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { TOKENS } from '@bifold/core/src/container-api'
+import { TOKENS } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
