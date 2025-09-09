@@ -49,6 +49,21 @@ module.exports = (async () => {
           inlineRequires: process.env.LOAD_STORYBOOK !== 'true',
         },
       }),
+      minifierPath: 'metro-minify-terser',
+      minifierConfig: {
+        keep_classnames: true,
+        keep_fnames: true,
+        mangle: {
+          keep_classnames: true,
+          keep_fnames: true,
+        },
+        // Remove console logs from production
+        compress: {
+          drop_console: process.env.NODE_ENV === 'production',
+          drop_debugger: true,
+          pure_funcs: ['console.log'],
+        },
+      },
     },
     resolver: {
       blacklistRE: exclusionList(extraExclusionlist.map((m) => new RegExp(`^${escape(m)}\\/.*$`))),

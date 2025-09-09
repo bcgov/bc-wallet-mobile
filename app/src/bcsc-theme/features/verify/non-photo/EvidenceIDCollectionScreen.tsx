@@ -1,8 +1,6 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useState } from 'react'
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
@@ -15,11 +13,13 @@ import {
   useStore,
 } from '@bifold/core'
 import { ScrollView, View } from 'react-native'
-import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions } from '@react-navigation/native'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { useTranslation } from 'react-i18next'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type EvidenceCollectionFormState = {
   documentNumber: string
@@ -95,7 +95,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       const regex = new RegExp(cardType.document_reference_input_mask)
       return regex.test(value)
     } catch (error) {
-      logger.error('Invalid regex pattern:', cardType.document_reference_input_mask, JSON.stringify(error))
+      logger.error(`Invalid regex pattern: ${cardType.document_reference_input_mask}`, error as Error)
       return true
     }
   }

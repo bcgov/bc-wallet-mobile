@@ -1,14 +1,14 @@
+import * as BcscCore from '@/../../packages/bcsc-core/src/index'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { BCSCRootStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { ThemedText, useStore, useTheme, Button, ButtonType, useServices, TOKENS, DispatchAction } from '@bifold/core'
+import { Button, ButtonType, DispatchAction, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
-import { StyleSheet, View, Platform } from 'react-native'
-import * as BcscCore from '@/../../packages/bcsc-core/src/index'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useTranslation } from 'react-i18next'
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { Platform, StyleSheet, View } from 'react-native'
 import { getAccount } from 'react-native-bcsc-core'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
@@ -79,16 +79,16 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
       dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
 
       logger.info('Account removal process completed successfully')
-    } catch (error: unknown) {
+    } catch (error: any) {
       if (serverDeleteSucceeded) {
         // Server deletion succeeded but local cleanup failed
-        logger.error('Server deletion succeeded but local cleanup failed:', error)
+        logger.error('Server deletion succeeded but local cleanup failed:', error as Error)
 
         // TODO(TL): The account is in a partially deleted state here.
         // We could recommend the user reinstalls the app or we could implement some recovery mechanism.
       } else {
         // The deletion fails outright, everything is still in tact here
-        logger.error('IAS delete request failed, local account remains intact:', error)
+        logger.error('IAS delete request failed, local account remains intact:', error as Error)
       }
     }
   }

@@ -1,5 +1,5 @@
+import { BifoldLogger, IVersionCheckService, VersionInfo } from '@bifold/core'
 import { checkVersion } from 'react-native-check-version'
-import { VersionInfo, IVersionCheckService, BifoldLogger } from '@bifold/core'
 
 export class VersionCheckService implements IVersionCheckService {
   private _cachedVersionInfo: VersionInfo | undefined
@@ -26,7 +26,7 @@ export class VersionCheckService implements IVersionCheckService {
 
         this._cachedVersionInfo = versionInfo
 
-        this.log.info('Checked for updates:', version)
+        this.log.info('Checked for updates:', { ...version })
         return versionInfo
       } catch (error) {
         this.log.error('Failed to check for updates:', error as Error)
