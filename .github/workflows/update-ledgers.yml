@@ -43,7 +43,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
-        run: yarn install --immutable
+        run: yarn install --immutable-cache
 
       - name: Update Indy ledgers
         run: node app/scripts/refresh-ledgers.cjs

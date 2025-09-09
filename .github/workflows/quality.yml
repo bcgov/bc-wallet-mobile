@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
-        run: yarn install --immutable
+        run: yarn install --immutable-cache
 
       - name: Cache bcsc-core build output
         uses: actions/cache@v3
@@ -85,7 +85,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
-        run: yarn install --immutable
+        run: yarn install --immutable-cache
 
       - name: Automated testing
         run: yarn test
