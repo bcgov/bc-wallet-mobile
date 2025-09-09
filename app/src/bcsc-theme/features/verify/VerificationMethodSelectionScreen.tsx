@@ -78,8 +78,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
       navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
     } catch (error) {
-      // Warn and default to it being closed
-      logger.warn('Error checking service availability:', { error })
+      logger.error('Error checking service availability:', error as Error)
       navigation.navigate(BCSCScreens.CallBusyOrClosed, {
         busy: false,
         formattedHours: 'Unavailable',

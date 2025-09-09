@@ -105,8 +105,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
       await video.updateVideoCallStatus(session.session_id, clientCallId, 'call_ended')
     } catch (error) {
-      // Just warn as this API call is not crucial for the flow, and cleanup may have already cleared session or clientCallId
-      logger.warn('Failed to update video call status:', { error })
+      logger.error('Failed to update video call status:', error as Error)
     }
 
     try {
@@ -116,8 +115,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
       await video.endVideoSession(session.session_id)
     } catch (error) {
-      // Just warn as this API call is not crucial for the flow, and cleanup may have already cleared session
-      logger.warn('Failed to end video session:', { error })
+      logger.error('Failed to end video session:', error as Error)
     }
 
     setSession(null)
@@ -139,9 +137,9 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         } else {
           throw new Error('Missing session or call ID for keep-alive update')
         }
-      } catch (error) {
+      } catch {
         // Just warn as one missed keep alive won't impact the call
-        logger.warn('Backend keep-alive update failed:', { error })
+        logger.warn('Backend keep-alive update failed')
       }
     }, keepAliveIntervalMs)
 
@@ -203,10 +201,10 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
           onRemoteDisconnect: handleRemoteDisconnect,
         }
 
-        const result = await connect(connectionRequest, logger)
-        result.setAppInitiatedDisconnect(false)
-        setConnection(result)
-        setLocalStream(result.localStream)
+        const conn = await connect(connectionRequest, logger)
+        conn.setAppInitiatedDisconnect(false)
+        setConnection(conn)
+        setLocalStream(conn.localStream)
 
         setFlowState(VideoCallFlowState.WAITING_FOR_AGENT)
         return true
@@ -243,8 +241,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     const connected = await establishWebRTCConnection(newSession)
     if (!connected) return
 
-    const call = await createCall(newSession.session_id)
-    if (!call) return
+    const newCall = await createCall(newSession.session_id)
+    if (!newCall) return
   }, [createSession, establishWebRTCConnection, createCall])
 
   // both functions within catch their own errors
