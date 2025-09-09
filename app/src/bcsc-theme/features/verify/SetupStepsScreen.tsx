@@ -5,7 +5,7 @@ import React, { useCallback } from 'react'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCDispatchAction, BCState } from '@/store'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { SetupStep } from './components/SetupStep'
@@ -220,168 +220,170 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      {/* SETUP STEP 2: Identification submission */}
+      <ScrollView>
+        {/* SETUP STEP 2: Identification submission */}
 
-      <SetupStep
-        title={'Step 1'}
-        subtext={getVerificationStep1Subtext()}
-        isComplete={step.id.completed}
-        isFocused={step.id.focused}
-        onPress={() => {
-          if (step.id.nonBcscNeedsAdditionalCard) {
-            navigation.navigate(BCSCScreens.EvidenceTypeList)
-            return
-          }
-          if (step.id.nonPhotoBcscNeedsAdditionalCard) {
-            navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
-            return
-          }
-          if (!step.id.completed) {
-            navigation.navigate(BCSCScreens.IdentitySelection)
-            return
-          }
-        }}
-      >
-        {
-          // show additional text if a second card is required
-          step.id.nonBcscNeedsAdditionalCard || step.id.nonPhotoBcscNeedsAdditionalCard ? (
-            <View>
-              <View style={styles.addSecondIdTextContainer}>
-                <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>Add second ID</ThemedText>
-                <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
-              </View>
-              {
-                // QUESTION (MD): Do we want the same for the non bcsc card verification?
-                store.bcsc.cardType === BCSCCardType.NonPhoto ? (
-                  <ThemedText>{'Additional identification required for non-photo BC Services Card.'}</ThemedText>
-                ) : null
-              }
-            </View>
-          ) : null
-        }
-      </SetupStep>
-
-      <View style={styles.itemSeparator} />
-      {/* SETUP STEP 2: Residential Address */}
-
-      <SetupStep
-        title={'Step 2'}
-        subtext={[getVerificationStep2Subtext()]}
-        isComplete={step.address.completed}
-        isFocused={step.address.focused}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.ResidentialAddressScreen)
-        }}
-      />
-
-      <View style={styles.itemSeparator} />
-      {/* SETUP STEP 3: Email Address */}
-
-      <SetupStep
-        title={'Step 3'}
-        subtext={[]}
-        isComplete={step.email.completed}
-        isFocused={step.email.focused}
-        onPress={handleEmailStepPress}
-      >
-        {
-          <View style={styles.contentEmailContainer}>
-            {step.email.completed ? (
-              <>
-                <ThemedText style={{ color: TextTheme.normal.color }}>{`Email: ${store.bcsc.email}`}</ThemedText>
-                <TouchableOpacity
-                  style={styles.contentEmailButton}
-                  onPress={handleEmailStepPress}
-                  testID={testIdWithKey('EditEmail')}
-                  accessibilityLabel={'Edit'}
-                  hitSlop={hitSlop}
-                >
-                  <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
-                    Edit
-                  </ThemedText>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <ThemedText
-                style={{
-                  color: step.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
-                }}
-              >
-                Email Address
-              </ThemedText>
-            )}
-          </View>
-        }
-      </SetupStep>
-
-      <View style={styles.itemSeparator} />
-      {/* SETUP STEP 4: Identity Verification */}
-
-      <SetupStep
-        title={'Step 4'}
-        subtext={[getVerificationStep4Subtext()]}
-        isComplete={step.verify.completed}
-        isFocused={step.verify.focused}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.VerificationMethodSelection)
-        }}
-      />
-
-      {store.bcsc.pendingVerification ? (
-        <>
-          <View style={styles.itemSeparator} />
-          <TouchableOpacity
-            style={[
-              styles.step,
-              styles.titleRow,
-              {
-                backgroundColor: ColorPalette.brand.primary,
-                justifyContent: 'space-between',
-                paddingVertical: Spacing.md,
-              },
-            ]}
-            onPress={handleCheckStatus}
-          >
-            <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
-              Check status
-            </ThemedText>
-            <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
-          </TouchableOpacity>
-
-          <View style={styles.itemSeparator} />
-
-          <TouchableOpacity
-            style={[
-              styles.step,
-              styles.titleRow,
-              {
-                backgroundColor: ColorPalette.brand.primary,
-                justifyContent: 'space-between',
-                paddingVertical: Spacing.md,
-              },
-            ]}
-            onPress={handleCancelVerification}
-          >
-            <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
-              Choose another way to verify
-            </ThemedText>
-            <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
-          </TouchableOpacity>
-        </>
-      ) : null}
-      <View style={styles.itemSeparator} />
-      <View style={{ padding: Spacing.md }}>
-        <Button
-          title={'Reset data'}
+        <SetupStep
+          title={'Step 1'}
+          subtext={getVerificationStep1Subtext()}
+          isComplete={step.id.completed}
+          isFocused={step.id.focused}
           onPress={() => {
-            dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
-            dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [undefined] })
+            if (step.id.nonBcscNeedsAdditionalCard) {
+              navigation.navigate(BCSCScreens.EvidenceTypeList)
+              return
+            }
+            if (step.id.nonPhotoBcscNeedsAdditionalCard) {
+              navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
+              return
+            }
+            if (!step.id.completed) {
+              navigation.navigate(BCSCScreens.IdentitySelection)
+              return
+            }
           }}
-          testID={testIdWithKey('ResetData')}
-          accessibilityLabel={'Reset data'}
-          buttonType={ButtonType.Secondary}
+        >
+          {
+            // show additional text if a second card is required
+            step.id.nonBcscNeedsAdditionalCard || step.id.nonPhotoBcscNeedsAdditionalCard ? (
+              <View>
+                <View style={styles.addSecondIdTextContainer}>
+                  <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>Add second ID</ThemedText>
+                  <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
+                </View>
+                {
+                  // QUESTION (MD): Do we want the same for the non bcsc card verification?
+                  store.bcsc.cardType === BCSCCardType.NonPhoto ? (
+                    <ThemedText>{'Additional identification required for non-photo BC Services Card.'}</ThemedText>
+                  ) : null
+                }
+              </View>
+            ) : null
+          }
+        </SetupStep>
+
+        <View style={styles.itemSeparator} />
+        {/* SETUP STEP 2: Residential Address */}
+
+        <SetupStep
+          title={'Step 2'}
+          subtext={[getVerificationStep2Subtext()]}
+          isComplete={step.address.completed}
+          isFocused={step.address.focused}
+          onPress={() => {
+            navigation.navigate(BCSCScreens.ResidentialAddressScreen)
+          }}
         />
-      </View>
+
+        <View style={styles.itemSeparator} />
+        {/* SETUP STEP 3: Email Address */}
+
+        <SetupStep
+          title={'Step 3'}
+          subtext={[]}
+          isComplete={step.email.completed}
+          isFocused={step.email.focused}
+          onPress={handleEmailStepPress}
+        >
+          {
+            <View style={styles.contentEmailContainer}>
+              {step.email.completed ? (
+                <>
+                  <ThemedText style={{ color: TextTheme.normal.color }}>{`Email: ${store.bcsc.email}`}</ThemedText>
+                  <TouchableOpacity
+                    style={styles.contentEmailButton}
+                    onPress={handleEmailStepPress}
+                    testID={testIdWithKey('EditEmail')}
+                    accessibilityLabel={'Edit'}
+                    hitSlop={hitSlop}
+                  >
+                    <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
+                      Edit
+                    </ThemedText>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <ThemedText
+                  style={{
+                    color: step.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
+                  }}
+                >
+                  Email Address
+                </ThemedText>
+              )}
+            </View>
+          }
+        </SetupStep>
+
+        <View style={styles.itemSeparator} />
+        {/* SETUP STEP 4: Identity Verification */}
+
+        <SetupStep
+          title={'Step 4'}
+          subtext={[getVerificationStep4Subtext()]}
+          isComplete={step.verify.completed}
+          isFocused={step.verify.focused}
+          onPress={() => {
+            navigation.navigate(BCSCScreens.VerificationMethodSelection)
+          }}
+        />
+
+        {store.bcsc.pendingVerification ? (
+          <>
+            <View style={styles.itemSeparator} />
+            <TouchableOpacity
+              style={[
+                styles.step,
+                styles.titleRow,
+                {
+                  backgroundColor: ColorPalette.brand.primary,
+                  justifyContent: 'space-between',
+                  paddingVertical: Spacing.md,
+                },
+              ]}
+              onPress={handleCheckStatus}
+            >
+              <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
+                Check status
+              </ThemedText>
+              <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
+            </TouchableOpacity>
+
+            <View style={styles.itemSeparator} />
+
+            <TouchableOpacity
+              style={[
+                styles.step,
+                styles.titleRow,
+                {
+                  backgroundColor: ColorPalette.brand.primary,
+                  justifyContent: 'space-between',
+                  paddingVertical: Spacing.md,
+                },
+              ]}
+              onPress={handleCancelVerification}
+            >
+              <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
+                Choose another way to verify
+              </ThemedText>
+              <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
+            </TouchableOpacity>
+          </>
+        ) : null}
+        <View style={styles.itemSeparator} />
+        <View style={{ padding: Spacing.md }}>
+          <Button
+            title={'Reset data'}
+            onPress={() => {
+              dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
+              dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [undefined] })
+            }}
+            testID={testIdWithKey('ResetData')}
+            accessibilityLabel={'Reset data'}
+            buttonType={ButtonType.Secondary}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
