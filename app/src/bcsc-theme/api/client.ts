@@ -61,8 +61,10 @@ class BCSCService {
       },
     })
 
-    if (!this.baseURL) {
-      this.logger.error('BCSCService initialized with empty URL.')
+    if (this.baseURL) {
+      this.logger.error(`BCSCService initialized with URL: ${this.baseURL}`)
+    } else {
+      this.logger.error(`BCSCService initialized with empty URL.`)
     }
 
     // fallback config
