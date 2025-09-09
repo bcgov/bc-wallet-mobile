@@ -62,14 +62,22 @@ const ProvinceCodeMap = {
  * @returns {*} {ProvinceCode}
  */
 export function getProvinceCode(province: string): ProvinceCode | null {
-  // remove all spaces and trim
-  const squishedProvince = province.replace(/\s+/g, '').trim() as keyof typeof ProvinceCodeMap
+  // unify casing, remove all spaces and trim
+  const squishedProvince = province.toLowerCase().replace(/\s+/g, '').trim() as keyof typeof ProvinceCodeMap
 
-  const provinceCode = ProvinceCodeMap[squishedProvince]
+  return ProvinceCodeMap[squishedProvince] ?? null
+}
 
-  if (!provinceCode) {
-    return null
-  }
+/**
+ * Validates if a given string is a valid Canadian postal code.
+ *
+ * Note: This is not strict validation, it checks for the general format of Canadian postal codes.
+ *
+ * @param {string} postalCode - The postal code to validate.
+ * @returns {*} {boolean} - True if the postal code is valid, false otherwise.
+ */
+export function isCanadianPostalCode(postalCode: string): boolean {
+  const postalCodeRegex = new RegExp(/^(?:[A-Z]\d[A-Z][ -]?\d[A-Z]\d)$/, 'i')
 
-  return provinceCode
+  return postalCodeRegex.test(postalCode)
 }

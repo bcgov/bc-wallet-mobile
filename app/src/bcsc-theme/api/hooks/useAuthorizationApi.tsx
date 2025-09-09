@@ -3,7 +3,7 @@ import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
 import { createDeviceSignedJWT } from 'react-native-bcsc-core'
 import { isAxiosError } from 'axios'
-import { ProvinceCode } from '@/bcsc-theme/utils/get-province-code'
+import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
 
@@ -110,7 +110,7 @@ const useAuthorizationApi = () => {
   const authorizeDeviceWithUnknownBCSC = useCallback(
     async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<VerifyUnknownBCSCResponseData | null> => {
       return withAccount<VerifyUnknownBCSCResponseData | null>(async (account) => {
-        const body = {
+        const body: Record<string, any> = {
           client_id: account.clientID,
           response_type: 'device_code',
           scope: 'openid profile address offline_access',
@@ -132,7 +132,8 @@ const useAuthorizationApi = () => {
             },
             // IAS requests 'unknown' when not specified
             gender: config.gender ?? 'unknown',
-            middle_name: config.middleNames,
+            // Omit middle name if not provided or empty string
+            middle_name: config.middleNames || undefined,
           }),
         }
 

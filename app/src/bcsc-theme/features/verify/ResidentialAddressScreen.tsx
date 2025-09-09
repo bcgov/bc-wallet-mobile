@@ -1,7 +1,7 @@
 import useAuthorizationApi from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { getProvinceCode, ProvinceCode } from '@/bcsc-theme/utils/get-province-code'
+import { getProvinceCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
