@@ -11,6 +11,7 @@ import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { SetupStep } from './components/SetupStep'
 import { hitSlop } from '@/constants'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -218,7 +219,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }, [step.verify.focused, step.id.nonPhotoBcscNeedsAdditionalCard, store.bcsc.deviceCodeExpiresAt])
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       {/* SETUP STEP 2: Identification submission */}
 
       <SetupStep
@@ -374,14 +375,14 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           title={'Reset data'}
           onPress={() => {
             dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
-            dispatch({ type: BCDispatchAction.CLEAR_ADDITIONAL_EVIDENCE, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [undefined] })
           }}
           testID={testIdWithKey('ResetData')}
           accessibilityLabel={'Reset data'}
           buttonType={ButtonType.Secondary}
         />
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

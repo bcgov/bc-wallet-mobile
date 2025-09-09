@@ -215,9 +215,15 @@ describe('useSetupSteps Hook', () => {
       store.bcsc.deviceCode = 'ABCDEFGH'
       store.bcsc.emailConfirmed = true
       store.bcsc.verified = true
+      store.bcsc.pendingVerification = false
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.verify.focused).toBe(false)
+      expect(hook.result.current.verify.completed).toBe(true)
     })
 
-    it('should not be focused when pendingVerification is true', () => {
+    it('should be focused when pendingVerification is true', () => {
       const store = lodash.cloneDeep(initialState)
 
       store.bcsc.cardType = BCSCCardType.Combined
@@ -230,8 +236,8 @@ describe('useSetupSteps Hook', () => {
 
       const hook = renderHook(() => useSetupSteps(store))
 
-      expect(hook.result.current.verify.focused).toBe(false)
-      expect(hook.result.current.verify.completed).toBe(true)
+      expect(hook.result.current.verify.focused).toBe(true)
+      expect(hook.result.current.verify.completed).toBe(false)
     })
   })
 

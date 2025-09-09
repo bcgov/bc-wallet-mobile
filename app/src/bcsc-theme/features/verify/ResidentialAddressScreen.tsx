@@ -1,7 +1,7 @@
 import useAuthorizationApi from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { getProvinceCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { getProvinceCode, isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
@@ -88,10 +88,6 @@ export const ResidentialAddressScreen = () => {
     // TODO (MD): Investigate a proper schema validation library if this gets more complex ie: yup, zod, etc.
     const errors: ResidentialAddressFormErrors = {}
 
-    // allows: h2t-1b8 / h2z 1b8 / H2Z1B8
-    // disallows: leading Z,W or to contain D, F, I, O, Q or U
-    const postalCodeRegex = new RegExp(/^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVXY][ -]?\d[ABCEGHJKLMNPRSTVXY]\d$/i)
-
     if (!values.streetAddress) {
       errors.streetAddress = t('Unified.Address.StreetAddressRequired')
     }
@@ -101,7 +97,7 @@ export const ResidentialAddressScreen = () => {
     if (!getProvinceCode(values.province)) {
       errors.province = t('Unified.Address.ProvinceInvalid')
     }
-    if (!postalCodeRegex.test(values.postalCode)) {
+    if (!isCanadianPostalCode(values.postalCode)) {
       errors.postalCode = t('Unified.Address.PostalCodeInvalid')
     }
 
@@ -164,6 +160,12 @@ export const ResidentialAddressScreen = () => {
         postalCode: formState.postalCode,
       },
     })
+
+    // device previously registered, but no deviceCode found in store
+    if (deviceAuth === null && !store.bcsc.deviceCode) {
+      logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found')
+      throw new Error('Device previously registered, but no deviceCode found in store')
+    }
 
     Toast.show({
       type: ToastType.Success,

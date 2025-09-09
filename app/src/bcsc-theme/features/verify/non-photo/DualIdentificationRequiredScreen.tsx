@@ -38,7 +38,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
   })
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['left', 'right']}>
+    <SafeAreaView style={styles.pageContainer} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View
           style={{
