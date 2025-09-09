@@ -16,8 +16,7 @@
       "@screens/*": ["src/screens/*"],
       "@services/*": ["src/services/*"],
       "@types/*": ["src/types/*"],
-      "@utils/*": ["src/utils/*"],
-      "react-native-bcsc-core": ["../packages/bcsc-core/src/index"]
+      "@utils/*": ["src/utils/*"]
     }
   },
   "exclude": ["node_modules", "metro.config.js", "babel.config.js", "jest.config.js", "jestSetup.js"]
