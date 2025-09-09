@@ -40,8 +40,8 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     try {
       const regex = new RegExp(cardType.document_reference_input_mask)
       return regex.test(value)
-    } catch (error: any) {
-      logger.error(`Invalid regex pattern: ${cardType.document_reference_input_mask}`, error)
+    } catch (error) {
+      logger.error(`Invalid regex pattern: ${cardType.document_reference_input_mask}`, error as Error)
       return true
     }
   }
