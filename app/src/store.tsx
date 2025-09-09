@@ -15,7 +15,7 @@ import {
   VerificationVideoUploadPayload,
 } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
-import { ProvinceCode } from './bcsc-theme/utils/get-province-code'
+import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 
 export interface IASEnvironment {
   name: string
