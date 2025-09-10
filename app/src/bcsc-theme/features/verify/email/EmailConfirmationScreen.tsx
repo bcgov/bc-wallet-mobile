@@ -14,7 +14,7 @@ import {
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
-import { Alert, Linking, StyleSheet, View } from 'react-native'
+import { Alert, Linking, Platform, StyleSheet, View } from 'react-native'
 import { CodeField, Cursor, useClearByFocusCell } from 'react-native-confirmation-code-field'
 import Toast from 'react-native-toast-message'
 
@@ -99,7 +99,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         })
       )
     } catch (error) {
-      setError('Error submitting email')
+      setError('Error verifying confirmation code')
     } finally {
       setLoading(false)
     }
@@ -127,7 +127,14 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   }
 
   const handleGoToEmail = () => {
-    Linking.openURL('mailto:').catch(() => {
+    let url = 'mailto:'
+
+    // On IOS we can open the mail application directly
+    if (Platform.OS === 'ios') {
+      url = 'message://'
+    }
+
+    Linking.openURL(url).catch(() => {
       Alert.alert('Unable to open email', 'Please check your email manually using your preferred email app.', [
         { text: 'OK' },
       ])
