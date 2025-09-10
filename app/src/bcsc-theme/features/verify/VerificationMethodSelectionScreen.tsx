@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
@@ -15,7 +16,7 @@ type VerificationMethodSelectionScreenProps = {
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
   const { evidence, video: videoCallApi } = useApi()
@@ -100,21 +101,29 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         loading={sendVideoLoading}
         disabled={sendVideoLoading || liveCallLoading}
       />
-      <ThemedText
-        variant={'bold'}
-        style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}
-      >
-        Cannot send a video?
-      </ThemedText>
-      <VerifyMethodActionButton
-        title={'Video call'}
-        description={`We will verify your identity during a video call.`}
-        icon={'video'}
-        onPress={handlePressLiveCall}
-        style={{ borderBottomWidth: 0 }}
-        loading={liveCallLoading}
-        disabled={liveCallLoading || sendVideoLoading}
-      />
+      {
+        // Do not show video call option for "Other" card type ie: dual identification cards
+        store.bcsc.cardType !== BCSCCardType.Other ? (
+          <>
+            <ThemedText
+              variant={'bold'}
+              style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}
+            >
+              Cannot send a video?
+            </ThemedText>
+            <VerifyMethodActionButton
+              title={'Video call'}
+              description={`We will verify your identity during a video call.`}
+              icon={'video'}
+              onPress={handlePressLiveCall}
+              style={{ borderBottomWidth: 0 }}
+              loading={liveCallLoading}
+              disabled={liveCallLoading || sendVideoLoading}
+            />
+          </>
+        ) : null
+      }
+
       <VerifyMethodActionButton
         title={'In person'}
         description={`Find out where to go and what to bring.`}

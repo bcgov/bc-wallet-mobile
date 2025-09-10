@@ -37,6 +37,7 @@ export enum BCSCScreens {
   ManualPairingCode = 'BCSCManualPairingCode',
   PairingConfirmation = 'BCSCPairingConfirmation',
   AdditionalIdentificationRequired = 'BCSCAdditionalIdentificationRequired',
+  DualIdentificationRequired = 'BCSCDualIdentificationRequired',
   IDPhotoInformation = 'BCSCIDPhotoInformation',
   EvidenceTypeList = 'EvidenceTypeList',
   EvidenceCapture = 'BCSCEvidenceCapture',
@@ -46,6 +47,7 @@ export enum BCSCScreens {
   CallBusyOrClosed = 'BCSCCallBusyOrClosed',
   LiveCall = 'BCSCLiveCall',
   VerifyNotComplete = 'BCSCVerifyNotComplete',
+  ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
 }
 
@@ -94,6 +96,7 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.PendingReview]: undefined
   [BCSCScreens.VerificationSuccess]: undefined
   [BCSCScreens.AdditionalIdentificationRequired]: undefined
+  [BCSCScreens.DualIdentificationRequired]: undefined
   [BCSCScreens.IDPhotoInformation]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceTypeList]: undefined
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
@@ -103,4 +106,5 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours?: string }
   [BCSCScreens.LiveCall]: undefined
   [BCSCScreens.VerifyNotComplete]: undefined
+  [BCSCScreens.ResidentialAddressScreen]: undefined
 }

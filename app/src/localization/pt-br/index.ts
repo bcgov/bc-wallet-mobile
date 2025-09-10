@@ -271,6 +271,15 @@ const translation = {
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (PT-BR)",
       "ChooseID": "Choose ID (PT-BR)",
     },
+    "DualNonBCSCEvidence": {
+      "Heading": "You must provide two government-issued IDs (PT-BR)",
+      "Description": "It's needed to verify your identity. (PT-BR)",
+      "CheckYourID": "Check your IDs (PT-BR)",
+      "CheckYourIDBullet1": "Both IDs should have the same name (PT-BR)",
+      "CheckYourIDBullet2": "At least one must be issued in Canada (PT-BR)",
+      "CheckYourIDBullet3": "One must have a recent photo (PT-BR)",
+      "CheckYourIDBullet4": "Both must not be expired (PT-BR)",
+    },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity. (PT-BR)",
       "IDPhotoInstructionsBullet1": "Center your ID within the frame (PT-BR)",
@@ -282,7 +291,49 @@ const translation = {
     "EvidenceTypeList": {
       "Heading": "Choose photo ID (PT-BR)",
       "Description": "Use an ID that has the same name as on your BC Services Card. (PT-BR)",
+      "NonBCSCDescription": "Use an ID that has the same name as your first ID. (PT-BR)",
       "FirstID": "Choose your first ID (PT-BR)",
+      "SecondID": "Choose your second ID (PT-BR)"
+    },
+    "EvidenceIDCollection": {
+      "DocumentNumberSubtext": "For example: (PT-BR)",
+      "DocumentNumberError": "Please enter a valid document number (PT-BR)",
+
+      "FirstNameLabel": "First name (PT-BR)",
+      "FirstNameSubtext": "Your first given name (PT-BR)",
+      "FirstNameError": "Please enter a first name (PT-BR)",
+
+      "LastNameLabel": "Last name (PT-BR)",
+      "LastNameError": "Please enter a last name (PT-BR)",
+      "LastNameSubtext": "Also known as surname or family name (PT-BR)",
+
+      "BirthDateLabel": "Birth date (PT-BR)",
+      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format (PT-BR)",
+      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (PT-BR)",
+
+      "MiddleNamesLabel": "Middle names (PT-BR)",
+      "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (PT-BR)",
+      "MiddleNamesError": "Please enter up to two middle names (PT-BR)",
+    },
+    "Address": {
+      "Heading": "Address (PT-BR)",
+      "Paragraph": "Enter the address of where you live. (PT-BR)",
+
+      "StreetAddressLabel": "Street Line 1 (PT-BR)",
+      "StreetAddressSubtext": "Your residential street address (PT-BR)",
+      "StreetAddressRequired": "Please enter a street address (PT-BR)",
+
+      "CityLabel": "City (PT-BR)",
+      "CitySubtext": "The city of your current address (PT-BR)",
+      "CityRequired": "Please enter a city (PT-BR)",
+
+      "ProvinceLabel": "Province or Territory (PT-BR)",
+      "ProvinceSubtext": "Province or territory. For example, BC or British Columbia (PT-BR)",
+      "ProvinceInvalid": "Please enter a valid Canadian province or territory (PT-BR)",
+
+      "PostalCodeLabel": "Postal Code (PT-BR)",
+      "PostalCodeSubtext": "Your postal code in format A1A 2B2 (PT-BR)",
+      "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format (PT-BR)"
     },
     "Account": {
       "RemoveAccount": "Remove account (PT-BR)",

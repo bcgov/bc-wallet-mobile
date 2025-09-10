@@ -271,6 +271,15 @@ const translation = {
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (FR)",
       "ChooseID": "Choose ID (FR)",
     },
+    "DualNonBCSCEvidence": {
+      "Heading": "You must provide two government-issued IDs (FR)",
+      "Description": "It's needed to verify your identity. (FR)",
+      "CheckYourID": "Check your IDs (FR)",
+      "CheckYourIDBullet1": "Both IDs should have the same name (FR)",
+      "CheckYourIDBullet2": "At least one must be issued in Canada (FR)",
+      "CheckYourIDBullet3": "One must have a recent photo (FR)",
+      "CheckYourIDBullet4": "Both must not be expired (FR)",
+    },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity. (FR)",
       "IDPhotoInstructionsBullet1": "Center your ID within the frame (FR)",
@@ -282,7 +291,49 @@ const translation = {
     "EvidenceTypeList": {
       "Heading": "Choose photo ID (FR)",
       "Description": "Use an ID that has the same name as on your BC Services Card. (FR)",
+      "NonBCSCDescription": "Use an ID that has the same name as your first ID. (FR)",
       "FirstID": "Choose your first ID (FR)",
+      "SecondID": "Choose your second ID (FR)"
+    },
+    "EvidenceIDCollection": {
+      "DocumentNumberSubtext": "For example: (FR)",
+      "DocumentNumberError": "Please enter a valid document number (FR)",
+
+      "FirstNameLabel": "First name (FR)",
+      "FirstNameSubtext": "Your first given name (FR)",
+      "FirstNameError": "Please enter a first name (FR)",
+
+      "LastNameLabel": "Last name (FR)",
+      "LastNameError": "Please enter a last name (FR)",
+      "LastNameSubtext": "Also known as surname or family name (FR)",
+
+      "BirthDateLabel": "Birth date (FR)",
+      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format (FR)",
+      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (FR)",
+
+      "MiddleNamesLabel": "Middle names (FR)",
+      "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (FR)",
+      "MiddleNamesError": "Please enter up to two middle names (FR)",
+    },
+    "Address": {
+      "Heading": "Address (FR)",
+      "Paragraph": "Enter the address of where you live. (FR)",
+
+      "StreetAddressLabel": "Street Line 1 (FR)",
+      "StreetAddressSubtext": "Your residential street address (FR)",
+      "StreetAddressRequired": "Please enter a street address (FR)",
+
+      "CityLabel": "City (FR)",
+      "CitySubtext": "The city of your current address (FR)",
+      "CityRequired": "Please enter a city (FR)",
+
+      "ProvinceLabel": "Province or Territory (FR)",
+      "ProvinceSubtext": "Province or territory. For example, BC or British Columbia (FR)",
+      "ProvinceInvalid": "Please enter a valid Canadian province or territory (FR)",
+
+      "PostalCodeLabel": "Postal Code (FR)",
+      "PostalCodeSubtext": "Your postal code in format A1A 2B2 (FR)",
+      "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format (FR)"
     },
     "Account": {
       "RemoveAccount": "Remove account (FR)",

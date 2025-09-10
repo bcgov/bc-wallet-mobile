@@ -274,6 +274,15 @@ const translation = {
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
       "ChooseID": "Choose ID",
     },
+    "DualNonBCSCEvidence": {
+      "Heading": "You must provide two government-issued IDs",
+      "Description": "It's needed to verify your identity.",
+      "CheckYourID": "Check your IDs",
+      "CheckYourIDBullet1": "Both IDs should have the same name",
+      "CheckYourIDBullet2": "At least one must be issued in Canada",
+      "CheckYourIDBullet3": "One must have a recent photo",
+      "CheckYourIDBullet4": "Both must not be expired",
+    },
     "IDPhotoInformation": {
       "Heading": "Take a photo of your ID. An agent will look at this photo when verifying your identity.",
       "IDPhotoInstructionsBullet1": "Center your ID within the frame",
@@ -380,7 +389,49 @@ const translation = {
     "EvidenceTypeList": {
       "Heading": "Choose photo ID",
       "Description": "Use an ID that has the same name as on your BC Services Card.",
+      "NonBCSCDescription": "Use an ID that has the same name as your first ID.",
       "FirstID": "Choose your first ID",
+      "SecondID": "Choose your second ID"
+    },
+    "EvidenceIDCollection": {
+      "DocumentNumberSubtext": "For example:",
+      "DocumentNumberError": "Please enter a valid document number",
+
+      "FirstNameLabel": "First name",
+      "FirstNameSubtext": "Your first given name",
+      "FirstNameError": "Please enter a first name",
+
+      "LastNameLabel": "Last name",
+      "LastNameError": "Please enter a last name",
+      "LastNameSubtext": "Also known as surname or family name",
+
+      "BirthDateLabel": "Birth date",
+      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format",
+      "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
+
+      "MiddleNamesLabel": "Middle names",
+      "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
+      "MiddleNamesError": "Please enter up to two middle names",
+    },
+    "Address": {
+      "Heading": "Address",
+      "Paragraph": "Enter the address of where you live.",
+
+      "StreetAddressLabel": "Street Line 1",
+      "StreetAddressSubtext": "Your residential street address",
+      "StreetAddressRequired": "Please enter a street address",
+
+      "CityLabel": "City",
+      "CitySubtext": "The city of your current address",
+      "CityRequired": "Please enter a city",
+
+      "ProvinceLabel": "Province or Territory",
+      "ProvinceSubtext": "Province or territory. For example, BC or British Columbia",
+      "ProvinceInvalid": "Please enter a valid Canadian province or territory",
+
+      "PostalCodeLabel": "Postal Code",
+      "PostalCodeSubtext": "Your postal code in format A1A 2B2",
+      "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format"
     },
     "Account": {
       "RemoveAccount": "Remove account",
@@ -408,7 +459,7 @@ const translation = {
   },
   "HelpCentre": {
     "Title": "Help Centre"
-  }
+  },
 }
 
 export default translation

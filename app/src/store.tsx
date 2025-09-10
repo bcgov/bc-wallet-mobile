@@ -15,6 +15,7 @@ import {
   VerificationVideoUploadPayload,
 } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
+import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 
 export interface IASEnvironment {
   name: string
@@ -39,6 +40,26 @@ export interface DismissPersonCredentialOffer {
   personCredentialOfferDismissed: boolean
 }
 
+/**
+ * Collection of metadata needed when a user is registering for the application
+ * using non-bcsc identification cards. ie: drivers license + birth certificate etc...
+ * These properties are then sent to IAS to authorize the user's device.
+ */
+export interface NonBCSCUserMetadata {
+  name?: {
+    first: string
+    last: string
+    middle?: string
+  }
+  address?: {
+    streetAddress: string
+    postalCode: string
+    city: string
+    province: ProvinceCode
+    country: 'CA' // currently we only support Canada
+  }
+}
+
 export interface BCSCState {
   verified: boolean
   cardType: BCSCCardType
@@ -48,6 +69,10 @@ export interface BCSCState {
   emailConfirmed?: boolean
   deviceCode?: string
   userCode?: string
+  // TODO (MD): technically this metadata does not need to be persisted. The data is used to
+  // register the device with IAS, and they are the source of truth for this data. However,
+  // we are unable to update this metadata with IAS after the device is registered.
+  userMetadata?: NonBCSCUserMetadata
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
   prompts?: VerificationPrompt[]
@@ -117,6 +142,8 @@ enum BCSCDispatchAction {
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
   ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
   UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
+  UPDATE_USER_NAME_METADATA = 'bcsc/updateUserMetadataName',
+  UPDATE_USER_ADDRESS_METADATA = 'bcsc/updateUserMetadataAddress',
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
@@ -191,6 +218,7 @@ const bcscState: BCSCState = {
   bookmarks: [],
   email: undefined,
   userCode: undefined,
+  userMetadata: undefined,
   deviceCode: undefined,
   deviceCodeExpiresAt: undefined,
   refreshToken: undefined,
@@ -453,6 +481,38 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       )
 
       const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_USER_NAME_METADATA: {
+      const userName: NonBCSCUserMetadata['name'] = (action?.payload || []).pop()
+
+      const bcsc = {
+        ...state.bcsc,
+        userMetadata: {
+          name: userName,
+          address: state.bcsc.userMetadata?.address,
+        },
+      }
+
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_USER_ADDRESS_METADATA: {
+      const userAddress: NonBCSCUserMetadata['address'] = (action?.payload || []).pop()
+
+      const bcsc = {
+        ...state.bcsc,
+        userMetadata: {
+          name: state.bcsc.userMetadata?.name,
+          address: userAddress,
+        },
+      }
+
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
