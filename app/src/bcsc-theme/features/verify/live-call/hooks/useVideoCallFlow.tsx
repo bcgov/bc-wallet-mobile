@@ -28,6 +28,7 @@ export interface VideoCallFlow {
   startVideoCall: () => Promise<void>
   cleanup: () => Promise<void>
   retryConnection: () => Promise<void>
+  setCallEnded: () => void
 }
 
 const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
@@ -45,6 +46,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { video } = useApi()
 
+  // This value is watched to determine which background-related action to take
   const backgroundMode: VideoCallBackgroundMode = useMemo(() => {
     if (!isInBackground) return VideoCallBackgroundMode.DISABLED
 
@@ -60,6 +62,12 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     return VideoCallBackgroundMode.FULL_CLEANUP
   }, [flowState, isInBackground])
 
+  // Sets to final flow state which allows UI to update accordingly
+  const setCallEnded = useCallback(() => {
+    setFlowState(VideoCallFlowState.CALL_ENDED)
+  }, [])
+
+  // Immediately stops all video and audio
   const stopAllMedia = useCallback(() => {
     if (localStream) {
       logger.info('Stopping local stream tracks...')
@@ -74,6 +82,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     logger.info('Media stopped successfully')
   }, [localStream, remoteStream, logger])
 
+  // TODO: comment this function
   const cleanup = useCallback(async () => {
     if (cleanupInProgressRef.current) {
       logger.info('Cleanup already in progress, skipping...')
@@ -125,6 +134,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     cleanupInProgressRef.current = false
   }, [video, stopAllMedia, clientCallId, session, connection, logger])
 
+  // TODO: comment
   const startBackendKeepAlive = useCallback(() => {
     if (backendKeepAliveTimerRef.current) {
       clearInterval(backendKeepAliveTimerRef.current)
@@ -146,15 +156,18 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     backendKeepAliveTimerRef.current = timer
   }, [session, clientCallId, video, logger])
 
+  // TODO: comment
   const handleRemoteDisconnect = useCallback(async () => {
     try {
       await cleanup()
+      setCallEnded()
       await leaveCall()
     } catch (error) {
       logger.warn(`Error during remote disconnect: ${error}`)
     }
   }, [cleanup, leaveCall, logger])
 
+  // TODO: comment
   const handleError = useCallback(
     (type: VideoCallErrorType, error: Error) => {
       logger.error(`Video call error [${type}]:`, error)
@@ -170,6 +183,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     [stopAllMedia, logger]
   )
 
+  // TODO: comment this function
   const createSession = useCallback(async (): Promise<VideoSession | null> => {
     try {
       const newSession = await video.createVideoSession()
@@ -181,6 +195,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }
   }, [video, handleError])
 
+  // TODO: comment this function
   const establishWebRTCConnection = useCallback(
     async (session: VideoSession): Promise<boolean> => {
       try {
@@ -216,6 +231,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     [handleError, handleRemoteDisconnect, logger]
   )
 
+  // TODO: comment this function
   const createCall = useCallback(
     async (sessionId: string): Promise<VideoCall | null> => {
       try {
@@ -231,6 +247,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     [video, handleError]
   )
 
+  // TODO: comment this function
   // all of the functions within catch their own errors
   const startVideoCall = useCallback(async () => {
     setFlowState(VideoCallFlowState.CREATING_SESSION)
@@ -245,12 +262,14 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     if (!newCall) return
   }, [createSession, establishWebRTCConnection, createCall])
 
+  // TODO: comment this function
   // both functions within catch their own errors
   const retryConnection = useCallback(async () => {
     await cleanup()
     await startVideoCall()
   }, [cleanup, startVideoCall])
 
+  // TODO: comment
   // ref because we only want the cleanup in the following effect to be triggered on full unmount
   const cleanupRef = useRef(cleanup)
   cleanupRef.current = cleanup
@@ -269,6 +288,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }
   }, [])
 
+  // TODO: comment
   useEffect(() => {
     if (!prevIsInBackgroundRef.current && isInBackground) {
       logger.info('Background transition...')
@@ -276,6 +296,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       if (backgroundMode === VideoCallBackgroundMode.FULL_CLEANUP) {
         cleanup()
           .then(() => {
+            setCallEnded()
             leaveCall()
           })
           .catch((error) => {
@@ -307,6 +328,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }
   }, [isInBackground, backgroundMode, localStream, cleanup, leaveCall, logger])
 
+  // TODO: comment this function
   useEffect(() => {
     if (flowState === VideoCallFlowState.IN_CALL && session && clientCallId) {
       logger.info('Starting backend keep-alive timer...')
@@ -323,6 +345,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     startVideoCall,
     cleanup,
     retryConnection,
+    setCallEnded,
   }
 }
 

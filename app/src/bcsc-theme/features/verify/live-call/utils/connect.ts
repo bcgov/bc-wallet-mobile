@@ -253,6 +253,7 @@ const createPeerConnection = async (localStream: MediaStream) => {
   const peerConstraints = {
     iceServers: [
       {
+        // TODO (bm): determine which STUN/TURN servers to use in which environments
         urls: 'stun:stun.l.google.com:19302',
       },
     ],

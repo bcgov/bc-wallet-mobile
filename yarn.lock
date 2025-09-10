@@ -11305,6 +11305,7 @@ __metadata:
     react-native-vector-icons: "npm:~10.0.3"
     react-native-video: "npm:~6.16.1"
     react-native-vision-camera: "npm:~4.3.2"
+    react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:~13.10.7"
     react-test-renderer: "npm:~18.2.0"
@@ -25782,6 +25783,16 @@ __metadata:
     react-native-worklets-core:
       optional: true
   checksum: 10c0/a388fa15586cb11425b76cbdaf3f49dff4d8d8a45d4c9a1c5504b89d792b6afbc5a01d9f680b4554b965d2d7cbd217b69f5a32a8f81956e27dd30536be27f341
+  languageName: node
+  linkType: hard
+
+"react-native-volume-manager@npm:~1.10.0":
+  version: 1.10.0
+  resolution: "react-native-volume-manager@npm:1.10.0"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  checksum: 10c0/2b338fa4b12b9af267c2da7ee18afa4f9fa83abad8af46265b0ec071e96318e419582bbc5091327e6345dea2a30d7ed696c4bc6a36a911f79538087b4b96c72c
   languageName: node
   linkType: hard
 

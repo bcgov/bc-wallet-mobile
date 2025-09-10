@@ -336,7 +336,8 @@ const translation = {
         "CreatingSession": "Creating video session... (PT-BR)",
         "ConnectingWebRTC": "Connecting to video service... (PT-BR)",
         "WaitingForAgent": "Waiting for an agent to join... (PT-BR)",
-        "Initializing": "Initializing... (PT-BR)"
+        "Initializing": "Initializing... (PT-BR)",
+        "CallEnded": "Call ended, checking verification... (PT-BR)"
       },
       "Loading": {
         "OneMomentPlease": "One moment please... (PT-BR)",
@@ -347,7 +348,9 @@ const translation = {
       "Banners": {
         "VideoWillResume": "Video will resume when you return to this app (PT-BR)",
         "AgentCantSeeYou": "Agent can't see you while your video is off (PT-BR)",
-        "AgentCantHearYou": "Agent can't hear you while your microphone is muted (PT-BR)"
+        "AgentCantHearYou": "Agent can't hear you while your microphone is muted (PT-BR)",
+        "VolumeOff": "Please turn up your volume to hear the agent (PT-BR)",
+        "VolumeLow": "Your volume is low, you may need to turn it up to hear the agent (PT-BR)"
       },
       "Errors": {
         "ConnectionError": "Connection Error (PT-BR)",

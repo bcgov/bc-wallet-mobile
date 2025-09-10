@@ -16,12 +16,12 @@ import DatePicker from 'react-native-date-picker'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type EnterBirthdateScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EnterBirthdate>
@@ -62,13 +62,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     },
   })
 
-  // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-2325661774
-  const onDateChange = (selectedDate: Date) => {
-    const isoDate = selectedDate.toISOString().split('T').at(0) as string
-    const realDate = new Date(isoDate)
-    setDate(realDate)
-  }
-
   const onSubmit = useCallback(async () => {
     try {
       setLoading(true)
@@ -102,9 +95,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     } finally {
       setLoading(false)
     }
-
-    // if successful, navigation reset to setup steps screen
-    // if not successful, navigate to mismatch screen
   }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger, store.bcsc.cardType])
 
   return (
@@ -123,8 +113,9 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
             theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
             mode={'date'}
             date={date}
+            // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-1850045253
             timeZoneOffsetInMinutes={date.getTimezoneOffset()}
-            onDateChange={onDateChange}
+            onDateChange={setDate}
             onStateChange={setPickerState}
           />
         </View>

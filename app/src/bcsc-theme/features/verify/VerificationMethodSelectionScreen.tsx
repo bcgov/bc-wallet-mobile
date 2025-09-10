@@ -54,6 +54,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
       const formattedHours = formatServiceHours(serviceHours)
 
+      // TODO (bm): Look for prod queue(s) depending on environment
       const availableDestination = destinations.find(
         (dest) => dest.destination_name === 'Test Harness Queue Destination'
       )

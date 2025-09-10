@@ -129,6 +129,7 @@
     "react-native-vector-icons": "~10.0.3",
     "react-native-video": "~6.16.1",
     "react-native-vision-camera": "~4.3.2",
+    "react-native-volume-manager": "~1.10.0",
     "react-native-webrtc": "~124.0.6",
     "react-native-webview": "~13.10.7",
     "reflect-metadata": "~0.1.14",

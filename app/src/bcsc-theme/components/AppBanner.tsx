@@ -1,6 +1,6 @@
-import { View, StyleSheet, TouchableOpacity } from 'react-native'
-import { useTheme, ThemedText, testIdWithKey } from '@bifold/core'
+import { ThemedText, testIdWithKey, useTheme } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 export interface AppBannerSectionProps {
   title: string
@@ -50,6 +50,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
       backgroundColor: ColorPalette.brand.primary,
       flexDirection: 'row',
       alignItems: 'center',
+      flexWrap: 'wrap',
       padding: Spacing.md,
     },
     icon: {
