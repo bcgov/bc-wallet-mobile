@@ -429,11 +429,11 @@ class BcscCore: NSObject {
 
     // Ensure account structure exists before writing
     do {
-      try storage.createAccountStructureIfRequired(accountID: accountID)
+      try storage.updateAccountListEntry(accountID: accountID)
     } catch {
       reject(
-        "E_ACCOUNT_STRUCTURE_CREATION_FAILED",
-        "Failed to create account structure: \(error.localizedDescription)", error)
+        "E_UPDATE_ACCOUNT_LIST_ENTRY_FAILED",
+        "Failed to update account list entry: \(error.localizedDescription)", error)
       return
     }
 
@@ -478,6 +478,36 @@ class BcscCore: NSObject {
     } else {
       resolve(nil)
     }
+  }
+  
+  /// Remove the current account and all related files.
+  ///
+  /// - Parameters:
+  /// - Resolves: The hashed string in hexadecimal format.
+  /// - Rejects: An error if the input is not valid base64 or if hashing fails.
+  @objc
+  func removeAccount(
+      _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+  ) {
+      let storage = StorageService()
+      guard let accountID = storage.currentAccountID else {
+          reject(
+              "E_MISSING_INVALID_ACCOUNT_ID",
+              "Account ID is missing or invalid", nil)
+          return
+      }
+
+      let isDeleted = storage.removeAccountFiles(accountID: accountID)
+
+      if !isDeleted {
+          reject(
+              "E_FAILED_TO_DELETE_ACCOUNT",
+              "Failed to remove account files", nil)
+          return
+      }
+
+      // account deleted successfully
+      resolve(nil)
   }
 
   @objc
