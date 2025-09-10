@@ -47,8 +47,6 @@ const useRegistrationApi = () => {
     // If an account already exists, we don't need to register again
     if (account) return
 
-    console.log('Account does not exist, proceeding with registration')
-
     const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
     const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {

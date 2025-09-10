@@ -1,25 +1,24 @@
-import * as BcscCore from '@/../../packages/bcsc-core/src/index'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useRegistrationApi from '@/bcsc-theme/api/hooks/useRegistrationApi'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCRootStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, DispatchAction, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Platform, StyleSheet, View } from 'react-native'
-import { getAccount } from 'react-native-bcsc-core'
+import { StyleSheet, View } from 'react-native'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
+/**
+ * Screen that confirms the user's intent to remove their account.
+ *
+ * @returns {*} {JSX.Element} The RemoveAccountConfirmationScreen component.
+ */
 const RemoveAccountConfirmationScreen: React.FC = () => {
   const { Spacing } = useTheme()
   const navigation = useNavigation<AccountNavigationProp>()
-  const [, dispatch] = useStore<BCState>()
-  const { registration } = useApi()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+  const factoryReset = useFactoryReset()
 
   const styles = StyleSheet.create({
     container: {
@@ -35,60 +34,6 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
     },
   })
 
-  const handleRemoveAccount = async () => {
-    const account = await getAccount()
-    if (!account?.clientID) {
-      logger.error('Account is null or missing clientID - cannot proceed with deletion')
-      return
-    }
-
-    logger.info(`Starting account deletion for clientID: ${account.clientID}`)
-
-    let serverDeleteSucceeded = false
-    try {
-      logger.info('Attempting IAS account deletion...')
-      const deleteRequestResult = await registration.deleteRegistration(account.clientID)
-
-      if (!deleteRequestResult?.success) {
-        throw new Error(`Delete request failed: ${JSON.stringify(deleteRequestResult)}`)
-      }
-
-      serverDeleteSucceeded = true
-      logger.info(`IAS deletion request successful: ${JSON.stringify(deleteRequestResult)}`)
-
-      logger.info('Clearing local account file...')
-      await BcscCore.removeAccount()
-      logger.info('Local account file cleared successfully')
-
-      logger.info('Rotating signing key...')
-      await BcscCore.rotateSigningKey()
-      logger.info('Signing key rotated successfully')
-
-      dispatch({ type: BCDispatchAction.CLEAR_BCSC })
-      logger.info('BCSC state cleared')
-
-      logger.info('Registering new account...')
-      await registration.register()
-      logger.info('Registration completed successfully')
-
-      logger.info('Logging out user...')
-      dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
-
-      logger.info('Account removal process completed successfully')
-    } catch (error: any) {
-      if (serverDeleteSucceeded) {
-        // Server deletion succeeded but local cleanup failed
-        logger.error('Server deletion succeeded but local cleanup failed:', error)
-
-        // TODO(TL): The account is in a partially deleted state here.
-        // We could recommend the user reinstalls the app or we could implement some recovery mechanism.
-      } else {
-        // The deletion fails outright, everything is still in tact here
-        logger.error('IAS delete request failed, local account remains intact:', error)
-      }
-    }
-  }
-
   return (
     <View style={styles.container}>
       <View style={styles.textContainer}>
@@ -100,7 +45,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
           accessibilityLabel={t('Unified.Account.RemoveAccount')}
           buttonType={ButtonType.Critical}
           title={t('Unified.Account.RemoveAccount')}
-          onPress={handleRemoveAccount}
+          onPress={factoryReset}
         />
         <Button
           accessibilityLabel={t('Global.Cancel')}

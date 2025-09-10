@@ -9,7 +9,6 @@ import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { getAccount, removeAccount, rotateSigningKey } from 'react-native-bcsc-core'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -38,8 +37,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     () => registered && !store.bcsc.pendingVerification && !needsAdditionalEvidence,
     [registered, store.bcsc.pendingVerification, needsAdditionalEvidence]
   )
-
-  const { registration } = useApi()
 
   const styles = StyleSheet.create({
     container: {
@@ -165,27 +162,8 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Button
-        onPress={async () => {
-          try {
-            const initialAccount = await getAccount()
-
-            console.log('Initial account:', initialAccount?.clientID)
-
-            await removeAccount()
-            await registration.register()
-            const newAccount = await getAccount()
-
-            console.log('New account:', newAccount?.clientID)
-          } catch (err) {
-            console.log(err)
-          }
-        }}
-        title={'btn'}
-        buttonType={ButtonType.ModalSecondary}
-      />
       <TouchableOpacity
-        onPress={async () => {
+        onPress={() => {
           if (!registered) {
             navigation.navigate(BCSCScreens.IdentitySelection)
           }
