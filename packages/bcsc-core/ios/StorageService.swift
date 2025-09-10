@@ -201,18 +201,12 @@ class StorageService {
 
     // MARK: - Helper Methods
 
-    func createAccountStructureIfRequired(accountID: String) throws {
+    func updateAccountListEntry(accountID: String) throws {
         let rootDirectoryURL = try FileManager.default.url(
             for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false
         )
         let baseURL = rootDirectoryURL.appendingPathComponent(self.basePath)
         let accountListPath = baseURL.appendingPathComponent(accountListURLComponent)
-
-        // Check if the account_list file already exists
-        guard !FileManager.default.fileExists(atPath: accountListPath.path) else {
-            print("StorageService: account_list file already exists at \(accountListPath.path)")
-            return
-        }
 
         // Create the account list structure with provided accountID
         let accountListData: [String: Any] = [

@@ -90,6 +90,15 @@ export const getKeyPair = (label: string): Promise<KeyPair> => {
 };
 
 /**
+ * Generates a new signing key, this appends a new key pair to the existing keys.
+ *
+ * @returns {*} {Promise<void>} A promise that resolves when the key has been successfully generated.
+ */
+export const rotateSigningKey = (): Promise<void> => {
+  return BcscCore.rotateSigningKey();
+};
+
+/**
  * Retrieves a token of a specified type.
  * @param tokenType The type of token to retrieve (e.g., Access, Refresh, Registration).
  * @returns A promise that resolves to a TokenInfo object if found, otherwise null.

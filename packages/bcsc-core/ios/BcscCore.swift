@@ -221,6 +221,56 @@ class BcscCore: NSObject {
         }
     }
 
+    /// Generates a new signing key and appends it to the existing keys with an incremented numeric suffix.
+    ///
+    /// - Parameters:
+    ///   - resolve: The resolve callback for success
+    ///   - reject: The reject callback for error handling
+    @objc
+    func rotateSigningKey(
+        _ resolve: @escaping RCTPromiseResolveBlock,
+        reject: @escaping RCTPromiseRejectBlock
+    ) {
+        let keyPairManager = KeyPairManager()
+        let keys = keyPairManager.findAllPrivateKeys()
+
+        // Get the latest key based on creation date
+        guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
+            reject("E_NO_KEYS_FOUND", "No keys available.", nil)
+            return
+        }
+
+        // Extract the numeric suffix from the latest key label
+        let labelParts = latestKeyInfo.tag.components(separatedBy: "/")
+        guard let labelId = Int(labelParts.last ?? "") else {
+            reject(
+                "E_KEY_LABEL_PARSE_FAILED",
+                "Failed to parse the numeric suffix from the latest key label: \(latestKeyInfo.tag)",
+                nil)
+            return
+
+        }
+
+        // Generate new key with incremented suffix
+        // QUESTION (MD): Should we regenerate the UUID part or use the previous one?
+        let newKeyLabel = "\(BcscCore.provider)/\(UUID().uuidString)/\(labelId + 1)"  // Use BcscCore.provider
+
+        do {
+            _ = try keyPairManager.generateKeyPair(withLabel: newKeyLabel)
+        } catch {
+            print(
+                "BcscCore: rotateSigningKey - Failed to generate new key: \(error.localizedDescription)"
+            )
+            reject("E_KEY_GENERATION_FAILED", "Failed to generate new key", error)
+            return
+        }
+
+        print("BcscCore: rotateSigningKey - Successfully rotated signing key -> \(newKeyLabel)")
+
+        // TODO: Consider returning the new key ie: getKeyPair(initialKeyId)
+        resolve(nil)
+    }
+
     private func generateKeyPair() -> String? {
         let keyPairManager = KeyPairManager()
         let keys = keyPairManager.findAllPrivateKeys()
@@ -437,13 +487,13 @@ class BcscCore: NSObject {
             newAccount.failedAttemptCount = failedAttemptCount
         }
 
-        // Ensure account structure exists before writing
+        // Update account list entry
         do {
-            try storage.createAccountStructureIfRequired(accountID: accountID)
+            try storage.updateAccountListEntry(accountID: accountID)
         } catch {
             reject(
-                "E_ACCOUNT_STRUCTURE_CREATION_FAILED",
-                "Failed to create account structure: \(error.localizedDescription)", error)
+                "E_UPDATE_ACCOUNT_LIST_ENTRY_FAILED",
+                "Failed to update account list entry: \(error.localizedDescription)", error)
             return
         }
 

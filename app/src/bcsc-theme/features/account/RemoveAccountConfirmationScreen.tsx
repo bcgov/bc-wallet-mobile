@@ -20,7 +20,6 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const { registration } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
-  const { deleteRegistration } = useRegistrationApi()
 
   const styles = StyleSheet.create({
     container: {
@@ -48,7 +47,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
     let serverDeleteSucceeded = false
     try {
       logger.info('Attempting IAS account deletion...')
-      const deleteRequestResult = await deleteRegistration(account.clientID)
+      const deleteRequestResult = await registration.deleteRegistration(account.clientID)
 
       if (!deleteRequestResult?.success) {
         throw new Error(`Delete request failed: ${JSON.stringify(deleteRequestResult)}`)
@@ -60,6 +59,10 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
       logger.info('Clearing local account file...')
       await BcscCore.removeAccount()
       logger.info('Local account file cleared successfully')
+
+      logger.info('Rotating signing key...')
+      await BcscCore.rotateSigningKey()
+      logger.info('Signing key rotated successfully')
 
       dispatch({ type: BCDispatchAction.CLEAR_BCSC })
       logger.info('BCSC state cleared')

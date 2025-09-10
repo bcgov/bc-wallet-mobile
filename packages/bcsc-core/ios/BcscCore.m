@@ -9,6 +9,9 @@ RCT_EXTERN_METHOD(getKeyPair:(NSString *)label
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(rotateSigningKey:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getToken:(nonnull NSNumber *)tokenTypeNumber
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
