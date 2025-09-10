@@ -67,7 +67,6 @@ export type NativeAccount = {
 export interface Spec extends TurboModule {
   getAllKeys(): Promise<PrivateKeyInfo[]>;
   getKeyPair(label: string): Promise<KeyPair>;
-  rotateSigningKey(): Promise<void>;
   getToken(tokenType: number): Promise<NativeToken | null>;
   getAccount(): Promise<NativeAccount | null>;
   setAccount(account: Omit<NativeAccount, 'id'>): Promise<void>;

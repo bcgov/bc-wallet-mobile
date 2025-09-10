@@ -184,26 +184,6 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun rotateSigningKey(promise: Promise) {
-      // Check if KeyStore is available
-      if (!keyPairSource.isAvailable()) {
-        promise.reject("E_KEYSTORE_UNAVAILABLE", "Android KeyStore is not available on this device")
-        return
-      }
-
-      try {
-        val newKewPair = keyPairSource.getNewBcscKeyPair()
-
-        Log.d(NAME, "BcscCore: rotateSigningKey: Successfully rotated signing key -> ${newKewPair.getKeyInfo().getAlias()}")
-
-        promise.resolve(null)
-      } catch (e: Exception) {
-        promise.reject("E_KEY_ROTATION_ERROR", "Error rotating signing key: ${e.message}", e)
-        return
-      }
-  }
-
-  @ReactMethod
   override fun getToken(tokenType: Int, promise: Promise) {
     Log.d(NAME, "getToken called with tokenType: $tokenType")
 
@@ -1091,7 +1071,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       promise.resolve(null)
     }
   }
-
+  
   // MARK: - Account management methods
   /**
    * Helper method to get account data synchronously (without Promise)
@@ -1298,7 +1278,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       }
       val existingContent = accountsFile.readText()
       Log.d(NAME, "removeAccountFromFile - Current accounts file content: $existingContent")
-
+      
       val accountsArray = JSONArray(existingContent)
       val updatedAccountsArray = JSONArray()
 
@@ -1307,7 +1287,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       for (i in 0 until accountsArray.length()) {
         val accountObj = accountsArray.getJSONObject(i)
         val uuid = accountObj.optString("uuid", "")
-
+        
         if (uuid != accountId) {
           updatedAccountsArray.put(accountObj)
         } else {
@@ -1315,16 +1295,16 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
           Log.d(NAME, "removeAccountFromFile - Found and removing account with UUID: $uuid")
         }
       }
-
-      // Write back updated accounts array
+      
+      // Write back updated accounts array 
       FileWriter(accountsFile).use { writer ->
         writer.write(updatedAccountsArray.toString())
         writer.flush()
       }
-
+      
       Log.d(NAME, "removeAccountFromFile - Removed $removedCount account(s), " +
                   "${updatedAccountsArray.length()} account(s) remaining")
-
+      
     } catch (e: Exception) {
       Log.w(NAME, "removeAccountFromFile - Error removing account from file: ${e.message}", e)
     }
