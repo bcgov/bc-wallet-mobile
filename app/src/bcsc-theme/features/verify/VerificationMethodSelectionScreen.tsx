@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerificationMethodSelection>
@@ -14,7 +15,7 @@ type VerificationMethodSelectionScreenProps = {
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const [loading, setLoading] = useState(false)
   const { evidence } = useApi()
 
@@ -51,20 +52,29 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         loading={loading}
         disabled={loading}
       />
-      <ThemedText
-        variant={'bold'}
-        style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}
-      >
-        Cannot send a video?
-      </ThemedText>
-      <VerifyMethodActionButton
-        title={'Video call'}
-        description={`We will verify your identity during a video call.`}
-        icon={'video'}
-        onPress={() => null}
-        style={{ borderBottomWidth: 0 }}
-        disabled={loading}
-      />
+
+      {
+        // Do not show video call option for "Other" card type ie: dual identification cards
+        store.bcsc.cardType !== BCSCCardType.Other ? (
+          <>
+            <ThemedText
+              variant={'bold'}
+              style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}
+            >
+              Cannot send a video?
+            </ThemedText>
+            <VerifyMethodActionButton
+              title={'Video call'}
+              description={`We will verify your identity during a video call.`}
+              icon={'video'}
+              onPress={() => null}
+              style={{ borderBottomWidth: 0 }}
+              disabled={loading}
+            />
+          </>
+        ) : null
+      }
+
       <VerifyMethodActionButton
         title={'In person'}
         description={`Find out where to go and what to bring.`}

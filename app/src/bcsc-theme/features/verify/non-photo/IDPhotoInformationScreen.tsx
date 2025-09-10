@@ -47,7 +47,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
     },
   })
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['left', 'right']}>
+    <SafeAreaView style={styles.pageContainer} edges={['left', 'right', 'bottom']}>
       <ScrollView>
         <View style={styles.imageContainer}>
           <Image source={SCAN_ID_IMAGE} style={styles.image} />
