@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -30,7 +30,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
-        run: yarn install --immutable-cache
+        run: yarn install --immutable
 
       - name: Cache bcsc-core build output
         uses: actions/cache@v3
@@ -70,7 +70,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -85,7 +85,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: app
-        run: yarn install --immutable-cache
+        run: yarn install --immutable
 
       - name: Automated testing
         run: yarn test
