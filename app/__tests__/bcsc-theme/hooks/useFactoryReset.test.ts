@@ -1,10 +1,3 @@
-// Note: This mock has to be at the top level as the file it's
-// mocking is using a turbo proxy which is invoked immediately
-jest.mock('react-native-bcsc-core', () => ({
-  getAccount: jest.fn(),
-  removeAccount: jest.fn(),
-}))
-
 import { renderHook, act } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 import * as Bifold from '@bifold/core'
