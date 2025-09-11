@@ -1,13 +1,23 @@
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
-import * as BcscCore from '@/../../packages/bcsc-core/src/index'
 import useApi from './useApi'
-import { getAccount } from 'react-native-bcsc-core'
+import * as BcscCore from 'react-native-bcsc-core'
 import { BCDispatchAction, BCState } from '@/store'
 import { useCallback } from 'react'
+
+type FactoryResetResult =
+  | {
+      success: true
+    }
+  | {
+      success: false
+      error: Error
+    }
 
 /**
  * Hook to perform a factory reset of the BCSC account and state.
  * This should get the application as close as possible to a fresh install state.
+ *
+ * WARNING: This is a destructive action and will result in loss of all user data and settings.
  *
  * This includes:
  *  - Deleting the IAS account associated with the current clientID.
@@ -28,59 +38,63 @@ export const useFactoryReset = () => {
   /**
    * Performs a factory reset of the BCSC account and state.
    *
-   *  @returns {Promise<void>} A promise that resolves when the factory reset is complete.
+   *  @returns {Promise<FactoryResetResult>} A promise that resolves to the result of the factory reset operation.
    */
-  const factoryReset = useCallback(async () => {
-    const account = await getAccount()
-
-    if (!account) {
-      throw new Error('FactoryReset: Account is null - cannot proceed with BCSC factory reset')
-    }
-
-    // Delete IAS account
-    logger.info('FactoryReset: Deleting IAS account...')
-    // TODO (MD): Handle specific error cases (e.g. network issues, 404 not found, etc.) include retries if appropriate
-    const deleteIASAccount = await registration.deleteRegistration(account.clientID)
-
-    if (!deleteIASAccount.success) {
-      throw new Error('FactoryReset: IAS account deletion failed')
-    }
-
-    // Clear local account file
+  const factoryReset = useCallback(async (): Promise<FactoryResetResult> => {
     try {
-      logger.info('FactoryReset: Clearing local account file...')
+      const account = await BcscCore.getAccount()
+
+      if (!account) {
+        throw new Error('Local account not found for factory reset')
+      }
+
+      // Delete IAS account
+      logger.info('FactoryReset: Deleting IAS account from server...')
+      const deleteIASAccount = await registration.deleteRegistration(account.clientID)
+
+      if (!deleteIASAccount.success) {
+        throw new Error('IAS server account deletion failed')
+      }
+
+      // Remove local account file
+      logger.info('FactoryReset: Removing local account file...')
       await BcscCore.removeAccount()
-    } catch (error: any) {
-      logger.error('FactoryReset: Error removing local account', error)
 
-      // TODO (MD): Handle partial failure - IAS account deleted but local account removal failed
-      // Recommend to reinstall the application
-      throw error
-    }
+      // Reset BCSC state to initial state
+      logger.info('FactoryReset: Clearing BCSC state...')
+      dispatch({ type: BCDispatchAction.CLEAR_BCSC })
 
-    // Reset BCSC state to initial state
-    dispatch({ type: BCDispatchAction.CLEAR_BCSC })
-    logger.info('FactoryReset: BCSC state cleared')
-
-    // Register a new account (generates a new clientID and saves to local account file)
-    try {
       logger.info('FactoryReset: Registering new account...')
-      // TODO (MD): Handle specific error cases (e.g. network issues, 404 not found, etc.) include retries if appropriate
       await registration.register()
-    } catch (error: any) {
-      logger.error('FactoryReset: Error registering new account', error)
 
-      // TODO (MD): Handle partial failure - IAS account deleted (server and local) but new registration failed
-      // Recommend to reinstall the application
-      throw error
+      logger.info('FactoryReset: Logging out user...')
+      dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
+
+      // Factory reset complete
+      logger.info('FactoryReset: BCSC factory reset completed successfully')
+      return { success: true }
+    } catch (error) {
+      const factoryResetError = _formatFactoryResetError(error)
+      logger.error(`FactoryReset: ${factoryResetError.message}`, factoryResetError)
+
+      return { success: false, error: factoryResetError }
     }
-
-    logger.info('FactoryReset: Logging out user...')
-    dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
-
-    // Factory reset complete
-    logger.info('FactoryReset: BCSC factory reset completed successfully')
   }, [registration, dispatch])
 
   return factoryReset
+}
+
+/**
+ * Formats errors that occur during the factory reset process.
+ *
+ * @param {unknown} error - The error to format.
+ * @returns {*} {Error} The formatted error.
+ */
+function _formatFactoryResetError(error: unknown): Error {
+  if (error instanceof Error) {
+    error.message = `FactoryResetError: ${error.message}`
+    return error
+  }
+
+  return new Error(`FactoryResetUnknownError: ${JSON.stringify(error, null, 2)}`)
 }

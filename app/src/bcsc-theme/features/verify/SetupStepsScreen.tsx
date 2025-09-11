@@ -12,6 +12,7 @@ import { SetupStep } from './components/SetupStep'
 import { hitSlop } from '@/constants'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -35,6 +36,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const factoryReset = useFactoryReset()
 
   // tracks the current step state (completed and focused)
   const step = useSetupSteps(store)
@@ -374,9 +376,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <View style={{ padding: Spacing.md }}>
           <Button
             title={'Reset data'}
-            onPress={() => {
-              dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
-              dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [undefined] })
+            onPress={async () => {
+              const result = await factoryReset()
+
+              if (!result.success) {
+                logger.error('Factory reset failed', result.error)
+              }
             }}
             testID={testIdWithKey('ResetData')}
             accessibilityLabel={'Reset data'}

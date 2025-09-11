@@ -1,6 +1,6 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCRootStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -19,6 +19,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   const navigation = useNavigation<AccountNavigationProp>()
   const { t } = useTranslation()
   const factoryReset = useFactoryReset()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     container: {
@@ -45,7 +46,14 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
           accessibilityLabel={t('Unified.Account.RemoveAccount')}
           buttonType={ButtonType.Critical}
           title={t('Unified.Account.RemoveAccount')}
-          onPress={factoryReset}
+          onPress={async () => {
+            const result = await factoryReset()
+
+            if (!result.success) {
+              // TODO (MD): Show some user feedback that the factory reset failed
+              logger.error('Factory reset failed', result.error)
+            }
+          }}
         />
         <Button
           accessibilityLabel={t('Global.Cancel')}
