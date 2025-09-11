@@ -7,7 +7,7 @@ import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type CallLoadingViewProps = {
-  onCancel?: () => void
+  onCancel: () => void
   message?: string
 }
 
@@ -79,15 +79,13 @@ const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
         </View>
       </View>
       <View style={styles.controlsContainer}>
-        {onCancel ? (
-          <Button
-            buttonType={ButtonType.Primary}
-            onPress={onCancel}
-            title={t('Global.Cancel')}
-            accessibilityLabel={t('Global.Cancel')}
-            testID={testIdWithKey('Cancel')}
-          />
-        ) : null}
+        <Button
+          buttonType={ButtonType.Primary}
+          onPress={onCancel}
+          title={t('Global.Cancel')}
+          accessibilityLabel={t('Global.Cancel')}
+          testID={testIdWithKey('Cancel')}
+        />
       </View>
     </SafeAreaView>
   )

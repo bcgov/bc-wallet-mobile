@@ -4,7 +4,7 @@ import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVi
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -12,11 +12,14 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 import InCallManager from 'react-native-incall-manager'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import VolumeManager from 'react-native-volume-manager'
+import { VolumeManager } from 'react-native-volume-manager'
 import { MediaStreamTrack, RTCView } from 'react-native-webrtc'
+import CallErrorView from './components/CallErrorView'
 import CallIconButton from './components/CallIconButton'
 import CallLoadingView from './components/CallLoadingView'
+import CallProcessingView from './components/CallProcessingView'
+import { cropDelayMs } from './constants'
+import { clearIntervalIfExists, clearTimeoutIfExists } from './utils/clearTimeoutIfExists'
 import { formatCallTime } from './utils/formatCallTime'
 
 type LiveCallScreenProps = {
@@ -35,17 +38,12 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const [callTimer, setCallTimer] = useState<string>('')
   const [systemVolume, setSystemVolume] = useState<number>(1)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const cropDelayTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current)
-      timerIntervalRef.current = null
-    }
-    setCallStartTime(null)
-    setCallTimer('')
-
     try {
       if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
         throw new Error('Missing device or user code')
@@ -73,6 +71,9 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     } catch {
+      // TODO (bm): as of Sept 10th 2025, the API throws if the user is not
+      // verified even though it isn't truly an error. We should check for
+      // this case specifically and only throw if it's some other error
       logger.info('User not verified')
       navigation.dispatch(
         CommonActions.reset({
@@ -87,6 +88,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger])
 
+  // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {
     flowState,
     videoCallError,
@@ -99,18 +101,29 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     setCallEnded,
   } = useVideoCallFlow(leaveCall)
 
-  const inCall = useMemo(() => flowState === VideoCallFlowState.IN_CALL, [flowState])
-
+  // start crop delay timeout when call starts. the crop delay is to match the
+  // current BCSC where the timer doesn't start until after 11 seconds. In
+  // future we can use this 11 seconds to crop the bottom part of the remote video that
+  // shows the users video for the first ten seconds (we don't want that extra
+  // feed of the users video since we are already showing it ourselves)
   useEffect(() => {
     if (flowState === VideoCallFlowState.IN_CALL && !callStartTime) {
-      const startTime = Date.now()
-      setCallStartTime(startTime)
+      cropDelayTimeoutRef.current = setTimeout(() => {
+        const startTime = Date.now()
+        setCallStartTime(startTime)
+      }, cropDelayMs)
     } else if (flowState !== VideoCallFlowState.IN_CALL && callStartTime) {
       setCallStartTime(null)
       setCallTimer('')
     }
+
+    return () => {
+      clearTimeoutIfExists(cropDelayTimeoutRef)
+    }
   }, [flowState, callStartTime])
 
+  // when call start time is first set, begin updating the user-facing
+  // display of the call length
   useEffect(() => {
     if (callStartTime) {
       const updateTimer = () => {
@@ -122,31 +135,16 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       updateTimer()
 
       timerIntervalRef.current = setInterval(updateTimer, 1000)
-
-      return () => {
-        if (timerIntervalRef.current) {
-          clearInterval(timerIntervalRef.current)
-          timerIntervalRef.current = null
-        }
-      }
-    } else {
-      setCallTimer('')
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current)
-        timerIntervalRef.current = null
-      }
     }
   }, [callStartTime])
 
   useEffect(() => {
     return () => {
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current)
-      }
+      clearIntervalIfExists(timerIntervalRef)
     }
   }, [])
 
-  // Monitor device volume changes
+  // setup volume detection
   useEffect(() => {
     const getInitialVolume = async () => {
       try {
@@ -168,26 +166,25 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [logger])
 
+  // Determine which banner notice to show in an order of priority
   const banner: { type: 'warning' | 'error'; title: string } | null = useMemo(() => {
     if (isInBackground) {
-      return { type: 'warning', title: t('Unified.VideoCall.VideoWillResume') }
+      return { type: 'warning', title: t('Unified.VideoCall.Banners.VideoWillResume') }
     }
     if (videoHidden) {
-      return { type: 'error', title: t('Unified.VideoCall.AgentCantSeeYou') }
-    }
-    if (systemVolume === 0) {
-      return { type: 'error', title: 'Please turn up the volume to hear the agent' }
+      return { type: 'error', title: t('Unified.VideoCall.Banners.AgentCantSeeYou') }
     }
     if (onMute) {
-      return { type: 'error', title: t('Unified.VideoCall.AgentCantHearYou') }
+      return { type: 'error', title: t('Unified.VideoCall.Banners.AgentCantHearYou') }
     }
     if (systemVolume < 0.2) {
-      return { type: 'warning', title: 'Your volume is low, you may need to turn it up to hear the agent' }
+      return { type: 'warning', title: t('Unified.VideoCall.Banners.VolumeLow') }
     }
 
     return null
-  }, [isInBackground, onMute, videoHidden, inCall, systemVolume, t])
+  }, [isInBackground, onMute, videoHidden, systemVolume, t])
 
+  // whenever mute choice changes, update the audio tracks accordingly
   useEffect(() => {
     if (localStream) {
       const audioTracks = localStream.getAudioTracks()
@@ -197,6 +194,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [onMute, localStream])
 
+  // whenever hide video choice changes, update the video tracks accordingly
   useEffect(() => {
     if (localStream) {
       const videoTracks = localStream.getVideoTracks()
@@ -214,14 +212,15 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     setVideoHidden((prev) => !prev)
   }, [])
 
+  // kick off the process only once (flow state doesn't go back to idle)
   useEffect(() => {
-    // only start call automatically once (flow state doesn't go back to idle)
     if (flowState === VideoCallFlowState.IDLE) {
       startVideoCall()
       InCallManager.start({ media: 'video', auto: true })
     }
   }, [flowState, startVideoCall])
 
+  // loading / error user-facing state message
   const stateMessage = useMemo(() => {
     switch (flowState) {
       case VideoCallFlowState.CREATING_SESSION:
@@ -239,50 +238,30 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
     }
   }, [flowState, videoCallError, t])
 
+  // when the user presses the end call button
   const handleEndCall = useCallback(async () => {
     try {
-      await cleanup()
+      logger.info('User initiated call end')
       setCallEnded()
+      await cleanup()
       await leaveCall()
     } catch (error) {
       logger.error('Error while leaving video call', error as Error)
     }
-  }, [cleanup, leaveCall, logger])
+  }, [setCallEnded, cleanup, leaveCall, logger])
 
   if (flowState === VideoCallFlowState.ERROR) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground, padding: Spacing.md }}>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Icon name="alert-circle" size={64} color={ColorPalette.semantic.error} />
-          <ThemedText variant={'headingTwo'} style={{ marginTop: Spacing.lg, textAlign: 'center' }}>
-            {t('Unified.VideoCall.ConnectionError')}
-          </ThemedText>
-          <ThemedText style={{ marginTop: Spacing.md, textAlign: 'center' }}>{stateMessage}</ThemedText>
-        </View>
-        <View style={{ gap: Spacing.sm }}>
-          {videoCallError?.retryable && (
-            <Button
-              buttonType={ButtonType.Primary}
-              onPress={retryConnection}
-              title={t('Unified.VideoCall.TryAgain')}
-              accessibilityLabel={t('Unified.VideoCall.TryAgain')}
-              testID={testIdWithKey('TryAgain')}
-            />
-          )}
-          <Button
-            buttonType={ButtonType.Secondary}
-            onPress={() => navigation.goBack()}
-            title={t('Unified.VideoCall.GoBack')}
-            accessibilityLabel={t('Unified.VideoCall.GoBack')}
-            testID={testIdWithKey('GoBack')}
-          />
-        </View>
-      </SafeAreaView>
+      <CallErrorView
+        message={stateMessage || t('Unified.VideoCall.Errors.GenericError')}
+        onGoBack={() => navigation.goBack()}
+        onRetry={videoCallError?.retryable ? retryConnection : undefined}
+      />
     )
   }
 
   if (flowState === VideoCallFlowState.CALL_ENDED) {
-    return <CallLoadingView message={t('Unified.VideoCall.CallStates.CallEnded')} />
+    return <CallProcessingView message={t('Unified.VideoCall.CallStates.CallEnded')} />
   }
 
   if (flowState !== VideoCallFlowState.IN_CALL) {
@@ -337,7 +316,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       <SafeAreaView edges={['left', 'right']} style={{ flex: 1, justifyContent: 'space-between' }}>
         <View style={styles.upperContainer}>
           <View style={styles.timeAndLabelContainer}>
-            <ThemedText>{inCall ? 'Service BC' : 'In Queue'}</ThemedText>
+            <ThemedText>{t('Unified.VideoCall.ServiceBC')}</ThemedText>
             {callTimer ? <ThemedText>{callTimer}</ThemedText> : null}
           </View>
           {banner ? <BannerSection type={banner.type} title={banner.title} dismissible={false} /> : null}

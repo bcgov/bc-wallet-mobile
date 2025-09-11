@@ -52,6 +52,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
       alignItems: 'center',
       flexWrap: 'wrap',
       padding: Spacing.md,
+      flexShrink: 1,
     },
     icon: {
       marginRight: Spacing.md,
@@ -108,7 +109,10 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
       />
       <ThemedText
         variant={'bold'}
-        style={{ color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white }}
+        style={{
+          flex: 1,
+          color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
+        }}
         testID={testIdWithKey(`text-${type}`)}
       >
         {title}

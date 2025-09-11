@@ -16,6 +16,7 @@ import type { ConnectionRequest, ConnectResult } from '../types/live-call'
 // WebRTC Events need handlers even if we don't do anything with some of them
 const noop = () => {}
 
+// sets up the full Pexip and WebRTC connection
 export const connect = async (
   req: ConnectionRequest & {
     onRemoteStream: (mediaStream: MediaStream) => void

@@ -14,6 +14,7 @@ import {
   VideoCallErrorType,
   VideoCallFlowState,
 } from '../types/live-call'
+import { clearIntervalIfExists } from '../utils/clearTimeoutIfExists'
 import { connect } from '../utils/connect'
 import createVideoCallError from '../utils/createVideoCallError'
 
@@ -42,11 +43,12 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const [connection, setConnection] = useState<ConnectResult | null>(null)
   const backendKeepAliveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const prevIsInBackgroundRef = useRef(false)
-  const cleanupInProgressRef = useRef(false)
+  const cleanupCompletedRef = useRef(false)
+  const handleRemoteDisconnectRef = useRef<(() => Promise<void>) | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { video } = useApi()
 
-  // This value is watched to determine which background-related action to take
+  // this value is watched to determine which background-related action to take
   const backgroundMode: VideoCallBackgroundMode = useMemo(() => {
     if (!isInBackground) return VideoCallBackgroundMode.DISABLED
 
@@ -62,12 +64,12 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     return VideoCallBackgroundMode.FULL_CLEANUP
   }, [flowState, isInBackground])
 
-  // Sets to final flow state which allows UI to update accordingly
+  // sets to final flow state which allows UI to update accordingly
   const setCallEnded = useCallback(() => {
     setFlowState(VideoCallFlowState.CALL_ENDED)
   }, [])
 
-  // Immediately stops all video and audio
+  // immediately stops all video and audio
   const stopAllMedia = useCallback(() => {
     if (localStream) {
       logger.info('Stopping local stream tracks...')
@@ -82,29 +84,27 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     logger.info('Media stopped successfully')
   }, [localStream, remoteStream, logger])
 
-  // TODO: comment this function
+  // stops media
+  // stops keep-alives
+  // disconnects from pexip conference
+  // updates call and session via API
+  // clears state
   const cleanup = useCallback(async () => {
-    if (cleanupInProgressRef.current) {
-      logger.info('Cleanup already in progress, skipping...')
+    if (cleanupCompletedRef.current) {
+      logger.info('Cleanup already completed, skipping...')
       return
     }
-
-    cleanupInProgressRef.current = true
+    cleanupCompletedRef.current = true
     stopAllMedia()
-    connection?.stopPexipKeepAlive()
     connection?.setAppInitiatedDisconnect(true)
-
-    if (backendKeepAliveTimerRef.current) {
-      clearInterval(backendKeepAliveTimerRef.current)
-      backendKeepAliveTimerRef.current = null
-    }
+    connection?.stopPexipKeepAlive()
+    clearIntervalIfExists(backendKeepAliveTimerRef)
 
     try {
       logger.info('Disconnecting from Pexip...')
       await connection?.disconnectPexip()
     } catch (error) {
-      // Just warn as pexip call may already be disconnected from remote side and throw because of that
-      logger.warn('Error disconnecting from Pexip:', { error })
+      logger.error('Error disconnecting from Pexip:', error as Error)
     }
 
     try {
@@ -131,14 +131,10 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setClientCallId(null)
     setConnection(null)
     setVideoCallError(null)
-    cleanupInProgressRef.current = false
   }, [video, stopAllMedia, clientCallId, session, connection, logger])
 
-  // TODO: comment
   const startBackendKeepAlive = useCallback(() => {
-    if (backendKeepAliveTimerRef.current) {
-      clearInterval(backendKeepAliveTimerRef.current)
-    }
+    clearIntervalIfExists(backendKeepAliveTimerRef)
 
     const timer = setInterval(async () => {
       try {
@@ -156,18 +152,23 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     backendKeepAliveTimerRef.current = timer
   }, [session, clientCallId, video, logger])
 
-  // TODO: comment
+  // when the call is disconnected by the agent or due to network issues
   const handleRemoteDisconnect = useCallback(async () => {
     try {
-      await cleanup()
       setCallEnded()
+      await cleanup()
       await leaveCall()
     } catch (error) {
       logger.warn(`Error during remote disconnect: ${error}`)
     }
-  }, [cleanup, leaveCall, logger])
+  }, [setCallEnded, cleanup, leaveCall, logger])
+  // The above memoized callback is needed in the connection request but
+  // we still want it to use up-to-date values, so we're storing it in a ref
+  // to prevent stale closures
+  handleRemoteDisconnectRef.current = handleRemoteDisconnect
 
-  // TODO: comment
+  // creates a more elaborate error object with additional options that
+  // the UI can make use of
   const handleError = useCallback(
     (type: VideoCallErrorType, error: Error) => {
       logger.error(`Video call error [${type}]:`, error)
@@ -183,7 +184,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     [stopAllMedia, logger]
   )
 
-  // TODO: comment this function
+  // 1. a session must be created before anything else
   const createSession = useCallback(async (): Promise<VideoSession | null> => {
     try {
       const newSession = await video.createVideoSession()
@@ -195,7 +196,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }
   }, [video, handleError])
 
-  // TODO: comment this function
+  // 2. with the session and the gateway URL, we can initiate the WebRTC connection
   const establishWebRTCConnection = useCallback(
     async (session: VideoSession): Promise<boolean> => {
       try {
@@ -213,7 +214,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
             setRemoteStream(stream)
             setFlowState(VideoCallFlowState.IN_CALL)
           },
-          onRemoteDisconnect: handleRemoteDisconnect,
+          onRemoteDisconnect: () => handleRemoteDisconnectRef.current?.(),
         }
 
         const conn = await connect(connectionRequest, logger)
@@ -228,10 +229,11 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         return false
       }
     },
-    [handleError, handleRemoteDisconnect, logger]
+    [handleError, logger]
   )
 
-  // TODO: comment this function
+  // 3. this API call is really just for the benefit of the backend to track the call
+  // status and make appropriate updates
   const createCall = useCallback(
     async (sessionId: string): Promise<VideoCall | null> => {
       try {
@@ -247,9 +249,10 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     [video, handleError]
   )
 
-  // TODO: comment this function
+  // three step process with the steps above
   // all of the functions within catch their own errors
   const startVideoCall = useCallback(async () => {
+    cleanupCompletedRef.current = false
     setFlowState(VideoCallFlowState.CREATING_SESSION)
     const newSession = await createSession()
     if (!newSession) return
@@ -262,17 +265,22 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     if (!newCall) return
   }, [createSession, establishWebRTCConnection, createCall])
 
-  // TODO: comment this function
-  // both functions within catch their own errors
+  // if the user encounters a retryable error, they can start the process again
   const retryConnection = useCallback(async () => {
     await cleanup()
     await startVideoCall()
   }, [cleanup, startVideoCall])
 
-  // TODO: comment
   // ref because we only want the cleanup in the following effect to be triggered on full unmount
   const cleanupRef = useRef(cleanup)
   cleanupRef.current = cleanup
+  useEffect(() => {
+    return () => {
+      cleanupRef.current()
+    }
+  }, [])
+
+  // create listener for background state
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState: string) => {
       if (nextAppState === 'background') {
@@ -284,19 +292,22 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
     return () => {
       subscription.remove()
-      cleanupRef.current()
     }
   }, [])
 
-  // TODO: comment
+  // this effect handles transitions to and from background
+  // the combo of ref and state is to prevent extra calls to cleanup or
+  // re-enabling video tracks when the app state changes but the background
+  // state does not
   useEffect(() => {
     if (!prevIsInBackgroundRef.current && isInBackground) {
       logger.info('Background transition...')
 
       if (backgroundMode === VideoCallBackgroundMode.FULL_CLEANUP) {
+        logger.info('Performing full cleanup due to background transition...')
+        setCallEnded()
         cleanup()
           .then(() => {
-            setCallEnded()
             leaveCall()
           })
           .catch((error) => {
@@ -326,9 +337,9 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
       prevIsInBackgroundRef.current = isInBackground
     }
-  }, [isInBackground, backgroundMode, localStream, cleanup, leaveCall, logger])
+  }, [isInBackground, backgroundMode, localStream, setCallEnded, cleanup, leaveCall, logger])
 
-  // TODO: comment this function
+  // start the API keep alive when the call is ready
   useEffect(() => {
     if (flowState === VideoCallFlowState.IN_CALL && session && clientCallId) {
       logger.info('Starting backend keep-alive timer...')

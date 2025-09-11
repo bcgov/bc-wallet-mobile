@@ -2,13 +2,7 @@ import { VideoCallError, VideoCallErrorType } from '../types/live-call'
 
 export const createVideoCallError = (type: VideoCallErrorType, technicalDetails?: string): VideoCallError => {
   switch (type) {
-    case VideoCallErrorType.CONNECTION_TIMEOUT:
-      return {
-        type,
-        message: 'Connection to video service timed out.',
-        retryable: true,
-        technicalDetails,
-      }
+    // Pexip / WebRTC failed to connect
     case VideoCallErrorType.CONNECTION_FAILED:
       return {
         type,
@@ -16,13 +10,15 @@ export const createVideoCallError = (type: VideoCallErrorType, technicalDetails?
         retryable: true,
         technicalDetails,
       }
+    // API call to create session failed
     case VideoCallErrorType.SESSION_FAILED:
       return {
         type,
         message: 'Service is unavailable.',
-        retryable: false,
+        retryable: true,
         technicalDetails,
       }
+    // API call to create call failed
     case VideoCallErrorType.CALL_FAILED:
       return {
         type,
@@ -30,13 +26,7 @@ export const createVideoCallError = (type: VideoCallErrorType, technicalDetails?
         retryable: true,
         technicalDetails,
       }
-    case VideoCallErrorType.NETWORK_ERROR:
-      return {
-        type,
-        message: 'Network connection is unavailable.',
-        retryable: true,
-        technicalDetails,
-      }
+    // User has denied permissions
     case VideoCallErrorType.PERMISSION_DENIED:
       return {
         type,

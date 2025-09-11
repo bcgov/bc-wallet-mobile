@@ -297,6 +297,7 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible)"
     },
     "VideoCall": {
+      "ServiceBC": "Service BC",
       "BeforeYouCallTitle": "Before you call",
       "WiFiRecommended": "Wi-Fi Recommended",
       "StandardDataCharges": "Standard data charges may apply for calls over a cellular network.",
@@ -316,9 +317,6 @@ const translation = {
       "OneMomentPlease": "One moment please...",
       "SettingThingsUp": "We're setting things up for you",
       "TakingLongerThanUsual": "This is taking longer than usual. Please be patient.",
-      "VideoWillResume": "Video will resume when you return to this app",
-      "AgentCantSeeYou": "Agent can't see you while your video is off",
-      "AgentCantHearYou": "Agent can't hear you while your microphone is muted",
       "CreatingSession": "Creating video session...",
       "ConnectingWebRTC": "Connecting to video service...",
       "WaitingForAgent": "Waiting for an agent to join...",
@@ -351,7 +349,6 @@ const translation = {
         "VideoWillResume": "Video will resume when you return to this app",
         "AgentCantSeeYou": "Agent can't see you while your video is off",
         "AgentCantHearYou": "Agent can't hear you while your microphone is muted",
-        "VolumeOff": "Please turn up your volume to hear the agent",
         "VolumeLow": "Your volume is low, you may need to turn it up to hear the agent"
       },
       "Errors": {

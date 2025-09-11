@@ -346,6 +346,7 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible) (PT-BR)"
     },
     "VideoCall": {
+      "ServiceBC": "Service BC (PT-BR)",
       "BeforeYouCallTitle": "Before you call (PT-BR)",
       "WiFiRecommended": "Wi-Fi Recommended (PT-BR)",
       "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (PT-BR)",
@@ -365,9 +366,6 @@ const translation = {
       "OneMomentPlease": "One moment please... (PT-BR)",
       "SettingThingsUp": "We're setting things up for you (PT-BR)",
       "TakingLongerThanUsual": "This is taking longer than usual. Please be patient. (PT-BR)",
-      "VideoWillResume": "Video will resume when you return to this app (PT-BR)",
-      "AgentCantSeeYou": "Agent can't see you while your video is off (PT-BR)",
-      "AgentCantHearYou": "Agent can't hear you while your microphone is muted (PT-BR)",
       "CreatingSession": "Creating video session... (PT-BR)",
       "ConnectingWebRTC": "Connecting to video service... (PT-BR)",
       "WaitingForAgent": "Waiting for an agent to join... (PT-BR)",
@@ -400,7 +398,6 @@ const translation = {
         "VideoWillResume": "Video will resume when you return to this app (PT-BR)",
         "AgentCantSeeYou": "Agent can't see you while your video is off (PT-BR)",
         "AgentCantHearYou": "Agent can't hear you while your microphone is muted (PT-BR)",
-        "VolumeOff": "Please turn up your volume to hear the agent (PT-BR)",
         "VolumeLow": "Your volume is low, you may need to turn it up to hear the agent (PT-BR)"
       },
       "Errors": {

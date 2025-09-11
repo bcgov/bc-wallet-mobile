@@ -8,7 +8,6 @@ export interface ConnectionRequest {
 }
 
 export enum VideoCallErrorType {
-  CONNECTION_TIMEOUT = 'connection_timeout',
   CONNECTION_FAILED = 'connection_failed',
   SESSION_FAILED = 'session_failed',
   CALL_FAILED = 'call_failed',
