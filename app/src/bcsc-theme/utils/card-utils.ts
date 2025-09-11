@@ -1,5 +1,4 @@
-import { BCSCCardProcess } from '../api/hooks/useAuthorizationApi'
-import { BCSCCardType } from '../types/cards'
+import { BCSCCardProcess, BCSCCardType } from '../types/cards'
 
 /**
  * Get the card process for a given card type.

@@ -4,14 +4,9 @@ import { withAccount } from './withAccountGuard'
 import { createDeviceSignedJWT } from 'react-native-bcsc-core'
 import { isAxiosError } from 'axios'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
-
-export enum BCSCCardProcess {
-  BCSC = 'IDIM L3 Remote BCSC Photo Identity Verification',
-  BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
-  NonBCSC = 'IDIM L3 Remote Non-BCSC Identity Verification',
-}
 
 export interface VerifyInPersonResponseData {
   process: BCSCCardProcess
