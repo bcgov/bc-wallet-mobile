@@ -190,6 +190,7 @@ class BCSCService {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
+    this.logger.info(`Handling request for URL: ${String(config.url)}`)
     // skip processing if skipBearerAuth is set in the config
     if (config.skipBearerAuth) {
       return config
@@ -203,7 +204,8 @@ class BCSCService {
       config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
     }
 
-    this.logger.debug(`${String(config.method)}: ${String(config.url)}`, {})
+    this.logger.debug(`Sending request to ${String(config.url)} with method ${String(config.method)}`, config as any)
+
     return config
   }
 
