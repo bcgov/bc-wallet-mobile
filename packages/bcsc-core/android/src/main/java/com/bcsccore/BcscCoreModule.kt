@@ -40,9 +40,15 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 // JWT/Nimbus imports
+import com.nimbusds.jose.EncryptionMethod
+import com.nimbusds.jose.JWEAlgorithm
+import com.nimbusds.jose.JWEHeader
 import com.nimbusds.jose.JWEObject
+import com.nimbusds.jose.Payload
 import com.nimbusds.jose.crypto.RSADecrypter
+import com.nimbusds.jose.crypto.RSAEncrypter
 import com.nimbusds.jose.jwk.JWK
+import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jwt.JWTClaimsSet
 
 // BCSC KeyPair package imports
@@ -878,7 +884,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun createEvidenceRequestJWT(deviceCode: String, clientID: String, promise: Promise) {
+  override fun createPreVerificationJWT(deviceCode: String, clientID: String, promise: Promise) {
     try {
       // Create JWT claims set for evidence request (matching iOS implementation)
       val claimsSet = JWTClaimsSet.Builder()
@@ -888,16 +894,16 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
 
       // Sign the JWT using bcsc-keypair-port
       val signedJWT = keyPairSource.signAndSerializeClaimsSet(claimsSet)
-
-      Log.d(NAME, "createEvidenceRequestJWT: Successfully created evidence request JWT")
+      
+      Log.d(NAME, "createPreVerificationJWT: Successfully created pre-verification JWT")
       promise.resolve(signedJWT)
 
     } catch (e: BcscException) {
-      Log.e(NAME, "createEvidenceRequestJWT: BCSC signing error: ${e.devMessage}", e)
-      promise.reject("E_BCSC_EVIDENCE_JWT_ERROR", "Error creating evidence request JWT with bcsc-keypair-port: ${e.devMessage}", e)
+      Log.e(NAME, "createPreVerificationJWT: BCSC signing error: ${e.devMessage}", e)
+      promise.reject("E_BCSC_EVIDENCE_JWT_ERROR", "Error creating pre-verification JWT with bcsc-keypair-port: ${e.devMessage}", e)
     } catch (e: Exception) {
-      Log.e(NAME, "createEvidenceRequestJWT: Unexpected error: ${e.message}", e)
-      promise.reject("E_EVIDENCE_JWT_ERROR", "Unexpected error creating evidence request JWT: ${e.message}", e)
+      Log.e(NAME, "createPreVerificationJWT: Unexpected error: ${e.message}", e)
+      promise.reject("E_EVIDENCE_JWT_ERROR", "Unexpected error creating pre-verification JWT: ${e.message}", e)
     }
   }
 
@@ -1032,12 +1038,196 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     clientId: String,
     issuer: String,
     clientRefId: String,
-    key: ReadableMap?,
+    key: ReadableMap,
     fcmDeviceToken: String,
     deviceToken: String?,
     promise: Promise
   ) {
-    promise.reject("E_NOT_IMPLEMENTED", "createQuickLoginJWT not yet implemented on Android")
+    try {
+      // Validate required parameters
+      if (accessToken.isEmpty() || clientId.isEmpty() || issuer.isEmpty() || clientRefId.isEmpty()) {
+        promise.reject("E_INVALID_PARAMETERS", 
+          "All required parameters (accessToken, clientId, issuer, clientRefId, fcmDeviceToken) cannot be empty.")
+        return
+      }
+      
+      // Validate that key parameter is a valid JWK structure (matching iOS implementation)
+      if (!key.hasKey("n") || !key.hasKey("e") || !key.hasKey("kty")) {
+        promise.reject("E_INVALID_JWK", 
+          "Key parameter must be a valid JWK with n, e, and kty fields for encryption.")
+        return
+      }
+      
+      // Use empty string if deviceToken is not provided
+      val actualDeviceToken = deviceToken ?: ""
+      
+      Log.d(NAME, "createQuickLoginJWT called with clientId: $clientId, issuer: $issuer, clientRefId: $clientRefId")
+      
+      // Create signed JWT following iOS pattern (makeSignedJWTForAccountLogin)
+      val signedJWT = try {
+        createSignedJWTForAccountLogin(
+          accessToken, clientId, issuer, clientRefId, fcmDeviceToken, actualDeviceToken
+        )
+      } catch (e: Exception) {
+        Log.e(NAME, "createQuickLoginJWT: Failed to create signed JWT: ${e.message}")
+        promise.reject("E_JWT_CREATION_FAILED", "Failed to create signed JWT: ${e.message}", e)
+        return
+      }
+      
+      // Convert JWK ReadableMap to RSA public key for encryption (matching iOS)
+      val publicKey = try {
+        convertJWKToRSAPublicKey(key)
+      } catch (e: Exception) {
+        Log.e(NAME, "createQuickLoginJWT: Failed to convert JWK to public key: ${e.message}")
+        promise.reject("E_JWK_TO_KEY_FAILED", "Failed to convert JWK to RSA public key: ${e.message}", e)
+        return
+      }
+      
+      // Encrypt the signed JWT with the provided public key (matching iOS encryptJWTWithPublicKey)
+      val encryptedJWT = try {
+        encryptJWTWithRSAPublicKey(signedJWT, publicKey)
+      } catch (e: Exception) {
+        Log.e(NAME, "createQuickLoginJWT: Failed to encrypt JWT: ${e.message}")
+        promise.reject("E_JWT_ENCRYPTION_FAILED", "Failed to encrypt JWT: ${e.message}", e)
+        return
+      }
+      
+      Log.d(NAME, "createQuickLoginJWT: Successfully created and encrypted quick login JWT")
+      promise.resolve(encryptedJWT)
+      
+    } catch (e: BcscException) {
+      Log.e(NAME, "createQuickLoginJWT: BCSC error: ${e.devMessage}", e)
+      promise.reject("E_BCSC_QUICK_LOGIN_ERROR", "Error creating quick login JWT: ${e.devMessage}", e)
+    } catch (e: Exception) {
+      Log.e(NAME, "createQuickLoginJWT: Unexpected error: ${e.message}", e)
+      promise.reject("E_QUICK_LOGIN_ERROR", "Unexpected error creating quick login JWT: ${e.message}", e)
+    }
+  }
+  
+  /**
+   * Creates a signed JWT for account login following iOS QuickLoginProtocol pattern
+   * This matches the makeSignedJWTForAccountLogin method in iOS
+   */
+  private fun createSignedJWTForAccountLogin(
+    accessToken: String,
+    clientId: String, 
+    issuer: String,
+    clientRefId: String,
+    fcmDeviceToken: String,
+    deviceToken: String
+  ): String {
+    // Generate random UUID for JWT ID (matching iOS pattern)
+    val randomUUID = UUID.randomUUID().toString().lowercase()
+    val seconds = Date().time / 1000 // Unix timestamp in seconds
+    
+    // Calculate HMAC nonce (matching iOS AssertionFactory.commonCryptoHMAC)
+    val hmacNonce = createAssertionFactoryHMAC(accessToken, randomUUID, clientId.lowercase())
+    
+    // Build JWT claims following BCSC pattern
+    val claimsSet = JWTClaimsSet.Builder()
+      .audience(issuer)
+      .issuer(clientId.lowercase()) // Match iOS lowercasing
+      .claim("client_ref_id", clientRefId)
+      .claim("nonce", hmacNonce)
+      .issueTime(Date(seconds * 1000)) // Convert back to Date
+      .jwtID(randomUUID)
+      // Add device information claims (matching iOS addDeviceInfoClaims)
+      .claim("system_name", "Android")
+      .claim("system_version", Build.VERSION.RELEASE)
+      .claim("device_model", Build.MODEL)
+      .claim("device_id", UUID.randomUUID().toString())
+      .claim("device_token", deviceToken)
+      .claim("fcm_device_token", fcmDeviceToken)
+      .claim("mobile_id_version", getAppVersion())
+      .claim("mobile_id_build", getAppBuildNumber())
+      .claim("app_set_id", getAppSetId())
+      .claim("has_other_accounts", false)
+      .build()
+      
+    // Sign the JWT using current key pair (matching iOS signJWT)
+    return keyPairSource.signAndSerializeClaimsSet(claimsSet)
+  }
+  
+  /**
+   * Creates HMAC nonce matching iOS AssertionFactory.commonCryptoHMAC
+   */
+  private fun createAssertionFactoryHMAC(accessToken: String, jwtId: String, clientId: String): String {
+    val accessTokenBytes = accessToken.toByteArray(Charsets.UTF_8)
+    val clientIdBytes = clientId.toByteArray(Charsets.UTF_8)  
+    val jwtIdBytes = jwtId.toByteArray(Charsets.UTF_8)
+    
+    val secretKeySpec = SecretKeySpec(accessTokenBytes, "HmacSHA256")
+    val mac = Mac.getInstance("HmacSHA256")
+    mac.init(secretKeySpec)
+    
+    // Update with client ID and JWT ID bytes (matching iOS CCHmacUpdate pattern)
+    mac.update(clientIdBytes)
+    mac.update(jwtIdBytes)
+    
+    val hmacBytes = mac.doFinal()
+    return android.util.Base64.encodeToString(hmacBytes, android.util.Base64.NO_WRAP)
+  }
+  
+  /**
+   * Converts JWK ReadableMap to RSA PublicKey for encryption
+   * Matches iOS JWK.jwkToSecKey functionality
+   */
+  private fun convertJWKToRSAPublicKey(jwk: ReadableMap): java.security.PublicKey {
+    val modulusBase64 = jwk.getString("n") ?: throw IllegalArgumentException("JWK missing modulus (n)")
+    val exponentBase64 = jwk.getString("e") ?: throw IllegalArgumentException("JWK missing exponent (e)")
+    val keyType = jwk.getString("kty") ?: throw IllegalArgumentException("JWK missing key type (kty)")
+    
+    if (keyType != "RSA") {
+      throw IllegalArgumentException("Only RSA keys are supported, got: $keyType")
+    }
+    
+    // Decode base64url components (matching iOS RSA component handling)
+    val modulusBytes = android.util.Base64.decode(
+      modulusBase64.replace("-", "+").replace("_", "/"),
+      android.util.Base64.DEFAULT
+    )
+    val exponentBytes = android.util.Base64.decode(
+      exponentBase64.replace("-", "+").replace("_", "/"), 
+      android.util.Base64.DEFAULT
+    )
+    
+    // Create RSA public key from components
+    val modulus = java.math.BigInteger(1, modulusBytes)
+    val exponent = java.math.BigInteger(1, exponentBytes)
+    
+    val keySpec = java.security.spec.RSAPublicKeySpec(modulus, exponent)
+    val keyFactory = java.security.KeyFactory.getInstance("RSA")
+    return keyFactory.generatePublic(keySpec)
+  }
+  
+  /**
+   * Encrypts JWT using JWE with RSA-OAEP-256 + A256GCM following ias-android pattern
+   * This matches the encryptSignedJWT method in ias-android QuickLoginUseCase
+   */
+  private fun encryptJWTWithRSAPublicKey(jwt: String, publicKey: java.security.PublicKey): String {
+    try {
+      // Convert java.security.PublicKey to Nimbus RSAKey for JWE encryption
+      val rsaKey = RSAKey.Builder(publicKey as java.security.interfaces.RSAPublicKey)
+        .build()
+      
+      // Create JWE header with RSA-OAEP-256 algorithm and A256GCM encryption method
+      // This matches the ias-android implementation
+      val header = JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A256GCM)
+        .build()
+      
+      // Create JWE object with the signed JWT as payload
+      val jweObject = JWEObject(header, Payload(jwt))
+      
+      // Encrypt using RSA encrypter (hybrid encryption - RSA for key, AES for content)
+      val encrypter = RSAEncrypter(rsaKey)
+      jweObject.encrypt(encrypter)
+      
+      // Serialize to JWE compact format
+      return jweObject.serialize()
+      
+    } catch (e: Exception) {
+      throw RuntimeException("Failed to create JWE encrypted JWT: ${e.message}", e)
+    }
   }
 
   /**

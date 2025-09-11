@@ -341,7 +341,7 @@ class BcscCore: NSObject {
   /// - Resolves: The hashed string in hexadecimal format.
   /// - Rejects: An error if the input is not valid base64 or if hashing fails.
   @objc
-  func createEvidenceRequestJWT(
+  func createPreVerificationJWT(
     _ deviceCode: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {

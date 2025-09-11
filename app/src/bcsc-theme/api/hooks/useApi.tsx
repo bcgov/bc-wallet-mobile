@@ -8,6 +8,7 @@ import useUserApi from './useUserApi'
 import useEvidenceApi from './useEvidenceApi'
 import useMetadataApi from './useMetadataApi'
 import useJwksApi from './useJwksApi'
+import useVideoCallApi from './useVideoCallApi'
 
 const useApi = () => {
   const config = useConfigApi()
@@ -19,6 +20,7 @@ const useApi = () => {
   const evidence = useEvidenceApi()
   const metadata = useMetadataApi()
   const jwks = useJwksApi()
+  const video = useVideoCallApi()
 
   return useMemo(
     () => ({
@@ -31,8 +33,9 @@ const useApi = () => {
       evidence,
       metadata,
       jwks,
+      video,
     }),
-    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks]
+    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks, video]
   )
 }
 

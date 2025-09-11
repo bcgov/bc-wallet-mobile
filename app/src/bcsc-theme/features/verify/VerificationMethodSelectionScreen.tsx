@@ -1,13 +1,14 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerificationMethodSelection>
@@ -16,8 +17,10 @@ type VerificationMethodSelectionScreenProps = {
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-  const [loading, setLoading] = useState(false)
-  const { evidence } = useApi()
+  const [sendVideoLoading, setSendVideoLoading] = useState(false)
+  const [liveCallLoading, setLiveCallLoading] = useState(false)
+  const { evidence, video: videoCallApi } = useApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -28,7 +31,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
   const handlePressSendVideo = async () => {
     try {
-      setLoading(true)
+      setSendVideoLoading(true)
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
@@ -37,9 +40,55 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       // TODO: Handle error, e.g., show an alert or log the error
       return
     } finally {
-      setLoading(false)
+      setSendVideoLoading(false)
     }
   }
+
+  const handlePressLiveCall = useCallback(async () => {
+    try {
+      setLiveCallLoading(true)
+
+      const [destinations, serviceHours] = await Promise.all([
+        videoCallApi.getVideoDestinations(),
+        videoCallApi.getServiceHours(),
+      ])
+
+      const formattedHours = formatServiceHours(serviceHours)
+
+      // TODO (bm): Look for prod queue(s) depending on environment
+      const availableDestination = destinations.find(
+        (dest) => dest.destination_name === 'Test Harness Queue Destination'
+      )
+
+      if (!availableDestination) {
+        navigation.navigate(BCSCScreens.CallBusyOrClosed, {
+          busy: true,
+          formattedHours,
+        })
+        return
+      }
+
+      const isWithinServiceHours = checkIfWithinServiceHours(serviceHours)
+
+      if (!isWithinServiceHours) {
+        navigation.navigate(BCSCScreens.CallBusyOrClosed, {
+          busy: false,
+          formattedHours,
+        })
+        return
+      }
+
+      navigation.navigate(BCSCScreens.BeforeYouCall, { formattedHours })
+    } catch (error) {
+      logger.error('Error checking service availability:', error as Error)
+      navigation.navigate(BCSCScreens.CallBusyOrClosed, {
+        busy: false,
+        formattedHours: 'Unavailable',
+      })
+    } finally {
+      setLiveCallLoading(false)
+    }
+  }, [videoCallApi, logger, navigation])
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
@@ -49,10 +98,9 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         icon={'send'}
         onPress={handlePressSendVideo}
         style={{ marginBottom: Spacing.xxl }}
-        loading={loading}
-        disabled={loading}
+        loading={sendVideoLoading}
+        disabled={sendVideoLoading || liveCallLoading}
       />
-
       {
         // Do not show video call option for "Other" card type ie: dual identification cards
         store.bcsc.cardType !== BCSCCardType.Other ? (
@@ -67,9 +115,10 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
               title={'Video call'}
               description={`We will verify your identity during a video call.`}
               icon={'video'}
-              onPress={() => null}
+              onPress={handlePressLiveCall}
               style={{ borderBottomWidth: 0 }}
-              disabled={loading}
+              loading={liveCallLoading}
+              disabled={liveCallLoading || sendVideoLoading}
             />
           </>
         ) : null
@@ -80,7 +129,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
         description={`Find out where to go and what to bring.`}
         icon={'account'}
         onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
-        disabled={loading}
+        disabled={liveCallLoading || sendVideoLoading}
       />
     </SafeAreaView>
   )
