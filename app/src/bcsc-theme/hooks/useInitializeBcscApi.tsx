@@ -22,10 +22,14 @@ const useInitializeBcscApi = () => {
     const asyncEffect = async () => {
       try {
         await client.fetchEndpointsAndConfig(client.baseURL)
+        logger.debug('Fetched BCSC endpoints and configuration', {
+          baseURL: client.baseURL,
+        })
       } catch (error) {
         logger.error('Failed to fetch BCSC endpoints', {
           message: error instanceof Error ? error.message : String(error),
         })
+
         dispatch({
           type: DispatchAction.BANNER_MESSAGES,
           payload: [
@@ -42,8 +46,9 @@ const useInitializeBcscApi = () => {
 
       try {
         await registration.register()
+        logger.debug('BCSC registration successful')
       } catch (error) {
-        logger.error(`Error during registration: ${error}`)
+        logger.error(`Error during registration.`, error as Error)
       }
 
       try {
@@ -69,7 +74,7 @@ const useInitializeBcscApi = () => {
           dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
         }
       } catch (error) {
-        logger.error(`Error setting API client tokens: ${error}`)
+        logger.error(`Error setting API client tokens.`, error as Error)
       } finally {
         setLoading(false)
       }

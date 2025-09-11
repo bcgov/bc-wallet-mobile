@@ -339,6 +339,98 @@ const translation = {
       "RemoveAccount": "Remove account (PT-BR)",
       "RemoveAccountTitle": "Remove account from this app? (PT-BR)",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)"
+    },
+    "VideoTips": {
+      "PrivatePlace": "Find a private place to talk (PT-BR)",
+      "OnlyPerson": "Be the only person in the video (PT-BR)",
+      "RemoveGlasses": "Remove your glasses (if possible) (PT-BR)"
+    },
+    "VideoCall": {
+      "ServiceBC": "Service BC (PT-BR)",
+      "BeforeYouCallTitle": "Before you call (PT-BR)",
+      "WiFiRecommended": "Wi-Fi Recommended (PT-BR)",
+      "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (PT-BR)",
+      "CellularNetworkWarning": "The app detected you're on a cellular network. (PT-BR)",
+      "FindPrivatePlace": "Find a Private Place to Talk (PT-BR)",
+      "MakeSureOnlyYou": "Make sure you'll be the only person in the video. (PT-BR)",
+      "HoursOfService": "Hours of Service (PT-BR)",
+      "DefaultHours": "Monday to Friday\n7:30am - 5:00pm Pacific Time (PT-BR)",
+      "ContactCentrePrivacy": "Contact Centre Privacy (PT-BR)",
+      "PrivacyNotice": "During a video call, Service BC will ask for and collect personal information. The personal information you will provide is collected for the purpose of verification of your BC Services Card. This information is collected under the authority of Section 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act (FIPPA). (PT-BR)",
+      "PrivacyContactInfo": "If you have further questions about privacy, please contact Chief Privacy Officer, 100 - 722 Johnson Street, Victoria, BC, V8W 1N1, or by phone\n250-405-3726 (PT-BR)",
+      "Assistance": "Need assistance? (PT-BR)",
+      "StartVideoCallDescription": "Start a video call with a Service BC agent. They will verify your identity to finish setting up this app. (PT-BR)",
+      "YouShould": "You should: (PT-BR)",
+      "StartCall": "Start call (PT-BR)",
+      "StartVideoCall": "Start video call (PT-BR)",
+      "OneMomentPlease": "One moment please... (PT-BR)",
+      "SettingThingsUp": "We're setting things up for you (PT-BR)",
+      "TakingLongerThanUsual": "This is taking longer than usual. Please be patient. (PT-BR)",
+      "CreatingSession": "Creating video session... (PT-BR)",
+      "ConnectingWebRTC": "Connecting to video service... (PT-BR)",
+      "WaitingForAgent": "Waiting for an agent to join... (PT-BR)",
+      "Initializing": "Initializing... (PT-BR)",
+      "ConnectionError": "Connection Error (PT-BR)",
+      "GenericError": "An error occurred (PT-BR)",
+      "TryAgain": "Try Again (PT-BR)",
+      "GoBack": "Go Back (PT-BR)",
+      "AllAgentsBusy": "All agents are busy (PT-BR)",
+      "CallUsLater": "Call us later (PT-BR)",
+      "AllAgentsBusyMessage": "We're sorry your call couldn't be answered. All of our agents are busy at the moment. Please call us back during our hours of service. (PT-BR)",
+      "CurrentlyClosedMessage": "We are currently closed. To talk to one of our agents to verify by video, call us during our hours of service. (PT-BR)",
+      "Reminder": "Reminder (PT-BR)",
+      "AddCardAgainReminder": "You'll need to add your card again if you don't finish verifying by {{date}}. (PT-BR)",
+      "SendVideoInstead": "Send video instead (PT-BR)",
+      "CallStates": {
+        "CreatingSession": "Creating video session... (PT-BR)",
+        "ConnectingWebRTC": "Connecting to video service... (PT-BR)",
+        "WaitingForAgent": "Waiting for an agent to join... (PT-BR)",
+        "Initializing": "Initializing... (PT-BR)",
+        "CallEnded": "Call ended, checking verification... (PT-BR)"
+      },
+      "Loading": {
+        "OneMomentPlease": "One moment please... (PT-BR)",
+        "SettingThingsUp": "We're setting things up for you (PT-BR)",
+        "TakingLongerThanUsual": "This is taking longer than usual. Please be patient. (PT-BR)",
+        "Cancel": "Cancel (PT-BR)"
+      },
+      "Banners": {
+        "VideoWillResume": "Video will resume when you return to this app (PT-BR)",
+        "AgentCantSeeYou": "Agent can't see you while your video is off (PT-BR)",
+        "AgentCantHearYou": "Agent can't hear you while your microphone is muted (PT-BR)",
+        "VolumeLow": "Your volume is low, you may need to turn it up to hear the agent (PT-BR)"
+      },
+      "Errors": {
+        "ConnectionError": "Connection Error (PT-BR)",
+        "ConnectionTimeout": "Connection to video service timed out. (PT-BR)",
+        "ConnectionFailed": "Failed to establish video connection. (PT-BR)",
+        "SessionFailed": "Service is unavailable. (PT-BR)",
+        "CallFailed": "Failed to initiate video call. (PT-BR)",
+        "NetworkError": "Network connection is unavailable. (PT-BR)",
+        "PermissionDenied": "Camera or microphone access was denied. (PT-BR)",
+        "UnexpectedError": "An unexpected error occurred. (PT-BR)",
+        "GenericError": "An error occurred (PT-BR)",
+        "TryAgain": "Try Again (PT-BR)",
+        "GoBack": "Go Back (PT-BR)"
+      },
+      "CallBusyOrClosed": {
+        "AllAgentsBusy": "All agents are busy (PT-BR)",
+        "CallUsLater": "Call us later (PT-BR)",
+        "AllAgentsBusyMessage": "We're sorry your call couldn't be answered. All of our agents are busy at the moment. Please call us back during our hours of service. (PT-BR)",
+        "CurrentlyClosedMessage": "We are currently closed. To talk to one of our agents to verify by video, call us during our hours of service. (PT-BR)",
+        "HoursOfService": "Hours of Service (PT-BR)",
+        "Reminder": "Reminder (PT-BR)",
+        "AddCardAgainReminder": "You'll need to add your card again if you don't finish verifying by {{date}}. (PT-BR)",
+        "SendVideoInstead": "Send video instead (PT-BR)"
+      },
+      "VerifyNotComplete": {
+        "Title": "Verify not complete (PT-BR)",
+        "NotVerifiedYet": "Your identity is not verified yet. (PT-BR)",
+        "HavingTrouble": "Having trouble? (PT-BR)",
+        "TroubleshootingTips": "If you are having issues with audio or video, try out the following tips. If you're still having trouble, call us. (PT-BR)",
+        "SendVideoInstead": "Send video instead (PT-BR)",
+        "TryAgain": "Try again (PT-BR)"
+      }
     }
   },
   "RemoteLogging": {

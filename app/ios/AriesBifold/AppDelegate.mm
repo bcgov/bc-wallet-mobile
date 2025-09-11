@@ -1,5 +1,6 @@
 #import "AppDelegate.h"
 
+#import <WebRTCModuleOptions.h>
 #import <Firebase.h>
 #import <React/RCTBridge.h>
 #import <React/RCTBundleURLProvider.h>
@@ -11,6 +12,9 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  // allows background WebRTC
+  [WebRTCModuleOptions sharedInstance].enableMultitaskingCameraAccess = YES;
+
   [FIRApp configure];
   self.moduleName = @"BCWallet";
   // You can add your custom initial props in the dictionary below.
@@ -20,7 +24,7 @@
   // Because certain file operations can reset resource values, we
   // excluded file’s resource values each time the application starts.
   [self excludeDotAFJFolderFromBackup];
-  
+
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }
 

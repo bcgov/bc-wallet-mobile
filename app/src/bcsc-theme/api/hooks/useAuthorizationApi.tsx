@@ -1,9 +1,9 @@
+import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { isAxiosError } from 'axios'
 import { useCallback, useMemo } from 'react'
+import { createDeviceSignedJWT } from 'react-native-bcsc-core'
 import apiClient from '../client'
 import { withAccount } from './withAccountGuard'
-import { createDeviceSignedJWT } from 'react-native-bcsc-core'
-import { isAxiosError } from 'axios'
-import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
 
@@ -31,7 +31,7 @@ export interface VerifyUnknownBCSCResponseData {
   expires_in: number
 }
 
-interface AuthorizeDeviceUnknownBCSCConfig {
+export interface AuthorizeDeviceUnknownBCSCConfig {
   firstName: string
   lastName: string
   birthdate: string

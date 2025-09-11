@@ -122,7 +122,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         })
       )
     } catch (error) {
-      logger.error('Error during sending information to Service BC', { error })
+      logger.error('Error during sending information to Service BC', error as Error)
     } finally {
       setLoading(false)
     }
@@ -133,7 +133,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       <View>
         <TakeMediaButton
           onPress={() => {
-            navigation.navigate(BCSCScreens.PhotoInstructions)
+            navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
           }}
           title={'Photo of your face'}
           actionLabel={'Take Photo'}
