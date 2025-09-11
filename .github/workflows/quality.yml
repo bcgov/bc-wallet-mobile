@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -23,12 +23,10 @@ jobs:
       - name: Cache app node_modules
         uses: actions/cache@v3
         with:
-          path: |
-            app/node_modules
-          # Cache will be invalidated if package.json or yarn.lock changes
-          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-app-node_modules-
+          path: .yarn/cache
+          # Cache will be invalidated if yarn.lock changes
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install dependencies
         working-directory: app
@@ -72,7 +70,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Setup NodeJS
         uses: ./.github/workflows/actions/setup-node
@@ -80,12 +78,10 @@ jobs:
       - name: Cache app node_modules
         uses: actions/cache@v3
         with:
-          path: |
-            app/node_modules
-          # Cache will be invalidated if package.json or yarn.lock changes
-          key: ${{ runner.os }}-app-node_modules-${{ hashFiles('app/package.json', 'app/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-app-node_modules-
+          path: .yarn/cache
+          # Cache will be invalidated if yarn.lock changes
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
 
       - name: Install dependencies
         working-directory: app
