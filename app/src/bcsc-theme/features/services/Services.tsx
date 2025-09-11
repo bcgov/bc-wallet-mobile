@@ -10,6 +10,10 @@ import { BCState } from '@/store'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useNavigation } from '@react-navigation/native'
+import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { StackNavigationProp } from '@react-navigation/stack'
+
+type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceDetailsScreen>
 
 // to be replaced with API response or translation entries, whichever ends up being the case
 const mockHeaderText = 'Browse websites you can log in to with this app'
@@ -23,7 +27,7 @@ const Services: React.FC = () => {
   const { Spacing } = useTheme()
   const { metadata } = useApi()
   const [store] = useStore<BCState>()
-  const navigation = useNavigation()
+  const navigation = useNavigation<ServicesNavigationProp>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const [searchText, setSearchText] = useState('')
@@ -83,6 +87,8 @@ const Services: React.FC = () => {
     ])
   }
 
+  // TODO (MD): implement a loading UI
+
   return (
     <TabScreenWrapper>
       <ThemedText variant={'headingThree'} style={styles.headerText}>
@@ -101,7 +107,9 @@ const Services: React.FC = () => {
           title={service.client_name}
           description={service.client_description}
           onPress={() => {
-            // TODO (MD): implement service press action
+            navigation.navigate(BCSCScreens.ServiceDetailsScreen, {
+              service,
+            })
           }}
         />
       ))}
