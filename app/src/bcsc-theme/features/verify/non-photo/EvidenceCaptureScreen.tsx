@@ -116,11 +116,9 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
             cameraInstructions={currentSide.image_side_tip}
             cameraLabel={currentSide.image_side_label}
             maskType={MaskType.ID_CARD}
+            maskLineColor={ColorPalette.brand.primary}
             onPhotoTaken={handlePhotoTaken}
           />
-          <View style={styles.reticleContainer}>
-            <View style={styles.reticle} />
-          </View>
         </View>
       ) : (
         <PhotoReview photoPath={currentPhotoPath!} onAccept={handleAcceptPhoto} onRetake={handleRetakePhoto} />

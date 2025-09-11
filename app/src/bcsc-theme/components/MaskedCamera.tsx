@@ -11,6 +11,7 @@ type MaskedCameraProps = {
   cameraInstructions?: string
   cameraLabel?: string
   maskType?: MaskType
+  maskLineColor?: string
   onPhotoTaken: (path: string) => void
 }
 
@@ -18,6 +19,7 @@ const MaskedCamera = ({
   navigation,
   cameraInstructions,
   cameraLabel,
+  maskLineColor,
   maskType,
   cameraFace = 'back',
   onPhotoTaken,
@@ -152,7 +154,7 @@ const MaskedCamera = ({
         onError={onError}
         torch={torchOn ? 'on' : 'off'}
       />
-      <SVGOverlay maskType={maskType} strokeColor={ColorPalette.brand.tertiary} />
+      <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
       <View style={styles.instructionText}>
         <ThemedText style={{ color: 'white' }} variant={'headingThree'}>
           {cameraLabel}
