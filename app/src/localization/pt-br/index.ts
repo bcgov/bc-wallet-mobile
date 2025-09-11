@@ -102,7 +102,7 @@ const translation = {
   },
   "PersonCredential": {
     "ServicesCardInstalled": "Step 1: BC Services Card app installed (PT-BR)",
-    "InstallServicesCard": "Step 1: Install the BC Services Card app (FR",
+    "InstallServicesCard": "Step 1: Install the BC Services Card app (PT-BR",
     "InstallApp": "Install the app (PT-BR)",
     "AppOnOtherDevice": "I have it on another device (PT-BR)",
     "CreatePersonCred": "Step 2: Create your Person credential (PT-BR)",
@@ -211,6 +211,14 @@ const translation = {
     "ScanOnlySpecial3": "BC Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones. (PT-BR)",
     "WhereToUseLink": "See where you can use BC Wallet (PT-BR)",
     "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones. (PT-BR)"
+  },
+  "Services": {
+    "CatalogueTitle": "Browse websites you can log in to with this app (PT-BR)",
+    "ServiceLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
+    "ServiceLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
+    "ServiceGoto": "Go to (PT-BR)",
+    "ServicePreferComputer": "Prefer to use a computer or tablet? (PT-BR)",
+    "ServicePreferComputerHelp": "On that device go to: (PT-BR)"
   },
   "Unified": {
     "Steps": {

@@ -215,6 +215,14 @@ const translation = {
     "WhereToUseLink": "See where you can use BC Wallet",
     "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones."
   },
+  "Services": {
+    "CatalogueTitle": "Browse websites you can log in to with this app",
+    "ServiceLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app.",
+    "ServiceLoginProof": "You will use this app to prove who you are when you log in.",
+    "ServiceGoto": "Go to",
+    "ServicePreferComputer": "Prefer to use a computer or tablet?",
+    "ServicePreferComputerHelp": "On that device go to:"
+  },
   "Unified": {
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
