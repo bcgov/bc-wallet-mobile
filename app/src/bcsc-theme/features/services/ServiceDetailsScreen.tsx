@@ -1,5 +1,6 @@
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { ThemedText, useTheme } from '@bifold/core'
+import { Link, ThemedText, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -12,6 +13,7 @@ type ServiceDetailsScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScree
  * @returns {*} {JSX.Element} The service screen component or null if not implemented.
  */
 export const ServiceDetailsScreen: React.FC<ServiceDetailsScreenProps> = (props: ServiceDetailsScreenProps) => {
+  const { service } = props.route.params
   const { t } = useTranslation()
   const { Spacing } = useTheme()
 
@@ -19,17 +21,27 @@ export const ServiceDetailsScreen: React.FC<ServiceDetailsScreenProps> = (props:
     screenContainer: {
       flex: 1,
       padding: Spacing.lg,
+      gap: Spacing.lg,
     },
   })
 
   return (
     <View style={styles.screenContainer}>
-      <ThemedText>{props.route.params.service.client_name}</ThemedText>
+      <ThemedText variant={'headingTwo'}>{service.client_name}</ThemedText>
       <ThemedText>{t('Services.ServiceLoginInstructions')}</ThemedText>
       <ThemedText>{t('Services.ServiceLoginProof')}</ThemedText>
-      <ThemedText>{t('Services.ServiceGoto')}</ThemedText>
-      <ThemedText>{t('Services.ServicePreferComputer')}</ThemedText>
+      <Link
+        linkText={`${t('Services.ServiceGoto')} ${service.client_name}`}
+        onPress={() => {
+          props.navigation.navigate(BCSCScreens.WebView, {
+            url: service.client_uri,
+            title: service.client_name,
+          })
+        }}
+      ></Link>
+      <ThemedText variant={'bold'}>{t('Services.ServicePreferComputer')}</ThemedText>
       <ThemedText>{t('Services.ServicePreferComputerHelp')}</ThemedText>
+      <Link linkText={service.client_uri} onPress={() => {}}></Link>
     </View>
   )
 }

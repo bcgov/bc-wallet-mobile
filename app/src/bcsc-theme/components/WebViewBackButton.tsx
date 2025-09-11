@@ -21,6 +21,9 @@ export const createWebviewHeaderBackButton = (
   const HeaderLeft = (props: HeaderBackButtonProps) => {
     const [, dispatch] = useStore<BCState>()
     const handleBackPress = async () => {
+      // navigate back before refreshing to avoid blocking the UI
+      navigation.goBack()
+
       // Refresh when leaving webviews in case account / device action was taken within the webview
       if (client.tokens?.refresh_token) {
         const tokenData = await client.getTokensForRefreshToken(client.tokens?.refresh_token)
@@ -32,8 +35,6 @@ export const createWebviewHeaderBackButton = (
           })
         }
       }
-
-      navigation.goBack()
     }
 
     return <HeaderBackButton {...props} onPress={handleBackPress} />
