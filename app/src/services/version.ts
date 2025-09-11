@@ -1,10 +1,10 @@
+import { AbstractBifoldLogger, IVersionCheckService, VersionInfo } from '@bifold/core'
 import { checkVersion } from 'react-native-check-version'
-import { VersionInfo, IVersionCheckService, BifoldLogger } from '@bifold/core'
 
 export class VersionCheckService implements IVersionCheckService {
   private _cachedVersionInfo: VersionInfo | undefined
 
-  constructor(private readonly log: BifoldLogger) {
+  constructor(private readonly log: AbstractBifoldLogger) {
     // Logger is now injected
   }
 

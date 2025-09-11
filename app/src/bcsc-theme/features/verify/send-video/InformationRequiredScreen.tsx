@@ -2,14 +2,14 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
+import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { Buffer } from 'buffer'
 import { useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import RNFS from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
-import { CommonActions } from '@react-navigation/native'
-import { Buffer } from 'buffer'
 
 type InformationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.InformationRequired>
@@ -32,9 +32,6 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       flex: 1,
       justifyContent: 'space-between',
     },
-    // no properties needed, just a helpful label for the View
-    mediaContainer: {},
-
     controlsContainer: {
       padding: Spacing.md,
     },
@@ -133,7 +130,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={styles.mediaContainer}>
+      <View>
         <TakeMediaButton
           onPress={() => {
             navigation.navigate(BCSCScreens.PhotoInstructions)

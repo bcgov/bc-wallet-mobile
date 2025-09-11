@@ -94,8 +94,8 @@ const MaskedCamera = ({
     checkPermissions()
   }, [hasPermission, requestPermission, navigation])
 
-  const toggleTorch = () => setTorchOn((prev) => !prev)
-  MaskType.ID_CARD
+  const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
+
   if (!hasPermission) {
     return (
       <SafeAreaView style={styles.container}>
