@@ -141,6 +141,7 @@ class BcscCore: NSObject {
     for itemClass in secItemClasses {
       let query: [String: Any] = [
         kSecClass as String: itemClass,
+        kSecAttrSynchronizable as String: kSecAttrSynchronizableAny,  // Important for iCloud Keychain items
       ]
       SecItemDelete(query as CFDictionary)
     }
