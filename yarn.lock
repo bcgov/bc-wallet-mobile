@@ -3068,9 +3068,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@bifold/core@npm:2.7.2":
-  version: 2.7.2
-  resolution: "@bifold/core@npm:2.7.2"
+"@bifold/core@npm:2.7.3":
+  version: 2.7.3
+  resolution: "@bifold/core@npm:2.7.3"
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.13
     "@credo-ts/askar": 0.5.13
@@ -3097,7 +3097,6 @@ __metadata:
     "@react-native-async-storage/async-storage": ~1.22.3
     "@react-native-clipboard/clipboard": ~1.16.3
     "@react-native-community/netinfo": ~11.3.3
-    "@react-native-masked-view/masked-view": ~0.3.2
     "@react-navigation/bottom-tabs": ~6.0.9
     "@react-navigation/core": ~6.1.0
     "@react-navigation/devtools": ~6.0.27
@@ -3145,38 +3144,38 @@ __metadata:
     uuid: ~9.0.1
   bin:
     bifold: bin/bifold
-  checksum: 10c0/45e23404be1bd6d7cf32c19c7aee41ee3e046e05e8596be2597b5fa91f14f8da3af5b8e9b811f00a5a0e3245c0d4776cb1428d5f9187291c4cada78f8a316829
+  checksum: 10c0/b58b40870343c51a3008723c197f04ba48c8823938dd8a724f4ca1808a2256c93bc63097798926c2ad4794f1970f9760ebf18eacfa662d2e170bd92847e994dd
   languageName: node
   linkType: hard
 
-"@bifold/oca@npm:2.7.2":
-  version: 2.7.2
-  resolution: "@bifold/oca@npm:2.7.2"
+"@bifold/oca@npm:2.7.3":
+  version: 2.7.3
+  resolution: "@bifold/oca@npm:2.7.3"
   dependencies:
     "@credo-ts/anoncreds": "npm:0.5.13"
     "@credo-ts/core": "npm:0.5.13"
     axios: "npm:~1.4.0"
     lodash.startcase: "npm:~4.4.0"
     react-native-fs: "npm:~2.20.0"
-  checksum: 10c0/3eff931db3f316de5a2b09a0ea37d6ddc782ec652428fa54ab0c68d55e4125a524f8bae9b589164553d5993b4e33c8cdaf33d3d4b28782698a7e8dbe530587fa
+  checksum: 10c0/a28500a52412e82666149140d917338341ae958351c7e205037a0ea0dfba27b9d25ebce12150a58bc28fab094dd9583bdce49289102a7c1385646c4e5f2c73b5
   languageName: node
   linkType: hard
 
-"@bifold/react-native-attestation@npm:2.7.2":
-  version: 2.7.2
-  resolution: "@bifold/react-native-attestation@npm:2.7.2"
+"@bifold/react-native-attestation@npm:2.7.3":
+  version: 2.7.3
+  resolution: "@bifold/react-native-attestation@npm:2.7.3"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/50a6d1884ae389f36ed6cd439a9c71402419af468845438d6b168ca1a6f31bae1af521809a384fb5c36b42e5b087871018d036d388e6971305fd0e66f63ba76a
+  checksum: 10c0/3e0a78aa2b299edfa22b71a3dbec8e9b63e49b463b34c087031a1fdfc4494878c620767fc809fe92340ea3b344d538b907ebb75c38da6f9863c95f1839077737
   languageName: node
   linkType: hard
 
-"@bifold/remote-logs@npm:2.7.2":
-  version: 2.7.2
-  resolution: "@bifold/remote-logs@npm:2.7.2"
+"@bifold/remote-logs@npm:2.7.3":
+  version: 2.7.3
+  resolution: "@bifold/remote-logs@npm:2.7.3"
   dependencies:
-    "@bifold/core": "npm:2.7.2"
+    "@bifold/core": "npm:2.7.3"
     "@credo-ts/core": "npm:0.5.13"
     axios: "npm:~1.4.0"
     buffer: "npm:~6.0.3"
@@ -3190,20 +3189,20 @@ __metadata:
     react: ~18.3.1
     react-native: 0.73.11
     react-native-logs: ~5.1.0
-  checksum: 10c0/6eae28b199bf4c1e249b5c627eae9a0326786e4fddc5dd3898ace935ed0a060662114cd2852b347c254abfcc6e168511645ba707dec709ce6ea78fa560dce282
+  checksum: 10c0/aba45c0ae3d6f3fd12c757d74476472967153a8d2009125d0370a17021f22bc5f0e091ca63a51d70cbe9c665fd33689e5e25ec027626649d6f4784df53ad1158
   languageName: node
   linkType: hard
 
-"@bifold/verifier@npm:2.7.2":
-  version: 2.7.2
-  resolution: "@bifold/verifier@npm:2.7.2"
+"@bifold/verifier@npm:2.7.3":
+  version: 2.7.3
+  resolution: "@bifold/verifier@npm:2.7.3"
   peerDependencies:
     "@credo-ts/anoncreds": 0.5.13
     "@credo-ts/core": 0.5.13
     "@credo-ts/react-hooks": 0.6.0
     "@hyperledger/anoncreds-shared": 0.2.4
     react: ~18.3.1
-  checksum: 10c0/5919119de7dcadf48bd12c310738f8e645955f15236555e8872634156a21d7d02c7ecc86458431417d2ce1c54cf39359f7ced056888febd88d0608c82be8bd79
+  checksum: 10c0/92215c06ccb3edcf567eb1af88d3de233e12f9eff7ca672475801254ca05673d82c049ac278018b292e8a23400489f970b176182c70468af22a29cf3c0b5e9a6
   languageName: node
   linkType: hard
 
@@ -6497,16 +6496,6 @@ __metadata:
   peerDependencies:
     "@react-native-firebase/app": 14.12.0
   checksum: 10c0/1aa0ab2644ebd1beb39c8b481474daaad00315bbea04b9b240eba6bb7ee819ab353b832f1975132eda8a594e918b9e9841c039caa2bd87c09458fa2ae2a5b856
-  languageName: node
-  linkType: hard
-
-"@react-native-masked-view/masked-view@npm:~0.3.2":
-  version: 0.3.2
-  resolution: "@react-native-masked-view/masked-view@npm:0.3.2"
-  peerDependencies:
-    react: ">=16"
-    react-native: ">=0.57"
-  checksum: 10c0/4ec84b7af2ded49dc21f17cc723a0ef341076cbe40cf758dd2daff8734bea63ba83e2fee7e63958984385314b8915b6804135997e07697abdd4141217c847fe9
   languageName: node
   linkType: hard
 
@@ -11162,11 +11151,11 @@ __metadata:
     "@babel/core": "npm:~7.22.20"
     "@babel/preset-env": "npm:~7.22.20"
     "@babel/runtime": "npm:~7.23.9"
-    "@bifold/core": "npm:2.7.2"
-    "@bifold/oca": "npm:2.7.2"
-    "@bifold/react-native-attestation": "npm:2.7.2"
-    "@bifold/remote-logs": "npm:2.7.2"
-    "@bifold/verifier": "npm:2.7.2"
+    "@bifold/core": "npm:2.7.3"
+    "@bifold/oca": "npm:2.7.3"
+    "@bifold/react-native-attestation": "npm:2.7.3"
+    "@bifold/remote-logs": "npm:2.7.3"
+    "@bifold/verifier": "npm:2.7.3"
     "@commitlint/cli": "npm:~11.0.0"
     "@credo-ts/anoncreds": "npm:0.5.13"
     "@credo-ts/askar": "npm:0.5.13"
@@ -11197,7 +11186,6 @@ __metadata:
     "@react-native-community/netinfo": "npm:~11.3.3"
     "@react-native-firebase/app": "npm:~14.12.0"
     "@react-native-firebase/messaging": "npm:~14.12.0"
-    "@react-native-masked-view/masked-view": "npm:~0.3.2"
     "@react-native/babel-preset": "npm:~0.73.21"
     "@react-native/eslint-config": "npm:~0.73.2"
     "@react-native/eslint-plugin": "npm:~0.73.1"
@@ -11295,7 +11283,7 @@ __metadata:
     react-native-uuid: "npm:~2.0.3"
     react-native-vector-icons: "npm:~10.0.3"
     react-native-video: "npm:~6.16.1"
-    react-native-vision-camera: "npm:~4.3.2"
+    react-native-vision-camera: "npm:4.7.2"
     react-native-webview: "npm:~13.10.7"
     react-test-renderer: "npm:~18.2.0"
     reflect-metadata: "npm:~0.1.14"
@@ -25739,9 +25727,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-vision-camera@npm:~4.3.2":
-  version: 4.3.2
-  resolution: "react-native-vision-camera@npm:4.3.2"
+"react-native-vision-camera@npm:4.7.2":
+  version: 4.7.2
+  resolution: "react-native-vision-camera@npm:4.7.2"
   peerDependencies:
     "@shopify/react-native-skia": "*"
     react: "*"
@@ -25755,7 +25743,7 @@ __metadata:
       optional: true
     react-native-worklets-core:
       optional: true
-  checksum: 10c0/a388fa15586cb11425b76cbdaf3f49dff4d8d8a45d4c9a1c5504b89d792b6afbc5a01d9f680b4554b965d2d7cbd217b69f5a32a8f81956e27dd30536be27f341
+  checksum: 10c0/1d6dd49991f5b9481c0724bd8353a38af7eb05e5277b4a27bbeb0885c1cd01c86f92a0126ec7e0a2d19b50c7f583c12f0a301de831de328dc5a0b33bc88bd0b7
   languageName: node
   linkType: hard
 
