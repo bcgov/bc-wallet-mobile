@@ -483,8 +483,8 @@ class BcscCore: NSObject {
   /// Remove the current account and all related files.
   ///
   /// - Parameters:
-  /// - Resolves: The hashed string in hexadecimal format.
-  /// - Rejects: An error if the input is not valid base64 or if hashing fails.
+  ///   - resolve: Called when the account is successfully removed (returns nil).
+  ///   - reject: Called with an error if the account ID is missing/invalid or if account file removal fails.
   @objc
   func removeAccount(
       _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock

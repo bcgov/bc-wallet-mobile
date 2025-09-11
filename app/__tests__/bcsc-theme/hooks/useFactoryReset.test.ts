@@ -21,7 +21,7 @@ describe('useFactoryReset', () => {
     jest.resetAllMocks()
   })
 
-  it('should factory reset the device when successfull', async () => {
+  it('should factory reset the device when successful', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)
     const useApiMock = jest.mocked(useApi)
     const bifoldMock = jest.mocked(Bifold)
