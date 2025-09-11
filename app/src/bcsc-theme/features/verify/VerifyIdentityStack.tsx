@@ -1,39 +1,44 @@
+import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
+import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
-import SetupStepsScreen from './SetupStepsScreen'
-import IdentitySelectionScreen from './IdentitySelectionScreen'
-import SerialInstructionsScreen from './SerialInstructionsScreen'
-import ManualSerialScreen from './ManualSerialScreen'
-import ScanSerialScreen from './ScanSerialScreen'
+import WebViewScreen from '../webview/WebViewScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
-import VerificationMethodSelectionScreen from './VerificationMethodSelectionScreen'
-import VerifyInPersonScreen from './in-person/VerifyInPersonScreen'
+import IdentitySelectionScreen from './IdentitySelectionScreen'
+import ManualSerialScreen from './ManualSerialScreen'
 import MismatchedSerialScreen from './MismatchedSerialScreen'
+import PhotoInstructionsScreen from './PhotoInstructionsScreen'
+import PhotoReviewScreen from './PhotoReviewScreen'
+import { ResidentialAddressScreen } from './ResidentialAddressScreen'
+import ScanSerialScreen from './ScanSerialScreen'
+import SerialInstructionsScreen from './SerialInstructionsScreen'
+import SetupStepsScreen from './SetupStepsScreen'
+import TakePhotoScreen from './TakePhotoScreen'
+import VerificationMethodSelectionScreen from './VerificationMethodSelectionScreen'
 import VerificationSuccessScreen from './VerificationSuccessScreen'
+import EmailConfirmationScreen from './email/EmailConfirmationScreen'
+import EnterEmailScreen from './email/EnterEmailScreen'
+import VerifyInPersonScreen from './in-person/VerifyInPersonScreen'
+import BeforeYouCallScreen from './live-call/BeforeYouCallScreen'
+import CallBusyOrClosedScreen from './live-call/CallBusyOrClosedScreen'
+import LiveCallScreen from './live-call/LiveCallScreen'
+import StartCallScreen from './live-call/StartCallScreen'
+import VerifyNotCompleteScreen from './live-call/VerifyNotComplete'
+import AdditionalIdentificationRequiredScreen from './non-photo/AdditionalIdentificationRequiredScreen'
+import DualIdentificationRequiredScreen from './non-photo/DualIdentificationRequiredScreen'
+import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
+import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
+import EvidenceTypeListScreen from './non-photo/EvidenceTypeListScreen'
+import IDPhotoInformationScreen from './non-photo/IDPhotoInformationScreen'
 import InformationRequiredScreen from './send-video/InformationRequiredScreen'
-import PhotoInstructionsScreen from './send-video/PhotoInstructionsScreen'
-import TakePhotoScreen from './send-video/TakePhotoScreen'
-import PhotoReviewScreen from './send-video/PhotoReviewScreen'
+import PendingReviewScreen from './send-video/PendingReviewScreen'
+import SuccessfullySentScreen from './send-video/SuccessfullySentScreen'
 import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
-import PendingReviewScreen from './send-video/PendingReviewScreen'
-import SuccessfullySentScreen from './send-video/SuccessfullySentScreen'
-import AdditionalIdentificationRequiredScreen from './non-photo/AdditionalIdentificationRequiredScreen'
-import IDPhotoInformationScreen from './non-photo/IDPhotoInformationScreen'
-import EvidenceTypeListScreen from './non-photo/EvidenceTypeListScreen'
-import EvidenceCaptureScreen from './non-photo/EvidenceCaptureScreen'
-import EvidenceIDCollectionScreen from './non-photo/EvidenceIDCollectionScreen'
-import EnterEmailScreen from './email/EnterEmailScreen'
-import EmailConfirmationScreen from './email/EmailConfirmationScreen'
-import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
-import { ResidentialAddressScreen } from './ResidentialAddressScreen'
-import { HelpCentreUrl } from '@/constants'
-import WebViewScreen from '../webview/WebViewScreen'
-import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
-import DualIdentificationRequiredScreen from './non-photo/DualIdentificationRequiredScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -157,7 +162,6 @@ const VerifyIdentityStack = () => {
           headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
-
       <Stack.Screen
         name={BCSCScreens.WebView}
         component={WebViewScreen}
@@ -168,7 +172,27 @@ const VerifyIdentityStack = () => {
           headerLeft: createWebviewHeaderBackButton(navigation),
         })}
       />
-
+      <Stack.Screen
+        name={BCSCScreens.BeforeYouCall}
+        component={BeforeYouCallScreen}
+        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.StartCall}
+        component={StartCallScreen}
+        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+      />
+      <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name={BCSCScreens.VerifyNotComplete}
+        component={VerifyNotCompleteScreen}
+        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.CallBusyOrClosed}
+        component={CallBusyOrClosedScreen}
+        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+      />
       <Stack.Screen name={BCSCScreens.ResidentialAddressScreen} component={ResidentialAddressScreen} />
     </Stack.Navigator>
   )
