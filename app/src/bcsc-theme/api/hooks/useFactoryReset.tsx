@@ -79,7 +79,7 @@ export const useFactoryReset = () => {
 
       return { success: false, error: factoryResetError }
     }
-  }, [registration, dispatch])
+  }, [registration, dispatch, logger])
 
   return factoryReset
 }
