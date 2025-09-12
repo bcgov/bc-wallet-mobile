@@ -1,4 +1,4 @@
-import { useClientQuickLoginUrl } from '@/bcsc-theme/hooks/useClientQuickLoginUrl'
+import { useServiceClientQuickLoginUrl } from '@/bcsc-theme/hooks/useServiceClientQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, Link, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -11,14 +11,14 @@ type ServiceLoginScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens
 /**
  * Renders the service details screen component, which displays information about a specific serviceClient.
  *
- * @returns {*} {JSX.Element} The serviceClient screen component or null if not implemented.
+ * @returns {*} {JSX.Element} The service screen component or null if not implemented.
  */
 export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props) => {
   const { serviceClient } = props.route.params
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const quickLoginUrl = useClientQuickLoginUrl(serviceClient)
+  const quickLoginUrl = useServiceClientQuickLoginUrl(serviceClient)
 
   const styles = StyleSheet.create({
     screenContainer: {

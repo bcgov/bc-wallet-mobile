@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { Alert, Keyboard, ScrollView, StyleSheet, TextInput, TouchableWithoutFeedback, View } from 'react-native'
+import { Alert, Keyboard, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import ServiceButton from './components/ServiceButton'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
@@ -130,33 +130,30 @@ const Services: React.FC = () => {
         <ThemedText variant={'headingTwo'} style={styles.headerText}>
           {t('Services.CatalogueTitle')}
         </ThemedText>
-        <View style={styles.searchInputContainer}>
-          <View style={styles.searchInput}>
-            <Icon name="search" size={30} color={ColorPalette.brand.tertiary} />
-            <TextInput
-              placeholder={t('Services.CatalogueSearch')}
-              placeholderTextColor={ColorPalette.brand.tertiary}
-              value={search}
-              onChange={(event) => {
-                setSearch(event.nativeEvent.text)
-              }}
-              accessibilityLabel={t('Services.CatalogueSearch')}
-              testID={testIdWithKey('search')}
-              style={styles.searchText}
-            />
-            {debouncedSearch.length ? (
-              <Icon
-                name="clear"
-                size={30}
-                color={ColorPalette.brand.tertiary}
-                onPress={() => {
-                  Keyboard.dismiss()
-                  setSearch('')
+        <TouchableOpacity>
+          <View style={styles.searchInputContainer}>
+            <View style={styles.searchInput}>
+              <Icon name="search" size={30} color={ColorPalette.brand.tertiary} />
+              <TextInput
+                placeholder={t('Services.CatalogueSearch')}
+                placeholderTextColor={ColorPalette.brand.tertiary}
+                value={search}
+                clearButtonMode="while-editing"
+                onChangeText={(newText) => {
+                  // Dismiss keyboard when clearing search text
+                  if (search.length > 0 && newText === '') {
+                    Keyboard.dismiss()
+                  }
+
+                  setSearch(newText)
                 }}
+                accessibilityLabel={t('Services.CatalogueSearch')}
+                testID={testIdWithKey('search')}
+                style={styles.searchText}
               />
-            ) : null}
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
         {filteredServiceClients.map((service) => (
           <ServiceButton
             key={service.client_ref_id}
