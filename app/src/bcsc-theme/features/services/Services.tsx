@@ -111,6 +111,7 @@ const Services: React.FC = () => {
       </ThemedText>
       <TextInput
         placeholder={t('Services.CatalogueSearch')}
+        placeholderTextColor={ColorPalette.brand.tertiary}
         value={search}
         onChange={(event) => {
           setSearch(event.nativeEvent.text)

@@ -1,6 +1,5 @@
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Link, ThemedText, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
