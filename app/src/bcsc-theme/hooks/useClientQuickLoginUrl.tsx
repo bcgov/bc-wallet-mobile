@@ -4,9 +4,17 @@ import useApi from '../api/hooks/useApi'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { createQuickLoginHint } from '../utils/quick-login'
 
+// Only a subset of the ClientMetadata is needed for this hook
 type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login_uri'>
 
-export const useClientQuickLoginUrl = (client: ClientMetadataStub) => {
+/**
+ * A custom hook to generate a quick login URL for a specific client
+ *
+ * @param {ClientMetadataStub} client The client metadata object for which to generate the quick login URL
+ * @returns {*} {string | null}The generated quick login URL or null if not available
+ *
+ */
+export const useClientQuickLoginUrl = (client: ClientMetadataStub): string | null => {
   const { jwks, metadata } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -30,6 +38,7 @@ export const useClientQuickLoginUrl = (client: ClientMetadataStub) => {
         setQuickLoginUrl(`${client.initiate_login_uri}?login_hint=${quickLoginHint}`)
       } catch (error) {
         logger.error(`Error attempting to create quick login URL`, error as Error)
+        setQuickLoginUrl(null)
       }
     }
 

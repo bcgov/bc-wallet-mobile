@@ -29,6 +29,10 @@ const useQuickLoginUrl = (endpoint: string) => {
         }
 
         const uri = `${client.baseURL}/${endpoint}`
+        /**
+         * QUESTION (MD): What is the purpose of filtering the clients by client_uri here?
+         * And why do we use the client_ref_id of the first valid client found?
+         */
         const validClients = clients.filter((c) => c.client_uri === uri)
         const clientRefId = validClients[0].client_ref_id
 
@@ -38,7 +42,8 @@ const useQuickLoginUrl = (endpoint: string) => {
         const fullUrl = `${client.baseURL}/login/initiate?login_hint=${encodedHint}`
         setUrl(fullUrl)
       } catch (error) {
-        logger.error(`Error attempting to create quick login URL: ${error}`)
+        logger.error('Error attempting to create quick login URL', error as Error)
+        setUrl(null)
       }
     }
 

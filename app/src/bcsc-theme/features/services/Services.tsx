@@ -55,7 +55,7 @@ const Services: React.FC = () => {
   })
 
   const {
-    data: services,
+    data: serviceClients,
     load,
     isReady,
   } = useDataLoader<ClientMetadata[]>(() => metadata.getClientMetadata(), {
@@ -69,37 +69,37 @@ const Services: React.FC = () => {
   }, [load])
 
   // Services that are compatible with the user's card type
-  const supportedServices = useMemo(() => {
-    if (!services) {
+  const supportedServiceClients = useMemo(() => {
+    if (!serviceClients) {
       return []
     }
 
     // Filter services based on the user's card type (ie: card process)
     // TODO (MD): filter services on `bc_address` boolean (check users address)
     return (
-      services
+      serviceClients
         .filter((service) =>
           service.allowed_identification_processes.includes(getCardProcessForCardType(store.bcsc.cardType))
         )
         // Sort services alphabetically by client_name
         .sort((a, b) => a.client_name.localeCompare(b.client_name))
     )
-  }, [services, store.bcsc.cardType])
+  }, [serviceClients, store.bcsc.cardType])
 
   // Filter services based on the search text
-  const filteredServices = useMemo(() => {
+  const filteredServiceClients = useMemo(() => {
     // Return all supported services when there's no search text
     if (debouncedSearch.trim() === '') {
-      return supportedServices
+      return supportedServiceClients
     }
 
     // Filter supported services based on the search text (case insensitive)
     const query = debouncedSearch.toLowerCase()
-    return supportedServices.filter((service) => service.client_name.toLowerCase().includes(query))
-  }, [supportedServices, debouncedSearch])
+    return supportedServiceClients.filter((service) => service.client_name.toLowerCase().includes(query))
+  }, [supportedServiceClients, debouncedSearch])
 
   // Alert the user if services fail to load
-  if (!services && isReady) {
+  if (!serviceClients && isReady) {
     Alert.alert('Failed to load services', 'Please try again later.', [
       {
         text: 'OK',
@@ -134,14 +134,14 @@ const Services: React.FC = () => {
             style={styles.searchInput}
           />
         </View>
-        {filteredServices.map((service) => (
+        {filteredServiceClients.map((service) => (
           <ServiceButton
             key={service.client_ref_id}
             title={service.client_name}
             description={service.client_description}
             onPress={() => {
               navigation.navigate(BCSCScreens.ServiceLoginScreen, {
-                service,
+                serviceClient: service,
               })
             }}
           />

@@ -61,7 +61,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
-  [BCSCScreens.ServiceLoginScreen]: { service: ClientMetadata }
+  [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
 }
 
 export type BCSCVerifyIdentityStackParams = {
