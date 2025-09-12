@@ -24,9 +24,9 @@ const mockHeaderText = 'Browse websites you can log in to with this app'
  * @return {*} {JSX.Element} The Services screen component.
  */
 const Services: React.FC = () => {
-  const { Spacing } = useTheme()
   const { metadata } = useApi()
   const [store] = useStore<BCState>()
+  const { ColorPalette, Spacing, TextTheme } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -37,6 +37,16 @@ const Services: React.FC = () => {
     headerText: {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.lg,
+    },
+    searchInput: {
+      height: 60,
+      borderRadius: 24,
+      color: TextTheme.normal.color,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
+      marginHorizontal: Spacing.lg,
+      marginBottom: Spacing.lg,
+      fontSize: TextTheme.headerTitle.fontSize,
+      padding: Spacing.md,
     },
   })
 
@@ -100,6 +110,7 @@ const Services: React.FC = () => {
         onChange={(event) => {
           setSearchText(event.nativeEvent.text)
         }}
+        style={styles.searchInput}
       />
       {filteredServices.map((service) => (
         <ServiceButton
