@@ -11,8 +11,6 @@ type StartCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.StartCall>
 }
 
-const thumbnailHeight = 120
-
 const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
@@ -29,9 +27,14 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       flex: 1,
     },
     image: {
-      height: thumbnailHeight,
-      aspectRatio: 1,
+      // At smaller sizes the Image tag will ignore exif tags, which provide orientation (along with other metadata)
+      // Image is rendered at a larger size to pick up the exif data, then scaled down to fit in the button
+      height: 240,
       alignSelf: 'center',
+      aspectRatio: 1 / 1.3,
+      overflow: 'hidden',
+      transform: [{ scale: 0.5 }],
+      margin: -60,
     },
     controlsContainer: {
       marginTop: 'auto',
