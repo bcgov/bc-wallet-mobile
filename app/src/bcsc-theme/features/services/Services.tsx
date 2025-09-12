@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { Alert, StyleSheet, TextInput } from 'react-native'
 import ServiceButton from './components/ServiceButton'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
@@ -12,6 +12,7 @@ import { useDebounce } from '@/hooks/useDebounce'
 import { useNavigation } from '@react-navigation/native'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useTranslation } from 'react-i18next'
 
 type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceDetailsScreen>
 
@@ -25,13 +26,14 @@ const mockHeaderText = 'Browse websites you can log in to with this app'
  */
 const Services: React.FC = () => {
   const { metadata } = useApi()
+  const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const [searchText, setSearchText] = useState('')
-  const debouncedSearchText = useDebounce(searchText, 300)
+  const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300) // delayed by 300ms
 
   const styles = StyleSheet.create({
     headerText: {
@@ -71,19 +73,22 @@ const Services: React.FC = () => {
     }
 
     // Filter services based on the user's card type (ie: card process)
-    const supportedServices = services.filter((service) =>
-      service.allowed_identification_processes.includes(getCardProcessForCardType(store.bcsc.cardType))
-    )
+    const supportedServices = services
+      .filter((service) =>
+        service.allowed_identification_processes.includes(getCardProcessForCardType(store.bcsc.cardType))
+      )
+      // Sort services alphabetically by client_name
+      .sort((a, b) => a.client_name.localeCompare(b.client_name))
 
     // Return all supported services when there's no search text
-    if (debouncedSearchText.trim() === '') {
+    if (debouncedSearch.trim() === '') {
       return supportedServices
     }
 
     // Filter supported services based on the search text (case insensitive)
-    const query = debouncedSearchText.toLowerCase()
+    const query = debouncedSearch.toLowerCase()
     return supportedServices.filter((service) => service.client_name.toLowerCase().includes(query))
-  }, [services, debouncedSearchText, store.bcsc.cardType])
+  }, [services, debouncedSearch, store.bcsc.cardType])
 
   // Alert the user if services fail to load
   if (!services && isReady) {
@@ -105,11 +110,13 @@ const Services: React.FC = () => {
         {mockHeaderText}
       </ThemedText>
       <TextInput
-        placeholder={'search'}
-        value={searchText}
+        placeholder={t('Services.CatalogueSearch')}
+        value={search}
         onChange={(event) => {
-          setSearchText(event.nativeEvent.text)
+          setSearch(event.nativeEvent.text)
         }}
+        accessibilityLabel={t('Services.CatalogueSearch')}
+        testID={testIdWithKey('search')}
         style={styles.searchInput}
       />
       {filteredServices.map((service) => (
