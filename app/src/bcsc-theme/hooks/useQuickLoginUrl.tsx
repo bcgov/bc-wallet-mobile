@@ -1,9 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { TOKENS, useServices } from '@bifold/core'
 import { useEffect, useState } from 'react'
-import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
 import client from '../api/client'
+import { createQuickLoginHint } from '../utils/quick-login'
 
 /**
  * A custom hook to generate a quick login URL for a specific endpoint
@@ -29,32 +28,13 @@ const useQuickLoginUrl = (endpoint: string) => {
           throw new Error('No client metadata received from server')
         }
 
-        const { apnsToken, fcmDeviceToken } = await getNotificationTokens()
-        const account = await getAccount()
-
-        if (!account?.clientID || !account?.issuer) {
-          throw new Error('Account information is missing or incomplete')
-        }
-
-        if (!client.tokens?.access_token) {
-          throw new Error('Access token is missing')
-        }
-
         const uri = `${client.baseURL}/${endpoint}`
         const validClients = clients.filter((c) => c.client_uri === uri)
         const clientRefId = validClients[0].client_ref_id
 
-        const hint = await createQuickLoginJWT(
-          client.tokens.access_token,
-          account.clientID,
-          account.issuer,
-          clientRefId,
-          key,
-          fcmDeviceToken,
-          apnsToken
-        )
+        const quickLoginHint = await createQuickLoginHint({ clientRefId: clientRefId, jwk: key })
 
-        const encodedHint = encodeURIComponent(hint)
+        const encodedHint = encodeURIComponent(quickLoginHint)
         const fullUrl = `${client.baseURL}/login/initiate?login_hint=${encodedHint}`
         setUrl(fullUrl)
       } catch (error) {
