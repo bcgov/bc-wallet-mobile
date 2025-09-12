@@ -20,6 +20,9 @@ RCT_EXTERN_METHOD(setAccount:(NSDictionary *)account
 RCT_EXTERN_METHOD(getAccount:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(removeAccount:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(getRefreshTokenRequestBody:(NSString *)issuer
                   clientID:(NSString *)clientID
                   refreshToken:(NSString *)refreshToken
