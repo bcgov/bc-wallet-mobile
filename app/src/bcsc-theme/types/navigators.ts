@@ -45,7 +45,7 @@ export enum BCSCScreens {
   EvidenceIDCollection = 'BCSCEvidenceIDCollection',
   ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
-  ServiceDetailsScreen = 'ServiceDetailsScreen',
+  ServiceLoginScreen = 'ServiceLoginScreen',
 }
 
 export type BCSCTabStackParams = {
@@ -61,7 +61,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
-  [BCSCScreens.ServiceDetailsScreen]: { service: ClientMetadata }
+  [BCSCScreens.ServiceLoginScreen]: { service: ClientMetadata }
 }
 
 export type BCSCVerifyIdentityStackParams = {

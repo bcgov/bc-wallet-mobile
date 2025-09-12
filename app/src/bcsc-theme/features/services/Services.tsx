@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next'
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300
 
-type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceDetailsScreen>
+type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
 
 /**
  * Services screen component that displays a list of services accessible with the user's BCSC card.
@@ -139,7 +139,7 @@ const Services: React.FC = () => {
             title={service.client_name}
             description={service.client_description}
             onPress={() => {
-              navigation.navigate(BCSCScreens.ServiceDetailsScreen, {
+              navigation.navigate(BCSCScreens.ServiceLoginScreen, {
                 service,
               })
             }}

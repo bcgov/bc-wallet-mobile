@@ -4,14 +4,14 @@ import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
 
-type ServiceDetailsScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ServiceDetailsScreen>
+type ServiceLoginScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
 
 /**
  * Renders the service details screen component, which displays information about a specific service.
  *
  * @returns {*} {JSX.Element} The service screen component or null if not implemented.
  */
-export const ServiceDetailsScreen: React.FC<ServiceDetailsScreenProps> = (props: ServiceDetailsScreenProps) => {
+export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props) => {
   const { service } = props.route.params
   const { t } = useTranslation()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
@@ -41,16 +41,16 @@ export const ServiceDetailsScreen: React.FC<ServiceDetailsScreenProps> = (props:
         onPress={() => Linking.openURL(service.client_uri)}
         style={styles.link}
       ></Link>
-      <View style={styles.divider} />
-      <View>
-        <ThemedText variant={'bold'}>{t('Services.ServicePreferComputer')}</ThemedText>
-        <ThemedText>{t('Services.ServicePreferComputerHelp')}</ThemedText>
-        <Link
-          linkText={service.client_uri}
-          onPress={() => Linking.openURL(service.client_uri)}
-          style={styles.link}
-        ></Link>
-      </View>
+      {/* <View style={styles.divider} /> */}
+      {/* <View> */}
+      {/*   <ThemedText variant={'bold'}>{t('Services.ServicePreferComputer')}</ThemedText> */}
+      {/*   <ThemedText>{t('Services.ServicePreferComputerHelp')}</ThemedText> */}
+      {/*   <Link */}
+      {/*     linkText={service.client_uri} */}
+      {/*     onPress={() => Linking.openURL(service.client_uri)} */}
+      {/*     style={styles.link} */}
+      {/*   ></Link> */}
+      {/* </View> */}
     </View>
   )
 }
