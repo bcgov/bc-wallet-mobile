@@ -2,7 +2,7 @@ import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Link, ThemedText, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Linking, StyleSheet, View } from 'react-native'
 
 type ServiceDetailsScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ServiceDetailsScreen>
 
@@ -14,13 +14,20 @@ type ServiceDetailsScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScree
 export const ServiceDetailsScreen: React.FC<ServiceDetailsScreenProps> = (props: ServiceDetailsScreenProps) => {
   const { service } = props.route.params
   const { t } = useTranslation()
-  const { Spacing } = useTheme()
+  const { Spacing, ColorPalette, TextTheme } = useTheme()
 
   const styles = StyleSheet.create({
     screenContainer: {
       flex: 1,
       padding: Spacing.lg,
-      gap: Spacing.lg,
+      gap: Spacing.md * 2,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: ColorPalette.grayscale.mediumGrey,
+    },
+    link: {
+      color: ColorPalette.brand.primary,
     },
   })
 
@@ -31,16 +38,19 @@ export const ServiceDetailsScreen: React.FC<ServiceDetailsScreenProps> = (props:
       <ThemedText>{t('Services.ServiceLoginProof')}</ThemedText>
       <Link
         linkText={`${t('Services.ServiceGoto')} ${service.client_name}`}
-        onPress={() => {
-          props.navigation.navigate(BCSCScreens.WebView, {
-            url: service.client_uri,
-            title: service.client_name,
-          })
-        }}
+        onPress={() => Linking.openURL(service.client_uri)}
+        style={styles.link}
       ></Link>
-      <ThemedText variant={'bold'}>{t('Services.ServicePreferComputer')}</ThemedText>
-      <ThemedText>{t('Services.ServicePreferComputerHelp')}</ThemedText>
-      <Link linkText={service.client_uri} onPress={() => {}}></Link>
+      <View style={styles.divider} />
+      <View>
+        <ThemedText variant={'bold'}>{t('Services.ServicePreferComputer')}</ThemedText>
+        <ThemedText>{t('Services.ServicePreferComputerHelp')}</ThemedText>
+        <Link
+          linkText={service.client_uri}
+          onPress={() => Linking.openURL(service.client_uri)}
+          style={styles.link}
+        ></Link>
+      </View>
     </View>
   )
 }
