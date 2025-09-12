@@ -4054,6 +4054,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@credo-ts/webvh@npm:0.5.17-alpha-20250818210456":
+  version: 0.5.17-alpha-20250818210456
+  resolution: "@credo-ts/webvh@npm:0.5.17-alpha-20250818210456"
+  dependencies:
+    "@credo-ts/anoncreds": "npm:0.5.17-alpha-20250818210456"
+    "@credo-ts/core": "npm:0.5.17-alpha-20250818210456"
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:0.14.1"
+    didwebvh-ts: "npm:^2.5.3"
+    json-canonicalize: "npm:^1.2.0"
+    tsyringe: "npm:^4.8.0"
+  checksum: 10c0/2a4bb1c06f85cc2bb06c60f4c36dcbceb11b869c61cebf29f67a4a92cb47cb52f47ba4496ff251389de4b01e1b5c2e1f7b4584f681e951a0f482a17ab7bfc762
+  languageName: node
+  linkType: hard
+
+"@credo-ts/webvh@patch:@credo-ts/webvh@npm%3A0.5.17-alpha-20250818210456#~/.yarn/patches/@credo-ts-webvh-npm-0.5.17-alpha-20250818210456-132526c9e9.patch":
+  version: 0.5.17-alpha-20250818210456
+  resolution: "@credo-ts/webvh@patch:@credo-ts/webvh@npm%3A0.5.17-alpha-20250818210456#~/.yarn/patches/@credo-ts-webvh-npm-0.5.17-alpha-20250818210456-132526c9e9.patch::version=0.5.17-alpha-20250818210456&hash=55d7ec"
+  dependencies:
+    "@credo-ts/anoncreds": "npm:0.5.17-alpha-20250818210456"
+    "@credo-ts/core": "npm:0.5.17-alpha-20250818210456"
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:0.14.1"
+    didwebvh-ts: "npm:^2.5.3"
+    json-canonicalize: "npm:^1.2.0"
+    tsyringe: "npm:^4.8.0"
+  checksum: 10c0/de2d31369cda09adafec5c162e07402fb0178557a8019e99b7feac2acb44e65f0ee94643d82d1b487b9a3cfc9726e723f206b32bf715dd5cc2ab82f017e93237
+  languageName: node
+  linkType: hard
+
 "@cspotcode/source-map-support@npm:^0.8.0":
   version: 0.8.1
   resolution: "@cspotcode/source-map-support@npm:0.8.1"
@@ -5663,6 +5693,13 @@ __metadata:
   version: 1.4.0
   resolution: "@noble/hashes@npm:1.4.0"
   checksum: 10c0/8c3f005ee72e7b8f9cff756dfae1241485187254e3f743873e22073d63906863df5d4f13d441b7530ea614b7a093f0d889309f28b59850f33b66cb26a779a4a5
+  languageName: node
+  linkType: hard
+
+"@noble/hashes@npm:^1.8.0":
+  version: 1.8.0
+  resolution: "@noble/hashes@npm:1.8.0"
+  checksum: 10c0/06a0b52c81a6fa7f04d67762e08b2c476a00285858150caeaaff4037356dd5e119f45b2a530f638b77a5eeca013168ec1b655db41bae3236cb2e9d511484fc77
   languageName: node
   linkType: hard
 
@@ -11175,6 +11212,7 @@ __metadata:
     "@credo-ts/question-answer": "npm:0.5.13"
     "@credo-ts/react-hooks": "npm:0.6.0"
     "@credo-ts/react-native": "npm:0.5.13"
+    "@credo-ts/webvh": "npm:0.5.17-alpha-20250818210456"
     "@eslint/js": "npm:~8.57.1"
     "@formatjs/intl-datetimeformat": "npm:~4.2.6"
     "@formatjs/intl-displaynames": "npm:~5.2.6"
@@ -14358,6 +14396,18 @@ __metadata:
   version: 4.1.0
   resolution: "did-resolver@npm:4.1.0"
   checksum: 10c0/3ccb21c85958a2e47122e90b7c3bfdf738360a85745eb5dbe556b6bd33d2d7c2bc080d9b12da1a5de3491934a17329dd1cdc99854afb850699d6af3765102dbc
+  languageName: node
+  linkType: hard
+
+"didwebvh-ts@npm:^2.5.3":
+  version: 2.5.3
+  resolution: "didwebvh-ts@npm:2.5.3"
+  dependencies:
+    "@noble/hashes": "npm:^1.8.0"
+    json-canonicalize: "npm:^1.0.6"
+  bin:
+    didwebvh: dist/cli/didwebvh.js
+  checksum: 10c0/9e45f8d201d567625786a34183e6d12fcbfc0b04a3ea42b64a4eee9d3ecc6fe769acf612fcf789572575e176d99ddb0115548fe2c2e7d89d14b9fc18ef62fec6
   languageName: node
   linkType: hard
 
@@ -20823,6 +20873,13 @@ __metadata:
   version: 3.0.1
   resolution: "json-buffer@npm:3.0.1"
   checksum: 10c0/0d1c91569d9588e7eef2b49b59851f297f3ab93c7b35c7c221e288099322be6b562767d11e4821da500f3219542b9afd2e54c5dc573107c1126ed1080f8e96d7
+  languageName: node
+  linkType: hard
+
+"json-canonicalize@npm:^1.0.6, json-canonicalize@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "json-canonicalize@npm:1.2.0"
+  checksum: 10c0/98b031dbd8d8d5d2cfb826d226e23ea126e6caf8c80edc95814c547343d82bae4657fc2816915022ba2a7cffca64f3b9353096d90d3dbd1279a7767060124690
   languageName: node
   linkType: hard
 
