@@ -213,8 +213,8 @@ const translation = {
     "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones. (PT-BR)"
   },
   "Services": {
-    "CatalogueTitle": "Browse websites you can log in to with this app (PT-BR)",
-    "CatalogueSearch": "search (PT-BR)",
+    "CatalogueTitle": "Services (PT-BR)",
+    "CatalogueSearch": "Search services (PT-BR)",
     "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
     "NoLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
     "Goto": "Go to (PT-BR)",

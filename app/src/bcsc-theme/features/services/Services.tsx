@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native'
+import { Alert, Keyboard, ScrollView, StyleSheet, TextInput, TouchableWithoutFeedback, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import ServiceButton from './components/ServiceButton'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
@@ -13,6 +13,7 @@ import { useNavigation } from '@react-navigation/native'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300
 
@@ -39,18 +40,24 @@ const Services: React.FC = () => {
       paddingHorizontal: Spacing.md,
       paddingVertical: Spacing.lg,
     },
-    searchContainer: {
+    searchInputContainer: {
+      paddingHorizontal: Spacing.md,
+      paddingBottom: Spacing.md,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
     searchInput: {
-      height: 60,
-      borderRadius: 24,
-      color: TextTheme.normal.color,
+      flexDirection: 'row',
+      alignItems: 'center',
       backgroundColor: ColorPalette.brand.secondaryBackground,
-      marginHorizontal: Spacing.md,
-      marginBottom: Spacing.lg,
+      borderRadius: 8,
+      height: Spacing.xl * 2,
+      paddingHorizontal: Spacing.md,
+    },
+    searchText: {
+      flex: 1,
       fontSize: TextTheme.headerTitle.fontSize,
-      padding: Spacing.md,
+      color: TextTheme.normal.color,
+      marginLeft: Spacing.sm,
     },
   })
 
@@ -111,28 +118,44 @@ const Services: React.FC = () => {
   }
 
   // TODO (MD): implement a loading UI
+  // TODO (MD): implement an empty state UI
 
   return (
     <SafeAreaView
       edges={['top', 'left', 'right']}
       style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}
     >
-      <ScrollView stickyHeaderIndices={[1]}>
-        <ThemedText variant={'headingThree'} style={styles.headerText}>
+      {/* Dismiss keyboard when tapping outside of TextInput */}
+      <ScrollView stickyHeaderIndices={[1]} keyboardShouldPersistTaps="handled">
+        <ThemedText variant={'headingTwo'} style={styles.headerText}>
           {t('Services.CatalogueTitle')}
         </ThemedText>
-        <View style={styles.searchContainer}>
-          <TextInput
-            placeholder={t('Services.CatalogueSearch')}
-            placeholderTextColor={ColorPalette.brand.tertiary}
-            value={search}
-            onChange={(event) => {
-              setSearch(event.nativeEvent.text)
-            }}
-            accessibilityLabel={t('Services.CatalogueSearch')}
-            testID={testIdWithKey('search')}
-            style={styles.searchInput}
-          />
+        <View style={styles.searchInputContainer}>
+          <View style={styles.searchInput}>
+            <Icon name="search" size={30} color={ColorPalette.brand.tertiary} />
+            <TextInput
+              placeholder={t('Services.CatalogueSearch')}
+              placeholderTextColor={ColorPalette.brand.tertiary}
+              value={search}
+              onChange={(event) => {
+                setSearch(event.nativeEvent.text)
+              }}
+              accessibilityLabel={t('Services.CatalogueSearch')}
+              testID={testIdWithKey('search')}
+              style={styles.searchText}
+            />
+            {debouncedSearch.length ? (
+              <Icon
+                name="clear"
+                size={30}
+                color={ColorPalette.brand.tertiary}
+                onPress={() => {
+                  Keyboard.dismiss()
+                  setSearch('')
+                }}
+              />
+            ) : null}
+          </View>
         </View>
         {filteredServiceClients.map((service) => (
           <ServiceButton
