@@ -23,8 +23,9 @@ export const useClientQuickLoginUrl = (client: ClientMetadataStub): string | nul
   useEffect(() => {
     const asyncEffect = async () => {
       try {
+        // If the client does not have an initiate_login_uri, we cannot create a quick login URL
         if (!client.initiate_login_uri) {
-          throw new Error('Client does not support OIDC login')
+          return setQuickLoginUrl(null)
         }
 
         const jwk = await jwks.getFirstJwk()

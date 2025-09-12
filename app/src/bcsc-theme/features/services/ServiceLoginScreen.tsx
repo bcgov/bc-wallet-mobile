@@ -3,7 +3,7 @@ import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, Link, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Linking, StyleSheet, View } from 'react-native'
+import { Alert, Linking, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type ServiceLoginScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
@@ -20,15 +20,15 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props) => 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const quickLoginUrl = useClientQuickLoginUrl(serviceClient)
 
-  console.log(quickLoginUrl)
-
   const styles = StyleSheet.create({
     screenContainer: {
       flex: 1,
       paddingHorizontal: Spacing.lg,
       gap: Spacing.xxl,
     },
-    buttonContainer: {},
+    continueButtonContainer: {
+      marginBottom: Spacing.lg,
+    },
     infoContainer: {
       borderRadius: Spacing.sm,
       borderColor: ColorPalette.brand.tertiary,
@@ -40,8 +40,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props) => 
       color: ColorPalette.brand.primary,
     },
   })
-
-  const handleLogin = () => {}
 
   logger.info('Service', { serviceClient })
 
@@ -84,13 +82,21 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props) => 
       </ThemedText>
 
       <View>
-        <View style={{ marginBottom: 20 }}>
+        <View style={styles.continueButtonContainer}>
           <Button
             title="Continue"
             accessibilityLabel={'Continue'}
             testID={testIdWithKey('ServiceLoginContinue')}
             buttonType={ButtonType.Primary}
-            onPress={handleLogin}
+            onPress={() => {
+              if (quickLoginUrl) {
+                Linking.openURL(quickLoginUrl)
+                return
+              }
+
+              // This should never happen, but just in case...
+              Alert.alert(t('Services.LoginErrorTitle'), t('Services.LoginErrorMessage'))
+            }}
           />
         </View>
         <Button
