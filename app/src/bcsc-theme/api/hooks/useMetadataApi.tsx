@@ -7,23 +7,33 @@ export type MetadataResponseData = {
   clients: Clients
 }
 
+/**
+ * Client metadata as returned by the IAS Client Metadata endpoint.
+ *
+ * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#IAS-Client-Metadata-endpoint
+ */
 export interface ClientMetadata {
   client_ref_id: string
   client_name: string
-  policy_uri: string
   client_uri: string
-  initiate_login_uri: string
   application_type: string
-  client_description: string
   claims_description: string
-  service_listing_sort_order: number
   suppress_confirmation_info: boolean
   suppress_bookmark_prompt: boolean
   allowed_identification_processes: string[]
+  initiate_login_uri?: string
+  client_description?: string
+  policy_uri?: string
+  service_listing_sort_order?: number
 }
 
 const useMetadataApi = () => {
-  const getClientMetadata = useCallback(async (): Promise<Clients> => {
+  /**
+   * Fetches the client metadata from the IAS Client Metadata endpoint.
+   *
+   * @return {*} {Promise<ClientMetadata[]>} A promise that resolves to an array of client metadata objects.
+   */
+  const getClientMetadata = useCallback(async (): Promise<ClientMetadata[]> => {
     const {
       data: { clients },
     } = await apiClient.get<MetadataResponseData>(apiClient.endpoints.clientMetadata)

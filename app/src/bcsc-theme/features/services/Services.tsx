@@ -47,7 +47,7 @@ const Services: React.FC = () => {
       borderRadius: 24,
       color: TextTheme.normal.color,
       backgroundColor: ColorPalette.brand.secondaryBackground,
-      marginHorizontal: Spacing.lg,
+      marginHorizontal: Spacing.md,
       marginBottom: Spacing.lg,
       fontSize: TextTheme.headerTitle.fontSize,
       padding: Spacing.md,
@@ -75,6 +75,7 @@ const Services: React.FC = () => {
     }
 
     // Filter services based on the user's card type (ie: card process)
+    // TODO (MD): filter services on `bc_address` boolean (check users address)
     return (
       services
         .filter((service) =>

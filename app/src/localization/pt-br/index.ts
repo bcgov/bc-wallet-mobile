@@ -215,11 +215,9 @@ const translation = {
   "Services": {
     "CatalogueTitle": "Browse websites you can log in to with this app (PT-BR)",
     "CatalogueSearch": "search (PT-BR)",
-    "ServiceLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
-    "ServiceLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
-    "ServiceGoto": "Go to (PT-BR)",
-    "ServicePreferComputer": "Prefer to use a computer or tablet? (PT-BR)",
-    "ServicePreferComputerHelp": "On that device go to: (PT-BR)"
+    "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
+    "NoLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
+    "Goto": "Go to (PT-BR)",
   },
   "Unified": {
     "Steps": {
