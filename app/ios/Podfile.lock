@@ -1033,7 +1033,7 @@ PODS:
   - React-Mapbuffer (0.73.11):
     - glog
     - React-debug
-  - react-native-attestation (2.7.2):
+  - react-native-attestation (2.7.3):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1258,10 +1258,6 @@ PODS:
     - React-Core
   - RNCClipboard (1.16.3):
     - React-Core
-  - RNCMaskedView (0.3.2):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
-    - React-Core
   - RNDeviceInfo (8.7.1):
     - React-Core
   - RNFBApp (14.12.0):
@@ -1300,11 +1296,11 @@ PODS:
     - SDWebImage/Core (= 5.21.1)
   - SDWebImage/Core (5.21.1)
   - SocketRocket (0.6.1)
-  - VisionCamera (4.3.2):
-    - VisionCamera/Core (= 4.3.2)
-    - VisionCamera/React (= 4.3.2)
-  - VisionCamera/Core (4.3.2)
-  - VisionCamera/React (4.3.2):
+  - VisionCamera (4.7.2):
+    - VisionCamera/Core (= 4.7.2)
+    - VisionCamera/React (= 4.7.2)
+  - VisionCamera/Core (4.7.2)
+  - VisionCamera/React (4.7.2):
     - React-Core
   - Yoga (1.14.0)
 
@@ -1386,7 +1382,6 @@ DEPENDENCIES:
   - RNArgon2 (from `../node_modules/react-native-argon2`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
-  - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
@@ -1567,8 +1562,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
     :path: "../node_modules/@react-native-clipboard/clipboard"
-  RNCMaskedView:
-    :path: "../node_modules/@react-native-masked-view/masked-view"
   RNDeviceInfo:
     :path: "../node_modules/react-native-device-info"
   RNFBApp:
@@ -1648,7 +1641,7 @@ SPEC CHECKSUMS:
   React-jsinspector: a98428936fb888cc15d857226a26d9ac0a668a0e
   React-logger: 6e4873d1f9c54cca30f6c91a6617f8c91b75ba4c
   React-Mapbuffer: 57bf49a458398d329dad2bf8bc660e3e35b96989
-  react-native-attestation: d35b7756ef9ea75fc600d5c63c2b48929ddf9f65
+  react-native-attestation: e25a5c51296da09097a8c7f7e155953eb52c3939
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
   react-native-date-picker: 2eca217a8fb09c517f5bb6b23978718c6cec59ec
   react-native-encrypted-storage: 569d114e329b1c2c2d9f8c84bcdbe4478dda2258
@@ -1687,7 +1680,6 @@ SPEC CHECKSUMS:
   RNArgon2: 708e188b7a4d4ec8baf62463927c47abef453a94
   RNCAsyncStorage: 9350c2956f996b3ff1ac7cfdb50901c113a27640
   RNCClipboard: f6679d470d0da2bce2a37b0af7b9e0bf369ecda5
-  RNCMaskedView: 3f3c27b339db863b1fd5f39cc9660484ecfd46ee
   RNDeviceInfo: d3e91ffb33ee97a7982108476edb68cb3672efa6
   RNFBApp: 827b4dfadf8c039738c1c928474e45b3ec306ba0
   RNFBMessaging: 6465e1ccc5421e9493a5ed8d7d69e4daf8a2de6d
@@ -1702,7 +1694,7 @@ SPEC CHECKSUMS:
   RNVectorIcons: 102cd20472bf0d7cd15443d43cd87f9c97228ac3
   SDWebImage: f29024626962457f3470184232766516dee8dfea
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
-  VisionCamera: 6ad4b86176f6fea45e90e380d3d530bc5e1abff9
+  VisionCamera: 30b358b807324c692064f78385e9a732ce1bebfe
   Yoga: 1f93d5925ea12fb0880b21efe3566677337cf2ed
 
 PODFILE CHECKSUM: 7143c901b4221bb5cd19672e06910ed9b96d7c96

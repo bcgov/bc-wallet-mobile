@@ -32,9 +32,6 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       flex: 1,
       justifyContent: 'space-between',
     },
-    // no properties needed, just a helpful label for the View
-    mediaContainer: {},
-
     controlsContainer: {
       padding: Spacing.md,
     },
@@ -133,7 +130,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={styles.mediaContainer}>
+      <View>
         <TakeMediaButton
           onPress={() => {
             navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
