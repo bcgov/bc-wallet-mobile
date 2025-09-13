@@ -1,4 +1,4 @@
-import { useServiceClientQuickLoginUrl } from '@/bcsc-theme/hooks/useServiceClientQuickLoginUrl'
+import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, Link, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -18,7 +18,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props) => 
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const quickLoginUrl = useServiceClientQuickLoginUrl(serviceClient)
+  const quickLoginUrl = useQuickLoginURL(serviceClient)
 
   const styles = StyleSheet.create({
     screenContainer: {

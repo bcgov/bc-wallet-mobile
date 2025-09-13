@@ -40,11 +40,28 @@ const useMetadataApi = () => {
     return clients
   }, [])
 
+  /**
+   * Fetches the client metadata for the BCSC application specifically.
+   *
+   * @return {*} {Promise<ClientMetadata | null>} A promise that resolves to the BCSC client metadata object, or null if not found.
+   */
+  const getBCSCClientMetadata = useCallback(async (): Promise<ClientMetadata | null> => {
+    const clients = await getClientMetadata()
+    const bcscClient = clients.find((client) => client.client_uri === `${apiClient.baseURL}/account/`)
+
+    if (!bcscClient) {
+      throw new Error('BCSC client metadata not found')
+    }
+
+    return bcscClient
+  }, [])
+
   return useMemo(
     () => ({
       getClientMetadata,
+      getBCSCClientMetadata,
     }),
-    [getClientMetadata]
+    [getClientMetadata, getBCSCClientMetadata]
   )
 }
 
