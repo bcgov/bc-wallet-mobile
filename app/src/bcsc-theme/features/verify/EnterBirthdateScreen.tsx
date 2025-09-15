@@ -62,6 +62,15 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     },
   })
 
+  // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-2325661774
+  const onDateChange = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+    const realDate = new Date(year, month, day, 12, 0, 0, 0)
+    setDate(realDate)
+  }
+
   const onSubmit = useCallback(async () => {
     try {
       setLoading(true)
@@ -117,9 +126,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
             theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
             mode={'date'}
             date={date}
-            // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-1850045253
-            timeZoneOffsetInMinutes={date.getTimezoneOffset()}
-            onDateChange={setDate}
+            onDateChange={onDateChange}
             onStateChange={setPickerState}
           />
         </View>

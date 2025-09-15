@@ -3,7 +3,7 @@ import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-toke
 import { TOKENS, useServices } from '@bifold/core'
 import { useEffect, useState } from 'react'
 import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
-import client from '../api/client'
+import { useBCSCApiClient } from './useBCSCApiClient'
 
 /**
  * A custom hook to generate a quick login URL for a specific endpoint
@@ -13,6 +13,7 @@ import client from '../api/client'
  */
 const useQuickLoginUrl = (endpoint: string) => {
   const { jwks, metadata } = useApi()
+  const client = useBCSCApiClient()
   const [url, setUrl] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -63,7 +64,7 @@ const useQuickLoginUrl = (endpoint: string) => {
     }
 
     asyncEffect()
-  }, [endpoint, logger, jwks, metadata])
+  }, [endpoint, client, logger, jwks, metadata])
 
   return url
 }

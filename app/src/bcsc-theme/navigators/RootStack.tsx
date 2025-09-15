@@ -14,8 +14,8 @@ import { ActivityIndicator, DeviceEventEmitter } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { BCState } from '@/store'
-import useInitializeBcscApi from '../hooks/useInitializeBcscApi'
 import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
+import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
 
 const TempLoadingView = () => {
@@ -38,8 +38,7 @@ const BCSCRootStack: React.FC = () => {
   ])
   const { agent, initializeAgent, shutdownAndClearAgentIfExists } = useAgentSetup()
   const [onboardingComplete, setOnboardingComplete] = useState(false)
-
-  const { loading } = useInitializeBcscApi()
+  const { loading } = useInitializeBCSC()
 
   const shouldRenderMainStack = useMemo(
     () => onboardingComplete && store.authentication.didAuthenticate,

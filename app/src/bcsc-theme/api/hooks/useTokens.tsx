@@ -1,7 +1,7 @@
 import { getDeviceCountFromIdToken } from '@/bcsc-theme/utils/get-device-count'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
-import apiClient, { TokenStatusResponseDataWithDeviceCount } from '../client'
+import BCSCApiClient, { TokenStatusResponseDataWithDeviceCount } from '../client'
 import { withAccount } from './withAccountGuard'
 
 export interface TokenStatusResponseData {
@@ -18,21 +18,24 @@ export interface BcscJwtPayload {
   // Add other BCSC-specific claims here as needed
 }
 
-const useTokenApi = () => {
-  const checkDeviceCodeStatus = useCallback(async (deviceCode: string, confirmationCode: string) => {
-    return withAccount<TokenStatusResponseDataWithDeviceCount>(async (account) => {
-      const { clientID, issuer } = account
-      const body = await getDeviceCodeRequestBody(deviceCode, clientID, issuer, confirmationCode)
-      const { data } = await apiClient.post<TokenStatusResponseData>(apiClient.endpoints.token, body, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        skipBearerAuth: true,
-      })
-      apiClient.tokens = data
+const useTokenApi = (apiClient: BCSCApiClient) => {
+  const checkDeviceCodeStatus = useCallback(
+    async (deviceCode: string, confirmationCode: string) => {
+      return withAccount<TokenStatusResponseDataWithDeviceCount>(async (account) => {
+        const { clientID, issuer } = account
+        const body = await getDeviceCodeRequestBody(deviceCode, clientID, issuer, confirmationCode)
+        const { data } = await apiClient.post<TokenStatusResponseData>(apiClient.endpoints.token, body, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          skipBearerAuth: true,
+        })
+        apiClient.tokens = data
 
-      const bcsc_devices_count = await getDeviceCountFromIdToken(data.id_token, apiClient.logger)
-      return { ...data, bcsc_devices_count }
-    })
-  }, [])
+        const bcsc_devices_count = await getDeviceCountFromIdToken(data.id_token, apiClient.logger)
+        return { ...data, bcsc_devices_count }
+      })
+    },
+    [apiClient]
+  )
 
   return useMemo(
     () => ({
