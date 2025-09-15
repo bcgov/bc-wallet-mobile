@@ -2,7 +2,6 @@ import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
-import Config from 'react-native-config'
 
 import { getDeviceCountFromIdToken } from '../utils/get-device-count'
 import { TokenStatusResponseData } from './hooks/useTokens'
@@ -52,7 +51,7 @@ class BCSCApiClient {
   baseURL: string
   tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
 
-  constructor(baseURL: string = String(Config.IAS_URL ?? 'https://idsit.gov.bc.ca'), logger: RemoteLogger) {
+  constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
     this.logger = logger
     this.client = axios.create({
