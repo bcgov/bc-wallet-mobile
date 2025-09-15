@@ -228,6 +228,9 @@ const translation = {
     "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app.",
     "NoLoginProof": "You will use this app to prove who you are when you log in.",
     "Goto": "Go to",
+    "NotListed": "Services not listed?",
+    "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above.",
+    "NotListedDescriptionContact": "Contact the service to the the link to their website."
   },
   "Unified": {
     "Steps": {

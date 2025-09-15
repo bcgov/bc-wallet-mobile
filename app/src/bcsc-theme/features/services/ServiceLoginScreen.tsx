@@ -86,6 +86,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props) => 
           </View>
         </TouchableOpacity>
 
+        {/* TODO (MD): Find out what action should happen when user reports suspicious activity */}
         <ThemedText variant={'bold'}>
           {t('Services.ReportSuspiciousPrefix')} <ThemedText>{t('Services.ReportSuspicious')}</ThemedText>
         </ThemedText>

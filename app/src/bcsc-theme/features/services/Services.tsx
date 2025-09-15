@@ -66,6 +66,12 @@ const Services: React.FC = () => {
       color: TextTheme.normal.color,
       marginLeft: Spacing.sm,
     },
+    bottomContainer: {
+      margin: Spacing.md,
+    },
+    desciptionText: {
+      lineHeight: 30,
+    },
   })
 
   // TODO (MD): implement a loading UI
@@ -80,6 +86,7 @@ const Services: React.FC = () => {
         <ThemedText variant={'headingTwo'} style={styles.headerText}>
           {t('Services.CatalogueTitle')}
         </ThemedText>
+
         <View style={styles.searchInputContainer}>
           <View ref={searchInputRef} style={styles.searchInput}>
             <Icon name="search" size={30} color={ColorPalette.brand.tertiary} />
@@ -119,6 +126,7 @@ const Services: React.FC = () => {
             />
           </View>
         </View>
+
         {serviceClients.map((service) => (
           <ServiceButton
             key={service.client_ref_id}
@@ -131,6 +139,14 @@ const Services: React.FC = () => {
             }}
           />
         ))}
+
+        <View style={styles.bottomContainer}>
+          <ThemedText variant={'bold'}>{t('Services.NotListed')}</ThemedText>
+          <ThemedText style={styles.desciptionText}>{t('Services.NotListedDescription')}</ThemedText>
+          <ThemedText style={[styles.desciptionText, { marginTop: Spacing.xl }]}>
+            {t('Services.NotListedDescriptionContact')}
+          </ThemedText>
+        </View>
       </ScrollView>
     </SafeAreaView>
   )
