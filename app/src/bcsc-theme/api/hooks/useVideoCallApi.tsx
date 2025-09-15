@@ -2,7 +2,7 @@ import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { createPreVerificationJWT } from 'react-native-bcsc-core'
-import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
+import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
 type SessionStatusType = 'session_granted' | 'session_not_granted' | 'session_failed' | 'session_ended'
@@ -61,8 +61,7 @@ export interface ServiceHours {
   service_unavailable_periods: ServicePeriod[]
 }
 
-const useVideoCallApi = () => {
-  const apiClient = useBCSCApiClient()
+const useVideoCallApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
 
   const _getDeviceCode = useCallback(() => {

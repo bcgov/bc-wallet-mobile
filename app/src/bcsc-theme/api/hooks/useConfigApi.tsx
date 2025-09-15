@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
-import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
+import BCSCApiClient from '../client'
 
 export interface ServerStatusResponseData {
   minVersion: string
@@ -19,9 +19,7 @@ export interface TermsOfUseResponseData {
   html: string
 }
 
-const useConfigApi = () => {
-  const apiClient = useBCSCApiClient()
-
+const useConfigApi = (apiClient: BCSCApiClient) => {
   /**
    * Fetches the server status from the IAS API.
    *

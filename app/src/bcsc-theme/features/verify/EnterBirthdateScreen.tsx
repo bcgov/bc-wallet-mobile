@@ -9,7 +9,6 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import moment from 'moment'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -65,9 +64,10 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
 
   // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-2325661774
   const onDateChange = (date: Date) => {
-    // Format as date-only string, then create new Date to avoid timezone shifts
-    const dateOnly = moment(date).format('YYYY-MM-DD')
-    const realDate = new Date(dateOnly)
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const day = date.getDate()
+    const realDate = new Date(year, month, day, 12, 0, 0, 0)
     setDate(realDate)
   }
 
@@ -126,8 +126,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
             theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
             mode={'date'}
             date={date}
-            // https://github.com/henninghall/react-native-date-picker/issues/724#issuecomment-1850045253
-            timeZoneOffsetInMinutes={date.getTimezoneOffset()}
             onDateChange={onDateChange}
             onStateChange={setPickerState}
           />

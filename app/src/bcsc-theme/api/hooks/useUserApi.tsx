@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { decodePayload } from 'react-native-bcsc-core'
-import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
+import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
 export interface UserInfoResponseData {
@@ -19,9 +19,7 @@ export interface UserInfoResponseData {
   card_expiry: string
 }
 
-const useUserApi = () => {
-  const apiClient = useBCSCApiClient()
-
+const useUserApi = (apiClient: BCSCApiClient) => {
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {
       const response = await apiClient.get<any>(apiClient.endpoints.userInfo)

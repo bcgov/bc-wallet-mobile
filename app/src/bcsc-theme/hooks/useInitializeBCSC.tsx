@@ -10,19 +10,19 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
 // and, if it exists, uses refresh token to get rest of token info
 const useInitializeBCSC = () => {
   const [store, dispatch] = useStore<BCState>()
-  const { client, isReady } = useBCSCApiClientState()
-  const { register } = useRegistrationApi()
+  const { client, clientIsReady } = useBCSCApiClientState()
+  const { register } = useRegistrationApi(client, clientIsReady)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [loading, setLoading] = useState(true)
-  const initializedRef = useRef(false)
+  const initializationInProgressRef = useRef(false)
 
   useEffect(() => {
-    if (!store.stateLoaded || !isReady || !client || initializedRef.current) {
+    if (!store.stateLoaded || !clientIsReady || !client || initializationInProgressRef.current) {
       return
     }
 
     const asyncEffect = async () => {
-      initializedRef.current = true
+      initializationInProgressRef.current = true
       setLoading(true)
 
       try {
@@ -43,6 +43,8 @@ const useInitializeBCSC = () => {
           token = store.bcsc.refreshToken
         }
 
+        // if there is no token, the user will see the verify stack (setup steps),
+        // if there is a valid token the user will be logged in
         if (token) {
           const tokenData = await client.getTokensForRefreshToken(token)
           if (tokenData.bcsc_devices_count !== undefined) {
@@ -55,7 +57,7 @@ const useInitializeBCSC = () => {
           dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
         }
       } catch (error) {
-        initializedRef.current = false
+        initializationInProgressRef.current = false
         logger.error(`Error setting API client tokens.`, error as Error)
       } finally {
         setLoading(false)
@@ -63,7 +65,7 @@ const useInitializeBCSC = () => {
     }
 
     asyncEffect()
-  }, [store.stateLoaded, register, isReady, client, dispatch, logger, store.bcsc.refreshToken])
+  }, [store.stateLoaded, register, clientIsReady, client, dispatch, logger, store.bcsc.refreshToken])
 
   return { loading }
 }

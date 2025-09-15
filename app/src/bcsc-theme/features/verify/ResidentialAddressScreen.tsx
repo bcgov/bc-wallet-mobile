@@ -1,4 +1,4 @@
-import useAuthorizationApi from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getProvinceCode, isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
@@ -10,11 +10,11 @@ import {
   testIdWithKey,
   ThemedText,
   ToastType,
+  TOKENS,
   useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
-import { TOKENS } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -41,7 +41,7 @@ export const ResidentialAddressScreen = () => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const navigation = useNavigation()
-  const authorization = useAuthorizationApi()
+  const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const [formState, setFormState] = useState<ResidentialAddressFormState>({

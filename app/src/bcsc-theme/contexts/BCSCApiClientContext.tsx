@@ -7,20 +7,20 @@ import BCSCApiClient from '../api/client'
 
 export interface BCSCApiClientContextType {
   client: BCSCApiClient | null
-  isReady: boolean
+  clientIsReady: boolean
   error: string | null
 }
 
 export const BCSCApiClientContext = createContext<BCSCApiClientContextType>({
   client: null,
-  isReady: false,
+  clientIsReady: false,
   error: null,
 })
 
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [store, dispatch] = useStore<BCState>()
   const [client, setClient] = useState<BCSCApiClient | null>(null)
-  const [isReady, setIsReady] = useState(false)
+  const [clientIsReady, setClientIsReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -30,7 +30,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     const configureClient = async () => {
-      setIsReady(false)
+      setClientIsReady(false)
       setError(null)
 
       try {
@@ -38,12 +38,14 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
         await newClient.fetchEndpointsAndConfig(store.developer.environment.iasApiBaseUrl)
 
         setClient(newClient)
-        setIsReady(true)
+        setClientIsReady(true)
       } catch (err) {
-        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${err}`
+        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
+          (err as Error)?.message
+        }`
         setError(errorMessage)
         setClient(null)
-        setIsReady(false)
+        setClientIsReady(false)
         dispatch({
           type: DispatchAction.BANNER_MESSAGES,
           payload: [
@@ -65,10 +67,10 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const contextValue = useMemo(
     () => ({
       client,
-      isReady,
+      clientIsReady,
       error,
     }),
-    [client, isReady, error]
+    [client, clientIsReady, error]
   )
 
   return <BCSCApiClientContext.Provider value={contextValue}>{children}</BCSCApiClientContext.Provider>

@@ -367,10 +367,13 @@ export class AppContainer implements Container {
       ])
 
       // Convert date string to Date object (async-storage converts Dates to strings)
-      // Use timezone-safe parsing to prevent off-by-one date errors (consistent with date picker)
+      // timezone-safe parsing to prevent off-by-one date errors (consistent with date picker)
       if (typeof bcsc.birthdate === 'string') {
-        const dateOnly = moment(bcsc.birthdate).format('YYYY-MM-DD')
-        bcsc.birthdate = new Date(dateOnly)
+        const momentDate = moment(bcsc.birthdate)
+        const year = momentDate.year()
+        const month = momentDate.month()
+        const day = momentDate.date()
+        bcsc.birthdate = new Date(year, month, day, 12, 0, 0, 0)
       }
 
       if (typeof bcsc.deviceCodeExpiresAt === 'string') {

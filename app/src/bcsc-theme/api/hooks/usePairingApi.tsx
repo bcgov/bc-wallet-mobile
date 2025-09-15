@@ -1,7 +1,7 @@
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { useCallback, useMemo } from 'react'
 import { signPairingCode } from 'react-native-bcsc-core'
-import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
+import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
 // There is no actual data response (just a 200) from the pairing code login endpoint, so we
@@ -10,9 +10,7 @@ export interface PairingCodeLoginResponseData {
   success: boolean
 }
 
-const usePairingApi = () => {
-  const apiClient = useBCSCApiClient()
-
+const usePairingApi = (apiClient: BCSCApiClient) => {
   const loginByPairingCode = useCallback(
     async (code: string) => {
       return withAccount<PairingCodeLoginResponseData>(async (account) => {

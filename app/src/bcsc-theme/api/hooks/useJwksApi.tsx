@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
+import BCSCApiClient from '../client'
 
 export interface JWK {
   kty: string
@@ -14,9 +14,7 @@ export type JWKResponseData = {
   keys: Keys
 }
 
-const useJwksApi = () => {
-  const apiClient = useBCSCApiClient()
-
+const useJwksApi = (apiClient: BCSCApiClient) => {
   const getJwks = useCallback(async (): Promise<Keys> => {
     const {
       data: { keys },

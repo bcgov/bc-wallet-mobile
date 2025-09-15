@@ -2,7 +2,7 @@ import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { createPreVerificationJWT } from 'react-native-bcsc-core'
-import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
+import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
 
 export interface VerificationPrompt {
@@ -91,8 +91,7 @@ export interface EvidenceMetadataPayload {
   }[]
 }
 
-const useEvidenceApi = () => {
-  const apiClient = useBCSCApiClient()
+const useEvidenceApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
 
   const _getDeviceCode = useCallback(() => {

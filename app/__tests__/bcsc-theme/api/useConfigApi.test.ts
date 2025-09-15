@@ -1,3 +1,4 @@
+import useConfigApi from '@bcsc-theme/api/hooks/useConfigApi'
 import { renderHook } from '@testing-library/react-native'
 import { Platform } from 'react-native'
 
@@ -6,19 +7,13 @@ const mockApiClient = {
   get: jest.fn().mockImplementation(() => Promise.resolve({ data: {} })),
 }
 
-jest.mock('@bcsc-theme/hooks/useBCSCApiClient', () => ({
-  useBCSCApiClient: () => mockApiClient,
-}))
-
-import useConfigApi from '@bcsc-theme/api/hooks/useConfigApi'
-
 describe('useConfigApi', () => {
   beforeEach(() => {
     Platform.OS = 'ios'
     jest.clearAllMocks()
   })
 
-  const config = renderHook(() => useConfigApi()).result.current
+  const config = renderHook(() => useConfigApi(mockApiClient as any)).result.current
 
   describe('getServerStatus', () => {
     it('calls the correct endpoint for android', async () => {
