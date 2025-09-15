@@ -1,6 +1,6 @@
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import React, { createContext, useEffect, useState } from 'react'
+import React, { createContext, useEffect, useMemo, useState } from 'react'
 
 import { BCState } from '@/store'
 import BCSCApiClient from '../api/client'
@@ -62,5 +62,14 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     configureClient()
   }, [store.stateLoaded, store.developer.environment.name, store.developer.environment.iasApiBaseUrl, logger, dispatch])
 
-  return <BCSCApiClientContext.Provider value={{ client, isReady, error }}>{children}</BCSCApiClientContext.Provider>
+  const contextValue = useMemo(
+    () => ({
+      client,
+      isReady,
+      error,
+    }),
+    [client, isReady, error]
+  )
+
+  return <BCSCApiClientContext.Provider value={contextValue}>{children}</BCSCApiClientContext.Provider>
 }
