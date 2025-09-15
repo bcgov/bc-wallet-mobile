@@ -27,11 +27,13 @@ import { BrandingOverlayType, RemoteOCABundleResolver } from '@bifold/oca/build/
 import { getProofRequestTemplates } from '@bifold/verifier'
 import { Agent } from '@credo-ts/core'
 import { NavigationProp } from '@react-navigation/native'
+import moment from 'moment'
 import { TFunction } from 'react-i18next'
 import { Linking } from 'react-native'
 import { Config } from 'react-native-config'
 import { DependencyContainer } from 'tsyringe'
 
+import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from '@utils/expiration'
@@ -71,7 +73,6 @@ import {
   RemoteDebuggingState,
   initialState,
 } from './src/store'
-import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 
 const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
@@ -366,8 +367,10 @@ export class AppContainer implements Container {
       ])
 
       // Convert date string to Date object (async-storage converts Dates to strings)
+      // Use timezone-safe parsing to prevent off-by-one date errors (consistent with date picker)
       if (typeof bcsc.birthdate === 'string') {
-        bcsc.birthdate = new Date(Date.parse(bcsc.birthdate))
+        const dateOnly = moment(bcsc.birthdate).format('YYYY-MM-DD')
+        bcsc.birthdate = new Date(dateOnly)
       }
 
       if (typeof bcsc.deviceCodeExpiresAt === 'string') {
