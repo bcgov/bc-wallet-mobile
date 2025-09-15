@@ -41,6 +41,7 @@ const Account: React.FC = () => {
     const asyncEffect = async () => {
       try {
         setLoading(true)
+        bcscClientServiceLoader.load()
         const userInfo = await user.getUserInfo()
         let picture = ''
         if (userInfo.picture) {
