@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import { Keyboard, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
+import { Keyboard, ScrollView, StyleSheet, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import ServiceButton from './components/ServiceButton'
 import { BCState, Mode } from '@/store'

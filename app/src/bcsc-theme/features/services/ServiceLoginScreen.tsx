@@ -1,7 +1,7 @@
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState, Mode } from '@/store'
-import { Button, ButtonType, Link, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Alert, Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -15,7 +15,7 @@ type ServiceLoginScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens
  *
  * @returns {*} {JSX.Element} The service screen component or null if not implemented.
  */
-export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props) => {
+export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: ServiceLoginScreenProps) => {
   const { serviceClient } = props.route.params
   const { t } = useTranslation()
   const [store] = useStore<BCState>()

@@ -56,7 +56,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({}))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(2)
+        expect(hook.result.current.length).toHaveLength(2)
         expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
         expect(hook.result.current[1].client_ref_id).toBe(mockServiceClientB.client_ref_id)
       })
@@ -80,7 +80,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({ cardProcessFilter: BCSCCardProcess.BCSC }))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(1)
+        expect(hook.result.current).toHaveLength(1)
         expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
       })
     })
@@ -103,7 +103,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({ requireBCAddressFilter: true }))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(1)
+        expect(hook.result.current).toHaveLength(1)
         expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
       })
     })
@@ -126,7 +126,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'ALPHA' }))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(1)
+        expect(hook.result.current).toHaveLength(1)
         expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
       })
     })
@@ -147,7 +147,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'Alpha' }))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(1)
+        expect(hook.result.current).toHaveLength(1)
         expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
       })
     })
@@ -168,7 +168,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'client alpha' }))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(1)
+        expect(hook.result.current).toHaveLength(1)
         expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
       })
     })
@@ -189,7 +189,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'badbadbad' }))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(0)
+        expect(hook.result.current).toHaveLength(0)
       })
     })
 
@@ -209,7 +209,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'TEST ALPHA' }))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(0)
+        expect(hook.result.current).toHaveLength(0)
       })
     })
   })
@@ -237,7 +237,7 @@ describe('useFilterServiceClients', () => {
       )
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(1)
+        expect(hook.result.current).toHaveLength(1)
         expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
       })
     })
@@ -264,7 +264,7 @@ describe('useFilterServiceClients', () => {
       )
 
       await waitFor(() => {
-        expect(hook.result.current.length).toBe(0)
+        expect(hook.result.current).toHaveLength(0)
       })
     })
   })

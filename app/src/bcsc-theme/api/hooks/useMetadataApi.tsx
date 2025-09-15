@@ -55,7 +55,7 @@ const useMetadataApi = () => {
     }
 
     return bcscClient
-  }, [])
+  }, [getClientMetadata])
 
   return useMemo(
     () => ({

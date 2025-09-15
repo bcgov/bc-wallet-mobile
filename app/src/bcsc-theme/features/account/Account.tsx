@@ -57,7 +57,7 @@ const Account: React.FC = () => {
     }
 
     asyncEffect()
-  }, [user, logger])
+  }, [user, logger, bcscClientServiceLoader])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {

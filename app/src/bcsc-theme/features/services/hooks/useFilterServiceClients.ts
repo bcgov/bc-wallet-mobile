@@ -93,7 +93,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
 
     // Sort services alphabetically by client_name
     return serviceClientsCopy.sort((a, b) => a.client_name.localeCompare(b.client_name))
-  }, [serviceClients])
+  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter])
 
   // Further filter services based on the partial name filter
   const queriedServiceClients = useMemo(() => {
