@@ -21,6 +21,7 @@ export interface ClientMetadata {
   suppress_confirmation_info: boolean
   suppress_bookmark_prompt: boolean
   allowed_identification_processes: string[]
+  bc_address: boolean
   initiate_login_uri?: string
   client_description?: string
   policy_uri?: string

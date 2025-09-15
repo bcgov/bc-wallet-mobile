@@ -1,11 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { Alert, Keyboard, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
+import React, { useState } from 'react'
+import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Keyboard, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import ServiceButton from './components/ServiceButton'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import { BCState } from '@/store'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -14,6 +11,7 @@ import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { useFilterServiceClients } from './hooks/useFilterServiceClients'
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300
 
@@ -25,15 +23,18 @@ type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScree
  * @return {*} {JSX.Element} The Services screen component.
  */
 const Services: React.FC = () => {
-  const { metadata } = useApi()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
+
+  const serviceClients = useFilterServiceClients({
+    cardProcessFilter: getCardProcessForCardType(store.bcsc.cardType),
+    partialNameFilter: debouncedSearch,
+  })
 
   const styles = StyleSheet.create({
     headerText: {
@@ -60,62 +61,6 @@ const Services: React.FC = () => {
       marginLeft: Spacing.sm,
     },
   })
-
-  const {
-    data: serviceClients,
-    load,
-    isReady,
-  } = useDataLoader<ClientMetadata[]>(() => metadata.getClientMetadata(), {
-    onError: (error) => {
-      logger.error('Error loading services', error as Error)
-    },
-  })
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  // Services that are compatible with the user's card type
-  const supportedServiceClients = useMemo(() => {
-    if (!serviceClients) {
-      return []
-    }
-
-    // Filter services based on the user's card type (ie: card process)
-    // TODO (MD): filter services on `bc_address` boolean (check users address)
-    return (
-      serviceClients
-        .filter((service) =>
-          service.allowed_identification_processes.includes(getCardProcessForCardType(store.bcsc.cardType))
-        )
-        // Sort services alphabetically by client_name
-        .sort((a, b) => a.client_name.localeCompare(b.client_name))
-    )
-  }, [serviceClients, store.bcsc.cardType])
-
-  // Filter services based on the search text
-  const filteredServiceClients = useMemo(() => {
-    // Return all supported services when there's no search text
-    if (debouncedSearch.trim() === '') {
-      return supportedServiceClients
-    }
-
-    // Filter supported services based on the search text (case insensitive)
-    const query = debouncedSearch.toLowerCase()
-    return supportedServiceClients.filter((service) => service.client_name.toLowerCase().includes(query))
-  }, [supportedServiceClients, debouncedSearch])
-
-  // Alert the user if services fail to load
-  if (!serviceClients && isReady) {
-    Alert.alert('Failed to load services', 'Please try again later.', [
-      {
-        text: 'OK',
-        onPress: () => {
-          navigation.goBack()
-        },
-      },
-    ])
-  }
 
   // TODO (MD): implement a loading UI
   // TODO (MD): implement an empty state UI
@@ -154,7 +99,7 @@ const Services: React.FC = () => {
             </View>
           </View>
         </TouchableOpacity>
-        {filteredServiceClients.map((service) => (
+        {serviceClients.map((service) => (
           <ServiceButton
             key={service.client_ref_id}
             title={service.client_name}
