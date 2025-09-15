@@ -1,9 +1,9 @@
-import { useCallback, useMemo } from 'react'
-import { useStore } from '@bifold/core'
-import apiClient from '../client'
-import { withAccount } from './withAccountGuard'
-import { createPreVerificationJWT } from 'react-native-bcsc-core'
 import { BCState } from '@/store'
+import { useStore } from '@bifold/core'
+import { useCallback, useMemo } from 'react'
+import { createPreVerificationJWT } from 'react-native-bcsc-core'
+import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
+import { withAccount } from './withAccountGuard'
 
 export interface VerificationPrompt {
   id: number
@@ -92,6 +92,7 @@ export interface EvidenceMetadataPayload {
 }
 
 const useEvidenceApi = () => {
+  const apiClient = useBCSCApiClient()
   const [store] = useStore<BCState>()
 
   const _getDeviceCode = useCallback(() => {
@@ -106,7 +107,7 @@ const useEvidenceApi = () => {
       skipBearerAuth: true,
     })
     return data
-  }, [])
+  }, [apiClient])
 
   // This needs ot be called for the process to start
   const createVerificationRequest = useCallback(async (): Promise<VerificationResponseData> => {
@@ -125,7 +126,7 @@ const useEvidenceApi = () => {
       )
       return data
     })
-  }, [_getDeviceCode])
+  }, [_getDeviceCode, apiClient])
 
   const uploadPhotoEvidenceMetadata = useCallback(
     async (payload: VerificationPhotoUploadPayload): Promise<UploadEvidenceResponseData> => {
@@ -144,7 +145,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
   const uploadVideoEvidenceMetadata = useCallback(
     async (payload: VerificationVideoUploadPayload): Promise<UploadEvidenceResponseData> => {
@@ -163,7 +164,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const sendVerificationRequest = useCallback(
@@ -186,7 +187,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const getVerificationRequestPrompts = useCallback(
@@ -205,7 +206,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const getVerificationRequestStatus = useCallback(
@@ -224,7 +225,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   // This is only valid once sendVerificationRequest has been called
@@ -246,7 +247,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const createEmailVerification = useCallback(
@@ -266,7 +267,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const sendEmailVerificationCode = useCallback(
@@ -288,7 +289,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const uploadPhotoEvidenceBinary = useCallback(
@@ -306,7 +307,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const uploadVideoEvidenceBinary = useCallback(
@@ -324,7 +325,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const sendEvidenceMetadata = useCallback(
@@ -344,7 +345,7 @@ const useEvidenceApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   return useMemo(

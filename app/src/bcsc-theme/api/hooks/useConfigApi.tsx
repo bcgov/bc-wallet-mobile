@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
-import apiClient from '../client'
 import { Platform } from 'react-native'
+import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
 
 export interface ServerStatusResponseData {
   minVersion: string
@@ -20,6 +20,8 @@ export interface TermsOfUseResponseData {
 }
 
 const useConfigApi = () => {
+  const apiClient = useBCSCApiClient()
+
   /**
    * Fetches the server status from the IAS API.
    *
@@ -34,13 +36,13 @@ const useConfigApi = () => {
       }
     )
     return data
-  }, [])
+  }, [apiClient])
 
   const getTermsOfUse = useCallback(async () => {
     // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
     const { data } = await apiClient.get<TermsOfUseResponseData>(`${apiClient.baseURL}/cardtap/v3/terms`)
     return data
-  }, [])
+  }, [apiClient])
 
   return useMemo(
     () => ({

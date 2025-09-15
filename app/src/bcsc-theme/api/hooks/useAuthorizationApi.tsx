@@ -2,7 +2,7 @@ import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { isAxiosError } from 'axios'
 import { useCallback, useMemo } from 'react'
 import { createDeviceSignedJWT } from 'react-native-bcsc-core'
-import apiClient from '../client'
+import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
 import { withAccount } from './withAccountGuard'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
@@ -46,6 +46,8 @@ export interface AuthorizeDeviceUnknownBCSCConfig {
 }
 
 const useAuthorizationApi = () => {
+  const apiClient = useBCSCApiClient()
+
   /**
    * Authorize a device with a known BCSC card.
    *
@@ -94,7 +96,7 @@ const useAuthorizationApi = () => {
         }
       })
     },
-    []
+    [apiClient]
   )
 
   /**
@@ -164,7 +166,7 @@ const useAuthorizationApi = () => {
         }
       })
     },
-    []
+    [apiClient]
   )
 
   return useMemo(

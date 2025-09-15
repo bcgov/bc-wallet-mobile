@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import apiClient from '../client'
+import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
 
 export type Clients = ClientMetadata[]
 
@@ -23,12 +23,14 @@ export interface ClientMetadata {
 }
 
 const useMetadataApi = () => {
+  const apiClient = useBCSCApiClient()
+
   const getClientMetadata = useCallback(async (): Promise<Clients> => {
     const {
       data: { clients },
     } = await apiClient.get<MetadataResponseData>(apiClient.endpoints.clientMetadata)
     return clients
-  }, [])
+  }, [apiClient])
 
   return useMemo(
     () => ({

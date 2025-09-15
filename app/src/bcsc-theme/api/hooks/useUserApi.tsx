@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { decodePayload } from 'react-native-bcsc-core'
-import apiClient from '../client'
+import { useBCSCApiClient } from '../../hooks/useBCSCApiClient'
 import { withAccount } from './withAccountGuard'
 
 export interface UserInfoResponseData {
@@ -20,29 +20,34 @@ export interface UserInfoResponseData {
 }
 
 const useUserApi = () => {
+  const apiClient = useBCSCApiClient()
+
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {
       const response = await apiClient.get<any>(apiClient.endpoints.userInfo)
       const userInfoString = await decodePayload(String(response.data))
       return JSON.parse(userInfoString)
     })
-  }, [])
+  }, [apiClient])
 
-  const getPicture = useCallback(async (pictureUrl: string): Promise<string> => {
-    return withAccount(async () => {
-      const response = await apiClient.get<ArrayBuffer>(pictureUrl, {
-        responseType: 'arraybuffer', // get raw binary data
+  const getPicture = useCallback(
+    async (pictureUrl: string): Promise<string> => {
+      return withAccount(async () => {
+        const response = await apiClient.get<ArrayBuffer>(pictureUrl, {
+          responseType: 'arraybuffer', // get raw binary data
+        })
+
+        // convert to base64
+        const base64String = btoa(
+          new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
+        )
+
+        // return as uri
+        return `data:image/jpeg;base64,${base64String}`
       })
-
-      // convert to base64
-      const base64String = btoa(
-        new Uint8Array(response.data).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      )
-
-      // return as uri
-      return `data:image/jpeg;base64,${base64String}`
-    })
-  }, [])
+    },
+    [apiClient]
+  )
 
   return useMemo(
     () => ({
