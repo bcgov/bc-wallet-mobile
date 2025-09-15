@@ -1,6 +1,6 @@
-import useConfigApi from '@/bcsc-theme/api/hooks/useConfigApi'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCState } from '@/store'
-import { DispatchAction, TOKENS, useServices, useStore, BannerMessage } from '@bifold/core'
+import { BannerMessage, DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useEffect } from 'react'
 
 /**
@@ -10,14 +10,14 @@ import { useEffect } from 'react'
  */
 export const NotificationBannerContainer: React.FC = () => {
   const [, dispatch] = useStore<BCState>()
-  const { getServerStatus } = useConfigApi()
+  const { config } = useApi()
   const [NotificationBanner, logger] = useServices([TOKENS.COMPONENT_NOTIFICATION_BANNER, TOKENS.UTIL_LOGGER])
 
   // Fetch server status and update the banner messages
   useEffect(() => {
     const asyncEffect = async () => {
       try {
-        const serverStatus = await getServerStatus()
+        const serverStatus = await config.getServerStatus()
 
         // If the server status is OK, do nothing
         if (serverStatus.status === 'ok') {
@@ -57,8 +57,6 @@ export const NotificationBannerContainer: React.FC = () => {
     }
 
     asyncEffect()
-    // missing dependency here is intentional to avoid infinite loop ie: getServerStatus
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, logger])
+  }, [config, dispatch, logger])
   return <NotificationBanner />
 }

@@ -1,9 +1,9 @@
-import { useCallback, useMemo } from 'react'
-import { useStore } from '@bifold/core'
-import apiClient from '../client'
-import { withAccount } from './withAccountGuard'
-import { createPreVerificationJWT } from 'react-native-bcsc-core'
 import { BCState } from '@/store'
+import { useStore } from '@bifold/core'
+import { useCallback, useMemo } from 'react'
+import { createPreVerificationJWT } from 'react-native-bcsc-core'
+import BCSCApiClient from '../client'
+import { withAccount } from './withAccountGuard'
 
 type SessionStatusType = 'session_granted' | 'session_not_granted' | 'session_failed' | 'session_ended'
 type CallStatusType =
@@ -61,7 +61,7 @@ export interface ServiceHours {
   service_unavailable_periods: ServicePeriod[]
 }
 
-const useVideoCallApi = () => {
+const useVideoCallApi = (apiClient: BCSCApiClient) => {
   const [store] = useStore<BCState>()
 
   const _getDeviceCode = useCallback(() => {
@@ -83,7 +83,7 @@ const useVideoCallApi = () => {
       })
       return data
     })
-  }, [_getDeviceCode])
+  }, [_getDeviceCode, apiClient])
 
   const updateVideoSessionStatus = useCallback(
     async (sessionId: string, status: SessionStatusType): Promise<VideoSession> => {
@@ -103,7 +103,7 @@ const useVideoCallApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const createVideoCall = useCallback(
@@ -129,7 +129,7 @@ const useVideoCallApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const updateVideoCallStatus = useCallback(
@@ -150,7 +150,7 @@ const useVideoCallApi = () => {
         return data
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const endVideoSession = useCallback(
@@ -165,7 +165,7 @@ const useVideoCallApi = () => {
         })
       })
     },
-    [_getDeviceCode]
+    [_getDeviceCode, apiClient]
   )
 
   const getVideoDestinations = useCallback(async (): Promise<VideoDestinations> => {
@@ -179,7 +179,7 @@ const useVideoCallApi = () => {
       })
       return data
     })
-  }, [_getDeviceCode])
+  }, [_getDeviceCode, apiClient])
 
   const getServiceHours = useCallback(async (): Promise<ServiceHours> => {
     return withAccount(async (account) => {
@@ -192,7 +192,7 @@ const useVideoCallApi = () => {
       })
       return data
     })
-  }, [_getDeviceCode])
+  }, [_getDeviceCode, apiClient])
 
   return useMemo(
     () => ({

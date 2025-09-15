@@ -1,13 +1,11 @@
-import BCLogger from '@/utils/logger'
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
-import Config from 'react-native-config'
 
+import { getDeviceCountFromIdToken } from '../utils/get-device-count'
 import { TokenStatusResponseData } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
-import { getDeviceCountFromIdToken } from '../utils/get-device-count'
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
@@ -45,7 +43,7 @@ interface BCSCEndpoints {
   video: string
 }
 
-class BCSCService {
+class BCSCApiClient {
   readonly client: AxiosInstance
   readonly logger: RemoteLogger
   endpoints: BCSCEndpoints
@@ -53,9 +51,9 @@ class BCSCService {
   baseURL: string
   tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
 
-  constructor(baseURL: string = String(Config.IAS_URL ?? 'https://idsit.gov.bc.ca')) {
+  constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
-    this.logger = BCLogger
+    this.logger = logger
     this.client = axios.create({
       headers: {
         'Content-Type': 'application/json',
@@ -63,9 +61,9 @@ class BCSCService {
     })
 
     if (this.baseURL) {
-      this.logger.info(`BCSCService initialized with URL: ${this.baseURL}`)
+      this.logger.info(`BCSCApiClient initialized with URL: ${this.baseURL}`)
     } else {
-      this.logger.error('BCSCService initialized with empty URL.')
+      this.logger.error('BCSCApiClient initialized with empty URL.')
     }
 
     // fallback config
@@ -242,6 +240,4 @@ class BCSCService {
   }
 }
 
-const client = new BCSCService()
-
-export default client
+export default BCSCApiClient

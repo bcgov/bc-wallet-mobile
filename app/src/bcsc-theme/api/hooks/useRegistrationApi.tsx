@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from 'react'
-import { getDynamicClientRegistrationBody, setAccount, AccountSecurityMethod, getAccount } from 'react-native-bcsc-core'
+import { AccountSecurityMethod, getAccount, getDynamicClientRegistrationBody, setAccount } from 'react-native-bcsc-core'
 
-import apiClient from '../client'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
+import BCSCApiClient from '../client'
 
 export interface RegistrationResponseData {
   client_id: string
@@ -39,10 +39,16 @@ export interface RegistrationResponseData {
   default_acr_values: string[]
 }
 
-const useRegistrationApi = () => {
-  const [state, dispatch] = useStore<BCState>()
+// The registration API is a bit of a special case because it gets called during initialization,
+// so its params are adjusted to account for an api client that may not be ready yet
+const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: boolean = true) => {
+  const [store, dispatch] = useStore<BCState>()
 
   const register = useCallback(async () => {
+    if (!clientIsReady || !apiClient) {
+      throw new Error('BCSC client not ready for registration')
+    }
+
     const account = await getAccount()
     // If an account already exists, we don't need to register again
     if (account) return
@@ -65,22 +71,33 @@ const useRegistrationApi = () => {
       securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
     })
     return data
-  }, [dispatch])
+  }, [clientIsReady, apiClient, dispatch])
 
-  const updateRegistration = useCallback(async (clientId: string) => {
-    const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
-    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
-    const { data } = await apiClient.put<RegistrationResponseData>(
-      `${apiClient.endpoints.registration}/${clientId}`,
-      body,
-      { headers: { 'Content-Type': 'application/json' } }
-    )
-    return data
-  }, [])
+  const updateRegistration = useCallback(
+    async (clientId: string) => {
+      if (!clientIsReady || !apiClient) {
+        throw new Error('BCSC client not ready for registration update')
+      }
+
+      const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
+      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
+      const { data } = await apiClient.put<RegistrationResponseData>(
+        `${apiClient.endpoints.registration}/${clientId}`,
+        body,
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+      return data
+    },
+    [clientIsReady, apiClient]
+  )
 
   const deleteRegistration = useCallback(
     async (clientId: string) => {
-      const registrationAccessToken = state.bcsc.registrationAccessToken
+      if (!clientIsReady || !apiClient) {
+        throw new Error('BCSC client not ready for registration deletion')
+      }
+
+      const registrationAccessToken = store.bcsc.registrationAccessToken
 
       const { status } = await apiClient.delete(`${apiClient.endpoints.registration}/${clientId}`, {
         skipBearerAuth: true,
@@ -92,7 +109,7 @@ const useRegistrationApi = () => {
       // 200 level status codes indicate success
       return { success: status > 199 && status < 300 }
     },
-    [state.bcsc.registrationAccessToken]
+    [clientIsReady, apiClient, store.bcsc.registrationAccessToken]
   )
 
   return useMemo(

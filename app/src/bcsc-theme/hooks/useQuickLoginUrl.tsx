@@ -5,7 +5,7 @@ import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
 import { getNotificationTokens } from '../utils/push-notification-tokens'
 import useDataLoader from './useDataLoader'
-import BCSCService from '../api/client'
+import { useBCSCApiClient } from './useBCSCApiClient'
 
 // Only a subset of the ClientMetadata is needed for this hook
 type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login_uri'>
@@ -23,6 +23,7 @@ export const STUB_SERVICE_CLIENT: ClientMetadataStub = { client_ref_id: '' }
  */
 export const useQuickLoginURL = (serviceClient: ClientMetadataStub): string | null => {
   const { jwks } = useApi()
+  const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const [quickLoginUrl, setQuickLoginUrl] = useState<string | null>(null)
@@ -60,12 +61,12 @@ export const useQuickLoginURL = (serviceClient: ClientMetadataStub): string | nu
           throw new Error('No account available')
         }
 
-        if (!BCSCService.tokens?.access_token) {
+        if (!client.tokens?.access_token) {
           throw new Error('Access token is missing')
         }
 
         const loginHint = await createQuickLoginJWT(
-          BCSCService.tokens.access_token,
+          client.tokens.access_token,
           accountDataLoader.data.clientID,
           accountDataLoader.data.issuer,
           serviceClient.client_ref_id,
@@ -84,7 +85,7 @@ export const useQuickLoginURL = (serviceClient: ClientMetadataStub): string | nu
     }
 
     asyncEffect()
-  }, [serviceClient, logger, jwkDataLoader, tokensDataLoader, accountDataLoader])
+  }, [serviceClient, logger, jwkDataLoader, tokensDataLoader, accountDataLoader, client.tokens?.access_token])
 
   return quickLoginUrl
 }

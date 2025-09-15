@@ -26,15 +26,16 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     contentContainer: {
       flex: 1,
     },
+    // At smaller sizes the Image tag will ignore exif tags, which provide orientation
+    // (along with other metadata.) Image is rendered at a larger size to pick up the
+    // exif data, then scaled down and given negative margin to fit in the button
     image: {
-      // At smaller sizes the Image tag will ignore exif tags, which provide orientation (along with other metadata)
-      // Image is rendered at a larger size to pick up the exif data, then scaled down to fit in the button
-      height: 240,
+      height: 300, // height that will ensure EXIF
       alignSelf: 'center',
       aspectRatio: 1 / 1.3,
       overflow: 'hidden',
-      transform: [{ scale: 0.5 }],
-      margin: -60,
+      transform: [{ scale: 0.333 }], // scale to match thumbnailHeight
+      margin: -100, // -height * scale
     },
     controlsContainer: {
       marginTop: 'auto',

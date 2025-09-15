@@ -1,10 +1,10 @@
-import { StackNavigationProp } from '@react-navigation/stack'
-import { BCSCRootStackParams, BCSCScreens } from '../types/navigators'
-import { HeaderBackButton, HeaderBackButtonProps } from '@react-navigation/elements'
-import { useStore } from '@bifold/core'
 import { BCDispatchAction, BCState } from '@/store'
-import client from '../api/client'
+import { useStore } from '@bifold/core'
+import { HeaderBackButton, HeaderBackButtonProps } from '@react-navigation/elements'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
+import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
+import { BCSCRootStackParams, BCSCScreens } from '../types/navigators'
 
 /**
  * Creates a custom back button for webview headers that refreshes device count on back press.
@@ -20,6 +20,8 @@ export const createWebviewHeaderBackButton = (
   // Declared so that it has a display name for debugging purposes
   const HeaderLeft = (props: HeaderBackButtonProps) => {
     const [, dispatch] = useStore<BCState>()
+    const client = useBCSCApiClient()
+
     const handleBackPress = async () => {
       // navigate back before refreshing to avoid blocking the UI
       navigation.goBack()

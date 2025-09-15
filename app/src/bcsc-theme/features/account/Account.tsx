@@ -1,20 +1,20 @@
-import client from '@/bcsc-theme/api/client'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { STUB_SERVICE_CLIENT, useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
-import { useTranslation } from 'react-i18next'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { STUB_SERVICE_CLIENT, useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
@@ -22,6 +22,7 @@ const Account: React.FC = () => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { user, metadata } = useApi()
+  const client = useBCSCApiClient()
   const navigation = useNavigation<AccountNavigationProp>()
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<UserInfoResponseData | null>(null)
@@ -69,7 +70,7 @@ const Account: React.FC = () => {
     } catch (error) {
       logger.error(`Error navigating to My Devices webview: ${error}`)
     }
-  }, [navigation, logger])
+  }, [client, navigation, logger])
 
   const handleAllAccountDetailsPress = useCallback(async () => {
     try {

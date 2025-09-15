@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import apiClient from '../client'
+import BCSCApiClient from '../client'
 
 export type Clients = ClientMetadata[]
 
@@ -28,7 +28,7 @@ export interface ClientMetadata {
   service_listing_sort_order?: number
 }
 
-const useMetadataApi = () => {
+const useMetadataApi = (apiClient: BCSCApiClient) => {
   /**
    * Fetches the client metadata from the IAS Client Metadata endpoint.
    *
@@ -39,7 +39,7 @@ const useMetadataApi = () => {
       data: { clients },
     } = await apiClient.get<MetadataResponseData>(apiClient.endpoints.clientMetadata)
     return clients
-  }, [])
+  }, [apiClient])
 
   /**
    * Fetches the client metadata for the BCSC application specifically.
@@ -55,7 +55,7 @@ const useMetadataApi = () => {
     }
 
     return bcscClient
-  }, [getClientMetadata])
+  }, [apiClient, getClientMetadata])
 
   return useMemo(
     () => ({

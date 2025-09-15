@@ -1,4 +1,4 @@
-import client from '@/bcsc-theme/api/client'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import React, { useCallback } from 'react'
@@ -14,6 +14,7 @@ export interface WebViewScreenProps {
 
 const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
   const { ColorPalette } = useTheme()
+  const client = useBCSCApiClient()
   const { url } = route.params
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
