@@ -56,7 +56,7 @@ describe('useFilterServiceClients', () => {
       const hook = renderHook(() => useFilterServiceClients({}))
 
       await waitFor(() => {
-        expect(hook.result.current.length).toHaveLength(2)
+        expect(hook.result.current).toHaveLength(2)
         expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientA.client_ref_id)
         expect(hook.result.current[1].client_ref_id).toBe(mockServiceClientB.client_ref_id)
       })
