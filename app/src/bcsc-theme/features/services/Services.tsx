@@ -1,9 +1,9 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { Keyboard, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import ServiceButton from './components/ServiceButton'
-import { BCState } from '@/store'
+import { BCState, Mode } from '@/store'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useNavigation } from '@react-navigation/native'
@@ -33,8 +33,12 @@ const Services: React.FC = () => {
 
   const serviceClients = useFilterServiceClients({
     cardProcessFilter: getCardProcessForCardType(store.bcsc.cardType),
-    partialNameFilter: debouncedSearch,
+    partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
+
+  const searchInputRef = useRef<View>(null)
+
+  const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
 
   const styles = StyleSheet.create({
     headerText: {
@@ -53,6 +57,8 @@ const Services: React.FC = () => {
       borderRadius: 8,
       height: Spacing.xl * 2,
       paddingHorizontal: Spacing.md,
+      borderWidth: 1,
+      borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8',
     },
     searchText: {
       flex: 1,
@@ -63,7 +69,6 @@ const Services: React.FC = () => {
   })
 
   // TODO (MD): implement a loading UI
-  // TODO (MD): implement an empty state UI
 
   return (
     <SafeAreaView
@@ -75,30 +80,45 @@ const Services: React.FC = () => {
         <ThemedText variant={'headingTwo'} style={styles.headerText}>
           {t('Services.CatalogueTitle')}
         </ThemedText>
-        <TouchableOpacity>
-          <View style={styles.searchInputContainer}>
-            <View style={styles.searchInput}>
-              <Icon name="search" size={30} color={ColorPalette.brand.tertiary} />
-              <TextInput
-                placeholder={t('Services.CatalogueSearch')}
-                placeholderTextColor={ColorPalette.brand.tertiary}
-                value={search}
-                clearButtonMode="while-editing"
-                onChangeText={(newText) => {
-                  // Dismiss keyboard when clearing search text
-                  if (search.length > 0 && newText === '') {
-                    Keyboard.dismiss()
-                  }
+        <View style={styles.searchInputContainer}>
+          <View ref={searchInputRef} style={styles.searchInput}>
+            <Icon name="search" size={30} color={ColorPalette.brand.tertiary} />
+            <TextInput
+              placeholder={t('Services.CatalogueSearch')}
+              placeholderTextColor={ColorPalette.brand.tertiary}
+              value={search}
+              clearButtonMode="while-editing"
+              onChangeText={(newText) => {
+                // Dismiss keyboard when clearing search text
+                if (search.length > 0 && newText === '') {
+                  Keyboard.dismiss()
+                }
 
-                  setSearch(newText)
-                }}
-                accessibilityLabel={t('Services.CatalogueSearch')}
-                testID={testIdWithKey('search')}
-                style={styles.searchText}
-              />
-            </View>
+                setSearch(newText)
+              }}
+              onFocus={() => {
+                if (searchInputRef.current) {
+                  // set the native props directly to avoid useState delay
+                  searchInputRef.current.setNativeProps({
+                    style: {
+                      borderColor: isBCSCMode ? ColorPalette.brand.primary : ColorPalette.brand.primaryBackground,
+                    },
+                  })
+                }
+              }}
+              onBlur={() => {
+                if (searchInputRef.current) {
+                  searchInputRef.current.setNativeProps({
+                    style: { borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8' },
+                  })
+                }
+              }}
+              accessibilityLabel={t('Services.CatalogueSearch')}
+              testID={testIdWithKey('search')}
+              style={styles.searchText}
+            />
           </View>
-        </TouchableOpacity>
+        </View>
         {serviceClients.map((service) => (
           <ServiceButton
             key={service.client_ref_id}

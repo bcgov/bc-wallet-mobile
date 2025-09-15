@@ -1,6 +1,6 @@
 import * as Bifold from '@bifold/core'
 import { useFilterServiceClients } from '@/bcsc-theme/features/services/hooks/useFilterServiceClients'
-import { act, renderHook, waitFor } from '@testing-library/react-native'
+import { renderHook, waitFor } from '@testing-library/react-native'
 import * as useApi from '@/bcsc-theme/api/hooks/useApi'
 import * as navigation from '@react-navigation/native'
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'

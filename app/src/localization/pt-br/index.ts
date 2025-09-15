@@ -215,6 +215,13 @@ const translation = {
   "Services": {
     "CatalogueTitle": "Services (PT-BR)",
     "CatalogueSearch": "Search services (PT-BR)",
+    "WantToLogin": "Do you want to log in to (PT-BR)",
+    "RequestedInformation": "They will receive the following information: (PR-BR)",
+    "FromAccountPrefix": "From your (PT-BR)",
+    "FromAccount": "Account (PT-BR)",
+    "PrivacyNotice": "Privacy notice (PT-BR)",
+    "ReportSuspiciousPrefix": "Not you? (PT-BR)",
+    "ReportSuspicious": "Report Suspicious Activity (PT-BR)",
     "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (PT-BR)",
     "NoLoginProof": "You will use this app to prove who you are when you log in. (PT-BR)",
     "Goto": "Go to (PT-BR)",
