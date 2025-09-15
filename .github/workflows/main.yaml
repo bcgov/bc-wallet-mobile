@@ -59,7 +59,6 @@ jobs:
             "PROOF_TEMPLATE_URL"
             "MEDIATOR_USE_PUSH_NOTIFICATIONS"
             "INDY_VDR_PROXY_URL"
-            "IAS_URL"
           )
           for var in "${required_env_vars[@]}"; do
             if [ -z "${!var}" ]; then
@@ -72,7 +71,6 @@ jobs:
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
-          IAS_URL: ${{ vars.IAS_URL }}
 
   early-exit-check:
     runs-on: ubuntu-22.04
@@ -235,7 +233,6 @@ jobs:
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
-          IAS_URL: ${{ vars.IAS_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
@@ -245,7 +242,6 @@ jobs:
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
-          echo "IAS_URL=${IAS_URL}" >>.env
 
       - name: Update APS environment
         run: |
@@ -383,7 +379,6 @@ jobs:
           PROOF_TEMPLATE_URL: ${{ vars.PROOF_TEMPLATE_URL }}
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
-          IAS_URL: ${{ vars.IAS_URL }}
         run: |
           echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
@@ -393,7 +388,6 @@ jobs:
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
-          echo "IAS_URL=${IAS_URL}" >>.env
 
       - name: Patch for Single App build
         if: ${{ matrix.build_type == 'single-app' }}
