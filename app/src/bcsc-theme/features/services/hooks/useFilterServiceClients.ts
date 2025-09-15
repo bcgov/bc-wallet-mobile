@@ -31,7 +31,7 @@ export interface ServiceClientsFilter {
    *
    * @type {boolean}
    */
-  requiresBCAddressFilter?: boolean
+  requireBCAddressFilter?: boolean
 }
 
 /**
@@ -77,18 +77,22 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
       return []
     }
 
+    let serviceClientsCopy = serviceClients
+
     // Filter services based on the user's card type (ie: card process)
     if (filter.cardProcessFilter) {
-      serviceClients.filter((service) => service.allowed_identification_processes.includes(filter.cardProcessFilter!))
+      serviceClientsCopy = serviceClientsCopy.filter((service) =>
+        service.allowed_identification_processes.includes(filter.cardProcessFilter!)
+      )
     }
 
     // Filter services that require a BC Address
-    if (filter.requiresBCAddressFilter) {
-      serviceClients.filter((service) => service.bc_address === true)
+    if (filter.requireBCAddressFilter) {
+      serviceClientsCopy = serviceClientsCopy.filter((service) => service.bc_address === true)
     }
 
     // Sort services alphabetically by client_name
-    return serviceClients.sort((a, b) => a.client_name.localeCompare(b.client_name))
+    return serviceClientsCopy.sort((a, b) => a.client_name.localeCompare(b.client_name))
   }, [serviceClients])
 
   // Filter services based on the search text
