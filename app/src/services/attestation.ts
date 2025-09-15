@@ -1,9 +1,9 @@
 import {
+  AbstractBifoldLogger,
   AttestationEventTypes,
   AttestationMonitor as AttestationMonitorI,
   BifoldAgent,
   BifoldError,
-  BifoldLogger,
   removeExistingInvitationsById,
 } from '@bifold/core'
 import {
@@ -153,7 +153,7 @@ export class AttestationMonitor implements AttestationMonitorI {
   private offerSubscription?: AgentSubscription
   private agent?: Agent
   private options: AttestationMonitorOptions
-  private log?: BifoldLogger
+  private log?: AbstractBifoldLogger
   private _attestationWorkflowInProgress = false
   private _shouldHandleProofRequestAutomatically = false
   private _proofRequest?: ProofExchangeRecord
@@ -161,7 +161,7 @@ export class AttestationMonitor implements AttestationMonitorI {
 
   // take in options, agent, and logger. Options should include the attestation service URL
   // and the proof to watch for along with the cred_ef_id of the attestation credentials.
-  public constructor(logger: BifoldLogger, options: AttestationMonitorOptions) {
+  public constructor(logger: AbstractBifoldLogger, options: AttestationMonitorOptions) {
     this.log = logger
     this.options = options
     const { shouldHandleProofRequestAutomatically } = options

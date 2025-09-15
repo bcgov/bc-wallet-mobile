@@ -346,6 +346,98 @@ const translation = {
       "RemoveAccount": "Remove account (FR)",
       "RemoveAccountTitle": "Remove account from this app? (FR)",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)"
+    },
+    "VideoTips": {
+      "PrivatePlace": "Find a private place to talk (FR)",
+      "OnlyPerson": "Be the only person in the video (FR)",
+      "RemoveGlasses": "Remove your glasses (if possible) (FR)"
+    },
+    "VideoCall": {
+      "ServiceBC": "Service BC (FR)",
+      "BeforeYouCallTitle": "Before you call (FR)",
+      "WiFiRecommended": "Wi-Fi Recommended (FR)",
+      "StandardDataCharges": "Standard data charges may apply for calls over a cellular network. (FR)",
+      "CellularNetworkWarning": "The app detected you're on a cellular network. (FR)",
+      "FindPrivatePlace": "Find a Private Place to Talk (FR)",
+      "MakeSureOnlyYou": "Make sure you'll be the only person in the video. (FR)",
+      "HoursOfService": "Hours of Service (FR)",
+      "DefaultHours": "Monday to Friday\n7:30am - 5:00pm Pacific Time (FR)",
+      "ContactCentrePrivacy": "Contact Centre Privacy (FR)",
+      "PrivacyNotice": "During a video call, Service BC will ask for and collect personal information. The personal information you will provide is collected for the purpose of verification of your BC Services Card. This information is collected under the authority of Section 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act (FIPPA). (FR)",
+      "PrivacyContactInfo": "If you have further questions about privacy, please contact Chief Privacy Officer, 100 - 722 Johnson Street, Victoria, BC, V8W 1N1, or by phone\n250-405-3726 (FR)",
+      "Assistance": "Need assistance? (FR)",
+      "StartVideoCallDescription": "Start a video call with a Service BC agent. They will verify your identity to finish setting up this app. (FR)",
+      "YouShould": "You should: (FR)",
+      "StartCall": "Start call (FR)",
+      "StartVideoCall": "Start video call (FR)",
+      "OneMomentPlease": "One moment please... (FR)",
+      "SettingThingsUp": "We're setting things up for you (FR)",
+      "TakingLongerThanUsual": "This is taking longer than usual. Please be patient. (FR)",
+      "CreatingSession": "Creating video session... (FR)",
+      "ConnectingWebRTC": "Connecting to video service... (FR)",
+      "WaitingForAgent": "Waiting for an agent to join... (FR)",
+      "Initializing": "Initializing... (FR)",
+      "ConnectionError": "Connection Error (FR)",
+      "GenericError": "An error occurred (FR)",
+      "TryAgain": "Try Again (FR)",
+      "GoBack": "Go Back (FR)",
+      "AllAgentsBusy": "All agents are busy (FR)",
+      "CallUsLater": "Call us later (FR)",
+      "AllAgentsBusyMessage": "We're sorry your call couldn't be answered. All of our agents are busy at the moment. Please call us back during our hours of service. (FR)",
+      "CurrentlyClosedMessage": "We are currently closed. To talk to one of our agents to verify by video, call us during our hours of service. (FR)",
+      "Reminder": "Reminder (FR)",
+      "AddCardAgainReminder": "You'll need to add your card again if you don't finish verifying by {{date}}. (FR)",
+      "SendVideoInstead": "Send video instead (FR)",
+      "CallStates": {
+        "CreatingSession": "Creating video session... (FR)",
+        "ConnectingWebRTC": "Connecting to video service... (FR)",
+        "WaitingForAgent": "Waiting for an agent to join... (FR)",
+        "Initializing": "Initializing... (FR)",
+        "CallEnded": "Call ended, checking verification... (FR)"
+      },
+      "Loading": {
+        "OneMomentPlease": "One moment please... (FR)",
+        "SettingThingsUp": "We're setting things up for you (FR)",
+        "TakingLongerThanUsual": "This is taking longer than usual. Please be patient. (FR)",
+        "Cancel": "Cancel (FR)"
+      },
+      "Banners": {
+        "VideoWillResume": "Video will resume when you return to this app (FR)",
+        "AgentCantSeeYou": "Agent can't see you while your video is off (FR)",
+        "AgentCantHearYou": "Agent can't hear you while your microphone is muted (FR)",
+        "VolumeLow": "Your volume is low, you may need to turn it up to hear the agent (FR)"
+      },
+      "Errors": {
+        "ConnectionError": "Connection Error (FR)",
+        "ConnectionTimeout": "Connection to video service timed out. (FR)",
+        "ConnectionFailed": "Failed to establish video connection. (FR)",
+        "SessionFailed": "Service is unavailable. (FR)",
+        "CallFailed": "Failed to initiate video call. (FR)",
+        "NetworkError": "Network connection is unavailable. (FR)",
+        "PermissionDenied": "Camera or microphone access was denied. (FR)",
+        "UnexpectedError": "An unexpected error occurred. (FR)",
+        "GenericError": "An error occurred (FR)",
+        "TryAgain": "Try Again (FR)",
+        "GoBack": "Go Back (FR)"
+      },
+      "CallBusyOrClosed": {
+        "AllAgentsBusy": "All agents are busy (FR)",
+        "CallUsLater": "Call us later (FR)",
+        "AllAgentsBusyMessage": "We're sorry your call couldn't be answered. All of our agents are busy at the moment. Please call us back during our hours of service. (FR)",
+        "CurrentlyClosedMessage": "We are currently closed. To talk to one of our agents to verify by video, call us during our hours of service. (FR)",
+        "HoursOfService": "Hours of Service (FR)",
+        "Reminder": "Reminder (FR)",
+        "AddCardAgainReminder": "You'll need to add your card again if you don't finish verifying by {{date}}. (FR)",
+        "SendVideoInstead": "Send video instead (FR)"
+      },
+      "VerifyNotComplete": {
+        "Title": "Verify not complete (FR)",
+        "NotVerifiedYet": "Your identity is not verified yet. (FR)",
+        "HavingTrouble": "Having trouble? (FR)",
+        "TroubleshootingTips": "If you are having issues with audio or video, try out the following tips. If you're still having trouble, call us. (FR)",
+        "SendVideoInstead": "Send video instead (FR)",
+        "TryAgain": "Try again (FR)"
+      }
     }
   },
   "RemoteLogging": {

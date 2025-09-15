@@ -1,26 +1,26 @@
-import { ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import { useEffect, useState, useRef } from 'react'
-import { StyleSheet, View, Text, Alert, TouchableOpacity } from 'react-native'
+import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useEffect, useRef, useState } from 'react'
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import MaskedView from '@react-native-masked-view/masked-view'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
-import CircularMask from './CircularMask'
 
 type MaskedCameraProps = {
   navigation: any
   cameraFace: 'front' | 'back'
   cameraInstructions?: string
   cameraLabel?: string
-  cameraMask?: React.ReactElement
+  maskType?: MaskType
+  maskLineColor?: string
   onPhotoTaken: (path: string) => void
 }
 
 const MaskedCamera = ({
   navigation,
-  cameraMask,
   cameraInstructions,
   cameraLabel,
+  maskLineColor,
+  maskType,
   cameraFace = 'back',
   onPhotoTaken,
 }: MaskedCameraProps) => {
@@ -96,7 +96,8 @@ const MaskedCamera = ({
     checkPermissions()
   }, [hasPermission, requestPermission, navigation])
 
-  const toggleTorch = () => setTorchOn((prev) => !prev)
+  const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
+
   if (!hasPermission) {
     return (
       <SafeAreaView style={styles.container}>
@@ -140,27 +141,25 @@ const MaskedCamera = ({
       Alert.alert('Error', 'Failed to take photo. Please try again.')
     }
   }
-  const DefaultMask = <CircularMask />
 
   return (
     <View style={{ flex: 1, backgroundColor: 'black', position: 'relative' }}>
-      <MaskedView style={{ flex: 1, backgroundColor: 'black' }} maskElement={cameraMask || DefaultMask}>
-        <Camera
-          ref={cameraRef}
-          style={styles.camera}
-          device={device}
-          isActive={isActive}
-          photo={true}
-          onInitialized={() => setIsActive(true)}
-          onError={onError}
-          torch={torchOn ? 'on' : 'off'}
-        />
-      </MaskedView>
+      <Camera
+        ref={cameraRef}
+        style={styles.camera}
+        device={device}
+        isActive={isActive}
+        photo={true}
+        onInitialized={() => setIsActive(true)}
+        onError={onError}
+        torch={torchOn ? 'on' : 'off'}
+      />
+      <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
       <View style={styles.instructionText}>
-        <ThemedText style={{ color: 'white' }} variant={'headingThree'}>
+        <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
           {cameraLabel}
         </ThemedText>
-        <ThemedText style={{ color: 'white' }} variant={'headingFour'}>
+        <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
           {cameraInstructions}
         </ThemedText>
       </View>

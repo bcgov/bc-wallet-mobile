@@ -2,6 +2,7 @@ import CryptoKit
 import Foundation
 import React
 
+
 enum AccountSecurityMethod: String {
   case pinNoDeviceAuth = "app_pin_no_device_authn"
   case pinWithDeviceAuth = "app_pin_has_device_authn"
@@ -33,6 +34,7 @@ enum DeviceInfoKeys {
 @objcMembers
 @objc(BcscCore)
 class BcscCore: NSObject {
+  let logger = AppLogger(subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard", category: "BcscCore")
   static let generalizedOsName = "iOS"
   static let provider = "https://idsit.gov.bc.ca/device/"
   static let clientName = "BC Services Wallet"
@@ -144,7 +146,7 @@ class BcscCore: NSObject {
       SecItemDelete(query as CFDictionary)
     }
 
-    print("BcscCore: Keychain cleared for this app.")
+    logger.log("Keychain cleared for this app.")
   }
 
   // MARK: - Public Methods
@@ -229,60 +231,60 @@ class BcscCore: NSObject {
         let baseId = components.joined(separator: "/")  // Reconstruct the base part of the ID
         let newKeyId = "\(baseId)/\(numericSuffix)"
 
-        print(
-          "BcscCore: generateKeyPair (private) - Latest key found: \(existingTag). Attempting to generate new incremented key with ID: \(newKeyId)"
+        logger.log(
+          "generateKeyPair - Latest key found: \(existingTag). Attempting to generate new incremented key with ID: \(newKeyId)"
         )
         do {
           // Assuming default keyType and keySize are handled by KeyPairManager.generateKeyPair or are acceptable.
           _ = try keyPairManager.generateKeyPair(withLabel: newKeyId)
-          print(
-            "BcscCore: generateKeyPair (private) - Successfully generated new incremented key with ID: \(newKeyId)"
+          logger.log(
+            "generateKeyPair - Successfully generated new incremented key with ID: \(newKeyId)"
           )
           return newKeyId
         } catch {
-          print(
-            "BcscCore: generateKeyPair (private) - Failed to generate new incremented key with ID \(newKeyId): \(error.localizedDescription)."
+          logger.error(
+            "generateKeyPair - Failed to generate new incremented key with ID \(newKeyId): \(error.localizedDescription)."
           )
           return nil  // Failed to generate the specifically requested incremented key.
         }
       } else {
         // Parsing the existing tag failed (e.g., not in expected format or last part not a number).
         // Fallback: generate a completely new key using a fresh initial ID pattern.
-        print(
-          "BcscCore: generateKeyPair (private) - Could not parse or increment existing key tag: \(existingTag). Attempting to generate a new key with a fresh initial ID pattern."
+        logger.warning(
+          "generateKeyPair - Could not parse or increment existing key tag: \(existingTag). Attempting to generate a new key with a fresh initial ID pattern."
         )
         // Use the same pattern for the new key ID as in the 'no keys found' case for consistency, but with a new UUID.
         let freshGeneratedKeyId = "\(BcscCore.provider)/\(UUID().uuidString)/1"
-        print(
-          "BcscCore: generateKeyPair (private) - Attempting to generate a new key with ID: \(freshGeneratedKeyId) due to parsing failure of existing key."
+        logger.log(
+          "generateKeyPair - Attempting to generate a new key with ID: \(freshGeneratedKeyId) due to parsing failure of existing key."
         )
         do {
           _ = try keyPairManager.generateKeyPair(withLabel: freshGeneratedKeyId)
-          print(
-            "BcscCore: generateKeyPair (private) - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
+          logger.log(
+            "generateKeyPair - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
           )
           return freshGeneratedKeyId
         } catch {
-          print(
-            "BcscCore: generateKeyPair (private) - Failed to generate new key with ID \(freshGeneratedKeyId) after parsing failure: \(error.localizedDescription)"
+          logger.error(
+            "generateKeyPair - Failed to generate new key with ID \(freshGeneratedKeyId) after parsing failure: \(error.localizedDescription)"
           )
           return nil
         }
       }
     } else {
       // No keys found, attempt to generate a new one
-      print(
-        "BcscCore: generateKeyPair (private) - No keys found. Attempting to generate a new key with ID: \(initialKeyId)"
+      logger.log(
+        "generateKeyPair - No keys found. Attempting to generate a new key with ID: \(initialKeyId)"
       )
       do {
         _ = try keyPairManager.generateKeyPair(withLabel: initialKeyId)  // Assuming default keyType and keySize are handled by this method or are acceptable.
-        print(
-          "BcscCore: generateKeyPair (private) - Successfully generated new key with ID: \(initialKeyId)"
+        logger.log(
+          "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
         )
         return initialKeyId
       } catch {
-        print(
-          "BcscCore: generateKeyPair (private) - Failed to generate new key with ID \(initialKeyId): \(error.localizedDescription)"
+        logger.error(
+          "generateKeyPair - Failed to generate new key with ID \(initialKeyId): \(error.localizedDescription)"
         )
         return nil
       }
@@ -341,7 +343,7 @@ class BcscCore: NSObject {
   /// - Resolves: The hashed string in hexadecimal format.
   /// - Rejects: An error if the input is not valid base64 or if hashing fails.
   @objc
-  func createEvidenceRequestJWT(
+  func createPreVerificationJWT(
     _ deviceCode: String, clientID: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
@@ -375,7 +377,7 @@ class BcscCore: NSObject {
 
       // Add any additional claims
       for (key, value) in claims {
-          print(key, value)
+          logger.log("\(key), \(value)")
           builder.claim(name: key as! String, value: value)
       }
 
@@ -393,7 +395,7 @@ class BcscCore: NSObject {
     _ account: NSDictionary, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
-    print("BcscCore: setAccount called with account: \(account)")
+    logger.log("setAccount called with account: \(account)")
     let accountID = UUID().uuidString
     let storage = StorageService()
 
@@ -429,11 +431,11 @@ class BcscCore: NSObject {
 
     // Ensure account structure exists before writing
     do {
-      try storage.createAccountStructureIfRequired(accountID: accountID)
+      try storage.updateAccountListEntry(accountID: accountID)
     } catch {
       reject(
-        "E_ACCOUNT_STRUCTURE_CREATION_FAILED",
-        "Failed to create account structure: \(error.localizedDescription)", error)
+        "E_UPDATE_ACCOUNT_LIST_ENTRY_FAILED",
+        "Failed to update account list entry: \(error.localizedDescription)", error)
       return
     }
 
@@ -444,7 +446,7 @@ class BcscCore: NSObject {
     )
 
     if success {
-      print("BcscCore: setAccount - Account successfully stored")
+      logger.log("setAccount - Account successfully stored")
       resolve(nil)
     } else {
       reject("E_ACCOUNT_STORAGE_FAILED", "Failed to store account data", nil)
@@ -478,6 +480,36 @@ class BcscCore: NSObject {
     } else {
       resolve(nil)
     }
+  }
+  
+  /// Remove the current account and all related files.
+  ///
+  /// - Parameters:
+  ///   - resolve: Called when the account is successfully removed (returns nil).
+  ///   - reject: Called with an error if the account ID is missing/invalid or if account file removal fails.
+  @objc
+  func removeAccount(
+      _ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
+  ) {
+      let storage = StorageService()
+      guard let accountID = storage.currentAccountID else {
+          reject(
+              "E_MISSING_INVALID_ACCOUNT_ID",
+              "Account ID is missing or invalid", nil)
+          return
+      }
+
+      let isDeleted = storage.removeAccountFiles(accountID: accountID)
+
+      if !isDeleted {
+          reject(
+              "E_FAILED_TO_DELETE_ACCOUNT",
+              "Failed to remove account files", nil)
+          return
+      }
+
+      // account deleted successfully
+      resolve(nil)
   }
 
   @objc
@@ -659,7 +691,7 @@ class BcscCore: NSObject {
     ]
 
     do {
-      // print("BcscCore: getDynamicClientRegistrationBody - Client Registration Data: \(clientRegistrationData)")
+      // logger.log("BcscCore: getDynamicClientRegistrationBody - Client Registration Data: \(clientRegistrationData)")
       let jsonData = try JSONSerialization.data(withJSONObject: clientRegistrationData, options: [])
       let jsonString = String(data: jsonData, encoding: .utf8) ?? "{}"
 
@@ -810,7 +842,7 @@ class BcscCore: NSObject {
       return  // Error already handled in makeSignedJWT
     }
 
-    print("signedJWT: \(signedJWT)")
+    logger.log("signedJWT: \(signedJWT)")
 
     // Encrypt the signed JWT with the provided public key
     do {

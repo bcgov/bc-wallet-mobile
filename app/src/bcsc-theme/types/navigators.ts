@@ -43,6 +43,11 @@ export enum BCSCScreens {
   EvidenceTypeList = 'EvidenceTypeList',
   EvidenceCapture = 'BCSCEvidenceCapture',
   EvidenceIDCollection = 'BCSCEvidenceIDCollection',
+  BeforeYouCall = 'BCSCBeforeYouCall',
+  StartCall = 'BCSCStartCall',
+  CallBusyOrClosed = 'BCSCCallBusyOrClosed',
+  LiveCall = 'BCSCLiveCall',
+  VerifyNotComplete = 'BCSCVerifyNotComplete',
   ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
@@ -78,9 +83,14 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.VerificationMethodSelection]: undefined
   [BCSCScreens.VerifyInPerson]: undefined
   [BCSCScreens.InformationRequired]: undefined
-  [BCSCScreens.PhotoInstructions]: undefined
-  [BCSCScreens.TakePhoto]: { deviceSide: 'front' | 'back'; cameraLabel: string; cameraInstructions: string }
-  [BCSCScreens.PhotoReview]: { photoPath: string }
+  [BCSCScreens.PhotoInstructions]: { forLiveCall: boolean }
+  [BCSCScreens.TakePhoto]: {
+    deviceSide: 'front' | 'back'
+    cameraLabel: string
+    cameraInstructions: string
+    forLiveCall: boolean
+  }
+  [BCSCScreens.PhotoReview]: { photoPath: string; forLiveCall: boolean }
   [BCSCScreens.VideoInstructions]: undefined
   [BCSCScreens.TakeVideo]: undefined
   [BCSCScreens.VideoReview]: { videoPath: string; videoThumbnailPath: string }
@@ -94,5 +104,10 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.EvidenceTypeList]: undefined
   [BCSCScreens.EvidenceCapture]: { cardType: EvidenceType }
   [BCSCScreens.EvidenceIDCollection]: { cardType: EvidenceType }
+  [BCSCScreens.BeforeYouCall]: { formattedHours?: string }
+  [BCSCScreens.StartCall]: undefined
+  [BCSCScreens.CallBusyOrClosed]: { busy: boolean; formattedHours?: string }
+  [BCSCScreens.LiveCall]: undefined
+  [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddressScreen]: undefined
 }

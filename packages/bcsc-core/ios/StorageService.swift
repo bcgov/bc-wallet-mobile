@@ -28,6 +28,7 @@ enum AccountFiles: String {
 }
 
 class StorageService {
+    let logger = AppLogger(subsystem: Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard", category: "StorageService")
     var currentBundleID: String {
         return Bundle.main.bundleIdentifier ?? "ca.bc.gov.id.servicescard"
     }
@@ -60,7 +61,7 @@ class StorageService {
                 .appendingPathComponent(accountListURLComponent)
             
             guard FileManager.default.fileExists(atPath: accountListFileUrl.path) else {
-                print("StorageService: Error - account_list file does not exist at \(accountListFileUrl.path).")
+                logger.error("account_list file does not exist at \(accountListFileUrl.path).")
                 return nil
             }
             
@@ -69,14 +70,14 @@ class StorageService {
             if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
                let accounts = json["accounts"] as? [String],
                let firstAccountID = accounts.first, !firstAccountID.isEmpty {
-                // print("StorageService: Successfully loaded account ID \(firstAccountID) from account_list.")
+                // logger.log("StorageService: Successfully loaded account ID \(firstAccountID) from account_list.")
                 return firstAccountID
             } else {
-                print("StorageService: Error - Failed to parse account_list JSON or accounts array is empty/first ID is empty.")
+                logger.error("Failed to parse account_list JSON or accounts array is empty/first ID is empty.")
                 return nil
             }
         } catch {
-            print("StorageService: Error - Could not access or read account_list: \(error).")
+            logger.error("Could not access or read account_list: \(error).")
             return nil
         }
     }
@@ -88,7 +89,7 @@ class StorageService {
     func readData<T: NSObject & NSCoding & NSSecureCoding>(file: AccountFiles, pathDirectory: FileManager.SearchPathDirectory) -> T? { // Added file parameter
         do {
             guard let accountID = self.currentAccountID else {
-                print("StorageService: Error - currentAccountID is nil. Cannot read data.")
+                logger.error("currentAccountID is nil. Cannot read data.")
                 return nil
             }
             let rootDirectoryURL = try FileManager.default.url(for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
@@ -110,14 +111,14 @@ class StorageService {
             }
             
             let data = try Data(contentsOf: fileUrl)
-            print("Data read from file: \(data)")
+            logger.log("Data read from file: \(data)")
             
             if let obj: T = try? decodeArchivedObject(from: data) {
-                print("Decoded object: \(obj)")
+                logger.log("Decoded object: \(obj)")
                 return obj
             }
             
-            print("Failed to decode object from data.")
+            logger.error("Failed to decode object from data.")
             
             return nil
         } catch {
@@ -133,7 +134,7 @@ class StorageService {
         do {
             // Get the current account ID first
             guard let accountID = self.currentAccountID else {
-                print("StorageService: Error - currentAccountID is nil. Cannot write data.")
+                logger.error("currentAccountID is nil. Cannot write data.")
                 return false
             }
             
@@ -150,46 +151,69 @@ class StorageService {
             // Write the encoded data to file
             try encodedData.write(to: fileUrl)
             
-            print("StorageService: Successfully wrote data to file: \(fileUrl.path)")
+            logger.log("Successfully wrote data to file: \(fileUrl.path)")
             return true
         } catch {
-            print("StorageService: Error writing data: \(error)")
+            logger.error("Error writing data: \(error)")
             return false
         }
-    } 
-
-    // MARK: - Helper Methods
-
-    func createAccountStructureIfRequired(accountID: String) throws {
-        let rootDirectoryURL = try FileManager.default.url(for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-        let baseURL = rootDirectoryURL.appendingPathComponent(self.basePath)
-        let accountListPath = baseURL.appendingPathComponent(accountListURLComponent)
-        
-        // Check if the account_list file already exists
-        guard !FileManager.default.fileExists(atPath: accountListPath.path) else {
-            print("StorageService: account_list file already exists at \(accountListPath.path)")
-            return
-        }
-        
-        // Create the account list structure with provided accountID
-        let accountListData: [String: Any] = [
-            "accounts": [accountID],
-            "current": accountID
-        ]
-                
-        // Create directory with accountID as name if it doesn't exist
-        let accountDirectory = baseURL.appendingPathComponent(accountID)
-        if !FileManager.default.fileExists(atPath: accountDirectory.path) {
-            try FileManager.default.createDirectory(at: accountDirectory, withIntermediateDirectories: true, attributes: nil)
-            print("StorageService: Created account directory at \(accountDirectory.path)")
-        } else {
-            print("StorageService: Account directory already exists at \(accountDirectory.path)")
-        }
-
-        // Convert to JSON data and write to file
-        let jsonData = try JSONSerialization.data(withJSONObject: accountListData, options: [])
-        try jsonData.write(to: accountListPath)
     }
+  
+  func removeAccountFiles(accountID: String) -> Bool {
+      let pathDirectory = defaultSearchPathDirectory
+
+      do {
+          let rootDirectoryURL = try FileManager.default.url(
+              for: pathDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+          let accountDirectoryUrl = rootDirectoryURL.appendingPathComponent(self.basePath)
+              .appendingPathComponent(accountID)
+        
+          let fileManager = FileManager.default
+
+          if fileManager.fileExists(atPath: accountDirectoryUrl.path) {
+              try fileManager.removeItem(atPath: accountDirectoryUrl.path)
+              logger.log(
+                  "StorageService: Successfully removed account files for account: \(accountID)")
+          } else {
+              logger.log("StorageService: Account files for account: \(accountID) not found")
+          }
+
+          return true
+      } catch {
+          logger.log("StorageService: Error removing account files: \(error)")
+          return false
+      }
+  }
+  
+  // MARK: - Helper Methods
+  
+  func updateAccountListEntry(accountID: String) throws {
+      let rootDirectoryURL = try FileManager.default.url(
+          for: defaultSearchPathDirectory, in: .userDomainMask, appropriateFor: nil, create: false
+      )
+      let baseURL = rootDirectoryURL.appendingPathComponent(self.basePath)
+      let accountListPath = baseURL.appendingPathComponent(accountListURLComponent)
+
+      // Create the account list structure with provided accountID
+      let accountListData: [String: Any] = [
+          "accounts": [accountID],
+          "current": accountID,
+      ]
+
+      // Create directory with accountID as name if it doesn't exist
+      let accountDirectory = baseURL.appendingPathComponent(accountID)
+      if !FileManager.default.fileExists(atPath: accountDirectory.path) {
+          try FileManager.default.createDirectory(
+              at: accountDirectory, withIntermediateDirectories: true, attributes: nil)
+          logger.log("StorageService: Created account directory at \(accountDirectory.path)")
+      } else {
+          logger.log("StorageService: Account directory already exists at \(accountDirectory.path)")
+      }
+
+      // Convert to JSON data and write to file
+      let jsonData = try JSONSerialization.data(withJSONObject: accountListData, options: [])
+      try jsonData.write(to: accountListPath)
+  }
     
     private func encodeArchivedObject<T: NSObject & NSSecureCoding>(
         object: T,
@@ -201,9 +225,9 @@ class StorageService {
         if T.self != NSDictionary.self {
             let archivedClassName = "\(moduleName).\(className)"
             NSKeyedArchiver.setClassName(archivedClassName, for: T.self)
-            print("Encoding class: \(archivedClassName)")
+            logger.log("Encoding class: \(archivedClassName)")
         } else {
-            print("Skipping class registration for NSDictionary")
+            logger.log("Skipping class registration for NSDictionary")
         }
         
         let archiver = NSKeyedArchiver(requiringSecureCoding: false)
@@ -233,9 +257,9 @@ class StorageService {
         if T.self != NSDictionary.self {
             let archivedClassName = "\(moduleName).\(className)"
             NSKeyedUnarchiver.setClass(T.self, forClassName: archivedClassName)
-            print("Decoding classx: \(archivedClassName)")
+            logger.log("Decoding classx: \(archivedClassName)")
         } else {
-            print("Skipping class registration for NSDictionary")
+            logger.log("Skipping class registration for NSDictionary")
         }
         
         let unarchiver = try NSKeyedUnarchiver(forReadingFrom: data)

@@ -1,17 +1,18 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { hitSlop } from '@/constants'
+import { useSetupSteps } from '@/hooks/useSetupSteps'
+import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCDispatchAction, BCState } from '@/store'
 import { useTranslation } from 'react-i18next'
 import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { SetupStep } from './components/SetupStep'
-import { hitSlop } from '@/constants'
-import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { SetupStep } from './components/SetupStep'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -35,6 +36,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const [store, dispatch] = useStore<BCState>()
   const { evidence, token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const factoryReset = useFactoryReset()
 
   // tracks the current step state (completed and focused)
   const step = useSetupSteps(store)
@@ -374,9 +376,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <View style={{ padding: Spacing.md }}>
           <Button
             title={'Reset data'}
-            onPress={() => {
-              dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.None] })
-              dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [undefined] })
+            onPress={async () => {
+              const result = await factoryReset()
+
+              if (!result.success) {
+                logger.error('Factory reset failed', result.error)
+              }
             }}
             testID={testIdWithKey('ResetData')}
             accessibilityLabel={'Reset data'}

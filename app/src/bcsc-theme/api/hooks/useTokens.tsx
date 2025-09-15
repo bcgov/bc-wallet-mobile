@@ -1,8 +1,8 @@
+import { getDeviceCountFromIdToken } from '@/bcsc-theme/utils/get-device-count'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import apiClient, { TokenStatusResponseDataWithDeviceCount } from '../client'
 import { withAccount } from './withAccountGuard'
-import { getDeviceCountFromIdToken } from '@/bcsc-theme/utils/get-device-count'
 
 export interface TokenStatusResponseData {
   access_token: string
@@ -23,7 +23,6 @@ const useTokenApi = () => {
     return withAccount<TokenStatusResponseDataWithDeviceCount>(async (account) => {
       const { clientID, issuer } = account
       const body = await getDeviceCodeRequestBody(deviceCode, clientID, issuer, confirmationCode)
-      apiClient.logger.info(`Device code body: ${body}`)
       const { data } = await apiClient.post<TokenStatusResponseData>(apiClient.endpoints.token, body, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,

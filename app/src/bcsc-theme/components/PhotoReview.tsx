@@ -38,7 +38,6 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
       setLoading(false)
     }
   }
-
   return (
     <View style={styles.contentContainer}>
       <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />

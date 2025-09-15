@@ -153,7 +153,9 @@ PODS:
     - React
     - React-callinvoker
     - React-Core
+  - JitsiWebRTC (124.0.2)
   - libevent (2.1.12)
+  - Mute (0.6.1)
   - nanopb (2.30908.0):
     - nanopb/decode (= 2.30908.0)
     - nanopb/encode (= 2.30908.0)
@@ -1031,7 +1033,7 @@ PODS:
   - React-Mapbuffer (0.73.11):
     - glog
     - React-debug
-  - react-native-attestation (2.7.2):
+  - react-native-attestation (2.7.3):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1069,6 +1071,12 @@ PODS:
   - react-native-video/Video (6.16.1):
     - glog
     - RCT-Folly (= 2022.05.16.00)
+    - React-Core
+  - react-native-volume-manager (1.10.0):
+    - Mute
+    - React-Core
+  - react-native-webrtc (124.0.6):
+    - JitsiWebRTC (~> 124.0.0)
     - React-Core
   - react-native-webview (13.10.7):
     - glog
@@ -1241,16 +1249,14 @@ PODS:
     - React-jsi (= 0.73.11)
     - React-logger (= 0.73.11)
     - React-perflogger (= 0.73.11)
+  - ReactNativeIncallManager (4.2.1):
+    - React-Core
   - RNArgon2 (2.0.1):
     - CatCrypto
     - React-Core
   - RNCAsyncStorage (1.22.3):
     - React-Core
   - RNCClipboard (1.16.3):
-    - React-Core
-  - RNCMaskedView (0.3.2):
-    - glog
-    - RCT-Folly (= 2022.05.16.00)
     - React-Core
   - RNDeviceInfo (8.7.1):
     - React-Core
@@ -1290,11 +1296,11 @@ PODS:
     - SDWebImage/Core (= 5.21.1)
   - SDWebImage/Core (5.21.1)
   - SocketRocket (0.6.1)
-  - VisionCamera (4.3.2):
-    - VisionCamera/Core (= 4.3.2)
-    - VisionCamera/React (= 4.3.2)
-  - VisionCamera/Core (4.3.2)
-  - VisionCamera/React (4.3.2):
+  - VisionCamera (4.7.2):
+    - VisionCamera/Core (= 4.7.2)
+    - VisionCamera/React (= 4.7.2)
+  - VisionCamera/Core (4.7.2)
+  - VisionCamera/React (4.7.2):
     - React-Core
   - Yoga (1.14.0)
 
@@ -1349,6 +1355,8 @@ DEPENDENCIES:
   - react-native-splash-screen (from `../node_modules/react-native-splash-screen`)
   - react-native-tcp-socket (from `../node_modules/react-native-tcp-socket`)
   - react-native-video (from `../node_modules/react-native-video`)
+  - react-native-volume-manager (from `../node_modules/react-native-volume-manager`)
+  - react-native-webrtc (from `../node_modules/react-native-webrtc`)
   - react-native-webview (from `../node_modules/react-native-webview`)
   - React-nativeconfig (from `../node_modules/react-native/ReactCommon`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -1370,10 +1378,10 @@ DEPENDENCIES:
   - React-runtimescheduler (from `../node_modules/react-native/ReactCommon/react/renderer/runtimescheduler`)
   - React-utils (from `../node_modules/react-native/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - ReactNativeIncallManager (from `../node_modules/react-native-incall-manager`)
   - RNArgon2 (from `../node_modules/react-native-argon2`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNCClipboard (from `../node_modules/@react-native-clipboard/clipboard`)"
-  - "RNCMaskedView (from `../node_modules/@react-native-masked-view/masked-view`)"
   - RNDeviceInfo (from `../node_modules/react-native-device-info`)
   - "RNFBApp (from `../node_modules/@react-native-firebase/app`)"
   - "RNFBMessaging (from `../node_modules/@react-native-firebase/messaging`)"
@@ -1404,7 +1412,9 @@ SPEC REPOS:
     - GoogleAppMeasurement
     - GoogleDataTransport
     - GoogleUtilities
+    - JitsiWebRTC
     - libevent
+    - Mute
     - nanopb
     - PromisesObjC
     - SDWebImage
@@ -1498,6 +1508,10 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-tcp-socket"
   react-native-video:
     :path: "../node_modules/react-native-video"
+  react-native-volume-manager:
+    :path: "../node_modules/react-native-volume-manager"
+  react-native-webrtc:
+    :path: "../node_modules/react-native-webrtc"
   react-native-webview:
     :path: "../node_modules/react-native-webview"
   React-nativeconfig:
@@ -1540,14 +1554,14 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/utils"
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  ReactNativeIncallManager:
+    :path: "../node_modules/react-native-incall-manager"
   RNArgon2:
     :path: "../node_modules/react-native-argon2"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNCClipboard:
     :path: "../node_modules/@react-native-clipboard/clipboard"
-  RNCMaskedView:
-    :path: "../node_modules/@react-native-masked-view/masked-view"
   RNDeviceInfo:
     :path: "../node_modules/react-native-device-info"
   RNFBApp:
@@ -1601,7 +1615,9 @@ SPEC CHECKSUMS:
   GoogleUtilities: ea963c370a38a8069cc5f7ba4ca849a60b6d7d15
   hermes-engine: d992945b77c506e5164e6a9a77510c9d57472c59
   indy-vdr: aada31078a9ed270dd618fadb4cf69bcdc333d68
+  JitsiWebRTC: b47805ab5668be38e7ee60e2258f49badfe8e1d0
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
+  Mute: 20135a96076f140cc82bfc8b810e2d6150d8ec7e
   nanopb: a0ba3315591a9ae0a16a309ee504766e90db0c96
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   RCT-Folly: cd21f1661364f975ae76b3308167ad66b09f53f5
@@ -1625,7 +1641,7 @@ SPEC CHECKSUMS:
   React-jsinspector: a98428936fb888cc15d857226a26d9ac0a668a0e
   React-logger: 6e4873d1f9c54cca30f6c91a6617f8c91b75ba4c
   React-Mapbuffer: 57bf49a458398d329dad2bf8bc660e3e35b96989
-  react-native-attestation: d35b7756ef9ea75fc600d5c63c2b48929ddf9f65
+  react-native-attestation: e25a5c51296da09097a8c7f7e155953eb52c3939
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
   react-native-date-picker: 2eca217a8fb09c517f5bb6b23978718c6cec59ec
   react-native-encrypted-storage: 569d114e329b1c2c2d9f8c84bcdbe4478dda2258
@@ -1637,6 +1653,8 @@ SPEC CHECKSUMS:
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   react-native-tcp-socket: ae8abcfebc071216302a09d9ed1e375d4e877484
   react-native-video: d74d94fbaeee3c0d8f6570173289f43fe210066f
+  react-native-volume-manager: d9d2863a2374420af89c89662333ea6adf506988
+  react-native-webrtc: 96fdff9e3a942ed88cafe01898da1c93fd628957
   react-native-webview: f802f655c8446404bb0c134da9335a8cf667e8cb
   React-nativeconfig: 8fd29a35a3e4e8c37682d976667663d834ba6165
   React-NativeModulesApple: 83d7077877f8eda8e1b6055b3f8f16f7db8463b5
@@ -1658,10 +1676,10 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 398069b748d97567cc7585cc9a97284ad19d72fa
   React-utils: e8549669b504c18929b2e9aa4d87657e530a91a4
   ReactCommon: 9c38e8797dc2ac72edf63cd18cf450d918575666
+  ReactNativeIncallManager: dccd3e7499caa3bb73d3acfedf4fb0360f1a87d5
   RNArgon2: 708e188b7a4d4ec8baf62463927c47abef453a94
   RNCAsyncStorage: 9350c2956f996b3ff1ac7cfdb50901c113a27640
   RNCClipboard: f6679d470d0da2bce2a37b0af7b9e0bf369ecda5
-  RNCMaskedView: 3f3c27b339db863b1fd5f39cc9660484ecfd46ee
   RNDeviceInfo: d3e91ffb33ee97a7982108476edb68cb3672efa6
   RNFBApp: 827b4dfadf8c039738c1c928474e45b3ec306ba0
   RNFBMessaging: 6465e1ccc5421e9493a5ed8d7d69e4daf8a2de6d
@@ -1676,7 +1694,7 @@ SPEC CHECKSUMS:
   RNVectorIcons: 102cd20472bf0d7cd15443d43cd87f9c97228ac3
   SDWebImage: f29024626962457f3470184232766516dee8dfea
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
-  VisionCamera: 6ad4b86176f6fea45e90e380d3d530bc5e1abff9
+  VisionCamera: 30b358b807324c692064f78385e9a732ce1bebfe
   Yoga: 1f93d5925ea12fb0880b21efe3566677337cf2ed
 
 PODFILE CHECKSUM: 7143c901b4221bb5cd19672e06910ed9b96d7c96
