@@ -3,7 +3,6 @@ import React from 'react'
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-
 import { testIdWithKey, useTheme } from '@bifold/core'
 import Account from '../features/account/Account'
 import Home from '../features/home/Home'

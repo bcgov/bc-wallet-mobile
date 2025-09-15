@@ -71,7 +71,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
     ])
   }
 
-  // Services that are compatible with the user's card type
+  // Apply filters to the service clients (these filters are memoized to avoid unnecessary recalculations)
   const filteredServiceClients = useMemo(() => {
     if (!serviceClients) {
       return []
@@ -79,7 +79,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
 
     let serviceClientsCopy = serviceClients
 
-    // Filter services based on the user's card type (ie: card process)
+    // Filter services based on the card process
     if (filter.cardProcessFilter) {
       serviceClientsCopy = serviceClientsCopy.filter((service) =>
         service.allowed_identification_processes.includes(filter.cardProcessFilter!)
@@ -95,7 +95,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
     return serviceClientsCopy.sort((a, b) => a.client_name.localeCompare(b.client_name))
   }, [serviceClients])
 
-  // Filter services based on the search text
+  // Further filter services based on the partial name filter
   const queriedServiceClients = useMemo(() => {
     // Return all supported services when there's no search text
     if (!filter.partialNameFilter || filter.partialNameFilter.trim() === '') {
