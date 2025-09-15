@@ -13,15 +13,15 @@ diff --git a/app/App.tsx b/app/App.tsx
 index da1e87bf..b5d58351 100644
 --- a/app/App.tsx
 +++ b/app/App.tsx
-@@ -68,7 +68,7 @@ const App = () => {
-     <ErrorBoundaryWrapper logger={BCLogger}>
+@@ -70,7 +70,7 @@ const App = () => {
        <ContainerProvider value={bcwContainer}>
          <StoreProvider initialState={initialState} reducer={reducer}>
--          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
-+          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCSC}>
-             <NavContainer navigationRef={navigationRef}>
-               <AnimatedComponentsProvider value={animatedComponents}>
-                 <AuthProvider>
+           <BCSCApiClientProvider>
+-            <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
++            <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCSC}>
+               <NavContainer navigationRef={navigationRef}>
+                 <AnimatedComponentsProvider value={animatedComponents}>
+                   <AuthProvider>
 diff --git a/app/src/store.tsx b/app/src/store.tsx
 index 104e4d41..cabd61b7 100644
 --- a/app/src/store.tsx
