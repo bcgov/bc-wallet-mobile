@@ -70,9 +70,7 @@ export interface BCSCState {
   emailConfirmed?: boolean
   deviceCode?: string
   userCode?: string
-  // TODO (MD): technically this metadata does not need to be persisted. The data is used to
-  // register the device with IAS, and they are the source of truth for this data. However,
-  // we are unable to update this metadata with IAS after the device is registered.
+  // only needed for non-bcsc cards and deleted after verification
   userMetadata?: NonBCSCUserMetadata
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
