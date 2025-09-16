@@ -71,7 +71,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
   // render an alternative screen if the serviceClient does not support OIDC login
   if (!serviceClient.initiate_login_uri) {
     return (
-      <SafeAreaView style={styles.screenContainer} edges={['bottom']}>
+      <SafeAreaView edges={['bottom']}>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View style={styles.screenContainer}>
             <ThemedText variant={'headingThree'}>{serviceClient.client_name}</ThemedText>
