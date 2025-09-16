@@ -1296,11 +1296,11 @@ PODS:
     - SDWebImage/Core (= 5.21.1)
   - SDWebImage/Core (5.21.1)
   - SocketRocket (0.6.1)
-  - VisionCamera (4.7.2):
-    - VisionCamera/Core (= 4.7.2)
-    - VisionCamera/React (= 4.7.2)
-  - VisionCamera/Core (4.7.2)
-  - VisionCamera/React (4.7.2):
+  - VisionCamera (4.3.2):
+    - VisionCamera/Core (= 4.3.2)
+    - VisionCamera/React (= 4.3.2)
+  - VisionCamera/Core (4.3.2)
+  - VisionCamera/React (4.3.2):
     - React-Core
   - Yoga (1.14.0)
 
@@ -1694,7 +1694,7 @@ SPEC CHECKSUMS:
   RNVectorIcons: 102cd20472bf0d7cd15443d43cd87f9c97228ac3
   SDWebImage: f29024626962457f3470184232766516dee8dfea
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
-  VisionCamera: 30b358b807324c692064f78385e9a732ce1bebfe
+  VisionCamera: 6ad4b86176f6fea45e90e380d3d530bc5e1abff9
   Yoga: 1f93d5925ea12fb0880b21efe3566677337cf2ed
 
 PODFILE CHECKSUM: 7143c901b4221bb5cd19672e06910ed9b96d7c96
