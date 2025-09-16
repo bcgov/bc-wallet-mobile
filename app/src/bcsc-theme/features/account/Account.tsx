@@ -31,14 +31,16 @@ const Account: React.FC = () => {
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const bcscClientServiceLoader = useDataLoader(metadata.getBCSCClientMetadata, {
+  const { load: loadBcscServiceClient, data: bcscServiceClient } = useDataLoader(metadata.getBCSCClientMetadata, {
     onError: (error) => logger.error(`Error loading BCSC client metadata: ${error}`),
   })
 
-  bcscClientServiceLoader.load()
-
   // we can use the stub service client as a fallback, the hook will return null if no initiate_login_uri is present
-  const url = useQuickLoginURL(bcscClientServiceLoader.data ?? STUB_SERVICE_CLIENT)
+  const [quickLoginUrl] = useQuickLoginURL(bcscServiceClient ?? STUB_SERVICE_CLIENT)
+
+  useEffect(() => {
+    loadBcscServiceClient()
+  }, [loadBcscServiceClient])
 
   useEffect(() => {
     const asyncEffect = async () => {
@@ -75,13 +77,13 @@ const Account: React.FC = () => {
 
   const handleAllAccountDetailsPress = useCallback(async () => {
     try {
-      if (url) {
-        await Linking.openURL(url)
+      if (quickLoginUrl) {
+        await Linking.openURL(quickLoginUrl)
       }
     } catch (error) {
       logger.error(`Error opening All Account Details: ${error}`)
     }
-  }, [url, logger])
+  }, [quickLoginUrl, logger])
 
   const styles = StyleSheet.create({
     container: {

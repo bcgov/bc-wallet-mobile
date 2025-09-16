@@ -20,7 +20,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
-  const quickLoginUrl = useQuickLoginURL(serviceClient)
+  const [quickLoginUrl] = useQuickLoginURL(serviceClient)
 
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
 
