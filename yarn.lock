@@ -11292,7 +11292,7 @@ __metadata:
     react-native-uuid: "npm:~2.0.3"
     react-native-vector-icons: "npm:~10.0.3"
     react-native-video: "npm:~6.16.1"
-    react-native-vision-camera: "npm:4.7.2"
+    react-native-vision-camera: "npm:4.3.2"
     react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:~13.10.7"
@@ -25754,9 +25754,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-vision-camera@npm:4.7.2":
-  version: 4.7.2
-  resolution: "react-native-vision-camera@npm:4.7.2"
+"react-native-vision-camera@npm:4.3.2":
+  version: 4.3.2
+  resolution: "react-native-vision-camera@npm:4.3.2"
   peerDependencies:
     "@shopify/react-native-skia": "*"
     react: "*"
@@ -25770,7 +25770,7 @@ __metadata:
       optional: true
     react-native-worklets-core:
       optional: true
-  checksum: 10c0/1d6dd49991f5b9481c0724bd8353a38af7eb05e5277b4a27bbeb0885c1cd01c86f92a0126ec7e0a2d19b50c7f583c12f0a301de831de328dc5a0b33bc88bd0b7
+  checksum: 10c0/a388fa15586cb11425b76cbdaf3f49dff4d8d8a45d4c9a1c5504b89d792b6afbc5a01d9f680b4554b965d2d7cbd217b69f5a32a8f81956e27dd30536be27f341
   languageName: node
   linkType: hard
 
