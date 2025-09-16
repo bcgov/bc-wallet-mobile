@@ -1,6 +1,5 @@
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl } from '@/constants'
 import { BCState, Mode } from '@/store'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'

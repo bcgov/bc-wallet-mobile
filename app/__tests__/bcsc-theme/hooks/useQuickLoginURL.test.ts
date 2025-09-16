@@ -11,7 +11,7 @@ import * as useBCSCApiClient from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import * as Bifold from '@bifold/core'
-import { act, renderHook, waitFor } from '@testing-library/react-native'
+import { renderHook, waitFor } from '@testing-library/react-native'
 
 describe('useQuickLoginURL', () => {
   beforeEach(() => {
