@@ -161,8 +161,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
                     return
                   }
 
-                  // This should never happen, but just in case...
-                  Alert.alert(t('Services.LoginErrorTitle'), quickLoginError ?? undefined)
+                  if (quickLoginError) {
+                    Alert.alert(t('Services.LoginErrorTitle'), quickLoginError)
+                  }
                 }}
               />
             </View>

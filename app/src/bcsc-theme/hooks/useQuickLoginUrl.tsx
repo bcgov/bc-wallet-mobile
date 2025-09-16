@@ -101,7 +101,7 @@ export const useQuickLoginURL = (serviceClient: ClientMetadataStub): QuickLoginU
         handleQuickLoginUpdate(`${serviceClient.initiate_login_uri}?login_hint=${encodedTokenHint}`, null)
       } catch (error) {
         logger.error('Error creating quick login URL', error as Error)
-        handleQuickLoginUpdate(null, `Error creating quick login URL ${(error as Error).message}`)
+        handleQuickLoginUpdate(null, `Error creating quick login URL: ${(error as Error).message}`)
       }
     }
 
