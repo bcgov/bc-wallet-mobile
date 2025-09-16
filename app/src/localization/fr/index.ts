@@ -227,7 +227,9 @@ const translation = {
     "Goto": "Go to (FR)",
     "NotListed": "Services not listed? (FR)",
     "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (FR)",
-    "NotListedDescriptionContact": "Contact the service to the the link to their website. (FR)"
+    "NotListedDescriptionContact": "Contact the service to the the link to their website. (FR)",
+    "PrivacyPolicy": "Privacy Policy (FR)",
+    "LoginErrorTitle": "Unable to quick login to service (FR)"
   },
   "Unified": {
     "Steps": {

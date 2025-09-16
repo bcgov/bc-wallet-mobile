@@ -1,7 +1,8 @@
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl } from '@/constants'
 import { BCState, Mode } from '@/store'
-import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Alert, Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -20,9 +21,11 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
-  const [quickLoginUrl] = useQuickLoginURL(serviceClient)
+  const [quickLoginUrl, quickLoginError] = useQuickLoginURL(serviceClient)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
+  const privacyPolicyUri = serviceClient.policy_uri
 
   const styles = StyleSheet.create({
     screenContainer: {
@@ -115,16 +118,25 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
           <ThemedText>{serviceClient.claims_description}</ThemedText>
         </View>
 
-        <TouchableOpacity
-          onPress={() => {
-            // TODO (MD): Open privacy policy URL if available
-          }}
-        >
-          <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-            <ThemedText style={styles.infoHeader}>{t('Services.PrivacyNotice')}</ThemedText>
-            <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
-          </View>
-        </TouchableOpacity>
+        {privacyPolicyUri ? (
+          <TouchableOpacity
+            onPress={() => {
+              try {
+                props.navigation.navigate(BCSCScreens.WebView, {
+                  url: privacyPolicyUri,
+                  title: t('Services.PrivacyPolicy'),
+                })
+              } catch (error) {
+                logger.error(`Error navigating to the service client privacy policy webview: ${error}`)
+              }
+            }}
+          >
+            <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
+              <ThemedText style={styles.infoHeader}>{t('Services.PrivacyNotice')}</ThemedText>
+              <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
+            </View>
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <ThemedText variant={'bold'}>
@@ -145,7 +157,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
               }
 
               // This should never happen, but just in case...
-              Alert.alert(t('Services.LoginErrorTitle'), t('Services.LoginErrorMessage'))
+              Alert.alert(t('Services.LoginErrorTitle'), quickLoginError ?? undefined)
             }}
           />
         </View>
