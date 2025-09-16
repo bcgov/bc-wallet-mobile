@@ -5,7 +5,7 @@ import { BCState, Mode } from '@/store'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Alert, Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
@@ -72,103 +72,111 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
   if (!serviceClient.initiate_login_uri) {
     return (
       <SafeAreaView style={styles.screenContainer} edges={['bottom']}>
-        <ThemedText variant={'headingThree'}>{serviceClient.client_name}</ThemedText>
-        <ThemedText style={styles.descriptionText}>{t('Services.NoLoginInstructions')}</ThemedText>
-        <ThemedText style={styles.descriptionText}>{t('Services.NoLoginProof')}</ThemedText>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={styles.screenContainer}>
+            <ThemedText variant={'headingThree'}>{serviceClient.client_name}</ThemedText>
+            <ThemedText style={styles.descriptionText}>{t('Services.NoLoginInstructions')}</ThemedText>
+            <ThemedText style={styles.descriptionText}>{t('Services.NoLoginProof')}</ThemedText>
 
-        <TouchableOpacity
-          onPress={() => {
-            Linking.openURL(serviceClient.client_uri)
-          }}
-        >
-          <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-            <ThemedText style={styles.infoHeader}>
-              {t('Services.Goto')} {serviceClient.client_name}
+            <TouchableOpacity
+              onPress={() => {
+                Linking.openURL(serviceClient.client_uri)
+              }}
+            >
+              <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
+                <ThemedText style={styles.infoHeader}>
+                  {t('Services.Goto')} {serviceClient.client_name}
+                </ThemedText>
+                <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
+              </View>
+            </TouchableOpacity>
+
+            {/* TODO (MD): Find out what action should happen when user reports suspicious activity */}
+            <ThemedText variant={'bold'}>
+              {t('Services.ReportSuspiciousPrefix')} <ThemedText>{t('Services.ReportSuspicious')}</ThemedText>
             </ThemedText>
-            <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
           </View>
-        </TouchableOpacity>
-
-        {/* TODO (MD): Find out what action should happen when user reports suspicious activity */}
-        <ThemedText variant={'bold'}>
-          {t('Services.ReportSuspiciousPrefix')} <ThemedText>{t('Services.ReportSuspicious')}</ThemedText>
-        </ThemedText>
+        </ScrollView>
       </SafeAreaView>
     )
   }
 
   return (
-    <SafeAreaView style={styles.screenContainer} edges={['bottom']}>
-      <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
-        {`${t('Services.WantToLogin')}\n`}
-        <ThemedText variant={'headingThree'}>{serviceClient.client_name}?</ThemedText>
-      </ThemedText>
-
-      <ThemedText style={styles.descriptionText}>{t('Services.RequestedInformation')}</ThemedText>
-
-      <View style={styles.cardsContainer}>
-        <View style={styles.infoContainer}>
-          <ThemedText style={[styles.infoHeader, { marginBottom: Spacing.sm }]}>
-            {t('Services.FromAccountPrefix')}
-            <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
-              {' '}
-              {t('Services.FromAccount')}
-            </ThemedText>
+    <SafeAreaView edges={['bottom']}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.screenContainer}>
+          <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
+            {`${t('Services.WantToLogin')}\n`}
+            <ThemedText variant={'headingThree'}>{serviceClient.client_name}?</ThemedText>
           </ThemedText>
-          <ThemedText>{serviceClient.claims_description}</ThemedText>
-        </View>
 
-        {privacyPolicyUri ? (
-          <TouchableOpacity
-            onPress={() => {
-              try {
-                props.navigation.navigate(BCSCScreens.WebView, {
-                  url: privacyPolicyUri,
-                  title: t('Services.PrivacyPolicy'),
-                })
-              } catch (error) {
-                logger.error(`Error navigating to the service client privacy policy webview: ${error}`)
-              }
-            }}
-          >
-            <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-              <ThemedText style={styles.infoHeader}>{t('Services.PrivacyNotice')}</ThemedText>
-              <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
+          <ThemedText style={styles.descriptionText}>{t('Services.RequestedInformation')}</ThemedText>
+
+          <View style={styles.cardsContainer}>
+            <View style={styles.infoContainer}>
+              <ThemedText style={[styles.infoHeader, { marginBottom: Spacing.sm }]}>
+                {t('Services.FromAccountPrefix')}
+                <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
+                  {' '}
+                  {t('Services.FromAccount')}
+                </ThemedText>
+              </ThemedText>
+              <ThemedText>{serviceClient.claims_description}</ThemedText>
             </View>
-          </TouchableOpacity>
-        ) : null}
-      </View>
 
-      <ThemedText variant={'bold'}>
-        {t('Services.ReportSuspiciousPrefix')} <ThemedText>{t('Services.ReportSuspicious')}</ThemedText>
-      </ThemedText>
+            {privacyPolicyUri ? (
+              <TouchableOpacity
+                onPress={() => {
+                  try {
+                    props.navigation.navigate(BCSCScreens.WebView, {
+                      url: privacyPolicyUri,
+                      title: t('Services.PrivacyPolicy'),
+                    })
+                  } catch (error) {
+                    logger.error(`Error navigating to the service client privacy policy webview: ${error}`)
+                  }
+                }}
+              >
+                <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
+                  <ThemedText style={styles.infoHeader}>{t('Services.PrivacyNotice')}</ThemedText>
+                  <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
+                </View>
+              </TouchableOpacity>
+            ) : null}
+          </View>
 
-      <View style={styles.buttonsContainer}>
-        <View style={styles.continueButtonContainer}>
-          <Button
-            title="Continue"
-            accessibilityLabel={'Continue'}
-            testID={testIdWithKey('ServiceLoginContinue')}
-            buttonType={ButtonType.Primary}
-            onPress={() => {
-              if (quickLoginUrl) {
-                Linking.openURL(quickLoginUrl)
-                return
-              }
+          <ThemedText variant={'bold'}>
+            {t('Services.ReportSuspiciousPrefix')} <ThemedText>{t('Services.ReportSuspicious')}</ThemedText>
+          </ThemedText>
 
-              // This should never happen, but just in case...
-              Alert.alert(t('Services.LoginErrorTitle'), quickLoginError ?? undefined)
-            }}
-          />
+          <View style={styles.buttonsContainer}>
+            <View style={styles.continueButtonContainer}>
+              <Button
+                title="Continue"
+                accessibilityLabel={'Continue'}
+                testID={testIdWithKey('ServiceLoginContinue')}
+                buttonType={ButtonType.Primary}
+                onPress={() => {
+                  if (quickLoginUrl) {
+                    Linking.openURL(quickLoginUrl)
+                    return
+                  }
+
+                  // This should never happen, but just in case...
+                  Alert.alert(t('Services.LoginErrorTitle'), quickLoginError ?? undefined)
+                }}
+              />
+            </View>
+            <Button
+              title="Cancel"
+              accessibilityLabel={'Cancel'}
+              testID={testIdWithKey('ServiceLoginCancel')}
+              buttonType={ButtonType.Tertiary}
+              onPress={() => props.navigation.goBack()}
+            />
+          </View>
         </View>
-        <Button
-          title="Cancel"
-          accessibilityLabel={'Cancel'}
-          testID={testIdWithKey('ServiceLoginCancel')}
-          buttonType={ButtonType.Tertiary}
-          onPress={() => props.navigation.goBack()}
-        />
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
