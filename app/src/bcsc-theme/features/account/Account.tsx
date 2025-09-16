@@ -35,6 +35,8 @@ const Account: React.FC = () => {
     onError: (error) => logger.error(`Error loading BCSC client metadata: ${error}`),
   })
 
+  bcscClientServiceLoader.load()
+
   // we can use the stub service client as a fallback, the hook will return null if no initiate_login_uri is present
   const url = useQuickLoginURL(bcscClientServiceLoader.data ?? STUB_SERVICE_CLIENT)
 
@@ -42,7 +44,6 @@ const Account: React.FC = () => {
     const asyncEffect = async () => {
       try {
         setLoading(true)
-        bcscClientServiceLoader.load()
         const userInfo = await user.getUserInfo()
         let picture = ''
         if (userInfo.picture) {
@@ -58,7 +59,7 @@ const Account: React.FC = () => {
     }
 
     asyncEffect()
-  }, [user, logger, bcscClientServiceLoader])
+  }, [user, logger])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {

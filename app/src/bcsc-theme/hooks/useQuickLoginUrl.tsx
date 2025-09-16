@@ -36,6 +36,10 @@ export const useQuickLoginURL = (serviceClient: ClientMetadataStub): string | nu
   const tokensDataLoader = useDataLoader(getNotificationTokens, { onError })
   const accountDataLoader = useDataLoader(getAccount, { onError })
 
+  jwkDataLoader.load()
+  tokensDataLoader.load()
+  accountDataLoader.load()
+
   useEffect(() => {
     const asyncEffect = async () => {
       try {
@@ -44,10 +48,6 @@ export const useQuickLoginURL = (serviceClient: ClientMetadataStub): string | nu
           setQuickLoginUrl(null)
           return
         }
-
-        jwkDataLoader.load()
-        tokensDataLoader.load()
-        accountDataLoader.load()
 
         if (!jwkDataLoader.data) {
           throw new Error('No JWK received from server')
@@ -85,7 +85,7 @@ export const useQuickLoginURL = (serviceClient: ClientMetadataStub): string | nu
     }
 
     asyncEffect()
-  }, [serviceClient, logger, jwkDataLoader, tokensDataLoader, accountDataLoader, client.tokens?.access_token])
+  }, [serviceClient, logger, client.tokens?.access_token])
 
   return quickLoginUrl
 }
