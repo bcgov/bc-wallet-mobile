@@ -11,6 +11,7 @@ import BCSCTabStack from './TabStack'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { HelpCentreUrl } from '@/constants'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
+import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -64,6 +65,13 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             headerBackTitleVisible: false,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.ServiceLoginScreen}
+          component={ServiceLoginScreen}
+          options={() => ({
+            headerShown: true,
           })}
         />
       </Stack.Navigator>

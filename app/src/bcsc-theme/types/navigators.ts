@@ -1,6 +1,7 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
 import { BCSCCardType } from './cards'
+import { ClientMetadata } from '../api/hooks/useMetadataApi'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
@@ -49,6 +50,7 @@ export enum BCSCScreens {
   VerifyNotComplete = 'BCSCVerifyNotComplete',
   ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
+  ServiceLoginScreen = 'ServiceLoginScreen',
 }
 
 export type BCSCTabStackParams = {
@@ -64,6 +66,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
 }
 
 export type BCSCVerifyIdentityStackParams = {

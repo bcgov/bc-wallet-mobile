@@ -4,7 +4,7 @@ import { ThemedText, useTheme } from '@bifold/core'
 
 interface ServiceButtonProps {
   title: string
-  description: string
+  description?: string
   onPress: () => void
 }
 
