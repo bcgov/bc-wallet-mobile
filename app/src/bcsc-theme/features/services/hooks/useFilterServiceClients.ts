@@ -40,13 +40,14 @@ export interface ServiceClientsFilter {
    * @format uuid
    * @type {string[]}
    */
-  clientRefIdsFilter?: string[]
+  serviceClientIdsFilter?: string[]
 }
 
 /**
- * A custom hook to filter service clients based on various criteria such as name, card process, and BC address requirement.
+ * A custom hook to filter service clients based on various criteria such as name,
+ * card process, and BC address requirement. Sorted by numeric listing order and name.
  *
- * TODO (MD): This hook might need to either return the full data loader state (loading, error, etc.)
+ * TODO (MD): This hook will eventually need to return the data loader (loading, error, etc.)
  *
  * @param {ServiceClientsFilter} filter The filter criteria to apply to the service clients.
  * @returns {*} {ClientMetadata[]} The filtered list of service clients.
@@ -103,8 +104,8 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
     }
 
     // Filter services based on the provided IDs
-    if (filter.clientRefIdsFilter) {
-      const idsSet = new Set(filter.clientRefIdsFilter)
+    if (filter.serviceClientIdsFilter) {
+      const idsSet = new Set(filter.serviceClientIdsFilter)
       serviceClientsCopy = serviceClientsCopy.filter((service) => idsSet.has(service.client_ref_id))
     }
 
@@ -119,7 +120,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
 
       return a.client_name.localeCompare(b.client_name)
     })
-  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter, filter.clientRefIdsFilter])
+  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter, filter.serviceClientIdsFilter])
 
   // Further filter services based on the partial name filter
   const queriedServiceClients = useMemo(() => {

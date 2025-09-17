@@ -15,7 +15,6 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { mockServices } from '@/bcsc-theme/fixtures/services'
 import { BCSCRootStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
 

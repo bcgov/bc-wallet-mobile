@@ -20,6 +20,7 @@ const mockServiceClientA: ClientMetadata = {
   suppress_bookmark_prompt: false,
   allowed_identification_processes: [BCSCCardProcess.BCSC],
   bc_address: true,
+  service_listing_sort_order: undefined,
 }
 
 const mockServiceClientB: ClientMetadata = {
@@ -32,6 +33,20 @@ const mockServiceClientB: ClientMetadata = {
   suppress_bookmark_prompt: false,
   allowed_identification_processes: [BCSCCardProcess.NonBCSC],
   bc_address: false,
+  service_listing_sort_order: undefined,
+}
+
+const mockServiceClientC: ClientMetadata = {
+  client_ref_id: 'test-client-id-c',
+  client_name: 'TEST CLIENT CHARLIE',
+  client_uri: 'https://test.client.c',
+  application_type: 'web',
+  claims_description: 'claims',
+  suppress_confirmation_info: false,
+  suppress_bookmark_prompt: false,
+  allowed_identification_processes: [BCSCCardProcess.NonBCSC],
+  bc_address: false,
+  service_listing_sort_order: 1,
 }
 
 describe('useFilterServiceClients', () => {
@@ -41,6 +56,29 @@ describe('useFilterServiceClients', () => {
 
   describe('no filters', () => {
     it('should return all service clients when no filters are applied', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      const useApiMock = jest.mocked(useApi)
+      const navigationMock = jest.mocked(navigation)
+
+      useApiMock.default.mockReturnValue({
+        metadata: {
+          getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientB, mockServiceClientA, mockServiceClientC]),
+        },
+      } as any)
+      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
+      bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
+
+      const hook = renderHook(() => useFilterServiceClients({}))
+
+      await waitFor(() => {
+        expect(hook.result.current).toHaveLength(3)
+        expect(hook.result.current[0].client_ref_id).toBe(mockServiceClientC.client_ref_id)
+        expect(hook.result.current[1].client_ref_id).toBe(mockServiceClientA.client_ref_id)
+        expect(hook.result.current[2].client_ref_id).toBe(mockServiceClientB.client_ref_id)
+      })
+    })
+
+    it('should sort by sort order then name', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
       const navigationMock = jest.mocked(navigation)
