@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BC Wallet Mobile - AI Documentation Schema",
+  "description": "Comprehensive machine-readable documentation for the BC Wallet Mobile project",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-08",
+  "project": {
+    "name": "bc-wallet-mobile",
+    "version": "1.0.0",
+    "description": "BC Wallet to hold Verifiable Credentials - A React Native mobile application for managing digital identity and verifiable credentials in British Columbia",
+    "type": "react-native-mobile-app",
+    "license": "Apache-2.0",
+    "homepage": "https://github.com/bcgov/bc-wallet-mobile",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/bcgov/bc-wallet-mobile.git"
+    },
+    "maintainer": {
+      "organization": "Government of British Columbia",
+      "contact": "https://github.com/bcgov/bc-wallet-mobile/issues"
+    }
+  },
+  "architecture": {
+    "pattern": "monorepo",
+    "structure": "yarn-workspaces",
+    "packages": [
+      {
+        "name": "bc-wallet-mobile-app",
+        "path": "./app",
+        "type": "react-native-application",
+        "description": "Main React Native mobile application"
+      },
+      {
+        "name": "react-native-bcsc-core",
+        "path": "./packages/bcsc-core",
+        "type": "react-native-library",
+        "description": "Core functionality for BC Services Card integration"
+      }
+    ],
+    "domains": [
+      "digital-identity",
+      "verifiable-credentials", 
+      "self-sovereign-identity",
+      "government-services",
+      "mobile-wallet",
+      "hyperledger-aries",
+      "decentralized-identity"
+    ],
+    "designPatterns": [
+      "dependency-injection",
+      "event-driven-architecture", 
+      "state-management",
+      "modular-theming",
+      "navigation-stack",
+      "workspace-monorepo"
+    ]
+  },
+  "technology": {
+    "runtime": {
+      "node": ">=20.19.2 <21.0.0",
+      "platform": ["ios", "android"],
+      "reactNative": "0.73.11",
+      "packageManager": "yarn@4.9.2"
+    },
+    "languages": [
+      {
+        "name": "TypeScript",
+        "version": "~5.5.4",
+        "purpose": "Primary development language",
+        "configFiles": ["tsconfig.json", "tsconfig-base.json"]
+      },
+      {
+        "name": "JavaScript", 
+        "purpose": "Configuration and build scripts"
+      },
+      {
+        "name": "Java",
+        "purpose": "Android native modules"
+      },
+      {
+        "name": "Swift/Objective-C",
+        "purpose": "iOS native modules"
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "React Native",
+        "version": "0.73.11",
+        "purpose": "Cross-platform mobile framework"
+      },
+      {
+        "name": "Bifold Wallet",
+        "version": "2.4.0",
+        "purpose": "Self-sovereign identity wallet framework",
+        "packages": ["@bifold/core", "@bifold/oca", "@bifold/verifier", "@bifold/remote-logs", "@bifold/react-native-attestation"]
+      },
+      {
+        "name": "Credo-TS",
+        "version": "0.5.13", 
+        "purpose": "TypeScript implementation of Aries protocols",
+        "packages": ["@credo-ts/anoncreds", "@credo-ts/askar", "@credo-ts/core", "@credo-ts/indy-vdr", "@credo-ts/openid4vc"]
+      },
+      {
+        "name": "React Navigation",
+        "version": "~6.0.16",
+        "purpose": "Navigation framework for React Native"
+      }
+    ],
+    "infrastructure": [
+      {
+        "name": "Hyperledger Aries",
+        "purpose": "Decentralized identity protocols",
+        "components": ["agent", "mediator", "protocols"]
+      },
+      {
+        "name": "Hyperledger Indy",
+        "purpose": "Distributed ledger for identity",
+        "components": ["indy-vdr", "anoncreds"]
+      }
+    ]
+  },
+  "dependencies": {
+    "critical": [
+      {
+        "name": "@bifold/core",
+        "version": "2.4.0",
+        "purpose": "Core wallet functionality and UI components"
+      },
+      {
+        "name": "@credo-ts/core", 
+        "version": "0.5.13",
+        "purpose": "Aries protocol implementation"
+      },
+      {
+        "name": "react-native",
+        "version": "0.73.11", 
+        "purpose": "Mobile framework runtime"
+      },
+      {
+        "name": "@hyperledger/aries-askar-react-native",
+        "version": "0.2.3",
+        "purpose": "Secure storage for credentials"
+      },
+      {
+        "name": "@hyperledger/indy-vdr-react-native",
+        "version": "0.2.2",
+        "purpose": "Verifiable data registry client"
+      }
+    ],
+    "development": [
+      {
+        "name": "@typescript-eslint/eslint-plugin",
+        "version": "~7.18.0",
+        "purpose": "TypeScript linting"
+      },
+      {
+        "name": "jest",
+        "version": "~29.6.4",
+        "purpose": "Testing framework"
+      },
+      {
+        "name": "prettier",
+        "version": "~2.8.8",
+        "purpose": "Code formatting"
+      }
+    ],
+    "security": [
+      {
+        "name": "react-native-keychain",
+        "version": "~8.1.3",
+        "purpose": "Secure credential storage"
+      },
+      {
+        "name": "react-native-encrypted-storage",
+        "version": "~4.0.3",
+        "purpose": "Encrypted local storage"
+      },
+      {
+        "name": "react-native-screenguard",
+        "version": "~1.1.0",
+        "purpose": "Screen recording protection"
+      }
+    ]
+  },
+  "development": {
+    "setup": {
+      "prerequisites": [
+        "Node.js >=20.19.2 <21.0.0",
+        "Yarn 4.9.2",
+        "JDK and Gradle (for Android)",
+        "Ruby 2.x.x",
+        "Python 3.11.x",
+        "Android SDK Platform 33",
+        "iOS 11 (for iOS development)"
+      ],
+      "commands": {
+        "install": "corepack enable && yarn install",
+        "build": "yarn build",
+        "lint": "yarn lint",
+        "test": "yarn test",
+        "start": "cd app && yarn start",
+        "android": "cd app && yarn android",
+        "ios": "cd app && yarn ios"
+      }
+    },
+    "scripts": {
+      "lint": "Runs ESLint on the codebase",
+      "prettier": "Checks code formatting",
+      "test": "Runs Jest test suite", 
+      "typecheck": "Runs TypeScript type checking",
+      "android": "Builds and runs Android app",
+      "ios": "Builds and runs iOS app"
+    },
+    "configuration": {
+      "eslint": "eslint.config.mjs",
+      "prettier": ".prettierrc",
+      "typescript": "tsconfig.json",
+      "jest": "jest.config.js",
+      "babel": "babel.config.js",
+      "metro": "metro.config.js"
+    }
+  },
+  "environments": {
+    "development": {
+      "configFile": ".env.sample",
+      "variables": [
+        "LOAD_STORYBOOK",
+        "OCA_URL", 
+        "MEDIATOR_URL",
+        "MEDIATOR_USE_PUSH_NOTIFICATIONS",
+        "PROOF_TEMPLATE_URL",
+        "REMOTE_LOGGING_URL",
+        "INDY_VDR_PROXY_URL"
+      ]
+    },
+    "production": {
+      "deployment": ["App Store", "Google Play Store", "SauceLabs"],
+      "secrets": [
+        "APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64",
+        "PLAY_STORE_JKS_BASE64",
+        "MEDIATOR_URL",
+        "GOOGLE_API_CREDENTIALS_BASE64"
+      ]
+    }
+  },
+  "cicd": {
+    "platform": "GitHub Actions",
+    "workflows": [
+      {
+        "name": "main.yaml",
+        "purpose": "Build, test and deploy iOS and Android apps",
+        "triggers": ["push to main", "pull_request"],
+        "jobs": ["build-ios", "build-android", "ship-to-saucelabs", "run-on-device-tests"]
+      },
+      {
+        "name": "quality.yml", 
+        "purpose": "Code quality checks"
+      },
+      {
+        "name": "maintenance.yml",
+        "purpose": "Maintenance tasks"
+      }
+    ],
+    "artifacts": [
+      "iOS .ipa files",
+      "Android .aab and .apk files"
+    ],
+    "testing": {
+      "unit": "Jest",
+      "integration": "Aries Mobile Test Harness",
+      "devices": "SauceLabs cloud testing"
+    }
+  },
+  "features": {
+    "core": [
+      "Digital wallet for verifiable credentials",
+      "Self-sovereign identity management", 
+      "QR code scanning for credential offers",
+      "Credential verification and presentation",
+      "Biometric authentication",
+      "Secure credential storage"
+    ],
+    "bcsc": [
+      "BC Services Card integration",
+      "Government service authentication",
+      "Identity verification workflows",
+      "Document capture and verification"
+    ],
+    "security": [
+      "Encrypted storage",
+      "Screen recording protection", 
+      "Biometric authentication",
+      "Secure communication protocols",
+      "Key management"
+    ]
+  },
+  "apis": {
+    "internal": [
+      {
+        "name": "BcscCore",
+        "path": "packages/bcsc-core/src",
+        "description": "Core BCSC functionality",
+        "exports": ["getAccount", "setAccount", "signPairingCode", "hashBase64"]
+      }
+    ],
+    "external": [
+      {
+        "name": "Mediator Service",
+        "purpose": "Aries message mediation"
+      },
+      {
+        "name": "OCA Service", 
+        "purpose": "Overlay Capture Architecture for credential schemas"
+      },
+      {
+        "name": "Indy VDR Proxy",
+        "purpose": "Verifiable data registry access"
+      }
+    ]
+  },
+  "security": {
+    "scanners": ["SonarCloud"],
+    "policies": ["Apache License 2.0", "COMPLIANCE.yaml"],
+    "practices": [
+      "Dependency vulnerability scanning",
+      "Code quality analysis",
+      "Secret scanning",
+      "Secure credential storage",
+      "Communication encryption"
+    ]
+  }
+}
