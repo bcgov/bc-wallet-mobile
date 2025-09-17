@@ -46,6 +46,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
       marginTop: 'auto',
     },
     infoContainer: {
+      display: 'flex',
+      overflow: 'hidden',
+      gap: Spacing.md,
       borderRadius: Spacing.sm,
       borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8',
       borderWidth: 1,
@@ -53,8 +56,12 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
       padding: Spacing.md,
     },
     infoHeader: {
+      flexShrink: 1,
       fontSize: TextTheme.headerTitle.fontSize,
       color: ColorPalette.brand.primary,
+    },
+    infoIcon: {
+      flexShrink: 0,
     },
     privacyNoticeContainer: {
       display: 'flex',
@@ -83,10 +90,10 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
               }}
             >
               <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-                <ThemedText style={styles.infoHeader}>
+                <ThemedText style={styles.infoHeader} ellipsizeMode="tail">
                   {t('Services.Goto')} {serviceClient.client_name}
                 </ThemedText>
-                <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
+                <Icon style={styles.infoIcon} name="open-in-new" size={30} color={ColorPalette.brand.primary} />
               </View>
             </TouchableOpacity>
 
