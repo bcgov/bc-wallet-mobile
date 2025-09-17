@@ -7,11 +7,11 @@ import { STUB_SERVICE_CLIENT, useQuickLoginURL } from '@/bcsc-theme/hooks/useQui
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { useIsFocused, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, AppState, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
@@ -27,7 +27,11 @@ const Account: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<UserInfoResponseData | null>(null)
   const [pictureUri, setPictureUri] = useState<string>()
+  const isFocused = useIsFocused()
   const { t } = useTranslation()
+  const getQuickLoginURL = useQuickLoginURL()
+
+  const openedAccountWebview = useRef(false)
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -35,32 +39,44 @@ const Account: React.FC = () => {
     onError: (error) => logger.error(`Error loading BCSC client metadata: ${error}`),
   })
 
-  // we can use the stub service client as a fallback, the hook will return null if no initiate_login_uri is present
-  const [quickLoginUrl] = useQuickLoginURL(bcscServiceClient ?? STUB_SERVICE_CLIENT)
+  const fetchUserData = async () => {
+    try {
+      setLoading(true)
+      const userInfo = await user.getUserInfo()
+
+      if (userInfo.picture) {
+        const pictureURI = await user.getPicture(userInfo.picture)
+        setPictureUri(pictureURI)
+      }
+
+      setUserInfo(userInfo)
+    } catch (error) {
+      logger.error(`Error fetching user info, client metadata, or key: ${error}`)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     loadBcscServiceClient()
   }, [loadBcscServiceClient])
 
+  // Refresh user data when returning from external account webview
   useEffect(() => {
-    const asyncEffect = async () => {
-      try {
-        setLoading(true)
-        const userInfo = await user.getUserInfo()
-        let picture = ''
-        if (userInfo.picture) {
-          picture = await user.getPicture(userInfo.picture)
-        }
-        setUserInfo(userInfo)
-        setPictureUri(picture)
-      } catch (error) {
-        logger.error(`Error fetching user info, client metadata, or key: ${error}`)
-      } finally {
-        setLoading(false)
+    const appListener = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && openedAccountWebview.current) {
+        logger.info('App has come to the foreground, refreshing user data')
+        fetchUserData()
+        openedAccountWebview.current = false
       }
-    }
+    })
 
-    asyncEffect()
+    return () => appListener.remove()
+  }, [isFocused, logger])
+
+  // Initial load of user data
+  useEffect(() => {
+    fetchUserData()
   }, [user, logger])
 
   const handleMyDevicesPress = useCallback(async () => {
@@ -77,13 +93,21 @@ const Account: React.FC = () => {
 
   const handleAllAccountDetailsPress = useCallback(async () => {
     try {
-      if (quickLoginUrl) {
-        await Linking.openURL(quickLoginUrl)
+      if (!bcscServiceClient) {
+        // only generate quick login url if we have the bcsc service client metadata
+        return
+      }
+
+      const quickLoginResult = await getQuickLoginURL(bcscServiceClient)
+
+      if (quickLoginResult.success) {
+        await Linking.openURL(quickLoginResult.url)
+        openedAccountWebview.current = true
       }
     } catch (error) {
       logger.error(`Error opening All Account Details: ${error}`)
     }
-  }, [quickLoginUrl, logger])
+  }, [logger, getQuickLoginURL, bcscServiceClient])
 
   const styles = StyleSheet.create({
     container: {
