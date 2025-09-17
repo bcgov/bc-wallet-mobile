@@ -232,7 +232,9 @@ const translation = {
     "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above.",
     "NotListedDescriptionContact": "Contact the service to the the link to their website.",
     "PrivacyPolicy": "Privacy Policy",
-    "LoginErrorTitle": "Unable to quick login to service"
+    "LoginErrorTitle": "Unable to quick login to service",
+    "SavedServices": "Saved Services",
+    "NoSavedServices": "No saved services",
   },
   "Unified": {
     "Steps": {

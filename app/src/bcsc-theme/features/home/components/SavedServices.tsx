@@ -7,6 +7,7 @@ import { BCState } from '@/store'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useNavigation } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
 
 interface SavedServiceProps {
   title: string
@@ -35,17 +36,14 @@ const SavedService: React.FC<SavedServiceProps> = ({ title, onPress }) => {
 
 type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
 
-// to be replaced with API response or translation entries, whichever ends up being the case
-const mockTitle = 'YOUR SAVED SERVICES'
-const mockNoServicesMessage = 'No saved services'
-
 const SavedServices: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const navigation = useNavigation<ServicesNavigationProp>()
+  const { t } = useTranslation()
 
   const serviceClients = useFilterServiceClients({
-    clientRefIdsFilter: store.bcsc.bookmarks,
+    serviceClientIdsFilter: store.bcsc.bookmarks,
   })
 
   const styles = StyleSheet.create({
@@ -69,7 +67,7 @@ const SavedServices: React.FC = () => {
       <View style={styles.headerContainer}>
         <Icon name="bookmark" size={24} color={ColorPalette.brand.tertiary} style={styles.bookmarkIcon} />
         <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.tertiary }}>
-          {mockTitle}
+          {t('Services.SavedServices')}
         </ThemedText>
       </View>
 
@@ -78,7 +76,7 @@ const SavedServices: React.FC = () => {
           variant={'headingFour'}
           style={{ color: ColorPalette.brand.tertiary, fontWeight: 'normal', paddingHorizontal: Spacing.md }}
         >
-          {mockNoServicesMessage}
+          {t('Services.NoSavedServices')}
         </ThemedText>
       ) : (
         serviceClients.map((serviceClient) => (
