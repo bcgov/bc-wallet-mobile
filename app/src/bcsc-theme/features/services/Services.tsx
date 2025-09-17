@@ -89,12 +89,13 @@ const Services: React.FC = () => {
 
         <View style={styles.searchInputContainer}>
           <View ref={searchInputRef} style={styles.searchInput}>
-            <Icon name="search" size={30} color={ColorPalette.brand.tertiary} />
+            <Icon name="search" size={24} color={ColorPalette.brand.tertiary} />
             <TextInput
               placeholder={t('Services.CatalogueSearch')}
               placeholderTextColor={ColorPalette.brand.tertiary}
               value={search}
-              clearButtonMode="while-editing"
+              // disable autocorrect to prevent completion when clearing search text
+              autoCorrect={false}
               onChangeText={(newText) => {
                 // Dismiss keyboard when clearing search text
                 if (search.length > 0 && newText === '') {
@@ -124,6 +125,19 @@ const Services: React.FC = () => {
               testID={testIdWithKey('search')}
               style={styles.searchText}
             />
+            {search.length > 0 ? (
+              <Icon
+                name="clear"
+                size={24}
+                color={ColorPalette.brand.tertiary}
+                onPress={() => {
+                  Keyboard.dismiss()
+                  setSearch('')
+                }}
+                accessibilityLabel={'clearSearch'}
+                testID={testIdWithKey('clearSearch')}
+              />
+            ) : null}
           </View>
         </View>
 

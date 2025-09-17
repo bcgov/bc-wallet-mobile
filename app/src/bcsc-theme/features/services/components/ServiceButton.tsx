@@ -29,7 +29,7 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPre
       <ThemedText variant={'headingFour'} style={styles.title}>
         {title}
       </ThemedText>
-      <ThemedText style={{ color: ColorPalette.brand.tertiary }}>{description}</ThemedText>
+      {description ? <ThemedText style={{ color: ColorPalette.brand.tertiary }}>{description}</ThemedText> : null}
     </TouchableOpacity>
   )
 }
