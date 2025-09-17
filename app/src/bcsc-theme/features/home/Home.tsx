@@ -46,11 +46,6 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     asyncEffect()
   }, [user, logger])
 
-  // replace with API response
-  const savedServices = mockServices.filter((service) =>
-    store.bcsc.bookmarks.some((serviceId) => serviceId === service.id)
-  )
-
   const styles = StyleSheet.create({
     buttonsContainer: {
       padding: Spacing.md,
@@ -82,7 +77,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
             />
             <SectionButton title={mockLogInTitle} description={mockLogInDescription} onPress={handlePairingCodePress} />
           </View>
-          <SavedServices services={savedServices} />
+          <SavedServices />
         </>
       )}
     </TabScreenWrapper>
