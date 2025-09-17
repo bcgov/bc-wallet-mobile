@@ -32,10 +32,21 @@ export interface ServiceClientsFilter {
    * @type {boolean}
    */
   requireBCAddressFilter?: boolean
+  /**
+   * An optional list of service client ref ids to filter by
+   * if provided, only service clients with these IDs will be included
+   * ie: saved services (bookmarks)
+   *
+   * @format uuid
+   * @type {string[]}
+   */
+  clientRefIdsFilter?: string[]
 }
 
 /**
  * A custom hook to filter service clients based on various criteria such as name, card process, and BC address requirement.
+ *
+ * TODO (MD): This hook might need to either return the full data loader state (loading, error, etc.)
  *
  * @param {ServiceClientsFilter} filter The filter criteria to apply to the service clients.
  * @returns {*} {ClientMetadata[]} The filtered list of service clients.
@@ -91,9 +102,24 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
       serviceClientsCopy = serviceClientsCopy.filter((service) => service.bc_address === true)
     }
 
-    // Sort services alphabetically by client_name
-    return serviceClientsCopy.sort((a, b) => a.client_name.localeCompare(b.client_name))
-  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter])
+    // Filter services based on the provided IDs
+    if (filter.clientRefIdsFilter) {
+      const idsSet = new Set(filter.clientRefIdsFilter)
+      serviceClientsCopy = serviceClientsCopy.filter((service) => idsSet.has(service.client_ref_id))
+    }
+
+    // Sort services by their listing order, then alphabetically by name
+    return serviceClientsCopy.sort((a, b) => {
+      const orderA = a.service_listing_sort_order ?? Number.MAX_SAFE_INTEGER
+      const orderB = b.service_listing_sort_order ?? Number.MAX_SAFE_INTEGER
+
+      if (orderA !== orderB) {
+        return orderA - orderB
+      }
+
+      return a.client_name.localeCompare(b.client_name)
+    })
+  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter, filter.clientRefIdsFilter])
 
   // Further filter services based on the partial name filter
   const queriedServiceClients = useMemo(() => {
