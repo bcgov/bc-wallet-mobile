@@ -70,9 +70,7 @@ export interface BCSCState {
   emailConfirmed?: boolean
   deviceCode?: string
   userCode?: string
-  // TODO (MD): technically this metadata does not need to be persisted. The data is used to
-  // register the device with IAS, and they are the source of truth for this data. However,
-  // we are unable to update this metadata with IAS after the device is registered.
+  // only needed for non-bcsc cards and deleted after verification
   userMetadata?: NonBCSCUserMetadata
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
@@ -145,6 +143,7 @@ enum BCSCDispatchAction {
   UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
   UPDATE_USER_NAME_METADATA = 'bcsc/updateUserMetadataName',
   UPDATE_USER_ADDRESS_METADATA = 'bcsc/updateUserMetadataAddress',
+  CLEAR_USER_METADATA = 'bcsc/clearUserMetadata',
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
@@ -517,6 +516,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         },
       }
 
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.CLEAR_USER_METADATA: {
+      const bcsc = { ...state.bcsc, userMetadata: undefined }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
