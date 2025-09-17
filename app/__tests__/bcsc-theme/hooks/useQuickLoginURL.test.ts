@@ -4,7 +4,7 @@ import * as BcscCore from 'react-native-bcsc-core'
 import * as tokens from '@/bcsc-theme/utils/push-notification-tokens'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import * as Bifold from '@bifold/core'
-import { renderHook, waitFor } from '@testing-library/react-native'
+import { renderHook } from '@testing-library/react-native'
 
 jest.mock('@bifold/core')
 jest.mock('@/bcsc-theme/api/hooks/useApi')
