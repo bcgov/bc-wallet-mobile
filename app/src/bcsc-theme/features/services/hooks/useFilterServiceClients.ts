@@ -4,8 +4,13 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Alert } from 'react-native'
+
+interface FilterServiceClientsResult {
+  serviceClients: ClientMetadata[]
+  isLoading: boolean
+}
 
 export interface ServiceClientsFilter {
   /**
@@ -47,23 +52,25 @@ export interface ServiceClientsFilter {
  * A custom hook to filter service clients based on various criteria such as name,
  * card process, and BC address requirement. Sorted by numeric listing order and name.
  *
- * TODO (MD): This hook will eventually need to return the data loader (loading, error, etc.)
- *
  * @param {ServiceClientsFilter} filter The filter criteria to apply to the service clients.
- * @returns {*} {ClientMetadata[]} The filtered list of service clients.
+ * @returns {*} {FilterServiceClientsResult} The filtered list of service clients and loading state.
  */
-export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMetadata[] => {
+export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterServiceClientsResult => {
   const { metadata } = useApi()
   const navigation = useNavigation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  const filteringDoneRef = useRef(false)
 
   const {
     data: serviceClients,
     load,
     isReady,
+    isLoading,
   } = useDataLoader<ClientMetadata[]>(() => metadata.getClientMetadata(), {
     onError: (error) => {
       logger.error('Error loading services', error as Error)
+      filteringDoneRef.current = true
     },
   })
 
@@ -114,12 +121,18 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
   }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter, filter.serviceClientIdsFilter])
 
   // Further filter services based on the partial name filter
-  const queriedServiceClients = useMemo(
-    () => _queryServiceClientsByName(filteredServiceClients, filter.partialNameFilter),
-    [filteredServiceClients, filter]
-  )
+  const queriedServiceClients = useMemo(() => {
+    const newServiceClients = _queryServiceClientsByName(filteredServiceClients, filter.partialNameFilter)
 
-  return queriedServiceClients
+    filteringDoneRef.current = true
+
+    return newServiceClients
+  }, [filteredServiceClients, filter])
+
+  return {
+    serviceClients: queriedServiceClients,
+    isLoading: isLoading || !filteringDoneRef.current,
+  }
 }
 
 /**
