@@ -1,3 +1,4 @@
+// @deprecated - remove after Services screens fully implemented
 export interface ServiceData {
   id: string
   title: string
@@ -5,6 +6,7 @@ export interface ServiceData {
   onPress: () => void
 }
 
+// @deprecated - remove after Services screens fully implemented
 export const mockServices: ServiceData[] = [
   {
     id: '1',

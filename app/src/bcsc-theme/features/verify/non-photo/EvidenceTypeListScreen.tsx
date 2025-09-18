@@ -9,8 +9,8 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { EvidenceMetadataResponseData, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { BCSCCardProcess } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 import { useTranslation } from 'react-i18next'
+import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -105,8 +105,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
     // filter data based on the selected card type (process)
     let cards: Record<string, EvidenceType[]> = {}
-    const selectedProcess =
-      store.bcsc.cardType === BCSCCardType.NonPhoto ? BCSCCardProcess.BCSCNonPhoto : BCSCCardProcess.NonBCSC
+    const selectedProcess = getCardProcessForCardType(store.bcsc.cardType)
     data.processes.forEach((p) => {
       // only show card that matches the selected process
       if (p.process === selectedProcess) {

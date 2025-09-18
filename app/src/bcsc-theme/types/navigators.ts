@@ -1,5 +1,6 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
+import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
@@ -55,6 +56,7 @@ export enum BCSCScreens {
   TransferAccountQRDisplay = 'TransferAccountQRDisplayScreen',
   TransferAccountQRScan = 'TransferAccountQRScanScreen',
   TransferAccountSuccess = 'TransferAccountSuccessScreen',
+  ServiceLoginScreen = 'ServiceLoginScreen',
 }
 
 export type BCSCTabStackParams = {
@@ -76,6 +78,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.TransferAccountQRDisplay]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined
+  [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
 }
 
 export type BCSCVerifyIdentityStackParams = {

@@ -17,6 +17,10 @@ import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
+import createHelpHeaderButton from '../components/HelpHeaderButton'
+import { HelpCentreUrl } from '@/constants'
+import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
+import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -110,6 +114,13 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCScreens.TransferAccountSuccess}
           component={TransferSuccessScreen}
+          options={() => ({
+            headerShown: true,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.ServiceLoginScreen}
+          component={ServiceLoginScreen}
           options={() => ({
             headerShown: true,
           })}

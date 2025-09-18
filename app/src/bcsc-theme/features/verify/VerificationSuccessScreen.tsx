@@ -48,7 +48,11 @@ const VerificationSuccessScreen = () => {
           accessibilityLabel={'Ok'}
           title={'Ok'}
           buttonType={ButtonType.Primary}
-          onPress={() => dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })}
+          onPress={() => {
+            dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
+            // Clear temp user metadata on successful verification
+            dispatch({ type: BCDispatchAction.CLEAR_USER_METADATA })
+          }}
         />
       </View>
     </SafeAreaView>

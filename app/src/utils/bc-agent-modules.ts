@@ -26,10 +26,11 @@ import {
 import { DrpcModule } from '@credo-ts/drpc'
 import { IndyVdrAnonCredsRegistry, IndyVdrModule, IndyVdrPoolConfig } from '@credo-ts/indy-vdr'
 import { PushNotificationsApnsModule, PushNotificationsFcmModule } from '@credo-ts/push-notifications'
+import { WebVhAnonCredsRegistry, WebvhDidResolver } from '@credo-ts/webvh'
 import { anoncreds } from '@hyperledger/anoncreds-react-native'
 import { ariesAskar } from '@hyperledger/aries-askar-react-native'
 import { indyVdr } from '@hyperledger/indy-vdr-react-native'
-import { IndyVdrProxyDidResolver, IndyVdrProxyAnonCredsRegistry, CacheSettings } from 'credo-ts-indy-vdr-proxy-client'
+import { CacheSettings, IndyVdrProxyAnonCredsRegistry, IndyVdrProxyDidResolver } from 'credo-ts-indy-vdr-proxy-client'
 
 export type BCAgent = Agent<ReturnType<typeof getBCAgentModules>>
 
@@ -77,7 +78,7 @@ export function getBCAgentModules({
     }),
     anoncreds: new AnonCredsModule({
       anoncreds,
-      registries: [new IndyVdrAnonCredsRegistry()],
+      registries: [new IndyVdrAnonCredsRegistry(), new WebVhAnonCredsRegistry()],
     }),
     indyVdr: new IndyVdrModule({
       indyVdr,
@@ -118,17 +119,22 @@ export function getBCAgentModules({
     }),
     pushNotificationsFcm: new PushNotificationsFcmModule(),
     pushNotificationsApns: new PushNotificationsApnsModule(),
-    dids: new DidsModule(),
+    dids: new DidsModule({
+      resolvers: [new WebvhDidResolver()],
+    }),
     drpc: new DrpcModule(),
   }
 
   if (enableProxy && proxyBaseUrl) {
     modules.anoncreds = new AnonCredsModule({
       anoncreds,
-      registries: [new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings })],
+      registries: [
+        new IndyVdrProxyAnonCredsRegistry({ proxyBaseUrl, cacheOptions: proxyCacheSettings }),
+        new WebVhAnonCredsRegistry(),
+      ],
     })
     modules.dids = new DidsModule({
-      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl })],
+      resolvers: [new IndyVdrProxyDidResolver({ proxyBaseUrl }), new WebvhDidResolver()],
     })
   }
 

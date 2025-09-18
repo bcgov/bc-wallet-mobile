@@ -212,6 +212,25 @@ const translation = {
     "WhereToUseLink": "Voyez où vous pouvez utiliser BC Wallet.",
     "BadQRCodeDescription": "Le code QR scanné ne fonctionne pas avec BC Wallet. BC Wallet ne fonctionne qu'avec les services participants.\n\nIl ne peut actuellement pas ajouter de justificatifs numériques en prenant des photos de justificatifs physiques."
   },
+  "Services": {
+    "CatalogueTitle": "Services (FR)",
+    "CatalogueSearch": "Search services (FR)",
+    "WantToLogin": "Do you want to log in to (FR)",
+    "RequestedInformation": "They will receive the following information: (FR)",
+    "FromAccountPrefix": "From your (FR)",
+    "FromAccount": "Account (FR)",
+    "PrivacyNotice": "Privacy notice (FR)",
+    "ReportSuspiciousPrefix": "Not you? (FR)",
+    "ReportSuspicious": "Report Suspicious Activity (FR)",
+    "NoLoginInstructions": "You will need to go to their website first if you want to log in to it. You can't log in to services directly from this app. (FR)",
+    "NoLoginProof": "You will use this app to prove who you are when you log in. (FR)",
+    "Goto": "Go to (FR)",
+    "NotListed": "Services not listed? (FR)",
+    "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (FR)",
+    "NotListedDescriptionContact": "Contact the service to the the link to their website. (FR)",
+    "PrivacyPolicy": "Privacy Policy (FR)",
+    "LoginErrorTitle": "Unable to quick login to service (FR)"
+  },
   "Unified": {
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (FR)",
