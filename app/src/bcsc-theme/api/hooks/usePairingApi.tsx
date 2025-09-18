@@ -11,7 +11,7 @@ export interface PairingCodeLoginClientMetadata {
   client_uri: string
   initiate_login_uri: string
   policy_uri: string
-  aaplication_type: string
+  application_type: string
   useage_date: string
 }
 
