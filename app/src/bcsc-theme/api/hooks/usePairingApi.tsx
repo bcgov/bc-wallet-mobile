@@ -12,7 +12,7 @@ export interface PairingCodeLoginClientMetadata {
   initiate_login_uri: string
   policy_uri: string
   application_type: string
-  useage_date: string
+  usage_date: string
 }
 
 const usePairingApi = (apiClient: BCSCApiClient) => {
