@@ -1,8 +1,13 @@
-import { ServiceData } from '@/bcsc-theme/fixtures/services'
-import { ThemedText, useTheme } from '@bifold/core'
+import { ThemedText, useStore, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useFilterServiceClients } from '../../services/hooks/useFilterServiceClients'
+import { BCState } from '@/store'
+import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useNavigation } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
 
 interface SavedServiceProps {
   title: string
@@ -28,16 +33,18 @@ const SavedService: React.FC<SavedServiceProps> = ({ title, onPress }) => {
     </TouchableOpacity>
   )
 }
-interface SavedServicesProps {
-  services: ServiceData[]
-}
 
-// to be replaced with API response or translation entries, whichever ends up being the case
-const mockTitle = 'YOUR SAVED SERVICES'
-const mockNoServicesMessage = 'No saved services'
+type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
 
-const SavedServices: React.FC<SavedServicesProps> = ({ services = [] }) => {
+const SavedServices: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
+  const [store] = useStore<BCState>()
+  const navigation = useNavigation<ServicesNavigationProp>()
+  const { t } = useTranslation()
+
+  const { serviceClients } = useFilterServiceClients({
+    serviceClientIdsFilter: store.bcsc.bookmarks,
+  })
 
   const styles = StyleSheet.create({
     container: {
@@ -51,6 +58,7 @@ const SavedServices: React.FC<SavedServicesProps> = ({ services = [] }) => {
     },
     bookmarkIcon: {
       marginRight: Spacing.sm,
+      marginLeft: -Spacing.xs,
     },
   })
 
@@ -59,19 +67,29 @@ const SavedServices: React.FC<SavedServicesProps> = ({ services = [] }) => {
       <View style={styles.headerContainer}>
         <Icon name="bookmark" size={24} color={ColorPalette.brand.tertiary} style={styles.bookmarkIcon} />
         <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.tertiary }}>
-          {mockTitle}
+          {t('Services.SavedServices')}
         </ThemedText>
       </View>
 
-      {services.length === 0 ? (
+      {serviceClients.length === 0 ? (
         <ThemedText
           variant={'headingFour'}
           style={{ color: ColorPalette.brand.tertiary, fontWeight: 'normal', paddingHorizontal: Spacing.md }}
         >
-          {mockNoServicesMessage}
+          {t('Services.NoSavedServices')}
         </ThemedText>
       ) : (
-        services.map((service) => <SavedService key={service.id} title={service.title} onPress={service.onPress} />)
+        serviceClients.map((serviceClient) => (
+          <SavedService
+            key={serviceClient.client_ref_id}
+            title={serviceClient.client_name}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.ServiceLoginScreen, {
+                serviceClient: serviceClient,
+              })
+            }}
+          />
+        ))
       )}
     </View>
   )

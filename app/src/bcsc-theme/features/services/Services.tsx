@@ -31,7 +31,7 @@ const Services: React.FC = () => {
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
 
-  const serviceClients = useFilterServiceClients({
+  const { serviceClients } = useFilterServiceClients({
     cardProcessFilter: getCardProcessForCardType(store.bcsc.cardType),
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
