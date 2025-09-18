@@ -20,7 +20,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
-  const [quickLoginUrl, quickLoginError] = useQuickLoginURL(serviceClient)
+  const getQuickLoginURL = useQuickLoginURL()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
@@ -162,15 +162,15 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
                 accessibilityLabel={'Continue'}
                 testID={testIdWithKey('ServiceLoginContinue')}
                 buttonType={ButtonType.Primary}
-                onPress={() => {
-                  if (quickLoginUrl) {
-                    Linking.openURL(quickLoginUrl)
+                onPress={async () => {
+                  const generateQuickLogin = await getQuickLoginURL(serviceClient)
+
+                  if (generateQuickLogin.success) {
+                    Linking.openURL(generateQuickLogin.url)
                     return
                   }
 
-                  if (quickLoginError) {
-                    Alert.alert(t('Services.LoginErrorTitle'), quickLoginError)
-                  }
+                  Alert.alert(t('Services.LoginErrorTitle'), generateQuickLogin.error)
                 }}
               />
             </View>

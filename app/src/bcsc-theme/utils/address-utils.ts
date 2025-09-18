@@ -55,6 +55,13 @@ const ProvinceCodeMap = {
   YUKON: 'YT',
 } as const
 
+type ResidentialAddress = {
+  streetAddress: string
+  city: string
+  province: string
+  postalCode: string
+}
+
 /**
  * Attempt to get the province code for a given string, returns null if not possible.
  *
@@ -80,4 +87,14 @@ export function isCanadianPostalCode(postalCode: string): boolean {
   const postalCodeRegex = new RegExp(/^(?:[A-Z]\d[A-Z][ -]?\d[A-Z]\d)$/, 'i')
 
   return postalCodeRegex.test(postalCode)
+}
+
+/**
+ * Formats a ResidentialAddress object into a single string suitable for display.
+ *
+ * @param {ResidentialAddress} address - The address object to format.
+ * @returns {*} {string} - The formatted address string in uppercase.
+ */
+export function formatAddressForDisplay(address: ResidentialAddress): string {
+  return `${address.streetAddress}, ${address.city}, ${address.province} ${address.postalCode}`.toUpperCase()
 }

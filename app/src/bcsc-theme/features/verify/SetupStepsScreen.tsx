@@ -13,6 +13,7 @@ import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SetupStep } from './components/SetupStep'
+import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -192,7 +193,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     }
 
     if (store.bcsc.userMetadata?.address && store.bcsc.deviceCode) {
-      return 'Address: Residential address saved'
+      return `Address: ${formatAddressForDisplay(store.bcsc.userMetadata.address)}`
     }
 
     return 'Residential address'
