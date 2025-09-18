@@ -110,30 +110,54 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
     }
 
     // Sort services by their listing order, then alphabetically by name
-    return serviceClientsCopy.sort((a, b) => {
-      const orderA = a.service_listing_sort_order ?? Number.MAX_SAFE_INTEGER
-      const orderB = b.service_listing_sort_order ?? Number.MAX_SAFE_INTEGER
-
-      if (orderA !== orderB) {
-        return orderA - orderB
-      }
-
-      return a.client_name.localeCompare(b.client_name)
-    })
+    return _sortServiceClients(serviceClientsCopy)
   }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter, filter.serviceClientIdsFilter])
 
   // Further filter services based on the partial name filter
-  const queriedServiceClients = useMemo(() => {
-    // Return all supported services when there's no search text
-    if (!filter.partialNameFilter || filter.partialNameFilter.trim() === '') {
-      return filteredServiceClients
-    }
-
-    // Filter supported services based on the search text (case insensitive)
-    const query = filter.partialNameFilter.toLowerCase()
-
-    return filteredServiceClients.filter((service) => service.client_name.toLowerCase().includes(query))
-  }, [filteredServiceClients, filter])
+  const queriedServiceClients = useMemo(
+    () => _queryServiceClientsByName(filteredServiceClients, filter.partialNameFilter),
+    [filteredServiceClients, filter]
+  )
 
   return queriedServiceClients
+}
+
+/**
+ * Filters the given list of service clients by their name using a case-insensitive partial match.
+ *
+ * @param {ClientMetadata[]} serviceClients - The list of service clients to filter.
+ * @param {string} [query] - The partial name to filter by.
+ * @returns {*} {ClientMetadata[]} The filtered list of service clients whose names match the query.
+ */
+function _queryServiceClientsByName(serviceClients: ClientMetadata[], query?: string): ClientMetadata[] {
+  const caseInsensitiveQuery = query?.toLowerCase().trim()
+
+  // Return all supported services when there's no search text
+  if (!caseInsensitiveQuery) {
+    return serviceClients
+  }
+
+  return serviceClients.filter((service) => service.client_name.toLowerCase().includes(caseInsensitiveQuery))
+}
+
+/**
+ * Sorts the given list of service clients first by their numeric service listing sort order (ascending),
+ * and then alphabetically by their name (A-Z) for services with the same sort order.
+ *
+ * Services without a defined sort order are placed at the end of the list.
+ *
+ * @param {ClientMetadata[]} serviceClients - The list of service clients to sort.
+ * @returns {*} {ClientMetadata[]} The sorted list of service clients.
+ */
+function _sortServiceClients(serviceClients: ClientMetadata[]): ClientMetadata[] {
+  return serviceClients.sort((a, b) => {
+    const orderA = a.service_listing_sort_order ?? Number.MAX_SAFE_INTEGER
+    const orderB = b.service_listing_sort_order ?? Number.MAX_SAFE_INTEGER
+
+    if (orderA !== orderB) {
+      return orderA - orderB
+    }
+
+    return a.client_name.localeCompare(b.client_name)
+  })
 }
