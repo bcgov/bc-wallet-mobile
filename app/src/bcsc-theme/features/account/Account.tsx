@@ -38,27 +38,11 @@ const Account: React.FC = () => {
     onError: (error) => logger.error('Error loading BCSC client metadata', error as Error),
   })
 
-  /**
-   * Fetches user metadata and picture URI.
-   *
-   * @return {*} {Promise<{ user: UserInfoResponseData; picture?: string }>} An object containing user metadata and optional picture URI.
-   */
-  const fetchUserMetadata = useCallback(async () => {
-    let pictureUri: string | undefined
-    const userMetadata = await user.getUserInfo()
-
-    if (userMetadata.picture) {
-      pictureUri = await user.getPicture(userMetadata.picture)
-    }
-
-    return { user: userMetadata, picture: pictureUri }
-  }, [user])
-
   const {
     load: loadUserMeta,
     refresh: refreshUserMeta,
     ...userMeta
-  } = useDataLoader(fetchUserMetadata, {
+  } = useDataLoader(user.getUserMetadata, {
     onError: (error) => logger.error('Error loading user info or picture', error as Error),
   })
 

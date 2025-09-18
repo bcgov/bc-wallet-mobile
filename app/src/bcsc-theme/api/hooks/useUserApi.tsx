@@ -20,6 +20,11 @@ export interface UserInfoResponseData {
 }
 
 const useUserApi = (apiClient: BCSCApiClient) => {
+  /**
+   * Get user information and decode.
+   *
+   * @returns {*} {Promise<UserInfoResponseData>} A promise that resolves to the user information.
+   */
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
     return withAccount(async () => {
       const response = await apiClient.get<any>(apiClient.endpoints.userInfo)
@@ -28,6 +33,12 @@ const useUserApi = (apiClient: BCSCApiClient) => {
     })
   }, [apiClient])
 
+  /**
+   * Fetches and converts a user's picture to a base64 URI.
+   *
+   * @param {string} pictureUrl - The URL of the user's picture.
+   * @returns {*} {Promise<string>} A promise that resolves to the base64 URI of the picture.
+   */
   const getPicture = useCallback(
     async (pictureUrl: string): Promise<string> => {
       return withAccount(async () => {
@@ -47,12 +58,30 @@ const useUserApi = (apiClient: BCSCApiClient) => {
     [apiClient]
   )
 
+  /**
+   * Fetches user metadata and picture URI.
+   *
+   * @returns {*} {Promise<{ user: UserInfoResponseData; picture?: string }>} An object containing user metadata and optional picture URI.
+   */
+  const getUserMetadata = useCallback(async () => {
+    let pictureUri: string | undefined
+    const userMetadata = await getUserInfo()
+
+    // if picture exists, fetch it
+    if (userMetadata.picture) {
+      pictureUri = await getPicture(userMetadata.picture)
+    }
+
+    return { user: userMetadata, picture: pictureUri }
+  }, [getPicture, getUserInfo])
+
   return useMemo(
     () => ({
       getUserInfo,
       getPicture,
+      getUserMetadata,
     }),
-    [getUserInfo, getPicture]
+    [getUserInfo, getPicture, getUserMetadata]
   )
 }
 
