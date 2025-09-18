@@ -42,7 +42,7 @@ const SavedServices: React.FC = () => {
   const navigation = useNavigation<ServicesNavigationProp>()
   const { t } = useTranslation()
 
-  const { serviceClients, isLoading } = useFilterServiceClients({
+  const { serviceClients } = useFilterServiceClients({
     serviceClientIdsFilter: store.bcsc.bookmarks,
   })
 
