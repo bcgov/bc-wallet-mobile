@@ -49,6 +49,12 @@ export enum BCSCScreens {
   VerifyNotComplete = 'BCSCVerifyNotComplete',
   ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
+  TransferAccountInformation = 'TransferAccountInformationScreen',
+  TransferAccountInstructions = 'TransferAccountInstructionsScreen',
+  TransferAccountSteps = 'TransferAccountStepsScreen',
+  TransferAccountQRDisplay = 'TransferAccountQRDisplayScreen',
+  TransferAccountQRScan = 'TransferAccountQRScanScreen',
+  TransferAccountSuccess = 'TransferAccountSuccessScreen',
 }
 
 export type BCSCTabStackParams = {
@@ -64,6 +70,12 @@ export type BCSCRootStackParams = {
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.TransferAccountInformation]: undefined
+  [BCSCScreens.TransferAccountInstructions]: undefined
+  [BCSCScreens.TransferAccountSteps]: undefined
+  [BCSCScreens.TransferAccountQRDisplay]: undefined
+  [BCSCScreens.TransferAccountQRScan]: undefined
+  [BCSCScreens.TransferAccountSuccess]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {

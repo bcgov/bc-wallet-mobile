@@ -126,6 +126,12 @@ const Account: React.FC = () => {
               }
             />
             <SectionButton
+              onPress={() => {
+                navigation.navigate(BCSCScreens.TransferAccountInformation)
+              }}
+              title={'Transfer account to another device'}
+            />
+            <SectionButton
               onPress={handleAllAccountDetailsPress}
               title="All account details"
               description={'View your account activity, manage your email address, and more.'}
