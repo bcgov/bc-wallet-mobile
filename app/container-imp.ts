@@ -40,6 +40,7 @@ import {
   getSystemVersion,
 } from 'react-native-device-info'
 import { DependencyContainer } from 'tsyringe'
+import defaultIndyLedgers from './src/configs/ledgers/indy'
 
 import AddCredentialButton from './src/components/AddCredentialButton'
 import AddCredentialSlider from './src/components/AddCredentialSlider'
@@ -310,7 +311,7 @@ export class AppContainer implements Container {
     })
     resolver.log = logger
     this._container.registerInstance(TOKENS.UTIL_OCA_RESOLVER, resolver)
-
+    this._container.registerInstance(TOKENS.UTIL_LEDGERS, defaultIndyLedgers)
     this._container.registerInstance(TOKENS.NOTIFICATIONS, {
       useNotifications,
       customNotificationConfig: {
