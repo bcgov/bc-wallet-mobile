@@ -1,13 +1,13 @@
+import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import BulletPointWithText from '@/components/BulletPointWithText'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScrollView } from 'react-native-gesture-handler'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import CardDetails from '@assets/img/card-details.svg'
-import BulletPointWithText from '@/components/BulletPointWithText'
 import { useTranslation } from 'react-i18next'
+import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ScrollView } from 'react-native-gesture-handler'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type AdditionalIdentificationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -37,17 +37,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
   return (
     <SafeAreaView style={styles.pageContainer} edges={['left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <View
-          style={{
-            backgroundColor: ColorPalette.grayscale.white,
-            alignSelf: 'center',
-            borderRadius: 12,
-            padding: Spacing.sm,
-            margin: Spacing.lg,
-          }}
-        >
-          <CardDetails {...{ height: 80, width: 160 }} />
-        </View>
+        <GenericCardImage />
         <View style={{ marginBottom: Spacing.lg }}>
           <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.PhotoRequired')}</ThemedText>
           <ThemedText>{t('Unified.AdditionalEvidence.PhotoRequiredDescription')}</ThemedText>
