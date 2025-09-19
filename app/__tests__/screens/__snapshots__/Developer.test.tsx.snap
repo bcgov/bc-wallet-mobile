@@ -268,7 +268,7 @@ exports[`Developer Screen screen renders correctly 1`] = `
                 ]
               }
             >
-              Production
+              Test
             </Text>
           </View>
         </View>

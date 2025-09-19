@@ -29,6 +29,12 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       return
     }
 
+    // Safeguard: Ensure the store has the necessary environment details
+    if (!store.developer.environment.iasApiBaseUrl) {
+      logger.warn('Potential race condition detected. Store is loaded but environment details are missing.')
+      return
+    }
+
     const configureClient = async () => {
       setClientIsReady(false)
       setError(null)
