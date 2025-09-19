@@ -45,7 +45,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
         setClient(newClient)
         setClientIsReady(true)
-      } catch (err: any) {
+      } catch (err) {
         const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
           (err as Error)?.message
         }`
