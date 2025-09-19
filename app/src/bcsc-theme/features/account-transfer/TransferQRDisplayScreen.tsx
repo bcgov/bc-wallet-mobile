@@ -51,7 +51,9 @@ const TransferQRDisplayScreen: React.FC = () => {
         <ThemedText variant="headerTitle">
           Scan this QR code in the BC Services Card app on your other mobile device.
         </ThemedText>
-        <QRRenderer value={qrValue} />
+        <View style={{ flex: 1, height: '100%', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+          <QRRenderer value={qrValue} />
+        </View>
         <Button buttonType={ButtonType.Primary} title="Refresh QR Code" onPress={createToken} />
       </View>
     </SafeAreaView>

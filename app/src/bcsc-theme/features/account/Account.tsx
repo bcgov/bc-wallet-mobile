@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
@@ -13,7 +14,6 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, AppState, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
-import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
@@ -166,7 +166,7 @@ const Account: React.FC = () => {
             />
             <SectionButton
               onPress={() => {
-                navigation.navigate(BCSCScreens.TransferAccountInformation)
+                navigation.navigate(BCSCScreens.TransferAccountQRInformation)
               }}
               title={'Transfer account to another device'}
             />

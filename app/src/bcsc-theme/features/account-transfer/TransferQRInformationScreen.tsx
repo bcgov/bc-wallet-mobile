@@ -1,10 +1,10 @@
 import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 
-const TransferStepsScreen: React.FC = () => {
+const TransferQRInformationScreen: React.FC = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>TransferStepsScreen (stub)</Text>
+      <Text style={styles.text}>TransferQRInformationScreen (stub)</Text>
     </View>
   )
 }
@@ -22,4 +22,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default TransferStepsScreen
+export default TransferQRInformationScreen

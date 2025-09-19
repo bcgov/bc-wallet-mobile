@@ -1,11 +1,13 @@
 import React from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 
 const TransferInstructionsScreen: React.FC = () => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>TransferInstructionsScreen (stub)</Text>
-    </View>
+    <ScrollView>
+      <View style={styles.container}>
+        <Text style={styles.text}>TransferInstructionsScreen (stub)</Text>
+      </View>
+    </ScrollView>
   )
 }
 

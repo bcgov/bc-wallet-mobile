@@ -4,6 +4,9 @@ import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/n
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
+import AccountSetupSelectionScreen from '../account-transfer/AccountSetupSelectionScreen'
+import TransferInstructionsScreen from '../account-transfer/TransferInstructionsScreen'
+import TransferQRScannerScreen from '../account-transfer/TransferQRScannerScreen'
 import WebViewScreen from '../webview/WebViewScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
@@ -48,6 +51,13 @@ const VerifyIdentityStack = () => {
   return (
     <Stack.Navigator screenOptions={{ ...defaultStackOptions, headerShown: true, title: '' }}>
       <Stack.Screen
+        name={BCSCScreens.SetupTypes}
+        component={AccountSetupSelectionScreen}
+        options={{
+          headerLeft: () => null,
+        }}
+      />
+      <Stack.Screen
         name={BCSCScreens.SetupSteps}
         component={SetupStepsScreen}
         options={{
@@ -55,6 +65,27 @@ const VerifyIdentityStack = () => {
           headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOW_TO_SETUP }),
           headerLeft: () => null,
         }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountInformation}
+        component={TransferInstructionsScreen}
+        options={() => ({
+          headerShown: true,
+        })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountInstructions}
+        component={TransferInstructionsScreen}
+        options={() => ({
+          headerShown: true,
+        })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountQRScan}
+        component={TransferQRScannerScreen}
+        options={() => ({
+          headerShown: true,
+        })}
       />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen

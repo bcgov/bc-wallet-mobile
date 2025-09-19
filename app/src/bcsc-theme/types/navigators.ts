@@ -14,6 +14,7 @@ export enum BCSCScreens {
   WebView = 'BCSCWebView',
   Settings = 'BCSCSettings',
   SetupSteps = 'BCSCSetupSteps',
+  SetupTypes = 'BCSCSetupTypes',
   IdentitySelection = 'BCSCIdentitySelection',
   SerialInstructions = 'BCSCSerialInstructions',
   ManualSerial = 'BCSCManualSerial',
@@ -52,9 +53,9 @@ export enum BCSCScreens {
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
   TransferAccountInformation = 'TransferAccountInformationScreen',
   TransferAccountInstructions = 'TransferAccountInstructionsScreen',
-  TransferAccountSteps = 'TransferAccountStepsScreen',
   TransferAccountQRDisplay = 'TransferAccountQRDisplayScreen',
   TransferAccountQRScan = 'TransferAccountQRScanScreen',
+  TransferAccountQRInformation = 'TransferQRInformationScreen',
   TransferAccountSuccess = 'TransferAccountSuccessScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
 }
@@ -72,17 +73,19 @@ export type BCSCRootStackParams = {
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
-  [BCSCScreens.TransferAccountInformation]: undefined
-  [BCSCScreens.TransferAccountInstructions]: undefined
-  [BCSCScreens.TransferAccountSteps]: undefined
+  [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.TransferAccountQRDisplay]: undefined
-  [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined
+  [BCSCScreens.TransferAccountQRInformation]: undefined
   [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
 }
 
 export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.SetupSteps]: undefined
+  [BCSCScreens.SetupTypes]: undefined
+  [BCSCScreens.TransferAccountInstructions]: undefined
+  [BCSCScreens.TransferAccountQRScan]: undefined
+  [BCSCScreens.TransferAccountInformation]: undefined
   [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined

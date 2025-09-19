@@ -5,11 +5,8 @@ import { useMemo } from 'react'
 import { View } from 'react-native'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
-import TransferInformationScreen from '../features/account-transfer/TransferInformationScreen'
-import TransferInstructionsScreen from '../features/account-transfer/TransferInstructionsScreen'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
-import TransferQRScannerScreen from '../features/account-transfer/TransferQRScannerScreen'
-import TransferStepsScreen from '../features/account-transfer/TransferStepsScreen'
+import TransferQRInformationScreen from '../features/account-transfer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
 import ManualPairingCode from '../features/pairing/ManualPairing'
@@ -74,15 +71,8 @@ const MainStack: React.FC = () => {
           })}
         />
         <Stack.Screen
-          name={BCSCScreens.TransferAccountInformation}
-          component={TransferInformationScreen}
-          options={() => ({
-            headerShown: true,
-          })}
-        />
-        <Stack.Screen
-          name={BCSCScreens.TransferAccountInstructions}
-          component={TransferInstructionsScreen}
+          name={BCSCScreens.TransferAccountQRInformation}
+          component={TransferQRInformationScreen}
           options={() => ({
             headerShown: true,
           })}
@@ -90,20 +80,6 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCScreens.TransferAccountQRDisplay}
           component={TransferQRDisplayScreen}
-          options={() => ({
-            headerShown: true,
-          })}
-        />
-        <Stack.Screen
-          name={BCSCScreens.TransferAccountQRScan}
-          component={TransferQRScannerScreen}
-          options={() => ({
-            headerShown: true,
-          })}
-        />
-        <Stack.Screen
-          name={BCSCScreens.TransferAccountSteps}
-          component={TransferStepsScreen}
           options={() => ({
             headerShown: true,
           })}
