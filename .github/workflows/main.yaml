@@ -7,7 +7,7 @@ env:
 on:
   workflow_dispatch:
   push:
-    branches: [v1.0.24-hotfix]
+    branches: [fix/v1.0.24-hotfix]
     paths:
       - app/**
       - .yarn/**
@@ -172,7 +172,7 @@ jobs:
           ouput_artifact_ref: ios-artifact
 
       - name: Ship to iTunes
-        if: github.ref_name == 'v1.0.24-hotfix'
+        if: github.ref_name == 'fix/v1.0.24-hotfix'
         uses: ./.github/workflows/actions/ship-to-itunes
         with:
           app_store_connect_issuer_id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -182,7 +182,7 @@ jobs:
           version_name: ${{ env.appBuildVersion }}
 
       - name: Send notification for iOS failure
-        if: failure() && github.ref_name == 'v1.0.24-hotfix'
+        if: failure() && github.ref_name == 'fix/v1.0.24-hotfix'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
           job_title: "BC Wallet iOS Build - Run number ${{ github.run_number }}"
@@ -295,7 +295,7 @@ jobs:
             app/android/app/build/outputs/apk/release/app-release.apk
 
       - name: Upload Android artifact
-        if: github.ref_name == 'v1.0.24-hotfix'
+        if: github.ref_name == 'fix/v1.0.24-hotfix'
         uses: actions/upload-artifact@v4
         with:
           name: android-artifact
@@ -304,7 +304,7 @@ jobs:
           retention-days: 7
 
       - name: Ship to Google Play
-        if: github.ref_name == 'v1.0.24-hotfix'
+        if: github.ref_name == 'fix/v1.0.24-hotfix'
         working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
@@ -320,7 +320,7 @@ jobs:
           GOOGLE_API_CREDENTIALS="./android/api_keys.json" npx @bcgov/gpublish
 
       - name: Send notification for Android failure
-        if: failure() && github.ref_name == 'v1.0.24-hotfix'
+        if: failure() && github.ref_name == 'fix/v1.0.24-hotfix'
         uses: ./.github/workflows/actions/send-rocketchat-notification
         with:
           job_title: "BC Wallet Android Build - Run number ${{ github.run_number }}"
@@ -329,7 +329,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   ship-to-saucelabs:
-    if: github.ref_name == 'v1.0.24-hotfix'
+    if: github.ref_name == 'fix/v1.0.24-hotfix'
     needs: [build-ios, build-android]
     runs-on: ubuntu-22.04
     steps:
@@ -356,7 +356,7 @@ jobs:
           artifact_name: app-release.aab
 
   run-on-device-tests:
-    if: github.ref_name == 'v1.0.24-hotfix'
+    if: github.ref_name == 'fix/v1.0.24-hotfix'
     needs: [ship-to-saucelabs]
     runs-on: ubuntu-22.04
     strategy:
