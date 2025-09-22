@@ -17,6 +17,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
     container: {
       flex: 1,
       alignItems: 'center',
+      paddingHorizontal: Spacing.md,
     },
   })
 
@@ -27,20 +28,24 @@ const AccountSetupSelectionScreen: React.FC = () => {
         BC Services Card Account
       </ThemedText>
 
-      <Button
-        buttonType={ButtonType.Primary}
-        title="Create new Account"
-        onPress={() => {
-          navigation.navigate(BCSCScreens.SetupSteps)
-        }}
-      />
-      <Button
-        buttonType={ButtonType.Secondary}
-        title="Transfer Account From Another Device"
-        onPress={() => {
-          navigation.navigate(BCSCScreens.TransferAccountInformation)
-        }}
-      />
+      <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
+        <Button
+          buttonType={ButtonType.Primary}
+          title="Create new Account"
+          onPress={() => {
+            navigation.navigate(BCSCScreens.SetupSteps)
+          }}
+        />
+      </View>
+      <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
+        <Button
+          buttonType={ButtonType.Secondary}
+          title="Transfer Account From Another Device"
+          onPress={() => {
+            navigation.navigate(BCSCScreens.TransferAccountInformation)
+          }}
+        />
+      </View>
     </View>
   )
 }

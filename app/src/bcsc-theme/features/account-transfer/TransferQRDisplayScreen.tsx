@@ -1,4 +1,4 @@
-import { Button, ButtonType, QRRenderer, ThemedText, useTheme } from '@bifold/core'
+import { QRRenderer, ThemedText, useTheme } from '@bifold/core'
 
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +10,7 @@ import uuid from 'react-native-uuid'
 const TransferQRDisplayScreen: React.FC = () => {
   const { t } = useTranslation()
   const { ColorPalette, themeName, Spacing } = useTheme()
-  const [qrValue, setQRValue] = useState('')
+  const [qrValue, setQRValue] = useState<string | null>(null)
 
   // TODO: (Alfred) A timer would be cool idea to refresh the QR code automatically
   const styles = StyleSheet.create({
@@ -42,7 +42,9 @@ const TransferQRDisplayScreen: React.FC = () => {
       jti: uuid.v4().toString(),
     })
 
-    setQRValue(jwt)
+    const url = `https://idsit.gov.bc.ca/device/static/selfsetup.html?${jwt}`
+    console.log(jwt)
+    setQRValue('https://idsit.gov.bc.ca/device/static/selfsetup.html?assertion=' + 'butts')
   }
 
   return (
@@ -52,9 +54,9 @@ const TransferQRDisplayScreen: React.FC = () => {
           Scan this QR code in the BC Services Card app on your other mobile device.
         </ThemedText>
         <View style={{ flex: 1, height: '100%', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-          <QRRenderer value={qrValue} />
+          {qrValue && <QRRenderer value={qrValue} />}
         </View>
-        <Button buttonType={ButtonType.Primary} title="Refresh QR Code" onPress={createToken} />
+        {/* <Button buttonType={ButtonType.Primary} title="Refresh QR Code" onPress={createToken} /> */}
       </View>
     </SafeAreaView>
   )

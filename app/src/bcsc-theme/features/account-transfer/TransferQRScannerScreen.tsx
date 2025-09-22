@@ -1,33 +1,33 @@
-import { ScanCamera } from '@bifold/core'
+import { MaskType, ScanCamera, SVGOverlay, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 const TransferQRScannerScreen: React.FC = () => {
+  const { ColorPalette, themeName, Spacing } = useTheme()
   const handleScan = async (value: string) => {
+    console.log('SCANNED A QR CODE!!!!')
     console.log(value)
   }
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  })
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']}>
-      <View style={styles.container}>
-        <View></View>
-        <ScanCamera handleCodeScan={handleScan} />
+    <View style={styles.container}>
+      <View>
+        <ThemedText variant="headerTitle" style={{ paddingBottom: Spacing.lg }}>
+          A valid QR code will scan automatically
+        </ThemedText>
       </View>
-    </SafeAreaView>
+      <ScanCamera handleCodeScan={handleScan} />
+
+      <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
+      {/* <ScanCamera handleCodeScan={handleScan} /> */}
+    </View>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-  },
-  text: {
-    fontSize: 18,
-    color: '#333',
-  },
-})
 
 export default TransferQRScannerScreen
