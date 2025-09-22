@@ -2,4 +2,4 @@ CODE_SIGN_STYLE=Manual
 DEVELOPMENT_TEAM=L796QSLV3E
 PRODUCT_BUNDLE_IDENTIFIER=ca.bc.gov.BCWallet
 PROVISIONING_PROFILE_SPECIFIER=fbfc84dd-46cf-46ee-aeee-73ebcfb406b1
-CODE_SIGN_IDENTITY=iOS Distribution: Government of British Columbia (L796QSLV3E)
+CODE_SIGN_IDENTITY=iPhone Distribution: Government of British Columbia (L796QSLV3E)
