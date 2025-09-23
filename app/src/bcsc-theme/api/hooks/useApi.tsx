@@ -2,6 +2,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { useMemo } from 'react'
 import useAuthorizationApi from './useAuthorizationApi'
 import useConfigApi from './useConfigApi'
+import useDeviceAttestationApi from './useDeviceAttestationApi'
 import useEvidenceApi from './useEvidenceApi'
 import useJwksApi from './useJwksApi'
 import useMetadataApi from './useMetadataApi'
@@ -23,6 +24,7 @@ const useApi = () => {
   const metadata = useMetadataApi(apiClient)
   const jwks = useJwksApi(apiClient)
   const video = useVideoCallApi(apiClient)
+  const deviceAttestation = useDeviceAttestationApi(apiClient)
 
   return useMemo(
     () => ({
@@ -36,8 +38,9 @@ const useApi = () => {
       metadata,
       jwks,
       video,
+      deviceAttestation,
     }),
-    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks, video]
+    [config, pairing, registration, authorization, token, user, evidence, metadata, jwks, video, deviceAttestation]
   )
 }
 

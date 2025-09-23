@@ -10,7 +10,8 @@ import {
 } from '@pexip/infinity-api'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
-import { keepAliveIntervalMs, reconnectionGracePeriodMs } from '../constants'
+
+import { keepAliveIntervalMs, reconnectionGracePeriodMs } from '@/constants'
 import type { ConnectionRequest, ConnectResult } from '../types/live-call'
 
 // WebRTC Events need handlers even if we don't do anything with some of them

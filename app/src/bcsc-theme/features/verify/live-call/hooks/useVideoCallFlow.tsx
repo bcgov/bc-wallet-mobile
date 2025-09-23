@@ -5,7 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppState } from 'react-native'
 import uuid from 'react-native-uuid'
 import { MediaStream } from 'react-native-webrtc'
-import { keepAliveIntervalMs } from '../constants'
+
+import { keepAliveIntervalMs } from '@/constants'
 import {
   ConnectionRequest,
   ConnectResult,

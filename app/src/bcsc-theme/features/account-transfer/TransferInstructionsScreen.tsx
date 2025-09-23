@@ -13,7 +13,7 @@ const QR_CODE_PHONE = Image.resolveAssetSource(QRCodePhone)
 const QR_SCAN = Image.resolveAssetSource(QRScan)
 
 const TransferInstructionsScreen: React.FC = () => {
-  const { ColorPalette, themeName, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const styles = StyleSheet.create({
     container: {

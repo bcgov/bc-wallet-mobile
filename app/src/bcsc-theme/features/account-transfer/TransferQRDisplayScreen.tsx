@@ -1,18 +1,18 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { QRRenderer, ThemedText, useTheme } from '@bifold/core'
 
 import React, { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import uuid from 'react-native-uuid'
 
 const TransferQRDisplayScreen: React.FC = () => {
-  const { t } = useTranslation()
+  const { deviceAttestation } = useApi()
   const { ColorPalette, themeName, Spacing } = useTheme()
   const [qrValue, setQRValue] = useState<string | null>(null)
 
-  // TODO: (Alfred) A timer would be cool idea to refresh the QR code automatically
+  // TODO: (Alfred) Add a timer to automatically refresh the QR code every 30 seconds
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -24,27 +24,39 @@ const TransferQRDisplayScreen: React.FC = () => {
 
   useEffect(() => {
     createToken()
+    const interval = setInterval(() => {
+      createToken()
+    }, 30000)
+    return () => clearInterval(interval)
   }, [])
 
   const createToken = async () => {
     const epoch = Date.now()
-    const client = await getAccount()
-    if (!client) {
+    const account = await getAccount()
+    if (!account) {
       // BIG ERROR, NO ACCOUNT ABORT
       return
     }
+    // TODO: (Alfred) Investigate device signing. Android -> ios = not working. ios -> ios = QR code scans properly
     const jwt = await createDeviceSignedJWT({
       aud: 'https://idsit.gov.bc.ca/device/',
-      iss: client.clientID,
-      sub: client.clientID,
+      iss: account.clientID,
+      sub: account.clientID,
       iat: epoch,
       exp: epoch + 60, // give this token 1 minute to live
       jti: uuid.v4().toString(),
     })
 
     const url = `https://idsit.gov.bc.ca/device/static/selfsetup.html?${jwt}`
-    console.log(jwt)
-    setQRValue('https://idsit.gov.bc.ca/device/static/selfsetup.html?assertion=' + 'butts')
+    setQRValue(url)
+  }
+
+  const checkAttestation = async () => {
+    const response = await deviceAttestation.checkAttestationStatus('')
+    if (response) {
+      // clean up and navigate to the success screen
+      // TODO: (Alfred) Create a timer, generisize the success screen for any text?
+    }
   }
 
   return (
@@ -53,9 +65,7 @@ const TransferQRDisplayScreen: React.FC = () => {
         <ThemedText variant="headerTitle">
           Scan this QR code in the BC Services Card app on your other mobile device.
         </ThemedText>
-        <View style={{ flex: 1, height: '100%', justifyContent: 'center', alignItems: 'center', padding: 24 }}>
-          {qrValue && <QRRenderer value={qrValue} />}
-        </View>
+        {qrValue && <QRRenderer value={qrValue} />}
         {/* <Button buttonType={ButtonType.Primary} title="Refresh QR Code" onPress={createToken} /> */}
       </View>
     </SafeAreaView>

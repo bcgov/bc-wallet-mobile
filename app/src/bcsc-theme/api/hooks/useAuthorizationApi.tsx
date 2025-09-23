@@ -1,10 +1,10 @@
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { isAxiosError } from 'axios'
 import { useCallback, useMemo } from 'react'
 import { createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
 
@@ -52,13 +52,13 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * @returns {*} {VerifyInPersonResponseData | null}
    */
   const authorizeDevice = useCallback(
-    async (serial: string, birthdate: Date): Promise<VerifyInPersonResponseData | null> => {
+    async (serial?: string, birthdate?: Date): Promise<VerifyInPersonResponseData | null> => {
       return withAccount<VerifyInPersonResponseData | null>(async (account) => {
         const body = {
           response_type: 'device_code',
           client_id: account.clientID,
-          card_serial_number: serial,
-          birth_date: birthdate.toISOString().split('T')[0],
+          card_serial_number: serial ?? undefined,
+          birth_date: birthdate?.toISOString().split('T')[0] ?? undefined,
           scope: 'openid profile address offline_access',
         }
 
