@@ -25,13 +25,8 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   useEffect(() => {
-    if (!store.stateLoaded) {
-      return
-    }
-
-    // Safeguard: Ensure the store has the necessary environment details
-    if (!store.developer.environment.iasApiBaseUrl) {
-      logger.warn('Potential race condition detected. Store is loaded but environment details are missing.')
+    // Only attempt to configure the client if the store is loaded and the IAS API base URL is available
+    if (!store.stateLoaded || !store.developer.environment.iasApiBaseUrl) {
       return
     }
 
@@ -41,7 +36,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         const newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
-        await newClient.fetchEndpointsAndConfig(store.developer.environment.iasApiBaseUrl)
+        await newClient.fetchEndpointsAndConfig()
 
         setClient(newClient)
         setClientIsReady(true)

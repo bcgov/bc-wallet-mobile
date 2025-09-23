@@ -17,6 +17,7 @@ import { BCState } from '@/store'
 import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
+import { BCSCApiClientProvider } from '../contexts/BCSCApiClientContext'
 
 const TempLoadingView = () => {
   const { ColorPalette } = useTheme()
@@ -75,7 +76,9 @@ const BCSCRootStack: React.FC = () => {
     return (
       <AgentProvider agent={agent}>
         <OpenIDCredentialRecordProvider>
-          {loading ? <TempLoadingView /> : store.bcsc.verified ? <BCSCMainStack /> : <VerifyIdentityStack />}
+          <BCSCApiClientProvider>
+            {loading ? <TempLoadingView /> : store.bcsc.verified ? <BCSCMainStack /> : <VerifyIdentityStack />}
+          </BCSCApiClientProvider>
         </OpenIDCredentialRecordProvider>
       </AgentProvider>
     )
