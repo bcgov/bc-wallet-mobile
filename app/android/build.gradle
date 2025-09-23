@@ -7,15 +7,17 @@ buildscript {
         compileSdkVersion = 35
         targetSdkVersion = 35
         ndkVersion = "25.1.8937393"
-        kotlinVersion = "1.7.22"
+        kotlinVersion = "1.9.20"
         androidXBrowser = "1.5.0"
+        javaVersion = JavaVersion.VERSION_17
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.4.2")
+        classpath("com.android.tools.build:gradle:8.6.1")
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.20")
         classpath('com.google.gms:google-services:4.4.2')
         classpath("com.facebook.react:react-native-gradle-plugin")
         // NOTE: Do not place your application dependencies here; they belong
@@ -38,6 +40,14 @@ allprojects {
 
         google()
         maven { url 'https://www.jitpack.io' }
+    }
+
+    configurations.all {
+        resolutionStrategy {
+            force "org.jetbrains.kotlin:kotlin-stdlib:1.9.20"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.20"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.20"
+        }
     }
 }
 
