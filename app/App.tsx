@@ -26,7 +26,6 @@ import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
 
 import Root from '@/Root'
-import { BCSCApiClientProvider } from '@/bcsc-theme/contexts/BCSCApiClientContext'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { localization } from '@/localization'
 import { initialState, reducer } from '@/store'
