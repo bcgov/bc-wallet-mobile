@@ -86,7 +86,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
     })
 
     return data
-  }, [clientIsReady, apiClient, dispatch])
+  }, [clientIsReady, apiClient, logger, dispatch])
 
   const updateRegistration = useCallback(
     async (clientId: string) => {
