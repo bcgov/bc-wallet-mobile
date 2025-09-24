@@ -3,7 +3,7 @@ import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useFilterServiceClients } from '../../services/hooks/useFilterServiceClients'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useNavigation } from '@react-navigation/native'
@@ -14,7 +14,7 @@ type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScree
 
 const SavedServices: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const navigation = useNavigation<ServicesNavigationProp>()
   const { t } = useTranslation()
 
@@ -58,11 +58,14 @@ const SavedServices: React.FC = () => {
         serviceClients.map((serviceClient) => (
           <SavedServiceCard
             key={serviceClient.client_ref_id}
-            serviceClient={serviceClient}
+            title={serviceClient.client_name}
             onPress={() => {
               navigation.navigate(BCSCScreens.ServiceLoginScreen, {
                 serviceClient: serviceClient,
               })
+            }}
+            onRemove={() => {
+              dispatch({ type: BCDispatchAction.REMOVE_BOOKMARK, payload: [serviceClient.client_ref_id] })
             }}
           />
         ))
