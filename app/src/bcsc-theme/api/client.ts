@@ -135,8 +135,10 @@ class BCSCApiClient {
     })
   }
 
-  async fetchEndpointsAndConfig(url: string) {
-    const response = await this.get<any>(`${url}/device/.well-known/openid-configuration`, { skipBearerAuth: true })
+  async fetchEndpointsAndConfig() {
+    const response = await this.get<any>(`${this.baseURL}/device/.well-known/openid-configuration`, {
+      skipBearerAuth: true,
+    })
     this.config = {
       pairDeviceWithQRCodeSupported: response.data['pair_device_with_qrcode_supported'],
       maximumAccountsPerDevice: response.data['maximum_accounts_per_device'],
