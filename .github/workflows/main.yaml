@@ -15,6 +15,7 @@ on:
   #   branches: [main]
   workflow_run:
     workflows: ["Code Quality"]
+    branches: ["*"]
     types:
       - completed
 
