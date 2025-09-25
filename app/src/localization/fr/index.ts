@@ -157,6 +157,7 @@ const translation = {
     "VulnerabilityDisclosurePolicy": "Politique de divulgation des vulnérabilités",
     "Accessibility": "Accessibilité",
     "IntroductionToTheApp": "Introduction à l'application",
+    "ButtonTitle": "Settings Menu (FR)"
   },
   "Developer": {
     "Environment": "Environnement",

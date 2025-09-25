@@ -157,7 +157,8 @@ const translation = {
     "PrivacyStatement": "Privacy statement",
     "VulnerabilityDisclosurePolicy": "Vulnerability disclosure policy",
     "Accessibility": "Accessibility",
-    "IntroductionToTheApp": "Introduction to the app"
+    "IntroductionToTheApp": "Introduction to the app",
+    "ButtonTitle": "Settings Menu"
   },
   "Developer": {
     "Environment": "Environment",
