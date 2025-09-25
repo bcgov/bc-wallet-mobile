@@ -2,8 +2,7 @@ import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHead
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
 import { NavigationContainer } from '@react-navigation/native'
-import { fireEvent, render, waitFor } from '@testing-library/react-native'
-import { BasicAppContext } from '__mocks__/helpers/app'
+import { fireEvent, render } from '@testing-library/react-native'
 
 let mockNavigate: jest.Mock
 
