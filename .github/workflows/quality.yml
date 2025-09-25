@@ -4,14 +4,7 @@ on:
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, labeled]
-  push:
-    branches: [main]
-    paths:
-      - app/**
-      - .yarn/**
-      - .github/workflows/**
-  # pull_request:
-  #   branches: [main]
+
 jobs:
   lint:
     runs-on: ubuntu-22.04

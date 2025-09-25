@@ -5,19 +5,14 @@ env:
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - app/**
-  #     - .yarn/**
-  #     - .github/workflows/**
-  # pull_request:
-  #   branches: [main]
-  workflow_run:
-    workflows: ["Code Quality"]
-    branches: ["*"]
-    types:
-      - completed
+  push:
+    branches: [main]
+    paths:
+      - app/**
+      - .yarn/**
+      - .github/workflows/**
+  pull_request:
+    branches: [main]
 
 jobs:
   check-secrets:
@@ -80,24 +75,14 @@ jobs:
   early-exit-check:
     runs-on: ubuntu-22.04
     outputs:
-      should_skip_build: ${{ steps.core_files_changed.outputs.result == 'true' }}
+      should_skip_build: ${{ steps.core_files_changed.outputs.result == 'false' }}
     steps:
-      - name: Check workflow_run trigger success
-        id: core_files_changed
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ] && [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
-            echo "Workflow triggered by workflow_run but Code Quality workflow did not succeed - skipping build"
-            echo "result=true" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Workflow_run check passed, continuing to file change detection"
-          fi
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all branches, main needed.
 
       - name: Check if core files changed
+        id: core_files_changed
         shell: bash
         run: |
           set -x
@@ -123,16 +108,15 @@ jobs:
 
           if [ $change_count -gt 0 ]; then
             # A result greater than 0 means there are changes
-            # in the specified directories - don't skip build.
-            echo "result=false" >> $GITHUB_OUTPUT
-          else
-            # No changes - skip build.
+            # in the specified directories.
             echo "result=true" >> $GITHUB_OUTPUT
+          else
+            echo "result=false" >> $GITHUB_OUTPUT
           fi
 
   build-ios:
     needs: [check-secrets, check-vars, early-exit-check]
-    if: needs.early-exit-check.outputs.should_skip_build == 'false'
+    if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
       matrix:
         include:
@@ -332,7 +316,7 @@ jobs:
 
   build-android:
     needs: [check-secrets, check-vars, early-exit-check]
-    if: needs.early-exit-check.outputs.should_skip_build == 'false'
+    if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
       matrix:
         include:
@@ -406,7 +390,7 @@ jobs:
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
 
       - name: Patch for Single App build
-        if: ${{ matrix.build_type == 'single-app' }}
+        if: matrix.build_type == 'single-app'
         run: |
           echo "Patching for Single App build"
           git config user.email "github-action@users.noreply.github.com"
@@ -492,12 +476,11 @@ jobs:
 
   build-summary:
     runs-on: ubuntu-latest
-    # Always run regardless of previous job status
-    if: always()
     needs:
       - early-exit-check
       - build-android
       - build-ios
+    if: always()
     steps:
       - name: Check matrix results
         run: |
