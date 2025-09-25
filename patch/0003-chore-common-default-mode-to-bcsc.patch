@@ -16,7 +16,6 @@ index da1e87bf..b5d58351 100644
 @@ -70,7 +70,7 @@ const App = () => {
        <ContainerProvider value={bcwContainer}>
          <StoreProvider initialState={initialState} reducer={reducer}>
-           <BCSCApiClientProvider>
 -            <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
 +            <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCSC}>
                <NavContainer navigationRef={navigationRef}>
@@ -33,8 +32,8 @@ index 104e4d41..cabd61b7 100644
 -  mode: Mode.BCWallet,
 +  mode: Mode.BCSC,
  }
- 
+
  const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
--- 
+--
 2.49.0
 
