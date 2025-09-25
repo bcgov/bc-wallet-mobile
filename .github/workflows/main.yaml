@@ -5,14 +5,14 @@ env:
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - app/**
-      - .yarn/**
-      - .github/workflows/**
-  pull_request:
-    branches: [main]
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - app/**
+  #     - .yarn/**
+  #     - .github/workflows/**
+  # pull_request:
+  #   branches: [main]
   workflow_run:
     workflows: ["Code Quality"]
     types:
