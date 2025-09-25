@@ -12,10 +12,13 @@ import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { HelpCentreUrl } from '@/constants'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
+import Settings from '../features/settings/Settings'
+import { useTranslation } from 'react-i18next'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const theme = useTheme()
+  const { t } = useTranslation()
   const Stack = createStackNavigator<BCSCRootStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
@@ -32,6 +35,16 @@ const MainStack: React.FC = () => {
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
+        <Stack.Screen
+          name={BCSCScreens.Settings}
+          component={Settings}
+          options={{
+            headerShown: true,
+            title: t('Screens.Settings'),
+            headerBackTestID: testIdWithKey('Back'),
+            headerShadowVisible: false,
+          }}
+        />
         <Stack.Screen
           name={BCSCScreens.ManualPairingCode}
           component={ManualPairingCode}

@@ -11,6 +11,7 @@ import Settings from '../features/settings/Settings'
 import { BCSCScreens, BCSCTabStackParams } from '../types/navigators'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { HelpCentreUrl } from '@/constants'
+import { createSettingsHeaderButton } from '../components/SettingsHeaderButton'
 
 type TabBarIconProps = {
   focused: boolean
@@ -84,7 +85,7 @@ const BCSCTabStack: React.FC = () => {
             tabBarTestID: testIdWithKey('Home'),
             title: '',
             headerShown: true,
-            headerLeft: () => null,
+            headerLeft: createSettingsHeaderButton(),
             headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           }}
         />
@@ -97,6 +98,9 @@ const BCSCTabStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Services',
             tabBarTestID: testIdWithKey('Services'),
+            title: '',
+            headerShown: true,
+            headerLeft: createSettingsHeaderButton(),
           }}
         />
         <Tab.Screen
@@ -108,17 +112,9 @@ const BCSCTabStack: React.FC = () => {
             tabBarShowLabel: false,
             tabBarAccessibilityLabel: 'Account',
             tabBarTestID: testIdWithKey('Account'),
-          }}
-        />
-        <Tab.Screen
-          name={BCSCScreens.Settings}
-          component={Settings}
-          options={{
-            tabBarIconStyle: styles.tabBarIcon,
-            tabBarIcon: createTabBarIcon('Settings', 'cog'),
-            tabBarShowLabel: false,
-            tabBarAccessibilityLabel: 'Settings',
-            tabBarTestID: testIdWithKey('Settings'),
+            title: '',
+            headerShown: true,
+            headerLeft: createSettingsHeaderButton(),
           }}
         />
       </Tab.Navigator>

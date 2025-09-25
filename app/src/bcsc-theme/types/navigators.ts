@@ -57,7 +57,8 @@ export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
   [BCSCScreens.Account]: undefined
-  [BCSCScreens.Settings]: undefined
+  // TODO (MD): Deprecated?
+  // [BCSCScreens.Settings]: undefined
 }
 
 export type BCSCRootStackParams = {
@@ -67,6 +68,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
   [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
+  [BCSCScreens.Settings]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {
