@@ -116,12 +116,12 @@ jobs:
 
   build-ios:
     needs: [check-secrets, check-vars, early-exit-check]
-    if: ${{ needs.early-exit-check.outputs.should_skip_build != 'true' }}
+    if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
       matrix:
         include:
           - build_type: "bc-wallet"
-            app_version: "1.0.25"
+            app_version: "1.0.26"
             export_options: "export-options-bcw.plist"
             artifact_name: "ios-bc-wallet-artifact"
           - build_type: "single-app"
@@ -203,7 +203,7 @@ jobs:
           git diff ios/Podfile.lock
 
       - name: Patch for Single App build
-        if: ${{ matrix.build_type == 'single-app' }}
+        if: matrix.build_type == 'single-app'
         run: |
           echo "Patching for Single App build"
           git config user.email "github-action@users.noreply.github.com"
@@ -316,12 +316,12 @@ jobs:
 
   build-android:
     needs: [check-secrets, check-vars, early-exit-check]
-    if: ${{ needs.early-exit-check.outputs.should_skip_build != 'true' }}
+    if: needs.early-exit-check.outputs.should_skip_build != 'true'
     strategy:
       matrix:
         include:
           - build_type: "bc-wallet"
-            app_version: "1.0.25"
+            app_version: "1.0.26"
             android_package_name: "ca.bc.gov.BCWallet"
             jks_base64_secret: "PLAY_STORE_JKS_BASE64"
             jks_alias_secret: "PLAY_STORE_JKS_ALIAS"
@@ -390,7 +390,7 @@ jobs:
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
 
       - name: Patch for Single App build
-        if: ${{ matrix.build_type == 'single-app' }}
+        if: matrix.build_type == 'single-app'
         run: |
           echo "Patching for Single App build"
           git config user.email "github-action@users.noreply.github.com"
@@ -571,20 +571,20 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: run-aath-agents
-        if: ${{ matrix.mobile-platform=='-p iOS' }}
+        if: matrix.mobile-platform=='-p iOS'
         uses: ./.github/workflows/actions/run-aath-agents
         with:
           USE_NGROK: ""
 
       - name: run-aath-agents-ngrok
-        if: ${{ matrix.mobile-platform=='-p Android' }}
+        if: matrix.mobile-platform=='-p Android'
         uses: ./.github/workflows/actions/run-aath-agents
         with:
           NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
           USE_NGROK: "-n"
 
       - name: run-sauce-connect-tunnel
-        if: ${{ matrix.mobile-platform=='-p iOS' }}
+        if: matrix.mobile-platform=='-p iOS'
         uses: saucelabs/sauce-connect-action@v2
         with:
           username: ${{ secrets.SAUCE_USERNAME }}
@@ -616,7 +616,7 @@ jobs:
           REPORT_PROJECT: ${{ matrix.report-project }}
 
       - name: Upload smoke-test results to Allure
-        if: ${{ always() }}
+        if: always()
         uses: ./.github/workflows/actions/run-send-gen-test-results-secure
         with:
           REPORT_PROJECT: ${{ matrix.report-project }}

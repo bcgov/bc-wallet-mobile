@@ -15,8 +15,8 @@ import useVideoCallApi from './useVideoCallApi'
 const useApi = () => {
   const apiClient = useBCSCApiClient()
   const config = useConfigApi(apiClient)
-  const pairing = usePairingApi(apiClient)
   const registration = useRegistrationApi(apiClient)
+  const pairing = usePairingApi(apiClient)
   const authorization = useAuthorizationApi(apiClient)
   const token = useTokenApi(apiClient)
   const user = useUserApi(apiClient)
