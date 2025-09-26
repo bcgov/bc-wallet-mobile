@@ -15,7 +15,6 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { mockServices } from '@/bcsc-theme/fixtures/services'
 import { BCSCRootStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
 
@@ -57,16 +56,14 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
       try {
         setLoading(true)
         logger.info(`Submitting pairing code: ${code}`)
-        const { success } = await pairing.loginByPairingCode(code)
-        if (success) {
-          logger.info('Pairing code submitted successfully.')
-          navigation.navigate(BCSCScreens.PairingConfirmation, {
-            serviceId: mockServices[0].id,
-            serviceName: mockServices[0].title,
-          })
-        } else {
-          throw new Error('unsuccessful response from pairing API')
-        }
+        const serviceClient = await pairing.loginByPairingCode(code)
+
+        logger.info('Pairing code submitted successfully.')
+
+        navigation.navigate(BCSCScreens.PairingConfirmation, {
+          serviceId: serviceClient.client_ref_id,
+          serviceName: serviceClient.client_name,
+        })
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)
         setMessage('Failed to submit pairing code.')
