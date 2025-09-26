@@ -18,7 +18,8 @@ const SEARCH_DEBOUNCE_DELAY_MS = 300
 type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
 
 /**
- * Services screen component that displays a list of services accessible with the user's BCSC card.
+ * Services screen component that displays a list of services accessible
+ * with the user's BCSC card.
  *
  * @return {*} {JSX.Element} The Services screen component.
  */
@@ -27,18 +28,15 @@ const Services: React.FC = () => {
   const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
-
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
-
-  const serviceClients = useFilterServiceClients({
-    cardProcessFilter: getCardProcessForCardType(store.bcsc.cardType),
-    partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
-  })
-
   const searchInputRef = useRef<View>(null)
-
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
+  const serviceClients = useFilterServiceClients({
+    cardProcessFilter: getCardProcessForCardType(store.bcsc.cardType) ?? undefined,
+    partialNameFilter: !search ? '' : debouncedSearch, // if search is empty,
+    // avoid debounce delay
+  })
 
   const styles = StyleSheet.create({
     headerText: {
