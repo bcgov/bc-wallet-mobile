@@ -1504,9 +1504,9 @@ exports[`Developer Screen screen renders correctly 1`] = `
                   },
                 ]
               }
-              thumbTintColor="#003366"
+              thumbTintColor="#606060"
               tintColor="#D3D3D3"
-              value={true}
+              value={false}
             />
           </View>
         </View>
