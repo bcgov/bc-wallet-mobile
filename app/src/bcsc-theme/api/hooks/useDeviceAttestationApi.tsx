@@ -14,45 +14,41 @@ export interface VerifyAttestation {
 // Assertion type is hardcoded
 const assertionType = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
-const useDeviceAttestationApi = (apiClient: BCSCApiClient | null, clientIsReady: boolean = true) => {
+const useDeviceAttestationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
   const [store, dispatch] = useStore<BCState>()
 
   const verifyAttestation = useCallback(async (data: VerifyAttestation) => {
-    console.log('_____________')
-    console.log('_____________')
-    console.log('_____________')
-    if (!clientIsReady || !apiClient) {
+    if (!isClientReady || !apiClient) {
       throw new Error('BCSC client not ready for Device Attestation!')
     }
 
-    const formData = new URLSearchParams()
-    formData.append('client_id', data.client_id)
-    formData.append('device_code', data.device_code)
-    formData.append('attestation', data.attestation)
-    formData.append('client_assertion_type', assertionType)
-    formData.append('client_assertion', data.client_assertion)
-    console.log('SENDING ATTESTATION REQUEST', formData.toString())
-    const response = await apiClient.post(apiClient.endpoints.attestation, formData, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    })
-    if (response.status == 201) {
-      // successful
-    } else if (response.status == 400) {
-    } else if (response.status == 401) {
-    } else if (response.status == 429) {
-    } else {
+    const requestData = {
+      client_id: data.client_id,
+      device_code: data.device_code,
+      attestation: data.attestation,
+      client_assertion_type: assertionType,
+      client_assertion: data.client_assertion,
     }
 
-    return
+    const response = await apiClient.post(apiClient.endpoints.attestation, requestData, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      skipBearerAuth: true,
+    })
+    if (response.status == 201) {
+      return true
+    }
+
+    return false
   }, [])
 
   const checkAttestationStatus = useCallback(async (jwtID: string): Promise<boolean | undefined> => {
-    if (!clientIsReady || !apiClient) {
+    if (!isClientReady || !apiClient) {
       throw new Error('BCSC client not ready for Device Attestation!')
     }
 
-    const response = await apiClient.post(`${apiClient.endpoints.attestation}/${jwtID}`, {
+    const response = await apiClient.get(`${apiClient.endpoints.attestation}/${jwtID}`, {
       headers: { Authorization: `Bearer ${store.bcsc.registrationAccessToken}` },
+      skipBearerAuth: true,
     })
 
     if (response.status == 200) {
