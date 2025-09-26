@@ -54,6 +54,9 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
   const authorizeDevice = useCallback(
     async (serial?: string, birthdate?: Date): Promise<VerifyInPersonResponseData | null> => {
       return withAccount<VerifyInPersonResponseData | null>(async (account) => {
+        if (serial && !birthdate) {
+          throw new Error('Birthdate is required when providing a serial number')
+        }
         const body = {
           response_type: 'device_code',
           client_id: account.clientID,

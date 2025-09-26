@@ -2,6 +2,7 @@ import { getDeviceCountFromIdToken } from '@/bcsc-theme/utils/get-device-count'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient, { TokenStatusResponseDataWithDeviceCount } from '../client'
+import { VerifyAttestation } from './useDeviceAttestationApi'
 import { withAccount } from './withAccountGuard'
 
 export interface TokenStatusResponseData {
@@ -19,6 +20,28 @@ export interface BcscJwtPayload {
 }
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
+  const deviceToken = useCallback(
+    async (payload: VerifyAttestation) => {
+      const { data } = await apiClient.post<TokenStatusResponseData>(
+        apiClient.endpoints.token,
+        {
+          device_code: payload.device_code,
+          client_id: payload.client_id,
+          client_assertion: payload.client_assertion,
+          client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+        },
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          skipBearerAuth: true,
+        }
+      )
+
+      return data
+    },
+    [apiClient]
+  )
+
   const checkDeviceCodeStatus = useCallback(
     async (deviceCode: string, confirmationCode: string) => {
       return withAccount<TokenStatusResponseDataWithDeviceCount>(async (account) => {
@@ -40,6 +63,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   return useMemo(
     () => ({
       checkDeviceCodeStatus,
+      deviceToken,
     }),
     [checkDeviceCodeStatus]
   )
