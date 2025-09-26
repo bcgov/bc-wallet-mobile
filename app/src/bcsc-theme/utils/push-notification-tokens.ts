@@ -20,5 +20,7 @@ export const getNotificationTokens = async (logger?: RemoteLogger) => {
     }
   }
 
+  logger?.error('Retrieved notification tokens for registration')
+
   return { fcmDeviceToken, apnsToken }
 }
