@@ -3,6 +3,8 @@ const fs = require('fs')
 const path = require('path')
 const escape = require('escape-string-regexp')
 const exclusionList = require('metro-config/src/defaults/exclusionList')
+const { FileStore } = require('metro-cache')
+
 require('dotenv').config()
 
 const packageDirs = [
@@ -72,6 +74,11 @@ module.exports = (async () => {
       sourceExts: [...sourceExts, 'svg', 'cjs'],
     },
     watchFolders,
+    cacheStores: [
+      new FileStore({
+        root: path.join(__dirname, '.metro-cache'),
+      }),
+    ],
   }
 
   return mergeConfig(getDefaultConfig(__dirname), metroConfig)
