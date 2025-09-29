@@ -39,7 +39,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
       </View>
       <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
         <Button
-          buttonType={ButtonType.Secondary}
+          buttonType={ButtonType.Tertiary}
           title="Transfer Account From Another Device"
           onPress={() => {
             navigation.navigate(BCSCScreens.TransferAccountInformation)

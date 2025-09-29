@@ -55,7 +55,7 @@ const TransferInstructionsScreen: React.FC = () => {
         <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
           <Button
             buttonType={ButtonType.Primary}
-            title="Transfer Account From Another Device"
+            title="Scan QR code"
             onPress={() => {
               navigation.navigate(BCSCScreens.TransferAccountQRScan)
             }}
