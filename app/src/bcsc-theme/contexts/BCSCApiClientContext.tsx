@@ -13,12 +13,20 @@ export interface BCSCApiClientContextType {
   error: string | null
 }
 
-export const BCSCApiClientContext = createContext<BCSCApiClientContextType>({
-  client: null,
-  clientIsReady: false,
-  error: null,
-})
+export const BCSCApiClientContext = createContext<BCSCApiClientContextType | null>(null)
 
+/**
+ * Provides a singleton BCSCApiClient instance to child components via context.
+ *
+ * The client is initialized based on the current developer environment and automatically
+ * reconfigures if the environment changes. If initialization fails, an error state is exposed.
+ *
+ * Children can access the client, its readiness, and errors via BCSCApiClientContext, or
+ * just the client using useBCSCApiClient/useBCSCApiClientState hooks.
+ *
+ * @param {React.ReactNode} children - The child components that will have access to the BCSCApiClient instance.
+ * @returns {*} {JSX.Element} The BCSCApiClientProvider component wrapping its children.
+ */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [store, dispatch] = useStore<BCState>()
   const [clientIsReady, setClientIsReady] = useState(false)
@@ -86,4 +94,9 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   )
 
   return <BCSCApiClientContext.Provider value={contextValue}>{children}</BCSCApiClientContext.Provider>
+}
+
+// This function is used to reset the singleton instance in tests
+export function _resetBCSCApiClientSingleton() {
+  BCSC_API_CLIENT_SINGLETON = null
 }
