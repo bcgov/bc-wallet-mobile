@@ -7,6 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import AccountSetupSelectionScreen from '../account-transfer/AccountSetupSelectionScreen'
 import TransferInstructionsScreen from '../account-transfer/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../account-transfer/TransferQRScannerScreen'
+import TransferSuccessScreen from '../account-transfer/TransferSuccessScreen'
 import WebViewScreen from '../webview/WebViewScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
@@ -69,6 +70,13 @@ const VerifyIdentityStack = () => {
       <Stack.Screen
         name={BCSCScreens.TransferAccountInformation}
         component={TransferInstructionsScreen}
+        options={() => ({
+          headerShown: true,
+        })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountSuccess}
+        component={TransferSuccessScreen}
         options={() => ({
           headerShown: true,
         })}

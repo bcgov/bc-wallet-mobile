@@ -1,9 +1,17 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { DismissiblePopupModal, MaskType, ScanCamera, SVGOverlay, ThemedText, useStore, useTheme } from '@bifold/core'
-import { QrCodeScanError } from '@bifold/core/lib/typescript/src/types/error'
+import {
+  DismissiblePopupModal,
+  MaskType,
+  QrCodeScanError,
+  ScanCamera,
+  SVGOverlay,
+  ThemedText,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useEffect, useState } from 'react'
@@ -52,15 +60,18 @@ const TransferQRScannerScreen: React.FC = () => {
     async (value: string) => {
       setIsLoading(true)
       setScanError(null)
+      const account = await getAccount()
+      if (!account) {
+        setScanError(
+          new QrCodeScanError(t('Scan.InvalidQrCode'), value, 'No account found, restart the app and try again.')
+        )
+        setIsLoading(false)
+        return
+      }
       try {
         const qrToken = value.split('?')[1]
         // ias tokens expect times in seconds since epoch
         const timeInSeconds = Math.floor(Date.now() / 1000)
-        const account = await getAccount()
-        if (!account) {
-          // BIG ERROR, NO ACCOUNT ABORT
-          return
-        }
 
         // TODO: (Alfred) Investigate device signing. Android -> ios = not working. ios -> ios = QR code scans properly
         const jwt = await createDeviceSignedJWT({
@@ -81,7 +92,13 @@ const TransferQRScannerScreen: React.FC = () => {
           })
 
           if (!response) {
-            console.log('NO RESPONSE FROM VERIFY ATTESTATION Display an error pop up')
+            setScanError(
+              new QrCodeScanError(
+                t('Scan.InvalidQrCode'),
+                value,
+                'No attestation response, check your connection and try again.'
+              )
+            )
           }
 
           const deviceToken = await token.deviceToken({
@@ -99,6 +116,7 @@ const TransferQRScannerScreen: React.FC = () => {
           dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [deviceToken.refresh_token] })
           dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
 
+          navigator.navigate(BCSCScreens.VerificationSuccess)
           setIsLoading(false)
         }
       } catch (error) {

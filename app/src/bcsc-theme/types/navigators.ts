@@ -86,6 +86,7 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.TransferAccountInformation]: undefined
+  [BCSCScreens.TransferAccountSuccess]: undefined
   [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined

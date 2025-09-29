@@ -46,10 +46,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null, isClientReady:
       throw new Error('BCSC client not ready for Device Attestation!')
     }
 
-    const response = await apiClient.get(`${apiClient.endpoints.attestation}/${jwtID}`, {
-      headers: { Authorization: `Bearer ${store.bcsc.registrationAccessToken}` },
-      skipBearerAuth: true,
-    })
+    const response = await apiClient.get(`${apiClient.endpoints.attestation}/${jwtID}`, {})
 
     if (response.status == 200) {
       return true
