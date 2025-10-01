@@ -19,8 +19,8 @@ describe('Card Utils', () => {
       expect(getCardProcessForCardType(BCSCCardType.Other)).toBe(BCSCCardProcess.NonBCSC)
     })
 
-    it('should throw an error for None card type', () => {
-      expect(() => getCardProcessForCardType(BCSCCardType.None)).toThrow(`Invalid card type: ${BCSCCardType.None}}`)
+    it('should return null for None card type', () => {
+      expect(getCardProcessForCardType(BCSCCardType.None)).toBeNull()
     })
 
     it('should throw an error for unknown card type', () => {
@@ -31,7 +31,7 @@ describe('Card Utils', () => {
       const cardTypes = Object.values(BCSCCardType)
       cardTypes.forEach((cardType) => {
         if (cardType === BCSCCardType.None) {
-          expect(() => getCardProcessForCardType(cardType)).toThrow()
+          expect(getCardProcessForCardType(cardType)).toBeNull()
         } else {
           const process = getCardProcessForCardType(cardType)
           expect(Object.values(BCSCCardProcess)).toContain(process)

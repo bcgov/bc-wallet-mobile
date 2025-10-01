@@ -7,7 +7,7 @@ import { BCSCCardProcess, BCSCCardType } from '../types/cards'
  * @param {BCSCCardType} cardType - The type of BCSC card.
  * @returns {*} {BCSCCardProcess} The corresponding card process.
  */
-export function getCardProcessForCardType(cardType: BCSCCardType): BCSCCardProcess {
+export function getCardProcessForCardType(cardType: BCSCCardType): BCSCCardProcess | null {
   switch (cardType) {
     case BCSCCardType.Combined:
       return BCSCCardProcess.BCSC
@@ -18,7 +18,7 @@ export function getCardProcessForCardType(cardType: BCSCCardType): BCSCCardProce
     case BCSCCardType.Other:
       return BCSCCardProcess.NonBCSC
     case BCSCCardType.None:
-      throw new Error(`Invalid card type: ${BCSCCardType.None}}`)
+      return null
     default:
       throw new Error(`Unknown card type: ${cardType}`)
   }

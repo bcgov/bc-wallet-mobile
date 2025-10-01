@@ -60,6 +60,14 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
 
     logger.info('No account found, proceeding with registration')
 
+    try {
+      logger.info(`TEST FETCH START: notification tokens for registration`)
+      const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
+      logger.info(`TEST FETCH END: notification tokens for registration, ${fcmDeviceToken}, ${apnsToken}`)
+    } catch (error) {
+      logger.error('Failed to fetch notification tokens for registration', error as Error)
+    }
+
     const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
     logger.info('Fetched notification tokens for registration')
 
