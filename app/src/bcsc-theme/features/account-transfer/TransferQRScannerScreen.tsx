@@ -133,7 +133,6 @@ const TransferQRScannerScreen: React.FC = () => {
           }
 
           dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [deviceToken.refresh_token] })
-          dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
 
           navigator.navigate(BCSCScreens.VerificationSuccess)
           setIsLoading(false)
