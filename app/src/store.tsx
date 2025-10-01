@@ -63,6 +63,7 @@ export interface NonBCSCUserMetadata {
 
 export interface BCSCState {
   verified: boolean
+  // used during verification, use IAS account cardType for everything else
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
@@ -85,7 +86,6 @@ export interface BCSCState {
   verificationRequestId?: string
   verificationRequestSha?: string
   additionalEvidenceData: AdditionalEvidenceData[]
-  bcscDevicesCount?: number
   registrationAccessToken?: string
 }
 
@@ -147,7 +147,6 @@ enum BCSCDispatchAction {
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
-  UPDATE_DEVICE_COUNT = 'bcsc/updateDeviceCount',
   UPDATE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateRegistrationAccessToken',
 }
 
@@ -391,13 +390,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_REFRESH_TOKEN: {
       const refreshToken = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, refreshToken }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.UPDATE_DEVICE_COUNT: {
-      const bcscDevicesCount = (action?.payload || []).pop()
-      const bcsc = { ...state.bcsc, bcscDevicesCount }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
