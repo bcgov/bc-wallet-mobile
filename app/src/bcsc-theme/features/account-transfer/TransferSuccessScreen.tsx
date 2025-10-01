@@ -3,7 +3,6 @@ import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
-import { StyleSheet } from 'react-native'
 
 const TransferSuccessScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCTabStackParams>>()
@@ -19,18 +18,4 @@ const TransferSuccessScreen: React.FC = () => {
     />
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-  },
-  text: {
-    fontSize: 18,
-    color: '#333',
-  },
-})
-
 export default TransferSuccessScreen

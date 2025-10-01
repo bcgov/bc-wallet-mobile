@@ -14,12 +14,14 @@ import {
 } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import uuid from 'react-native-uuid'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useCameraPermission } from 'react-native-vision-camera'
 
 const TransferQRScannerScreen: React.FC = () => {
   const { deviceAttestation, authorization, token } = useApi()
@@ -29,6 +31,7 @@ const TransferQRScannerScreen: React.FC = () => {
   const { ColorPalette } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
+  const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
 
   const registerDevice = async () => {
@@ -56,7 +59,23 @@ const TransferQRScannerScreen: React.FC = () => {
     registerDevice()
   }, [])
 
-  const handleScan = React.useCallback(
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!hasPermission) {
+        const permission = await requestPermission()
+        if (!permission) {
+          Alert.alert('Camera Permission Required', 'Please enable camera permission to take a photo.', [
+            { text: 'OK', onPress: () => navigator.goBack() },
+          ])
+          return
+        }
+      }
+    }
+
+    checkPermissions()
+  }, [hasPermission, requestPermission, navigator])
+
+  const handleScan = useCallback(
     async (value: string) => {
       setIsLoading(true)
       setScanError(null)
@@ -143,6 +162,16 @@ const TransferQRScannerScreen: React.FC = () => {
       paddingTop: 30,
     },
   })
+
+  if (!hasPermission) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ThemedText style={{ color: 'white' }}>Camera permission required</ThemedText>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />

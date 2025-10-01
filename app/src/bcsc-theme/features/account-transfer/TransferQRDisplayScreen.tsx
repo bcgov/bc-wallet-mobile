@@ -6,9 +6,8 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 
 import React, { useEffect, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import uuid from 'react-native-uuid'
 
 const TransferQRDisplayScreen: React.FC = () => {
@@ -46,7 +45,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   }, [])
 
   const createToken = async () => {
-    const epoch = Date.now()
+    const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
     if (!account) {
       // BIG ERROR, NO ACCOUNT ABORT
@@ -57,8 +56,8 @@ const TransferQRDisplayScreen: React.FC = () => {
       aud: account.issuer,
       iss: account.clientID,
       sub: account.clientID,
-      iat: epoch,
-      exp: epoch + 60, // give this token 1 minute to live
+      iat: timeInSeconds,
+      exp: timeInSeconds + 60, // give this token 1 minute to live
       jti: jti,
     })
     const url = `${store.developer.environment.iasApiBaseUrl}/device/static/selfsetup.html?${jwt}`
@@ -73,7 +72,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']}>
+    <ScrollView>
       <View
         style={{
           flex: 1,
@@ -82,12 +81,25 @@ const TransferQRDisplayScreen: React.FC = () => {
           marginTop: Spacing.xl,
         }}
       >
-        <ThemedText variant="headerTitle" style={{ textAlign: 'center' }}>
+        <ThemedText variant="headerTitle" style={{ textAlign: 'center', paddingBottom: Spacing.md }}>
           Scan this QR code in the BC Services Card app on your other mobile device.
         </ThemedText>
-        {qrValue && <QRRenderer value={qrValue} />}
+
+        {qrValue && (
+          <View
+            style={{
+              backgroundColor: ColorPalette.grayscale.white,
+              flex: 1,
+              padding: Spacing.sm,
+              borderRadius: Spacing.sm,
+              overflow: 'hidden',
+            }}
+          >
+            <QRRenderer value={qrValue} />
+          </View>
+        )}
       </View>
-    </SafeAreaView>
+    </ScrollView>
   )
 }
 
