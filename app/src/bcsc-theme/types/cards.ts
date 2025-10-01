@@ -1,9 +1,9 @@
 export enum BCSCCardType {
-  None = 'None',
-  Combined = 'Combined Services Card and Driver License',
-  Photo = 'BC Services Card with Photo',
-  NonPhoto = 'BC Services Card without Photo',
-  Other = 'Other ID(s)',
+  Combined = 'BC Services Card Combo', // IAS value
+  Photo = 'BC Services Card Photo', // IAS value
+  NonPhoto = 'BC Services Card Non-Photo', // IAS value
+  Other = 'Non BC Services Card(s)', // Transform undefined card_type to 'Other' (ie: non-BCSC card)
+  None = 'None', // Local value when no card is present
 }
 
 export enum BCSCCardProcess {

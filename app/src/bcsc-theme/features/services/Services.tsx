@@ -12,6 +12,8 @@ import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { useFilterServiceClients } from './hooks/useFilterServiceClients'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300
 
@@ -25,6 +27,7 @@ type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScree
  */
 const Services: React.FC = () => {
   const { t } = useTranslation()
+  const apiClient = useBCSCApiClient()
   const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
@@ -32,10 +35,10 @@ const Services: React.FC = () => {
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
   const searchInputRef = useRef<View>(null)
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
+  const accountCardType = apiClient.tokens?.account.bcsc_card_type ?? BCSCCardType.None
   const serviceClients = useFilterServiceClients({
-    cardProcessFilter: getCardProcessForCardType(store.bcsc.cardType) ?? undefined,
-    partialNameFilter: !search ? '' : debouncedSearch, // if search is empty,
-    // avoid debounce delay
+    cardProcessFilter: getCardProcessForCardType(accountCardType) ?? null,
+    partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
 
   const styles = StyleSheet.create({

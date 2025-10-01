@@ -2,20 +2,15 @@ import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
-
-import { getDeviceCountFromIdToken } from '../utils/get-device-count'
-import { TokenStatusResponseData } from './hooks/useTokens'
+import { TokenStatusResponseData, TokenStatusWithAccount } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
+import { getBCSCAccountJWT } from '../utils/bcsc-account-jwt'
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
   }
-}
-
-export interface TokenStatusResponseDataWithDeviceCount extends TokenStatusResponseData {
-  bcsc_devices_count?: number
 }
 
 interface BCSCConfig {
@@ -49,7 +44,7 @@ class BCSCApiClient {
   endpoints: BCSCEndpoints
   config: BCSCConfig
   baseURL: string
-  tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
+  tokens?: TokenStatusWithAccount // this token will be used to interact and access data from IAS servers
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -166,7 +161,7 @@ class BCSCApiClient {
     }
   }
 
-  async fetchAccessToken(): Promise<TokenStatusResponseDataWithDeviceCount> {
+  async fetchAccessToken(): Promise<TokenStatusWithAccount> {
     return withAccount(async () => {
       if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
         // refresh token should be saved when a device is authorized with IAS
@@ -209,19 +204,20 @@ class BCSCApiClient {
     return config
   }
 
-  async getTokensForRefreshToken(refreshToken: string): Promise<TokenStatusResponseDataWithDeviceCount> {
+  async getTokensForRefreshToken(refreshToken: string): Promise<TokenStatusWithAccount> {
     return withAccount(async (account) => {
-      const { issuer, clientID } = account
-      const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, refreshToken)
+      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
+
       const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,
       })
-      this.tokens = tokenResponse.data
 
-      const bcsc_devices_count = await getDeviceCountFromIdToken(tokenResponse.data.id_token, this.logger)
+      const bcscAccount = await getBCSCAccountJWT(tokenResponse.data.id_token, this.logger)
 
-      return { ...tokenResponse.data, bcsc_devices_count }
+      this.tokens = { ...tokenResponse.data, account: bcscAccount }
+
+      return this.tokens
     })
   }
 
