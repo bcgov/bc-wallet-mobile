@@ -37,7 +37,7 @@ const Services: React.FC = () => {
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
   const accountCardType = apiClient.tokens?.account.bcsc_card_type ?? BCSCCardType.None
   const serviceClients = useFilterServiceClients({
-    cardProcessFilter: getCardProcessForCardType(accountCardType) ?? null,
+    cardProcessFilter: getCardProcessForCardType(accountCardType),
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
 

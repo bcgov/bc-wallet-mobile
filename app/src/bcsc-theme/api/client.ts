@@ -4,7 +4,7 @@ import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import { TokenStatusResponseData, TokenStatusWithAccount } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
-import { getBCSCAccountJWT } from '../utils/bcsc-account-jwt'
+import { getBCSCAccountJWT } from '../utils/bcsc-account'
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
@@ -168,8 +168,7 @@ class BCSCApiClient {
         throw new Error('TODO: Register if refresh token is expired or not present')
       }
 
-      const tokenData = await this.getTokensForRefreshToken(this.tokens.refresh_token)
-      return tokenData
+      return this.getTokensForRefreshToken(this.tokens.refresh_token)
     })
   }
 

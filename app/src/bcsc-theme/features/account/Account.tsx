@@ -161,7 +161,9 @@ const Account: React.FC = () => {
             <SectionButton
               onPress={handleMyDevicesPress}
               title={
-                store.bcsc.bcscDevicesCount !== undefined ? `My devices (${store.bcsc.bcscDevicesCount})` : 'My devices'
+                client.tokens?.account.bcsc_devices_count !== undefined
+                  ? `My devices (${client.tokens.account.bcsc_devices_count})`
+                  : 'My devices'
               }
             />
             <SectionButton

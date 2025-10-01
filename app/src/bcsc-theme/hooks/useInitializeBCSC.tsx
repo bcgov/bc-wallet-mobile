@@ -34,28 +34,19 @@ const useInitializeBCSC = () => {
       }
 
       try {
-        let token
-        if (!store.bcsc.refreshToken) {
-          const tokenInfo = await getToken(TokenType.Refresh)
-          token = tokenInfo?.token
-          dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [token] })
-        } else {
-          token = store.bcsc.refreshToken
-        }
+        const refreshToken = store.bcsc.refreshToken ?? (await getToken(TokenType.Refresh))?.token
 
         // if there is no token, the user will see the verify stack (setup steps),
-        // if there is a valid token the user will be logged in
-        if (token) {
-          const tokenData = await client.getTokensForRefreshToken(token)
-          if (tokenData.bcsc_devices_count !== undefined) {
-            dispatch({
-              type: BCDispatchAction.UPDATE_DEVICE_COUNT,
-              payload: [tokenData.bcsc_devices_count],
-            })
-          }
-
-          dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
+        if (!refreshToken) {
+          return
         }
+
+        dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refreshToken] })
+
+        await client.getTokensForRefreshToken(refreshToken)
+
+        // if there is a valid token the user will be logged in
+        dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
       } catch (error) {
         initializationInProgressRef.current = false
         logger.error(`Error setting API client tokens.`, error as Error)
