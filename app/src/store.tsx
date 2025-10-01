@@ -204,7 +204,7 @@ const remoteDebuggingState: RemoteDebuggingState = {
 
 const developerState: Developer = {
   enableProxy: false,
-  environment: iasEnvironments[0],
+  environment: __DEV__ ? iasEnvironments[2] : iasEnvironments[0],
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
 }
