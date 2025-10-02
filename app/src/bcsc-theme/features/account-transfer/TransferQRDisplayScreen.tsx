@@ -4,14 +4,14 @@ import { BCState } from '@/store'
 import { QRRenderer, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 
 const TransferQRDisplayScreen: React.FC = () => {
-  const jti = uuid.v4().toString()
+  const jti = useMemo(() => uuid.v4().toString(), [])
   const { deviceAttestation } = useApi()
   const { ColorPalette, Spacing } = useTheme()
   const [qrValue, setQRValue] = useState<string | null>(null)
@@ -39,7 +39,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
     if (!account) {
-      // TODO: (Alfred) What needs to happen here? The account should be there when
+      // TODO: (Alfred) What needs to happen here? The account should be created when they download the app
       return
     }
 
@@ -58,9 +58,13 @@ const TransferQRDisplayScreen: React.FC = () => {
 
   const checkAttestation = useCallback(
     async (id: string) => {
-      const response = await deviceAttestation.checkAttestationStatus(id)
-      if (response) {
-        navigation.navigate(BCSCScreens.TransferAccountSuccess)
+      try {
+        const response = await deviceAttestation.checkAttestationStatus(id)
+        if (response) {
+          navigation.navigate(BCSCScreens.TransferAccountSuccess)
+        }
+      } catch (error) {
+        // TODO: (Alfred) Not sure we need to handle this, it pings until the request is 'satisfied' so failure is an ok state to be in
       }
     },
     [deviceAttestation, navigation]

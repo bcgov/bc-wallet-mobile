@@ -19,13 +19,17 @@ const TransferQRInformationScreen: React.FC = () => {
       justifyContent: 'center',
       padding: Spacing.md,
     },
-    buttonContainer: { margin: Spacing.lg, gap: Spacing.sm, width: '100%' },
+    buttonContainer: { marginBottom: Spacing.md, gap: Spacing.sm, width: '100%' },
   })
   return (
     <View style={styles.container}>
-      <ThemedText variant="headerTitle">{t('Unified.TransferQRInformation.Title')}</ThemedText>
-      <ThemedText>{t('Unified.TransferQRInformation.Instructions')}</ThemedText>
-      <ThemedText>{t('Unified.TransferQRInformation.Warning')}</ThemedText>
+      <View style={{ marginBottom: Spacing.xl }}>
+        <ThemedText style={{ textAlign: 'center' }} variant="headerTitle">
+          {t('Unified.TransferQRInformation.Title')}
+        </ThemedText>
+        <ThemedText style={{ textAlign: 'center' }}>{t('Unified.TransferQRInformation.Instructions')}</ThemedText>
+        <ThemedText style={{ textAlign: 'center' }}>{t('Unified.TransferQRInformation.Warning')}</ThemedText>
+      </View>
 
       <View style={styles.buttonContainer}>
         <Button

@@ -24,11 +24,11 @@ const AccountSetupSelectionScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <GenericCardImage />
-      <ThemedText variant="headerTitle" style={{ color: 'white' }}>
+      <ThemedText variant="headerTitle" style={{ color: 'white', marginBottom: Spacing.xxl }}>
         {t('Unified.AccountSetup.Title')}
       </ThemedText>
 
-      <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
+      <View style={{ marginBottom: Spacing.md, width: '100%' }}>
         <Button
           buttonType={ButtonType.Primary}
           title={t('Unified.AccountSetup.CreateAccount')}
@@ -37,7 +37,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
           }}
         />
       </View>
-      <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
+      <View style={{ width: '100%' }}>
         <Button
           buttonType={ButtonType.Tertiary}
           title={t('Unified.AccountSetup.TransferAccount')}
