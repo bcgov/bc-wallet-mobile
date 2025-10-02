@@ -4,8 +4,13 @@ import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { TOKENS, useServices } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { Alert } from 'react-native'
+
+interface FilterServiceClientsResult {
+  serviceClients: ClientMetadata[]
+  isLoading: boolean
+}
 
 export interface ServiceClientsFilter {
   /**
@@ -34,26 +39,40 @@ export interface ServiceClientsFilter {
    * @type {boolean}
    */
   requireBCAddressFilter?: boolean
+  /**
+   * An optional list of service client ref ids to filter by
+   * if provided, only service clients with these IDs will be included
+   * ie: saved services (bookmarks)
+   *
+   * @format uuid
+   * @type {string[]}
+   */
+  serviceClientIdsFilter?: string[]
 }
 
 /**
- * A custom hook to filter service clients based on various criteria such as name, card process, and BC address requirement.
+ * A custom hook to filter service clients based on various criteria such as name,
+ * card process, and BC address requirement. Sorted by numeric listing order and name.
  *
  * @param {ServiceClientsFilter} filter The filter criteria to apply to the service clients.
- * @returns {*} {ClientMetadata[]} The filtered list of service clients.
+ * @returns {*} {FilterServiceClientsResult} The filtered list of service clients and loading state.
  */
-export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMetadata[] => {
+export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterServiceClientsResult => {
   const { metadata } = useApi()
   const navigation = useNavigation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  const filteringDoneRef = useRef(false)
 
   const {
     data: serviceClients,
     load,
     isReady,
+    isLoading,
   } = useDataLoader<ClientMetadata[]>(() => metadata.getClientMetadata(), {
     onError: (error) => {
       logger.error('Error loading services', error as Error)
+      filteringDoneRef.current = true
     },
   })
 
@@ -93,22 +112,67 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): ClientMet
       serviceClientsCopy = serviceClientsCopy.filter((service) => service.bc_address === true)
     }
 
-    // Sort services alphabetically by client_name
-    return serviceClientsCopy.sort((a, b) => a.client_name.localeCompare(b.client_name))
-  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter])
+    // Filter services based on the provided IDs
+    if (filter.serviceClientIdsFilter) {
+      const idsSet = new Set(filter.serviceClientIdsFilter)
+      serviceClientsCopy = serviceClientsCopy.filter((service) => idsSet.has(service.client_ref_id))
+    }
+
+    // Sort services by their listing order, then alphabetically by name
+    return _sortServiceClients(serviceClientsCopy)
+  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter, filter.serviceClientIdsFilter])
 
   // Further filter services based on the partial name filter
   const queriedServiceClients = useMemo(() => {
-    // Return all supported services when there's no search text
-    if (!filter.partialNameFilter || filter.partialNameFilter.trim() === '') {
-      return filteredServiceClients
-    }
+    const newServiceClients = _queryServiceClientsByName(filteredServiceClients, filter.partialNameFilter)
 
-    // Filter supported services based on the search text (case insensitive)
-    const query = filter.partialNameFilter.toLowerCase()
+    filteringDoneRef.current = true
 
-    return filteredServiceClients.filter((service) => service.client_name.toLowerCase().includes(query))
+    return newServiceClients
   }, [filteredServiceClients, filter])
 
-  return queriedServiceClients
+  return {
+    serviceClients: queriedServiceClients,
+    isLoading: isLoading || !filteringDoneRef.current,
+  }
+}
+
+/**
+ * Filters the given list of service clients by their name using a case-insensitive partial match.
+ *
+ * @param {ClientMetadata[]} serviceClients - The list of service clients to filter.
+ * @param {string} [query] - The partial name to filter by.
+ * @returns {*} {ClientMetadata[]} The filtered list of service clients whose names match the query.
+ */
+function _queryServiceClientsByName(serviceClients: ClientMetadata[], query?: string): ClientMetadata[] {
+  const caseInsensitiveQuery = query?.toLowerCase().trim()
+
+  // Return all supported services when there's no search text
+  if (!caseInsensitiveQuery) {
+    return serviceClients
+  }
+
+  return serviceClients.filter((service) => service.client_name.toLowerCase().includes(caseInsensitiveQuery))
+}
+
+/**
+ * Sorts the given list of service clients first by their numeric service listing sort order (ascending),
+ * and then alphabetically by their name (A-Z) for services with the same sort order.
+ *
+ * Services without a defined sort order are placed at the end of the list.
+ *
+ * @param {ClientMetadata[]} serviceClients - The list of service clients to sort.
+ * @returns {*} {ClientMetadata[]} The sorted list of service clients.
+ */
+function _sortServiceClients(serviceClients: ClientMetadata[]): ClientMetadata[] {
+  return serviceClients.sort((a, b) => {
+    const orderA = a.service_listing_sort_order ?? Number.MAX_SAFE_INTEGER
+    const orderB = b.service_listing_sort_order ?? Number.MAX_SAFE_INTEGER
+
+    if (orderA !== orderB) {
+      return orderA - orderB
+    }
+
+    return a.client_name.localeCompare(b.client_name)
+  })
 }

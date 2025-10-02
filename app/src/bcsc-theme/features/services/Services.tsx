@@ -14,6 +14,7 @@ import { useFilterServiceClients } from './hooks/useFilterServiceClients'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300
 
@@ -42,10 +43,8 @@ const Services: React.FC = () => {
       onError: (error) => logger.error('Error loading card type', error as Error),
     }
   )
-  const serviceClients = useFilterServiceClients({
-    cardProcessFilter: idTokenMetadata?.bcsc_card_type
-      ? getCardProcessForCardType(idTokenMetadata.bcsc_card_type)
-      : null,
+  const { serviceClients } = useFilterServiceClients({
+    cardProcessFilter: getCardProcessForCardType(idTokenMetadata?.bcsc_card_type ?? BCSCCardType.None),
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
 
