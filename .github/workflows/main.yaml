@@ -121,7 +121,7 @@ jobs:
       matrix:
         include:
           - build_type: "bc-wallet"
-            app_version: "1.0.26"
+            app_version: "1.0.27"
             export_options: "export-options-bcw.plist"
             artifact_name: "ios-bc-wallet-artifact"
           - build_type: "single-app"
@@ -321,7 +321,7 @@ jobs:
       matrix:
         include:
           - build_type: "bc-wallet"
-            app_version: "1.0.26"
+            app_version: "1.0.27"
             android_package_name: "ca.bc.gov.BCWallet"
             jks_base64_secret: "PLAY_STORE_JKS_BASE64"
             jks_alias_secret: "PLAY_STORE_JKS_ALIAS"
