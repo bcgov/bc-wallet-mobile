@@ -173,11 +173,6 @@ class BCSCApiClient {
         throw new Error('Refresh token expired')
       }
 
-      if (!this.isTokenExpired(this.tokens.access_token)) {
-        // access token is still valid
-        return this.tokens
-      }
-
       // access token is expired, fetch new tokens using refresh token
       return this.getTokensForRefreshToken(this.tokens.refresh_token)
     })
@@ -201,7 +196,9 @@ class BCSCApiClient {
       return config
     }
 
-    this.tokens = await this.fetchAccessToken()
+    if (!this.tokens || !this.isTokenExpired(this.tokens.access_token)) {
+      this.tokens = await this.fetchAccessToken()
+    }
 
     if (this.tokens) {
       config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
