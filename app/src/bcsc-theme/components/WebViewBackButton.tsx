@@ -1,7 +1,6 @@
 import { HeaderBackButton, HeaderBackButtonProps } from '@react-navigation/elements'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
-import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { BCSCRootStackParams, BCSCScreens } from '../types/navigators'
 
 /**
@@ -17,16 +16,8 @@ export const createWebviewHeaderBackButton = (
 ) => {
   // Declared so that it has a display name for debugging purposes
   const HeaderLeft = (props: HeaderBackButtonProps) => {
-    const client = useBCSCApiClient()
-
     const handleBackPress = async () => {
-      // navigate back before refreshing to avoid blocking the UI
       navigation.goBack()
-
-      // Refresh when leaving webviews in case account / device action was taken within the webview
-      if (client.tokens?.refresh_token) {
-        await client.getTokensForRefreshToken(client.tokens?.refresh_token)
-      }
     }
 
     return <HeaderBackButton {...props} onPress={handleBackPress} />

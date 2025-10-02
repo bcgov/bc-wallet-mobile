@@ -63,7 +63,7 @@ export interface NonBCSCUserMetadata {
 
 export interface BCSCState {
   verified: boolean
-  // used during verification, use IAS account cardType for everything else
+  // used during verification, use IAS ID token cardType for everything else
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
