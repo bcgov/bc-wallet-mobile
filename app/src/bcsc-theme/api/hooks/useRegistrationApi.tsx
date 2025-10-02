@@ -5,6 +5,7 @@ import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-toke
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
+import { TOKENS, useServices } from '@bifold/core'
 
 export interface RegistrationResponseData {
   client_id: string
@@ -43,6 +44,7 @@ export interface RegistrationResponseData {
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: boolean = true) => {
   const [store, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const register = useCallback(async () => {
     if (!clientIsReady || !apiClient) {
@@ -51,27 +53,61 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
 
     const account = await getAccount()
     // If an account already exists, we don't need to register again
-    if (account) return
+    if (account) {
+      logger.info('Account already exists, skipping registration')
+      return
+    }
 
-    const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
+    logger.info('No account found, proceeding with registration')
+
+    let fcmDeviceToken = 'test_fcmDeviceToken'
+    let apnsToken = 'test_apnsToken'
+    try {
+      logger.debug(`TEST FETCH START: notification tokens for registration`)
+      const tokens = await getNotificationTokens()
+
+      if (tokens.fcmDeviceToken) {
+        logger.debug('Using actual fcm token from notification service')
+        fcmDeviceToken = tokens.fcmDeviceToken
+      }
+
+      if (tokens.apnsToken) {
+        logger.debug('Using actual apns token from notification service')
+        apnsToken = tokens.apnsToken
+      }
+
+      logger.debug(`TEST FETCH END: notification tokens for registration, ${fcmDeviceToken}, ${apnsToken}`)
+    } catch (error) {
+      logger.error('Failed to fetch notification tokens for registration', error as Error)
+    }
+
+    // const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
+    // logger.info('Fetched notification tokens for registration')
+
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
+    logger.info('Generated dynamic client registration body')
+
     const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
       headers: { 'Content-Type': 'application/json' },
       skipBearerAuth: true,
     })
+
+    logger.info('Completed registration request')
 
     dispatch({
       type: BCDispatchAction.UPDATE_REGISTRATION_ACCESS_TOKEN,
       payload: [{ registrationAccessToken: data.registration_access_token }],
     })
 
+    logger.info(`Storing new account information locally, ${data.client_id}, issuer: ${apiClient.endpoints.issuer}`)
     await setAccount({
       clientID: data.client_id,
       issuer: apiClient.endpoints.issuer,
       securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
     })
+
     return data
-  }, [clientIsReady, apiClient, dispatch])
+  }, [clientIsReady, apiClient, logger, dispatch])
 
   const updateRegistration = useCallback(
     async (clientId: string) => {

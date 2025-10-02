@@ -58,7 +58,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   }
 
   return (
-    <TabScreenWrapper edges={['left', 'right']}>
+    <TabScreenWrapper>
       {loading ? (
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (

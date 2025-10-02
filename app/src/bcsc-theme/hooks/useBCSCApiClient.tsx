@@ -7,7 +7,7 @@ export const useBCSCApiClient = (): BCSCApiClient => {
   const context = useContext(BCSCApiClientContext)
 
   if (!context) {
-    throw new Error('useBCSCApiClient must be used within a BCSCClientProvider')
+    throw new Error('useBCSCApiClient must be used within a BCSCApiClientProvider')
   }
 
   if (context.error) {
@@ -15,7 +15,7 @@ export const useBCSCApiClient = (): BCSCApiClient => {
   }
 
   if (!context.client || !context.clientIsReady) {
-    throw new Error('BCSC client not ready. Make sure BCSCClientProvider is properly configured.')
+    throw new Error('BCSC client not ready. Make sure BCSCApiClientProvider is properly configured.')
   }
 
   return context.client
@@ -26,7 +26,7 @@ export const useBCSCApiClientState = () => {
   const context = useContext(BCSCApiClientContext)
 
   if (!context) {
-    throw new Error('useBCSCClientState must be used within a BCSCClientProvider')
+    throw new Error('useBCSCClientState must be used within a BCSCApiClientProvider')
   }
 
   return context

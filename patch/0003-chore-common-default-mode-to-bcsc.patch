@@ -1,32 +1,32 @@
-From b155394a341faa66c34b06e30fc890ace0673ab5 Mon Sep 17 00:00:00 2001
-From: "Jason C. Leach" <jason.leach@fullboar.ca>
-Date: Tue, 26 Aug 2025 11:43:14 -0700
+From 582f2d89a5a9e1c9bcd9afa041e10fc5401e71cf Mon Sep 17 00:00:00 2001
+From: Mac Deluca <Mac.Deluca@quartech.com>
+Date: Thu, 25 Sep 2025 14:12:35 -0700
 Subject: [PATCH] chore: common default mode to bcsc
 
-Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
+Signed-off-by: Mac Deluca <Mac.Deluca@quartech.com>
 ---
  app/App.tsx       | 2 +-
  app/src/store.tsx | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/app/App.tsx b/app/App.tsx
-index da1e87bf..b5d58351 100644
+index a0d6217..7e1580c 100644
 --- a/app/App.tsx
 +++ b/app/App.tsx
-@@ -70,7 +70,7 @@ const App = () => {
+@@ -68,7 +68,7 @@ const App = () => {
+     <ErrorBoundaryWrapper logger={BCLogger}>
        <ContainerProvider value={bcwContainer}>
          <StoreProvider initialState={initialState} reducer={reducer}>
-           <BCSCApiClientProvider>
--            <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
-+            <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCSC}>
-               <NavContainer navigationRef={navigationRef}>
-                 <AnimatedComponentsProvider value={animatedComponents}>
-                   <AuthProvider>
+-          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
++          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCSC}>
+             <NavContainer navigationRef={navigationRef}>
+               <AnimatedComponentsProvider value={animatedComponents}>
+                 <AuthProvider>
 diff --git a/app/src/store.tsx b/app/src/store.tsx
-index 104e4d41..cabd61b7 100644
+index 1734682..c01bbf9 100644
 --- a/app/src/store.tsx
 +++ b/app/src/store.tsx
-@@ -216,7 +216,7 @@ export const initialState: BCState = {
+@@ -249,7 +249,7 @@ export const initialState: BCState = {
    developer: developerState,
    dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
    bcsc: bcscState,
@@ -36,5 +36,5 @@ index 104e4d41..cabd61b7 100644
  
  const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
 -- 
-2.49.0
+2.39.5 (Apple Git-154)
 

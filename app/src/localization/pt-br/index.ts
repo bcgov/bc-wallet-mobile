@@ -157,6 +157,7 @@ const translation = {
     "VulnerabilityDisclosurePolicy": "Vulnerability disclosure policy (PT-BR)",
     "Accessibility": "Accessibility (PT-BR)",
     "IntroductionToTheApp": "Introduction to the app (PT-BR)",
+    "ButtonTitle": "Settings Menu (PT-BR)",
   },
   "Developer": {
     "Environment": "Environment (PT-BR)",
