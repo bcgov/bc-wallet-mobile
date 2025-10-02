@@ -5,6 +5,7 @@ import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import AccountSetupSelectionScreen from '../account-transfer/AccountSetupSelectionScreen'
+import TransferInformationScreen from '../account-transfer/TransferInformationScreen'
 import TransferInstructionsScreen from '../account-transfer/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../account-transfer/TransferQRScannerScreen'
 import TransferSuccessScreen from '../account-transfer/TransferSuccessScreen'
@@ -69,7 +70,7 @@ const VerifyIdentityStack = () => {
       />
       <Stack.Screen
         name={BCSCScreens.TransferAccountInformation}
-        component={TransferInstructionsScreen}
+        component={TransferInformationScreen}
         options={() => ({
           headerShown: true,
         })}
