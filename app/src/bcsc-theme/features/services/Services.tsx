@@ -32,7 +32,7 @@ const Services: React.FC = () => {
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
   const searchInputRef = useRef<View>(null)
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
-  const serviceClients = useFilterServiceClients({
+  const { serviceClients } = useFilterServiceClients({
     cardProcessFilter: getCardProcessForCardType(store.bcsc.cardType) ?? undefined,
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty,
     // avoid debounce delay
