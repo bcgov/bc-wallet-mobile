@@ -4,8 +4,8 @@ import { BCState } from '@/store'
 import { QRRenderer, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
@@ -13,45 +13,36 @@ import uuid from 'react-native-uuid'
 const TransferQRDisplayScreen: React.FC = () => {
   const jti = uuid.v4().toString()
   const { deviceAttestation } = useApi()
-  const { ColorPalette, themeName, Spacing } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [qrValue, setQRValue] = useState<string | null>(null)
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
+  const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
 
-  // TODO: (Alfred) Add a timer to automatically refresh the QR code every 30 seconds
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      alignItems: 'center',
       justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: Spacing.xl,
+    },
+    qrCodeContainer: {
+      backgroundColor: ColorPalette.grayscale.white,
+      flex: 1,
+      padding: Spacing.sm,
+      borderRadius: Spacing.sm,
+      overflow: 'hidden',
     },
   })
 
-  useEffect(() => {
-    createToken()
-    const interval = setInterval(() => {
-      createToken()
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [])
-
-  useEffect(() => {
-    checkAttestation(jti)
-    const interval = setInterval(() => {
-      checkAttestation(jti)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const createToken = async () => {
+  const createToken = useCallback(async () => {
     const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
     if (!account) {
-      // BIG ERROR, NO ACCOUNT ABORT
+      // TODO: (Alfred) What needs to happen here? The account should be there when
       return
     }
-    // TODO: (Alfred) Investigate device signing. Android -> ios = not working. ios -> ios = QR code scans properly
+
     const jwt = await createDeviceSignedJWT({
       aud: account.issuer,
       iss: account.clientID,
@@ -60,41 +51,46 @@ const TransferQRDisplayScreen: React.FC = () => {
       exp: timeInSeconds + 60, // give this token 1 minute to live
       jti: jti,
     })
+    // TODO: can this be added to the well known endpoints?
     const url = `${store.developer.environment.iasApiBaseUrl}/device/static/selfsetup.html?${jwt}`
     setQRValue(url)
-  }
+  }, [store.developer.environment.iasApiBaseUrl, jti])
 
-  const checkAttestation = async (id: string) => {
-    const response = await deviceAttestation.checkAttestationStatus(id)
-    if (response) {
-      navigation.navigate(BCSCScreens.TransferAccountSuccess)
-    }
-  }
+  const checkAttestation = useCallback(
+    async (id: string) => {
+      const response = await deviceAttestation.checkAttestationStatus(id)
+      if (response) {
+        navigation.navigate(BCSCScreens.TransferAccountSuccess)
+      }
+    },
+    [deviceAttestation, navigation]
+  )
+
+  useEffect(() => {
+    createToken()
+    const interval = setInterval(() => {
+      createToken()
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [createToken])
+
+  useEffect(() => {
+    checkAttestation(jti)
+    const interval = setInterval(() => {
+      checkAttestation(jti)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [checkAttestation, jti])
 
   return (
     <ScrollView>
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: Spacing.xl,
-        }}
-      >
+      <View style={styles.container}>
         <ThemedText variant="headerTitle" style={{ textAlign: 'center', paddingBottom: Spacing.md }}>
-          Scan this QR code in the BC Services Card app on your other mobile device.
+          {t('Unified.TransferQRDisplay.Instructions')}
         </ThemedText>
 
         {qrValue && (
-          <View
-            style={{
-              backgroundColor: ColorPalette.grayscale.white,
-              flex: 1,
-              padding: Spacing.sm,
-              borderRadius: Spacing.sm,
-              overflow: 'hidden',
-            }}
-          >
+          <View style={styles.qrCodeContainer}>
             <QRRenderer value={qrValue} />
           </View>
         )}

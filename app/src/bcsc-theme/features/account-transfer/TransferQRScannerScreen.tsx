@@ -28,13 +28,13 @@ const TransferQRScannerScreen: React.FC = () => {
   const { client } = useBCSCApiClientState()
   const navigator = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const [store, dispatch] = useStore<BCState>()
-  const { ColorPalette } = useTheme()
+  const { ColorPalette, Spacing } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
   const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
 
-  const registerDevice = async () => {
+  const registerDevice = useCallback(async () => {
     // we already have a device code, no need to authorize again
     if (store.bcsc.deviceCode) {
       return
@@ -53,11 +53,11 @@ const TransferQRScannerScreen: React.FC = () => {
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
     dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
-  }
+  }, [store.bcsc.deviceCode, authorization, dispatch])
 
   useEffect(() => {
     registerDevice()
-  }, [])
+  }, [registerDevice])
 
   useEffect(() => {
     const checkPermissions = async () => {
@@ -143,7 +143,7 @@ const TransferQRScannerScreen: React.FC = () => {
         setIsLoading(false)
       }
     },
-    [store.bcsc.deviceCode, deviceAttestation, getAccount]
+    [store.bcsc.deviceCode, deviceAttestation, client, dispatch, navigator, t, token]
   )
   const styles = StyleSheet.create({
     container: {
@@ -151,7 +151,7 @@ const TransferQRScannerScreen: React.FC = () => {
     },
     icon: {
       color: ColorPalette.grayscale.white,
-      padding: 4,
+      padding: Spacing.md,
     },
     messageContainer: {
       marginHorizontal: 40,
@@ -181,10 +181,8 @@ const TransferQRScannerScreen: React.FC = () => {
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={false} />
       <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
       <View style={styles.messageContainer}>
-        <>
-          <Icon name="qrcode-scan" size={40} style={styles.icon} />
-          <ThemedText variant="title">{t('Scan.WillScanAutomatically')}</ThemedText>
-        </>
+        <Icon name="qrcode-scan" size={40} style={styles.icon} />
+        <ThemedText variant="title">{t('Scan.WillScanAutomatically')}</ThemedText>
       </View>
       {scanError && (
         <DismissiblePopupModal

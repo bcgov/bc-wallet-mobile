@@ -293,6 +293,39 @@ const translation = {
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
       "ChooseID": "Choose ID",
     },
+    "AccountSetup": {
+      "Title": "BC Services Card Account",
+      "CreateAccount": "Create new Account",
+      "TransferAccount": "Transfer Account From Another Device"
+    },
+    "TransferQRInformation": {
+      "Title": "Open the BC Services Card app on your other mobile device",
+      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device.",
+      "Warning" : "Do not scan with the camera app.",
+      "GetQRCode": "Get QR Code",
+      "LearnMore": "Learn more"
+    },
+    "TransferInformation": {
+      "Title": "Have this app on another device?",
+      "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again.",
+      "TransferAccount": "Transfer Account",
+    },
+    "TransferInstructions": {
+      "Title": "Scan your QR code to transfer your account",
+      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section.",
+      "Step2": "2. Choose 'Transfer to another device' to get your QR code.",
+      "Step3": "3. Continue on this device and scan that QR code.",
+      "ScanQRCode": "Scan QR Code",
+    },
+    "TransferQRDisplay": {
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device."
+    },
+    "TransferSuccess": {
+      "Title": "QR code scan complete",
+      "Description": "The app should be set up on your other mobile device.",
+      "ExtraText": "If you no longer need to use the app on this device, you can remove your account.",
+      "ButtonText": "Ok"
+    },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs",
       "Description": "It's needed to verify your identity.",

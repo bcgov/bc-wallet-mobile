@@ -290,6 +290,39 @@ const translation = {
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (FR)",
       "ChooseID": "Choose ID (FR)",
     },
+    "AccountSetup": {
+      "Title": "BC Services Card Account (FR)",
+      "CreateAccount": "Create new Account (FR)",
+      "TransferAccount": "Transfer Account From Another Device (FR)"
+    },
+    "TransferQRInformation": {
+      "Title": "Open the BC Services Card app on your other mobile device (FR)",
+      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (FR)",
+      "Warning" : "Do not scan with the camera app. (FR)",
+      "GetQRCode": "Get QR Code (FR)",
+      "LearnMore": "Learn more (FR)"
+    },
+    "TransferInformation": {
+      "Title": "Have this app on another device? (FR)",
+      "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again. (FR)",
+      "TransferAccount": "Transfer Account (FR)",
+    },
+    "TransferInstructions": {
+      "Title": "Scan your QR code to transfer your account (FR)",
+      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section. (FR)",
+      "Step2": "2. Choose 'Transfer to another device' to get your QR code. (FR)",
+      "Step3": "3. Continue on this device and scan that QR code. (FR)",
+      "ScanQRCode": "Scan QR Code (FR)",
+    },
+    "TransferQRDisplay": {
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device. (FR)"
+    },
+    "TransferSuccess": {
+      "Title": "QR code scan complete (FR)",
+      "Description": "The app should be set up on your other mobile device. (FR)",
+      "ExtraText": "If you no longer need to use the app on this device, you can remove your account. (FR)",
+      "ButtonText": "Ok"
+    },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs (FR)",
       "Description": "It's needed to verify your identity. (FR)",

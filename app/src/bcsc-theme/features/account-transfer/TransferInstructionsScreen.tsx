@@ -6,6 +6,7 @@ import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Image, ScrollView, StyleSheet, View } from 'react-native'
 
 const TAB_NAVIGATOR = Image.resolveAssetSource(TabNavigator)
@@ -14,6 +15,8 @@ const QR_SCAN = Image.resolveAssetSource(QRScan)
 
 const TransferInstructionsScreen: React.FC = () => {
   const { Spacing } = useTheme()
+  const { t } = useTranslation()
+
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const styles = StyleSheet.create({
     container: {
@@ -28,24 +31,24 @@ const TransferInstructionsScreen: React.FC = () => {
     <ScrollView>
       <View style={styles.container}>
         <ThemedText variant="headerTitle" style={{ paddingBottom: Spacing.lg }}>
-          Scan your QR code to transfer your account
+          {t('Unified.TransferInstructions.Title')}
         </ThemedText>
 
-        <ThemedText>1. On your other device, open the BC Services Card app and go to the Account section.</ThemedText>
+        <ThemedText>{t('Unified.TransferInstructions.Step1')}</ThemedText>
         <Image
           source={TAB_NAVIGATOR}
           style={{ height: 200, aspectRatio: 1, marginTop: Spacing.md }}
           resizeMode={'contain'}
         />
 
-        <ThemedText>2. Choose "Transfer to another device" to get your QR code.</ThemedText>
+        <ThemedText>{t('Unified.TransferInstructions.Step2')}</ThemedText>
         <Image
           source={QR_CODE_PHONE}
           style={{ height: 300, aspectRatio: 0.5, marginTop: Spacing.md }}
           resizeMode={'contain'}
         />
 
-        <ThemedText>3. Continue on this device and scan that QR code.</ThemedText>
+        <ThemedText>{t('Unified.TransferInstructions.Step3')}</ThemedText>
         <Image
           source={QR_SCAN}
           style={{ height: 300, aspectRatio: 0.5, marginTop: Spacing.md }}
@@ -55,7 +58,7 @@ const TransferInstructionsScreen: React.FC = () => {
         <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
           <Button
             buttonType={ButtonType.Primary}
-            title="Scan QR code"
+            title={t('Unified.TransferInstructions.ScanQRCode')}
             onPress={() => {
               navigation.navigate(BCSCScreens.TransferAccountQRScan)
             }}

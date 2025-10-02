@@ -290,6 +290,39 @@ const translation = {
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (PT-BR)",
       "ChooseID": "Choose ID (PT-BR)",
     },
+    "AccountSetup": {
+      "Title": "BC Services Card Account (PT-BR)",
+      "CreateAccount": "Create new Account (PT-BR)",
+      "TransferAccount": "Transfer Account From Another Device (PT-BR)"
+    },
+    "TransferQRInformation": {
+      "Title": "Open the BC Services Card app on your other mobile device (PT-BR)",
+      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (PT-BR)",
+      "Warning" : "Do not scan with the camera app. (PT-BR)",
+      "GetQRCode": "Get QR Code (PT-BR)",
+      "LearnMore": "Learn more (PT-BR)"
+    },
+    "TransferInformation": {
+      "Title": "Have this app on another device? (PT-BR)",
+      "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again. (PT-BR)",
+      "TransferAccount": "Transfer Account (PT-BR)",
+    },
+    "TransferInstructions": {
+      "Title": "Scan your QR code to transfer your account (PT-BR)",
+      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section. (PT-BR)",
+      "Step2": "2. Choose 'Transfer to another device' to get your QR code. (PT-BR)",
+      "Step3": "3. Continue on this device and scan that QR code. (PT-BR)",
+      "ScanQRCode": "Scan QR Code (PT-BR)",
+    },
+    "TransferQRDisplay": {
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device. (PT-BR)"
+    },
+    "TransferSuccess": {
+      "Title": "QR code scan complete (PT-BR)",
+      "Description": "The app should be set up on your other mobile device. (PT-BR)",
+      "ExtraText": "If you no longer need to use the app on this device, you can remove your account. (PT-BR)",
+      "ButtonText": "Ok"
+    },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs (PT-BR)",
       "Description": "It's needed to verify your identity. (PT-BR)",

@@ -65,7 +65,7 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
       checkDeviceCodeStatus,
       deviceToken,
     }),
-    [checkDeviceCodeStatus]
+    [checkDeviceCodeStatus, deviceToken]
   )
 }
 

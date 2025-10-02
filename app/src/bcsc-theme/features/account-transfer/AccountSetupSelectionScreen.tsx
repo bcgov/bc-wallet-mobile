@@ -11,7 +11,7 @@ import { StyleSheet, View } from 'react-native'
 const AccountSetupSelectionScreen: React.FC = () => {
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
-  const { ColorPalette, themeName, Spacing } = useTheme()
+  const { Spacing } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
@@ -25,13 +25,13 @@ const AccountSetupSelectionScreen: React.FC = () => {
     <View style={styles.container}>
       <GenericCardImage />
       <ThemedText variant="headerTitle" style={{ color: 'white' }}>
-        BC Services Card Account
+        {t('Unified.AccountSetup.Title')}
       </ThemedText>
 
       <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
         <Button
           buttonType={ButtonType.Primary}
-          title="Create new Account"
+          title={t('Unified.AccountSetup.CreateAccount')}
           onPress={() => {
             navigation.navigate(BCSCScreens.SetupSteps)
           }}
@@ -40,7 +40,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
       <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
         <Button
           buttonType={ButtonType.Tertiary}
-          title="Transfer Account From Another Device"
+          title={t('Unified.AccountSetup.TransferAccount')}
           onPress={() => {
             navigation.navigate(BCSCScreens.TransferAccountInformation)
           }}
