@@ -1,7 +1,7 @@
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import { getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
+import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 
@@ -164,30 +164,21 @@ class BCSCApiClient {
   async fetchAccessToken(): Promise<TokenResponse> {
     return withAccount(async () => {
       if (!this.tokens) {
-        // initialize client with `getTokensForRefreshToken` if tokens not present
-        throw new Error('Initialize tokens by calling getTokensForRefreshToken first')
-      }
-
-      if (!this.isTokenExpired(this.tokens.access_token) && !this.isTokenExpired(this.tokens.refresh_token)) {
-        // both tokens are valid, return existing tokens
-        return this.tokens
+        // initialize tokens using `getTokensForRefreshToken`
+        throw new Error('Client tokens not initialized')
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
-        this.logger.info('Refresh token expired, refreshing token...')
-
-        // refresh token is expired, retrieve from device
-        const refreshToken = await getToken(TokenType.Refresh)
-
-        if (!refreshToken) {
-          throw new Error('No refresh token available on device')
-        }
-
-        // update the client with the new refresh token
-        this.tokens.refresh_token = refreshToken.token
+        // note: refresh tokens should not expire
+        throw new Error('Refresh token expired')
       }
 
-      // access token is expired but refresh token is valid, fetch new tokens
+      if (!this.isTokenExpired(this.tokens.access_token)) {
+        // access token is still valid
+        return this.tokens
+      }
+
+      // access token is expired, fetch new tokens using refresh token
       return this.getTokensForRefreshToken(this.tokens.refresh_token)
     })
   }
