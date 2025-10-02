@@ -36,7 +36,7 @@ const Services: React.FC = () => {
   const searchInputRef = useRef<View>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { load: loadIdTokenMetadata, data: idTokenMetadata } = useDataLoader(
-    // use the cache, card type doen't change
+    // use the cache, card type doesn't change
     () => token.getCachedIdTokenMetadata({ refreshCache: false }),
     {
       onError: (error) => logger.error('Error loading card type', error as Error),
