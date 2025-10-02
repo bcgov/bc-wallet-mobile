@@ -25,17 +25,25 @@ type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 const Account: React.FC = () => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
-  const { user, metadata } = useApi()
+  const { user, metadata, token } = useApi()
   const client = useBCSCApiClient()
   const navigation = useNavigation<AccountNavigationProp>()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
 
-  const openedAccountWebview = useRef(false)
+  const openedWebview = useRef(false)
 
   const { load: loadBcscServiceClient, data: bcscServiceClient } = useDataLoader(metadata.getBCSCClientMetadata, {
     onError: (error) => logger.error('Error loading BCSC client metadata', error as Error),
+  })
+
+  const {
+    load: loadDeviceCount,
+    data: deviceCount,
+    refresh: refreshDeviceCount,
+  } = useDataLoader(token.getDeviceCount, {
+    onError: (error) => logger.error('Error loading device count', error as Error),
   })
 
   /**
@@ -66,21 +74,23 @@ const Account: React.FC = () => {
   useEffect(() => {
     loadUserMeta()
     loadBcscServiceClient()
-  }, [loadUserMeta, loadBcscServiceClient])
+    loadDeviceCount()
+  }, [loadUserMeta, loadBcscServiceClient, loadDeviceCount])
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
     const appListener = AppState.addEventListener('change', async (nextAppState) => {
-      if (nextAppState === 'active' && openedAccountWebview.current) {
-        logger.info('Returning from Account webview, refreshing user info...')
-        openedAccountWebview.current = false
+      if (nextAppState === 'active' && openedWebview.current) {
+        logger.info('Returning from webview, refreshing user and device metadata...')
+        openedWebview.current = false
         refreshUserMeta()
+        refreshDeviceCount()
       }
     })
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [logger, refreshUserMeta])
+  }, [logger, refreshDeviceCount, refreshUserMeta])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {
@@ -89,6 +99,7 @@ const Account: React.FC = () => {
         url: fullUrl,
         title: 'Manage Devices',
       })
+      openedWebview.current = true
     } catch (error) {
       logger.error(`Error navigating to My Devices webview: ${error}`)
     }
@@ -105,7 +116,7 @@ const Account: React.FC = () => {
 
       if (quickLoginResult.success) {
         await Linking.openURL(quickLoginResult.url)
-        openedAccountWebview.current = true
+        openedWebview.current = true
       }
     } catch (error) {
       logger.error(`Error opening All Account Details: ${error}`)
@@ -160,11 +171,7 @@ const Account: React.FC = () => {
           <View style={styles.buttonsContainer}>
             <SectionButton
               onPress={handleMyDevicesPress}
-              title={
-                client.tokens?.account.bcsc_devices_count !== undefined
-                  ? `My devices (${client.tokens.account.bcsc_devices_count})`
-                  : 'My devices'
-              }
+              title={deviceCount !== null && deviceCount !== undefined ? `My devices (${deviceCount})` : 'My devices'}
             />
             <SectionButton
               onPress={handleAllAccountDetailsPress}

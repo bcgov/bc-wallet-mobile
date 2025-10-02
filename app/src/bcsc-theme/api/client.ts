@@ -174,11 +174,13 @@ class BCSCApiClient {
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
+        this.logger.info('Refresh token expired, refreshing token...')
+
         // refresh token is expired, retrieve from device
         const refreshToken = await getToken(TokenType.Refresh)
 
         if (!refreshToken) {
-          throw new Error('No refresh token available')
+          throw new Error('No refresh token available on device')
         }
 
         // update the client with the new refresh token

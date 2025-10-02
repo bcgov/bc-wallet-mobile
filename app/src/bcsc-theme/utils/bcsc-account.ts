@@ -9,11 +9,11 @@ enum BCSCAccountType {
 }
 
 /**
- * IAS BCSC ID Token JWT
+ * IAS BCSC ID token
  *
  * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#ID-Token
  */
-export interface BCSCAccountJWT {
+export interface IdToken {
   sub: string
   aud: string
   iss: string
@@ -40,12 +40,12 @@ export interface BCSCAccountJWT {
  *
  * @param {string} idToken - The BCSC ID token (JWE).
  * @param {BifoldLogger} logger - Logger instance for error logging.
- * @returns {*} {Promise<BCSCAccountToken>} Parsed ID token payload as a BCSCAccountToken object.
+ * @returns {*} {Promise<BCSCAccountToken>} Parsed ID token payload as a IdToken object.
  */
-export async function getBCSCAccountJWT(idToken: string, logger: BifoldLogger): Promise<BCSCAccountJWT> {
+export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger): Promise<IdToken> {
   try {
     const payloadString = await decodePayload(idToken)
-    const payload: BCSCAccountJWT = JSON.parse(payloadString)
+    const payload: IdToken = JSON.parse(payloadString)
 
     // Transform undefined card_type to 'Other' (ie: non-BCSC card) if account_type is OTHER
     if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.OTHER) {
@@ -54,7 +54,7 @@ export async function getBCSCAccountJWT(idToken: string, logger: BifoldLogger): 
 
     return payload
   } catch (error) {
-    logger.error('getBCSCAccountToken -> Failed to decode ID token payload', error as Error)
+    logger.error('getIdTokenMetadata -> Failed to decode ID token payload', error as Error)
     throw error
   }
 }

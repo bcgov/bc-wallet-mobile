@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react'
-import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import React, { useEffect, useRef, useState } from 'react'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import ServiceButton from './components/ServiceButton'
 import { BCState, Mode } from '@/store'
@@ -12,8 +12,8 @@ import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { useFilterServiceClients } from './hooks/useFilterServiceClients'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300
 
@@ -26,20 +26,28 @@ type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScree
  * @return {*} {JSX.Element} The Services screen component.
  */
 const Services: React.FC = () => {
+  const { token } = useApi()
   const { t } = useTranslation()
-  const apiClient = useBCSCApiClient()
   const [store] = useStore<BCState>()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const navigation = useNavigation<ServicesNavigationProp>()
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
   const searchInputRef = useRef<View>(null)
-  const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
-  const accountCardType = apiClient.tokens?.account.bcsc_card_type ?? BCSCCardType.None
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { load: loadCardType, data: cardType } = useDataLoader(token.getCardType, {
+    onError: (error) => logger.error('Error loading card type', error as Error),
+  })
   const serviceClients = useFilterServiceClients({
-    cardProcessFilter: getCardProcessForCardType(accountCardType),
+    cardProcessFilter: cardType ? getCardProcessForCardType(cardType) : null,
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
+
+  const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
+
+  useEffect(() => {
+    loadCardType()
+  }, [loadCardType])
 
   const styles = StyleSheet.create({
     headerText: {
