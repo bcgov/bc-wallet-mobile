@@ -1,10 +1,9 @@
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
-import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
-import { TokenStatusResponseData, TokenStatusWithAccount } from './hooks/useTokens'
+import { getRefreshTokenRequestBody, getToken, TokenType } from 'react-native-bcsc-core'
+import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
-import { getBCSCAccountJWT } from '../utils/bcsc-account'
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
@@ -44,7 +43,8 @@ class BCSCApiClient {
   endpoints: BCSCEndpoints
   config: BCSCConfig
   baseURL: string
-  tokens?: TokenStatusWithAccount // this token will be used to interact and access data from IAS servers
+  // TODO (MD): Persist tokens securely using PersistentStorage ie: loadTokens(), saveTokens()
+  tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -161,13 +161,31 @@ class BCSCApiClient {
     }
   }
 
-  async fetchAccessToken(): Promise<TokenStatusWithAccount> {
+  async fetchAccessToken(): Promise<TokenResponse> {
     return withAccount(async () => {
-      if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
-        // refresh token should be saved when a device is authorized with IAS
-        throw new Error('TODO: Register if refresh token is expired or not present')
+      if (!this.tokens) {
+        // initialize client with `getTokensForRefreshToken` if tokens not present
+        throw new Error('Initialize tokens by calling getTokensForRefreshToken first')
       }
 
+      if (!this.isTokenExpired(this.tokens.access_token) && !this.isTokenExpired(this.tokens.refresh_token)) {
+        // both tokens are valid, return existing tokens
+        return this.tokens
+      }
+
+      if (this.isTokenExpired(this.tokens.refresh_token)) {
+        // refresh token is expired, retrieve from device
+        const refreshToken = await getToken(TokenType.Refresh)
+
+        if (!refreshToken) {
+          throw new Error('No refresh token available')
+        }
+
+        // update the client with the new refresh token
+        this.tokens.refresh_token = refreshToken.token
+      }
+
+      // access token is expired but refresh token is valid, fetch new tokens
       return this.getTokensForRefreshToken(this.tokens.refresh_token)
     })
   }
@@ -190,9 +208,7 @@ class BCSCApiClient {
       return config
     }
 
-    if (!this.tokens || this.isTokenExpired(this.tokens.access_token)) {
-      this.tokens = await this.fetchAccessToken()
-    }
+    this.tokens = await this.fetchAccessToken()
 
     if (this.tokens) {
       config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
@@ -203,18 +219,16 @@ class BCSCApiClient {
     return config
   }
 
-  async getTokensForRefreshToken(refreshToken: string): Promise<TokenStatusWithAccount> {
+  async getTokensForRefreshToken(refreshToken: string): Promise<TokenResponse> {
     return withAccount(async (account) => {
       const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
 
-      const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
+      const tokenResponse = await this.post<TokenResponse>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,
       })
 
-      const bcscAccount = await getBCSCAccountJWT(tokenResponse.data.id_token, this.logger)
-
-      this.tokens = { ...tokenResponse.data, account: bcscAccount }
+      this.tokens = tokenResponse.data
 
       return this.tokens
     })
