@@ -39,12 +39,16 @@ const Account: React.FC = () => {
   })
 
   const {
-    load: loadDeviceCount,
-    data: deviceCount,
-    refresh: refreshDeviceCount,
-  } = useDataLoader(token.getDeviceCount, {
-    onError: (error) => logger.error('Error loading device count', error as Error),
-  })
+    load: loadIdTokenMetadata,
+    data: idTokenMetadata,
+    refresh: refreshIdTokenMetadata,
+  } = useDataLoader(
+    // refresh the cache to get latest device count when returning from a webview
+    () => token.getCachedIdTokenMetadata({ refreshCache: true }),
+    {
+      onError: (error) => logger.error('Error loading ID token metadata', error as Error),
+    }
+  )
 
   /**
    * Fetches user metadata and picture URI.
@@ -74,8 +78,8 @@ const Account: React.FC = () => {
   useEffect(() => {
     loadUserMeta()
     loadBcscServiceClient()
-    loadDeviceCount()
-  }, [loadUserMeta, loadBcscServiceClient, loadDeviceCount])
+    loadIdTokenMetadata()
+  }, [loadUserMeta, loadBcscServiceClient, loadIdTokenMetadata])
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
@@ -84,13 +88,13 @@ const Account: React.FC = () => {
         logger.info('Returning from webview, refreshing user and device metadata...')
         openedWebview.current = false
         refreshUserMeta()
-        refreshDeviceCount()
+        refreshIdTokenMetadata()
       }
     })
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [logger, refreshDeviceCount, refreshUserMeta])
+  }, [logger, refreshIdTokenMetadata, refreshUserMeta])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {
@@ -171,7 +175,11 @@ const Account: React.FC = () => {
           <View style={styles.buttonsContainer}>
             <SectionButton
               onPress={handleMyDevicesPress}
-              title={deviceCount !== null && deviceCount !== undefined ? `My devices (${deviceCount})` : 'My devices'}
+              title={
+                typeof idTokenMetadata?.bcsc_devices_count === 'number'
+                  ? `My devices (${idTokenMetadata.bcsc_devices_count})`
+                  : 'My devices'
+              }
             />
             <SectionButton
               onPress={handleAllAccountDetailsPress}

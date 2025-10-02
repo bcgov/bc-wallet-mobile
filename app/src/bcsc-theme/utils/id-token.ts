@@ -2,10 +2,10 @@ import { BCSCCardType } from '../types/cards'
 import { decodePayload } from 'react-native-bcsc-core'
 import { BifoldLogger } from '@bifold/core'
 
-enum BCSCAccountType {
-  PHOTO = 'BC Services Card with photo',
-  NON_PHOTO = 'BC Services Card without photo',
-  OTHER = 'Other - no BC Services Card',
+export enum BCSCAccountType {
+  Photo = 'BC Services Card with photo',
+  NonPhoto = 'BC Services Card without photo',
+  Other = 'Other - no BC Services Card',
 }
 
 /**
@@ -29,10 +29,10 @@ export interface IdToken {
   bcsc_reason: string
   bcsc_status_date: number // epoch
   acr: number // Defined since R2.6.x
-  bcsc_devices_count?: number // Defined since R2.10.2
-  bcsc_max_devices?: number // Defined since R2.10.2
-  hasActivePersonCredential?: boolean // Defined since: R3.11.0
-  bcsc_account_type?: BCSCAccountType // Defined since: R3.14.0
+  bcsc_devices_count: number // Defined since R2.10.2
+  bcsc_max_devices: number // Defined since R2.10.2
+  hasActivePersonCredential: boolean // Defined since: R3.11.0
+  bcsc_account_type: BCSCAccountType // Defined since: R3.14.0
 }
 
 /**
@@ -48,7 +48,7 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
     const payload: IdToken = JSON.parse(payloadString)
 
     // Transform undefined card_type to 'Other' (ie: non-BCSC card) if account_type is OTHER
-    if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.OTHER) {
+    if (payload.bcsc_card_type === undefined && payload.bcsc_account_type === BCSCAccountType.Other) {
       payload.bcsc_card_type = BCSCCardType.Other
     }
 

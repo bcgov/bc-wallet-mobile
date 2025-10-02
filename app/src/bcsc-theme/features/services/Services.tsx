@@ -35,19 +35,25 @@ const Services: React.FC = () => {
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
   const searchInputRef = useRef<View>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { load: loadCardType, data: cardType } = useDataLoader(token.getCardType, {
-    onError: (error) => logger.error('Error loading card type', error as Error),
-  })
+  const { load: loadIdTokenMetadata, data: idTokenMetadata } = useDataLoader(
+    // use the cache, card type doen't change
+    () => token.getCachedIdTokenMetadata({ refreshCache: false }),
+    {
+      onError: (error) => logger.error('Error loading card type', error as Error),
+    }
+  )
   const serviceClients = useFilterServiceClients({
-    cardProcessFilter: cardType ? getCardProcessForCardType(cardType) : null,
+    cardProcessFilter: idTokenMetadata?.bcsc_card_type
+      ? getCardProcessForCardType(idTokenMetadata.bcsc_card_type)
+      : null,
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty, avoid debounce delay
   })
 
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
 
   useEffect(() => {
-    loadCardType()
-  }, [loadCardType])
+    loadIdTokenMetadata()
+  }, [loadIdTokenMetadata])
 
   const styles = StyleSheet.create({
     headerText: {

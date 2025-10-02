@@ -2,8 +2,11 @@ import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
-import { getIdTokenMetadata } from '@/bcsc-theme/utils/bcsc-account'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+
+interface IdTokenMetadataConfig {
+  refreshCache: boolean
+}
 
 export interface TokenResponse {
   access_token: string
@@ -34,51 +37,36 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   )
 
   /**
-   * Get the type of BCSC card associated with the ID token.
-   * This value does not change after the initial authentication, so it does not require a token refresh.
+   * Get cached ID token metadata.
+   * If refreshCache is true, it will fetch new tokens using the refresh token before extracting metadata.
    *
-   * Note: Returns BCSCCardType.None if there are no tokens available.
+   * @param {IdTokenMetadataConfig} config - Configuration object.
+   * @param {boolean} config.refreshCache - Whether to refresh the token cache.
+   * @returns {*} {Promise<IdToken>} The ID token metadata.
    *
-   * @returns {*} {Promise<BCSCCardType>} The type of BCSC card.
    */
-  const getCardType = useCallback(async () => {
-    if (!apiClient.tokens) {
-      return BCSCCardType.None
-    }
+  const getCachedIdTokenMetadata = useCallback(
+    async (config: IdTokenMetadataConfig) => {
+      if (!apiClient.tokens) {
+        throw new Error('No tokens available')
+      }
 
-    const tokenMetadata = await getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
+      if (config.refreshCache) {
+        // Fetch new tokens to ensure we have the latest ID token
+        await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
+      }
 
-    return tokenMetadata.bcsc_card_type
-  }, [apiClient.logger, apiClient.tokens])
-
-  /**
-   * Get the count of devices associated with the account from the ID token.
-   * This will always fetch a new token using the refresh token to ensure the device count is current.
-   *
-   * Note: Returns null if there are no tokens available or if the device count is not present in the token.
-   *
-   * @returns {*} {Promise<number | null>} The count of devices or null.
-   */
-  const getDeviceCount = useCallback(async () => {
-    if (!apiClient.tokens) {
-      return null
-    }
-
-    // Fetch new tokens to ensure we have the latest device count
-    const tokens = await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
-
-    const tokenMetadata = await getIdTokenMetadata(tokens.id_token, apiClient.logger)
-
-    return tokenMetadata.bcsc_devices_count ?? null
-  }, [apiClient])
+      return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
+    },
+    [apiClient]
+  )
 
   return useMemo(
     () => ({
       checkDeviceCodeStatus,
-      getCardType,
-      getDeviceCount,
+      getCachedIdTokenMetadata,
     }),
-    [checkDeviceCodeStatus, getCardType, getDeviceCount]
+    [checkDeviceCodeStatus, getCachedIdTokenMetadata]
   )
 }
 
