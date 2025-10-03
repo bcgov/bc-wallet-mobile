@@ -76,7 +76,6 @@ const TransferQRDisplayScreen: React.FC = () => {
     },
     [deviceAttestation, navigation]
   )
-
   const startInterval = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -86,6 +85,15 @@ const TransferQRDisplayScreen: React.FC = () => {
     }, 30000) // 30 seconds
   }, [createToken])
 
+  const refreshToken = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+
+    createToken()
+    startInterval()
+  }, [createToken, startInterval])
+
   useEffect(() => {
     refreshToken()
     return () => {
@@ -93,16 +101,7 @@ const TransferQRDisplayScreen: React.FC = () => {
         clearInterval(intervalRef.current)
       }
     }
-  }, [createToken, startInterval])
-
-  const refreshToken = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-    }
-
-    createToken()
-    startInterval()
-  }
+  }, [refreshToken, startInterval])
 
   useEffect(() => {
     checkAttestation(jti)
