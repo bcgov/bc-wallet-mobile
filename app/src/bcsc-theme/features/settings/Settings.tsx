@@ -78,7 +78,8 @@ const Settings: React.FC = () => {
 
   const onPressMode = () => {
     lockOutUser(LockoutReason.Logout)
-    setTheme(BCThemeNames.BCWallet)
+    const newTheme = store.mode === Mode.BCWallet ? BCThemeNames.BCSC : BCThemeNames.BCWallet
+    setTheme(newTheme)
     dispatch({ type: BCDispatchAction.UPDATE_MODE, payload: [Mode.BCWallet] })
   }
 

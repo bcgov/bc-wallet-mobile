@@ -36,7 +36,6 @@ const Developer: React.FC = () => {
   const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
     !!store.preferences.useConnectionInviterCapability
   )
-  const [BCSCMode, setBCSCMode] = useState<boolean>(store.mode === Mode.BCSC)
   const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
   const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
   const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
@@ -46,6 +45,8 @@ const Developer: React.FC = () => {
   const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
   const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
   const navigation = useNavigation()
+
+  const BCSCMode = store.mode === Mode.BCSC
 
   const styles = StyleSheet.create({
     container: {
@@ -300,7 +301,6 @@ const Developer: React.FC = () => {
       type: BCDispatchAction.UPDATE_MODE,
       payload: [newMode],
     })
-    setBCSCMode((previousState) => !previousState)
   }
 
   return (
