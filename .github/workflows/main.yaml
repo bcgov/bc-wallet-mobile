@@ -87,7 +87,7 @@ jobs:
         run: |
           set -x
 
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then 
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
             # On main branch, compare with the previous
             # commit otherwise (for PRs) compare with the
             # current commit.
@@ -202,15 +202,6 @@ jobs:
           git status && \
           git diff ios/Podfile.lock
 
-      - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
-        run: |
-          echo "Patching for Single App build"
-          git config user.email "github-action@users.noreply.github.com"
-          git config user.name "GitHub Actions"
-          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
-          git am < ./patch/0003-chore-common-default-mode-to-bcsc.patch
-
       - name: Bump Build No.
         working-directory: app/ios
         env:
@@ -225,6 +216,7 @@ jobs:
       - name: Create environment settings
         working-directory: app
         env:
+          BUILD_TARGET: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
@@ -234,7 +226,8 @@ jobs:
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
         run: |
-          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
+          echo "BUILD_TARGET=${BUILD_TARGET}" >.env
+          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
@@ -242,6 +235,14 @@ jobs:
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
+
+      - name: Patch for Single App build
+        if: matrix.build_type == 'single-app'
+        run: |
+          echo "Patching for Single App build"
+          git config user.email "github-action@users.noreply.github.com"
+          git config user.name "GitHub Actions"
+          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
 
       - name: Update APS environment
         run: |
@@ -371,6 +372,7 @@ jobs:
       - name: Create environment settings
         working-directory: app
         env:
+          BUILD_TARGET: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
           IAS_PORTAL_URL: ${{ secrets.IAS_PORTAL_URL }}
@@ -380,7 +382,8 @@ jobs:
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
         run: |
-          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >.env
+          echo "BUILD_TARGET=${BUILD_TARGET}" >.env
+          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
           echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
           echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
           echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
@@ -396,7 +399,6 @@ jobs:
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
           git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
-          git am < ./patch/0003-chore-common-default-mode-to-bcsc.patch
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access
