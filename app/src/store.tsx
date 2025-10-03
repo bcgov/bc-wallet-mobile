@@ -244,21 +244,13 @@ export enum BCLocalStorageKeys {
   Mode = 'Mode',
 }
 
-const getInitialBuildMode = (): Mode => {
-  if (Object.values(Mode).includes(Config.BUILD_TARGET as Mode)) {
-    return Config.BUILD_TARGET as Mode
-  }
-
-  return Mode.BCWallet
-}
-
 export const initialState: BCState = {
   ...defaultState,
   preferences: { ...defaultState.preferences, useDataRetention: false, disableDataRetentionOption: true },
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
   bcsc: bcscState,
-  mode: getInitialBuildMode(),
+  mode: Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet,
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {
