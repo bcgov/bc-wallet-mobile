@@ -1,12 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
-import { QRRenderer, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, QRRenderer, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
 import uuid from 'react-native-uuid'
 
@@ -17,6 +17,8 @@ const TransferQRDisplayScreen: React.FC = () => {
   const [qrValue, setQRValue] = useState<string | null>(null)
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
 
   const styles = StyleSheet.create({
@@ -33,13 +35,17 @@ const TransferQRDisplayScreen: React.FC = () => {
       borderRadius: Spacing.sm,
       overflow: 'hidden',
     },
+    refreshButton: {
+      padding: Spacing.lg,
+      width: '100%',
+    },
   })
 
   const createToken = useCallback(async () => {
     const timeInSeconds = Math.floor(Date.now() / 1000)
     const account = await getAccount()
     if (!account) {
-      // TODO: (Alfred) What needs to happen here? The account should be created when they download the app
+      // TODO: (Alfred) What needs to happen here? The account should be created when they download the app, do they need to reinstall?
       return
     }
 
@@ -54,6 +60,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     // TODO: can this be added to the well known endpoints?
     const url = `${store.developer.environment.iasApiBaseUrl}/device/static/selfsetup.html?${jwt}`
     setQRValue(url)
+    setIsLoading(false)
   }, [store.developer.environment.iasApiBaseUrl, jti])
 
   const checkAttestation = useCallback(
@@ -70,13 +77,32 @@ const TransferQRDisplayScreen: React.FC = () => {
     [deviceAttestation, navigation]
   )
 
-  useEffect(() => {
-    createToken()
-    const interval = setInterval(() => {
+  const startInterval = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+    intervalRef.current = setInterval(() => {
       createToken()
-    }, 30000)
-    return () => clearInterval(interval)
+    }, 30000) // 30 seconds
   }, [createToken])
+
+  useEffect(() => {
+    refreshToken()
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [createToken, startInterval])
+
+  const refreshToken = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+    }
+
+    createToken()
+    startInterval()
+  }
 
   useEffect(() => {
     checkAttestation(jti)
@@ -85,6 +111,10 @@ const TransferQRDisplayScreen: React.FC = () => {
     }, 3000)
     return () => clearInterval(interval)
   }, [checkAttestation, jti])
+
+  if (isLoading) {
+    return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+  }
 
   return (
     <ScrollView>
@@ -98,6 +128,9 @@ const TransferQRDisplayScreen: React.FC = () => {
             <QRRenderer value={qrValue} />
           </View>
         )}
+        <View style={styles.refreshButton}>
+          <Button buttonType={ButtonType.Primary} title="Refresh QR Code" onPress={refreshToken} />
+        </View>
       </View>
     </ScrollView>
   )

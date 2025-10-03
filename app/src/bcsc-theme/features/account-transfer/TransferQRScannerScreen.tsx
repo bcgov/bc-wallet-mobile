@@ -29,7 +29,7 @@ const TransferQRScannerScreen: React.FC = () => {
   const navigator = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const [store, dispatch] = useStore<BCState>()
   const { ColorPalette, Spacing } = useTheme()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
   const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
@@ -64,12 +64,13 @@ const TransferQRScannerScreen: React.FC = () => {
       if (!hasPermission) {
         const permission = await requestPermission()
         if (!permission) {
-          Alert.alert('Camera Permission Required', 'Please enable camera permission to take a photo.', [
+          Alert.alert('Camera Permission Required', 'Please enable camera permission to scan a QR code.', [
             { text: 'OK', onPress: () => navigator.goBack() },
           ])
           return
         }
       }
+      setIsLoading(false)
     }
 
     checkPermissions()
@@ -162,6 +163,10 @@ const TransferQRScannerScreen: React.FC = () => {
     },
   })
 
+  if (isLoading) {
+    return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+  }
+
   if (!hasPermission) {
     return (
       <SafeAreaView style={styles.container}>
@@ -171,14 +176,9 @@ const TransferQRScannerScreen: React.FC = () => {
       </SafeAreaView>
     )
   }
-
-  if (isLoading) {
-    return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-  }
-
   return (
     <View style={styles.container}>
-      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={false} />
+      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} />
       <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
       <View style={styles.messageContainer}>
         <Icon name="qrcode-scan" size={40} style={styles.icon} />
