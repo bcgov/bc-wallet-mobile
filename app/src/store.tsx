@@ -16,6 +16,7 @@ import {
 } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
+import Config from 'react-native-config'
 
 export interface IASEnvironment {
   name: string
@@ -243,13 +244,21 @@ export enum BCLocalStorageKeys {
   Mode = 'Mode',
 }
 
+const getInitialBuildMode = (): Mode => {
+  if (Object.values(Mode).includes(Config.BUILD_TARGET as Mode)) {
+    return Config.BUILD_TARGET as Mode
+  }
+
+  return Mode.BCWallet
+}
+
 export const initialState: BCState = {
   ...defaultState,
   preferences: { ...defaultState.preferences, useDataRetention: false, disableDataRetentionOption: true },
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
   bcsc: bcscState,
-  mode: Mode.BCWallet,
+  mode: getInitialBuildMode(),
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {

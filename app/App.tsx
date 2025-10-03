@@ -28,7 +28,7 @@ import { container } from 'tsyringe'
 import Root from '@/Root'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { localization } from '@/localization'
-import { initialState, reducer } from '@/store'
+import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
 import BCLogger from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
@@ -68,7 +68,10 @@ const App = () => {
     <ErrorBoundaryWrapper logger={BCLogger}>
       <ContainerProvider value={bcwContainer}>
         <StoreProvider initialState={initialState} reducer={reducer}>
-          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
+          <ThemeProvider
+            themes={themes}
+            defaultThemeName={initialState.mode === Mode.BCWallet ? BCThemeNames.BCWallet : BCThemeNames.BCSC}
+          >
             <NavContainer navigationRef={navigationRef}>
               <AnimatedComponentsProvider value={animatedComponents}>
                 <AuthProvider>
