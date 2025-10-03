@@ -216,6 +216,7 @@ jobs:
       - name: Create environment settings
         working-directory: app
         env:
+          # translate matrix.build_type to ENV BUILD_TARGET ie: Mode
           BUILD_TARGET: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
@@ -372,6 +373,7 @@ jobs:
       - name: Create environment settings
         working-directory: app
         env:
+          # translate matrix.build_type to ENV BUILD_TARGET ie: Mode
           BUILD_TARGET: ${{ matrix.build_type == 'bc-wallet' && 'bcwallet' || 'bcsc' }}
           MEDIATOR_USE_PUSH_NOTIFICATIONS: ${{ vars.MEDIATOR_USE_PUSH_NOTIFICATIONS }}
           MEDIATOR_URL: ${{ secrets.MEDIATOR_URL }}
