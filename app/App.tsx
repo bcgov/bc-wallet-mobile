@@ -34,6 +34,7 @@ import BCLogger from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
 import WebDisplay from '@screens/WebDisplay'
 import { AppContainer } from './container-imp'
+import Config from 'react-native-config'
 
 initLanguages(localization)
 
@@ -70,7 +71,7 @@ const App = () => {
         <StoreProvider initialState={initialState} reducer={reducer}>
           <ThemeProvider
             themes={themes}
-            defaultThemeName={initialState.mode === Mode.BCWallet ? BCThemeNames.BCWallet : BCThemeNames.BCSC}
+            defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
           >
             <NavContainer navigationRef={navigationRef}>
               <AnimatedComponentsProvider value={animatedComponents}>
