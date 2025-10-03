@@ -202,6 +202,14 @@ jobs:
           git status && \
           git diff ios/Podfile.lock
 
+      - name: Patch for Single App build
+        if: matrix.build_type == 'single-app'
+        run: |
+          echo "Patching for Single App build"
+          git config user.email "github-action@users.noreply.github.com"
+          git config user.name "GitHub Actions"
+          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
+
       - name: Bump Build No.
         working-directory: app/ios
         env:
@@ -236,14 +244,6 @@ jobs:
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
-
-      - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
-        run: |
-          echo "Patching for Single App build"
-          git config user.email "github-action@users.noreply.github.com"
-          git config user.name "GitHub Actions"
-          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
 
       - name: Update APS environment
         run: |
