@@ -7,6 +7,7 @@ type SampleApiDisplayProps<T> = {
   title: string
 }
 
+// TODO (MD): deprecate
 const SampleApiDisplay = <T,>({ dataLoader, title }: SampleApiDisplayProps<T>) => {
   const { Spacing } = useTheme()
   const { load, isLoading, data, isReady, error } = dataLoader

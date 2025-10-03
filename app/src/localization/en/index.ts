@@ -158,7 +158,24 @@ const translation = {
     "VulnerabilityDisclosurePolicy": "Vulnerability disclosure policy",
     "Accessibility": "Accessibility",
     "IntroductionToTheApp": "Introduction to the app",
-    "ButtonTitle": "Settings Menu"
+  },
+  "BCSCSettings": {
+    "HeaderA": "App Settings",
+    "HeaderB": "Information",
+    "Help": "Help",
+    "SignOut": "Sign out",
+    "Biometrics": "Biometrics",
+    "ChangePIN": "Change PIN",
+    "AutoLockTime": "Auto lock time",
+    "Notifications": "Notifications",
+    "ForgetPairings": "Forget pairings",
+    "Privacy": "Privacy",
+    "ContactUs": "Contact us",
+    "Feedback": "Feedback",
+    "Accessibility": "Accessibility",
+    "TermsOfUse": "Terms of use",
+    "Version": "Version",
+    "ButtonTitle": "Settings Menu", // TODO (MD): Move to BCSCSettings for other locales and use this value in App
   },
   "Developer": {
     "Environment": "Environment",

@@ -5,29 +5,52 @@ import useApi from '@bcsc-theme/api/hooks/useApi'
 import { ServerStatusResponseData, TermsOfUseResponseData } from '@bcsc-theme/api/hooks/useConfigApi'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import useDataLoader from '@bcsc-theme/hooks/useDataLoader'
-import { Button, ButtonType, LockoutReason, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  LockoutReason,
+  ThemedText,
+  TOKENS,
+  useAuth,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import React from 'react'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, Text, View } from 'react-native'
 import SampleApiDisplay from './components/SampleApiDisplay'
+import { SettingsActionCard } from './components/SettingsActionCard'
+import { useTranslation } from 'react-i18next'
+import Icon from 'react-native-vector-icons/MaterialIcons'
 
 // Placeholder for now, not sure if we want to reuse our
 // existing settings screen or create a new one, prob create new
 const Settings: React.FC = () => {
-  const { Spacing, setTheme, themeName } = useTheme()
+  const { t } = useTranslation()
+  const { Spacing, setTheme, themeName, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const { lockOutUser } = useAuth()
   const { config, evidence, user } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       justifyContent: 'space-between',
       padding: Spacing.md,
     },
-    contentContainer: {
-      flex: 1,
+    sectionHeader: {
+      padding: Spacing.md,
+      fontWeight: 'bold',
+      fontSize: 16,
     },
-    controlsContainer: {},
+    sectionContainer: {
+      gap: Spacing.xs / 2,
+    },
+    cardContainer: {
+      padding: Spacing.md,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
+    },
   })
 
   const onServerStatusError = (error: unknown) => {
@@ -94,29 +117,36 @@ const Settings: React.FC = () => {
   return (
     <TabScreenWrapper>
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.contentContainer}>
-          <SampleApiDisplay<TermsOfUseResponseData> dataLoader={termsDataLoader} title={'Terms of Use'} />
-          <SampleApiDisplay<ServerStatusResponseData> dataLoader={serverStatusDataLoader} title={'Server Status'} />
-          <SampleApiDisplay<UserInfoResponseData> dataLoader={userAccount} title={'User Account'} />
-          <SampleApiDisplay<any> dataLoader={evidenceStart} title={'Start Evidence'} />
-          <SampleApiDisplay<any> dataLoader={deleteRequest} title={'Delete Verification Request'} />
-        </ScrollView>
-        <View style={styles.controlsContainer}>
-          <View style={{ marginVertical: Spacing.md }}>
-            <Button
-              title={'Use BC Wallet Mode'}
-              accessibilityLabel={'Use BC Wallet Mode'}
-              buttonType={ButtonType.Primary}
-              onPress={onPressMode}
+        <ScrollView>
+          <View style={styles.sectionContainer}>
+            <SettingsActionCard
+              title={t('BCSCSettings.SignOut')}
+              startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
+              endAdornment={<Icon name="chevron-right" size={24} color={ColorPalette.brand.secondary} />}
+              onPress={() => {
+                lockOutUser(LockoutReason.Logout)
+              }}
             />
+
+            <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
+
+            {/* TODO (MD): Implement actions for these cards */}
+            <SettingsActionCard title={t('BCSCSettings.Biometrics')} />
+            <SettingsActionCard title={t('BCSCSettings.ChangePIN')} />
+            <SettingsActionCard title={t('BCSCSettings.AutoLockTime')} />
+            <SettingsActionCard title={t('BCSCSettings.Notifications')} />
+            <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} />
+
+            <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderB')}</ThemedText>
+
+            <SettingsActionCard title={t('BCSCSettings.Help')} />
+            <SettingsActionCard title={t('BCSCSettings.Privacy')} />
+            <SettingsActionCard title={t('BCSCSettings.ContactUs')} />
+            <SettingsActionCard title={t('BCSCSettings.Feedback')} />
+            <SettingsActionCard title={t('BCSCSettings.Accessibility')} />
+            <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} />
           </View>
-          <Button
-            title={'Switch Theme'}
-            accessibilityLabel={'Switch Theme'}
-            buttonType={ButtonType.Secondary}
-            onPress={onPressTheme}
-          />
-        </View>
+        </ScrollView>
       </View>
     </TabScreenWrapper>
   )
