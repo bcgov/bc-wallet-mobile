@@ -28,15 +28,23 @@ const mockLogger = {
   debug: jest.fn(),
 }
 
+// Helper to set platform OS in a type-safe way
+const setPlatformOS = (os: 'ios' | 'android' | 'web') => {
+  Object.defineProperty(Platform, 'OS', {
+    writable: true,
+    value: os,
+  })
+}
+
 describe('getNotificationTokens', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     // Reset Platform.OS to iOS for most tests
-    ;(Platform as any).OS = 'ios'
+    setPlatformOS('ios')
   })
 
-  describe('Success Cases', () => {
-    it('should return tokens successfully on iOS with both FCM and APNS tokens', async () => {
+  describe('when successful', () => {
+    it('returns both FCM and APNS tokens on iOS', async () => {
       const mockFCMToken = 'mock_fcm_token_123'
       const mockAPNSToken = 'mock_apns_token_456'
 
@@ -53,8 +61,8 @@ describe('getNotificationTokens', () => {
       expect(mockLogger.info).toHaveBeenCalledWith('Retrieved all required notification tokens for registration.')
     })
 
-    it('should return tokens successfully on Android with only FCM token', async () => {
-      ;(Platform as any).OS = 'android'
+    it('returns only FCM token on Android (no APNS token needed)', async () => {
+      setPlatformOS('android')
       const mockFCMToken = 'mock_fcm_token_android'
 
       mockGetToken.mockResolvedValue(mockFCMToken)
@@ -73,9 +81,9 @@ describe('getNotificationTokens', () => {
     })
   })
 
-  describe('Failure Cases', () => {
-    it('should throw error when FCM token is null', async () => {
-      ;(Platform as any).OS = 'ios'
+  describe('when FCM token fails', () => {
+    it('throws error when FCM token is null', async () => {
+      setPlatformOS('ios')
       mockGetToken.mockResolvedValue(null)
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
@@ -87,8 +95,8 @@ describe('getNotificationTokens', () => {
       )
     })
 
-    it('should throw error when FCM token is undefined', async () => {
-      ;(Platform as any).OS = 'ios'
+    it('throws error when FCM token is undefined', async () => {
+      setPlatformOS('ios')
       mockGetToken.mockResolvedValue(undefined)
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
@@ -97,8 +105,8 @@ describe('getNotificationTokens', () => {
       )
     })
 
-    it('should throw error when FCM token fetch throws exception', async () => {
-      ;(Platform as any).OS = 'ios'
+    it('throws error when FCM token fetch throws exception', async () => {
+      setPlatformOS('ios')
       const mockError = new Error('FCM service unavailable')
       mockGetToken.mockRejectedValue(mockError)
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
@@ -108,8 +116,8 @@ describe('getNotificationTokens', () => {
       )
     })
 
-    it('should throw error on iOS when APNS token is null', async () => {
-      ;(Platform as any).OS = 'ios'
+    it('throws error when APNS token is null on iOS', async () => {
+      setPlatformOS('ios')
       mockGetToken.mockResolvedValue('mock_fcm_token')
       mockGetAPNSToken.mockResolvedValue(null)
 
@@ -118,8 +126,8 @@ describe('getNotificationTokens', () => {
       )
     })
 
-    it('should throw error on iOS when APNS token fetch throws exception', async () => {
-      ;(Platform as any).OS = 'ios'
+    it('throws error when APNS token fetch throws exception on iOS', async () => {
+      setPlatformOS('ios')
       const mockError = new Error('APNS service unavailable')
       mockGetToken.mockResolvedValue('mock_fcm_token')
       mockGetAPNSToken.mockRejectedValue(mockError)
@@ -129,8 +137,8 @@ describe('getNotificationTokens', () => {
       )
     })
 
-    it('should throw error with multiple failures', async () => {
-      ;(Platform as any).OS = 'ios'
+    it('throws error with combined FCM and APNS failures', async () => {
+      setPlatformOS('ios')
       mockGetToken.mockResolvedValue(null)
       mockGetAPNSToken.mockRejectedValue(new Error('APNS error'))
 
@@ -139,8 +147,8 @@ describe('getNotificationTokens', () => {
       )
     })
 
-    it('should handle non-Error exceptions properly', async () => {
-      ;(Platform as any).OS = 'ios'
+    it('handles non-Error exceptions (string messages)', async () => {
+      setPlatformOS('ios')
       mockGetToken.mockRejectedValue('String error message')
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
@@ -150,8 +158,8 @@ describe('getNotificationTokens', () => {
     })
   })
 
-  describe('Logger Integration', () => {
-    it('should work without logger (optional parameter)', async () => {
+  describe('with optional logger parameter', () => {
+    it('works without logger provided', async () => {
       mockGetToken.mockResolvedValue('mock_fcm_token')
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
@@ -162,7 +170,7 @@ describe('getNotificationTokens', () => {
       expect(result.apnsToken).toBe('mock_apns_token')
     })
 
-    it('should handle logger gracefully when it fails', async () => {
+    it('handles null and undefined logger gracefully', async () => {
       // Test that the function works when logger is null/undefined
       mockGetToken.mockResolvedValue('mock_fcm_token')
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
@@ -177,9 +185,9 @@ describe('getNotificationTokens', () => {
     })
   })
 
-  describe('Platform-Specific Behavior', () => {
-    it('should not call getAPNSToken on Android', async () => {
-      ;(Platform as any).OS = 'android'
+  describe('platform-specific behavior', () => {
+    it('does not call getAPNSToken on Android', async () => {
+      setPlatformOS('android')
       mockGetToken.mockResolvedValue('mock_fcm_token')
 
       await getNotificationTokens(mockLogger)
@@ -187,8 +195,8 @@ describe('getNotificationTokens', () => {
       expect(mockGetAPNSToken).not.toHaveBeenCalled()
     })
 
-    it('should call getAPNSToken on iOS', async () => {
-      ;(Platform as any).OS = 'ios'
+    it('calls getAPNSToken on iOS', async () => {
+      setPlatformOS('ios')
       mockGetToken.mockResolvedValue('mock_fcm_token')
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
@@ -197,8 +205,8 @@ describe('getNotificationTokens', () => {
       expect(mockGetAPNSToken).toHaveBeenCalled()
     })
 
-    it('should handle unknown platform as non-iOS', async () => {
-      ;(Platform as any).OS = 'web'
+    it('treats unknown platforms as non-iOS (no APNS token)', async () => {
+      setPlatformOS('web')
       mockGetToken.mockResolvedValue('mock_fcm_token')
 
       const result = await getNotificationTokens(mockLogger)
@@ -209,9 +217,9 @@ describe('getNotificationTokens', () => {
     })
   })
 
-  describe('Edge Cases', () => {
-    it('should handle empty string FCM token as invalid', async () => {
-      ;(Platform as any).OS = 'ios'
+  describe('edge cases with empty strings', () => {
+    it('treats empty string FCM token as invalid', async () => {
+      setPlatformOS('ios')
       mockGetToken.mockResolvedValue('')
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
@@ -220,8 +228,8 @@ describe('getNotificationTokens', () => {
       )
     })
 
-    it('should handle empty string APNS token as invalid on iOS', async () => {
-      ;(Platform as any).OS = 'ios'
+    it('treats empty string APNS token as invalid on iOS', async () => {
+      setPlatformOS('ios')
       mockGetToken.mockResolvedValue('mock_fcm_token')
       mockGetAPNSToken.mockResolvedValue('')
 
