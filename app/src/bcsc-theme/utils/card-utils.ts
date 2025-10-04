@@ -18,8 +18,8 @@ export function getCardProcessForCardType(cardType: BCSCCardType): BCSCCardProce
     case BCSCCardType.Other:
       return BCSCCardProcess.NonBCSC
     case BCSCCardType.None:
-      return null
+      return null // No card -> no card process
     default:
-      throw new Error(`Unknown card type: ${cardType}`)
+      return null // Unknown card type -> no card process
   }
 }

@@ -25,18 +25,30 @@ type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 const Account: React.FC = () => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
-  const { user, metadata } = useApi()
+  const { user, metadata, token } = useApi()
   const client = useBCSCApiClient()
   const navigation = useNavigation<AccountNavigationProp>()
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
 
-  const openedAccountWebview = useRef(false)
+  const openedWebview = useRef(false)
 
   const { load: loadBcscServiceClient, data: bcscServiceClient } = useDataLoader(metadata.getBCSCClientMetadata, {
     onError: (error) => logger.error('Error loading BCSC client metadata', error as Error),
   })
+
+  const {
+    load: loadIdTokenMetadata,
+    data: idTokenMetadata,
+    refresh: refreshIdTokenMetadata,
+  } = useDataLoader(
+    // refresh the cache to get latest device count when returning from a webview
+    () => token.getCachedIdTokenMetadata({ refreshCache: true }),
+    {
+      onError: (error) => logger.error('Error loading ID token metadata', error as Error),
+    }
+  )
 
   const {
     load: loadUserMeta,
@@ -50,21 +62,23 @@ const Account: React.FC = () => {
   useEffect(() => {
     loadUserMeta()
     loadBcscServiceClient()
-  }, [loadUserMeta, loadBcscServiceClient])
+    loadIdTokenMetadata()
+  }, [loadUserMeta, loadBcscServiceClient, loadIdTokenMetadata])
 
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
     const appListener = AppState.addEventListener('change', async (nextAppState) => {
-      if (nextAppState === 'active' && openedAccountWebview.current) {
-        logger.info('Returning from Account webview, refreshing user info...')
-        openedAccountWebview.current = false
+      if (nextAppState === 'active' && openedWebview.current) {
+        logger.info('Returning from webview, refreshing user and device metadata...')
+        openedWebview.current = false
         refreshUserMeta()
+        refreshIdTokenMetadata()
       }
     })
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [logger, refreshUserMeta])
+  }, [logger, refreshIdTokenMetadata, refreshUserMeta])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {
@@ -73,6 +87,7 @@ const Account: React.FC = () => {
         url: fullUrl,
         title: 'Manage Devices',
       })
+      openedWebview.current = true
     } catch (error) {
       logger.error(`Error navigating to My Devices webview: ${error}`)
     }
@@ -89,7 +104,7 @@ const Account: React.FC = () => {
 
       if (quickLoginResult.success) {
         await Linking.openURL(quickLoginResult.url)
-        openedAccountWebview.current = true
+        openedWebview.current = true
       }
     } catch (error) {
       logger.error(`Error opening All Account Details: ${error}`)
@@ -145,7 +160,9 @@ const Account: React.FC = () => {
             <SectionButton
               onPress={handleMyDevicesPress}
               title={
-                store.bcsc.bcscDevicesCount !== undefined ? `My devices (${store.bcsc.bcscDevicesCount})` : 'My devices'
+                typeof idTokenMetadata?.bcsc_devices_count === 'number'
+                  ? `My devices (${idTokenMetadata.bcsc_devices_count})`
+                  : 'My devices'
               }
             />
             <SectionButton

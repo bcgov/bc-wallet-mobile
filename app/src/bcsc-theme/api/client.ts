@@ -2,9 +2,7 @@ import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
-
-import { getDeviceCountFromIdToken } from '../utils/get-device-count'
-import { TokenStatusResponseData } from './hooks/useTokens'
+import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
 
 // Extend AxiosRequestConfig to include skipBearerAuth
@@ -12,10 +10,6 @@ declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
   }
-}
-
-export interface TokenStatusResponseDataWithDeviceCount extends TokenStatusResponseData {
-  bcsc_devices_count?: number
 }
 
 interface BCSCConfig {
@@ -49,7 +43,8 @@ class BCSCApiClient {
   endpoints: BCSCEndpoints
   config: BCSCConfig
   baseURL: string
-  tokens?: TokenStatusResponseData // this token will be used to interact and access data from IAS servers
+  // TODO (MD): Persist tokens securely using PersistentStorage ie: loadTokens(), saveTokens()
+  tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -166,15 +161,20 @@ class BCSCApiClient {
     }
   }
 
-  async fetchAccessToken(): Promise<TokenStatusResponseDataWithDeviceCount> {
+  async fetchAccessToken(): Promise<TokenResponse> {
     return withAccount(async () => {
-      if (!this.tokens?.refresh_token || this.isTokenExpired(this.tokens?.refresh_token)) {
-        // refresh token should be saved when a device is authorized with IAS
-        throw new Error('TODO: Register if refresh token is expired or not present')
+      if (!this.tokens) {
+        // initialize tokens using `getTokensForRefreshToken`
+        throw new Error('Client tokens not initialized')
       }
 
-      const tokenData = await this.getTokensForRefreshToken(this.tokens.refresh_token)
-      return tokenData
+      if (this.isTokenExpired(this.tokens.refresh_token)) {
+        // note: refresh tokens should not expire
+        throw new Error('Refresh token expired')
+      }
+
+      // access token is expired, fetch new tokens using refresh token
+      return this.getTokensForRefreshToken(this.tokens.refresh_token)
     })
   }
 
@@ -196,7 +196,7 @@ class BCSCApiClient {
       return config
     }
 
-    if (!this.tokens || this.isTokenExpired(this.tokens.access_token)) {
+    if (!this.tokens || !this.isTokenExpired(this.tokens.access_token)) {
       this.tokens = await this.fetchAccessToken()
     }
 
@@ -209,19 +209,18 @@ class BCSCApiClient {
     return config
   }
 
-  async getTokensForRefreshToken(refreshToken: string): Promise<TokenStatusResponseDataWithDeviceCount> {
+  async getTokensForRefreshToken(refreshToken: string): Promise<TokenResponse> {
     return withAccount(async (account) => {
-      const { issuer, clientID } = account
-      const tokenBody = await getRefreshTokenRequestBody(issuer, clientID, refreshToken)
-      const tokenResponse = await this.post<TokenStatusResponseData>(this.endpoints.token, tokenBody, {
+      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
+
+      const tokenResponse = await this.post<TokenResponse>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,
       })
+
       this.tokens = tokenResponse.data
 
-      const bcsc_devices_count = await getDeviceCountFromIdToken(tokenResponse.data.id_token, this.logger)
-
-      return { ...tokenResponse.data, bcsc_devices_count }
+      return this.tokens
     })
   }
 

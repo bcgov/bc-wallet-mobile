@@ -24,13 +24,15 @@ export interface ServiceClientsFilter {
    */
   partialNameFilter?: string
   /**
-   * Filter service clients based on the user's card process
+   * Filter service clients based on the user's card process type.
+   *
+   * Note: Explicitly setting this to null will return no services.
    *
    * @see card-utils.ts->getCardProcessForCardType
    * @example BCSCCardProcess.NonPhoto would filter out services that do not support non-photo cards
-   * @type {BCSCCardProcess}
+   * @type {BCSCCardProcess | null}
    */
-  cardProcessFilter?: BCSCCardProcess
+  cardProcessFilter?: BCSCCardProcess | null
   /**
    * Filter service clients that require a BC Address on file
    *
@@ -92,7 +94,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
 
   // Apply filters to the service clients (these filters are memoized to avoid unnecessary recalculations)
   const filteredServiceClients = useMemo(() => {
-    if (!serviceClients) {
+    if (!serviceClients || filter.cardProcessFilter === null) {
       return []
     }
 
