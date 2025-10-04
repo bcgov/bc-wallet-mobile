@@ -8,6 +8,7 @@ import useDataLoader from '@bcsc-theme/hooks/useDataLoader'
 import {
   Button,
   ButtonType,
+  isBiometricsActive,
   LockoutReason,
   ThemedText,
   TOKENS,
@@ -22,6 +23,7 @@ import SampleApiDisplay from './components/SampleApiDisplay'
 import { SettingsActionCard } from './components/SettingsActionCard'
 import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { getBuildNumber, getSystemName, getSystemVersion, getVersion } from 'react-native-device-info'
 
 // Placeholder for now, not sure if we want to reuse our
 // existing settings screen or create a new one, prob create new
@@ -29,7 +31,7 @@ const Settings: React.FC = () => {
   const { t } = useTranslation()
   const { Spacing, setTheme, themeName, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-  const { lockOutUser } = useAuth()
+  const auth = useAuth()
   const { config, evidence, user } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -51,6 +53,10 @@ const Settings: React.FC = () => {
       padding: Spacing.md,
       backgroundColor: ColorPalette.brand.secondaryBackground,
     },
+    versionContainer: {
+      padding: Spacing.md,
+      gap: Spacing.xs,
+    },
   })
 
   const onServerStatusError = (error: unknown) => {
@@ -59,6 +65,11 @@ const Settings: React.FC = () => {
   const onTermsOfUseError = (error: unknown) => {
     logger.error(`Error loading terms of use: ${error}`)
   }
+
+  const isBiometricsActive = useDataLoader(auth.isBiometricsActive, {
+    onError: (error: unknown) => logger.error(`Error loading biometrics: ${error}`),
+  })
+
   const serverStatusDataLoader = useDataLoader<ServerStatusResponseData>(() => config.getServerStatus(), {
     onError: onServerStatusError,
   })
@@ -114,37 +125,53 @@ const Settings: React.FC = () => {
     }
   }
 
+  // TODO (MD): Deprecate this once all settings actions have been implemented
+  const onPressActionTodo = () => {
+    logger.info('TODO: Settings action pressed')
+  }
+
   return (
     <TabScreenWrapper>
       <View style={styles.container}>
-        <ScrollView>
-          <View style={styles.sectionContainer}>
-            <SettingsActionCard
-              title={t('BCSCSettings.SignOut')}
-              startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
-              endAdornment={<Icon name="chevron-right" size={24} color={ColorPalette.brand.secondary} />}
-              onPress={() => {
-                lockOutUser(LockoutReason.Logout)
-              }}
-            />
+        <ScrollView style={styles.sectionContainer}>
+          <SettingsActionCard
+            title={t('BCSCSettings.SignOut')}
+            startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
+            onPress={() => {
+              auth.lockOutUser(LockoutReason.Logout)
+            }}
+          />
 
-            <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
+          <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
 
-            {/* TODO (MD): Implement actions for these cards */}
-            <SettingsActionCard title={t('BCSCSettings.Biometrics')} />
-            <SettingsActionCard title={t('BCSCSettings.ChangePIN')} />
-            <SettingsActionCard title={t('BCSCSettings.AutoLockTime')} />
-            <SettingsActionCard title={t('BCSCSettings.Notifications')} />
-            <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} />
+          {/* TODO (MD): Implement actions for these cards */}
+          <SettingsActionCard
+            title={t('BCSCSettings.Biometrics')}
+            onPress={onPressActionTodo}
+            endAdornmentText={isBiometricsActive.data ? 'OFF' : 'ON'}
+          />
+          <SettingsActionCard title={t('BCSCSettings.ChangePIN')} onPress={onPressActionTodo} />
+          <SettingsActionCard
+            title={t('BCSCSettings.AutoLockTime')}
+            onPress={onPressActionTodo}
+            endAdornmentText={`${store.preferences.autoLockTime} min`}
+          />
+          <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressActionTodo} />
 
-            <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderB')}</ThemedText>
+          <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderB')}</ThemedText>
 
-            <SettingsActionCard title={t('BCSCSettings.Help')} />
-            <SettingsActionCard title={t('BCSCSettings.Privacy')} />
-            <SettingsActionCard title={t('BCSCSettings.ContactUs')} />
-            <SettingsActionCard title={t('BCSCSettings.Feedback')} />
-            <SettingsActionCard title={t('BCSCSettings.Accessibility')} />
-            <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} />
+          <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressActionTodo} />
+
+          <View style={styles.versionContainer}>
+            <ThemedText>BC Services Card</ThemedText>
+            <ThemedText>{`Version: ${getVersion()}`}</ThemedText>
+            <ThemedText>{`Build: ${getBuildNumber()}`}</ThemedText>
           </View>
         </ScrollView>
       </View>

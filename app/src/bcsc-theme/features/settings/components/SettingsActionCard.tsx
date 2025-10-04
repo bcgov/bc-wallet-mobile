@@ -4,15 +4,15 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native'
 
 interface SettingsActionCardProps {
   title: string
-  onPress?: () => void // TODO (MD): make this required when all cards have actions
+  onPress: () => void
   startAdornment?: ReactNode
-  endAdornment?: ReactNode
+  endAdornmentText?: string
 }
 
 /**
  * A card component used in the settings screen to represent an action the user can take.
  *
- * @returns {*  } {JSX.Element}
+ * @returns {*} {JSX.Element}
  */
 export const SettingsActionCard = (props: SettingsActionCardProps) => {
   const { Spacing, ColorPalette } = useTheme()
@@ -29,8 +29,10 @@ export const SettingsActionCard = (props: SettingsActionCardProps) => {
       flexDirection: 'row',
       gap: Spacing.sm,
     },
-    endAdornment: {
+    endAdornmentText: {
       marginLeft: 'auto',
+      fontWeight: 'bold',
+      color: ColorPalette.brand.primary,
     },
   })
 
@@ -44,7 +46,9 @@ export const SettingsActionCard = (props: SettingsActionCardProps) => {
       <View style={styles.textContainer}>
         {props.startAdornment ? props.startAdornment : null}
         <ThemedText>{props.title}</ThemedText>
-        {props.endAdornment ? <View style={styles.endAdornment}>{props.endAdornment}</View> : null}
+        {props.endAdornmentText ? (
+          <ThemedText style={styles.endAdornmentText}>{props.endAdornmentText}</ThemedText>
+        ) : null}
       </View>
     </TouchableOpacity>
   )
