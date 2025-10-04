@@ -1,6 +1,5 @@
 import { Platform } from 'react-native'
-import messaging from '@react-native-firebase/messaging'
-import { getNotificationTokens, NotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 
 // Mock the messaging module
 const mockGetToken = jest.fn()
@@ -20,13 +19,23 @@ jest.mock('react-native', () => ({
   },
 }))
 
-// Create a mock logger
+// Create a mock logger that satisfies the BifoldLogger interface
 const mockLogger = {
+  // Methods used by the function under test
   info: jest.fn(),
   error: jest.fn(),
   warn: jest.fn(),
   debug: jest.fn(),
-}
+
+  // Additional methods from BifoldLogger interface (not used but required for typing)
+  logLevel: 0,
+  isEnabled: jest.fn().mockReturnValue(true),
+  test: jest.fn(),
+  trace: jest.fn(),
+  fatal: jest.fn(),
+  report: jest.fn(),
+  log: jest.fn(),
+} as any // Use 'as any' to bypass private property type checking
 
 // Helper to set platform OS in a type-safe way
 const setPlatformOS = (os: 'ios' | 'android' | 'web') => {
