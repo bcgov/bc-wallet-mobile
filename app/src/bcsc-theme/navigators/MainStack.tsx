@@ -1,4 +1,4 @@
-import { Screens, SettingStack, testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
+import { SettingStack, testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { View } from 'react-native'

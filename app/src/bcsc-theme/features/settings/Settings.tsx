@@ -67,7 +67,6 @@ const Settings: React.FC = () => {
 
           <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
 
-          {/* TODO (MD): Implement actions for these cards */}
           <SettingsActionCard
             title={t('BCSCSettings.Biometrics')}
             onPress={() => {
@@ -83,6 +82,7 @@ const Settings: React.FC = () => {
               navigation.navigate(BCSCStacks.SettingStack, { screen: BCSCScreens.ChangePIN })
             }}
           />
+          {/* TODO (MD): Implement actions for these cards */}
           <SettingsActionCard
             title={t('BCSCSettings.AutoLockTime')}
             onPress={onPressActionTodo}
@@ -99,6 +99,8 @@ const Settings: React.FC = () => {
           <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressActionTodo} />
           <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressActionTodo} />
           <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressActionTodo} />
+
+          {/* TODO (MD): Add developer options */}
 
           <View style={styles.versionContainer}>
             <ThemedText variant="labelSubtitle">BC Services Card</ThemedText>
