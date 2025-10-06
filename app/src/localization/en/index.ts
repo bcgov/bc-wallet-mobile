@@ -175,7 +175,7 @@ const translation = {
     "Accessibility": "Accessibility",
     "TermsOfUse": "Terms of use",
     "Version": "Version",
-    "ButtonTitle": "Settings Menu", // TODO (MD): Move to BCSCSettings for other locales and use this value in App
+    "ButtonTitle": "Settings Menu",
   },
   "Developer": {
     "Environment": "Environment",
