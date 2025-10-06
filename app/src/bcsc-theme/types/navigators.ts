@@ -2,9 +2,11 @@ import { NavigatorScreenParams } from '@react-navigation/native'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
 import { BCSCCardType } from './cards'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
+import { Screens as BifoldScreens } from '@bifold/core'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
+  SettingStack = 'BCSCSettingStack',
 }
 
 export enum BCSCScreens {
@@ -51,6 +53,8 @@ export enum BCSCScreens {
   ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
+  ToggleBiometrics = BifoldScreens.ToggleBiometry,
+  ChangePIN = BifoldScreens.ChangePIN,
 }
 
 export type BCSCTabStackParams = {
@@ -59,8 +63,17 @@ export type BCSCTabStackParams = {
   [BCSCScreens.Account]: undefined
 }
 
+export type BCSCSettingStackParams = {
+  [BCSCScreens.ToggleBiometrics]: undefined
+  [BCSCScreens.ChangePIN]: undefined
+}
+
 export type BCSCRootStackParams = {
+  // Stacks
   [BCSCStacks.TabStack]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCStacks.SettingStack]: NavigatorScreenParams<BCSCSettingStackParams>
+
+  // Screens
   [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }

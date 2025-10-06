@@ -1,4 +1,4 @@
-import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
+import { Screens, SettingStack, testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { View } from 'react-native'
@@ -35,6 +35,9 @@ const MainStack: React.FC = () => {
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
+
+        <Stack.Screen name={BCSCStacks.SettingStack} component={SettingStack} />
+
         <Stack.Screen
           name={BCSCScreens.Settings}
           component={Settings}
