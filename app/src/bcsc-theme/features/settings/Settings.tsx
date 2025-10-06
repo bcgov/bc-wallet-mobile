@@ -1,6 +1,15 @@
 import { BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
-import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  LockoutReason,
+  Screens as BifoldScreens,
+  ThemedText,
+  TOKENS,
+  useAuth,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { SettingsActionCard } from './components/SettingsActionCard'
@@ -9,7 +18,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { BCSCRootStackParams, BCSCStacks } from '@/bcsc-theme/types/navigators'
 
 /**
  * The Settings screen for the BCSC theme.
@@ -71,7 +80,7 @@ const Settings: React.FC = () => {
             title={t('BCSCSettings.Biometrics')}
             onPress={() => {
               // TODO (MD): Biometrics content from Bifold is specific to BC Wallet, we need to make dynamic for BCSC
-              navigation.navigate(BCSCStacks.SettingStack, { screen: BCSCScreens.ToggleBiometrics })
+              navigation.navigate(BCSCStacks.SettingStack, { screen: BifoldScreens.ToggleBiometry })
             }}
             endAdornmentText={store.preferences.useBiometry ? 'ON' : 'OFF'}
           />
@@ -79,7 +88,7 @@ const Settings: React.FC = () => {
             title={t('BCSCSettings.ChangePIN')}
             onPress={() => {
               // TODO (MD): Bifold change PIN is rerouting to the BC Wallet settings screen, should go to previous screen instead
-              navigation.navigate(BCSCStacks.SettingStack, { screen: BCSCScreens.ChangePIN })
+              navigation.navigate(BCSCStacks.SettingStack, { screen: BifoldScreens.ChangePIN })
             }}
           />
           {/* TODO (MD): Implement actions for these cards */}

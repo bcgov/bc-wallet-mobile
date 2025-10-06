@@ -53,8 +53,6 @@ export enum BCSCScreens {
   ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
-  ToggleBiometrics = BifoldScreens.ToggleBiometry,
-  ChangePIN = BifoldScreens.ChangePIN,
 }
 
 export type BCSCTabStackParams = {
@@ -64,8 +62,8 @@ export type BCSCTabStackParams = {
 }
 
 export type BCSCSettingStackParams = {
-  [BCSCScreens.ToggleBiometrics]: undefined
-  [BCSCScreens.ChangePIN]: undefined
+  [BifoldScreens.ToggleBiometry]: undefined
+  [BifoldScreens.ChangePIN]: undefined
 }
 
 export type BCSCRootStackParams = {
