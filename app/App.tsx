@@ -28,12 +28,13 @@ import { container } from 'tsyringe'
 import Root from '@/Root'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { localization } from '@/localization'
-import { initialState, reducer } from '@/store'
+import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
 import BCLogger from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
 import WebDisplay from '@screens/WebDisplay'
 import { AppContainer } from './container-imp'
+import Config from 'react-native-config'
 
 initLanguages(localization)
 
@@ -68,7 +69,10 @@ const App = () => {
     <ErrorBoundaryWrapper logger={BCLogger}>
       <ContainerProvider value={bcwContainer}>
         <StoreProvider initialState={initialState} reducer={reducer}>
-          <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
+          <ThemeProvider
+            themes={themes}
+            defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
+          >
             <NavContainer navigationRef={navigationRef}>
               <AnimatedComponentsProvider value={animatedComponents}>
                 <AuthProvider>

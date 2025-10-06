@@ -59,8 +59,29 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
     logger.info('No account found, proceeding with registration')
 
-    const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
-    logger.info('Fetched notification tokens for registration')
+    let fcmDeviceToken = 'test_fcmDeviceToken'
+    let apnsToken = 'test_apnsToken'
+    try {
+      logger.debug(`TEST FETCH START: notification tokens for registration`)
+      const tokens = await getNotificationTokens()
+
+      if (tokens.fcmDeviceToken) {
+        logger.debug('Using actual fcm token from notification service')
+        fcmDeviceToken = tokens.fcmDeviceToken
+      }
+
+      if (tokens.apnsToken) {
+        logger.debug('Using actual apns token from notification service')
+        apnsToken = tokens.apnsToken
+      }
+
+      logger.debug(`TEST FETCH END: notification tokens for registration, ${fcmDeviceToken}, ${apnsToken}`)
+    } catch (error) {
+      logger.error('Failed to fetch notification tokens for registration', error as Error)
+    }
+
+    // const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
+    // logger.info('Fetched notification tokens for registration')
 
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
     logger.info('Generated dynamic client registration body')

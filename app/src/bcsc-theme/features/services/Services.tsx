@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import { Keyboard, ScrollView, StyleSheet, TextInput, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
 import ServiceButton from './components/ServiceButton'
 import { BCState, Mode } from '@/store'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
@@ -12,6 +11,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { useFilterServiceClients } from './hooks/useFilterServiceClients'
+import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300
 
@@ -32,7 +32,7 @@ const Services: React.FC = () => {
   const debouncedSearch = useDebounce(search, SEARCH_DEBOUNCE_DELAY_MS)
   const searchInputRef = useRef<View>(null)
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
-  const serviceClients = useFilterServiceClients({
+  const { serviceClients } = useFilterServiceClients({
     cardProcessFilter: getCardProcessForCardType(store.bcsc.cardType) ?? undefined,
     partialNameFilter: !search ? '' : debouncedSearch, // if search is empty,
     // avoid debounce delay
@@ -75,92 +75,87 @@ const Services: React.FC = () => {
   // TODO (MD): implement a loading UI
 
   return (
-    <SafeAreaView
-      edges={['top', 'left', 'right']}
-      style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}
-    >
+    <TabScreenWrapper scrollViewProps={{ stickyHeaderIndices: [1], keyboardShouldPersistTaps: 'handled' }}>
       {/* Dismiss keyboard when tapping outside of TextInput */}
-      <ScrollView stickyHeaderIndices={[1]} keyboardShouldPersistTaps="handled">
-        <ThemedText variant={'headingTwo'} style={styles.headerText}>
-          {t('Services.CatalogueTitle')}
-        </ThemedText>
+      <ThemedText variant={'headingTwo'} style={styles.headerText}>
+        {t('Services.CatalogueTitle')}
+      </ThemedText>
 
-        <View style={styles.searchInputContainer}>
-          <View ref={searchInputRef} style={styles.searchInput}>
-            <Icon name="search" size={24} color={ColorPalette.brand.tertiary} />
-            <TextInput
-              placeholder={t('Services.CatalogueSearch')}
-              placeholderTextColor={ColorPalette.brand.tertiary}
-              value={search}
-              // disable autocorrect to prevent completion when clearing search text
-              autoCorrect={false}
-              onChangeText={(newText) => {
-                // Dismiss keyboard when clearing search text
-                if (search.length > 0 && newText === '') {
-                  Keyboard.dismiss()
-                }
+      <View style={styles.searchInputContainer}>
+        <View ref={searchInputRef} style={styles.searchInput}>
+          <Icon name="search" size={24} color={ColorPalette.brand.tertiary} />
+          <TextInput
+            placeholder={t('Services.CatalogueSearch')}
+            placeholderTextColor={ColorPalette.brand.tertiary}
+            value={search}
+            // disable autocorrect to prevent completion when clearing search text
+            autoCorrect={false}
+            onChangeText={(newText) => {
+              // Dismiss keyboard when clearing search text
+              if (search.length > 0 && newText === '') {
+                Keyboard.dismiss()
+              }
 
-                setSearch(newText)
-              }}
-              onFocus={() => {
-                if (searchInputRef.current) {
-                  // set the native props directly to avoid useState delay
-                  searchInputRef.current.setNativeProps({
-                    style: {
-                      borderColor: isBCSCMode ? ColorPalette.brand.primary : ColorPalette.brand.primaryBackground,
-                    },
-                  })
-                }
-              }}
-              onBlur={() => {
-                if (searchInputRef.current) {
-                  searchInputRef.current.setNativeProps({
-                    style: { borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8' },
-                  })
-                }
-              }}
-              accessibilityLabel={t('Services.CatalogueSearch')}
-              testID={testIdWithKey('search')}
-              style={styles.searchText}
-            />
-            {search.length > 0 ? (
-              <Icon
-                name="clear"
-                size={24}
-                color={ColorPalette.brand.tertiary}
-                onPress={() => {
-                  Keyboard.dismiss()
-                  setSearch('')
-                }}
-                accessibilityLabel={'clearSearch'}
-                testID={testIdWithKey('clearSearch')}
-              />
-            ) : null}
-          </View>
-        </View>
-
-        {serviceClients.map((service) => (
-          <ServiceButton
-            key={service.client_ref_id}
-            title={service.client_name}
-            description={service.client_description}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.ServiceLoginScreen, {
-                serviceClient: service,
-              })
+              setSearch(newText)
             }}
+            onFocus={() => {
+              if (searchInputRef.current) {
+                // set the native props directly to avoid useState delay
+                searchInputRef.current.setNativeProps({
+                  style: {
+                    borderColor: isBCSCMode ? ColorPalette.brand.primary : ColorPalette.brand.primaryBackground,
+                  },
+                })
+              }
+            }}
+            onBlur={() => {
+              if (searchInputRef.current) {
+                searchInputRef.current.setNativeProps({
+                  style: { borderColor: isBCSCMode ? '#1E5189' : '#D8D8D8' },
+                })
+              }
+            }}
+            accessibilityLabel={t('Services.CatalogueSearch')}
+            testID={testIdWithKey('search')}
+            style={styles.searchText}
           />
-        ))}
-
-        <View style={styles.bottomContainer}>
-          <ThemedText variant={'bold'}>{t('Services.NotListed')}</ThemedText>
-          <ThemedText style={styles.desciptionText}>{t('Services.NotListedDescription')}</ThemedText>
-          <ThemedText style={[styles.desciptionText, { marginTop: Spacing.xl }]}>
-            {t('Services.NotListedDescriptionContact')}
-          </ThemedText>
+          {search.length > 0 ? (
+            <Icon
+              name="clear"
+              size={24}
+              color={ColorPalette.brand.tertiary}
+              onPress={() => {
+                Keyboard.dismiss()
+                setSearch('')
+              }}
+              accessibilityLabel={'clearSearch'}
+              testID={testIdWithKey('clearSearch')}
+            />
+          ) : null}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+
+      {serviceClients.map((service) => (
+        <ServiceButton
+          key={service.client_ref_id}
+          title={service.client_name}
+          description={service.client_description}
+          onPress={() => {
+            navigation.navigate(BCSCScreens.ServiceLoginScreen, {
+              serviceClient: service,
+            })
+          }}
+        />
+      ))}
+
+      <View style={styles.bottomContainer}>
+        <ThemedText variant={'bold'}>{t('Services.NotListed')}</ThemedText>
+        <ThemedText style={styles.desciptionText}>{t('Services.NotListedDescription')}</ThemedText>
+        <ThemedText style={[styles.desciptionText, { marginTop: Spacing.xl }]}>
+          {t('Services.NotListedDescriptionContact')}
+        </ThemedText>
+      </View>
+    </TabScreenWrapper>
   )
 }
 

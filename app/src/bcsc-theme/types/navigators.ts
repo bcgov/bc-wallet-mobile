@@ -64,7 +64,6 @@ export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
   [BCSCScreens.Account]: undefined
-  [BCSCScreens.Settings]: undefined
 }
 
 export type BCSCRootStackParams = {
@@ -78,6 +77,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.TransferAccountSuccess]: undefined
   [BCSCScreens.TransferAccountQRInformation]: undefined
   [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
+  [BCSCScreens.Settings]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {

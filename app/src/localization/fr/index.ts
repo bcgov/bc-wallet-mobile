@@ -157,6 +157,7 @@ const translation = {
     "VulnerabilityDisclosurePolicy": "Politique de divulgation des vulnérabilités",
     "Accessibility": "Accessibilité",
     "IntroductionToTheApp": "Introduction à l'application",
+    "ButtonTitle": "Settings Menu (FR)"
   },
   "Developer": {
     "Environment": "Environnement",
@@ -229,7 +230,9 @@ const translation = {
     "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above. (FR)",
     "NotListedDescriptionContact": "Contact the service to the the link to their website. (FR)",
     "PrivacyPolicy": "Privacy Policy (FR)",
-    "LoginErrorTitle": "Unable to quick login to service (FR)"
+    "LoginErrorTitle": "Unable to quick login to service (FR)",
+    "SavedServices": "Saved Services (FR)",
+    "NoSavedServices": "No saved services (FR)",
   },
   "Unified": {
     "Steps": {

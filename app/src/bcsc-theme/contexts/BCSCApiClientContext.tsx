@@ -1,9 +1,11 @@
+import { BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import React, { createContext, useEffect, useMemo, useState } from 'react'
-
-import { BCState } from '@/store'
 import BCSCApiClient from '../api/client'
+
+// Singleton instance of BCSCApiClient
+let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
 
 export interface BCSCApiClientContextType {
   client: BCSCApiClient | null
@@ -11,17 +13,25 @@ export interface BCSCApiClientContextType {
   error: string | null
 }
 
-export const BCSCApiClientContext = createContext<BCSCApiClientContextType>({
-  client: null,
-  isClientReady: false,
-  error: null,
-})
+export const BCSCApiClientContext = createContext<BCSCApiClientContextType | null>(null)
 
+/**
+ * Provides a singleton BCSCApiClient instance to child components via context.
+ *
+ * The client is initialized based on the current developer environment and automatically
+ * reconfigures if the environment changes. If initialization fails, an error state is exposed.
+ *
+ * Children can access the client, its readiness, and errors via BCSCApiClientContext, or
+ * just the client using useBCSCApiClient/useBCSCApiClientState hooks.
+ *
+ * @param {React.ReactNode} children - The child components that will have access to the BCSCApiClient instance.
+ * @returns {*} {JSX.Element} The BCSCApiClientProvider component wrapping its children.
+ */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [store, dispatch] = useStore<BCState>()
-  const [client, setClient] = useState<BCSCApiClient | null>(null)
   const [isClientReady, setIsClientReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   useEffect(() => {
@@ -35,18 +45,27 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       setError(null)
 
       try {
-        const newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
-        await newClient.fetchEndpointsAndConfig()
+        // If the singleton doesn't exist or the base URL has changed, create a new instance
+        if (
+          !BCSC_API_CLIENT_SINGLETON ||
+          BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
+        ) {
+          const newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
+          await newClient.fetchEndpointsAndConfig()
 
-        setClient(newClient)
+          BCSC_API_CLIENT_SINGLETON = newClient
+        }
+
         setIsClientReady(true)
       } catch (err) {
         const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
           (err as Error)?.message
         }`
         setError(errorMessage)
-        setClient(null)
         setIsClientReady(false)
+
+        BCSC_API_CLIENT_SINGLETON = null
+
         dispatch({
           type: DispatchAction.BANNER_MESSAGES,
           payload: [
@@ -67,12 +86,17 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const contextValue = useMemo(
     () => ({
-      client,
+      client: BCSC_API_CLIENT_SINGLETON,
       isClientReady,
       error,
     }),
-    [client, isClientReady, error]
+    [isClientReady, error]
   )
 
   return <BCSCApiClientContext.Provider value={contextValue}>{children}</BCSCApiClientContext.Provider>
+}
+
+// This function is used to reset the singleton instance in tests
+export function _resetBCSCApiClientSingleton() {
+  BCSC_API_CLIENT_SINGLETON = null
 }

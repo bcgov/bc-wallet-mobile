@@ -2,6 +2,7 @@ import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
@@ -12,6 +13,7 @@ import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountCo
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
+import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
@@ -19,6 +21,7 @@ import BCSCTabStack from './TabStack'
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const theme = useTheme()
+  const { t } = useTranslation()
   const Stack = createStackNavigator<BCSCRootStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
@@ -35,6 +38,16 @@ const MainStack: React.FC = () => {
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
+        <Stack.Screen
+          name={BCSCScreens.Settings}
+          component={Settings}
+          options={{
+            headerShown: true,
+            title: t('Screens.Settings'),
+            headerBackTestID: testIdWithKey('Back'),
+            headerShadowVisible: false,
+          }}
+        />
         <Stack.Screen
           name={BCSCScreens.ManualPairingCode}
           component={ManualPairingCode}

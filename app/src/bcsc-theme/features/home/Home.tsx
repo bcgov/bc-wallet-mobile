@@ -1,5 +1,5 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useStore, useTheme, useServices, TOKENS } from '@bifold/core'
+import { useTheme, useServices, TOKENS } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import HomeHeader from './components/HomeHeader'
@@ -7,8 +7,6 @@ import SavedServices from './components/SavedServices'
 import SectionButton from '../../components/SectionButton'
 import { StackScreenProps } from '@react-navigation/stack'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
-import { mockServices } from '@/bcsc-theme/fixtures/services'
 import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { NotificationBannerContainer } from './components/NotificationBannerContainer'
@@ -24,7 +22,6 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 
 const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { Spacing } = useTheme()
-  const [store] = useStore<BCState>()
   const { user } = useApi()
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
@@ -46,11 +43,6 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     asyncEffect()
   }, [user, logger])
 
-  // replace with API response
-  const savedServices = mockServices.filter((service) =>
-    store.bcsc.bookmarks.some((serviceId) => serviceId === service.id)
-  )
-
   const styles = StyleSheet.create({
     buttonsContainer: {
       padding: Spacing.md,
@@ -66,7 +58,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   }
 
   return (
-    <TabScreenWrapper edges={['left', 'right']}>
+    <TabScreenWrapper>
       {loading ? (
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
@@ -82,7 +74,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
             />
             <SectionButton title={mockLogInTitle} description={mockLogInDescription} onPress={handlePairingCodePress} />
           </View>
-          <SavedServices services={savedServices} />
+          <SavedServices />
         </>
       )}
     </TabScreenWrapper>
