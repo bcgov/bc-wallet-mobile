@@ -23,8 +23,8 @@ describe('Card Utils', () => {
       expect(getCardProcessForCardType(BCSCCardType.None)).toBeNull()
     })
 
-    it('should throw an error for unknown card type', () => {
-      expect(() => getCardProcessForCardType(99 as any)).toThrow('Unknown card type: 99')
+    it('should return null for unknown card type', () => {
+      expect(getCardProcessForCardType(99 as any)).toBeNull()
     })
 
     it('should support all BCSCCardType values', () => {
