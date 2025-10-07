@@ -2,14 +2,12 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
-import Spinner from '@/components/Spinner'
-import { BCSCAccountType } from '@/bcsc-theme/utils/id-token'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 
 type VerificationMethodSelectionScreenProps = {
@@ -17,7 +15,7 @@ type VerificationMethodSelectionScreenProps = {
 }
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
@@ -31,7 +29,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     },
   })
 
-  const handlePressSendVideo = async () => {
+  const handlePressSendVideo = useCallback(async () => {
     try {
       setSendVideoLoading(true)
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
@@ -44,7 +42,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     } finally {
       setSendVideoLoading(false)
     }
-  }
+  }, [dispatch, evidence, navigation])
 
   const handlePressLiveCall = useCallback(async () => {
     try {
