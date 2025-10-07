@@ -17,6 +17,7 @@ import {
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
 import Config from 'react-native-config'
+import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 
 export interface IASEnvironment {
   name: string
@@ -86,6 +87,7 @@ export interface BCSCState {
   bookmarks: string[]
   verificationRequestId?: string
   verificationRequestSha?: string
+  verificationOptions: DeviceVerificationOption[]
   additionalEvidenceData: AdditionalEvidenceData[]
   registrationAccessToken?: string
 }
@@ -140,6 +142,7 @@ enum BCSCDispatchAction {
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
+  UPDATE_VERIFICATION_OPTIONS = 'bcsc/updateVerificationOptions',
   ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
   UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
   UPDATE_USER_NAME_METADATA = 'bcsc/updateUserMetadataName',
@@ -227,6 +230,7 @@ const bcscState: BCSCState = {
   refreshToken: undefined,
   verificationRequestId: undefined,
   verificationRequestSha: undefined,
+  verificationOptions: [],
   additionalEvidenceData: [],
 }
 
@@ -432,6 +436,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_VERIFICATION_REQUEST: {
       const evidence = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, verificationRequestId: evidence?.id, verificationRequestSha: evidence?.sha256 }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_VERIFICATION_OPTIONS: {
+      const verificationOptions = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, verificationOptions }
       const newState = { ...state, bcsc }
 
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)

@@ -1,5 +1,4 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
@@ -9,6 +8,9 @@ import { useCallback, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
+import Spinner from '@/components/Spinner'
+import { BCSCAccountType } from '@/bcsc-theme/utils/id-token'
+import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerificationMethodSelection>
@@ -90,47 +92,73 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     }
   }, [videoCallApi, logger, navigation])
 
-  return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <VerifyMethodActionButton
-        title={'Send a video'}
-        description={`Record a short video and we'll review it to verify your identity.`}
-        icon={'send'}
-        onPress={handlePressSendVideo}
-        style={{ marginBottom: Spacing.xxl }}
-        loading={sendVideoLoading}
-        disabled={sendVideoLoading || liveCallLoading}
-      />
-      {
-        // Do not show video call option for "Other" card type ie: dual identification cards
-        store.bcsc.cardType !== BCSCCardType.Other ? (
-          <>
-            <ThemedText
-              variant={'bold'}
-              style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}
-            >
-              Cannot send a video?
-            </ThemedText>
+  /**
+   * Returns a sorted array of verification method buttons based on the available options.
+   *
+   * @param {DeviceVerificationOption[]} deviceVerificationOptions - The available verification options.
+   * @returns {JSX.Element[]} An array of JSX elements representing the verification method buttons.
+   */
+  const getSortedVerificationMethods = useCallback(
+    (deviceVerificationOptions: DeviceVerificationOption[]): JSX.Element[] => {
+      const verificationMethods: JSX.Element[] = []
+
+      for (let index = 0; index < deviceVerificationOptions.length; index++) {
+        const verificationOption = deviceVerificationOptions[index]
+        const borderBottomWidth = deviceVerificationOptions.length === index + 1 ? 1 : undefined
+
+        if (verificationOption === DeviceVerificationOption.LIVE_VIDEO_CALL) {
+          verificationMethods.push(
             <VerifyMethodActionButton
+              key="video_call"
               title={'Video call'}
               description={`We will verify your identity during a video call.`}
               icon={'video'}
               onPress={handlePressLiveCall}
-              style={{ borderBottomWidth: 0 }}
               loading={liveCallLoading}
               disabled={liveCallLoading || sendVideoLoading}
+              style={{ borderBottomWidth }}
             />
-          </>
-        ) : null
+          )
+        }
+
+        if (verificationOption === DeviceVerificationOption.SEND_VIDEO) {
+          verificationMethods.push(
+            <VerifyMethodActionButton
+              key="send_video"
+              title={'Send a video'}
+              description={`Record a short video and we'll review it to verify your identity.`}
+              icon={'send'}
+              onPress={handlePressSendVideo}
+              loading={sendVideoLoading}
+              disabled={sendVideoLoading || liveCallLoading}
+              style={{ borderBottomWidth }}
+            />
+          )
+        }
+
+        if (verificationOption === DeviceVerificationOption.IN_PERSON) {
+          verificationMethods.push(
+            <VerifyMethodActionButton
+              key="in_person"
+              title={'In person'}
+              description={`Find out where to go and what to bring.`}
+              icon={'account'}
+              onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
+              disabled={liveCallLoading || sendVideoLoading}
+              style={{ borderBottomWidth }}
+            />
+          )
+        }
       }
 
-      <VerifyMethodActionButton
-        title={'In person'}
-        description={`Find out where to go and what to bring.`}
-        icon={'account'}
-        onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
-        disabled={liveCallLoading || sendVideoLoading}
-      />
+      return verificationMethods
+    },
+    [handlePressLiveCall, handlePressSendVideo, liveCallLoading, navigation, sendVideoLoading]
+  )
+
+  return (
+    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+      {getSortedVerificationMethods(store.bcsc.verificationOptions)}
     </SafeAreaView>
   )
 }
