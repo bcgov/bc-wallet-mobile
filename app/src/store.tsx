@@ -16,6 +16,7 @@ import {
 } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
+import Config from 'react-native-config'
 
 export interface IASEnvironment {
   name: string
@@ -248,7 +249,7 @@ export const initialState: BCState = {
   developer: developerState,
   dismissPersonCredentialOffer: dismissPersonCredentialOfferState,
   bcsc: bcscState,
-  mode: Mode.BCWallet,
+  mode: Config.BUILD_TARGET === Mode.BCSC ? Mode.BCSC : Mode.BCWallet,
 }
 
 const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCState => {

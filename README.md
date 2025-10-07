@@ -53,11 +53,11 @@ Following along, you should end up using Android SDK Platform 33 with Android 13
 
 ## Additional Setup for Android Studio
 
-Once you've followed the setup steps for React Native we have a few more things we need to do inside android studio, to smooth out the development experience. 
+Once you've followed the setup steps for React Native we have a few more things we need to do inside android studio, to smooth out the development experience.
 
 1. Open Android Studio and open the folder a `~/bc-wallet-mobile/app/android`
 2. Open Android Studio settings, then select `Build, Execution, Deployment` -> `Build Tools` -> `Gradle`
-3. You should see a few field inputs, update the Gradle SDK field to the same version of Java you downloaded earlier in the Prequisite Software steps 
+3. You should see a few field inputs, update the Gradle SDK field to the same version of Java you downloaded earlier in the Prequisite Software steps
 ![Android Studio Gradle Setting](/docs/android-studio-java-setting.png)
 
 
@@ -110,6 +110,7 @@ Then once your PR is merged and the packages have been published, make a PR in b
 In the `./app/` directory copy the .env.sample `cp .env.sample .env`
 
 ```
+BUILD_TARGET=<bcwallet | bcsc>
 LOAD_STORYBOOK=false
 OCA_URL=<url>
 MEDIATOR_URL=<url>
