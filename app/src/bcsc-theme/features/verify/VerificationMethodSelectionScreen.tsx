@@ -90,73 +90,58 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     }
   }, [videoCallApi, logger, navigation])
 
-  /**
-   * Returns a sorted array of verification method buttons based on the available options.
-   *
-   * @param {DeviceVerificationOption[]} deviceVerificationOptions - The available verification options.
-   * @returns {JSX.Element[]} An array of JSX elements representing the verification method buttons.
-   */
-  const getSortedVerificationMethods = useCallback(
-    (deviceVerificationOptions: DeviceVerificationOption[]): JSX.Element[] => {
-      const verificationMethods: JSX.Element[] = []
-
-      for (let index = 0; index < deviceVerificationOptions.length; index++) {
-        const verificationOption = deviceVerificationOptions[index]
-        const borderBottomWidth = deviceVerificationOptions.length === index + 1 ? 1 : undefined
-
-        if (verificationOption === DeviceVerificationOption.LIVE_VIDEO_CALL) {
-          verificationMethods.push(
-            <VerifyMethodActionButton
-              key="video_call"
-              title={'Video call'}
-              description={`We will verify your identity during a video call.`}
-              icon={'video'}
-              onPress={handlePressLiveCall}
-              loading={liveCallLoading}
-              disabled={liveCallLoading || sendVideoLoading}
-              style={{ borderBottomWidth }}
-            />
-          )
-        }
-
-        if (verificationOption === DeviceVerificationOption.SEND_VIDEO) {
-          verificationMethods.push(
-            <VerifyMethodActionButton
-              key="send_video"
-              title={'Send a video'}
-              description={`Record a short video and we'll review it to verify your identity.`}
-              icon={'send'}
-              onPress={handlePressSendVideo}
-              loading={sendVideoLoading}
-              disabled={sendVideoLoading || liveCallLoading}
-              style={{ borderBottomWidth }}
-            />
-          )
-        }
-
-        if (verificationOption === DeviceVerificationOption.IN_PERSON) {
-          verificationMethods.push(
-            <VerifyMethodActionButton
-              key="in_person"
-              title={'In person'}
-              description={`Find out where to go and what to bring.`}
-              icon={'account'}
-              onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
-              disabled={liveCallLoading || sendVideoLoading}
-              style={{ borderBottomWidth }}
-            />
-          )
-        }
-      }
-
-      return verificationMethods
-    },
-    [handlePressLiveCall, handlePressSendVideo, liveCallLoading, navigation, sendVideoLoading]
-  )
-
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      {getSortedVerificationMethods(store.bcsc.verificationOptions)}
+      {store.bcsc.verificationOptions
+        .map((option, index) => {
+          const borderBottomWidth = store.bcsc.verificationOptions.length === index + 1 ? 1 : undefined
+
+          if (option === DeviceVerificationOption.LIVE_VIDEO_CALL) {
+            return (
+              <VerifyMethodActionButton
+                key="video_call"
+                title={'Video call'}
+                description={`We will verify your identity during a video call.`}
+                icon={'video'}
+                onPress={handlePressLiveCall}
+                loading={liveCallLoading}
+                disabled={liveCallLoading || sendVideoLoading}
+                style={{ borderBottomWidth }}
+              />
+            )
+          }
+
+          if (option === DeviceVerificationOption.SEND_VIDEO) {
+            return (
+              <VerifyMethodActionButton
+                key="send_video"
+                title={'Send a video'}
+                description={`Record a short video and we'll review it to verify your identity.`}
+                icon={'send'}
+                onPress={handlePressSendVideo}
+                loading={sendVideoLoading}
+                disabled={sendVideoLoading || liveCallLoading}
+                style={{ borderBottomWidth }}
+              />
+            )
+          }
+
+          if (option === DeviceVerificationOption.IN_PERSON) {
+            return (
+              <VerifyMethodActionButton
+                key="in_person"
+                title={'In person'}
+                description={`Find out where to go and what to bring.`}
+                icon={'account'}
+                onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
+                disabled={liveCallLoading || sendVideoLoading}
+                style={{ borderBottomWidth }}
+              />
+            )
+          }
+          return null
+        })
+        .filter(Boolean)}
     </SafeAreaView>
   )
 }
