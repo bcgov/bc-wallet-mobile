@@ -1,24 +1,12 @@
 import { BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
-import {
-  LockoutReason,
-  Screens as BifoldScreens,
-  ThemedText,
-  TOKENS,
-  useAuth,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { SettingsActionCard } from './components/SettingsActionCard'
 import { useTranslation } from 'react-i18next'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { BCSCRootStackParams, BCSCStacks } from '@/bcsc-theme/types/navigators'
 
 /**
  * The Settings screen for the BCSC theme.
@@ -27,7 +15,6 @@ import { BCSCRootStackParams, BCSCStacks } from '@/bcsc-theme/types/navigators'
  */
 const Settings: React.FC = () => {
   const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams>>()
   const { Spacing, ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
   const auth = useAuth()
@@ -78,18 +65,14 @@ const Settings: React.FC = () => {
 
           <SettingsActionCard
             title={t('BCSCSettings.Biometrics')}
-            onPress={() => {
-              // TODO (MD): Biometrics content from Bifold is specific to BC Wallet, we need to make dynamic for BCSC
-              navigation.navigate(BCSCStacks.SettingStack, { screen: BifoldScreens.ToggleBiometry })
-            }}
+            // TODO (MD): Export ToggleBiometry component from Bifold and make text content dynamic with props
+            onPress={onPressActionTodo}
             endAdornmentText={store.preferences.useBiometry ? 'ON' : 'OFF'}
           />
           <SettingsActionCard
             title={t('BCSCSettings.ChangePIN')}
-            onPress={() => {
-              // TODO (MD): Bifold change PIN is rerouting to the BC Wallet settings screen, should go to previous screen instead
-              navigation.navigate(BCSCStacks.SettingStack, { screen: BifoldScreens.ChangePIN })
-            }}
+            // TODO (MD): Export ChangePIN component from Bifold and make text content dynamic with props
+            onPress={onPressActionTodo}
           />
           {/* TODO (MD): Implement actions for these cards */}
           <SettingsActionCard
