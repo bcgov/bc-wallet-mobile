@@ -15,7 +15,7 @@ export const useBCSCApiClient = (): BCSCApiClient => {
   }
 
   if (!context.client || !context.isClientReady) {
-    throw new Error('BCSC client not ready. Make sure BCSCClientProvider is properly configured.')
+    throw new Error('BCSC client not ready. Make sure BCSCApiClientProvider is properly configured.')
   }
 
   return context.client
