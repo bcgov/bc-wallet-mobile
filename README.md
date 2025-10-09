@@ -1,4 +1,3 @@
-
 ![Lifecycle:Maturing](https://img.shields.io/badge/Lifecycle-Maturing-007EC6)
 [![Native Build & Test](https://github.com/bcgov/bc-wallet-mobile/actions/workflows/main.yaml/badge.svg?branch=main)](https://github.com/bcgov/bc-wallet-mobile/actions/workflows/main.yaml)
 
@@ -7,14 +6,16 @@
 BC Wallet to hold Verifiable Credentials
 
 # Table of Contents
+
 <!-- TOC -->
-* [Prerequisite software](#prerequisite-software)
-* [Cloning and initializing submodule](#cloning-and-initializing-submodule)
-* [React Native setup](#react-native-setup)
-* [Installing npm modules](#installing-npm-modules)
-* [Configuration](#configuration)
-* [Running in an Android emulator](#running-in-an-android-emulator)
-* [Troubleshooting and debugging](#troubleshooting-and-debugging)
+
+- [Prerequisite software](#prerequisite-software)
+- [Cloning and initializing submodule](#cloning-and-initializing-submodule)
+- [React Native setup](#react-native-setup)
+- [Installing npm modules](#installing-npm-modules)
+- [Configuration](#configuration)
+- [Running in an Android emulator](#running-in-an-android-emulator)
+- [Troubleshooting and debugging](#troubleshooting-and-debugging)
 <!-- TOC -->
 
 ## Prerequisite software
@@ -50,16 +51,14 @@ React Native environment setup instructions are documented [here](https://reactn
 
 Following along, you should end up using Android SDK Platform 33 with Android 13 (API Level 33) for Android development and/or iOS 11 for iOS development.
 
-
 ## Additional Setup for Android Studio
 
-Once you've followed the setup steps for React Native we have a few more things we need to do inside android studio, to smooth out the development experience. 
+Once you've followed the setup steps for React Native we have a few more things we need to do inside android studio, to smooth out the development experience.
 
 1. Open Android Studio and open the folder a `~/bc-wallet-mobile/app/android`
 2. Open Android Studio settings, then select `Build, Execution, Deployment` -> `Build Tools` -> `Gradle`
-3. You should see a few field inputs, update the Gradle SDK field to the same version of Java you downloaded earlier in the Prequisite Software steps 
-![Android Studio Gradle Setting](/docs/android-studio-java-setting.png)
-
+3. You should see a few field inputs, update the Gradle SDK field to the same version of Java you downloaded earlier in the Prequisite Software steps
+   ![Android Studio Gradle Setting](/docs/android-studio-java-setting.png)
 
 ## Installing npm modules and pods
 
@@ -333,6 +332,50 @@ Ensure you have your emulator's front and back camera set to use different sourc
    > If debug does not showup. Ensure you have enabled debugging on the device by clicking <kbd>command</kbd> + <kbd>m</kbd>
    > on the device and select <kbd>Debug</kbd>.
    > <br> > ![](./docs/Emulator-debug-menu.png)
+
+### Debugging in WSL2 and Android Emulator
+
+If you're developing on Windows using WSL2, follow these setup steps:
+
+**Install in WSL2:**
+
+- Install Android Studio in WSL2
+- Clone bc-wallet-mobile repository in WSL2 filesystem
+- Install openJDK in WSL2 (version 17.0.16)
+- Install Gradle in WSL2 (version 9.0.0)
+- Use Android SDK from the project
+
+**Windows Configuration:**
+
+- Disable Hyper-V in Windows Features
+- Enable nested virtualization in Windows Features
+
+**Note:** Running the Android emulator in WSL2 requires proper virtualization support. Make sure your system supports nested virtualization and that it's enabled in your BIOS/UEFI settings.
+
+**Enable Systemd for WSL2:**
+
+```sh
+# /etc/wsl.conf
+[boot]
+systemd=true
+# reboot WSL2 after this change
+```
+
+**Grant permissions to the user to access the KVM device:**
+
+```sh
+sudo mknod /dev/kvm c 10 232;
+
+sudo setfacl -m u:$USER:rwx /dev/kvm
+
+sudo chmod -R 0777 /dev/kvm
+```
+
+sources:
+
+- [enable-kvm](https://stackoverflow.com/questions/40342015/enable-vt-x-in-your-bios-security-settings-ensure-that-your-linux-distro-has-wo)
+- [grant-permissions](https://stackoverflow.com/questions/62907566/grant-current-user-access-to-dev-kvm)
+- [systemd](https://stackoverflow.com/questions/79650575/system-has-not-been-booted-with-systemd-as-init-system-pid-1)
 
 ### Debugging in VSCode and Android Emulator
 
