@@ -66,6 +66,7 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
+  nickname?: string
   email?: string
   emailConfirmed?: boolean
   deviceCode?: string
@@ -122,6 +123,7 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  UPDATE_NICKNAME = 'bcsc/updateNickname',
   UPDATE_VERIFIED = 'bcsc/updateVerified',
   UPDATE_CARD_TYPE = 'bcsc/updateCardType',
   UPDATE_SERIAL = 'bcsc/updateSerial',
@@ -317,6 +319,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         newState.dismissPersonCredentialOffer
       )
 
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_NICKNAME: {
+      const nickname = (action?.payload || []).pop() ?? ''
+      const bcsc = { ...state.bcsc, nickname }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_VERIFIED: {
