@@ -34,6 +34,23 @@ const TransferQRScannerScreen: React.FC = () => {
   const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    icon: {
+      color: ColorPalette.grayscale.white,
+      padding: Spacing.md,
+    },
+    messageContainer: {
+      marginHorizontal: 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'center',
+      paddingTop: 30,
+    },
+  })
+
   const registerDevice = useCallback(async () => {
     // we already have a device code, no need to authorize again
     if (store.bcsc.deviceCode) {
@@ -145,22 +162,6 @@ const TransferQRScannerScreen: React.FC = () => {
     },
     [store.bcsc.deviceCode, deviceAttestation, client, dispatch, navigator, t, token]
   )
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    icon: {
-      color: ColorPalette.grayscale.white,
-      padding: Spacing.md,
-    },
-    messageContainer: {
-      marginHorizontal: 40,
-      flexDirection: 'row',
-      alignItems: 'center',
-      alignSelf: 'center',
-      paddingTop: 30,
-    },
-  })
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />

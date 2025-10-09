@@ -42,13 +42,13 @@ export interface AuthorizeDeviceUnknownBCSCConfig {
 
 const useAuthorizationApi = (apiClient: BCSCApiClient) => {
   /**
-   * Authorize a device with a known BCSC card.
+   * Authorize a device with a known BCSC card. Serial and birthdate are optional, but if serial is provided, both must be provided.
    *
    * TODO: fetch evidence API endpoint from this endpoint
    *
-   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301615517/5.1.1+Evidence+API`
-   * @param {string} serial - BCSC serial number
-   * @param {Date} birthdate - Users birth date
+   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization-Request`
+   * @param {string?} serial - BCSC serial number
+   * @param {Date?} birthdate - Users birth date. This paramter is required if serial is provided
    * @returns {*} {VerifyInPersonResponseData | null}
    */
   const authorizeDevice = useCallback(
@@ -101,7 +101,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * Note: This request will return null if called multiple times for the same device.
    * First response will return the Verification response, which must be stored and persisted.
    *
-   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301615517/5.1.1+Evidence+API`
+   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization`
    * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
    * @returns {*} {VerifyUnknownBCSCResponseData | null} - Returns the response data or null if already registered
    */
