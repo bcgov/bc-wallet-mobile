@@ -12,10 +12,10 @@ export interface VerifyAttestation {
 // Assertion type is hardcoded
 const assertionType = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
 
-const useDeviceAttestationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
+const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
   const verifyAttestation = useCallback(
     async (data: VerifyAttestation) => {
-      if (!isClientReady || !apiClient) {
+      if (!apiClient) {
         throw new Error('BCSC client not ready for Device Attestation!')
       }
 
@@ -37,12 +37,12 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null, isClientReady:
 
       return false
     },
-    [isClientReady, apiClient]
+    [apiClient]
   )
 
   const checkAttestationStatus = useCallback(
     async (jwtID: string): Promise<boolean | undefined> => {
-      if (!isClientReady || !apiClient) {
+      if (!apiClient) {
         throw new Error('BCSC client not ready for Device Attestation!')
       }
 
@@ -58,7 +58,7 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null, isClientReady:
         // not found, it means the attestation has yet to be processed
       }
     },
-    [isClientReady, apiClient]
+    [apiClient]
   )
 
   return useMemo(
