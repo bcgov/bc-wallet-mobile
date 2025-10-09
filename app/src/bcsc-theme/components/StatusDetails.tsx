@@ -66,7 +66,7 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
           </ThemedText>
         ) : null}
         {bullets?.map((bullet) => (
-          <View style={styles.bulletContainer}>
+          <View style={styles.bulletContainer} key={bullet}>
             <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
             <ThemedText>{bullet}</ThemedText>
           </View>
