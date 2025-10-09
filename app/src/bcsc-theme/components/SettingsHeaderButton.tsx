@@ -21,7 +21,7 @@ export const createSettingsHeaderButton = () => {
       <IconButton
         buttonLocation={ButtonLocation.Left}
         icon={'menu'}
-        accessibilityLabel={t('Settings.MenuButton')}
+        accessibilityLabel={t('Settings.ButtonTitle')}
         testID={testIdWithKey('SettingsMenuButton')}
         onPress={() => {
           navigation.navigate(BCSCScreens.Settings)
