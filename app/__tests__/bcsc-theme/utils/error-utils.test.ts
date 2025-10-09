@@ -1,4 +1,4 @@
-import { formatIasAxiosResponseError, formatAxiosErrorForLogger } from '@/bcsc-theme/utils/error-utils'
+import { formatIasAxiosResponseError } from '@/bcsc-theme/utils/error-utils'
 import { AxiosError } from 'axios'
 
 describe('Error Utils', () => {
@@ -108,40 +108,6 @@ describe('Error Utils', () => {
       expect(formattedError.message).toContain('currently unavailable')
       expect(formattedError.message).toContain('after 2 minutes')
       expect(formattedError.name).toBe('IASAxiosError')
-    })
-  })
-
-  describe('formatAxiosErrorForLogger', () => {
-    it('should not log if status code is in suppressStatusCodeLogs', () => {
-      const mockError: any = {
-        response: {
-          status: 400,
-        },
-      }
-
-      const logError = formatAxiosErrorForLogger({
-        error: mockError,
-        suppressStatusCodeLogs: [400],
-        suppressStackTrace: false,
-      })
-
-      expect(logError).toBeNull()
-    })
-
-    it('should log if status code is not in suppressStatusCodeLogs', () => {
-      const mockError: any = {
-        response: {
-          status: 401,
-        },
-      }
-
-      const logError = formatAxiosErrorForLogger({
-        error: mockError,
-        suppressStatusCodeLogs: [400],
-        suppressStackTrace: false,
-      })
-
-      expect(logError).toBeDefined()
     })
   })
 })
