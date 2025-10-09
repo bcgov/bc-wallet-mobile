@@ -103,10 +103,13 @@ class BCSCApiClient {
       const loggerError = formatAxiosErrorForLogger({
         error: IASAxiosError,
         suppressStackTrace: __DEV__, // disable stack trace in development
-        suppressStatusCodeLogs: error.config?.suppressStatusCodeLogs ?? [],
       })
 
-      if (loggerError) {
+      const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
+      const statusCode = error.response?.status ?? 0
+
+      // Only log if the status code is not in the suppress list
+      if (!suppressStatusCodeLogs.includes(statusCode)) {
         this.logger.error('IAS API Error', loggerError)
       }
 
@@ -118,6 +121,7 @@ class BCSCApiClient {
     const response = await this.get<any>(`${this.baseURL}/device/.well-known/openid-configuration`, {
       skipBearerAuth: true,
     })
+
     this.config = {
       pairDeviceWithQRCodeSupported: response.data['pair_device_with_qrcode_supported'],
       maximumAccountsPerDevice: response.data['maximum_accounts_per_device'],

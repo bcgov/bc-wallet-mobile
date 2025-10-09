@@ -11,12 +11,6 @@ interface LogAxiosErrorOptions {
    * @type {boolean}
    */
   suppressStackTrace: boolean
-  /**
-   * Status codes to suppress logging for
-   * Note: Useful for endpoints that return expected error codes
-   * @type {number[]}
-   */
-  suppressStatusCodeLogs: number[]
 }
 
 /**
@@ -66,12 +60,7 @@ export function formatIasAxiosResponseError(error: AxiosError<any>): AxiosError 
  * @param {LogAxiosErrorOptions} options - The options for logging the error
  * @returns {*} {void}
  */
-export function formatAxiosErrorForLogger(options: LogAxiosErrorOptions): Record<string, unknown> | null {
-  // Suppress logging for specified status codes
-  if (options.suppressStatusCodeLogs.includes(options.error.response?.status ?? -1)) {
-    return null
-  }
-
+export function formatAxiosErrorForLogger(options: LogAxiosErrorOptions): Record<string, unknown> {
   const errorDetails: Record<string, unknown> = {
     name: options.error.name,
     code: options.error.code,
