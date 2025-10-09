@@ -65,13 +65,12 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
             {description}
           </ThemedText>
         ) : null}
-        {bullets &&
-          bullets.map((bullet, idx) => (
-            <View style={styles.bulletContainer} key={idx}>
-              <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-              <ThemedText>{bullet}</ThemedText>
-            </View>
-          ))}
+        {bullets?.map((bullet) => (
+          <View style={styles.bulletContainer}>
+            <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+            <ThemedText>{bullet}</ThemedText>
+          </View>
+        ))}
         {extraText ? (
           <ThemedText style={{ marginBottom: Spacing.md, textAlign: 'center' }}>{extraText}</ThemedText>
         ) : null}

@@ -93,7 +93,6 @@ const TransferQRScannerScreen: React.FC = () => {
         // ias tokens expect times in seconds since epoch
         const timeInSeconds = Math.floor(Date.now() / 1000)
 
-        // TODO: (Alfred) Investigate device signing. Android -> ios = not working. ios -> ios = QR code scans properly
         const jwt = await createDeviceSignedJWT({
           aud: account.issuer,
           iss: account.clientID,

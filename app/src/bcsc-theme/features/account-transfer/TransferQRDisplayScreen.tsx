@@ -57,7 +57,7 @@ const TransferQRDisplayScreen: React.FC = () => {
       exp: timeInSeconds + 60, // give this token 1 minute to live
       jti: jti,
     })
-    // TODO: can this be added to the well known endpoints?
+
     const url = `${store.developer.environment.iasApiBaseUrl}/device/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
@@ -71,7 +71,7 @@ const TransferQRDisplayScreen: React.FC = () => {
           navigation.navigate(BCSCScreens.TransferAccountSuccess)
         }
       } catch (error) {
-        // TODO: (Alfred) Not sure we need to handle this, it pings until the request is 'satisfied' so failure is an ok state to be in
+        // Do nothing, a fail state from this endpoint just means the attestation hasn't been consumed yet
       }
     },
     [deviceAttestation, navigation]
