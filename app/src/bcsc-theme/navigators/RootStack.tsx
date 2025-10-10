@@ -32,11 +32,7 @@ const TempLoadingView = () => {
 const BCSCRootStack: React.FC = () => {
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
-  const [useAgentSetup, OnboardingStack, loadState] = useServices([
-    TOKENS.HOOK_USE_AGENT_SETUP,
-    TOKENS.STACK_ONBOARDING,
-    TOKENS.LOAD_STATE,
-  ])
+  const [useAgentSetup, loadState] = useServices([TOKENS.HOOK_USE_AGENT_SETUP, TOKENS.LOAD_STATE])
   const { agent, initializeAgent, shutdownAndClearAgentIfExists } = useAgentSetup()
   const [onboardingComplete, setOnboardingComplete] = useState(false)
   const { loading } = useInitializeBCSC()

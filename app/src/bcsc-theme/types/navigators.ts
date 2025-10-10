@@ -52,6 +52,12 @@ export enum BCSCScreens {
   ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
+  // Onboarding Screens
+  OnboardingIntroCarouselScreen = 'BCSCOnboardingIntroCarousel',
+  OnboardingPrivacyPolicyScreen = 'BCSCOnboardingPrivacyPolicy',
+  OnboardingTermsOfUseScreen = 'BCSCOnboardingTermsOfUse',
+  OnboardingNotificationsScreen = 'BCSCOnboardingNotifications',
+  OnboardingSecureAppScreen = 'BCSCOnboardingSecureApp',
 }
 
 export type BCSCTabStackParams = {
@@ -68,6 +74,14 @@ export type BCSCRootStackParams = {
   [BCSCScreens.RemoveAccountConfirmation]: undefined
   [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
   [BCSCScreens.Settings]: undefined
+}
+
+export type BCSCOnboardingStackParams = {
+  [BCSCScreens.OnboardingIntroCarouselScreen]: undefined
+  [BCSCScreens.OnboardingPrivacyPolicyScreen]: undefined
+  [BCSCScreens.OnboardingTermsOfUseScreen]: undefined
+  [BCSCScreens.OnboardingNotificationsScreen]: undefined
+  [BCSCScreens.OnboardingSecureAppScreen]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {

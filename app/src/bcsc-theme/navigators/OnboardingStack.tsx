@@ -1,8 +1,8 @@
 import { createStackNavigator } from '@react-navigation/stack'
 import { View } from 'react-native'
-import BCSCPreface from '../features/onboarding/Preface'
-import { BCSCStacks } from '../types/navigators'
+import { BCSCScreens, BCSCStacks } from '../types/navigators'
 import { useDefaultStackOptions, useTheme } from '@bifold/core'
+import IntroCarouselScreen from '../features/onboarding/IntroCarousel'
 
 const OnboardingStack: React.FC = () => {
   const theme = useTheme()
@@ -19,7 +19,7 @@ const OnboardingStack: React.FC = () => {
           title: '',
         }}
       >
-        <Stack.Screen name="Preface" component={BCSCPreface} />
+        <Stack.Screen name={BCSCScreens.OnboardingIntroCarouselScreen} component={IntroCarouselScreen} />
       </Stack.Navigator>
     </View>
   )
