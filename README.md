@@ -109,6 +109,7 @@ Then once your PR is merged and the packages have been published, make a PR in b
 In the `./app/` directory copy the .env.sample `cp .env.sample .env`
 
 ```
+BUILD_TARGET=<bcwallet | bcsc>
 LOAD_STORYBOOK=false
 OCA_URL=<url>
 MEDIATOR_URL=<url>
