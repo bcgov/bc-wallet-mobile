@@ -13,7 +13,7 @@ describe('BCSC API Client Hooks', () => {
     })
 
     it('should throw if BCSCClientProvider reports an error', () => {
-      const mockContext = { error: 'Test error', client: null, clientIsReady: false }
+      const mockContext = { error: 'Test error', client: null, isClientReady: false }
 
       jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
 
@@ -25,7 +25,7 @@ describe('BCSC API Client Hooks', () => {
     })
 
     it('should throw if client is not ready', () => {
-      const mockContext = { error: null, client: null, clientIsReady: false }
+      const mockContext = { error: null, client: null, isClientReady: false }
 
       jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
 
@@ -37,7 +37,7 @@ describe('BCSC API Client Hooks', () => {
     })
 
     it('should throw if client is undefined', () => {
-      const mockContext = { error: null, client: null, clientIsReady: true }
+      const mockContext = { error: null, client: null, isClientReady: true }
 
       jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
 
@@ -50,7 +50,7 @@ describe('BCSC API Client Hooks', () => {
 
     it('should return the client if ready and no errors', () => {
       const mockClient = {}
-      const mockContext = { error: null, client: mockClient, clientIsReady: true }
+      const mockContext = { error: null, client: mockClient, isClientReady: true }
 
       jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
 

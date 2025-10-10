@@ -5,7 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AppState } from 'react-native'
 import uuid from 'react-native-uuid'
 import { MediaStream } from 'react-native-webrtc'
-import { keepAliveIntervalMs } from '../constants'
+
+import { KEEP_ALIVE_INTERVAL_MS } from '@/constants'
 import {
   ConnectionRequest,
   ConnectResult,
@@ -147,7 +148,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         // Just warn as one missed keep alive won't impact the call
         logger.warn('Backend keep-alive update failed')
       }
-    }, keepAliveIntervalMs)
+    }, KEEP_ALIVE_INTERVAL_MS)
 
     backendKeepAliveTimerRef.current = timer
   }, [session, clientCallId, video, logger])
