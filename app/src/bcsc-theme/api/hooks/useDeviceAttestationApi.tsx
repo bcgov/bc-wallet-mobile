@@ -45,8 +45,6 @@ const useDeviceAttestationApi = (apiClient: BCSCApiClient | null) => {
         skipBearerAuth: true,
       })
 
-      // Response Codes:
-
       if (response.status == 201) {
         return true
       }
