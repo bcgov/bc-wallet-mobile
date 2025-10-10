@@ -17,6 +17,7 @@ import { BCState } from '@/store'
 import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
+import BCSCOnboardingStack from './OnboardingStack'
 
 const TempLoadingView = () => {
   const { ColorPalette } = useTheme()
@@ -82,7 +83,7 @@ const BCSCRootStack: React.FC = () => {
   }
 
   // use same onboarding stack as bifold / bcwallet for now
-  return <OnboardingStack agent={agent} initializeAgent={initializeAgent} />
+  return <BCSCOnboardingStack />
 }
 
 export default BCSCRootStack

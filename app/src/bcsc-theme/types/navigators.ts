@@ -5,6 +5,7 @@ import { ClientMetadata } from '../api/hooks/useMetadataApi'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
+  OnboardingStack = 'BCSCOnboardingStack',
 }
 
 export enum BCSCScreens {
