@@ -35,6 +35,7 @@ const translation = {
     "ToContinueUsing": "To continue using the BC Wallet scan feature, please allow camera permissions. (PT-BR)",
     "Allow": "Allow (PT-BR)",
     "OpenSettings": "Open settings (PT-BR)",
+    "CameraPermissionRequired": "Camera permission required (PT-BR)"
   },
   "Biometry": {
     "Toggle": "Toggle Biometrics (PT-BR)",
@@ -343,6 +344,12 @@ const translation = {
       "Description": "The app should be set up on your other mobile device. (PT-BR)",
       "ExtraText": "If you no longer need to use the app on this device, you can remove your account. (PT-BR)",
       "ButtonText": "Ok"
+    },
+    "Verification": {
+      "Title": "You're all set (PT-BR)",
+      "Description": "Use this app to securely log in to many different websites. (PT-BR)",
+      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID. (PT-BR)",
+      "ButtonText": "Ok (PT-BR)"
     },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs (PT-BR)",

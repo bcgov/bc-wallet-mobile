@@ -1,16 +1,18 @@
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
+import { useTranslation } from 'react-i18next'
 
 const VerificationSuccessScreen = () => {
+  const { t } = useTranslation()
   const [, dispatch] = useStore<BCState>()
 
   return (
     <StatusDetails
-      title={`You're all set`}
-      description={`Use this app to securely log in to many different websites.`}
-      extraText={`Remember, it is not a health card, vaccine card, driver's license, or photo ID.`}
-      buttonText={'Ok'}
+      title={t('Unified.Verification.Title')}
+      description={t('Unified.Verification.Description')}
+      extraText={t('Unified.Verification.ExtraText')}
+      buttonText={t('Unified.Verification.ButtonText')}
       onButtonPress={() => {
         dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
         dispatch({ type: BCDispatchAction.CLEAR_USER_METADATA })

@@ -19,7 +19,7 @@ import CallIconButton from './components/CallIconButton'
 import CallLoadingView from './components/CallLoadingView'
 import CallProcessingView from './components/CallProcessingView'
 
-import { cropDelayMs } from '@/constants'
+import { CROP_DELAY_MS } from '@/constants'
 import { clearIntervalIfExists, clearTimeoutIfExists } from './utils/clearTimeoutIfExists'
 import { formatCallTime } from './utils/formatCallTime'
 
@@ -103,7 +103,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       cropDelayTimeoutRef.current = setTimeout(() => {
         const startTime = Date.now()
         setCallStartTime(startTime)
-      }, cropDelayMs)
+      }, CROP_DELAY_MS)
     } else if (flowState !== VideoCallFlowState.IN_CALL && callStartTime) {
       setCallStartTime(null)
       setCallTimer('')

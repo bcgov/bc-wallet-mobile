@@ -43,6 +43,7 @@ export enum HelpCentreUrl {
 }
 
 // BCSC Constants
-export const reconnectionGracePeriodMs = 3000
-export const keepAliveIntervalMs = 30000
-export const cropDelayMs = 11000
+
+export const RECONNECTION_GRACE_PERIOD_MS = 3000
+export const KEEP_ALIVE_INTERVAL_MS = 30000
+export const CROP_DELAY_MS = 11000

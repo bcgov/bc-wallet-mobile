@@ -171,7 +171,7 @@ const TransferQRScannerScreen: React.FC = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ThemedText style={{ color: 'white' }}>Camera permission required</ThemedText>
+          <ThemedText style={{ color: 'white' }}>{t('CameraDisclosure.CameraPermissionRequired')}</ThemedText>
         </View>
       </SafeAreaView>
     )
