@@ -12,8 +12,10 @@ describe('useSetupSteps Hook', () => {
 
       const { result: hook } = renderHook(() => useSetupSteps(store))
 
+      expect(hook.current.nickname.completed).toBe(false)
+      expect(hook.current.nickname.focused).toBe(true)
       expect(hook.current.id.completed).toBe(false)
-      expect(hook.current.id.focused).toBe(true)
+      expect(hook.current.id.focused).toBe(false)
       expect(hook.current.address.completed).toBe(false)
       expect(hook.current.address.focused).toBe(false)
       expect(hook.current.email.completed).toBe(false)
@@ -22,10 +24,27 @@ describe('useSetupSteps Hook', () => {
       expect(hook.current.verify.focused).toBe(false)
     })
   })
+  describe('Nickname Step', () => {
+    it('should be focused when nickname is not provided', () => {
+      const store = lodash.cloneDeep(initialState)
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.nickname.completed).toBe(false)
+      expect(hook.result.current.nickname.focused).toBe(true)
+    })
+
+    it('should be completed when nickname is provided', () => {
+      const store = lodash.cloneDeep(initialState)
+      store.bcsc.nickname = 'test'
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.nickname.completed).toBe(true)
+      expect(hook.result.current.nickname.focused).toBe(false)
+    })
+  })
 
   describe('ID Step', () => {
     it('Combo Card: should be completed when serial and email provided', () => {
       const store = lodash.cloneDeep(initialState)
+      store.bcsc.nickname = 'test'
 
       const hook = renderHook(() => useSetupSteps(store))
 
@@ -44,6 +63,7 @@ describe('useSetupSteps Hook', () => {
 
     it('Non-Photo Card: should be completed when serial, email, and photo ID provided', () => {
       const store = lodash.cloneDeep(initialState)
+      store.bcsc.nickname = 'test'
 
       const hook = renderHook(() => useSetupSteps(store))
 
@@ -78,6 +98,7 @@ describe('useSetupSteps Hook', () => {
 
     it('Non-BCSC Card: should be completed when 2 IDs provided', () => {
       const store = lodash.cloneDeep(initialState)
+      store.bcsc.nickname = 'test'
 
       const hook = renderHook(() => useSetupSteps(store))
 
@@ -131,6 +152,7 @@ describe('useSetupSteps Hook', () => {
   describe('Residential Address Step', () => {
     it('should be focused when ID step completed but address not yet completed', () => {
       const store = lodash.cloneDeep(initialState)
+      store.bcsc.nickname = 'test'
 
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
@@ -145,7 +167,7 @@ describe('useSetupSteps Hook', () => {
 
     it('should be completed when device code is provided', () => {
       const store = lodash.cloneDeep(initialState)
-
+      store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -161,7 +183,7 @@ describe('useSetupSteps Hook', () => {
   describe('Email Step', () => {
     it('should be focused when ID step completed, address step completed, but email not yet completed', () => {
       const store = lodash.cloneDeep(initialState)
-
+      store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -175,7 +197,7 @@ describe('useSetupSteps Hook', () => {
 
     it('should be completed when email and emailConfirmed are provided', () => {
       const store = lodash.cloneDeep(initialState)
-
+      store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -192,7 +214,7 @@ describe('useSetupSteps Hook', () => {
   describe('Verify Step', () => {
     it('should be focused when ID step completed, address step completed, email step completed, but verify not yet completed', () => {
       const store = lodash.cloneDeep(initialState)
-
+      store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -208,7 +230,7 @@ describe('useSetupSteps Hook', () => {
 
     it('should be completed when verified is true', () => {
       const store = lodash.cloneDeep(initialState)
-
+      store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -247,9 +269,11 @@ describe('useSetupSteps Hook', () => {
 
       const hook = renderHook(() => useSetupSteps(store))
 
-      // Step 1: ID step should be focused
+      // Step 1: Nickname step should be focused
+      expect(hook.result.current.nickname.completed).toBe(false)
+      expect(hook.result.current.nickname.focused).toBe(true)
       expect(hook.result.current.id.completed).toBe(false)
-      expect(hook.result.current.id.focused).toBe(true)
+      expect(hook.result.current.id.focused).toBe(false)
       expect(hook.result.current.address.completed).toBe(false)
       expect(hook.result.current.address.focused).toBe(false)
       expect(hook.result.current.email.completed).toBe(false)
@@ -258,6 +282,18 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.verify.focused).toBe(false)
 
       // Complete Step 1
+      store.bcsc.nickname = 'test'
+
+      hook.rerender(store)
+
+      expect(hook.result.current.nickname.completed).toBe(true)
+      expect(hook.result.current.nickname.focused).toBe(false)
+
+      // Step 2: ID step should be focused
+      expect(hook.result.current.id.completed).toBe(false)
+      expect(hook.result.current.id.focused).toBe(true)
+
+      // Complete Step 2
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -267,11 +303,11 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.id.completed).toBe(true)
       expect(hook.result.current.id.focused).toBe(false)
 
-      // Step 2: Address step should be focused
+      // Step 3: Address step should be focused
       expect(hook.result.current.address.completed).toBe(false)
       expect(hook.result.current.address.focused).toBe(true)
 
-      // Complete Step 2
+      // Complete Step 3
       store.bcsc.deviceCode = 'ABCDEFGH'
 
       hook.rerender(store)
@@ -279,11 +315,11 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.address.completed).toBe(true)
       expect(hook.result.current.address.focused).toBe(false)
 
-      // Step 3: Email step should be focused
+      // Step 4: Email step should be focused
       expect(hook.result.current.email.completed).toBe(false)
       expect(hook.result.current.email.focused).toBe(true)
 
-      // Complete Step 3
+      // Complete Step 4
       store.bcsc.emailConfirmed = true
 
       hook.rerender(store)
@@ -291,11 +327,11 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.email.completed).toBe(true)
       expect(hook.result.current.email.focused).toBe(false)
 
-      // Step 4: Verify step should be focused
+      // Step 5: Verify step should be focused
       expect(hook.result.current.verify.completed).toBe(false)
       expect(hook.result.current.verify.focused).toBe(true)
 
-      // Complete Step 4
+      // Complete Step 5
       store.bcsc.verified = true
       store.bcsc.pendingVerification = false
 

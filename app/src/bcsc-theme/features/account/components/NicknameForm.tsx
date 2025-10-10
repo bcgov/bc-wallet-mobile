@@ -71,7 +71,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
     } else {
       setError(null)
       setLoading(true)
-      dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [{ nickname: accountNickname }] })
+      dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [accountNickname] })
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }

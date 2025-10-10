@@ -160,7 +160,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    * @returns {*} {string[]} An array of strings representing the subtext for Step 1.
    */
   const getVerificationStep1Subtext = useCallback((): string[] => {
-    if (step.nickname.completed) {
+    if (step.nickname.completed && store.bcsc.nickname) {
       return [`${t('Unified.Steps.NicknameAccount')}: ${store.bcsc.nickname}`]
     }
 
