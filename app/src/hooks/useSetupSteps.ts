@@ -13,6 +13,7 @@ import { useMemo } from 'react'
  */
 export const useSetupSteps = (store: BCState) => {
   // store + card attributes
+  const nickname = store.bcsc.nickname || null
   const bcscSerialNumber = store.bcsc.serial || null
   const emailAddress = store.bcsc.email || null
   const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
@@ -33,42 +34,49 @@ export const useSetupSteps = (store: BCState) => {
     isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 2 && !nonBcscNeedsAdditionalCard
 
   // step completion states
-  const Step1IdsCompleted = bcscRegistered || nonBcscRegistered
-  const Step2AddressCompleted = Boolean(store.bcsc.deviceCode)
-  const Step3EmailCompleted = Boolean(emailAddress && emailConfirmed)
-  const Step4VerificationCompleted = store.bcsc.verified && !store.bcsc.pendingVerification
+  const Step1NicknameCompleted = Boolean(nickname)
+  const Step2IdsCompleted = bcscRegistered || nonBcscRegistered
+  const Step3AddressCompleted = Boolean(store.bcsc.deviceCode)
+  const Step4EmailCompleted = Boolean(emailAddress && emailConfirmed)
+  const Step5VerificationCompleted = store.bcsc.verified && !store.bcsc.pendingVerification
 
   return useMemo(
     () => ({
-      // step 1: provide ID(s)
+      // step 1: provide nickname account
+      nickname: {
+        completed: Step1NicknameCompleted,
+        focused: !Step1NicknameCompleted,
+      },
+      // step 2: provide ID(s)
       id: {
-        completed: Step1IdsCompleted,
-        focused: !Step1IdsCompleted,
+        completed: Step2IdsCompleted,
+        focused: Step1NicknameCompleted && !Step2IdsCompleted,
         // additional state for UI
         nonBcscNeedsAdditionalCard: nonBcscNeedsAdditionalCard,
         nonPhotoBcscNeedsAdditionalCard: nonPhotoBcscNeedsAdditionalCard,
       },
-      // step 2: provide residential address (non BCSC cards only)
+      // step 3: provide residential address (non BCSC cards only)
       address: {
-        completed: Step2AddressCompleted,
-        focused: Step1IdsCompleted && !Step2AddressCompleted,
+        completed: Step3AddressCompleted,
+        focused: Step2IdsCompleted && !Step3AddressCompleted,
       },
-      // step 3: provide and confirm email (non BCSC cards only)
+      // step 4: provide and confirm email (non BCSC cards only)
       email: {
-        completed: Step3EmailCompleted,
-        focused: Step1IdsCompleted && Step2AddressCompleted && !Step3EmailCompleted,
+        completed: Step4EmailCompleted,
+        focused: Step2IdsCompleted && Step3AddressCompleted && !Step4EmailCompleted,
       },
-      // step 4: verify identity (in person, video or live call)
+      // step 5: verify identity (in person, video or live call)
       verify: {
-        completed: Step4VerificationCompleted,
-        focused: Step1IdsCompleted && Step2AddressCompleted && Step3EmailCompleted && !Step4VerificationCompleted,
+        completed: Step5VerificationCompleted,
+        focused: Step2IdsCompleted && Step3AddressCompleted && Step4EmailCompleted && !Step5VerificationCompleted,
       },
     }),
     [
-      Step1IdsCompleted,
-      Step2AddressCompleted,
-      Step3EmailCompleted,
-      Step4VerificationCompleted,
+      Step1NicknameCompleted,
+      Step2IdsCompleted,
+      Step3AddressCompleted,
+      Step4EmailCompleted,
+      Step5VerificationCompleted,
       nonBcscNeedsAdditionalCard,
       nonPhotoBcscNeedsAdditionalCard,
     ]

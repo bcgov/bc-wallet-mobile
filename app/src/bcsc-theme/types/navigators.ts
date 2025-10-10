@@ -58,6 +58,8 @@ export enum BCSCScreens {
   TransferAccountQRInformation = 'TransferQRInformationScreen',
   TransferAccountSuccess = 'TransferAccountSuccessScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
+  NicknameAccount = 'NicknameAccount',
+  RenameAccount = 'RenameAccount',
 }
 
 export type BCSCTabStackParams = {
@@ -126,4 +128,5 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.LiveCall]: undefined
   [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddressScreen]: undefined
+  [BCSCScreens.NicknameAccount]: undefined
 }

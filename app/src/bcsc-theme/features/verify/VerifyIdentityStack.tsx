@@ -44,6 +44,7 @@ import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
+import NicknameAccountScreen from '../account/NicknameAccountScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -68,6 +69,7 @@ const VerifyIdentityStack = () => {
           headerLeft: () => null,
         }}
       />
+      <Stack.Screen name={BCSCScreens.NicknameAccount} component={NicknameAccountScreen} />
       <Stack.Screen
         name={BCSCScreens.TransferAccountInformation}
         component={TransferInformationScreen}
