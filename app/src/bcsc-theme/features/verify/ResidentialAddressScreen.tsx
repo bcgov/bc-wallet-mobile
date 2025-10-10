@@ -189,6 +189,10 @@ export const ResidentialAddressScreen = () => {
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
     dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
+    dispatch({
+      type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
+      payload: [deviceAuth.verification_options.split(' ')],
+    })
 
     navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
   }
