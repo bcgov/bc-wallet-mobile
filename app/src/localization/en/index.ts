@@ -512,7 +512,10 @@ const translation = {
     "Account": {
       "RemoveAccount": "Remove account",
       "RemoveAccountTitle": "Remove account from this app?",
-      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity."
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity.",
+      "TransferAccount": "Transfer account to another device",
+      "AccountDetails": "All account details",
+      "AccountDetailsDescription": "View your account activity, manage your email address and more."
     }
   },
   "RemoteLogging": {

@@ -418,7 +418,10 @@ const translation = {
     "Account": {
       "RemoveAccount": "Remove account (PT-BR)",
       "RemoveAccountTitle": "Remove account from this app? (PT-BR)",
-      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)"
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)",
+      "TransferAccount": "Transfer account to another device (PT-BR)",
+      "AccountDetails": "All account details (PT-BR)",
+      "AccountDetailsDescription": "View your account activity, manage your email address and more. (PT-BR)"
     },
     "VideoTips": {
       "PrivatePlace": "Find a private place to talk (PT-BR)",

@@ -315,7 +315,7 @@ const translation = {
     "AccountSetup": {
       "Title": "BC Services Card Account (FR)",
       "CreateAccount": "Create new Account (FR)",
-      "TransferAccount": "Transfer Account From Another Device (FR)"
+      "TransferAccount": "Transfer Account From Another Device (FR)",
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device (FR)",
@@ -418,7 +418,10 @@ const translation = {
     "Account": {
       "RemoveAccount": "Remove account (FR)",
       "RemoveAccountTitle": "Remove account from this app? (FR)",
-      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)"
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
+      "TransferAccount": "Transfer account to another device (FR)",
+      "AccountDetails": "All account details (FR)",
+      "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)"
     },
     "VideoTips": {
       "PrivatePlace": "Find a private place to talk (FR)",

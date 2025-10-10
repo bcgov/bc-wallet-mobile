@@ -169,12 +169,12 @@ const Account: React.FC = () => {
               onPress={() => {
                 navigation.navigate(BCSCScreens.TransferAccountQRInformation)
               }}
-              title={'Transfer account to another device'}
+              title={t('Unified.Account.TransferAccount')}
             />
             <SectionButton
               onPress={handleAllAccountDetailsPress}
-              title="All account details"
-              description={'View your account activity, manage your email address, and more.'}
+              title={t('Unified.Account.AccountDetails')}
+              description={t('Unified.Account.AccountDetailsDescription')}
             />
             <SectionButton
               onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
