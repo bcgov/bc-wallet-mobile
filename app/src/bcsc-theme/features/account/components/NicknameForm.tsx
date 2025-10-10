@@ -20,11 +20,10 @@ import { formStringLengths } from '@/constants'
 
 interface NicknameFormProps {
   isRenaming?: boolean
-  onSubmitSuccess?: (name: string) => void
   onCancel?: () => void
 }
 
-const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess, onCancel }) => {
+const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const navigation = useNavigation()
@@ -68,7 +67,11 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
     }
 
     if (isRenaming) {
-      onSubmitSuccess?.(accountNickname)
+      setError(null)
+      setLoading(true)
+      dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [accountNickname] })
+
+      navigation.goBack()
     } else {
       setError(null)
       setLoading(true)
@@ -76,7 +79,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }, [accountNickname, t, isRenaming, onSubmitSuccess, dispatch, navigation])
+  }, [accountNickname, t, isRenaming, dispatch, navigation])
 
   return (
     <KeyboardView>
