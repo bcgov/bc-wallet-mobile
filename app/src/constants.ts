@@ -44,5 +44,5 @@ export enum HelpCentreUrl {
 
 export const formStringLengths = {
   minimumLength: 1,
-  maximumLength: 50,
+  maximumLength: 35,
 } as const
