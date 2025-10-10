@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
@@ -16,6 +16,7 @@ import {
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { formStringLengths } from '@/constants'
 
 interface NicknameFormProps {
   isRenaming?: boolean
@@ -51,17 +52,17 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
     },
   })
 
-  const handleChangeText = (text: string) => {
+  const handleChangeText = useCallback((text: string) => {
     setAccountNickname(text)
-  }
+  }, [])
 
-  const handleContinuePressed = () => {
-    if (accountNickname.length < 1) {
+  const handleContinuePressed = useCallback(() => {
+    if (accountNickname.length < formStringLengths.minimumLength) {
       setError(t('Unified.NicknameAccount.EmptyNameTitle'))
       return
     }
 
-    if (accountNickname.length > 50) {
+    if (accountNickname.length > formStringLengths.maximumLength) {
       setError(t('Unified.NicknameAccount.CharCountTitle'))
       return
     }
@@ -75,7 +76,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }
+  }, [accountNickname, t, isRenaming, onSubmitSuccess, dispatch, navigation])
 
   return (
     <KeyboardView>

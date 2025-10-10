@@ -2,13 +2,12 @@ import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { initialState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
-import lodash from 'lodash'
 
 describe('useSetupSteps Hook', () => {
   describe('Init', () => {
     it('all steps should not be focused and completed', () => {
       // note: const store = { ...initialState } clones only top level, nested objects remain references
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
 
       const { result: hook } = renderHook(() => useSetupSteps(store))
 
@@ -26,14 +25,14 @@ describe('useSetupSteps Hook', () => {
   })
   describe('Nickname Step', () => {
     it('should be focused when nickname is not provided', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.nickname.completed).toBe(false)
       expect(hook.result.current.nickname.focused).toBe(true)
     })
 
     it('should be completed when nickname is provided', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.nickname.completed).toBe(true)
@@ -43,7 +42,7 @@ describe('useSetupSteps Hook', () => {
 
   describe('ID Step', () => {
     it('Combo Card: should be completed when serial and email provided', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
 
       const hook = renderHook(() => useSetupSteps(store))
@@ -62,7 +61,7 @@ describe('useSetupSteps Hook', () => {
     })
 
     it('Non-Photo Card: should be completed when serial, email, and photo ID provided', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
 
       const hook = renderHook(() => useSetupSteps(store))
@@ -97,7 +96,7 @@ describe('useSetupSteps Hook', () => {
     })
 
     it('Non-BCSC Card: should be completed when 2 IDs provided', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
 
       const hook = renderHook(() => useSetupSteps(store))
@@ -151,7 +150,7 @@ describe('useSetupSteps Hook', () => {
 
   describe('Residential Address Step', () => {
     it('should be focused when ID step completed but address not yet completed', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
 
       store.bcsc.cardType = BCSCCardType.Combined
@@ -166,7 +165,7 @@ describe('useSetupSteps Hook', () => {
     })
 
     it('should be completed when device code is provided', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
@@ -182,7 +181,7 @@ describe('useSetupSteps Hook', () => {
 
   describe('Email Step', () => {
     it('should be focused when ID step completed, address step completed, but email not yet completed', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
@@ -196,7 +195,7 @@ describe('useSetupSteps Hook', () => {
     })
 
     it('should be completed when email and emailConfirmed are provided', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
@@ -213,7 +212,7 @@ describe('useSetupSteps Hook', () => {
 
   describe('Verify Step', () => {
     it('should be focused when ID step completed, address step completed, email step completed, but verify not yet completed', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
@@ -229,7 +228,7 @@ describe('useSetupSteps Hook', () => {
     })
 
     it('should be completed when verified is true', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
       store.bcsc.nickname = 'test'
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
@@ -246,7 +245,7 @@ describe('useSetupSteps Hook', () => {
     })
 
     it('should be focused when pendingVerification is true', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
 
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
@@ -265,7 +264,7 @@ describe('useSetupSteps Hook', () => {
 
   describe('Full workflow', () => {
     it('should progress through all steps to completion', () => {
-      const store = lodash.cloneDeep(initialState)
+      const store = structuredClone(initialState)
 
       const hook = renderHook(() => useSetupSteps(store))
 

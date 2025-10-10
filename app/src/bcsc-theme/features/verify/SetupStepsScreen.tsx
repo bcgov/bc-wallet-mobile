@@ -232,7 +232,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 1: Nickname Account */}
 
         <SetupStep
-          title={'Step 1'}
+          title={t('Unified.Steps.Step1')}
           subtext={getVerificationStep1Subtext()}
           isComplete={step.nickname.completed}
           isFocused={step.nickname.focused}
@@ -246,7 +246,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 2: Identification submission */}
 
         <SetupStep
-          title={'Step 2'}
+          title={t('Unified.Steps.Step2')}
           subtext={getVerificationStep2Subtext()}
           isComplete={step.id.completed}
           isFocused={step.id.focused}
@@ -289,7 +289,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 3: Residential Address */}
 
         <SetupStep
-          title={'Step 3'}
+          title={t('Unified.Steps.Step3')}
           subtext={[getVerificationStep3Subtext()]}
           isComplete={step.address.completed}
           isFocused={step.address.focused}
@@ -302,7 +302,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 4: Email Address */}
 
         <SetupStep
-          title={'Step 4'}
+          title={t('Unified.Steps.Step4')}
           subtext={[]}
           isComplete={step.email.completed}
           isFocused={step.email.focused}
@@ -343,7 +343,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 5: Identity Verification */}
 
         <SetupStep
-          title={'Step 5'}
+          title={t('Unified.Steps.Step5')}
           subtext={[getVerificationStep5Subtext()]}
           isComplete={step.verify.completed}
           isFocused={step.verify.focused}

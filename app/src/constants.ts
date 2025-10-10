@@ -41,3 +41,8 @@ export enum HelpCentreUrl {
   VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html#section-options-app',
   VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html#section-inperson',
 }
+
+export const formStringLengths = {
+  minimumLength: 1,
+  maximumLength: 50,
+} as const
