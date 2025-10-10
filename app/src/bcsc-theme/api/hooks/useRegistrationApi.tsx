@@ -3,9 +3,8 @@ import { AccountSecurityMethod, getAccount, getDynamicClientRegistrationBody, se
 
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
-import { TOKENS, useServices } from '@bifold/core'
 
 export interface RegistrationResponseData {
   client_id: string
@@ -42,12 +41,12 @@ export interface RegistrationResponseData {
 
 // The registration API is a bit of a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
-const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: boolean = true) => {
+const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const register = useCallback(async () => {
-    if (!clientIsReady || !apiClient) {
+    if (!isClientReady || !apiClient) {
       throw new Error('BCSC client not ready for registration')
     }
 
@@ -111,11 +110,11 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
     })
 
     return data
-  }, [clientIsReady, apiClient, logger, dispatch])
+  }, [isClientReady, apiClient, logger, dispatch])
 
   const updateRegistration = useCallback(
     async (clientId: string) => {
-      if (!clientIsReady || !apiClient) {
+      if (!isClientReady || !apiClient) {
         throw new Error('BCSC client not ready for registration update')
       }
 
@@ -141,12 +140,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
       )
       return data
     },
-    [clientIsReady, apiClient, logger]
+    [isClientReady, apiClient, logger]
   )
 
   const deleteRegistration = useCallback(
     async (clientId: string) => {
-      if (!clientIsReady || !apiClient) {
+      if (!isClientReady || !apiClient) {
         throw new Error('BCSC client not ready for registration deletion')
       }
 
@@ -162,7 +161,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
       // 200 level status codes indicate success
       return { success: status > 199 && status < 300 }
     },
-    [clientIsReady, apiClient, store.bcsc.registrationAccessToken]
+    [isClientReady, apiClient, store.bcsc.registrationAccessToken]
   )
 
   return useMemo(

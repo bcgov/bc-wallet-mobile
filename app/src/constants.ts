@@ -41,3 +41,9 @@ export enum HelpCentreUrl {
   VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html#section-options-app',
   VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html#section-inperson',
 }
+
+// BCSC Constants
+
+export const RECONNECTION_GRACE_PERIOD_MS = 3000
+export const KEEP_ALIVE_INTERVAL_MS = 30000
+export const CROP_DELAY_MS = 11000
