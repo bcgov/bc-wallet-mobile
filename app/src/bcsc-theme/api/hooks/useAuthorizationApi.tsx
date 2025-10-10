@@ -42,9 +42,11 @@ export interface AuthorizeDeviceUnknownBCSCConfig {
 
 const useAuthorizationApi = (apiClient: BCSCApiClient) => {
   /**
-   * Authorize a device with a known BCSC card. Serial and birthdate are optional, but if serial is provided, both must be provided.
+   * Authorize a device with a known BCSC card. Serial and birthdate are optional, but if serial is provided, both must be provided. These values will be provided during the
+   * new account flow when entering card information.
    *
-   * TODO: fetch evidence API endpoint from this endpoint
+   * Note: If the user is transferring their account, this request won't need the serial or birthdate as account information will be scanned via QR Code at a later step.
+   * See this sequence diagram for more details: https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301576047/Self+Setup+Interaction+Design#Sequence-Diagram
    *
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization-Request`
    * @param {string?} serial - BCSC serial number
