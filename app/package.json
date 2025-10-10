@@ -41,11 +41,11 @@
     "setup": "yarn ios:setup && yarn android:setup"
   },
   "dependencies": {
-    "@bifold/core": "2.7.4",
-    "@bifold/oca": "2.7.4",
-    "@bifold/react-native-attestation": "2.7.4",
-    "@bifold/remote-logs": "2.7.4",
-    "@bifold/verifier": "2.7.4",
+    "@bifold/core": "2.8.0",
+    "@bifold/oca": "2.8.0",
+    "@bifold/react-native-attestation": "2.8.0",
+    "@bifold/remote-logs": "2.8.0",
+    "@bifold/verifier": "2.8.0",
     "@credo-ts/anoncreds": "0.5.17",
     "@credo-ts/askar": "0.5.17",
     "@credo-ts/core": "0.5.17",
