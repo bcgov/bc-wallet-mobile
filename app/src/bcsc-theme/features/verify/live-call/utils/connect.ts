@@ -10,7 +10,8 @@ import {
 } from '@pexip/infinity-api'
 import { mediaDevices, MediaStream, RTCIceCandidate, RTCPeerConnection } from 'react-native-webrtc'
 import { RTCOfferOptions } from 'react-native-webrtc/lib/typescript/RTCUtil'
-import { keepAliveIntervalMs, reconnectionGracePeriodMs } from '../constants'
+
+import { KEEP_ALIVE_INTERVAL_MS, RECONNECTION_GRACE_PERIOD_MS } from '@/constants'
 import type { ConnectionRequest, ConnectResult } from '../types/live-call'
 
 // WebRTC Events need handlers even if we don't do anything with some of them
@@ -89,7 +90,7 @@ export const connect = async (
             logger.warn('Grace period expired, triggering disconnect', { state: peerConnection.connectionState })
             handleDisconnect()
           }
-        }, reconnectionGracePeriodMs)
+        }, RECONNECTION_GRACE_PERIOD_MS)
       }
     }
   })
@@ -118,7 +119,7 @@ export const connect = async (
             })
             handleDisconnect()
           }
-        }, reconnectionGracePeriodMs)
+        }, RECONNECTION_GRACE_PERIOD_MS)
       }
     }
   })
@@ -185,7 +186,7 @@ export const connect = async (
     logger.info('Pexip call disconnected successfully')
   }
 
-  logger.info('Starting Pexip keep-alive timer', { intervalMs: keepAliveIntervalMs })
+  logger.info('Starting Pexip keep-alive timer', { intervalMs: KEEP_ALIVE_INTERVAL_MS })
   const keepAliveInterval = setInterval(async () => {
     try {
       logger.info('Refreshing Pexip token...')
@@ -206,7 +207,7 @@ export const connect = async (
     } catch (err) {
       logger.error('Pexip token refresh failed:', err as Error)
     }
-  }, keepAliveIntervalMs)
+  }, KEEP_ALIVE_INTERVAL_MS)
 
   const stopPexipKeepAlive = () => {
     logger.info('Stopping Pexip keep-alive timer')

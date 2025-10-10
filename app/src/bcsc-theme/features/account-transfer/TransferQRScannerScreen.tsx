@@ -1,0 +1,200 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCDispatchAction, BCState } from '@/store'
+import {
+  DismissiblePopupModal,
+  MaskType,
+  QrCodeScanError,
+  ScanCamera,
+  SVGOverlay,
+  ThemedText,
+  useStore,
+  useTheme,
+} from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
+import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import uuid from 'react-native-uuid'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { useCameraPermission } from 'react-native-vision-camera'
+
+const TransferQRScannerScreen: React.FC = () => {
+  const { deviceAttestation, authorization, token } = useApi()
+  const { client } = useBCSCApiClientState()
+  const navigator = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
+  const [store, dispatch] = useStore<BCState>()
+  const { ColorPalette, Spacing } = useTheme()
+  const [isLoading, setIsLoading] = useState(true)
+  const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
+  const { hasPermission, requestPermission } = useCameraPermission()
+  const { t } = useTranslation()
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    icon: {
+      color: ColorPalette.grayscale.white,
+      padding: Spacing.md,
+    },
+    messageContainer: {
+      marginHorizontal: 40,
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'center',
+      paddingTop: 30,
+    },
+  })
+
+  const registerDevice = useCallback(async () => {
+    // we already have a device code, no need to authorize again
+    if (store.bcsc.deviceCode) {
+      return
+    }
+    const deviceAuth = await authorization.authorizeDevice()
+    // device already authorized
+    if (deviceAuth === null) {
+      return
+    }
+
+    const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
+    dispatch({
+      type: BCDispatchAction.UPDATE_EMAIL,
+      payload: [{ email: deviceAuth.verified_email, emailConfirmed: !!deviceAuth.verified_email }],
+    })
+    dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
+    dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
+    dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
+  }, [store.bcsc.deviceCode, authorization, dispatch])
+
+  useEffect(() => {
+    registerDevice()
+  }, [registerDevice])
+
+  useEffect(() => {
+    const checkPermissions = async () => {
+      if (!hasPermission) {
+        const permission = await requestPermission()
+        if (!permission) {
+          Alert.alert('Camera Permission Required', 'Please enable camera permission to scan a QR code.', [
+            { text: 'OK', onPress: () => navigator.goBack() },
+          ])
+          return
+        }
+      }
+      setIsLoading(false)
+    }
+
+    checkPermissions()
+  }, [hasPermission, requestPermission, navigator])
+
+  const handleScan = useCallback(
+    async (value: string) => {
+      setIsLoading(true)
+      setScanError(null)
+      const account = await getAccount()
+      if (!account) {
+        setScanError(
+          new QrCodeScanError(t('Scan.InvalidQrCode'), value, 'No account found, restart the app and try again.')
+        )
+        setIsLoading(false)
+        return
+      }
+      try {
+        const qrToken = value.split('?')[1]
+        // ias tokens expect times in seconds since epoch
+        const timeInSeconds = Math.floor(Date.now() / 1000)
+
+        const jwt = await createDeviceSignedJWT({
+          aud: account.issuer,
+          iss: account.clientID,
+          sub: account.clientID,
+          iat: timeInSeconds,
+          exp: timeInSeconds + 60, // give this token 1 minute to live
+          jti: uuid.v4().toString(),
+        })
+
+        if (store.bcsc.deviceCode) {
+          const response = await deviceAttestation.verifyAttestation({
+            client_id: account.clientID,
+            device_code: store.bcsc.deviceCode,
+            attestation: qrToken,
+            client_assertion: jwt,
+          })
+
+          if (!response) {
+            setScanError(
+              new QrCodeScanError(
+                t('Scan.InvalidQrCode'),
+                value,
+                'No attestation response, check your connection and try again.'
+              )
+            )
+          }
+
+          const deviceToken = await token.deviceToken({
+            client_id: account.clientID,
+            device_code: store.bcsc.deviceCode,
+            attestation: qrToken,
+            client_assertion: jwt,
+          })
+
+          // api client needs the new tokens from IAS
+          if (client) {
+            client.tokens = deviceToken
+          }
+
+          dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [deviceToken.refresh_token] })
+
+          navigator.navigate(BCSCScreens.VerificationSuccess)
+          setIsLoading(false)
+        }
+      } catch (error) {
+        setScanError(new QrCodeScanError(t('Scan.InvalidQrCode'), value, (error as Error)?.message))
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [store.bcsc.deviceCode, deviceAttestation, client, dispatch, navigator, t, token]
+  )
+
+  if (isLoading) {
+    return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+  }
+
+  if (!hasPermission) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ThemedText style={{ color: 'white' }}>{t('CameraDisclosure.CameraPermissionRequired')}</ThemedText>
+        </View>
+      </SafeAreaView>
+    )
+  }
+  return (
+    <View style={styles.container}>
+      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} />
+      <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
+      <View style={styles.messageContainer}>
+        <Icon name="qrcode-scan" size={40} style={styles.icon} />
+        <ThemedText variant="title">{t('Scan.WillScanAutomatically')}</ThemedText>
+      </View>
+      {scanError && (
+        <DismissiblePopupModal
+          title={t('Scan.ErrorDetails')}
+          description={scanError.message}
+          onCallToActionLabel={t('Global.Dismiss')}
+          onCallToActionPressed={() => setScanError(null)}
+          onDismissPressed={() => setScanError(null)}
+        />
+      )}
+    </View>
+  )
+}
+
+export default TransferQRScannerScreen
