@@ -38,6 +38,7 @@ const MainStack: React.FC = () => {
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
+
         <Stack.Screen
           name={BCSCScreens.Settings}
           component={Settings}
