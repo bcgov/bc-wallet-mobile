@@ -5,11 +5,15 @@ import { useTheme } from '@bifold/core'
 export const CreatePINScreen: React.FC = () => {
   const theme = useTheme()
 
-  const styles = StyleSheet.create({})
+  const styles = StyleSheet.create({
+    container: {
+      padding: theme.Spacing.md,
+    },
+  })
 
   return (
     <SafeAreaView>
-      <ScrollView></ScrollView>
+      <ScrollView style={styles.container}></ScrollView>
     </SafeAreaView>
   )
 }

@@ -58,6 +58,7 @@ export enum BCSCScreens {
   OnboardingTermsOfUseScreen = 'BCSCOnboardingTermsOfUse',
   OnboardingNotificationsScreen = 'BCSCOnboardingNotifications',
   OnboardingSecureAppScreen = 'BCSCOnboardingSecureApp',
+  OnboardingCreatePINScreen = 'BCSCOnboardingCreatePIN',
 }
 
 export type BCSCTabStackParams = {
@@ -82,6 +83,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingTermsOfUseScreen]: undefined
   [BCSCScreens.OnboardingNotificationsScreen]: undefined
   [BCSCScreens.OnboardingSecureAppScreen]: undefined
+  [BCSCScreens.OnboardingCreatePINScreen]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {
