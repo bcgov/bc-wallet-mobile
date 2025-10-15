@@ -1,5 +1,6 @@
+import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -30,18 +31,6 @@ export const PrivacyPolicyScreen: React.FC = () => {
       lineHeight: 30,
       fontSize: 18,
     },
-    learnMoreContainer: {
-      padding: theme.Spacing.md,
-      backgroundColor: theme.ColorPalette.brand.secondaryBackground,
-      borderWidth: 1,
-      borderColor: theme.ColorPalette.brand.primaryLight,
-      borderRadius: theme.Spacing.xs,
-    },
-    learnMoreText: {
-      fontWeight: 'bold',
-      color: theme.ColorPalette.brand.primary,
-      fontSize: 18,
-    },
   })
 
   const handlePressLearnMore = () => {
@@ -63,9 +52,11 @@ export const PrivacyPolicyScreen: React.FC = () => {
           <ThemedText style={styles.contentText}>{t('BCSCOnboarding.PrivacyPolicyContentC')}</ThemedText>
         </View>
 
-        <View style={styles.learnMoreContainer}>
-          <ThemedText style={styles.learnMoreText}>{t('BCSCOnboarding.PrivacyPolicyLearnMore')}</ThemedText>
-        </View>
+        <CardButton
+          title={t('BCSCOnboarding.PrivacyPolicyLearnMore')}
+          onPress={handlePressLearnMore}
+          endIcon="open-in-new"
+        />
       </ScrollView>
 
       <View style={styles.buttonContainer}>
@@ -75,6 +66,8 @@ export const PrivacyPolicyScreen: React.FC = () => {
           onPress={() => {
             navigation.navigate(BCSCScreens.OnboardingTermsOfUseScreen)
           }}
+          testID={testIdWithKey('Continue')}
+          accessibilityLabel={t('BCSCOnboarding.ContinueButton')}
         />
       </View>
     </SafeAreaView>

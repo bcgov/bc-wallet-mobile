@@ -41,6 +41,7 @@ const translation = {
     "CarouselNext": "Next",
     "CarouselBack": "Back",
     "ContinueButton": "Continue",
+    "AcceptAndContinueButton": "Accept and continue",
     "CarouselServicesHeader": "Access services online",
     "CarouselProveHeader": "Prove who you are online",
     "CarouselCannotUseHeader": "Cannot use as a health card or driver's license",
