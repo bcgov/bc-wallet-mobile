@@ -1,6 +1,6 @@
 import { useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 
 interface RadioButtonProps<T> {
   label: string
@@ -60,7 +60,7 @@ export const RadioButton = <T,>({
   }, [disabled, onValueChange, value])
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={styles.container}
       onPress={handlePress}
       disabled={disabled}
@@ -72,6 +72,6 @@ export const RadioButton = <T,>({
     >
       <Text style={styles.label}>{label}</Text>
       <View style={styles.radioCircle}>{selected && <View style={styles.innerCircle} />}</View>
-    </TouchableOpacity>
+    </Pressable>
   )
 }

@@ -50,7 +50,9 @@ exports[`RadioGroup Component Edge Cases handles single option 1`] = `
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -62,7 +64,6 @@ exports[`RadioGroup Component Edge Cases handles single option 1`] = `
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -136,7 +137,9 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -148,7 +151,6 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -213,7 +215,9 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -225,7 +229,6 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -290,7 +293,9 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -302,7 +307,6 @@ exports[`RadioGroup Component Rendering renders correctly with default props 1`]
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -376,7 +380,9 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -388,7 +394,6 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -453,7 +458,9 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -465,7 +472,6 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -530,7 +536,9 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -542,7 +550,6 @@ exports[`RadioGroup Component Rendering renders correctly with mixed disabled op
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -616,7 +623,9 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -628,7 +637,6 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -693,7 +701,9 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -705,7 +715,6 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
@@ -781,7 +790,9 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
       accessible={true}
       collapsable={false}
       focusable={true}
+      onBlur={[Function]}
       onClick={[Function]}
+      onFocus={[Function]}
       onResponderGrant={[Function]}
       onResponderMove={[Function]}
       onResponderRelease={[Function]}
@@ -793,7 +804,6 @@ exports[`RadioGroup Component Rendering renders correctly with selected value 1`
           "alignItems": "center",
           "backgroundColor": "#FFFFFF",
           "flexDirection": "row",
-          "opacity": 1,
           "paddingHorizontal": 24,
           "paddingVertical": 16,
         }
