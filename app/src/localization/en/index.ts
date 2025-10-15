@@ -159,6 +159,7 @@ const translation = {
     "Accessibility": "Accessibility",
     "IntroductionToTheApp": "Introduction to the app",
   },
+  // TODO (MD): Move to Unified section
   "BCSCSettings": {
     "HeaderA": "App Settings",
     "HeaderB": "Information",
@@ -266,7 +267,6 @@ const translation = {
     "Onboarding": {
       "CarouselNext": "Next",
       "CarouselBack": "Back",
-      "ContinueButton": "Continue",
       "AcceptAndContinueButton": "Accept and continue",
       "CarouselServicesHeader": "Access services online",
       "CarouselProveHeader": "Prove who you are online",
@@ -277,7 +277,10 @@ const translation = {
       "PrivacyPolicyLearnMore": "Learn more",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It’s temporarily stored on this device until the app is set up.",
-      "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential"
+      "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential",
+      "TermsOfUseTitle": "Terms of Use",
+      "NotificationsHeader": "Notifications",
+      "NotificationsContinueButtonSecondary": "Continue without notifications"
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",

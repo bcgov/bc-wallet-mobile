@@ -1,6 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -8,8 +7,13 @@ import { SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 're
 
 const NUM_CAROUSEL_ITEMS = 3
 
+// TODO (MD): Waiting on final content, replace mock content with real carousel text
 const mockCarouselContent =
   'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
+
+interface IntroCarouselScreenProps {
+  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingIntroCarouselScreen>
+}
 
 /**
  * Intro Carousel screen component that displays a series of informational slides to the user.
@@ -21,10 +25,9 @@ const mockCarouselContent =
  *
  * @returns {*} {JSX.Element} The IntroCarouselScreen component.
  */
-export const IntroCarouselScreen = (): JSX.Element => {
+export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
-  const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
   const [carouselIndex, setCarouselIndex] = useState(0)
 
   const styles = StyleSheet.create({
@@ -67,7 +70,7 @@ export const IntroCarouselScreen = (): JSX.Element => {
 
   const handleNext = () => {
     if (carouselIndex === NUM_CAROUSEL_ITEMS - 1) {
-      navigation.navigate(BCSCScreens.OnboardingPrivacyPolicyScreen)
+      props.navigation.navigate(BCSCScreens.OnboardingPrivacyPolicyScreen)
       return
     }
 

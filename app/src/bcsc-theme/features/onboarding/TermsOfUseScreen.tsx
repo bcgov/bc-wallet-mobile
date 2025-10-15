@@ -1,18 +1,26 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+// TODO (MD): Waiting on final content, replace mock content with real terms of use text
 const mockTermsOfUseContent =
   'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
 
-export const TermsOfUseScreen: React.FC = () => {
+interface TermsOfUseScreenProps {
+  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingTermsOfUseScreen>
+}
+
+/**
+ * Terms of Use screen component that presents the application's terms of use to the user.
+ *
+ * @returns {*} {JSX.Element} The TermsOfUseScreen component.
+ */
+export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
-  const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
 
   const styles = StyleSheet.create({
     container: {
@@ -45,7 +53,7 @@ export const TermsOfUseScreen: React.FC = () => {
           title={t('Unified.Onboarding.AcceptAndContinueButton')}
           buttonType={ButtonType.Primary}
           onPress={() => {
-            navigation.navigate(BCSCScreens.OnboardingNotificationsScreen)
+            props.navigation.navigate(BCSCScreens.OnboardingNotificationsScreen)
           }}
           testID={testIdWithKey('AcceptAndContinue')}
           accessibilityLabel={t('Unified.Onboarding.AcceptAndContinueButton')}

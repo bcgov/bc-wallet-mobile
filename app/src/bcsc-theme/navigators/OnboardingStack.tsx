@@ -21,6 +21,7 @@ const OnboardingStack: React.FC = () => {
         ...defaultStackOptions,
         headerShown: false,
         title: '',
+        headerShadowVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),
       }}
@@ -32,7 +33,6 @@ const OnboardingStack: React.FC = () => {
         component={PrivacyPolicyScreen}
         options={{
           title: t('Unified.Onboarding.PrivacyPolicyTitle'),
-          headerShadowVisible: false,
           headerShown: true,
         }}
       />
@@ -43,13 +43,18 @@ const OnboardingStack: React.FC = () => {
         options={{
           title: t('Unified.Onboarding.TermsOfUseTitle'),
           headerShown: true,
-          headerShadowVisible: false,
         }}
       />
 
       <Stack.Screen name={BCSCScreens.OnboardingNotificationsScreen} component={NotificationsScreen} />
 
-      <Stack.Screen name={BCSCScreens.OnboardingSecureAppScreen} component={SecureAppScreen} />
+      <Stack.Screen
+        name={BCSCScreens.OnboardingSecureAppScreen}
+        component={SecureAppScreen}
+        options={{
+          headerShown: true,
+        }}
+      />
 
       <Stack.Screen name={BCSCScreens.OnboardingCreatePINScreen} component={SecureAppScreen} />
     </Stack.Navigator>

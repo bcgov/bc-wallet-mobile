@@ -1,16 +1,23 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-export const PrivacyPolicyScreen: React.FC = () => {
+interface PrivacyPolicyScreenProps {
+  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingPrivacyPolicyScreen>
+}
+
+/**
+ * Privacy Policy screen component that informs users about the app's privacy practices.
+ *
+ * @returns {*} {JSX.Element} The PrivacyPolicyScreen component.
+ */
+export const PrivacyPolicyScreen = (props: PrivacyPolicyScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
-  const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
 
   const styles = StyleSheet.create({
     container: {
@@ -21,8 +28,7 @@ export const PrivacyPolicyScreen: React.FC = () => {
       gap: theme.Spacing.lg,
     },
     buttonContainer: {
-      paddingTop: theme.Spacing.md,
-      paddingHorizontal: theme.Spacing.md,
+      padding: theme.Spacing.md,
     },
     sectionContainer: {
       gap: theme.Spacing.sm,
@@ -61,13 +67,13 @@ export const PrivacyPolicyScreen: React.FC = () => {
 
       <View style={styles.buttonContainer}>
         <Button
-          title={t('Unified.Onboarding.ContinueButton')}
+          title={t('Global.Continue')}
           buttonType={ButtonType.Primary}
           onPress={() => {
-            navigation.navigate(BCSCScreens.OnboardingTermsOfUseScreen)
+            props.navigation.navigate(BCSCScreens.OnboardingTermsOfUseScreen)
           }}
           testID={testIdWithKey('Continue')}
-          accessibilityLabel={t('Unified.Onboarding.ContinueButton')}
+          accessibilityLabel={t('Global.Continue')}
         />
       </View>
     </SafeAreaView>
