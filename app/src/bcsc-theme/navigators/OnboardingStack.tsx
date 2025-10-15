@@ -32,7 +32,7 @@ const OnboardingStack: React.FC = () => {
         component={PrivacyPolicyScreen}
         options={{
           title: t('BCSCOnboarding.PrivacyPolicyTitle'),
-          headerShadowVisible: true,
+          headerShadowVisible: false,
           headerShown: true,
         }}
       />
