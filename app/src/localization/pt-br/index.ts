@@ -254,6 +254,12 @@ const translation = {
     "NoSavedServices": "No saved services (PT-BR)",
   },
   "Unified": {
+    "Screens": {
+      "SetupTypes": "BC Services Card (PT-BR)",
+      "SetupSteps": "Setup Steps (PT-BR)",
+      "VerificationMethodSelection": "Choose How to Verify (PT-BR)",
+      "InformationRequired": "Information Required (PT-BR)",
+    },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
       "Step1": "Step 1 (PT-BR)",

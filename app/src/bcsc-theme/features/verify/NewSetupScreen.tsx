@@ -12,7 +12,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -30,6 +30,10 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
   const { t } = useTranslation()
   const [myOwnId, setMyOwnId] = useState<boolean>()
   const [otherPersonPresent, setOtherPersonPresent] = useState<boolean>()
+  const canContinue = useMemo(
+    () => myOwnId !== undefined && (myOwnId === true || otherPersonPresent !== undefined),
+    [myOwnId, otherPersonPresent]
+  )
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -91,33 +95,33 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
           <ThemedText>{t('Unified.NewSetup.RecordVideoOrVisit')}</ThemedText>
         </View>
         <ThemedText variant={'bold'}>{t('Unified.NewSetup.WhoseIDQuestion')}</ThemedText>
-        <RadioGroup
+        <RadioGroup<boolean>
           style={{ marginVertical: Spacing.md }}
           options={[
-            { label: t('Unified.NewSetup.MyOwnID'), value: 'true' },
-            { label: t('Unified.NewSetup.SomeoneElsesID'), value: 'false' },
+            { label: t('Unified.NewSetup.MyOwnID'), value: true },
+            { label: t('Unified.NewSetup.SomeoneElsesID'), value: false },
           ]}
-          selectedValue={myOwnId?.toString()}
+          selectedValue={myOwnId}
           onValueChange={(value) => {
-            if (value === 'true') {
+            if (value) {
               setOtherPersonPresent(undefined)
             }
 
-            setMyOwnId(value === 'true')
+            setMyOwnId(value)
           }}
           testID={testIdWithKey('MyOwnIdRadioGroup')}
         />
         {myOwnId === false ? (
           <>
             <ThemedText variant={'bold'}>{t('Unified.NewSetup.IsOtherPersonWithYou')}</ThemedText>
-            <RadioGroup
+            <RadioGroup<boolean>
               style={{ marginVertical: Spacing.md }}
               options={[
-                { label: t('Unified.NewSetup.Yes'), value: 'true' },
-                { label: t('Unified.NewSetup.No'), value: 'false' },
+                { label: t('Unified.NewSetup.Yes'), value: true },
+                { label: t('Unified.NewSetup.No'), value: false },
               ]}
-              selectedValue={otherPersonPresent?.toString()}
-              onValueChange={(value) => setOtherPersonPresent(value === 'true')}
+              selectedValue={otherPersonPresent}
+              onValueChange={(value) => setOtherPersonPresent(value)}
               testID={testIdWithKey('OtherPersonPresentRadioGroup')}
             />
           </>
@@ -127,7 +131,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
             {t('Unified.NewSetup.CannotFinishWithoutOtherPerson')}
           </InfoTextBox>
         ) : null}
-        {otherPersonPresent !== undefined ? (
+        {typeof otherPersonPresent === 'boolean' ? (
           <>
             <ThemedText variant={'bold'}>{t('Unified.NewSetup.OKToGiveHelp')}</ThemedText>
             <View style={styles.helpSection}>
@@ -174,7 +178,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
             }}
             testID={testIdWithKey('Continue')}
             accessibilityLabel={t('Global.Continue')}
-            disabled={myOwnId === undefined || (myOwnId === false && otherPersonPresent === undefined)}
+            disabled={!canContinue}
           />
           <Button
             buttonType={ButtonType.Secondary}

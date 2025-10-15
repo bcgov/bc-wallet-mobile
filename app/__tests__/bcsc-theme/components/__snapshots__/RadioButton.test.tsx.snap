@@ -41,6 +41,7 @@ exports[`RadioButton Component Rendering renders correctly when disabled 1`] = `
       "paddingVertical": 16,
     }
   }
+  testID="default-test-id"
 >
   <Text
     style={
@@ -113,6 +114,7 @@ exports[`RadioButton Component Rendering renders correctly when selected 1`] = `
       "paddingVertical": 16,
     }
   }
+  testID="default-test-id"
 >
   <Text
     style={
@@ -196,6 +198,7 @@ exports[`RadioButton Component Rendering renders correctly when selected and dis
       "paddingVertical": 16,
     }
   }
+  testID="default-test-id"
 >
   <Text
     style={
@@ -279,6 +282,7 @@ exports[`RadioButton Component Rendering renders correctly when unselected 1`] =
       "paddingVertical": 16,
     }
   }
+  testID="default-test-id"
 >
   <Text
     style={

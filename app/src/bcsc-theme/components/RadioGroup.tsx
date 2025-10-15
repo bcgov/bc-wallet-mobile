@@ -1,46 +1,26 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdForAccessabilityLabel, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, View, ViewStyle } from 'react-native'
 import { RadioButton } from './RadioButton'
 
-export interface RadioOption {
+interface RadioOption<T> {
   label: string
-  value: string
+  value: T
   disabled?: boolean
 }
 
-export interface RadioGroupProps {
-  options: RadioOption[]
-  selectedValue?: string
-  onValueChange: (value: string) => void
-  title?: string
-  disabled?: boolean
-  testID?: string
+interface RadioGroupProps<T> {
+  options: RadioOption<T>[]
+  selectedValue?: T
+  onValueChange: (value: T) => void
+  testID: string
   style?: ViewStyle
 }
 
-export const RadioGroup: React.FC<RadioGroupProps> = ({
-  options,
-  selectedValue,
-  onValueChange,
-  title,
-  disabled = false,
-  testID,
-  style = {},
-}) => {
-  const { ColorPalette, TextTheme, Spacing } = useTheme()
+export const RadioGroup = <T,>({ options, selectedValue, onValueChange, testID, style = {} }: RadioGroupProps<T>) => {
+  const { Spacing } = useTheme()
 
   const styles = StyleSheet.create({
-    titleContainer: {
-      paddingHorizontal: Spacing.md,
-      paddingTop: Spacing.md,
-      paddingBottom: Spacing.xs,
-    },
-    title: {
-      ...TextTheme.labelSubtitle,
-      color: disabled ? ColorPalette.grayscale.mediumGrey : ColorPalette.grayscale.black,
-      fontWeight: '600',
-    },
     optionsContainer: {
       paddingBottom: Spacing.xs,
     },
@@ -51,22 +31,17 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
 
   return (
     <View testID={testID} style={style}>
-      {title && (
-        <View style={styles.titleContainer}>
-          <ThemedText style={styles.title}>{title}</ThemedText>
-        </View>
-      )}
       <View style={styles.optionsContainer}>
         {options.map((option, index) => (
-          <React.Fragment key={option.value}>
+          <React.Fragment key={option.label}>
             {index > 0 && <View style={styles.separator} />}
-            <RadioButton
+            <RadioButton<T>
               label={option.label}
               value={option.value}
-              selected={selectedValue === option.value}
-              onPress={onValueChange}
-              disabled={disabled || option.disabled}
-              testID={`${testID || 'radioGroup'}-option-${option.value}`}
+              selectedValue={selectedValue}
+              onValueChange={onValueChange}
+              disabled={option.disabled}
+              testID={`${testID}-option-${testIdForAccessabilityLabel(option.label)}`}
             />
           </React.Fragment>
         ))}

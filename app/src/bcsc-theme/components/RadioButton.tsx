@@ -1,25 +1,26 @@
 import { useTheme } from '@bifold/core'
-import React from 'react'
+import React, { useCallback } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
-export interface RadioButtonProps {
+interface RadioButtonProps<T> {
   label: string
-  value: string
-  selected: boolean
-  onPress: (value: string) => void
+  value: T
+  selectedValue?: T
+  onValueChange: (value: T) => void
   disabled?: boolean
-  testID?: string
+  testID: string
 }
 
-export const RadioButton: React.FC<RadioButtonProps> = ({
+export const RadioButton = <T,>({
   label,
   value,
-  selected,
-  onPress,
+  selectedValue,
+  onValueChange,
   disabled = false,
   testID,
-}) => {
+}: RadioButtonProps<T>) => {
   const { ColorPalette, TextTheme, Spacing } = useTheme()
+  const selected = selectedValue === value
 
   const styles = StyleSheet.create({
     container: {
@@ -52,11 +53,11 @@ export const RadioButton: React.FC<RadioButtonProps> = ({
     },
   })
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     if (!disabled) {
-      onPress(value)
+      onValueChange(value)
     }
-  }
+  }, [disabled, onValueChange, value])
 
   return (
     <TouchableOpacity

@@ -7,9 +7,10 @@ import { RadioButton } from '../../../src/bcsc-theme/components/RadioButton'
 describe('RadioButton Component', () => {
   const defaultProps = {
     label: 'Test Option',
-    value: 'test-value',
-    selected: false,
-    onPress: jest.fn(),
+    value: false,
+    selectedValue: undefined,
+    onValueChange: jest.fn(),
+    testID: 'default-test-id',
   }
 
   beforeEach(() => {
@@ -32,7 +33,7 @@ describe('RadioButton Component', () => {
     test('renders correctly when selected', () => {
       const tree = render(
         <BasicAppContext>
-          <RadioButton {...defaultProps} selected={true} />
+          <RadioButton {...defaultProps} value={true} selectedValue={true} />
         </BasicAppContext>
       )
 
@@ -56,7 +57,7 @@ describe('RadioButton Component', () => {
     test('renders correctly when selected and disabled', () => {
       const tree = render(
         <BasicAppContext>
-          <RadioButton {...defaultProps} selected={true} disabled={true} />
+          <RadioButton {...defaultProps} selectedValue={false} disabled={true} />
         </BasicAppContext>
       )
 
@@ -77,40 +78,40 @@ describe('RadioButton Component', () => {
   })
 
   describe('Interaction', () => {
-    test('calls onPress with correct value when pressed', () => {
-      const mockOnPress = jest.fn()
+    test('calls onValueChange with correct value when pressed', () => {
+      const mockonValueChange = jest.fn()
       const { getByRole } = render(
         <BasicAppContext>
-          <RadioButton {...defaultProps} onPress={mockOnPress} />
+          <RadioButton {...defaultProps} onValueChange={mockonValueChange} />
         </BasicAppContext>
       )
 
       const radioButton = getByRole('radio')
       fireEvent.press(radioButton)
 
-      expect(mockOnPress).toHaveBeenCalledWith('test-value')
-      expect(mockOnPress).toHaveBeenCalledTimes(1)
+      expect(mockonValueChange).toHaveBeenCalledWith(false)
+      expect(mockonValueChange).toHaveBeenCalledTimes(1)
     })
 
-    test('does not call onPress when disabled', () => {
-      const mockOnPress = jest.fn()
+    test('does not call onValueChange when disabled', () => {
+      const mockonValueChange = jest.fn()
       const { getByRole } = render(
         <BasicAppContext>
-          <RadioButton {...defaultProps} onPress={mockOnPress} disabled={true} />
+          <RadioButton {...defaultProps} onValueChange={mockonValueChange} disabled={true} />
         </BasicAppContext>
       )
 
       const radioButton = getByRole('radio')
       fireEvent.press(radioButton)
 
-      expect(mockOnPress).not.toHaveBeenCalled()
+      expect(mockonValueChange).not.toHaveBeenCalled()
     })
 
-    test('calls onPress multiple times for multiple presses', () => {
-      const mockOnPress = jest.fn()
+    test('calls onValueChange multiple times for multiple presses', () => {
+      const mockonValueChange = jest.fn()
       const { getByRole } = render(
         <BasicAppContext>
-          <RadioButton {...defaultProps} onPress={mockOnPress} />
+          <RadioButton {...defaultProps} onValueChange={mockonValueChange} />
         </BasicAppContext>
       )
 
@@ -119,7 +120,7 @@ describe('RadioButton Component', () => {
       fireEvent.press(radioButton)
       fireEvent.press(radioButton)
 
-      expect(mockOnPress).toHaveBeenCalledTimes(3)
+      expect(mockonValueChange).toHaveBeenCalledTimes(3)
     })
   })
 
@@ -137,7 +138,7 @@ describe('RadioButton Component', () => {
     test('has correct accessibility state when unselected', () => {
       const { getByRole } = render(
         <BasicAppContext>
-          <RadioButton {...defaultProps} selected={false} />
+          <RadioButton {...defaultProps} />
         </BasicAppContext>
       )
 
@@ -148,7 +149,7 @@ describe('RadioButton Component', () => {
     test('has correct accessibility state when selected', () => {
       const { getByRole } = render(
         <BasicAppContext>
-          <RadioButton {...defaultProps} selected={true} />
+          <RadioButton {...defaultProps} selectedValue={false} />
         </BasicAppContext>
       )
 

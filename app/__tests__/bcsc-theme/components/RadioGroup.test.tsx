@@ -14,6 +14,7 @@ describe('RadioGroup Component', () => {
   const defaultProps = {
     options: defaultOptions,
     onValueChange: jest.fn(),
+    testID: 'test-radio-group',
   }
 
   beforeEach(() => {
@@ -33,34 +34,10 @@ describe('RadioGroup Component', () => {
       })
     })
 
-    test('renders correctly with title', () => {
-      const tree = render(
-        <BasicAppContext>
-          <RadioGroup {...defaultProps} title="Choose an option" />
-        </BasicAppContext>
-      )
-
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
-    })
-
     test('renders correctly with selected value', () => {
       const tree = render(
         <BasicAppContext>
           <RadioGroup {...defaultProps} selectedValue="option2" />
-        </BasicAppContext>
-      )
-
-      waitFor(() => {
-        expect(tree).toMatchSnapshot()
-      })
-    })
-
-    test('renders correctly when disabled', () => {
-      const tree = render(
-        <BasicAppContext>
-          <RadioGroup {...defaultProps} disabled={true} />
         </BasicAppContext>
       )
 
@@ -98,27 +75,6 @@ describe('RadioGroup Component', () => {
       expect(getByText('Option 2')).toBeTruthy()
       expect(getByText('Option 3')).toBeTruthy()
     })
-
-    test('displays title when provided', () => {
-      const { getByText } = render(
-        <BasicAppContext>
-          <RadioGroup {...defaultProps} title="Select your choice" />
-        </BasicAppContext>
-      )
-
-      expect(getByText('Select your choice')).toBeTruthy()
-    })
-
-    test('does not display title when not provided', () => {
-      const { queryByText } = render(
-        <BasicAppContext>
-          <RadioGroup {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      // Should not find any title text
-      expect(queryByText('Select your choice')).toBeFalsy()
-    })
   })
 
   describe('Interaction', () => {
@@ -151,19 +107,6 @@ describe('RadioGroup Component', () => {
       expect(mockOnValueChange).toHaveBeenCalledWith('option3')
 
       expect(mockOnValueChange).toHaveBeenCalledTimes(2)
-    })
-
-    test('does not call onValueChange when group is disabled', () => {
-      const mockOnValueChange = jest.fn()
-      const { getByText } = render(
-        <BasicAppContext>
-          <RadioGroup {...defaultProps} onValueChange={mockOnValueChange} disabled={true} />
-        </BasicAppContext>
-      )
-
-      fireEvent.press(getByText('Option 1'))
-
-      expect(mockOnValueChange).not.toHaveBeenCalled()
     })
 
     test('does not call onValueChange for individually disabled options', () => {
@@ -199,14 +142,14 @@ describe('RadioGroup Component', () => {
     test('shows correct selection state for each option', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <RadioGroup {...defaultProps} selectedValue="option2" testID="radio-group" />
+          <RadioGroup {...defaultProps} selectedValue="option2" />
         </BasicAppContext>
       )
 
       // Check that the correct option shows as selected via accessibility state
-      const option1 = getByTestId('radio-group-option-option1')
-      const option2 = getByTestId('radio-group-option-option2')
-      const option3 = getByTestId('radio-group-option-option3')
+      const option1 = getByTestId('test-radio-group-option-Option1')
+      const option2 = getByTestId('test-radio-group-option-Option2')
+      const option3 = getByTestId('test-radio-group-option-Option3')
 
       expect(option1.props.accessibilityState.selected).toBe(false)
       expect(option2.props.accessibilityState.selected).toBe(true)
@@ -217,24 +160,21 @@ describe('RadioGroup Component', () => {
       const mockOnValueChange = jest.fn()
       let selectedValue = 'option1'
 
+      const onValueChange = (value: string) => {
+        selectedValue = value
+        mockOnValueChange(value)
+      }
+
       const TestComponent = () => (
         <BasicAppContext>
-          <RadioGroup
-            {...defaultProps}
-            selectedValue={selectedValue}
-            onValueChange={(value) => {
-              selectedValue = value
-              mockOnValueChange(value)
-            }}
-            testID="radio-group"
-          />
+          <RadioGroup {...defaultProps} selectedValue={selectedValue} onValueChange={onValueChange} />
         </BasicAppContext>
       )
 
       const { getByText, getByTestId, rerender } = render(<TestComponent />)
 
       // Initially option1 should be selected
-      expect(getByTestId('radio-group-option-option1').props.accessibilityState.selected).toBe(true)
+      expect(getByTestId('test-radio-group-option-Option1').props.accessibilityState.selected).toBe(true)
 
       // Select option2
       fireEvent.press(getByText('Option 2'))
@@ -243,8 +183,8 @@ describe('RadioGroup Component', () => {
       selectedValue = 'option2'
       rerender(<TestComponent />)
 
-      expect(getByTestId('radio-group-option-option2').props.accessibilityState.selected).toBe(true)
-      expect(getByTestId('radio-group-option-option1').props.accessibilityState.selected).toBe(false)
+      expect(getByTestId('test-radio-group-option-Option2').props.accessibilityState.selected).toBe(true)
+      expect(getByTestId('test-radio-group-option-Option1').props.accessibilityState.selected).toBe(false)
     })
   })
 
@@ -266,21 +206,9 @@ describe('RadioGroup Component', () => {
         </BasicAppContext>
       )
 
-      expect(getByTestId('test-group-option-option1')).toBeTruthy()
-      expect(getByTestId('test-group-option-option2')).toBeTruthy()
-      expect(getByTestId('test-group-option-option3')).toBeTruthy()
-    })
-
-    test('uses default testID for options when no testID provided', () => {
-      const { getByTestId } = render(
-        <BasicAppContext>
-          <RadioGroup {...defaultProps} />
-        </BasicAppContext>
-      )
-
-      expect(getByTestId('radioGroup-option-option1')).toBeTruthy()
-      expect(getByTestId('radioGroup-option-option2')).toBeTruthy()
-      expect(getByTestId('radioGroup-option-option3')).toBeTruthy()
+      expect(getByTestId('test-group-option-Option1')).toBeTruthy()
+      expect(getByTestId('test-group-option-Option2')).toBeTruthy()
+      expect(getByTestId('test-group-option-Option3')).toBeTruthy()
     })
   })
 
@@ -314,14 +242,14 @@ describe('RadioGroup Component', () => {
     test('handles selectedValue that does not match any option', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <RadioGroup {...defaultProps} selectedValue="nonexistent" testID="radio-group" />
+          <RadioGroup {...defaultProps} selectedValue="nonexistent" />
         </BasicAppContext>
       )
 
       // All options should be unselected
-      expect(getByTestId('radio-group-option-option1').props.accessibilityState.selected).toBe(false)
-      expect(getByTestId('radio-group-option-option2').props.accessibilityState.selected).toBe(false)
-      expect(getByTestId('radio-group-option-option3').props.accessibilityState.selected).toBe(false)
+      expect(getByTestId('test-radio-group-option-Option1').props.accessibilityState.selected).toBe(false)
+      expect(getByTestId('test-radio-group-option-Option2').props.accessibilityState.selected).toBe(false)
+      expect(getByTestId('test-radio-group-option-Option3').props.accessibilityState.selected).toBe(false)
     })
   })
 })
