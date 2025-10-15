@@ -456,7 +456,15 @@ const translation = {
       "RemoveAccount": "Remove account",
       "RemoveAccountTitle": "Remove account from this app?",
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity."
-    }
+    },
+    "VerificationMethods": {
+      "SendVideoTitle": "Send a video",
+      "SendVideoDescription": "Record a short video and we'll review it to verify your identity.",
+      "VideoCallTitle": "Video call",
+      "VideoCallDescription": "We will verify your identity during a video call.",
+      "InPersonTitle": "In person",
+      "InPersonDescription": "Find out where to go and what to bring."
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting",

@@ -9,12 +9,14 @@ import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { useTranslation } from 'react-i18next'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerificationMethodSelection>
 }
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
+  const { t } = useTranslation()
   const { ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
@@ -100,8 +102,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
             return (
               <VerifyMethodActionButton
                 key="video_call"
-                title={'Video call'}
-                description={`We will verify your identity during a video call.`}
+                title={t('Unified.VerificationMethods.VideoCallTitle')}
+                description={t('Unified.VerificationMethods.VideoCallDescription')}
                 icon={'video'}
                 onPress={handlePressLiveCall}
                 loading={liveCallLoading}
@@ -115,8 +117,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
             return (
               <VerifyMethodActionButton
                 key="send_video"
-                title={'Send a video'}
-                description={`Record a short video and we'll review it to verify your identity.`}
+                title={t('Unified.VerificationMethods.SendVideoTitle')}
+                description={t('Unified.VerificationMethods.SendVideoDescription')}
                 icon={'send'}
                 onPress={handlePressSendVideo}
                 loading={sendVideoLoading}
@@ -130,8 +132,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
             return (
               <VerifyMethodActionButton
                 key="in_person"
-                title={'In person'}
-                description={`Find out where to go and what to bring.`}
+                title={t('Unified.VerificationMethods.InPersonTitle')}
+                description={t('Unified.VerificationMethods.InPersonDescription')}
                 icon={'account'}
                 onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
                 disabled={liveCallLoading || sendVideoLoading}
