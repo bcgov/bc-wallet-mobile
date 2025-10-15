@@ -33,7 +33,7 @@ describe('useSetupSteps Hook', () => {
 
     it('should be completed when nickname is provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.nickname.completed).toBe(true)
       expect(hook.result.current.nickname.focused).toBe(false)
@@ -43,7 +43,7 @@ describe('useSetupSteps Hook', () => {
   describe('ID Step', () => {
     it('Combo Card: should be completed when serial and email provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
 
       const hook = renderHook(() => useSetupSteps(store))
 
@@ -62,7 +62,7 @@ describe('useSetupSteps Hook', () => {
 
     it('Non-Photo Card: should be completed when serial, email, and photo ID provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
 
       const hook = renderHook(() => useSetupSteps(store))
 
@@ -97,7 +97,7 @@ describe('useSetupSteps Hook', () => {
 
     it('Non-BCSC Card: should be completed when 2 IDs provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
 
       const hook = renderHook(() => useSetupSteps(store))
 
@@ -151,7 +151,7 @@ describe('useSetupSteps Hook', () => {
   describe('Residential Address Step', () => {
     it('should be focused when ID step completed but address not yet completed', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
 
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
@@ -166,7 +166,7 @@ describe('useSetupSteps Hook', () => {
 
     it('should be completed when device code is provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -182,7 +182,7 @@ describe('useSetupSteps Hook', () => {
   describe('Email Step', () => {
     it('should be focused when ID step completed, address step completed, but email not yet completed', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -196,7 +196,7 @@ describe('useSetupSteps Hook', () => {
 
     it('should be completed when email and emailConfirmed are provided', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -213,7 +213,7 @@ describe('useSetupSteps Hook', () => {
   describe('Verify Step', () => {
     it('should be focused when ID step completed, address step completed, email step completed, but verify not yet completed', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -229,7 +229,7 @@ describe('useSetupSteps Hook', () => {
 
     it('should be completed when verified is true', () => {
       const store = structuredClone(initialState)
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -281,7 +281,7 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.verify.focused).toBe(false)
 
       // Complete Step 1
-      store.bcsc.nickname = 'test'
+      store.bcsc.nicknames = ['test']
 
       hook.rerender(store)
 

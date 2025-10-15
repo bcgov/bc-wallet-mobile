@@ -13,7 +13,7 @@ import {
   ThemedText,
   KeyboardView,
 } from '@bifold/core'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCDispatchAction, BCState, getSelectedNickname } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { formStringLengths } from '@/constants'
@@ -31,7 +31,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
   const [store, dispatch] = useStore<BCState>()
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
-  const [accountNickname, setAccountNickname] = useState(store.bcsc.nickname ?? '')
+  const [accountNickname, setAccountNickname] = useState(getSelectedNickname(store) ?? '')
   const [error, setError] = useState<string | null>(null)
 
   const styles = StyleSheet.create({
@@ -72,7 +72,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
     } else {
       setError(null)
       setLoading(true)
-      dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [accountNickname] })
+      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [accountNickname] })
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }

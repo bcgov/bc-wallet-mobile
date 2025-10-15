@@ -3,7 +3,7 @@ import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { hitSlop } from '@/constants'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCDispatchAction, BCState, getSelectedNickname } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -151,12 +151,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    * @returns {*} {string[]} An array of strings representing the subtext for Step 1.
    */
   const getVerificationStep1Subtext = useCallback((): string[] => {
-    if (step.nickname.completed && store.bcsc.nickname) {
-      return [`${t('Unified.Steps.NicknameAccount')}: ${store.bcsc.nickname}`]
+    if (step.nickname.completed && getSelectedNickname(store)) {
+      return [`${t('Unified.Steps.NicknameAccount')}: ${getSelectedNickname(store)}`]
     }
 
     return [t('Unified.Steps.NicknameAccount')]
-  }, [t, step.nickname.completed, store.bcsc.nickname])
+  }, [t, step.nickname.completed, store])
 
   /**
    * Returns the subtext for Step 2 (Identification) of the verification process.

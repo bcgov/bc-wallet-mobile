@@ -68,7 +68,8 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
-  nickname?: string
+  nicknames: string[]
+  selectedAccountIndex: number
   email?: string
   emailConfirmed?: boolean
   deviceCode?: string
@@ -124,7 +125,9 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  ADD_NICKNAME = 'bcsc/addNickname',
   UPDATE_NICKNAME = 'bcsc/updateNickname',
+  SELECT_ACCOUNT = 'bcsc/selectAccount',
   UPDATE_VERIFIED = 'bcsc/updateVerified',
   UPDATE_CARD_TYPE = 'bcsc/updateCardType',
   UPDATE_SERIAL = 'bcsc/updateSerial',
@@ -220,6 +223,8 @@ const bcscState: BCSCState = {
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
+  nicknames: [],
+  selectedAccountIndex: 0,
   bookmarks: [],
   email: undefined,
   userCode: undefined,
@@ -321,9 +326,27 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       return newState
     }
-    case BCSCDispatchAction.UPDATE_NICKNAME: {
+    case BCSCDispatchAction.ADD_NICKNAME: {
       const nickname = (action?.payload || []).pop() ?? ''
-      const bcsc = { ...state.bcsc, nickname }
+      const bcsc = { ...state.bcsc, nicknames: [...state.bcsc.nicknames, nickname] }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_NICKNAME: {
+      const { index, nickname } = (action?.payload || []).pop() ?? { index: 0, nickname: '' }
+      const updatedNicknames = [...state.bcsc.nicknames]
+      if (index >= 0 && index < updatedNicknames.length) {
+        updatedNicknames[index] = nickname
+      }
+      const bcsc = { ...state.bcsc, nicknames: updatedNicknames }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.SELECT_ACCOUNT: {
+      const selectedAccountIndex = (action?.payload || []).pop() ?? 0
+      const bcsc = { ...state.bcsc, selectedAccountIndex }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -556,3 +579,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
 // @ts-expect-error - states for the bifoldReducer and bcReducer are different, still works though
 export const reducer = mergeReducers(bifoldReducer, bcReducer)
+
+// Helper function to get the current selected nickname
+export const getSelectedNickname = (state: BCState): string | undefined => {
+  return state.bcsc.nicknames[state.bcsc.selectedAccountIndex]
+}

@@ -5,7 +5,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState } from '@/store'
+import { BCState, getSelectedNickname } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -150,6 +150,7 @@ const Account: React.FC = () => {
           <ThemedText
             style={styles.warning}
           >{`This cannot be used as photo ID, a driver's licence, or a health card.`}</ThemedText>
+          <AccountField label={'Account Nickname'} value={getSelectedNickname(store) ?? ''} />
           <AccountField label={'App expiry date'} value={userMeta.data?.user.card_expiry ?? ''} />
           <AccountField label={'Account type'} value={userMeta.data?.user.card_type ?? 'Non BC Services Card'} />
           <AccountField label={'Address'} value={userMeta.data?.user.address?.formatted ?? ''} />
