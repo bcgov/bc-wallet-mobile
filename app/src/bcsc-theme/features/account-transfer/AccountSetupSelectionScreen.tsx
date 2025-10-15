@@ -1,14 +1,17 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const AccountSetupSelectionScreen: React.FC = () => {
+  const [store] = useStore<BCState>()
   const { t } = useTranslation()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const { Spacing } = useTheme()
@@ -17,36 +20,49 @@ const AccountSetupSelectionScreen: React.FC = () => {
     container: {
       flex: 1,
       alignItems: 'center',
-      paddingHorizontal: Spacing.md,
+      padding: Spacing.md,
+      justifyContent: 'space-between',
+    },
+    contentContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    controlsContainer: {
+      marginTop: 'auto',
+      width: '100%',
+      gap: Spacing.sm,
     },
   })
 
   return (
-    <View style={styles.container}>
-      <GenericCardImage />
-      <ThemedText variant="headerTitle" style={{ color: 'white', marginBottom: Spacing.xxl }}>
-        {t('Unified.AccountSetup.Title')}
-      </ThemedText>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+      <View style={styles.contentContainer}>
+        <GenericCardImage />
+        <ThemedText variant={'headerTitle'}>{t('Unified.AccountSetup.Title')}</ThemedText>
+      </View>
 
-      <View style={{ marginBottom: Spacing.md, width: '100%' }}>
+      <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
-          title={t('Unified.AccountSetup.CreateAccount')}
+          title={t('Unified.AccountSetup.AddAccount')}
           onPress={() => {
-            navigation.navigate(BCSCScreens.SetupSteps)
+            if (store.bcsc.completedNewSetup) {
+              navigation.navigate(BCSCScreens.SetupSteps)
+            } else {
+              navigation.navigate(BCSCScreens.NewSetup)
+            }
           }}
         />
-      </View>
-      <View style={{ width: '100%' }}>
         <Button
-          buttonType={ButtonType.Tertiary}
+          buttonType={ButtonType.Secondary}
           title={t('Unified.AccountSetup.TransferAccount')}
           onPress={() => {
             navigation.navigate(BCSCScreens.TransferAccountInformation)
           }}
         />
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

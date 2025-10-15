@@ -1,0 +1,1337 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RadioGroup Component Edge Cases handles empty options array 1`] = `
+<View
+  style={{}}
+>
+  <View
+    style={
+      {
+        "paddingBottom": 4,
+      }
+    }
+  />
+</View>
+`;
+
+exports[`RadioGroup Component Edge Cases handles single option 1`] = `
+<View
+  style={{}}
+>
+  <View
+    style={
+      {
+        "paddingBottom": 4,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Only Option"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-only"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Only Option
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+  </View>
+</View>
+`;
+
+exports[`RadioGroup Component Rendering renders correctly when disabled 1`] = `
+<View
+  style={{}}
+>
+  <View
+    style={
+      {
+        "paddingBottom": 4,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Option 1"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": true,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option1"
+    >
+      <Text
+        style={
+          {
+            "color": "#606060",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 1
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#606060",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 2"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": true,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option2"
+    >
+      <Text
+        style={
+          {
+            "color": "#606060",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 2
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#606060",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 3"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": true,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option3"
+    >
+      <Text
+        style={
+          {
+            "color": "#606060",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 3
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#606060",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+  </View>
+</View>
+`;
+
+exports[`RadioGroup Component Rendering renders correctly with default props 1`] = `
+<View
+  style={{}}
+>
+  <View
+    style={
+      {
+        "paddingBottom": 4,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Option 1"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option1"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 1
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 2"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option2"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 2
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 3"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option3"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 3
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+  </View>
+</View>
+`;
+
+exports[`RadioGroup Component Rendering renders correctly with mixed disabled options 1`] = `
+<View
+  style={{}}
+>
+  <View
+    style={
+      {
+        "paddingBottom": 4,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Option 1"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option1"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 1
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 2 (Disabled)"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": true,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option2"
+    >
+      <Text
+        style={
+          {
+            "color": "#606060",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 2 (Disabled)
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#606060",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 3"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option3"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 3
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+  </View>
+</View>
+`;
+
+exports[`RadioGroup Component Rendering renders correctly with selected value 1`] = `
+<View
+  style={{}}
+>
+  <View
+    style={
+      {
+        "paddingBottom": 4,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Option 1"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option1"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 1
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 2"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": true,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option2"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 2
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "backgroundColor": "#003366",
+              "borderRadius": 6,
+              "height": 12,
+              "width": 12,
+            }
+          }
+        />
+      </View>
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 3"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option3"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 3
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+  </View>
+</View>
+`;
+
+exports[`RadioGroup Component Rendering renders correctly with title 1`] = `
+<View
+  style={{}}
+>
+  <View
+    style={
+      {
+        "paddingBottom": 4,
+        "paddingHorizontal": 16,
+        "paddingTop": 16,
+      }
+    }
+  >
+    <Text
+      maxFontSizeMultiplier={2}
+      style={
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          },
+          {
+            "color": "#000000",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 14,
+            "fontWeight": "600",
+          },
+        ]
+      }
+    >
+      Choose an option
+    </Text>
+  </View>
+  <View
+    style={
+      {
+        "paddingBottom": 4,
+      }
+    }
+  >
+    <View
+      accessibilityLabel="Option 1"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option1"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 1
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 2"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option2"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 2
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "height": 8,
+        }
+      }
+    />
+    <View
+      accessibilityLabel="Option 3"
+      accessibilityRole="radio"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": false,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "#FFFFFF",
+          "flexDirection": "row",
+          "opacity": 1,
+          "paddingHorizontal": 24,
+          "paddingVertical": 16,
+        }
+      }
+      testID="radioGroup-option-option3"
+    >
+      <Text
+        style={
+          {
+            "color": "#FFFFFF",
+            "flex": 1,
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 18,
+            "fontWeight": "normal",
+          }
+        }
+      >
+        Option 3
+      </Text>
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "transparent",
+            "borderColor": "#003366",
+            "borderRadius": 12,
+            "borderWidth": 3,
+            "height": 24,
+            "justifyContent": "center",
+            "width": 24,
+          }
+        }
+      />
+    </View>
+  </View>
+</View>
+`;

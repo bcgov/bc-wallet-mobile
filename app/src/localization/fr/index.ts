@@ -314,8 +314,28 @@ const translation = {
     },
     "AccountSetup": {
       "Title": "BC Services Card Account (FR)",
-      "CreateAccount": "Create new Account (FR)",
-      "TransferAccount": "Transfer Account From Another Device (FR)",
+      "AddAccount": "Add account (FR)",
+      "TransferAccount": "Transfer from another device (FR)"
+    },
+    "NewSetup": {
+      "Title": "Nouvelle configuration (FR)",
+      "YouWillNeedTo": "Vous devrez: (FR)",
+      "AddPhotoID": "Ajouter une pièce d'identité avec photo (FR)",
+      "RecordVideoOrVisit": "Enregistrer une courte vidéo, avoir un appel vidéo, ou visiter un bureau Service BC (FR)",
+      "WhoseIDQuestion": "De qui ajoutez-vous la pièce d'identité? (FR)",
+      "MyOwnID": "Ma propre pièce d'identité (FR)",
+      "SomeoneElsesID": "La pièce d'identité de quelqu'un d'autre (FR)",
+      "IsOtherPersonWithYou": "Cette autre personne est-elle avec vous? (FR)",
+      "Yes": "Oui (FR)",
+      "No": "Non (FR)",
+      "CannotFinishWithoutOtherPerson": "Vous ne pourrez pas terminer la configuration de cette application sans que l'autre personne soit présente. (FR)",
+      "OKToGiveHelp": "Il est acceptable d'aider quelqu'un à configurer son compte. (FR)",
+      "YouCan": "Vous pouvez (FR)",
+      "YouCanReadInstructions": "Lire les instructions (FR)",
+      "YouCanNavigateApp": "Naviguer dans l'application (FR)",
+      "YouCanTypeOrScan": "Taper, scanner, ou prendre des photos (FR)",
+      "YouCannot": "Vous ne pouvez pas (FR)",
+      "YouCannotBeInVideo": "Être dans les enregistrements vidéo ou les appels. Seule l'autre personne peut l'être. (FR)"
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device (FR)",

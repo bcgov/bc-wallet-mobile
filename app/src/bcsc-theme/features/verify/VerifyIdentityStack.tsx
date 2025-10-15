@@ -14,6 +14,7 @@ import EnterBirthdateScreen from './EnterBirthdateScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import ManualSerialScreen from './ManualSerialScreen'
 import MismatchedSerialScreen from './MismatchedSerialScreen'
+import NewSetupScreen from './NewSetupScreen'
 import PhotoInstructionsScreen from './PhotoInstructionsScreen'
 import PhotoReviewScreen from './PhotoReviewScreen'
 import { ResidentialAddressScreen } from './ResidentialAddressScreen'
@@ -57,8 +58,10 @@ const VerifyIdentityStack = () => {
         component={AccountSetupSelectionScreen}
         options={{
           headerLeft: () => null,
+          title: 'BC Services Card',
         }}
       />
+      <Stack.Screen name={BCSCScreens.NewSetup} component={NewSetupScreen} />
       <Stack.Screen
         name={BCSCScreens.SetupSteps}
         component={SetupStepsScreen}
@@ -68,34 +71,10 @@ const VerifyIdentityStack = () => {
           headerLeft: () => null,
         }}
       />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountInformation}
-        component={TransferInformationScreen}
-        options={() => ({
-          headerShown: true,
-        })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountSuccess}
-        component={TransferSuccessScreen}
-        options={() => ({
-          headerShown: true,
-        })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountInstructions}
-        component={TransferInstructionsScreen}
-        options={() => ({
-          headerShown: true,
-        })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountQRScan}
-        component={TransferQRScannerScreen}
-        options={() => ({
-          headerShown: true,
-        })}
-      />
+      <Stack.Screen name={BCSCScreens.TransferAccountInformation} component={TransferInformationScreen} />
+      <Stack.Screen name={BCSCScreens.TransferAccountSuccess} component={TransferSuccessScreen} />
+      <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
+      <Stack.Screen name={BCSCScreens.TransferAccountQRScan} component={TransferQRScannerScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen
         name={BCSCScreens.SerialInstructions}
