@@ -1,13 +1,13 @@
+import BCSCApiClient from '@/bcsc-theme/api/client'
 import {
   _resetBCSCApiClientSingleton,
   BCSCApiClientContext,
   BCSCApiClientProvider,
 } from '@/bcsc-theme/contexts/BCSCApiClientContext'
+import * as Bifold from '@bifold/core'
+import { DispatchAction } from '@bifold/core'
 import { renderHook, waitFor } from '@testing-library/react-native'
 import { useContext } from 'react'
-import * as Bifold from '@bifold/core'
-import BCSCApiClient from '@/bcsc-theme/api/client'
-import { DispatchAction } from '@bifold/core'
 
 jest.mock('@/bcsc-theme/api/client')
 
@@ -48,7 +48,7 @@ describe('BCSCApiClientProvider', () => {
     await waitFor(() => {
       expect(result.current?.client).toBeDefined()
       expect(result.current?.client).toBeInstanceOf(BCSCApiClient)
-      expect(result.current?.clientIsReady).toBe(true)
+      expect(result.current?.isClientReady).toBe(true)
       expect(result.current?.error).toBeNull()
       expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).toHaveBeenCalledTimes(1)
     })
@@ -75,7 +75,7 @@ describe('BCSCApiClientProvider', () => {
     const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
 
     // No initialization → stays false
-    expect(result.current?.clientIsReady).toBe(false)
+    expect(result.current?.isClientReady).toBe(false)
     expect(result.current?.client).toBeNull()
     expect(result.current?.error).toBeNull()
     expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).not.toHaveBeenCalled()
@@ -101,7 +101,7 @@ describe('BCSCApiClientProvider', () => {
 
     const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
 
-    expect(result.current?.clientIsReady).toBe(false)
+    expect(result.current?.isClientReady).toBe(false)
     expect(result.current?.client).toBeNull()
     expect(result.current?.error).toBeNull()
     expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).not.toHaveBeenCalled()
@@ -128,7 +128,7 @@ describe('BCSCApiClientProvider', () => {
     const { result, rerender } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
 
     await waitFor(() => {
-      expect(result.current?.clientIsReady).toBe(true)
+      expect(result.current?.isClientReady).toBe(true)
       expect(result.current?.client).toBeDefined()
       expect(result.current?.error).toBeNull()
       expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).toHaveBeenCalledTimes(1)
@@ -139,7 +139,7 @@ describe('BCSCApiClientProvider', () => {
     rerender({})
 
     await waitFor(() => {
-      expect(result.current?.clientIsReady).toBe(true)
+      expect(result.current?.isClientReady).toBe(true)
       expect(result.current?.client).toBeDefined()
       expect(result.current?.client?.baseURL).toBe('singleton')
       expect(result.current?.error).toBeNull()
@@ -170,7 +170,7 @@ describe('BCSCApiClientProvider', () => {
     const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
 
     await waitFor(() => {
-      expect(result.current?.clientIsReady).toBe(false)
+      expect(result.current?.isClientReady).toBe(false)
       expect(result.current?.client).toBeNull()
       expect(result.current?.error).toBeDefined()
       expect(result.current?.error).toContain('Initialization failed')

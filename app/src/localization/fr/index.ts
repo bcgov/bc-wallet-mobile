@@ -35,6 +35,7 @@ const translation = {
     "ToContinueUsing": "Pour continuer à utiliser la fonction de scan de BC Wallet, veuillez activer les autorisations de la caméra.",
     "Allow": "Autoriser",
     "OpenSettings": "Ouvrir les paramètres",
+    "CameraPermissionRequired": "Camera permission required (FR)"
   },
   "Biometry": {
     "Toggle": "Activer/Désactiver la biométrie",
@@ -311,6 +312,45 @@ const translation = {
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (FR)",
       "ChooseID": "Choose ID (FR)",
     },
+    "AccountSetup": {
+      "Title": "BC Services Card Account (FR)",
+      "CreateAccount": "Create new Account (FR)",
+      "TransferAccount": "Transfer Account From Another Device (FR)",
+    },
+    "TransferQRInformation": {
+      "Title": "Open the BC Services Card app on your other mobile device (FR)",
+      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (FR)",
+      "Warning" : "Do not scan with the camera app. (FR)",
+      "GetQRCode": "Get QR Code (FR)",
+      "LearnMore": "Learn more (FR)"
+    },
+    "TransferInformation": {
+      "Title": "Have this app on another device? (FR)",
+      "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again. (FR)",
+      "TransferAccount": "Transfer Account (FR)",
+    },
+    "TransferInstructions": {
+      "Title": "Scan your QR code to transfer your account (FR)",
+      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section. (FR)",
+      "Step2": "2. Choose 'Transfer to another device' to get your QR code. (FR)",
+      "Step3": "3. Continue on this device and scan that QR code. (FR)",
+      "ScanQRCode": "Scan QR Code (FR)",
+    },
+    "TransferQRDisplay": {
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device. (FR)"
+    },
+    "TransferSuccess": {
+      "Title": "QR code scan complete (FR)",
+      "Description": "The app should be set up on your other mobile device. (FR)",
+      "ExtraText": "If you no longer need to use the app on this device, you can remove your account. (FR)",
+      "ButtonText": "Ok"
+    },
+    "Verification": {
+      "Title": "You're all set (FR)",
+      "Description": "Use this app to securely log in to many different websites. (FR)",
+      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID. (FR)",
+      "ButtonText": "Ok (FR)"
+    },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs (FR)",
       "Description": "It's needed to verify your identity. (FR)",
@@ -378,7 +418,10 @@ const translation = {
     "Account": {
       "RemoveAccount": "Remove account (FR)",
       "RemoveAccountTitle": "Remove account from this app? (FR)",
-      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)"
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (FR)",
+      "TransferAccount": "Transfer account to another device (FR)",
+      "AccountDetails": "All account details (FR)",
+      "AccountDetailsDescription": "View your account activity, manage your email address and more. (FR)"
     },
     "VideoTips": {
       "PrivatePlace": "Find a private place to talk (FR)",

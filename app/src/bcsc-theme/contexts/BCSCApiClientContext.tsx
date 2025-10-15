@@ -1,7 +1,7 @@
+import { BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import React, { createContext, useEffect, useMemo, useState } from 'react'
-import { BCState } from '@/store'
 import BCSCApiClient from '../api/client'
 
 // Singleton instance of BCSCApiClient
@@ -9,7 +9,7 @@ let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
 
 export interface BCSCApiClientContextType {
   client: BCSCApiClient | null
-  clientIsReady: boolean
+  isClientReady: boolean
   error: string | null
 }
 
@@ -29,7 +29,7 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [store, dispatch] = useStore<BCState>()
-  const [clientIsReady, setClientIsReady] = useState(false)
+  const [isClientReady, setIsClientReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -41,7 +41,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     const configureClient = async () => {
-      setClientIsReady(false)
+      setIsClientReady(false)
       setError(null)
 
       try {
@@ -56,16 +56,16 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           BCSC_API_CLIENT_SINGLETON = newClient
         }
 
-        setClientIsReady(true)
+        setIsClientReady(true)
       } catch (err) {
         const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
           (err as Error)?.message
         }`
         setError(errorMessage)
+        setIsClientReady(false)
 
         BCSC_API_CLIENT_SINGLETON = null
 
-        setClientIsReady(false)
         dispatch({
           type: DispatchAction.BANNER_MESSAGES,
           payload: [
@@ -87,10 +87,10 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
   const contextValue = useMemo(
     () => ({
       client: BCSC_API_CLIENT_SINGLETON,
-      clientIsReady,
+      isClientReady,
       error,
     }),
-    [clientIsReady, error]
+    [isClientReady, error]
   )
 
   return <BCSCApiClientContext.Provider value={contextValue}>{children}</BCSCApiClientContext.Provider>

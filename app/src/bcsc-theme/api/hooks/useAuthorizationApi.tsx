@@ -1,10 +1,10 @@
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { isAxiosError } from 'axios'
 import { useCallback, useMemo } from 'react'
 import { createDeviceSignedJWT } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
 
@@ -43,23 +43,28 @@ export interface AuthorizeDeviceUnknownBCSCConfig {
 
 const useAuthorizationApi = (apiClient: BCSCApiClient) => {
   /**
-   * Authorize a device with a known BCSC card.
+   * Authorize a device with a known BCSC card. Serial and birthdate are optional, but if serial is provided, both must be provided. These values will be provided during the
+   * new account flow when entering card information.
    *
-   * TODO: fetch evidence API endpoint from this endpoint
+   * Note: If the user is transferring their account, this request won't need the serial or birthdate as account information will be scanned via QR Code at a later step.
+   * See this sequence diagram for more details: https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301576047/Self+Setup+Interaction+Design#Sequence-Diagram
    *
-   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301615517/5.1.1+Evidence+API`
-   * @param {string} serial - BCSC serial number
-   * @param {Date} birthdate - Users birth date
+   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization-Request`
+   * @param {string?} serial - BCSC serial number
+   * @param {Date?} birthdate - Users birth date. This paramter is required if serial is provided
    * @returns {*} {DeviceAuthorizationResponse | null}
    */
   const authorizeDevice = useCallback(
-    async (serial: string, birthdate: Date): Promise<DeviceAuthorizationResponse | null> => {
+    async (serial?: string, birthdate?: Date): Promise<DeviceAuthorizationResponse | null> => {
       return withAccount<DeviceAuthorizationResponse | null>(async (account) => {
+        if (serial && !birthdate) {
+          throw new Error('Birthdate is required when providing a serial number')
+        }
         const body = {
           response_type: 'device_code',
           client_id: account.clientID,
-          card_serial_number: serial,
-          birth_date: birthdate.toISOString().split('T')[0],
+          card_serial_number: serial ?? undefined,
+          birth_date: birthdate?.toISOString().split('T')[0] ?? undefined,
           scope: 'openid profile address offline_access',
         }
 
@@ -99,7 +104,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * Note: This request will return null if called multiple times for the same device.
    * First response will return the Verification response, which must be stored and persisted.
    *
-   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301615517/5.1.1+Evidence+API`
+   * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization`
    * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
    * @returns {*} {DeviceAuthorizationResponse | null} - Returns the response data or null if already registered
    */

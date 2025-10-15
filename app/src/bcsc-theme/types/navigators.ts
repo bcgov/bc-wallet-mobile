@@ -1,7 +1,7 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
-import { BCSCCardType } from './cards'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
+import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
@@ -14,6 +14,7 @@ export enum BCSCScreens {
   WebView = 'BCSCWebView',
   Settings = 'BCSCSettings',
   SetupSteps = 'BCSCSetupSteps',
+  SetupTypes = 'BCSCSetupTypes',
   IdentitySelection = 'BCSCIdentitySelection',
   SerialInstructions = 'BCSCSerialInstructions',
   ManualSerial = 'BCSCManualSerial',
@@ -50,6 +51,12 @@ export enum BCSCScreens {
   VerifyNotComplete = 'BCSCVerifyNotComplete',
   ResidentialAddressScreen = 'BCSCResidentialAddressScreen',
   RemoveAccountConfirmation = 'RemoveAccountConfirmationScreen',
+  TransferAccountInformation = 'TransferAccountInformationScreen',
+  TransferAccountInstructions = 'TransferAccountInstructionsScreen',
+  TransferAccountQRDisplay = 'TransferAccountQRDisplayScreen',
+  TransferAccountQRScan = 'TransferAccountQRScanScreen',
+  TransferAccountQRInformation = 'TransferQRInformationScreen',
+  TransferAccountSuccess = 'TransferAccountSuccessScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
 }
 
@@ -65,12 +72,21 @@ export type BCSCRootStackParams = {
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.SetupSteps]: undefined
+  [BCSCScreens.TransferAccountQRDisplay]: undefined
+  [BCSCScreens.TransferAccountSuccess]: undefined
+  [BCSCScreens.TransferAccountQRInformation]: undefined
   [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
   [BCSCScreens.Settings]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.SetupSteps]: undefined
+  [BCSCScreens.SetupTypes]: undefined
+  [BCSCScreens.TransferAccountInstructions]: undefined
+  [BCSCScreens.TransferAccountQRScan]: undefined
+  [BCSCScreens.TransferAccountInformation]: undefined
+  [BCSCScreens.TransferAccountSuccess]: undefined
   [BCSCScreens.WebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
