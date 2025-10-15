@@ -36,23 +36,6 @@ const translation = {
     "Allow": "Allow",
     "OpenSettings": "Open settings",
   },
-  // TODO (MD): Add french and portuguese translations
-  "BCSCOnboarding": {
-    "CarouselNext": "Next",
-    "CarouselBack": "Back",
-    "ContinueButton": "Continue",
-    "AcceptAndContinueButton": "Accept and continue",
-    "CarouselServicesHeader": "Access services online",
-    "CarouselProveHeader": "Prove who you are online",
-    "CarouselCannotUseHeader": "Cannot use as a health card or driver's license",
-    "PrivacyPolicyTitle": "Privacy",
-    "PrivacyPolicyHeaderSetup": "App Setup",
-    "PrivacyPolicyHeaderSecuringApp": "Securing the App",
-    "PrivacyPolicyLearnMore": "Learn more",
-    "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
-    "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It’s temporarily stored on this device until the app is set up.",
-    "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential"
-  },
   "Biometry": {
     "Toggle": "Toggle Biometrics",
     "EnabledText1": "Log in with your phone's biometrics instead of your wallet PIN.",
@@ -278,6 +261,23 @@ const translation = {
       "Step2": "Step 2",
       "Step3": "Step 3",
       "Step4": "Step 4"
+    },
+    // TODO (MD): Add french and portuguese translations
+    "Onboarding": {
+      "CarouselNext": "Next",
+      "CarouselBack": "Back",
+      "ContinueButton": "Continue",
+      "AcceptAndContinueButton": "Accept and continue",
+      "CarouselServicesHeader": "Access services online",
+      "CarouselProveHeader": "Prove who you are online",
+      "CarouselCannotUseHeader": "Cannot use as a health card or driver's license",
+      "PrivacyPolicyTitle": "Privacy",
+      "PrivacyPolicyHeaderSetup": "App Setup",
+      "PrivacyPolicyHeaderSecuringApp": "Securing the App",
+      "PrivacyPolicyLearnMore": "Learn more",
+      "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
+      "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It’s temporarily stored on this device until the app is set up.",
+      "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential"
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",

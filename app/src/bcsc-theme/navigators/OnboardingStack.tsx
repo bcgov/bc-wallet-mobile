@@ -31,7 +31,7 @@ const OnboardingStack: React.FC = () => {
         name={BCSCScreens.OnboardingPrivacyPolicyScreen}
         component={PrivacyPolicyScreen}
         options={{
-          title: t('BCSCOnboarding.PrivacyPolicyTitle'),
+          title: t('Unified.Onboarding.PrivacyPolicyTitle'),
           headerShadowVisible: false,
           headerShown: true,
         }}
@@ -41,7 +41,7 @@ const OnboardingStack: React.FC = () => {
         name={BCSCScreens.OnboardingTermsOfUseScreen}
         component={TermsOfUseScreen}
         options={{
-          title: t('BCSCOnboarding.TermsOfUseTitle'),
+          title: t('Unified.Onboarding.TermsOfUseTitle'),
           headerShown: true,
           headerShadowVisible: false,
         }}

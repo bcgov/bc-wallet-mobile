@@ -88,7 +88,7 @@ export const IntroCarouselScreen = (): JSX.Element => {
             <View style={styles.contentContainer}>
               {/* TODO: replace with image*/}
               <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-              <ThemedText variant={'headingThree'}>{t('BCSCOnboarding.CarouselServicesHeader')}</ThemedText>
+              <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselServicesHeader')}</ThemedText>
               <ThemedText>{mockCarouselContent}</ThemedText>
             </View>
           )}
@@ -97,7 +97,7 @@ export const IntroCarouselScreen = (): JSX.Element => {
             <View style={styles.contentContainer}>
               {/* TODO: replace with image */}
               <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-              <ThemedText variant={'headingThree'}>{t('BCSCOnboarding.CarouselProveHeader')}</ThemedText>
+              <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselProveHeader')}</ThemedText>
               <ThemedText>{mockCarouselContent}</ThemedText>
             </View>
           )}
@@ -106,7 +106,7 @@ export const IntroCarouselScreen = (): JSX.Element => {
             <View style={styles.contentContainer}>
               {/* TODO: replace with image*/}
               <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-              <ThemedText variant={'headingThree'}>{t('BCSCOnboarding.CarouselCannotUseHeader')}</ThemedText>
+              <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselCannotUseHeader')}</ThemedText>
               <ThemedText>{mockCarouselContent}</ThemedText>
             </View>
           )}
@@ -118,9 +118,11 @@ export const IntroCarouselScreen = (): JSX.Element => {
             onPress={handleBack}
             testID={testIdWithKey('CarouselBack')}
             accessibilityRole="button"
-            accessibilityLabel={t('BCSCOnboarding.CarouselBack')}
+            accessibilityLabel={t('Unified.Onboarding.CarouselBack')}
+            // QUESTION (MD): Should we update the styling to indicate it's disabled?
+            disabled={carouselIndex === 0}
           >
-            <ThemedText style={styles.carouselActionButtonText}>{t('BCSCOnboarding.CarouselBack')}</ThemedText>
+            <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselBack')}</ThemedText>
           </TouchableOpacity>
 
           <View style={styles.carouselCirclesContainer}>
@@ -134,9 +136,9 @@ export const IntroCarouselScreen = (): JSX.Element => {
             onPress={handleNext}
             testID={testIdWithKey('CarouselNext')}
             accessibilityRole="button"
-            accessibilityLabel={t('BCSCOnboarding.CarouselNext')}
+            accessibilityLabel={t('Unified.Onboarding.CarouselNext')}
           >
-            <ThemedText style={styles.carouselActionButtonText}>{t('BCSCOnboarding.CarouselNext')}</ThemedText>
+            <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselNext')}</ThemedText>
           </TouchableOpacity>
         </View>
       </View>

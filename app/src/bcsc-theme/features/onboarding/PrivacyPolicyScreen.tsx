@@ -40,20 +40,20 @@ export const PrivacyPolicyScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ThemedText style={styles.contentText}>{t('BCSCOnboarding.PrivacyPolicyContentA')}</ThemedText>
+        <ThemedText style={styles.contentText}>{t('Unified.Onboarding.PrivacyPolicyContentA')}</ThemedText>
 
         <View style={styles.sectionContainer}>
-          <ThemedText variant="headingFour">{t('BCSCOnboarding.PrivacyPolicyHeaderSetup')}</ThemedText>
-          <ThemedText style={styles.contentText}>{t('BCSCOnboarding.PrivacyPolicyContentB')}</ThemedText>
+          <ThemedText variant="headingFour">{t('Unified.Onboarding.PrivacyPolicyHeaderSetup')}</ThemedText>
+          <ThemedText style={styles.contentText}>{t('Unified.Onboarding.PrivacyPolicyContentB')}</ThemedText>
         </View>
 
         <View style={styles.sectionContainer}>
-          <ThemedText variant="headingFour">{t('BCSCOnboarding.PrivacyPolicyHeaderSecuringApp')}</ThemedText>
-          <ThemedText style={styles.contentText}>{t('BCSCOnboarding.PrivacyPolicyContentC')}</ThemedText>
+          <ThemedText variant="headingFour">{t('Unified.Onboarding.PrivacyPolicyHeaderSecuringApp')}</ThemedText>
+          <ThemedText style={styles.contentText}>{t('Unified.Onboarding.PrivacyPolicyContentC')}</ThemedText>
         </View>
 
         <CardButton
-          title={t('BCSCOnboarding.PrivacyPolicyLearnMore')}
+          title={t('Unified.Onboarding.PrivacyPolicyLearnMore')}
           onPress={handlePressLearnMore}
           endIcon="open-in-new"
         />
@@ -61,13 +61,13 @@ export const PrivacyPolicyScreen: React.FC = () => {
 
       <View style={styles.buttonContainer}>
         <Button
-          title={t('BCSCOnboarding.ContinueButton')}
+          title={t('Unified.Onboarding.ContinueButton')}
           buttonType={ButtonType.Primary}
           onPress={() => {
             navigation.navigate(BCSCScreens.OnboardingTermsOfUseScreen)
           }}
           testID={testIdWithKey('Continue')}
-          accessibilityLabel={t('BCSCOnboarding.ContinueButton')}
+          accessibilityLabel={t('Unified.Onboarding.ContinueButton')}
         />
       </View>
     </SafeAreaView>

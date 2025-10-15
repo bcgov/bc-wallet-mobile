@@ -42,13 +42,13 @@ export const TermsOfUseScreen: React.FC = () => {
 
       <View style={styles.buttonContainer}>
         <Button
-          title={t('BCSCOnboarding.AcceptAndContinueButton')}
+          title={t('Unified.Onboarding.AcceptAndContinueButton')}
           buttonType={ButtonType.Primary}
           onPress={() => {
             navigation.navigate(BCSCScreens.OnboardingNotificationsScreen)
           }}
           testID={testIdWithKey('AcceptAndContinue')}
-          accessibilityLabel={t('BCSCOnboarding.AcceptAndContinueButton')}
+          accessibilityLabel={t('Unified.Onboarding.AcceptAndContinueButton')}
         />
       </View>
     </SafeAreaView>
