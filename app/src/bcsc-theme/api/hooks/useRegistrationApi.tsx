@@ -60,31 +60,35 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
 
     logger.info('No account found, proceeding with registration')
 
+    // TODO:(jl) Using test tokens for now until we can reliably get
+    // real ones during setup. Need to debug why they fail from Testflight.
     let fcmDeviceToken = 'test_fcmDeviceToken'
-    let apnsToken = 'test_apnsToken'
+    let apnsToken: string | null = 'test_apnsToken'
+
+    // Try to get real notification tokens, fall back to test tokens if it fails
     try {
-      logger.debug(`TEST FETCH START: notification tokens for registration`)
-      const tokens = await getNotificationTokens()
+      logger.debug('Fetching notification tokens for registration')
+      const tokens = await getNotificationTokens(logger)
 
-      if (tokens.fcmDeviceToken) {
-        logger.debug('Using actual fcm token from notification service')
-        fcmDeviceToken = tokens.fcmDeviceToken
-      }
+      fcmDeviceToken = tokens.fcmDeviceToken || fcmDeviceToken
+      apnsToken = tokens.apnsToken || apnsToken
 
-      if (tokens.apnsToken) {
-        logger.debug('Using actual apns token from notification service')
-        apnsToken = tokens.apnsToken
-      }
-
-      logger.debug(`TEST FETCH END: notification tokens for registration, ${fcmDeviceToken}, ${apnsToken}`)
+      logger.info('Successfully retrieved notification tokens for registration')
     } catch (error) {
-      logger.error('Failed to fetch notification tokens for registration', error as Error)
+      logger.warn(
+        `Failed to retrieve notification tokens, using fallback tokens: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      )
     }
 
-    // const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
-    // logger.info('Fetched notification tokens for registration')
+    logger.debug(
+      `Final tokens for registration - FCM: ${fcmDeviceToken ? 'present' : 'missing'}, APNS: ${
+        apnsToken ? 'present' : 'missing'
+      }`
+    )
 
-    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
+    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken || '')
     logger.info('Generated dynamic client registration body')
 
     const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
@@ -115,8 +119,21 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
         throw new Error('BCSC client not ready for registration update')
       }
 
-      const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
-      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
+      let fcmDeviceToken = 'fallback_fcm_token'
+      let apnsToken: string | null = ''
+
+      try {
+        const tokens = await getNotificationTokens()
+        fcmDeviceToken = tokens.fcmDeviceToken || fcmDeviceToken
+        apnsToken = tokens.apnsToken || apnsToken
+      } catch (error) {
+        // Log warning but continue with fallback tokens
+        logger.warn(
+          `Failed to retrieve tokens for registration update: ${error instanceof Error ? error.message : String(error)}`
+        )
+      }
+
+      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken || '')
       const { data } = await apiClient.put<RegistrationResponseData>(
         `${apiClient.endpoints.registration}/${clientId}`,
         body,
@@ -124,7 +141,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, clientIsReady: bool
       )
       return data
     },
-    [clientIsReady, apiClient]
+    [clientIsReady, apiClient, logger]
   )
 
   const deleteRegistration = useCallback(
