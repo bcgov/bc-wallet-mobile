@@ -25,7 +25,7 @@ interface NotificationsScreenProps {
 }
 
 /**
- * TODO:
+ * Renders the notifications screen for the BCSC onboarding process.
  *
  * @returns {*} {JSX.Element} The NotificationsScreen component.
  */

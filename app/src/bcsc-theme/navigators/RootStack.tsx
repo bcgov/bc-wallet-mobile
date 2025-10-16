@@ -1,8 +1,10 @@
 import {
   BifoldError,
+  DispatchAction,
   EventTypes,
   OpenIDCredentialRecordProvider,
   TOKENS,
+  useAuth,
   useServices,
   useStore,
   useTheme,
@@ -20,6 +22,8 @@ import BCSCMainStack from './MainStack'
 import BCSCOnboardingStack from './OnboardingStack'
 import { StartupStack } from './StartupStack'
 
+const TEMP_DEVELOPMENT_PIN = '111111'
+
 const TempLoadingView = () => {
   const { ColorPalette } = useTheme()
 
@@ -31,6 +35,7 @@ const TempLoadingView = () => {
 }
 
 const BCSCRootStack: React.FC = () => {
+  const auth = useAuth()
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const [useAgentSetup, loadState] = useServices([TOKENS.HOOK_USE_AGENT_SETUP, TOKENS.LOAD_STATE])
@@ -58,6 +63,32 @@ const BCSCRootStack: React.FC = () => {
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
     })
   }, [dispatch, loadState, t, store.stateLoaded])
+
+  /**
+   * ONBOARDING PATCH
+   *
+   * TODO (MD) REMOVE: TEMPORARY CODE FOR ONBOARDING DEVELOPMENT PURPOSES
+   *
+   * Why? There are some decision notes related to PIN creation and authentication in BCSC.
+   *
+   * This useEffect is a temp patch to allow developers to bypass the PIN creation
+   * and authentication screens during onboarding. It automatically sets a default PIN,
+   * and marks the user as authenticated.
+   */
+  useEffect(() => {
+    const asyncEffect = async () => {
+      dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [true] })
+
+      if (!store.onboarding.didCreatePIN) {
+        await auth.setPIN(TEMP_DEVELOPMENT_PIN)
+        dispatch({ type: DispatchAction.DID_CREATE_PIN, payload: [true] })
+      }
+
+      await auth.getWalletSecret()
+    }
+
+    asyncEffect()
+  }, [])
 
   if (!store.bcsc.completedOnboarding) {
     return <BCSCOnboardingStack />
