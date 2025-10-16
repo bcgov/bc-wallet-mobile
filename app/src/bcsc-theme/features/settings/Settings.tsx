@@ -10,7 +10,6 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 
 /**
  * The Settings screen for the BCSC theme.
@@ -82,11 +81,9 @@ const Settings: React.FC = () => {
 
           <SettingsActionCard
             title={t('BCSCSettings.EditNickname')}
-            // TODO (MD): Export EditNickname component from Bifold and make text content dynamic with props
             onPress={() => {
               navigation.navigate(BCSCScreens.EditNickname)
             }}
-            endAdornmentText={getSelectedNickname(store)}
           />
 
           {/* TODO (MD): Implement actions for these cards */}

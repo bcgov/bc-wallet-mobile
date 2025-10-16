@@ -97,7 +97,9 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
             {t('Unified.NicknameAccount.AccountName')}
           </ThemedText>
 
-          <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.NicknameAccount.CreateAccountName')}</ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.md }}>
+            {isRenaming ? t('Unified.NicknameAccount.EditAccountName') : t('Unified.NicknameAccount.CreateAccountName')}
+          </ThemedText>
 
           <ThemedText style={{ marginLeft: Spacing.md }}>
             {t('Unified.NicknameAccount.AccountNameDescription1')}
