@@ -69,6 +69,8 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
+  nicknames: string[]
+  selectedAccountIndex: number
   email?: string
   emailConfirmed?: boolean
   deviceCode?: string
@@ -124,6 +126,9 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  ADD_NICKNAME = 'bcsc/addNickname',
+  UPDATE_NICKNAME = 'bcsc/updateNickname',
+  SELECT_ACCOUNT = 'bcsc/selectAccount',
   UPDATE_COMPLETED_NEW_SETUP = 'bcsc/updateCompletedNewSetup',
   UPDATE_VERIFIED = 'bcsc/updateVerified',
   UPDATE_CARD_TYPE = 'bcsc/updateCardType',
@@ -221,6 +226,8 @@ const bcscState: BCSCState = {
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
+  nicknames: [],
+  selectedAccountIndex: -1,
   bookmarks: [],
   email: undefined,
   userCode: undefined,
@@ -320,6 +327,30 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         newState.dismissPersonCredentialOffer
       )
 
+      return newState
+    }
+    case BCSCDispatchAction.ADD_NICKNAME: {
+      const nickname = (action?.payload || []).pop() ?? ''
+      const bcsc = { ...state.bcsc, nicknames: [...state.bcsc.nicknames, nickname] }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_NICKNAME: {
+      const { oldNickname, newNickname } = (action?.payload || []).pop() ?? {}
+      if (!oldNickname || !newNickname) {
+        return state
+      }
+      const bcsc = { ...state.bcsc, nicknames: state.bcsc.nicknames.map((n) => (n === oldNickname ? newNickname : n)) }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.SELECT_ACCOUNT: {
+      const selectedAccountIndex = (action?.payload || []).pop() ?? 0
+      const bcsc = { ...state.bcsc, selectedAccountIndex }
+      const newState = { ...state, bcsc }
+      // don't persist, should be assigned every app start
       return newState
     }
     case BCSCDispatchAction.UPDATE_COMPLETED_NEW_SETUP: {

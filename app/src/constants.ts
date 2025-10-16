@@ -44,6 +44,11 @@ export enum HelpCentreUrl {
 
 // BCSC Constants
 
+export const formStringLengths = {
+  minimumLength: 1,
+  maximumLength: 35,
+} as const
+
 export const RECONNECTION_GRACE_PERIOD_MS = 3000
 export const KEEP_ALIVE_INTERVAL_MS = 30000
 export const CROP_DELAY_MS = 11000

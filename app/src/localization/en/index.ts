@@ -167,6 +167,7 @@ const translation = {
     "SignOut": "Sign out",
     "Biometrics": "Biometrics",
     "ChangePIN": "Change PIN",
+    "EditNickname": "Edit nickname",
     "AutoLockTime": "Auto lock time",
     "Notifications": "Notifications",
     "ForgetPairings": "Forget pairings",
@@ -263,11 +264,22 @@ const translation = {
       "InformationRequired": "Information Required",
     },
     "Steps": {
+      "NicknameAccount": "Nickname account",
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
       "Step1": "Step 1",
       "Step2": "Step 2",
       "Step3": "Step 3",
-      "Step4": "Step 4"
+      "Step4": "Step 4",
+      "Step5": "Step 5",
+    },
+    "NicknameAccount": {
+      "AccountName": "Account Nickname",
+      "CreateAccountName": "Create a nickname for your account on this device. It identifies your account:",
+      "EditAccountName": "Edit the nickname for your account on this device. It identifies your account:",
+      "AccountNameDescription1": "• When you open the app",
+      "AccountNameDescription2": "• In notifications",
+      "CharCountTitle": "Character count exceeded",
+      "EmptyNameTitle": "Enter an account nickname",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",
