@@ -334,6 +334,16 @@ Ensure you have your emulator's front and back camera set to use different sourc
    > on the device and select <kbd>Debug</kbd>.
    > <br> > ![](./docs/Emulator-debug-menu.png)
 
+## Debuggin Android Emulator
+
+**Clear Caches**
+
+If issues are arising for the emulator, you may need to clear the caches.
+- run above commands for gradlew clean
+- delete `app/android/.gradle`
+- delete `app/.metro-cache`
+- delete `app/android/.yarn`
+
 ### Debugging in WSL2 and Android Emulator
 
 If you're developing on Windows using WSL2, follow these setup steps:

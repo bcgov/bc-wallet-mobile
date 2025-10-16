@@ -17,6 +17,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { formStringLengths } from '@/constants'
+import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 
 interface NicknameFormProps {
   isRenaming?: boolean
@@ -30,7 +31,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
   const [store, dispatch] = useStore<BCState>()
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
-  const [accountNickname, setAccountNickname] = useState(store.bcsc.nickname ?? '')
+  const [accountNickname, setAccountNickname] = useState(getSelectedNickname(store) ?? '')
   const [error, setError] = useState<string | null>(null)
 
   const styles = StyleSheet.create({
@@ -69,17 +70,21 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
     if (isRenaming) {
       setError(null)
       setLoading(true)
-      dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [accountNickname] })
+      // dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [accountNickname] })
 
       navigation.goBack()
     } else {
       setError(null)
       setLoading(true)
-      dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [accountNickname] })
+      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [accountNickname] })
+
+      // Select the most recently added nickname (last in the array)
+      const mostRecentIndex = store.bcsc.nicknames.length // This will be the index of the newly added nickname
+      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [mostRecentIndex] })
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }, [accountNickname, t, isRenaming, dispatch, navigation])
+  }, [accountNickname, t, isRenaming, dispatch, navigation, store])
 
   return (
     <KeyboardView>

@@ -13,6 +13,7 @@ export enum BCSCScreens {
   Account = 'BCSCAccount',
   WebView = 'BCSCWebView',
   Settings = 'BCSCSettings',
+  NewSetup = 'BCSCNewSetup',
   SetupSteps = 'BCSCSetupSteps',
   SetupTypes = 'BCSCSetupTypes',
   IdentitySelection = 'BCSCIdentitySelection',
@@ -84,6 +85,7 @@ export type BCSCRootStackParams = {
 }
 
 export type BCSCVerifyIdentityStackParams = {
+  [BCSCScreens.NewSetup]: undefined
   [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.SetupTypes]: undefined
   [BCSCScreens.TransferAccountInstructions]: undefined

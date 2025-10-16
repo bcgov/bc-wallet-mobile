@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SetupStep } from './components/SetupStep'
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
+import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -151,12 +152,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    * @returns {*} {string[]} An array of strings representing the subtext for Step 1.
    */
   const getVerificationStep1Subtext = useCallback((): string[] => {
-    if (step.nickname.completed && store.bcsc.nickname) {
-      return [`${t('Unified.Steps.NicknameAccount')}: ${store.bcsc.nickname}`]
+    if (step.nickname.completed && getSelectedNickname(store)) {
+      return [`${t('Unified.Steps.NicknameAccount')}: ${getSelectedNickname(store)}`]
     }
 
     return [t('Unified.Steps.NicknameAccount')]
-  }, [t, step.nickname.completed, store.bcsc.nickname])
+  }, [t, step.nickname.completed, store])
 
   /**
    * Returns the subtext for Step 2 (Identification) of the verification process.

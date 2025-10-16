@@ -4,6 +4,7 @@ import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/n
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
+import { useTranslation } from 'react-i18next'
 import AccountSetupSelectionScreen from '../account-transfer/AccountSetupSelectionScreen'
 import TransferInformationScreen from '../account-transfer/TransferInformationScreen'
 import TransferInstructionsScreen from '../account-transfer/TransferInstructionsScreen'
@@ -14,6 +15,7 @@ import EnterBirthdateScreen from './EnterBirthdateScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
 import ManualSerialScreen from './ManualSerialScreen'
 import MismatchedSerialScreen from './MismatchedSerialScreen'
+import NewSetupScreen from './NewSetupScreen'
 import PhotoInstructionsScreen from './PhotoInstructionsScreen'
 import PhotoReviewScreen from './PhotoReviewScreen'
 import { ResidentialAddressScreen } from './ResidentialAddressScreen'
@@ -49,6 +51,7 @@ import NicknameAccountScreen from '../account/NicknameAccountScreen'
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
   const theme = useTheme()
+  const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
 
   return (
@@ -58,46 +61,24 @@ const VerifyIdentityStack = () => {
         component={AccountSetupSelectionScreen}
         options={{
           headerLeft: () => null,
+          title: t('Unified.Screens.SetupTypes'),
         }}
       />
+      <Stack.Screen name={BCSCScreens.NewSetup} component={NewSetupScreen} />
       <Stack.Screen
         name={BCSCScreens.SetupSteps}
         component={SetupStepsScreen}
         options={{
-          title: 'Setup Steps',
+          title: t('Unified.Screens.SetupSteps'),
           headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOW_TO_SETUP }),
           headerLeft: () => null,
         }}
       />
       <Stack.Screen name={BCSCScreens.NicknameAccount} component={NicknameAccountScreen} />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountInformation}
-        component={TransferInformationScreen}
-        options={() => ({
-          headerShown: true,
-        })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountSuccess}
-        component={TransferSuccessScreen}
-        options={() => ({
-          headerShown: true,
-        })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountInstructions}
-        component={TransferInstructionsScreen}
-        options={() => ({
-          headerShown: true,
-        })}
-      />
-      <Stack.Screen
-        name={BCSCScreens.TransferAccountQRScan}
-        component={TransferQRScannerScreen}
-        options={() => ({
-          headerShown: true,
-        })}
-      />
+      <Stack.Screen name={BCSCScreens.TransferAccountInformation} component={TransferInformationScreen} />
+      <Stack.Screen name={BCSCScreens.TransferAccountSuccess} component={TransferSuccessScreen} />
+      <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
+      <Stack.Screen name={BCSCScreens.TransferAccountQRScan} component={TransferQRScannerScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
       <Stack.Screen
         name={BCSCScreens.SerialInstructions}
@@ -128,7 +109,7 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
         options={{
-          title: 'Choose How to Verify',
+          title: t('Unified.Screens.VerificationMethodSelection'),
           headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFICATION_METHODS }),
         }}
       />
@@ -142,7 +123,7 @@ const VerifyIdentityStack = () => {
       <Stack.Screen
         name={BCSCScreens.InformationRequired}
         component={InformationRequiredScreen}
-        options={{ title: 'Information Required' }}
+        options={{ title: t('Unified.Screens.InformationRequired') }}
       />
       <Stack.Screen name={BCSCScreens.PhotoInstructions} component={PhotoInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
