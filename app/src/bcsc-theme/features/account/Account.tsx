@@ -14,7 +14,6 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, AppState, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
-import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
@@ -151,7 +150,6 @@ const Account: React.FC = () => {
           <ThemedText
             style={styles.warning}
           >{`This cannot be used as photo ID, a driver's licence, or a health card.`}</ThemedText>
-          <AccountField label={'Account Nickname'} value={getSelectedNickname(store) ?? ''} />
           <AccountField label={'App expiry date'} value={userMeta.data?.user.card_expiry ?? ''} />
           <AccountField label={'Account type'} value={userMeta.data?.user.card_type ?? 'Non BC Services Card'} />
           <AccountField label={'Address'} value={userMeta.data?.user.address?.formatted ?? ''} />
