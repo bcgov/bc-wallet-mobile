@@ -1,7 +1,7 @@
-import { DeepPartial, IColorPalette, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
+import { BCThemeNames } from '@/constants'
 import Logo from '@assets/img/logo-with-text-dark.svg'
 import { BCWalletTheme, GrayscaleColors, NotificationColors } from '@bcwallet-theme/theme'
-import { BCThemeNames } from '@/constants'
+import { DeepPartial, IColorPalette, INotificationColors, ITheme, ThemeBuilder } from '@bifold/core'
 
 export const BCSCNotificationColors: INotificationColors = {
   ...NotificationColors,
@@ -9,6 +9,10 @@ export const BCSCNotificationColors: INotificationColors = {
   infoBorder: GrayscaleColors.lightGrey,
   infoIcon: '#FCBA19',
   infoText: GrayscaleColors.lightGrey,
+  error: '#CE3E39',
+  errorText: GrayscaleColors.white,
+  errorBorder: '#CE3E39',
+  errorIcon: GrayscaleColors.white,
 }
 
 export const BCSCColorPalette: IColorPalette = {
@@ -241,8 +245,12 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
           fontWeight: 'bold',
           textAlign: 'center',
         },
+        secondary: {
+          backgroundColor: '#1E5189',
+          borderWidth: 0,
+        },
         secondaryText: {
-          color: theme.ColorPalette.brand.primary,
+          color: theme.ColorPalette.grayscale.white,
           textAlign: 'center',
         },
         secondaryTextDisabled: {
