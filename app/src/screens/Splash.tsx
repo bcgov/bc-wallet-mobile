@@ -95,8 +95,8 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
 
   const setStep = useCallback(
     (stepIdx: number) => {
-      setStepText(steps[stepIdx])
-      const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
+      setStepText(steps[stepIdx - 1])
+      const percent = Math.floor((stepIdx / steps.length) * 100)
       setProgressPercent(percent)
     },
     [steps]

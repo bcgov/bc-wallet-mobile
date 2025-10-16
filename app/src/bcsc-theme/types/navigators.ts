@@ -9,6 +9,7 @@ export enum BCSCStacks {
 }
 
 export enum BCSCScreens {
+  Splash = 'BCSCSplash',
   Home = 'BCSCHome',
   Services = 'BCSCServices',
   Account = 'BCSCAccount',

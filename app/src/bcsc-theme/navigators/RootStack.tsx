@@ -8,16 +8,18 @@ import {
   useTheme,
 } from '@bifold/core'
 import AgentProvider from '@credo-ts/react-hooks'
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, DeviceEventEmitter } from 'react-native'
+import { ActivityIndicator, DeviceEventEmitter, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
 import { BCState } from '@/store'
 import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
 import BCSCOnboardingStack from './OnboardingStack'
+import Splash from '@/screens/Splash'
+import assert from 'assert'
+import { StartupStack } from './StartupStack'
 
 const TempLoadingView = () => {
   const { ColorPalette } = useTheme()
@@ -32,15 +34,13 @@ const TempLoadingView = () => {
 const BCSCRootStack: React.FC = () => {
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
+  const theme = useTheme()
   const [useAgentSetup, loadState] = useServices([TOKENS.HOOK_USE_AGENT_SETUP, TOKENS.LOAD_STATE])
   const { agent, initializeAgent, shutdownAndClearAgentIfExists } = useAgentSetup()
-  const [onboardingComplete, setOnboardingComplete] = useState(false)
-  const { loading } = useInitializeBCSC()
+  // const [onboardingComplete, setOnboardingComplete] = useState(false)
+  const initializeBCSC = useInitializeBCSC()
 
-  const shouldRenderMainStack = useMemo(
-    () => onboardingComplete && store.authentication.didAuthenticate,
-    [onboardingComplete, store.authentication.didAuthenticate]
-  )
+  const shouldRenderMainStack = store.bcsc.completedOnboarding && store.authentication.didAuthenticate
 
   useEffect(() => {
     // if user gets locked out, erase agent
@@ -49,17 +49,19 @@ const BCSCRootStack: React.FC = () => {
     }
   }, [store.authentication.didAuthenticate, shutdownAndClearAgentIfExists])
 
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener(EventTypes.DID_COMPLETE_ONBOARDING, () => {
-      setOnboardingComplete(true)
-    })
-
-    return sub.remove
-  }, [])
+  // useEffect(() => {
+  //   const sub = DeviceEventEmitter.addListener(EventTypes.DID_COMPLETE_ONBOARDING, () => {
+  //     setOnboardingComplete(true)
+  //   })
+  //
+  //   return sub.remove
+  // }, [])
 
   useEffect(() => {
     // Load state only if it hasn't been loaded yet
-    if (store.stateLoaded) return
+    if (store.stateLoaded) {
+      return
+    }
 
     loadState(dispatch).catch((err: unknown) => {
       const error = new BifoldError(t('Error.Title1044'), t('Error.Message1044'), (err as Error).message, 1001)
@@ -68,18 +70,45 @@ const BCSCRootStack: React.FC = () => {
     })
   }, [dispatch, loadState, t, store.stateLoaded])
 
-  if (shouldRenderMainStack && agent) {
+  // Enter PIN or biometrics -> render splash + initialize agent -> initialize BCSC -> render main stack
+
+  // If onboarding not complete, render onboarding stack
+  // Set of screens shown only once after app install
+  if (!store.bcsc.completedOnboarding) {
+    return <BCSCOnboardingStack />
+  }
+
+  // If user not authenticated, show Startup Stack
+  // Startup stack handles authentication and agent initialization (Splash screen, PIN entry, biometrics)
+  if (!store.authentication.didAuthenticate) {
+    return <StartupStack />
+  }
+
+  // If BCSC is initializing, show loading screen... doubtful we will ever see this
+  if (initializeBCSC.loading) {
+    return <TempLoadingView />
+  }
+
+  assert(agent, 'Agent should be initialized')
+  assert(store.authentication.didAuthenticate, 'User should be authenticated')
+
+  if (!store.bcsc.verified) {
     return (
       <AgentProvider agent={agent}>
         <OpenIDCredentialRecordProvider>
-          {loading ? <TempLoadingView /> : store.bcsc.verified ? <BCSCMainStack /> : <VerifyIdentityStack />}
+          <VerifyIdentityStack />
         </OpenIDCredentialRecordProvider>
       </AgentProvider>
     )
   }
 
-  // use same onboarding stack as bifold / bcwallet for now
-  return <BCSCOnboardingStack />
+  return (
+    <AgentProvider agent={agent}>
+      <OpenIDCredentialRecordProvider>
+        <BCSCMainStack />
+      </OpenIDCredentialRecordProvider>
+    </AgentProvider>
+  )
 }
 
 export default BCSCRootStack

@@ -265,6 +265,7 @@ const translation = {
     },
     // TODO (MD): Add french and portuguese translations
     "Onboarding": {
+      "LearnMore": "Learn more",
       "CarouselNext": "Next",
       "CarouselBack": "Back",
       "AcceptAndContinueButton": "Accept and continue",
@@ -274,13 +275,18 @@ const translation = {
       "PrivacyPolicyTitle": "Privacy",
       "PrivacyPolicyHeaderSetup": "App Setup",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
-      "PrivacyPolicyLearnMore": "Learn more",
       "PrivacyPolicyContentA": "Your personal information is collected for the purpose of setting up the app on your mobile device and using it to authenticate your identity for accessing government services online under sections 26(c), 26(e) and 26(h) of the Freedom of Information and Protection of Privacy Act.",
       "PrivacyPolicyContentB": "To set up this app you need to verify your identity by providing your information and ID. It’s temporarily stored on this device until the app is set up.",
       "PrivacyPolicyContentC": "This app can be secured with a PIN or using your device’s security. Keep your account safe. Keep your device passcode or app PIN confidential",
       "TermsOfUseTitle": "Terms of Use",
       "NotificationsHeader": "Notifications",
-      "NotificationsContinueButtonSecondary": "Continue without notifications"
+      "NotificationsContinueButtonSecondary": "Continue without notifications",
+      "SecureAppHeader": "Choose how to secure this app",
+      "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential",
+      "SecureAppFaceIDTitle": "Use Face ID",
+      "SecureAppFaceIDSubtext": "It’s already setup on this iPhone or iPad. It never leaves this device or is shared with us.",
+      "SecureAppPINTitle": "Create a PIN",
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us."
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",

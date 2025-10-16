@@ -58,11 +58,7 @@ export const PrivacyPolicyScreen = (props: PrivacyPolicyScreenProps): JSX.Elemen
           <ThemedText style={styles.contentText}>{t('Unified.Onboarding.PrivacyPolicyContentC')}</ThemedText>
         </View>
 
-        <CardButton
-          title={t('Unified.Onboarding.PrivacyPolicyLearnMore')}
-          onPress={handlePressLearnMore}
-          endIcon="open-in-new"
-        />
+        <CardButton title={t('Unified.Onboarding.LearnMore')} onPress={handlePressLearnMore} endIcon="open-in-new" />
       </ScrollView>
 
       <View style={styles.buttonContainer}>
