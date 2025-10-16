@@ -70,7 +70,10 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
     if (isRenaming) {
       setError(null)
       setLoading(true)
-      // dispatch({ type: BCDispatchAction.UPDATE_NICKNAME, payload: [accountNickname] })
+      dispatch({
+        type: BCDispatchAction.UPDATE_NICKNAME,
+        payload: [{ oldNickname: getSelectedNickname(store), newNickname: accountNickname }],
+      })
 
       navigation.goBack()
     } else {

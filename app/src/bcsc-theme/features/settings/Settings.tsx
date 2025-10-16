@@ -10,6 +10,7 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 
 /**
  * The Settings screen for the BCSC theme.
@@ -85,6 +86,7 @@ const Settings: React.FC = () => {
             onPress={() => {
               navigation.navigate(BCSCScreens.EditNickname)
             }}
+            endAdornmentText={getSelectedNickname(store)}
           />
 
           {/* TODO (MD): Implement actions for these cards */}

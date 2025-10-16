@@ -127,6 +127,7 @@ enum RemoteDebuggingDispatchAction {
 
 enum BCSCDispatchAction {
   ADD_NICKNAME = 'bcsc/addNickname',
+  UPDATE_NICKNAME = 'bcsc/updateNickname',
   SELECT_ACCOUNT = 'bcsc/selectAccount',
   UPDATE_COMPLETED_NEW_SETUP = 'bcsc/updateCompletedNewSetup',
   UPDATE_VERIFIED = 'bcsc/updateVerified',
@@ -331,6 +332,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.ADD_NICKNAME: {
       const nickname = (action?.payload || []).pop() ?? ''
       const bcsc = { ...state.bcsc, nicknames: [...state.bcsc.nicknames, nickname] }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_NICKNAME: {
+      const { oldNickname, newNickname } = (action?.payload || []).pop() ?? {}
+      if (!oldNickname || !newNickname) {
+        return state
+      }
+      const bcsc = { ...state.bcsc, nicknames: state.bcsc.nicknames.map((n) => (n === oldNickname ? newNickname : n)) }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
