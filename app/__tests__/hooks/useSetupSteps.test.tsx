@@ -34,6 +34,7 @@ describe('useSetupSteps Hook', () => {
     it('should be completed when nickname is provided', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
+      store.bcsc.selectedAccountIndex = 0
       const hook = renderHook(() => useSetupSteps(store))
       expect(hook.result.current.nickname.completed).toBe(true)
       expect(hook.result.current.nickname.focused).toBe(false)
@@ -44,7 +45,7 @@ describe('useSetupSteps Hook', () => {
     it('Combo Card: should be completed when serial and email provided', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
-
+      store.bcsc.selectedAccountIndex = 0
       const hook = renderHook(() => useSetupSteps(store))
 
       expect(hook.result.current.id.completed).toBe(false)
@@ -63,7 +64,7 @@ describe('useSetupSteps Hook', () => {
     it('Non-Photo Card: should be completed when serial, email, and photo ID provided', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
-
+      store.bcsc.selectedAccountIndex = 0
       const hook = renderHook(() => useSetupSteps(store))
 
       expect(hook.result.current.id.completed).toBe(false)
@@ -98,7 +99,7 @@ describe('useSetupSteps Hook', () => {
     it('Non-BCSC Card: should be completed when 2 IDs provided', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
-
+      store.bcsc.selectedAccountIndex = 0
       const hook = renderHook(() => useSetupSteps(store))
 
       expect(hook.result.current.id.completed).toBe(false)
@@ -152,7 +153,7 @@ describe('useSetupSteps Hook', () => {
     it('should be focused when ID step completed but address not yet completed', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
-
+      store.bcsc.selectedAccountIndex = 0
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -167,6 +168,7 @@ describe('useSetupSteps Hook', () => {
     it('should be completed when device code is provided', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
+      store.bcsc.selectedAccountIndex = 0
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -183,6 +185,7 @@ describe('useSetupSteps Hook', () => {
     it('should be focused when ID step completed, address step completed, but email not yet completed', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
+      store.bcsc.selectedAccountIndex = 0
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -214,6 +217,7 @@ describe('useSetupSteps Hook', () => {
     it('should be focused when ID step completed, address step completed, email step completed, but verify not yet completed', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
+      store.bcsc.selectedAccountIndex = 0
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -230,6 +234,7 @@ describe('useSetupSteps Hook', () => {
     it('should be completed when verified is true', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
+      store.bcsc.selectedAccountIndex = 0
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -247,6 +252,8 @@ describe('useSetupSteps Hook', () => {
     it('should be focused when pendingVerification is true', () => {
       const store = structuredClone(initialState)
 
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedAccountIndex = 0
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -282,6 +289,7 @@ describe('useSetupSteps Hook', () => {
 
       // Complete Step 1
       store.bcsc.nicknames = ['test']
+      store.bcsc.selectedAccountIndex = 0
 
       hook.rerender(store)
 
