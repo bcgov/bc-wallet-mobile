@@ -9,14 +9,14 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
 // and, if it exists, uses refresh token to get rest of token info
 const useInitializeBCSC = () => {
   const [store, dispatch] = useStore<BCState>()
-  const { client, clientIsReady } = useBCSCApiClientState()
-  const { register } = useRegistrationApi(client, clientIsReady)
+  const { client, isClientReady } = useBCSCApiClientState()
+  const { register } = useRegistrationApi(client, isClientReady)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [loading, setLoading] = useState(true)
   const initializationInProgressRef = useRef(false)
 
   useEffect(() => {
-    if (!store.stateLoaded || !clientIsReady || !client || initializationInProgressRef.current) {
+    if (!store.stateLoaded || !isClientReady || !client || initializationInProgressRef.current) {
       return
     }
 
@@ -54,7 +54,7 @@ const useInitializeBCSC = () => {
     }
 
     asyncEffect()
-  }, [store.stateLoaded, register, clientIsReady, client, dispatch, logger, store.bcsc.refreshToken])
+  }, [store.stateLoaded, register, isClientReady, client, dispatch, logger, store.bcsc.refreshToken])
 
   return { loading }
 }

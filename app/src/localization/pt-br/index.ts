@@ -35,6 +35,7 @@ const translation = {
     "ToContinueUsing": "To continue using the BC Wallet scan feature, please allow camera permissions. (PT-BR)",
     "Allow": "Allow (PT-BR)",
     "OpenSettings": "Open settings (PT-BR)",
+    "CameraPermissionRequired": "Camera permission required (PT-BR)"
   },
   "Biometry": {
     "Toggle": "Toggle Biometrics (PT-BR)",
@@ -253,6 +254,12 @@ const translation = {
     "NoSavedServices": "No saved services (PT-BR)",
   },
   "Unified": {
+    "Screens": {
+      "SetupTypes": "BC Services Card (PT-BR)",
+      "SetupSteps": "Setup Steps (PT-BR)",
+      "VerificationMethodSelection": "Choose How to Verify (PT-BR)",
+      "InformationRequired": "Information Required (PT-BR)",
+    },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
       "Step1": "Step 1 (PT-BR)",
@@ -310,6 +317,65 @@ const translation = {
       "LimitedAccess": "Limited access to services (PT-BR)",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo. (PT-BR)",
       "ChooseID": "Choose ID (PT-BR)",
+    },
+    "AccountSetup": {
+      "Title": "BC Services Card Account (PT-BR)",
+      "AddAccount": "Add account (PT-BR)",
+      "TransferAccount": "Transfer from another device (PT-BR)"
+    },
+    "NewSetup": {
+      "Title": "Nova configuração (PT-BR)",
+      "YouWillNeedTo": "Você precisará: (PT-BR)",
+      "AddPhotoID": "Adicionar um documento de identidade com foto (PT-BR)",
+      "RecordVideoOrVisit": "Gravar um vídeo curto, fazer uma chamada de vídeo, ou visitar um escritório Service BC (PT-BR)",
+      "WhoseIDQuestion": "De quem você está adicionando o documento? (PT-BR)",
+      "MyOwnID": "Meu próprio documento (PT-BR)",
+      "SomeoneElsesID": "Documento de outra pessoa (PT-BR)",
+      "IsOtherPersonWithYou": "Esta outra pessoa está com você? (PT-BR)",
+      "Yes": "Sim (PT-BR)",
+      "No": "Não (PT-BR)",
+      "CannotFinishWithoutOtherPerson": "Você não conseguirá terminar a configuração deste aplicativo sem que a outra pessoa esteja presente. (PT-BR)",
+      "OKToGiveHelp": "É OK ajudar alguém a configurar sua conta. (PT-BR)",
+      "YouCan": "Você pode (PT-BR)",
+      "YouCanReadInstructions": "Ler instruções (PT-BR)",
+      "YouCanNavigateApp": "Navegar no aplicativo (PT-BR)",
+      "YouCanTypeOrScan": "Digitar, escanear, ou tirar fotos (PT-BR)",
+      "YouCannot": "Você não pode (PT-BR)",
+      "YouCannotBeInVideo": "Estar em gravações de vídeo ou chamadas. Apenas a outra pessoa pode estar. (PT-BR)"
+    },
+    "TransferQRInformation": {
+      "Title": "Open the BC Services Card app on your other mobile device (PT-BR)",
+      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device. (PT-BR)",
+      "Warning" : "Do not scan with the camera app. (PT-BR)",
+      "GetQRCode": "Get QR Code (PT-BR)",
+      "LearnMore": "Learn more (PT-BR)"
+    },
+    "TransferInformation": {
+      "Title": "Have this app on another device? (PT-BR)",
+      "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again. (PT-BR)",
+      "TransferAccount": "Transfer Account (PT-BR)",
+    },
+    "TransferInstructions": {
+      "Title": "Scan your QR code to transfer your account (PT-BR)",
+      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section. (PT-BR)",
+      "Step2": "2. Choose 'Transfer to another device' to get your QR code. (PT-BR)",
+      "Step3": "3. Continue on this device and scan that QR code. (PT-BR)",
+      "ScanQRCode": "Scan QR Code (PT-BR)",
+    },
+    "TransferQRDisplay": {
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device. (PT-BR)"
+    },
+    "TransferSuccess": {
+      "Title": "QR code scan complete (PT-BR)",
+      "Description": "The app should be set up on your other mobile device. (PT-BR)",
+      "ExtraText": "If you no longer need to use the app on this device, you can remove your account. (PT-BR)",
+      "ButtonText": "Ok"
+    },
+    "Verification": {
+      "Title": "You're all set (PT-BR)",
+      "Description": "Use this app to securely log in to many different websites. (PT-BR)",
+      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID. (PT-BR)",
+      "ButtonText": "Ok (PT-BR)"
     },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs (PT-BR)",
@@ -378,7 +444,10 @@ const translation = {
     "Account": {
       "RemoveAccount": "Remove account (PT-BR)",
       "RemoveAccountTitle": "Remove account from this app? (PT-BR)",
-      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)"
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity. (PT-BR)",
+      "TransferAccount": "Transfer account to another device (PT-BR)",
+      "AccountDetails": "All account details (PT-BR)",
+      "AccountDetailsDescription": "View your account activity, manage your email address and more. (PT-BR)"
     },
     "VideoTips": {
       "PrivatePlace": "Find a private place to talk (PT-BR)",

@@ -1,8 +1,9 @@
+import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
+import { VerifyAttestationPayload } from './useDeviceAttestationApi'
 import { withAccount } from './withAccountGuard'
-import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 
 interface IdTokenMetadataConfig {
   refreshCache: boolean
@@ -18,6 +19,28 @@ export interface TokenResponse {
 }
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
+  const deviceToken = useCallback(
+    async (payload: VerifyAttestationPayload) => {
+      const { data } = await apiClient.post<TokenResponse>(
+        apiClient.endpoints.token,
+        {
+          device_code: payload.device_code,
+          client_id: payload.client_id,
+          client_assertion: payload.client_assertion,
+          client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+        },
+        {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          skipBearerAuth: true,
+        }
+      )
+
+      return data
+    },
+    [apiClient]
+  )
+
   const checkDeviceCodeStatus = useCallback(
     async (deviceCode: string, confirmationCode: string) => {
       return withAccount<TokenResponse>(async (account) => {
@@ -64,9 +87,10 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
   return useMemo(
     () => ({
       checkDeviceCodeStatus,
+      deviceToken,
       getCachedIdTokenMetadata,
     }),
-    [checkDeviceCodeStatus, getCachedIdTokenMetadata]
+    [checkDeviceCodeStatus, getCachedIdTokenMetadata, deviceToken]
   )
 }
 

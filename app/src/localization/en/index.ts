@@ -35,6 +35,7 @@ const translation = {
     "ToContinueUsing": "To continue using the BC Wallet scan feature, please allow camera permissions.",
     "Allow": "Allow",
     "OpenSettings": "Open settings",
+    "CameraPermissionRequired": "Camera permission required"
   },
   "Biometry": {
     "Toggle": "Toggle Biometrics",
@@ -256,6 +257,12 @@ const translation = {
     "NoSavedServices": "No saved services",
   },
   "Unified": {
+    "Screens": {
+      "SetupTypes": "BC Services Card",
+      "SetupSteps": "Setup Steps",
+      "VerificationMethodSelection": "Choose How to Verify",
+      "InformationRequired": "Information Required",
+    },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
       "Step1": "Step 1",
@@ -338,6 +345,65 @@ const translation = {
       "LimitedAccess": "Limited access to services",
       "LimitedAccessDescription": "Some services only accept the app when it's set up with a BC Services Card with a photo.",
       "ChooseID": "Choose ID",
+    },
+    "AccountSetup": {
+      "Title": "BC Services Card Account",
+      "AddAccount": "Add account",
+      "TransferAccount": "Transfer from another device"
+    },
+    "NewSetup": {
+      "Title": "New setup",
+      "YouWillNeedTo": "You will need to:",
+      "AddPhotoID": "Add a photo ID",
+      "RecordVideoOrVisit": "Record a short video, have a video call, or visit a Service BC office",
+      "WhoseIDQuestion": "Whose ID are you adding?",
+      "MyOwnID": "My own ID",
+      "SomeoneElsesID": "Someone else's ID",
+      "IsOtherPersonWithYou": "Is this other person with you?",
+      "Yes": "Yes",
+      "No": "No",
+      "CannotFinishWithoutOtherPerson": "You will not be able to finish setting up this app without the other person being present.",
+      "OKToGiveHelp": "It's OK to give someone a bit of help to setup their account.",
+      "YouCan": "You can",
+      "YouCanReadInstructions": "Read instructions",
+      "YouCanNavigateApp": "Navigate the app",
+      "YouCanTypeOrScan": "Type, scan, or take pictures",
+      "YouCannot": "You cannot",
+      "YouCannotBeInVideo": "Be in video recordings or calls. Only the other person can be."
+    },
+    "TransferQRInformation": {
+      "Title": "Open the BC Services Card app on your other mobile device",
+      "Instructions": "Scan the QR code with the BC Services Card app on your other mobile device.",
+      "Warning" : "Do not scan with the camera app.",
+      "GetQRCode": "Get QR Code",
+      "LearnMore": "Learn more"
+    },
+    "TransferInformation": {
+      "Title": "Have this app on another device?",
+      "Instructions": "You can transfer your account to that other device. No need to provide ID or verify your identity again.",
+      "TransferAccount": "Transfer Account",
+    },
+    "TransferInstructions": {
+      "Title": "Scan your QR code to transfer your account",
+      "Step1": "1. On your other device, open the BC Services Card app and go to the Account section.",
+      "Step2": "2. Choose 'Transfer to another device' to get your QR code.",
+      "Step3": "3. Continue on this device and scan that QR code.",
+      "ScanQRCode": "Scan QR Code",
+    },
+    "TransferQRDisplay": {
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device."
+    },
+    "TransferSuccess": {
+      "Title": "QR code scan complete",
+      "Description": "The app should be set up on your other mobile device.",
+      "ExtraText": "If you no longer need to use the app on this device, you can remove your account.",
+      "ButtonText": "Ok"
+    },
+    "Verification": {
+      "Title": "You're all set",
+      "Description": "Use this app to securely log in to many different websites.",
+      "ExtraText": "Remember, it is not a health card, vaccine card, driver's license, or photo ID.",
+      "ButtonText": "Ok"
     },
     "DualNonBCSCEvidence": {
       "Heading": "You must provide two government-issued IDs",
@@ -498,7 +564,10 @@ const translation = {
     "Account": {
       "RemoveAccount": "Remove account",
       "RemoveAccountTitle": "Remove account from this app?",
-      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity."
+      "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity.",
+      "TransferAccount": "Transfer account to another device",
+      "AccountDetails": "All account details",
+      "AccountDetailsDescription": "View your account activity, manage your email address and more."
     }
   },
   "RemoteLogging": {

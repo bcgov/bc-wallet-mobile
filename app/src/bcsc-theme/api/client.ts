@@ -4,11 +4,14 @@ import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
+import { formatIasAxiosResponseError, formatAxiosErrorForLogger } from '../utils/error-utils'
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {
   export interface AxiosRequestConfig {
     skipBearerAuth?: boolean
+    // Note: Useful for endpoints that return expected error codes
+    suppressStatusCodeLogs?: number[]
   }
 }
 
@@ -95,38 +98,22 @@ class BCSCApiClient {
     // Add interceptors
     this.client.interceptors.request.use(this.handleRequest.bind(this))
     this.client.interceptors.response.use(undefined, (error: AxiosError) => {
-      const errorDetails = {
-        name: error.name,
-        message: error.message,
-        code: error.code,
+      const IASAxiosError = formatIasAxiosResponseError(error)
 
-        request: {
-          method: error.config?.method?.toUpperCase(),
-          url: error.config?.url,
-          baseURL: error.config?.baseURL,
-          headers: error.config?.headers,
-          data: error.config?.data,
-          params: error.config?.params,
-        },
+      const loggerError = formatAxiosErrorForLogger({
+        error: IASAxiosError,
+        suppressStackTrace: __DEV__, // disable stack trace in development
+      })
 
-        response: error.response
-          ? {
-              status: error.response.status,
-              statusText: error.response.statusText,
-              headers: error.response.headers,
-              data: error.response.data,
-            }
-          : null,
+      const suppressStatusCodeLogs = error.config?.suppressStatusCodeLogs ?? []
+      const statusCode = error.response?.status ?? 0
 
-        isTimeout: error.code === 'ECONNABORTED',
-        isNetworkError: !error.response && !error.code,
-
-        stack: error.stack,
+      // Only log if the status code is not in the suppress list
+      if (!suppressStatusCodeLogs.includes(statusCode)) {
+        this.logger.error('IAS API Error', loggerError)
       }
 
-      this.logger.error(`API Error:\n${JSON.stringify(errorDetails, null, 2)}`)
-
-      return Promise.reject(error)
+      return Promise.reject(IASAxiosError)
     })
   }
 
@@ -134,6 +121,7 @@ class BCSCApiClient {
     const response = await this.get<any>(`${this.baseURL}/device/.well-known/openid-configuration`, {
       skipBearerAuth: true,
     })
+
     this.config = {
       pairDeviceWithQRCodeSupported: response.data['pair_device_with_qrcode_supported'],
       maximumAccountsPerDevice: response.data['maximum_accounts_per_device'],
