@@ -19,7 +19,6 @@ import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 
-
 export interface IASEnvironment {
   name: string
   iasAgentInviteUrl: string
