@@ -83,27 +83,21 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   }, [logger, initError])
 
   const steps: string[] = useMemo(
-    () => [
-      t('Init.Starting'),
-      t('Init.FetchingPreferences'),
-      t('Init.CheckingOCA'),
-      t('Init.InitializingAgent'),
-      t('Init.Finishing'),
-    ],
+    () => [t('Init.Starting'), t('Init.CheckingOCA'), t('Init.InitializingAgent'), t('Init.Finishing')],
     [t]
   )
 
   const setStep = useCallback(
     (stepIdx: number) => {
-      setStepText(steps[stepIdx - 1])
-      const percent = Math.floor((stepIdx / steps.length) * 100)
+      setStepText(steps[stepIdx] + stepIdx)
+      const percent = Math.floor(((stepIdx + 1) / steps.length) * 100)
       setProgressPercent(percent)
     },
     [steps]
   )
 
   useEffect(() => {
-    setStep(1)
+    setStep(0)
     if (initializing.current || !store.authentication.didAuthenticate) {
       return
     }
@@ -117,13 +111,13 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
       try {
         initializing.current = true
 
-        setStep(2)
+        setStep(1)
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 
-        setStep(3)
+        setStep(2)
         await initializeAgent(walletSecret)
 
-        setStep(4)
+        setStep(3)
       } catch (e: unknown) {
         initializing.current = false
 

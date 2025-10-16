@@ -7,7 +7,6 @@ import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { useTranslation } from 'react-i18next'
-import { CreatePINScreen } from '../features/onboarding/CreatePINScreen'
 
 const OnboardingStack = (): JSX.Element => {
   const { t } = useTranslation()
@@ -52,14 +51,6 @@ const OnboardingStack = (): JSX.Element => {
       <Stack.Screen
         name={BCSCScreens.OnboardingSecureAppScreen}
         component={SecureAppScreen}
-        options={{
-          headerShown: true,
-        }}
-      />
-
-      <Stack.Screen
-        name={BCSCScreens.OnboardingCreatePINScreen}
-        component={CreatePINScreen}
         options={{
           headerShown: true,
         }}
