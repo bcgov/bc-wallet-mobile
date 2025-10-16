@@ -254,6 +254,12 @@ const translation = {
     "NoSavedServices": "No saved services (PT-BR)",
   },
   "Unified": {
+    "Screens": {
+      "SetupTypes": "BC Services Card (PT-BR)",
+      "SetupSteps": "Setup Steps (PT-BR)",
+      "VerificationMethodSelection": "Choose How to Verify (PT-BR)",
+      "InformationRequired": "Information Required (PT-BR)",
+    },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
       "Step1": "Step 1 (PT-BR)",
@@ -314,8 +320,28 @@ const translation = {
     },
     "AccountSetup": {
       "Title": "BC Services Card Account (PT-BR)",
-      "CreateAccount": "Create new Account (PT-BR)",
-      "TransferAccount": "Transfer Account From Another Device (PT-BR)"
+      "AddAccount": "Add account (PT-BR)",
+      "TransferAccount": "Transfer from another device (PT-BR)"
+    },
+    "NewSetup": {
+      "Title": "Nova configuração (PT-BR)",
+      "YouWillNeedTo": "Você precisará: (PT-BR)",
+      "AddPhotoID": "Adicionar um documento de identidade com foto (PT-BR)",
+      "RecordVideoOrVisit": "Gravar um vídeo curto, fazer uma chamada de vídeo, ou visitar um escritório Service BC (PT-BR)",
+      "WhoseIDQuestion": "De quem você está adicionando o documento? (PT-BR)",
+      "MyOwnID": "Meu próprio documento (PT-BR)",
+      "SomeoneElsesID": "Documento de outra pessoa (PT-BR)",
+      "IsOtherPersonWithYou": "Esta outra pessoa está com você? (PT-BR)",
+      "Yes": "Sim (PT-BR)",
+      "No": "Não (PT-BR)",
+      "CannotFinishWithoutOtherPerson": "Você não conseguirá terminar a configuração deste aplicativo sem que a outra pessoa esteja presente. (PT-BR)",
+      "OKToGiveHelp": "É OK ajudar alguém a configurar sua conta. (PT-BR)",
+      "YouCan": "Você pode (PT-BR)",
+      "YouCanReadInstructions": "Ler instruções (PT-BR)",
+      "YouCanNavigateApp": "Navegar no aplicativo (PT-BR)",
+      "YouCanTypeOrScan": "Digitar, escanear, ou tirar fotos (PT-BR)",
+      "YouCannot": "Você não pode (PT-BR)",
+      "YouCannotBeInVideo": "Estar em gravações de vídeo ou chamadas. Apenas a outra pessoa pode estar. (PT-BR)"
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device (PT-BR)",

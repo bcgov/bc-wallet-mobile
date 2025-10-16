@@ -8,6 +8,7 @@ import {
 } from '@bifold/core'
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
+import Config from 'react-native-config'
 import {
   EvidenceType,
   VerificationPhotoUploadPayload,
@@ -16,7 +17,6 @@ import {
 } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
-import Config from 'react-native-config'
 
 export interface IASEnvironment {
   name: string
@@ -63,6 +63,7 @@ export interface NonBCSCUserMetadata {
 }
 
 export interface BCSCState {
+  completedNewSetup: boolean
   verified: boolean
   // used during verification, use IAS ID token cardType for everything else
   cardType: BCSCCardType
@@ -126,8 +127,8 @@ enum RemoteDebuggingDispatchAction {
 
 enum BCSCDispatchAction {
   ADD_NICKNAME = 'bcsc/addNickname',
-  UPDATE_NICKNAME = 'bcsc/updateNickname',
   SELECT_ACCOUNT = 'bcsc/selectAccount',
+  UPDATE_COMPLETED_NEW_SETUP = 'bcsc/updateCompletedNewSetup',
   UPDATE_VERIFIED = 'bcsc/updateVerified',
   UPDATE_CARD_TYPE = 'bcsc/updateCardType',
   UPDATE_SERIAL = 'bcsc/updateSerial',
@@ -219,6 +220,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 const bcscState: BCSCState = {
+  completedNewSetup: false,
   verified: false,
   cardType: BCSCCardType.None,
   serial: '',
@@ -333,20 +335,16 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
-    case BCSCDispatchAction.UPDATE_NICKNAME: {
-      const { index, nickname } = (action?.payload || []).pop() ?? { index: 0, nickname: '' }
-      const updatedNicknames = [...state.bcsc.nicknames]
-      if (index >= 0 && index < updatedNicknames.length) {
-        updatedNicknames[index] = nickname
-      }
-      const bcsc = { ...state.bcsc, nicknames: updatedNicknames }
+    case BCSCDispatchAction.SELECT_ACCOUNT: {
+      const selectedAccountIndex = (action?.payload || []).pop() ?? 0
+      const bcsc = { ...state.bcsc, selectedAccountIndex }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
-    case BCSCDispatchAction.SELECT_ACCOUNT: {
-      const selectedAccountIndex = (action?.payload || []).pop() ?? 0
-      const bcsc = { ...state.bcsc, selectedAccountIndex }
+    case BCSCDispatchAction.UPDATE_COMPLETED_NEW_SETUP: {
+      const completedNewSetup = (action?.payload || []).pop() ?? true
+      const bcsc = { ...state.bcsc, completedNewSetup }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

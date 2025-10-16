@@ -1,0 +1,319 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RadioButton Component Rendering renders correctly when disabled 1`] = `
+<View
+  accessibilityLabel="Test Option"
+  accessibilityRole="radio"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": true,
+      "expanded": undefined,
+      "selected": false,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#FFFFFF",
+      "flexDirection": "row",
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+  testID="default-test-id"
+>
+  <Text
+    style={
+      {
+        "color": "#606060",
+        "flex": 1,
+        "fontFamily": "BCSans-Regular",
+        "fontSize": 18,
+        "fontWeight": "normal",
+      }
+    }
+  >
+    Test Option
+  </Text>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "transparent",
+        "borderColor": "#606060",
+        "borderRadius": 12,
+        "borderWidth": 3,
+        "height": 24,
+        "justifyContent": "center",
+        "width": 24,
+      }
+    }
+  />
+</View>
+`;
+
+exports[`RadioButton Component Rendering renders correctly when selected 1`] = `
+<View
+  accessibilityLabel="Test Option"
+  accessibilityRole="radio"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": true,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#FFFFFF",
+      "flexDirection": "row",
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+  testID="default-test-id"
+>
+  <Text
+    style={
+      {
+        "color": "#FFFFFF",
+        "flex": 1,
+        "fontFamily": "BCSans-Regular",
+        "fontSize": 18,
+        "fontWeight": "normal",
+      }
+    }
+  >
+    Test Option
+  </Text>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "transparent",
+        "borderColor": "#003366",
+        "borderRadius": 12,
+        "borderWidth": 3,
+        "height": 24,
+        "justifyContent": "center",
+        "width": 24,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "#003366",
+          "borderRadius": 6,
+          "height": 12,
+          "width": 12,
+        }
+      }
+    />
+  </View>
+</View>
+`;
+
+exports[`RadioButton Component Rendering renders correctly when selected and disabled 1`] = `
+<View
+  accessibilityLabel="Test Option"
+  accessibilityRole="radio"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": true,
+      "expanded": undefined,
+      "selected": true,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#FFFFFF",
+      "flexDirection": "row",
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+  testID="default-test-id"
+>
+  <Text
+    style={
+      {
+        "color": "#606060",
+        "flex": 1,
+        "fontFamily": "BCSans-Regular",
+        "fontSize": 18,
+        "fontWeight": "normal",
+      }
+    }
+  >
+    Test Option
+  </Text>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "transparent",
+        "borderColor": "#606060",
+        "borderRadius": 12,
+        "borderWidth": 3,
+        "height": 24,
+        "justifyContent": "center",
+        "width": 24,
+      }
+    }
+  >
+    <View
+      style={
+        {
+          "backgroundColor": "#606060",
+          "borderRadius": 6,
+          "height": 12,
+          "width": 12,
+        }
+      }
+    />
+  </View>
+</View>
+`;
+
+exports[`RadioButton Component Rendering renders correctly when unselected 1`] = `
+<View
+  accessibilityLabel="Test Option"
+  accessibilityRole="radio"
+  accessibilityState={
+    {
+      "busy": undefined,
+      "checked": undefined,
+      "disabled": false,
+      "expanded": undefined,
+      "selected": false,
+    }
+  }
+  accessibilityValue={
+    {
+      "max": undefined,
+      "min": undefined,
+      "now": undefined,
+      "text": undefined,
+    }
+  }
+  accessible={true}
+  collapsable={false}
+  focusable={true}
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onResponderGrant={[Function]}
+  onResponderMove={[Function]}
+  onResponderRelease={[Function]}
+  onResponderTerminate={[Function]}
+  onResponderTerminationRequest={[Function]}
+  onStartShouldSetResponder={[Function]}
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#FFFFFF",
+      "flexDirection": "row",
+      "paddingHorizontal": 24,
+      "paddingVertical": 16,
+    }
+  }
+  testID="default-test-id"
+>
+  <Text
+    style={
+      {
+        "color": "#FFFFFF",
+        "flex": 1,
+        "fontFamily": "BCSans-Regular",
+        "fontSize": 18,
+        "fontWeight": "normal",
+      }
+    }
+  >
+    Test Option
+  </Text>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "backgroundColor": "transparent",
+        "borderColor": "#003366",
+        "borderRadius": 12,
+        "borderWidth": 3,
+        "height": 24,
+        "justifyContent": "center",
+        "width": 24,
+      }
+    }
+  />
+</View>
+`;
