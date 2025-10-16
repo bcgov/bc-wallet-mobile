@@ -256,6 +256,12 @@ const translation = {
     "NoSavedServices": "No saved services",
   },
   "Unified": {
+    "Screens": {
+      "SetupTypes": "BC Services Card",
+      "SetupSteps": "Setup Steps",
+      "VerificationMethodSelection": "Choose How to Verify",
+      "InformationRequired": "Information Required",
+    },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
       "Step1": "Step 1",
@@ -316,8 +322,28 @@ const translation = {
     },
     "AccountSetup": {
       "Title": "BC Services Card Account",
-      "CreateAccount": "Create new Account",
-      "TransferAccount": "Transfer Account From Another Device"
+      "AddAccount": "Add account",
+      "TransferAccount": "Transfer from another device"
+    },
+    "NewSetup": {
+      "Title": "New setup",
+      "YouWillNeedTo": "You will need to:",
+      "AddPhotoID": "Add a photo ID",
+      "RecordVideoOrVisit": "Record a short video, have a video call, or visit a Service BC office",
+      "WhoseIDQuestion": "Whose ID are you adding?",
+      "MyOwnID": "My own ID",
+      "SomeoneElsesID": "Someone else's ID",
+      "IsOtherPersonWithYou": "Is this other person with you?",
+      "Yes": "Yes",
+      "No": "No",
+      "CannotFinishWithoutOtherPerson": "You will not be able to finish setting up this app without the other person being present.",
+      "OKToGiveHelp": "It's OK to give someone a bit of help to setup their account.",
+      "YouCan": "You can",
+      "YouCanReadInstructions": "Read instructions",
+      "YouCanNavigateApp": "Navigate the app",
+      "YouCanTypeOrScan": "Type, scan, or take pictures",
+      "YouCannot": "You cannot",
+      "YouCannotBeInVideo": "Be in video recordings or calls. Only the other person can be."
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device",
