@@ -6,8 +6,6 @@ import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-const NUM_CAROUSEL_ITEMS = 3
-
 // TODO (MD): Waiting on final content, replace mock content with real carousel text
 const mockCarouselContent =
   'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
@@ -69,8 +67,29 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
     },
   })
 
+  const carouselPages = [
+    <View key="services" style={styles.contentContainer}>
+      {/* TODO: replace with image */}
+      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
+      <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselServicesHeader')}</ThemedText>
+      <ThemedText>{mockCarouselContent}</ThemedText>
+    </View>,
+    <View key="prove" style={styles.contentContainer}>
+      {/* TODO: replace with image */}
+      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
+      <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselProveHeader')}</ThemedText>
+      <ThemedText>{mockCarouselContent}</ThemedText>
+    </View>,
+    <View key="use" style={styles.contentContainer}>
+      {/* TODO: replace with image */}
+      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
+      <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselCannotUseHeader')}</ThemedText>
+      <ThemedText>{mockCarouselContent}</ThemedText>
+    </View>,
+  ]
+
   const handleNext = () => {
-    if (carouselIndex === NUM_CAROUSEL_ITEMS - 1) {
+    if (carouselIndex === carouselPages.length - 1) {
       props.navigation.navigate(BCSCScreens.OnboardingPrivacyPolicyScreen)
       return
     }
@@ -87,52 +106,27 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.scrollContainer}>
-        <ScrollView>
-          {carouselIndex === 0 && (
-            <View style={styles.contentContainer}>
-              {/* TODO: replace with image*/}
-              <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-              <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselServicesHeader')}</ThemedText>
-              <ThemedText>{mockCarouselContent}</ThemedText>
-            </View>
-          )}
-
-          {carouselIndex === 1 && (
-            <View style={styles.contentContainer}>
-              {/* TODO: replace with image */}
-              <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-              <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselProveHeader')}</ThemedText>
-              <ThemedText>{mockCarouselContent}</ThemedText>
-            </View>
-          )}
-
-          {carouselIndex === 2 && (
-            <View style={styles.contentContainer}>
-              {/* TODO: replace with image*/}
-              <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-              <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselCannotUseHeader')}</ThemedText>
-              <ThemedText>{mockCarouselContent}</ThemedText>
-            </View>
-          )}
-        </ScrollView>
+        <ScrollView>{carouselPages[carouselIndex]}</ScrollView>
 
         <View style={styles.carouselContainer}>
           <TouchableOpacity
-            style={styles.carouselActionButtonContainer}
+            style={[styles.carouselActionButtonContainer, carouselIndex === 0 && { opacity: 0.5 }]}
             onPress={handleBack}
             testID={testIdWithKey('CarouselBack')}
             accessibilityRole="button"
             accessibilityLabel={t('Unified.Onboarding.CarouselBack')}
-            // QUESTION (MD): Should we update the styling to indicate it's disabled?
             disabled={carouselIndex === 0}
           >
             <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselBack')}</ThemedText>
           </TouchableOpacity>
 
           <View style={styles.carouselCirclesContainer}>
-            <View style={[styles.carouselCircle, carouselIndex === 0 && styles.carouselCircleHighlighted]} />
-            <View style={[styles.carouselCircle, carouselIndex === 1 && styles.carouselCircleHighlighted]} />
-            <View style={[styles.carouselCircle, carouselIndex === 2 && styles.carouselCircleHighlighted]} />
+            {carouselPages.map((element, index) => (
+              <View
+                key={`carousel-circle-${element.key}`}
+                style={[styles.carouselCircle, carouselIndex === index && styles.carouselCircleHighlighted]}
+              />
+            ))}
           </View>
 
           <TouchableOpacity
