@@ -280,6 +280,13 @@ const translation = {
       "CharCountTitle": "Character count exceeded",
       "EmptyNameTitle": "Enter an account nickname",
     },
+    "AccountSelector": {
+      "SelectAccount": "Select Account",
+      "SelectAccountDescription": "Choose which account you would like to use on this device.",
+      "ExistingAccounts": "Your Accounts",
+      "NoAccountsFound": "No accounts found. Create a new account to get started.",
+      "AddNewAccount": "Add New Account",
+    },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",
       "SomePeopleStillCallIt": "Some people still call it a CareCard or a Health Card. It has your personal health number (PHN) on the back.",

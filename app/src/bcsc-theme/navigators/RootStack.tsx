@@ -17,6 +17,7 @@ import { BCState } from '@/store'
 import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
+import AccountSelectorScreen from '../features/account/AccountSelectorScreen'
 
 const TempLoadingView = () => {
   const { ColorPalette } = useTheme()
@@ -43,6 +44,11 @@ const BCSCRootStack: React.FC = () => {
   const shouldRenderMainStack = useMemo(
     () => onboardingComplete && store.authentication.didAuthenticate,
     [onboardingComplete, store.authentication.didAuthenticate]
+  )
+
+  const shouldRenderAccountSelector = useMemo(
+    () => store.bcsc.selectedAccountIndex === -1 && store.bcsc.nicknames.length > 0,
+    [store.bcsc.selectedAccountIndex, store.bcsc.nicknames.length]
   )
 
   useEffect(() => {
@@ -75,7 +81,17 @@ const BCSCRootStack: React.FC = () => {
     return (
       <AgentProvider agent={agent}>
         <OpenIDCredentialRecordProvider>
-          {loading ? <TempLoadingView /> : store.bcsc.verified ? <BCSCMainStack /> : <VerifyIdentityStack />}
+          {loading ? (
+            <TempLoadingView />
+          ) : store.bcsc.verified ? (
+            shouldRenderAccountSelector ? (
+              <AccountSelectorScreen />
+            ) : (
+              <BCSCMainStack />
+            )
+          ) : (
+            <VerifyIdentityStack />
+          )}
         </OpenIDCredentialRecordProvider>
       </AgentProvider>
     )

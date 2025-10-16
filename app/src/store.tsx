@@ -343,11 +343,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       }
       const bcsc = { ...state.bcsc, nicknames: state.bcsc.nicknames.map((n) => (n === oldNickname ? newNickname : n)) }
       const newState = { ...state, bcsc }
+
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.SELECT_ACCOUNT: {
-      const selectedAccountIndex = (action?.payload || []).pop() ?? 0
+      const selectedAccountIndex = (action?.payload || []).pop() ?? -1
       const bcsc = { ...state.bcsc, selectedAccountIndex }
       const newState = { ...state, bcsc }
       // don't persist, should be assigned every app start

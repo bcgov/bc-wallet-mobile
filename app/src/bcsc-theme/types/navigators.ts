@@ -61,6 +61,7 @@ export enum BCSCScreens {
   ServiceLoginScreen = 'ServiceLoginScreen',
   NicknameAccount = 'NicknameAccount',
   EditNickname = 'EditNickname',
+  AccountSelector = 'AccountSelector',
 }
 
 export type BCSCTabStackParams = {
@@ -132,4 +133,5 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddressScreen]: undefined
   [BCSCScreens.NicknameAccount]: undefined
+  [BCSCScreens.AccountSelector]: undefined
 }
