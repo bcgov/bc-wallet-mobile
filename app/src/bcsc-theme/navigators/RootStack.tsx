@@ -78,20 +78,14 @@ const BCSCRootStack: React.FC = () => {
   }, [dispatch, loadState, t, store.stateLoaded])
 
   if (shouldRenderMainStack && agent) {
+    if (shouldRenderAccountSelector) {
+      return <AccountSelectorScreen />
+    }
+
     return (
       <AgentProvider agent={agent}>
         <OpenIDCredentialRecordProvider>
-          {loading ? (
-            <TempLoadingView />
-          ) : store.bcsc.verified ? (
-            shouldRenderAccountSelector ? (
-              <AccountSelectorScreen />
-            ) : (
-              <BCSCMainStack />
-            )
-          ) : (
-            <VerifyIdentityStack />
-          )}
+          {loading ? <TempLoadingView /> : store.bcsc.verified ? <BCSCMainStack /> : <VerifyIdentityStack />}
         </OpenIDCredentialRecordProvider>
       </AgentProvider>
     )
