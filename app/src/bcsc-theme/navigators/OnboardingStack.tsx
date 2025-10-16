@@ -8,6 +8,11 @@ import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { useTranslation } from 'react-i18next'
 
+/**
+ * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
+ *
+ * @returns {*} {JSX.Element} The OnboardingStack component.
+ */
 const OnboardingStack = (): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()

@@ -14,7 +14,6 @@ import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, DeviceEventEmitter } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
 import { BCState } from '@/store'
 import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
@@ -35,12 +34,12 @@ const TempLoadingView = () => {
 }
 
 const BCSCRootStack: React.FC = () => {
-  const auth = useAuth()
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const [useAgentSetup, loadState] = useServices([TOKENS.HOOK_USE_AGENT_SETUP, TOKENS.LOAD_STATE])
   const { agent, initializeAgent, shutdownAndClearAgentIfExists } = useAgentSetup()
-  const { loading } = useInitializeBCSC()
+  const initializeBCSC = useInitializeBCSC()
+  const { setPIN: setWalletPIN, getWalletSecret } = useAuth()
 
   useEffect(() => {
     if (store.authentication.didAuthenticate) {
@@ -77,31 +76,46 @@ const BCSCRootStack: React.FC = () => {
    */
   useEffect(() => {
     const asyncEffect = async () => {
-      dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [true] })
+      if (!store.authentication.didAuthenticate) {
+        dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [true] })
+      }
 
       if (!store.onboarding.didCreatePIN) {
-        await auth.setPIN(TEMP_DEVELOPMENT_PIN)
+        await setWalletPIN(TEMP_DEVELOPMENT_PIN)
         dispatch({ type: DispatchAction.DID_CREATE_PIN, payload: [true] })
       }
 
-      await auth.getWalletSecret()
+      await getWalletSecret()
     }
 
     asyncEffect()
-  }, [])
+  }, [dispatch, getWalletSecret, setWalletPIN, store.authentication.didAuthenticate, store.onboarding.didCreatePIN])
 
+  // Show onboarding stack if uncompleted
   if (!store.bcsc.completedOnboarding) {
     return <BCSCOnboardingStack />
   }
 
+  // Show identity verification stack if user unverified
+  if (!store.bcsc.verified) {
+    return <VerifyIdentityStack />
+  }
+
+  // Show startup stack if agent isn't initialized or user hasn't authenticated yet
   if (!agent || !store.authentication.didAuthenticate) {
     return <StartupStack initializeAgent={initializeAgent} />
   }
 
+  // Show loading indicator if BCSC initializing (probably unnecessary, but just in case)
+  if (initializeBCSC.loading) {
+    return <TempLoadingView />
+  }
+
+  // Otherwise, show the main stack (app)
   return (
     <AgentProvider agent={agent}>
       <OpenIDCredentialRecordProvider>
-        {loading ? <TempLoadingView /> : store.bcsc.verified ? <BCSCMainStack /> : <VerifyIdentityStack />}
+        <BCSCMainStack />
       </OpenIDCredentialRecordProvider>
     </AgentProvider>
   )
