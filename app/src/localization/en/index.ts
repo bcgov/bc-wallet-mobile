@@ -270,7 +270,6 @@ const translation = {
       "Step3": "Step 3",
       "Step4": "Step 4"
     },
-    // TODO (MD): Add french and portuguese translations
     "Onboarding": {
       "LearnMore": "Learn more",
       "CarouselNext": "Next",
