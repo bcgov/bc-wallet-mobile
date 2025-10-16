@@ -97,20 +97,22 @@ const Splash: React.FC<SplashProps> = ({ initializeAgent }) => {
   )
 
   useEffect(() => {
-    setStep(1)
     if (initializing.current || !store.authentication.didAuthenticate) {
       return
     }
 
+    initializing.current = true
+
+    setStep(1)
+
     if (!walletSecret) {
+      initializing.current = false
       setInitError(new BifoldError(t('Error.Title2031'), t('Error.Message2031'), 'Wallet secret is not found', 2031))
       return
     }
 
     const initAgentAsyncEffect = async (): Promise<void> => {
       try {
-        initializing.current = true
-
         setStep(2)
         await (ocaBundleResolver as RemoteOCABundleResolver).checkForUpdates?.()
 

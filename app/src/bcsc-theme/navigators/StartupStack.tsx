@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { BCSCScreens } from '../types/navigators'
 import Splash from '@/screens/Splash'
+import { useCallback } from 'react'
 
 interface StartupStackProps {
   initializeAgent: (walletSecret: WalletSecret) => Promise<void>
@@ -26,7 +27,7 @@ export const StartupStack = (props: StartupStackProps) => {
   const Stack = createStackNavigator()
   const defaultStackOptions = useDefaultStackOptions(theme)
 
-  const SplashScreen = () => <Splash initializeAgent={props.initializeAgent} />
+  const SplashScreen = useCallback(() => <Splash initializeAgent={props.initializeAgent} />, [props.initializeAgent])
 
   return (
     <Stack.Navigator
