@@ -226,7 +226,7 @@ const bcscState: BCSCState = {
   serial: '',
   birthdate: undefined,
   nicknames: [],
-  selectedAccountIndex: 0,
+  selectedAccountIndex: -1,
   bookmarks: [],
   email: undefined,
   userCode: undefined,
@@ -339,7 +339,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const selectedAccountIndex = (action?.payload || []).pop() ?? 0
       const bcsc = { ...state.bcsc, selectedAccountIndex }
       const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      // don't persist, should be assigned every app start
       return newState
     }
     case BCSCDispatchAction.UPDATE_COMPLETED_NEW_SETUP: {
@@ -577,8 +577,3 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
 // @ts-expect-error - states for the bifoldReducer and bcReducer are different, still works though
 export const reducer = mergeReducers(bifoldReducer, bcReducer)
-
-// Helper function to get the current selected nickname
-export const getSelectedNickname = (state: BCState): string | undefined => {
-  return state.bcsc.nicknames[state.bcsc.selectedAccountIndex]
-}

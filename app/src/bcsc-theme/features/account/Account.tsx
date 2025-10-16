@@ -5,7 +5,7 @@ import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { BCState, getSelectedNickname } from '@/store'
+import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, AppState, Linking, StyleSheet, View } from 'react-native'
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
+import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 

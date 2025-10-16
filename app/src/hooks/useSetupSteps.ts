@@ -1,5 +1,6 @@
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { BCState, getSelectedNickname } from '@/store'
+import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
+import { BCState } from '@/store'
 import { useMemo } from 'react'
 
 /**

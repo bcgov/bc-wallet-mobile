@@ -13,10 +13,11 @@ import {
   ThemedText,
   KeyboardView,
 } from '@bifold/core'
-import { BCDispatchAction, BCState, getSelectedNickname } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { formStringLengths } from '@/constants'
+import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 
 interface NicknameFormProps {
   isRenaming?: boolean
@@ -74,9 +75,13 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
       setLoading(true)
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [accountNickname] })
 
+      // Select the most recently added nickname (last in the array)
+      const mostRecentIndex = store.bcsc.nicknames.length // This will be the index of the newly added nickname
+      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [mostRecentIndex] })
+
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }, [accountNickname, t, isRenaming, onSubmitSuccess, dispatch, navigation])
+  }, [accountNickname, t, isRenaming, onSubmitSuccess, dispatch, navigation, store])
 
   return (
     <KeyboardView>

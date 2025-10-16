@@ -3,7 +3,7 @@ import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { hitSlop } from '@/constants'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
-import { BCDispatchAction, BCState, getSelectedNickname } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SetupStep } from './components/SetupStep'
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
+import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
