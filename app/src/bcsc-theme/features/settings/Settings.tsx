@@ -52,12 +52,7 @@ const Settings: React.FC = () => {
 
   const onPressTermsOfUse = async () => {
     try {
-      const supported = await Linking.canOpenURL(TERMS_OF_USE_URL)
-      if (supported) {
-        await Linking.openURL(TERMS_OF_USE_URL)
-      } else {
-        logger.error('Unable to open Terms of Use URL')
-      }
+      await Linking.openURL(TERMS_OF_USE_URL)
     } catch (error) {
       logger.error('Error opening Terms of Use URL', error instanceof Error ? error : new Error(String(error)))
     }
