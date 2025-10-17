@@ -8,22 +8,23 @@ import { withAccount } from './withAccountGuard'
 
 const INVALID_REGISTRATION_REQUEST = 'invalid_registration_request'
 
-export interface VerifyInPersonResponseData {
-  process: BCSCCardProcess
-  user_code: string
-  device_code: string
-  verified_email: string
-  expires_in: number
+export enum DeviceVerificationOption {
+  LIVE_VIDEO_CALL = 'video_call',
+  SEND_VIDEO = 'back_check',
+  IN_PERSON = 'counter',
+  SELF = 'self', // transfer account to self
 }
 
-export interface VerifyUnknownBCSCResponseData {
-  process: BCSCCardProcess.NonBCSC
-  user_code: string
-  evidence_upload_uri: string
+export interface DeviceAuthorizationResponse {
   device_code: string
-  verification_options: string
-  verification_uri: string
-  expires_in: number
+  user_code: string // 8 character code
+  verified_email?: string // masked: a****1@gmail.com
+  attestation_uri: string
+  verification_options: string // space delimited options ie: video_call back_check...
+  evidence_upload_uri?: string // only when 'video_call' is one of the verification options
+  video_service_hours?: string // only when 'video_call' is one of the verification options
+  process: BCSCCardProcess
+  expires_in: number // seconds until verification code expires
 }
 
 export interface AuthorizeDeviceUnknownBCSCConfig {
@@ -51,11 +52,11 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization-Request`
    * @param {string?} serial - BCSC serial number
    * @param {Date?} birthdate - Users birth date. This paramter is required if serial is provided
-   * @returns {*} {VerifyInPersonResponseData | null}
+   * @returns {*} {DeviceAuthorizationResponse | null}
    */
   const authorizeDevice = useCallback(
-    async (serial?: string, birthdate?: Date): Promise<VerifyInPersonResponseData | null> => {
-      return withAccount<VerifyInPersonResponseData | null>(async (account) => {
+    async (serial?: string, birthdate?: Date): Promise<DeviceAuthorizationResponse | null> => {
+      return withAccount<DeviceAuthorizationResponse | null>(async (account) => {
         if (serial && !birthdate) {
           throw new Error('Birthdate is required when providing a serial number')
         }
@@ -70,7 +71,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         apiClient.logger.info('useAuthorizationApi.authorizeDevice.body', body)
 
         try {
-          const { data } = await apiClient.post<VerifyInPersonResponseData>(
+          const { data } = await apiClient.post<DeviceAuthorizationResponse>(
             apiClient.endpoints.deviceAuthorization,
             body,
             {
@@ -105,11 +106,11 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
    *
    * @see `https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#Device-Authorization`
    * @param {AuthorizeDeviceUnknownBCSCConfig} config - Config including user information and address
-   * @returns {*} {VerifyUnknownBCSCResponseData | null} - Returns the response data or null if already registered
+   * @returns {*} {DeviceAuthorizationResponse | null} - Returns the response data or null if already registered
    */
   const authorizeDeviceWithUnknownBCSC = useCallback(
-    async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<VerifyUnknownBCSCResponseData | null> => {
-      return withAccount<VerifyUnknownBCSCResponseData | null>(async (account) => {
+    async (config: AuthorizeDeviceUnknownBCSCConfig): Promise<DeviceAuthorizationResponse | null> => {
+      return withAccount<DeviceAuthorizationResponse | null>(async (account) => {
         const body: Record<string, any> = {
           client_id: account.clientID,
           response_type: 'device_code',
@@ -140,7 +141,7 @@ const useAuthorizationApi = (apiClient: BCSCApiClient) => {
         apiClient.logger.info('useAuthorizationApi.authorizeDeviceWithUnknownBCSC.body', body)
 
         try {
-          const { data } = await apiClient.post<VerifyUnknownBCSCResponseData>(
+          const { data } = await apiClient.post<DeviceAuthorizationResponse>(
             apiClient.endpoints.deviceAuthorization,
             body,
             {

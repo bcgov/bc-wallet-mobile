@@ -1,4 +1,4 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -61,6 +61,9 @@ const VerifyMethodActionButton = ({
       onPress={() => {
         if (!disabled && !loading) onPress()
       }}
+      testID={testIdWithKey(title)}
+      accessibilityRole="button"
+      accessibilityLabel={`${title} verification method`}
     >
       <View style={{ flex: 1 }}>
         <View style={styles.titleContainer}>

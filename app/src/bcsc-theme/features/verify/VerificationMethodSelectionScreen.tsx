@@ -1,21 +1,23 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
+import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { useTranslation } from 'react-i18next'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerificationMethodSelection>
 }
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { t } = useTranslation()
+  const { ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
@@ -29,7 +31,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     },
   })
 
-  const handlePressSendVideo = async () => {
+  const handlePressSendVideo = useCallback(async () => {
     try {
       setSendVideoLoading(true)
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
@@ -42,7 +44,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     } finally {
       setSendVideoLoading(false)
     }
-  }
+  }, [dispatch, evidence, navigation])
 
   const handlePressLiveCall = useCallback(async () => {
     try {
@@ -92,45 +94,56 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <VerifyMethodActionButton
-        title={'Send a video'}
-        description={`Record a short video and we'll review it to verify your identity.`}
-        icon={'send'}
-        onPress={handlePressSendVideo}
-        style={{ marginBottom: Spacing.xxl }}
-        loading={sendVideoLoading}
-        disabled={sendVideoLoading || liveCallLoading}
-      />
-      {
-        // Do not show video call option for "Other" card type ie: dual identification cards
-        store.bcsc.cardType !== BCSCCardType.Other ? (
-          <>
-            <ThemedText
-              variant={'bold'}
-              style={{ marginTop: Spacing.xl, paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}
-            >
-              Cannot send a video?
-            </ThemedText>
-            <VerifyMethodActionButton
-              title={'Video call'}
-              description={`We will verify your identity during a video call.`}
-              icon={'video'}
-              onPress={handlePressLiveCall}
-              style={{ borderBottomWidth: 0 }}
-              loading={liveCallLoading}
-              disabled={liveCallLoading || sendVideoLoading}
-            />
-          </>
-        ) : null
-      }
+      {store.bcsc.verificationOptions
+        .map((option, index) => {
+          const borderBottomWidth = store.bcsc.verificationOptions.length === index + 1 ? 1 : undefined
 
-      <VerifyMethodActionButton
-        title={'In person'}
-        description={`Find out where to go and what to bring.`}
-        icon={'account'}
-        onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
-        disabled={liveCallLoading || sendVideoLoading}
-      />
+          if (option === DeviceVerificationOption.LIVE_VIDEO_CALL) {
+            return (
+              <VerifyMethodActionButton
+                key="video_call"
+                title={t('Unified.VerificationMethods.VideoCallTitle')}
+                description={t('Unified.VerificationMethods.VideoCallDescription')}
+                icon={'video'}
+                onPress={handlePressLiveCall}
+                loading={liveCallLoading}
+                disabled={liveCallLoading || sendVideoLoading}
+                style={{ borderBottomWidth }}
+              />
+            )
+          }
+
+          if (option === DeviceVerificationOption.SEND_VIDEO) {
+            return (
+              <VerifyMethodActionButton
+                key="send_video"
+                title={t('Unified.VerificationMethods.SendVideoTitle')}
+                description={t('Unified.VerificationMethods.SendVideoDescription')}
+                icon={'send'}
+                onPress={handlePressSendVideo}
+                loading={sendVideoLoading}
+                disabled={sendVideoLoading || liveCallLoading}
+                style={{ borderBottomWidth }}
+              />
+            )
+          }
+
+          if (option === DeviceVerificationOption.IN_PERSON) {
+            return (
+              <VerifyMethodActionButton
+                key="in_person"
+                title={t('Unified.VerificationMethods.InPersonTitle')}
+                description={t('Unified.VerificationMethods.InPersonDescription')}
+                icon={'account'}
+                onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
+                disabled={liveCallLoading || sendVideoLoading}
+                style={{ borderBottomWidth }}
+              />
+            )
+          }
+          return null
+        })
+        .filter(Boolean)}
     </SafeAreaView>
   )
 }
