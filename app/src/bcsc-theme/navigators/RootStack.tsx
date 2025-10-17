@@ -74,17 +74,28 @@ const BCSCRootStack: React.FC = () => {
    */
   useEffect(() => {
     const asyncEffect = async () => {
-      if (store.bcsc.completedOnboarding) {
-        await setWalletPIN(TEMP_DEVELOPMENT_PIN)
-        dispatch({ type: DispatchAction.DID_CREATE_PIN, payload: [true] })
+      if (store.authentication.didAuthenticate === false) {
         dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [true] })
       }
 
-      await getWalletSecret()
+      const secret = await getWalletSecret()
+
+      if (!secret) {
+        await setWalletPIN(TEMP_DEVELOPMENT_PIN)
+        dispatch({ type: DispatchAction.DID_CREATE_PIN, payload: [true] })
+      }
     }
 
     asyncEffect()
-  }, [dispatch, getWalletSecret, setWalletPIN, store.bcsc.completedOnboarding])
+  }, [
+    dispatch,
+    getWalletSecret,
+    setWalletPIN,
+    store.authentication.didAuthenticate,
+    store.bcsc.completedOnboarding,
+    store.onboarding.didCreatePIN,
+    walletSecret,
+  ])
 
   // Show loading screen if state or wallet secret not loaded yet
   if (!store.stateLoaded || !walletSecret) {
