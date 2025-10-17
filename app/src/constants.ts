@@ -34,6 +34,8 @@ export const BCThemeNames = {
   BCSC: 'bcsc',
 } as const
 
+// BCSC Constants
+export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html',
   HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html',

@@ -1,12 +1,13 @@
+import { TERMS_OF_USE_URL } from '@/constants'
 import { BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { SettingsActionCard } from './components/SettingsActionCard'
 import { useTranslation } from 'react-i18next'
-import Icon from 'react-native-vector-icons/MaterialIcons'
+import { Linking, StyleSheet, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
+import Icon from 'react-native-vector-icons/MaterialIcons'
+import { SettingsActionCard } from './components/SettingsActionCard'
 
 /**
  * The Settings screen for the BCSC theme.
@@ -47,6 +48,14 @@ const Settings: React.FC = () => {
   // TODO (MD): Deprecate this once all settings actions have been implemented
   const onPressActionTodo = () => {
     logger.info('TODO: Settings action pressed')
+  }
+
+  const onPressTermsOfUse = async () => {
+    try {
+      await Linking.openURL(TERMS_OF_USE_URL)
+    } catch (error) {
+      logger.error('Error opening Terms of Use URL', error instanceof Error ? error : new Error(String(error)))
+    }
   }
 
   return (
@@ -90,7 +99,7 @@ const Settings: React.FC = () => {
           <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressActionTodo} />
           <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressActionTodo} />
           <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressActionTodo} />
-          <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
 
           {/* TODO (MD): Add developer options */}
 
