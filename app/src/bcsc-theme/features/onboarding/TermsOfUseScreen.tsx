@@ -1,7 +1,6 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TERMS_OF_USE_URL } from '@/constants'
-import { BCState } from '@/store'
-import { Button, ButtonType, DispatchAction, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
@@ -20,7 +19,6 @@ interface TermsOfUseScreenProps {
 export const TermsOfUseScreen = (props: TermsOfUseScreenProps) => {
   const { t } = useTranslation()
   const theme = useTheme()
-  const [, dispatch] = useStore<BCState>()
 
   const styles = StyleSheet.create({
     container: {
@@ -66,7 +64,6 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps) => {
           buttonType={ButtonType.Primary}
           onPress={() => {
             props.navigation.navigate(BCSCScreens.OnboardingNotificationsScreen)
-            dispatch({ type: DispatchAction.DID_AGREE_TO_TERMS, payload: [true] })
           }}
           testID={testIdWithKey('AcceptAndContinue')}
           accessibilityLabel={t('Unified.Onboarding.AcceptAndContinueButton')}
