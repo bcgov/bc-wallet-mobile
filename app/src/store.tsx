@@ -89,6 +89,7 @@ export interface BCSCState {
   verificationRequestSha?: string
   additionalEvidenceData: AdditionalEvidenceData[]
   registrationAccessToken?: string
+  completedOnboarding: boolean
 }
 
 export interface AdditionalEvidenceData {
@@ -151,6 +152,7 @@ enum BCSCDispatchAction {
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateRegistrationAccessToken',
+  UPDATE_COMPLETED_ONBOARDING = 'bcsc/updateOnboardingCompleted',
 }
 
 enum ModeDispatchAction {
@@ -231,6 +233,7 @@ const bcscState: BCSCState = {
   verificationRequestId: undefined,
   verificationRequestSha: undefined,
   additionalEvidenceData: [],
+  completedOnboarding: false,
 }
 
 export enum BCLocalStorageKeys {
@@ -320,6 +323,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         newState.dismissPersonCredentialOffer
       )
 
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_COMPLETED_ONBOARDING: {
+      const completedOnboarding = (action?.payload || []).pop() ?? true
+      const bcsc = { ...state.bcsc, completedOnboarding }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_COMPLETED_NEW_SETUP: {
