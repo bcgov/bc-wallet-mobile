@@ -91,6 +91,8 @@ const translation = {
     },
   },
   "PINCreate": {
+    "Header": "BC Wallet (PT-BR)",
+    "Subheader": "Secure your wallet (PT-BR)",
     "Explainer": {
       "PrimaryHeading": "Create a PIN that is: (PT-BR)",
       "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again. (PT-BR)",

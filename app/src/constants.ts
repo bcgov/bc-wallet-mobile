@@ -34,6 +34,8 @@ export const BCThemeNames = {
   BCSC: 'bcsc',
 } as const
 
+// BCSC Constants
+export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html',
   HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html',
@@ -41,8 +43,6 @@ export enum HelpCentreUrl {
   VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html#section-options-app',
   VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html#section-inperson',
 }
-
-// BCSC Constants
 
 export const RECONNECTION_GRACE_PERIOD_MS = 3000
 export const KEEP_ALIVE_INTERVAL_MS = 30000
