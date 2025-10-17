@@ -17,7 +17,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { formStringLengths } from '@/constants'
-import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
+import { hasNickname } from '@/bcsc-theme/utils/account-utils'
 
 interface NicknameFormProps {
   isRenaming?: boolean
@@ -32,7 +32,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
   const [store, dispatch] = useStore<BCState>()
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
-  const [accountNickname, setAccountNickname] = useState(getSelectedNickname(store) ?? '')
+  const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
   const [error, setError] = useState<string | null>(null)
 
   const styles = StyleSheet.create({
@@ -73,11 +73,16 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
     } else {
       setError(null)
       setLoading(true)
+
+      if (hasNickname(store, accountNickname)) {
+        setError(t('Unified.NicknameAccount.NameAlreadyExists'))
+        return
+      }
+
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [accountNickname] })
 
-      // Select the most recently added nickname (last in the array)
-      const mostRecentIndex = store.bcsc.nicknames.length // This will be the index of the newly added nickname
-      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [mostRecentIndex] })
+      // Select the newly added nickname
+      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [accountNickname] })
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }

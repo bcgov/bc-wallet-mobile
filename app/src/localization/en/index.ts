@@ -280,6 +280,7 @@ const translation = {
       "AccountNameDescription2": "• In notifications",
       "CharCountTitle": "Character count exceeded",
       "EmptyNameTitle": "Enter an account nickname",
+      "NameAlreadyExists": "This nickname already exists",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",
