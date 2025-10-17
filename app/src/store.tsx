@@ -69,6 +69,8 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
+  nicknames: Set<string>
+  selectedNickname?: string
   email?: string
   emailConfirmed?: boolean
   deviceCode?: string
@@ -124,6 +126,8 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  ADD_NICKNAME = 'bcsc/addNickname',
+  SELECT_ACCOUNT = 'bcsc/selectAccount',
   UPDATE_COMPLETED_NEW_SETUP = 'bcsc/updateCompletedNewSetup',
   UPDATE_VERIFIED = 'bcsc/updateVerified',
   UPDATE_CARD_TYPE = 'bcsc/updateCardType',
@@ -221,6 +225,8 @@ const bcscState: BCSCState = {
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
+  nicknames: new Set<string>(),
+  selectedNickname: undefined,
   bookmarks: [],
   email: undefined,
   userCode: undefined,
@@ -320,6 +326,23 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         newState.dismissPersonCredentialOffer
       )
 
+      return newState
+    }
+    case BCSCDispatchAction.ADD_NICKNAME: {
+      const nickname = (action?.payload || []).pop() ?? ''
+      const newNicknames = new Set(state.bcsc.nicknames)
+      newNicknames.add(nickname)
+      const bcsc = { ...state.bcsc, nicknames: newNicknames }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.SELECT_ACCOUNT: {
+      const selectedNickname = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, selectedNickname }
+      const newState = { ...state, bcsc }
+      // persist for now until selection screen is implemented
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_COMPLETED_NEW_SETUP: {
