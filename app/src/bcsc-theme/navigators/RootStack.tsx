@@ -20,39 +20,31 @@ import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
 import BCSCOnboardingStack from './OnboardingStack'
 import { StartupStack } from './StartupStack'
-import { useDebounce } from '@/hooks/useDebounce'
+import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 
+// ONBOARDING PATCH
 const TEMP_DEVELOPMENT_PIN = '111111'
 
-// Delay showing the loading screen to avoid flicker on fast loads
-const BCSC_LOADING_DELAY_MS = 100
+const BCSCRootStack: React.FC = () => {
+  const { t } = useTranslation()
+  const [store, dispatch] = useStore<BCState>()
+  const theme = useTheme()
+  const [loadState] = useServices([TOKENS.LOAD_STATE])
+  const { agent, initializeAgent, shutdownAndClearAgentIfExists } = useBCAgentSetup()
+  const initializeBCSC = useInitializeBCSC()
+  const { setPIN: setWalletPIN, getWalletSecret, walletSecret } = useAuth()
 
-const TempLoadingView = () => {
-  const { ColorPalette } = useTheme()
-
-  return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
+  const LoadingView = () => (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.ColorPalette.brand.primaryBackground }}>
       <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
     </SafeAreaView>
   )
-}
-
-const BCSCRootStack: React.FC = () => {
-  const [store, dispatch] = useStore<BCState>()
-  const { t } = useTranslation()
-  const [useAgentSetup, loadState] = useServices([TOKENS.HOOK_USE_AGENT_SETUP, TOKENS.LOAD_STATE])
-  const { agent, initializeAgent, shutdownAndClearAgentIfExists } = useAgentSetup()
-  const initializeBCSC = useInitializeBCSC()
-  const { setPIN: setWalletPIN, getWalletSecret, walletSecret } = useAuth()
-  const bcscLoadingDebounced = useDebounce(initializeBCSC.loading, BCSC_LOADING_DELAY_MS)
 
   useEffect(() => {
-    if (store.authentication.didAuthenticate) {
-      return
+    if (store.authentication.didAuthenticate === false) {
+      // if user gets locked out, erase agent
+      shutdownAndClearAgentIfExists()
     }
-
-    // if user gets locked out, erase agent
-    shutdownAndClearAgentIfExists()
   }, [store.authentication.didAuthenticate, shutdownAndClearAgentIfExists])
 
   useEffect(() => {
@@ -61,11 +53,12 @@ const BCSCRootStack: React.FC = () => {
       return
     }
 
-    loadState(dispatch).catch((err: unknown) => {
-      const error = new BifoldError(t('Error.Title1044'), t('Error.Message1044'), (err as Error).message, 1001)
-
-      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, error)
-    })
+    try {
+      loadState(dispatch)
+    } catch (error) {
+      const bifoldError = new BifoldError(t('Error.Title1044'), t('Error.Message1044'), (error as Error).message, 1001)
+      DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
+    }
   }, [dispatch, loadState, t, store.stateLoaded])
 
   /**
@@ -81,38 +74,24 @@ const BCSCRootStack: React.FC = () => {
    */
   useEffect(() => {
     const asyncEffect = async () => {
-      if (!store.stateLoaded) {
-        return
-      }
-
-      if (!store.authentication.didAuthenticate) {
-        dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [true] })
-      }
-
-      if (!store.onboarding.didCreatePIN) {
+      if (store.bcsc.completedOnboarding) {
         await setWalletPIN(TEMP_DEVELOPMENT_PIN)
         dispatch({ type: DispatchAction.DID_CREATE_PIN, payload: [true] })
+        dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [true] })
       }
 
       await getWalletSecret()
     }
 
     asyncEffect()
-  }, [
-    dispatch,
-    getWalletSecret,
-    setWalletPIN,
-    store.authentication.didAuthenticate,
-    store.onboarding.didCreatePIN,
-    store.stateLoaded,
-  ])
+  }, [dispatch, getWalletSecret, setWalletPIN, store.bcsc.completedOnboarding])
 
-  // Show loading screen if state, wallet secret, or BCSC initialization is still loading
-  if (!store.stateLoaded || !walletSecret || bcscLoadingDebounced) {
-    return <TempLoadingView />
+  // Show loading screen if state or wallet secret not loaded yet
+  if (!store.stateLoaded || !walletSecret) {
+    return <LoadingView />
   }
 
-  // Show onboarding stack if uncompleted
+  // Show onboarding stack if onboarding not completed yet
   if (!store.bcsc.completedOnboarding) {
     return <BCSCOnboardingStack />
   }
@@ -120,6 +99,11 @@ const BCSCRootStack: React.FC = () => {
   // Show startup stack if agent isn't initialized or user hasn't authenticated yet (biometrics/PIN)
   if (!agent || !store.authentication.didAuthenticate) {
     return <StartupStack initializeAgent={initializeAgent} />
+  }
+
+  // Show loading screen if BCSC initialization in progress (explicitly checked last to avoid flicker)
+  if (initializeBCSC.loading) {
+    return <LoadingView />
   }
 
   // Show identity verification stack (setup steps) if user unverified
