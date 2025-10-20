@@ -91,6 +91,8 @@ const translation = {
     },
   },
   "PINCreate": {
+    "Header": "BC Wallet (PT-BR)",
+    "Subheader": "Secure your wallet (PT-BR)",
     "Explainer": {
       "PrimaryHeading": "Create a PIN that is: (PT-BR)",
       "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again. (PT-BR)",
@@ -265,7 +267,17 @@ const translation = {
       "Step1": "Step 1 (PT-BR)",
       "Step2": "Step 2 (PT-BR)",
       "Step3": "Step 3 (PT-BR)",
-      "Step4": "Step 4 (PT-BR)"
+      "Step4": "Step 4 (PT-BR)",
+      "Step5": "Step 5 (PT-BR)",
+    },
+    "NicknameAccount": {
+      "AccountName": "Account Nickname (PT-BR)",
+      "CreateAccountName": "Create a nickname for your account on this device. It identifies your account: (PT-BR)",
+      "AccountNameDescription1": "When you open the app (PT-BR)",
+      "AccountNameDescription2": "In notifications (PT-BR)",
+      "CharCountTitle": "Character count exceeded (PT-BR)",
+      "EmptyNameTitle": "Enter an account nickname (PT-BR)",
+      "NameAlreadyExists": "This nickname already exists (PT-BR)",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",

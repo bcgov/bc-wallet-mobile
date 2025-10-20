@@ -91,6 +91,8 @@ const translation = {
     },
   },
   "PINCreate": {
+    "Header": "BC Wallet",
+    "Subheader": "Secure your wallet",
     "Explainer": {
       "PrimaryHeading": "Create a PIN that is:",
       "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again.",
@@ -267,7 +269,17 @@ const translation = {
       "Step1": "Step 1",
       "Step2": "Step 2",
       "Step3": "Step 3",
-      "Step4": "Step 4"
+      "Step4": "Step 4",
+      "Step5": "Step 5",
+    },
+    "NicknameAccount": {
+      "AccountName": "Account Nickname",
+      "CreateAccountName": "Create a nickname for your account on this device. It identifies your account:",
+      "AccountNameDescription1": "When you open the app",
+      "AccountNameDescription2": "In notifications",
+      "CharCountTitle": "Character count exceeded",
+      "EmptyNameTitle": "Enter an account nickname",
+      "NameAlreadyExists": "This nickname already exists",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",
