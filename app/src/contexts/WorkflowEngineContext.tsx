@@ -28,7 +28,7 @@ export interface WorkflowEngineContextType {
 export const WorkflowEngineContext = createContext<WorkflowEngineContextType | null>(null)
 
 export type WorkflowEngineProviderProps = PropsWithChildren<{
-  workflowSteps: WorkflowStep[]
+  workflow: WorkflowStep[]
 }>
 
 /**
@@ -44,7 +44,7 @@ export type WorkflowEngineProviderProps = PropsWithChildren<{
  */
 export const WorkflowEngineProvider = (props: WorkflowEngineProviderProps) => {
   const navigation = useNavigation()
-  const [workflowStep, setWorkflowStep] = useState<WorkflowStep>(props.workflowSteps[0])
+  const [workflowStep, setWorkflowStep] = useState<WorkflowStep>(props.workflow[0])
 
   /**
    * Finds a workflow step by its screen name.

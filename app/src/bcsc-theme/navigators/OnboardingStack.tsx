@@ -24,7 +24,7 @@ const OnboardingStack = (): JSX.Element => {
   const initialRouteName = OnboardingWorkflow[0].screen
 
   return (
-    <WorkflowEngineProvider workflowSteps={OnboardingWorkflow}>
+    <WorkflowEngineProvider workflow={OnboardingWorkflow}>
       <Stack.Navigator
         initialRouteName={initialRouteName}
         screenOptions={{
