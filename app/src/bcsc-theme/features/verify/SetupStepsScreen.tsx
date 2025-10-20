@@ -152,10 +152,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    */
   const getVerificationStep1Subtext = useCallback((): string[] => {
     if (step.nickname.completed && store.bcsc.selectedNickname) {
-      return [`${t('Unified.Steps.NicknameAccount')}: ${store.bcsc.selectedNickname}`]
+      return [`${t('Unified.NicknameAccount.AccountName')}: ${store.bcsc.selectedNickname}`]
     }
 
-    return [t('Unified.Steps.NicknameAccount')]
+    return [t('Unified.NicknameAccount.AccountName')]
   }, [t, step.nickname.completed, store])
 
   /**

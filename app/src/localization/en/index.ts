@@ -265,7 +265,6 @@ const translation = {
       "InformationRequired": "Information Required",
     },
     "Steps": {
-      "NicknameAccount": "Nickname account",
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
       "Step1": "Step 1",
       "Step2": "Step 2",
