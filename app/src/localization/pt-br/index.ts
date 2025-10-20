@@ -169,6 +169,7 @@ const translation = {
     "SignOut": "Sign out (PT-BR)",
     "Biometrics": "Biometrics (PT-BR)",
     "ChangePIN": "Change PIN (PT-BR)",
+    "EditNickname": "Edit Nickname (PT-BR)",
     "AutoLockTime": "Auto lock time (PT-BR)",
     "Notifications": "Notifications (PT-BR)",
     "ForgetPairings": "Forget pairings (PT-BR)",

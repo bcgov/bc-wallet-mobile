@@ -169,7 +169,7 @@ const translation = {
     "SignOut": "Sign out",
     "Biometrics": "Biometrics",
     "ChangePIN": "Change PIN",
-    "EditNickname": "Edit nickname",
+    "EditNickname": "Edit Nickname",
     "AutoLockTime": "Auto lock time",
     "Notifications": "Notifications",
     "ForgetPairings": "Forget pairings",
@@ -266,7 +266,6 @@ const translation = {
       "InformationRequired": "Information Required",
     },
     "Steps": {
-      "NicknameAccount": "Nickname account",
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
       "Step1": "Step 1",
       "Step2": "Step 2",
