@@ -12,26 +12,28 @@ import {
   LimitedTextInput,
   ThemedText,
   KeyboardView,
+  BulletPoint,
 } from '@bifold/core'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { formStringLengths } from '@/constants'
-import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
+import { hasNickname } from '@/bcsc-theme/utils/account-utils'
 
 interface NicknameFormProps {
   isRenaming?: boolean
+  onSubmitSuccess?: (name: string) => void
   onCancel?: () => void
 }
 
-const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => {
+const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess, onCancel }) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const navigation = useNavigation()
   const [store, dispatch] = useStore<BCState>()
   const { ButtonLoading } = useAnimatedComponents()
   const [loading, setLoading] = useState(false)
-  const [accountNickname, setAccountNickname] = useState(getSelectedNickname(store) ?? '')
+  const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
   const [error, setError] = useState<string | null>(null)
 
   const styles = StyleSheet.create({
@@ -50,6 +52,13 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
     secondButton: {
       marginTop: Spacing.sm,
     },
+    bulletPoint: {
+      marginLeft: Spacing.sm,
+    },
+    bulletPointContainer: {
+      marginBottom: Spacing.md,
+      marginLeft: Spacing.md,
+    },
   })
 
   const handleChangeText = useCallback((text: string) => {
@@ -57,37 +66,38 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
   }, [])
 
   const handleContinuePressed = useCallback(() => {
-    if (accountNickname.length < formStringLengths.minimumLength) {
+    //trim the account nickname
+    const trimmedAccountNickname = accountNickname.trim()
+
+    if (trimmedAccountNickname.length < formStringLengths.minimumLength) {
       setError(t('Unified.NicknameAccount.EmptyNameTitle'))
       return
     }
 
-    if (accountNickname.length > formStringLengths.maximumLength) {
+    if (trimmedAccountNickname.length > formStringLengths.maximumLength) {
       setError(t('Unified.NicknameAccount.CharCountTitle'))
       return
     }
 
     if (isRenaming) {
-      setError(null)
-      setLoading(true)
-      dispatch({
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: [{ oldNickname: getSelectedNickname(store), newNickname: accountNickname }],
-      })
-
-      navigation.goBack()
+      onSubmitSuccess?.(trimmedAccountNickname)
     } else {
       setError(null)
       setLoading(true)
-      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [accountNickname] })
 
-      // Select the most recently added nickname (last in the array)
-      const mostRecentIndex = store.bcsc.nicknames.length // This will be the index of the newly added nickname
-      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [mostRecentIndex] })
+      if (hasNickname(store, trimmedAccountNickname)) {
+        setError(t('Unified.NicknameAccount.NameAlreadyExists'))
+        return
+      }
+
+      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedAccountNickname] })
+
+      // Select the newly added nickname
+      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [trimmedAccountNickname] })
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }, [accountNickname, t, isRenaming, dispatch, navigation, store])
+  }, [accountNickname, t, isRenaming, onSubmitSuccess, dispatch, navigation, store])
 
   return (
     <KeyboardView>
@@ -97,17 +107,12 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
             {t('Unified.NicknameAccount.AccountName')}
           </ThemedText>
 
-          <ThemedText style={{ marginBottom: Spacing.md }}>
-            {isRenaming ? t('Unified.NicknameAccount.EditAccountName') : t('Unified.NicknameAccount.CreateAccountName')}
-          </ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.NicknameAccount.CreateAccountName')}</ThemedText>
 
-          <ThemedText style={{ marginLeft: Spacing.md }}>
-            {t('Unified.NicknameAccount.AccountNameDescription1')}
-          </ThemedText>
-
-          <ThemedText style={{ marginLeft: Spacing.md, marginBottom: Spacing.md }}>
-            {t('Unified.NicknameAccount.AccountNameDescription2')}
-          </ThemedText>
+          <View style={styles.bulletPointContainer}>
+            <BulletPoint textStyle={styles.bulletPoint} text={t('Unified.NicknameAccount.AccountNameDescription1')} />
+            <BulletPoint textStyle={styles.bulletPoint} text={t('Unified.NicknameAccount.AccountNameDescription2')} />
+          </View>
 
           <LimitedTextInput
             showLimitCounter={false}
