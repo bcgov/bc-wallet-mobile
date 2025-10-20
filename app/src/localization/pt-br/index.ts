@@ -274,6 +274,7 @@ const translation = {
     "NicknameAccount": {
       "AccountName": "Account Nickname (PT-BR)",
       "CreateAccountName": "Create a nickname for your account on this device. It identifies your account: (PT-BR)",
+      "EditAccountName": "Edit the nickname for your account on this device. It identifies your account: (PT-BR)",
       "AccountNameDescription1": "When you open the app (PT-BR)",
       "AccountNameDescription2": "In notifications (PT-BR)",
       "CharCountTitle": "Character count exceeded (PT-BR)",
