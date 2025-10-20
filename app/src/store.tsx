@@ -69,8 +69,8 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
-  nicknames: string[]
-  selectedAccountIndex: number
+  nicknames: Set<string>
+  selectedNickname?: string
   email?: string
   emailConfirmed?: boolean
   deviceCode?: string
@@ -226,8 +226,8 @@ const bcscState: BCSCState = {
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
-  nicknames: [],
-  selectedAccountIndex: -1,
+  nicknames: new Set<string>(),
+  selectedNickname: undefined,
   bookmarks: [],
   email: undefined,
   userCode: undefined,
@@ -331,27 +331,32 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.ADD_NICKNAME: {
       const nickname = (action?.payload || []).pop() ?? ''
-      const bcsc = { ...state.bcsc, nicknames: [...state.bcsc.nicknames, nickname] }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.UPDATE_NICKNAME: {
-      const { oldNickname, newNickname } = (action?.payload || []).pop() ?? {}
-      if (!oldNickname || !newNickname) {
-        return state
-      }
-      const bcsc = { ...state.bcsc, nicknames: state.bcsc.nicknames.map((n) => (n === oldNickname ? newNickname : n)) }
+
+      state.bcsc.nicknames.add(nickname)
+
+      const bcsc = { ...state.bcsc, nicknames: state.bcsc.nicknames }
       const newState = { ...state, bcsc }
 
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.SELECT_ACCOUNT: {
-      const selectedAccountIndex = (action?.payload || []).pop() ?? -1
-      const bcsc = { ...state.bcsc, selectedAccountIndex }
+      const selectedNickname = (action?.payload || []).pop() ?? undefined
+      const bcsc = { ...state.bcsc, selectedNickname }
       const newState = { ...state, bcsc }
-      // don't persist, should be assigned every app start
+      // persist for now until selection screen is implemented
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_NICKNAME: {
+      const { nickname, newNickname } = (action?.payload || []).pop() ?? {}
+
+      state.bcsc.nicknames.delete(nickname)
+      state.bcsc.nicknames.add(newNickname)
+
+      const bcsc = { ...state.bcsc, nicknames: state.bcsc.nicknames }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_COMPLETED_NEW_SETUP: {

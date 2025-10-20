@@ -1,15 +1,16 @@
-import { BCDispatchAction, BCState } from '@/store'
+import { TERMS_OF_USE_URL } from '@/constants'
+import { BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import { SettingsActionCard } from './components/SettingsActionCard'
 import { useTranslation } from 'react-i18next'
-import Icon from 'react-native-vector-icons/MaterialIcons'
+import { Linking, StyleSheet, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import Icon from 'react-native-vector-icons/MaterialIcons'
+import { SettingsActionCard } from './components/SettingsActionCard'
 
 /**
  * The Settings screen for the BCSC theme.
@@ -19,7 +20,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 const Settings: React.FC = () => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const auth = useAuth()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams>>()
@@ -53,6 +54,14 @@ const Settings: React.FC = () => {
     logger.info('TODO: Settings action pressed')
   }
 
+  const onPressTermsOfUse = async () => {
+    try {
+      await Linking.openURL(TERMS_OF_USE_URL)
+    } catch (error) {
+      logger.error('Error opening Terms of Use URL', error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
   return (
     <TabScreenWrapper>
       <View style={styles.container}>
@@ -62,7 +71,6 @@ const Settings: React.FC = () => {
             startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
             onPress={() => {
               auth.lockOutUser(LockoutReason.Logout)
-              dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [-1] })
             }}
           />
 
@@ -103,7 +111,7 @@ const Settings: React.FC = () => {
           <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressActionTodo} />
           <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressActionTodo} />
           <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressActionTodo} />
-          <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
 
           {/* TODO (MD): Add developer options */}
 

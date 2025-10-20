@@ -47,8 +47,8 @@ const BCSCRootStack: React.FC = () => {
   )
 
   const shouldRenderAccountSelector = useMemo(
-    () => store.bcsc.selectedAccountIndex === -1 && store.bcsc.nicknames.length > 0,
-    [store.bcsc.selectedAccountIndex, store.bcsc.nicknames.length]
+    () => store.bcsc.selectedNickname === undefined && store.bcsc.nicknames.size > 0,
+    [store.bcsc.selectedNickname, store.bcsc.nicknames.size]
   )
 
   useEffect(() => {

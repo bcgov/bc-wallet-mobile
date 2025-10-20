@@ -53,15 +53,15 @@ const AccountSelector: React.FC = () => {
             {t('Unified.AccountSelector.SelectAccountDescription')}
           </ThemedText>
 
-          {store.bcsc.nicknames.length > 0 ? (
+          {store.bcsc.nicknames.size > 0 ? (
             <>
               <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.md }}>
                 {t('Unified.AccountSelector.ExistingAccounts')}
               </ThemedText>
 
-              {store.bcsc.nicknames.map((nickname, index) => (
+              {Array.from(store.bcsc.nicknames).map((nickname, index) => (
                 <Button
-                  key={index}
+                  key={nickname}
                   title={nickname}
                   buttonType={ButtonType.Secondary}
                   testID={testIdWithKey(`Account-${index}`)}

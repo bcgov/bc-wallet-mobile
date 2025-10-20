@@ -91,6 +91,8 @@ const translation = {
     },
   },
   "PINCreate": {
+    "Header": "BC Wallet",
+    "Subheader": "Secure your wallet",
     "Explainer": {
       "PrimaryHeading": "Create a PIN that is:",
       "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again.",
@@ -167,7 +169,7 @@ const translation = {
     "SignOut": "Sign out",
     "Biometrics": "Biometrics",
     "ChangePIN": "Change PIN",
-    "EditNickname": "Edit nickname",
+    "EditNickname": "Edit Nickname",
     "AutoLockTime": "Auto lock time",
     "Notifications": "Notifications",
     "ForgetPairings": "Forget pairings",
@@ -264,7 +266,6 @@ const translation = {
       "InformationRequired": "Information Required",
     },
     "Steps": {
-      "NicknameAccount": "Nickname account",
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
       "Step1": "Step 1",
       "Step2": "Step 2",
@@ -276,10 +277,11 @@ const translation = {
       "AccountName": "Account Nickname",
       "CreateAccountName": "Create a nickname for your account on this device. It identifies your account:",
       "EditAccountName": "Edit the nickname for your account on this device. It identifies your account:",
-      "AccountNameDescription1": "• When you open the app",
-      "AccountNameDescription2": "• In notifications",
+      "AccountNameDescription1": "When you open the app",
+      "AccountNameDescription2": "In notifications",
       "CharCountTitle": "Character count exceeded",
       "EmptyNameTitle": "Enter an account nickname",
+      "NameAlreadyExists": "This nickname already exists",
     },
     "AccountSelector": {
       "SelectAccount": "Select Account",

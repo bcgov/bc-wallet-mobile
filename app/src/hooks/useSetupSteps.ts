@@ -1,5 +1,4 @@
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { getSelectedNickname } from '@/bcsc-theme/utils/account-utils'
 import { BCState } from '@/store'
 import { useMemo } from 'react'
 
@@ -14,7 +13,7 @@ import { useMemo } from 'react'
  */
 export const useSetupSteps = (store: BCState) => {
   // store + card attributes
-  const nickname = getSelectedNickname(store) || null
+  const nickname = store.bcsc.selectedNickname || null
   const bcscSerialNumber = store.bcsc.serial || null
   const emailAddress = store.bcsc.email || null
   const emailConfirmed = Boolean(store.bcsc.emailConfirmed)
