@@ -12,6 +12,7 @@ import {
   LimitedTextInput,
   ThemedText,
   KeyboardView,
+  BulletPoint,
 } from '@bifold/core'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
@@ -58,31 +59,34 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
   }, [])
 
   const handleContinuePressed = useCallback(() => {
-    if (accountNickname.length < formStringLengths.minimumLength) {
+    //trim the account nickname
+    const trimmedAccountNickname = accountNickname.trim()
+
+    if (trimmedAccountNickname.length < formStringLengths.minimumLength) {
       setError(t('Unified.NicknameAccount.EmptyNameTitle'))
       return
     }
 
-    if (accountNickname.length > formStringLengths.maximumLength) {
+    if (trimmedAccountNickname.length > formStringLengths.maximumLength) {
       setError(t('Unified.NicknameAccount.CharCountTitle'))
       return
     }
 
     if (isRenaming) {
-      onSubmitSuccess?.(accountNickname)
+      onSubmitSuccess?.(trimmedAccountNickname)
     } else {
       setError(null)
       setLoading(true)
 
-      if (hasNickname(store, accountNickname)) {
+      if (hasNickname(store, trimmedAccountNickname)) {
         setError(t('Unified.NicknameAccount.NameAlreadyExists'))
         return
       }
 
-      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [accountNickname] })
+      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedAccountNickname] })
 
       // Select the newly added nickname
-      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [accountNickname] })
+      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [trimmedAccountNickname] })
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
@@ -99,11 +103,14 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
           <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.NicknameAccount.CreateAccountName')}</ThemedText>
 
           <ThemedText style={{ marginLeft: Spacing.md }}>
-            {t('Unified.NicknameAccount.AccountNameDescription1')}
-          </ThemedText>
-
-          <ThemedText style={{ marginLeft: Spacing.md, marginBottom: Spacing.md }}>
-            {t('Unified.NicknameAccount.AccountNameDescription2')}
+            <BulletPoint
+              textStyle={{ marginLeft: Spacing.md }}
+              text={t('Unified.NicknameAccount.AccountNameDescription1')}
+            />
+            <BulletPoint
+              textStyle={{ marginLeft: Spacing.md }}
+              text={t('Unified.NicknameAccount.AccountNameDescription2')}
+            />
           </ThemedText>
 
           <LimitedTextInput

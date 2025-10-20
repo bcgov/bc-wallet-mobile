@@ -275,8 +275,8 @@ const translation = {
     "NicknameAccount": {
       "AccountName": "Account Nickname",
       "CreateAccountName": "Create a nickname for your account on this device. It identifies your account:",
-      "AccountNameDescription1": "• When you open the app",
-      "AccountNameDescription2": "• In notifications",
+      "AccountNameDescription1": "When you open the app",
+      "AccountNameDescription2": "In notifications",
       "CharCountTitle": "Character count exceeded",
       "EmptyNameTitle": "Enter an account nickname",
       "NameAlreadyExists": "This nickname already exists",
