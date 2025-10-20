@@ -1,23 +1,19 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
-import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useWorkflowEngine } from '@/contexts/WorkflowEngineContext'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-interface PrivacyPolicyScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingPrivacyPolicyScreen>
-}
 
 /**
  * Privacy Policy screen component that informs users about the app's privacy practices.
  *
  * @returns {*} {JSX.Element} The PrivacyPolicyScreen component.
  */
-export const PrivacyPolicyScreen = (props: PrivacyPolicyScreenProps): JSX.Element => {
+export const PrivacyPolicyScreen = (): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
+  const workflowEngine = useWorkflowEngine()
 
   const styles = StyleSheet.create({
     container: {
@@ -66,7 +62,7 @@ export const PrivacyPolicyScreen = (props: PrivacyPolicyScreenProps): JSX.Elemen
           title={t('Global.Continue')}
           buttonType={ButtonType.Primary}
           onPress={() => {
-            props.navigation.navigate(BCSCScreens.OnboardingTermsOfUseScreen)
+            workflowEngine.nextStep()
           }}
           testID={testIdWithKey('Continue')}
           accessibilityLabel={t('Global.Continue')}

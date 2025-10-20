@@ -1,4 +1,3 @@
-import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
@@ -10,30 +9,27 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
+import { useWorkflowEngine } from '@/contexts/WorkflowEngineContext'
 
 // TODO: Replace with real content when available
 const mockNotificationsContent =
   'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
-
-interface NotificationsScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingNotificationsScreen>
-}
 
 /**
  * Renders the notifications screen for the BCSC onboarding process.
  *
  * @returns {*} {JSX.Element} The NotificationsScreen component.
  */
-export const NotificationsScreen = (props: NotificationsScreenProps): JSX.Element => {
+export const NotificationsScreen = (): JSX.Element => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
   const theme = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const workflowEngine = useWorkflowEngine()
 
   const styles = StyleSheet.create({
     container: {
@@ -82,7 +78,7 @@ export const NotificationsScreen = (props: NotificationsScreenProps): JSX.Elemen
           buttonType={ButtonType.Primary}
           onPress={async () => {
             await activatePushNotifications()
-            props.navigation.navigate(BCSCScreens.OnboardingSecureAppScreen)
+            workflowEngine.nextStep()
           }}
           testID={testIdWithKey('Continue')}
           accessibilityLabel={t('Global.Continue')}
@@ -92,7 +88,7 @@ export const NotificationsScreen = (props: NotificationsScreenProps): JSX.Elemen
           title={t('Unified.Onboarding.NotificationsContinueButtonSecondary')}
           buttonType={ButtonType.Secondary}
           onPress={() => {
-            props.navigation.navigate(BCSCScreens.OnboardingSecureAppScreen)
+            workflowEngine.nextStep()
           }}
           testID={testIdWithKey('Continue')}
           accessibilityLabel={t('Unified.Onboarding.NotificationsContinueButtonSecondary')}
