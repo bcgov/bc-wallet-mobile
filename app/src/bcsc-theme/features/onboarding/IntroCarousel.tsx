@@ -1,4 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useWorkflowEngine } from '@/contexts/WorkflowEngineContext'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
@@ -28,6 +29,7 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
   const { t } = useTranslation()
   const theme = useTheme()
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const workflowEngine = useWorkflowEngine()
 
   const styles = StyleSheet.create({
     container: {
@@ -90,6 +92,7 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
 
   const handleNext = () => {
     if (carouselIndex === carouselPages.length - 1) {
+      workflowEngine.nextStep()
       props.navigation.navigate(BCSCScreens.OnboardingPrivacyPolicyScreen)
       return
     }
