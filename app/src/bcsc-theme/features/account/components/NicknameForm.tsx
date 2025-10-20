@@ -52,6 +52,13 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
     secondButton: {
       marginTop: Spacing.sm,
     },
+    bulletPoint: {
+      marginLeft: Spacing.sm,
+    },
+    bulletPointContainer: {
+      marginBottom: Spacing.md,
+      marginLeft: Spacing.md,
+    },
   })
 
   const handleChangeText = useCallback((text: string) => {
@@ -102,16 +109,10 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
 
           <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.NicknameAccount.CreateAccountName')}</ThemedText>
 
-          <ThemedText style={{ marginLeft: Spacing.md }}>
-            <BulletPoint
-              textStyle={{ marginLeft: Spacing.md }}
-              text={t('Unified.NicknameAccount.AccountNameDescription1')}
-            />
-            <BulletPoint
-              textStyle={{ marginLeft: Spacing.md }}
-              text={t('Unified.NicknameAccount.AccountNameDescription2')}
-            />
-          </ThemedText>
+          <View style={styles.bulletPointContainer}>
+            <BulletPoint textStyle={styles.bulletPoint} text={t('Unified.NicknameAccount.AccountNameDescription1')} />
+            <BulletPoint textStyle={styles.bulletPoint} text={t('Unified.NicknameAccount.AccountNameDescription2')} />
+          </View>
 
           <LimitedTextInput
             showLimitCounter={false}
