@@ -1,6 +1,5 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { WorkflowDefinition } from '@/workflow/WorkflowEngineContext'
-import { OnboardingSecureAppMethod } from '../../bcsc-theme/features/onboarding/SecureAppScreen'
 
 type OnboardingWorkflowSteps = 'Intro' | 'PrivacyPolicy' | 'TermsOfUse' | 'Notifications' | 'SecureApp'
 
@@ -27,19 +26,7 @@ export const OnboardingWorkflow: WorkflowDefinition<OnboardingWorkflowSteps> = {
   },
   SecureApp: {
     screen: BCSCScreens.OnboardingSecureAppScreen,
-    nextStep: (secureMethod: OnboardingSecureAppMethod) => {
-      if (secureMethod === OnboardingSecureAppMethod.PIN) {
-        // TODO (MD): Replace with Create PIN step
-        return '' as OnboardingWorkflowSteps
-      }
-
-      if (secureMethod === OnboardingSecureAppMethod.BIOMETRICS) {
-        // TODO (MD): Replace with Biometric setup step
-        return '' as OnboardingWorkflowSteps
-      }
-
-      throw new Error(`OnboardingWorkflow: invalid SecureApp method: ${secureMethod}`)
-    },
+    nextStep: null, // TODO (MD): Temporary last step until Biometrics and PIN
     previousStep: 'Notifications',
   },
 }

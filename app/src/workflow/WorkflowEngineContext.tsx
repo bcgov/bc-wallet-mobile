@@ -8,10 +8,12 @@ export interface WorkflowStep<WorkflowKey extends string> {
    */
   screen: string
   /**
-   * The name of the next screen in the workflow, or a function that determines the next screen based on context.
-   * @type {WorkflowKey | ((context: any) => WorkflowKey)}
+   * The name of the next screen in the workflow,
+   * or a function that determines the next screen based on context,
+   * or null if this is the last step.
+   * @type {WorkflowKey | ((context: any) => WorkflowKey | null) | null}
    */
-  nextStep: WorkflowKey | ((context: any) => WorkflowKey)
+  nextStep: WorkflowKey | ((context: any) => WorkflowKey | null) | null
   /**
    * The name of the previous screen in the workflow, or null if this is the first step.
    * @type {WorkflowKey | null}
@@ -27,6 +29,10 @@ export interface WorkflowEngineContextType<WorkflowKey extends string> {
   currentStep: WorkflowStep<WorkflowKey>
   /**
    * Advances to the next step in the workflow.
+   *
+   * Note: If the next step is null, the workflow is considered complete
+   * and the onWorkflowComplete callback will be invoked.
+   *
    * @param {any} [context] - Optional context for determining the next screen.
    * @returns {void}
    */
@@ -51,6 +57,7 @@ export type WorkflowDefinition<WorkflowKey extends string> = Record<WorkflowKey,
 export type WorkflowEngineProviderProps<WorkflowKey extends string> = PropsWithChildren<{
   workflowDefinition: WorkflowDefinition<WorkflowKey>
   initialWorkflowStep: WorkflowStep<WorkflowKey>
+  onWorkflowComplete: () => void
 }>
 
 /**
@@ -69,6 +76,21 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
   const [workflowStep, setWorkflowStep] = useState<WorkflowStep<WorkflowKey>>(props.initialWorkflowStep)
 
   /**
+   * Moves to a specific workflow step.
+   *
+   * @returns {void}
+   */
+  const goToWorkflowStep = useCallback(
+    (stepKey: WorkflowKey) => {
+      const step = props.workflowDefinition[stepKey]
+
+      navigation.navigate(step.screen as never)
+      setWorkflowStep(step)
+    },
+    [navigation, props.workflowDefinition]
+  )
+
+  /**
    * Advances to the next workflow step.
    *
    * @throws {Error} If the next step is not defined.
@@ -83,12 +105,15 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
         nextStep = nextStep(context)
       }
 
-      const goToNextWorkflowStep = props.workflowDefinition[nextStep]
+      // If there is no next step, the workflow is complete
+      if (nextStep === null) {
+        props.onWorkflowComplete()
+        return
+      }
 
-      navigation.navigate(goToNextWorkflowStep.screen as never)
-      setWorkflowStep(goToNextWorkflowStep)
+      goToWorkflowStep(nextStep)
     },
-    [navigation, props.workflowDefinition, workflowStep.nextStep]
+    [goToWorkflowStep, props, workflowStep.nextStep]
   )
 
   /**
@@ -97,16 +122,6 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
    * @throws {Error} If no previous step is defined (ie: first step).
    * @returns {void}
    */
-  const goToWorkflowStep = useCallback(
-    (stepKey: WorkflowKey) => {
-      const step = props.workflowDefinition[stepKey]
-
-      navigation.navigate(step.screen as never)
-      setWorkflowStep(step)
-    },
-    [navigation, props.workflowDefinition]
-  )
-
   const goToPreviousWorkflowStep = useCallback(() => {
     if (!workflowStep.previousStep) {
       throw new Error('WorkflowEngineProvider: No previous step defined for the current workflow step.')

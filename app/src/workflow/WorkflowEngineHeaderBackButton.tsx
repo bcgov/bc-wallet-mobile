@@ -17,11 +17,7 @@ export const createWorkflowEngineBackHeaderButton = () => {
       <HeaderBackButton
         {...props}
         onPress={() => {
-          if (workflowEngine.currentStep.previousStep == null) {
-            throw new Error('No previous step defined in the workflow.')
-          }
-
-          workflowEngine.goToStep(workflowEngine.currentStep.previousStep)
+          workflowEngine.goToPreviousStep()
         }}
       />
     )
