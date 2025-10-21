@@ -54,7 +54,7 @@ export const WorkflowEngineProvider = (props: WorkflowEngineProviderProps) => {
    */
   const _getWorkflowStepFromScreen = useCallback(
     (screen: string) => {
-      const step = props.workflowSteps.find((step) => step.screen === screen)
+      const step = props.workflow.find((step) => step.screen === screen)
 
       if (!step) {
         throw new Error(`Screen "${screen}" not found in workflow engine steps.`)
@@ -62,7 +62,7 @@ export const WorkflowEngineProvider = (props: WorkflowEngineProviderProps) => {
 
       return step
     },
-    [props.workflowSteps]
+    [props.workflow]
   )
 
   /**
