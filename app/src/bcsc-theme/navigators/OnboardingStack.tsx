@@ -41,6 +41,7 @@ const OnboardingStack = (): JSX.Element => {
           headerShadowVisible: false,
           headerBackTestID: testIdWithKey('Back'),
           headerBackAccessibilityLabel: t('Global.Back'),
+          headerLeft: createWorkflowEngineBackHeaderButton(),
         }}
       >
         <Stack.Screen name={BCSCScreens.OnboardingIntroCarouselScreen} component={IntroCarouselScreen} />
@@ -51,7 +52,6 @@ const OnboardingStack = (): JSX.Element => {
           options={{
             title: t('Unified.Onboarding.PrivacyPolicyTitle'),
             headerShown: true,
-            headerLeft: createWorkflowEngineBackHeaderButton(),
           }}
         />
 
@@ -61,7 +61,6 @@ const OnboardingStack = (): JSX.Element => {
           options={{
             title: t('Unified.Onboarding.TermsOfUseTitle'),
             headerShown: true,
-            headerLeft: createWorkflowEngineBackHeaderButton(),
           }}
         />
 
@@ -72,7 +71,6 @@ const OnboardingStack = (): JSX.Element => {
           component={SecureAppScreen}
           options={{
             headerShown: true,
-            headerLeft: createWorkflowEngineBackHeaderButton(),
           }}
         />
       </Stack.Navigator>

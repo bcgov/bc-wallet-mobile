@@ -5,11 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { Platform, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-export enum OnboardingSecureAppMethod {
-  PIN = 'PIN',
-  BIOMETRICS = 'BIOMETRICS',
-}
-
 /**
  * Renders the Secure App screen, which provides options for securing the app using biometric authentication or a PIN.
  *
