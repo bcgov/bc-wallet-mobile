@@ -62,7 +62,7 @@ export const PrivacyPolicyScreen = (): JSX.Element => {
           title={t('Global.Continue')}
           buttonType={ButtonType.Primary}
           onPress={() => {
-            workflowEngine.nextStep()
+            workflowEngine.goToNextStep()
           }}
           testID={testIdWithKey('Continue')}
           accessibilityLabel={t('Global.Continue')}

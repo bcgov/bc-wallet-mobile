@@ -1,6 +1,6 @@
 import { TERMS_OF_USE_URL } from '@/constants'
 import { useWorkflowEngine } from '@/contexts/WorkflowEngineContext'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -58,7 +58,7 @@ export const TermsOfUseScreen = (): JSX.Element => {
           title={t('Unified.Onboarding.AcceptAndContinueButton')}
           buttonType={ButtonType.Primary}
           onPress={() => {
-            workflowEngine.nextStep()
+            workflowEngine.goToNextStep()
           }}
           testID={testIdWithKey('AcceptAndContinue')}
           accessibilityLabel={t('Unified.Onboarding.AcceptAndContinueButton')}

@@ -92,7 +92,7 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
 
   const handleNext = () => {
     if (carouselIndex === carouselPages.length - 1) {
-      workflowEngine.nextStep()
+      workflowEngine.goToNextStep()
       return
     }
 

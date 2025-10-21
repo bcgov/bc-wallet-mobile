@@ -78,7 +78,7 @@ export const NotificationsScreen = (): JSX.Element => {
           buttonType={ButtonType.Primary}
           onPress={async () => {
             await activatePushNotifications()
-            workflowEngine.nextStep()
+            workflowEngine.goToNextStep()
           }}
           testID={testIdWithKey('Continue')}
           accessibilityLabel={t('Global.Continue')}
@@ -88,7 +88,7 @@ export const NotificationsScreen = (): JSX.Element => {
           title={t('Unified.Onboarding.NotificationsContinueButtonSecondary')}
           buttonType={ButtonType.Secondary}
           onPress={() => {
-            workflowEngine.nextStep()
+            workflowEngine.goToNextStep()
           }}
           testID={testIdWithKey('Continue')}
           accessibilityLabel={t('Unified.Onboarding.NotificationsContinueButtonSecondary')}
