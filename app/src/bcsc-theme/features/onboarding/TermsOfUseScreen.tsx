@@ -49,7 +49,6 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
         bounces={false}
         domStorageEnabled={true}
         javaScriptEnabled={true}
-        startInLoadingState={true}
         // Remove header, footer, and navigation elements for a cleaner view
         injectedJavaScriptBeforeContentLoaded={`
           document.addEventListener('DOMContentLoaded', function() {
