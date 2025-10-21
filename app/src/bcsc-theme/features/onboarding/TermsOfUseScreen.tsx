@@ -16,7 +16,7 @@ interface TermsOfUseScreenProps {
  *
  * @returns {*} {JSX.Element} The TermsOfUseScreen component.
  */
-export const TermsOfUseScreen = (props: TermsOfUseScreenProps) => {
+export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
 
