@@ -12,7 +12,7 @@ const useInitializeBCSC = () => {
   const { client, isClientReady } = useBCSCApiClientState()
   const { register } = useRegistrationApi(client, isClientReady)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const initializationInProgressRef = useRef(false)
 
   useEffect(() => {
