@@ -1,5 +1,5 @@
 import { TERMS_OF_USE_URL } from '@/constants'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
 import React from 'react'
@@ -20,7 +20,7 @@ import { SettingsActionCard } from './components/SettingsActionCard'
 const Settings: React.FC = () => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const auth = useAuth()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams>>()
@@ -71,6 +71,7 @@ const Settings: React.FC = () => {
             startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
             onPress={() => {
               auth.lockOutUser(LockoutReason.Logout)
+              dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
             }}
           />
 

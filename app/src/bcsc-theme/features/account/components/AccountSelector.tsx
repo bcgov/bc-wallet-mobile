@@ -33,8 +33,8 @@ const AccountSelector: React.FC = () => {
   })
 
   const handleAccountSelect = useCallback(
-    (index: number) => {
-      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [index] })
+    (nickname: string) => {
+      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [nickname] })
     },
     [dispatch]
   )
@@ -66,7 +66,7 @@ const AccountSelector: React.FC = () => {
                   buttonType={ButtonType.Secondary}
                   testID={testIdWithKey(`Account-${index}`)}
                   accessibilityLabel={nickname}
-                  onPress={() => handleAccountSelect(index)}
+                  onPress={() => handleAccountSelect(nickname)}
                 />
               ))}
             </>
