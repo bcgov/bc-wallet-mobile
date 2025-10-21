@@ -33,6 +33,11 @@ export interface WorkflowEngineContextType<WorkflowKey extends string> {
   goToNextStep: (context?: any) => void
   /**
    * Moves to the previous step in the workflow.
+   * @returns {void}
+   */
+  goToPreviousStep: () => void
+  /**
+   * Moves to a specific step in the workflow.
    * @param {WorkflowKey} stepKey - The step to navigate to.
    * @returns {void}
    */
@@ -102,14 +107,23 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
     [navigation, props.workflowDefinition]
   )
 
+  const goToPreviousWorkflowStep = useCallback(() => {
+    if (!workflowStep.previousStep) {
+      throw new Error('WorkflowEngineProvider: No previous step defined for the current workflow step.')
+    }
+
+    goToWorkflowStep(workflowStep.previousStep)
+  }, [goToWorkflowStep, workflowStep.previousStep])
+
   // Memoize the workflow engine context value
   const workflowEngine = useMemo(
     () => ({
       currentStep: workflowStep,
       goToNextStep: goToNextWorkflowStep,
+      goToPreviousStep: goToPreviousWorkflowStep,
       goToStep: goToWorkflowStep,
     }),
-    [goToNextWorkflowStep, goToWorkflowStep, workflowStep]
+    [goToNextWorkflowStep, goToPreviousWorkflowStep, goToWorkflowStep, workflowStep]
   )
 
   return <WorkflowEngineContext.Provider value={workflowEngine}>{props.children}</WorkflowEngineContext.Provider>
