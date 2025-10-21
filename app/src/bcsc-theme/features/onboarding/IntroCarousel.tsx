@@ -93,7 +93,6 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
   const handleNext = () => {
     if (carouselIndex === carouselPages.length - 1) {
       workflowEngine.nextStep()
-      props.navigation.navigate(BCSCScreens.OnboardingPrivacyPolicyScreen)
       return
     }
 
