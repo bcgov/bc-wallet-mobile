@@ -331,9 +331,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.ADD_NICKNAME: {
       const nickname = (action?.payload || []).pop() ?? ''
-
       const newNicknames = [...state.bcsc.nicknames, nickname]
-
       const bcsc = { ...state.bcsc, nicknames: newNicknames }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
@@ -349,9 +347,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.UPDATE_NICKNAME: {
       const { nickname, newNickname } = (action?.payload || []).pop() ?? {}
-
       const newNicknames = state.bcsc.nicknames.filter((n) => n !== nickname).concat([newNickname])
-
       const bcsc = { ...state.bcsc, nicknames: newNicknames }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
