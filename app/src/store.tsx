@@ -69,7 +69,7 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
-  nicknames: Set<string>
+  nicknames: string[]
   selectedNickname?: string
   email?: string
   emailConfirmed?: boolean
@@ -226,7 +226,7 @@ const bcscState: BCSCState = {
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
-  nicknames: new Set<string>(),
+  nicknames: [],
   selectedNickname: undefined,
   bookmarks: [],
   email: undefined,
@@ -332,9 +332,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.ADD_NICKNAME: {
       const nickname = (action?.payload || []).pop() ?? ''
 
-      state.bcsc.nicknames.add(nickname)
+      const newNicknames = [...state.bcsc.nicknames, nickname]
 
-      const bcsc = { ...state.bcsc, nicknames: state.bcsc.nicknames }
+      const bcsc = { ...state.bcsc, nicknames: newNicknames }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -350,10 +350,9 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_NICKNAME: {
       const { nickname, newNickname } = (action?.payload || []).pop() ?? {}
 
-      state.bcsc.nicknames.delete(nickname)
-      state.bcsc.nicknames.add(newNickname)
+      const newNicknames = state.bcsc.nicknames.filter((n) => n !== nickname).concat([newNickname])
 
-      const bcsc = { ...state.bcsc, nicknames: state.bcsc.nicknames }
+      const bcsc = { ...state.bcsc, nicknames: newNicknames }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

@@ -380,18 +380,6 @@ export class AppContainer implements Container {
         bcsc.deviceCodeExpiresAt = new Date(Date.parse(bcsc.deviceCodeExpiresAt))
       }
 
-      // Convert nicknames back to Set object (async-storage converts Sets to plain objects)
-      if (bcsc.nicknames && !(bcsc.nicknames instanceof Set)) {
-        if (Array.isArray(bcsc.nicknames)) {
-          bcsc.nicknames = new Set(bcsc.nicknames)
-        } else if (typeof bcsc.nicknames === 'object') {
-          // Handle case where Set was serialized as an object with numeric keys
-          bcsc.nicknames = new Set(Object.values(bcsc.nicknames))
-        } else {
-          bcsc.nicknames = new Set()
-        }
-      }
-
       // Reset paths and prompts on load as they should not be persisted
       bcsc.photoPath = undefined
       bcsc.videoPath = undefined
