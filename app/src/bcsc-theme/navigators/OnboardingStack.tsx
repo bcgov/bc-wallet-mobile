@@ -21,12 +21,11 @@ const OnboardingStack = (): JSX.Element => {
   const theme = useTheme()
   const Stack = createStackNavigator()
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const initialRouteName = OnboardingWorkflow[0].screen
 
   return (
-    <WorkflowEngineProvider workflow={OnboardingWorkflow}>
+    <WorkflowEngineProvider workflowDefinition={OnboardingWorkflow} initialWorkflowStep={OnboardingWorkflow.Intro}>
       <Stack.Navigator
-        initialRouteName={initialRouteName}
+        initialRouteName={OnboardingWorkflow.Intro.screen}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
