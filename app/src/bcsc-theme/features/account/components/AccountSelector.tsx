@@ -53,7 +53,7 @@ const AccountSelector: React.FC = () => {
             {t('Unified.AccountSelector.SelectAccountDescription')}
           </ThemedText>
 
-          {store.bcsc.nicknames.size > 0 ? (
+          {store.bcsc.nicknames.length > 0 ? (
             <>
               <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.md }}>
                 {t('Unified.AccountSelector.ExistingAccounts')}

@@ -89,7 +89,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
     if (isRenaming) {
       dispatch({
         type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: [store.bcsc.selectedNickname, trimmedAccountNickname],
+        payload: [{ nickname: store.bcsc.selectedNickname, newNickname: trimmedAccountNickname }],
       })
       dispatch({
         type: BCDispatchAction.SELECT_ACCOUNT,
