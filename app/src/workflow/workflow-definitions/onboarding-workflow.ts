@@ -1,6 +1,6 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { WorkflowDefinition } from '@/contexts/WorkflowEngineContext'
-import { OnboardingSecureAppMethod } from '../SecureAppScreen'
+import { WorkflowDefinition } from '@/workflow/WorkflowEngineContext'
+import { OnboardingSecureAppMethod } from '../../bcsc-theme/features/onboarding/SecureAppScreen'
 
 type OnboardingWorkflowSteps = 'Intro' | 'PrivacyPolicy' | 'TermsOfUse' | 'Notifications' | 'SecureApp'
 

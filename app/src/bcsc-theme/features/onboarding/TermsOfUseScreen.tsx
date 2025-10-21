@@ -1,5 +1,5 @@
 import { TERMS_OF_USE_URL } from '@/constants'
-import { useWorkflowEngine } from '@/contexts/WorkflowEngineContext'
+import { useWorkflowEngine } from '@/workflow/useWorkflowEngine'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'

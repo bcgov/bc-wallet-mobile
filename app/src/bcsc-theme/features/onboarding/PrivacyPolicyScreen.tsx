@@ -1,5 +1,5 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
-import { useWorkflowEngine } from '@/contexts/WorkflowEngineContext'
+import { useWorkflowEngine } from '@/workflow/useWorkflowEngine'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'

@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
-import { useWorkflowEngine } from '@/contexts/WorkflowEngineContext'
+import { useWorkflowEngine } from '@/workflow/useWorkflowEngine'
 
 // TODO: Replace with real content when available
 const mockNotificationsContent =

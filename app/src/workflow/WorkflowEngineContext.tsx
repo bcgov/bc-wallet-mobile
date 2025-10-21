@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native'
-import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, PropsWithChildren, useCallback, useMemo, useState } from 'react'
 
-export interface WorkflowStep<WorkflowKey extends string = string> {
+export interface WorkflowStep<WorkflowKey extends string> {
   /**
    * The name of the screen associated with this workflow step.
    * @type {string}
@@ -113,20 +113,4 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
   )
 
   return <WorkflowEngineContext.Provider value={workflowEngine}>{props.children}</WorkflowEngineContext.Provider>
-}
-
-/**
- * Hook to access the WorkflowEngine context.
- *
- * @throws {Error} If used outside of a WorkflowEngineProvider.
- * @returns {WorkflowEngineContextType} The workflow engine context value.
- */
-export const useWorkflowEngine = () => {
-  const context = useContext(WorkflowEngineContext)
-
-  if (!context) {
-    throw new Error('useWorkflowEngine must be used within a WorkflowEngineProvider')
-  }
-
-  return context
 }

@@ -1,7 +1,5 @@
-import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { useWorkflowEngine } from '@/contexts/WorkflowEngineContext'
+import { useWorkflowEngine } from '@/workflow/useWorkflowEngine'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
@@ -10,10 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 // TODO (MD): Waiting on final content, replace mock content with real carousel text
 const mockCarouselContent =
   'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
-
-interface IntroCarouselScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingIntroCarouselScreen>
-}
 
 /**
  * Intro Carousel screen component that displays a series of informational slides to the user.
@@ -25,7 +19,7 @@ interface IntroCarouselScreenProps {
  *
  * @returns {*} {JSX.Element} The IntroCarouselScreen component.
  */
-export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Element => {
+export const IntroCarouselScreen = (): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
   const [carouselIndex, setCarouselIndex] = useState(0)

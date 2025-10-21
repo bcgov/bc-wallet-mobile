@@ -7,9 +7,9 @@ import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { useTranslation } from 'react-i18next'
-import { WorkflowEngineProvider } from '@/contexts/WorkflowEngineContext'
-import { createOnboardingHeaderBackButton } from '../features/onboarding/components/OnboardingHeaderBackButton'
-import { OnboardingWorkflow } from '../features/onboarding/utils/onboarding-workflow'
+import { OnboardingWorkflow } from '@/workflow/workflow-definitions/onboarding-workflow'
+import { WorkflowEngineProvider } from '@/workflow/WorkflowEngineContext'
+import { createWorkflowEngineBackHeaderButton } from '@/workflow/WorkflowEngineHeaderBackButton'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -43,7 +43,7 @@ const OnboardingStack = (): JSX.Element => {
           options={{
             title: t('Unified.Onboarding.PrivacyPolicyTitle'),
             headerShown: true,
-            headerLeft: createOnboardingHeaderBackButton(),
+            headerLeft: createWorkflowEngineBackHeaderButton(),
           }}
         />
 
@@ -53,7 +53,7 @@ const OnboardingStack = (): JSX.Element => {
           options={{
             title: t('Unified.Onboarding.TermsOfUseTitle'),
             headerShown: true,
-            headerLeft: createOnboardingHeaderBackButton(),
+            headerLeft: createWorkflowEngineBackHeaderButton(),
           }}
         />
 
@@ -64,7 +64,7 @@ const OnboardingStack = (): JSX.Element => {
           component={SecureAppScreen}
           options={{
             headerShown: true,
-            headerLeft: createOnboardingHeaderBackButton(),
+            headerLeft: createWorkflowEngineBackHeaderButton(),
           }}
         />
       </Stack.Navigator>
