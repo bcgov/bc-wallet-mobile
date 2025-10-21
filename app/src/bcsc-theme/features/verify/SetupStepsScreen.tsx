@@ -23,10 +23,11 @@ type SetupStepsScreenProps = {
  * The SetupStepsScreen component displays the steps required for setting up identity verification for BCSC.
  *
  * Currently this supports several flows:
- *    1. BCSC card with photo
- *    2. BCSC combo card with photo
- *    3. BCSC card without photo (requires second ID)
- *    4. Non-BCSC cards (requires two IDs)
+ *    1. Nickname account
+ *    2. BCSC card with photo
+ *    3. BCSC combo card with photo
+ *    4. BCSC card without photo (requires second ID)
+ *    5. Non-BCSC cards (requires two IDs)
  *
  * @param {SetupStepsScreenProps} props - The props for the component, including navigation.
  * @returns {*} {JSX.Element} The rendered SetupStepsScreen component.
@@ -145,11 +146,24 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }
 
   /**
-   * Returns the subtext for Step 1 (Identification) of the verification process.
+   * Returns the subtext for Step 1 (Nickname Account) of the verification process.
    *
    * @returns {*} {string[]} An array of strings representing the subtext for Step 1.
    */
   const getVerificationStep1Subtext = useCallback((): string[] => {
+    if (step.nickname.completed && store.bcsc.selectedNickname) {
+      return [`${t('Unified.NicknameAccount.AccountName')}: ${store.bcsc.selectedNickname}`]
+    }
+
+    return [t('Unified.NicknameAccount.AccountName')]
+  }, [t, step.nickname.completed, store])
+
+  /**
+   * Returns the subtext for Step 2 (Identification) of the verification process.
+   *
+   * @returns {*} {string[]} An array of strings representing the subtext for Step 2.
+   */
+  const getVerificationStep2Subtext = useCallback((): string[] => {
     const cards: string[] = []
 
     // if the bcsc card is registered, show the bcsc serial number
@@ -171,14 +185,14 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }, [store.bcsc.additionalEvidenceData, store.bcsc.serial, step.id.completed, t])
 
   /**
-   * Returns the subtext for Step 2 (Residential Address) of the verification process.
+   * Returns the subtext for Step 3 (Residential Address) of the verification process.
    *
    * TODO (MD): Localization / translations for these return values
    *
    * @param {boolean} bcscIsRegistered - Indicates if the BC Services Card is registered.
-   * @returns {*} {string} The subtext for Step 2.
+   * @returns {*} {string} The subtext for Step 3.
    */
-  const getVerificationStep2Subtext = useCallback(() => {
+  const getVerificationStep3Subtext = useCallback(() => {
     if (step.id.completed && store.bcsc.serial) {
       return 'Address: Residential address from your BC Services Card will be used'
     }
@@ -191,11 +205,11 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }, [step.id.completed, store.bcsc.serial, store.bcsc.userMetadata?.address, store.bcsc.deviceCode])
 
   /**
-   * Returns the subtext for Step 4 (Verify Identity) of the verification process.
+   * Returns the subtext for Step 5 (Verify Identity) of the verification process.
    *
-   * @returns {*} {string} The subtext for step 4
+   * @returns {*} {string} The subtext for step 5
    */
-  const getVerificationStep4Subtext = useCallback(() => {
+  const getVerificationStep5Subtext = useCallback(() => {
     if (step.verify.focused && store.bcsc.deviceCodeExpiresAt) {
       const expirationDate = store.bcsc.deviceCodeExpiresAt.toLocaleString('en-CA', {
         day: '2-digit',
@@ -215,11 +229,25 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView>
+        {/* SETUP STEP 1: Nickname Account */}
+
+        <SetupStep
+          title={t('Unified.Steps.Step1')}
+          subtext={getVerificationStep1Subtext()}
+          isComplete={step.nickname.completed}
+          isFocused={step.nickname.focused}
+          onPress={() => {
+            navigation.navigate(BCSCScreens.NicknameAccount)
+          }}
+        />
+
+        <View style={styles.itemSeparator} />
+
         {/* SETUP STEP 2: Identification submission */}
 
         <SetupStep
-          title={'Step 1'}
-          subtext={getVerificationStep1Subtext()}
+          title={t('Unified.Steps.Step2')}
+          subtext={getVerificationStep2Subtext()}
           isComplete={step.id.completed}
           isFocused={step.id.focused}
           onPress={() => {
@@ -257,11 +285,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         </SetupStep>
 
         <View style={styles.itemSeparator} />
-        {/* SETUP STEP 2: Residential Address */}
+
+        {/* SETUP STEP 3: Residential Address */}
 
         <SetupStep
-          title={'Step 2'}
-          subtext={[getVerificationStep2Subtext()]}
+          title={t('Unified.Steps.Step3')}
+          subtext={[getVerificationStep3Subtext()]}
           isComplete={step.address.completed}
           isFocused={step.address.focused}
           onPress={() => {
@@ -270,10 +299,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         />
 
         <View style={styles.itemSeparator} />
-        {/* SETUP STEP 3: Email Address */}
+        {/* SETUP STEP 4: Email Address */}
 
         <SetupStep
-          title={'Step 3'}
+          title={t('Unified.Steps.Step4')}
           subtext={[]}
           isComplete={step.email.completed}
           isFocused={step.email.focused}
@@ -310,11 +339,12 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         </SetupStep>
 
         <View style={styles.itemSeparator} />
-        {/* SETUP STEP 4: Identity Verification */}
+
+        {/* SETUP STEP 5: Identity Verification */}
 
         <SetupStep
-          title={'Step 4'}
-          subtext={[getVerificationStep4Subtext()]}
+          title={t('Unified.Steps.Step5')}
+          subtext={[getVerificationStep5Subtext()]}
           isComplete={step.verify.completed}
           isFocused={step.verify.focused}
           onPress={() => {
