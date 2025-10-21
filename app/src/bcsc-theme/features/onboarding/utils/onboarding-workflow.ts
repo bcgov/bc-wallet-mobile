@@ -1,41 +1,45 @@
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { WorkflowStep } from '@/contexts/WorkflowEngineContext'
+import { WorkflowDefinition } from '@/contexts/WorkflowEngineContext'
 import { OnboardingSecureAppMethod } from '../SecureAppScreen'
 
-export const OnboardingWorkflow: WorkflowStep[] = [
-  {
+type OnboardingWorkflowSteps = 'Intro' | 'PrivacyPolicy' | 'TermsOfUse' | 'Notifications' | 'SecureApp'
+
+export const OnboardingWorkflow: WorkflowDefinition<OnboardingWorkflowSteps> = {
+  Intro: {
     screen: BCSCScreens.OnboardingIntroCarouselScreen,
-    nextScreen: BCSCScreens.OnboardingPrivacyPolicyScreen,
-    previousScreen: null,
+    nextStep: 'PrivacyPolicy',
+    previousStep: null,
   },
-  {
+  PrivacyPolicy: {
     screen: BCSCScreens.OnboardingPrivacyPolicyScreen,
-    nextScreen: BCSCScreens.OnboardingTermsOfUseScreen,
-    previousScreen: BCSCScreens.OnboardingIntroCarouselScreen,
+    nextStep: 'TermsOfUse',
+    previousStep: 'Intro',
   },
-  {
+  TermsOfUse: {
     screen: BCSCScreens.OnboardingTermsOfUseScreen,
-    nextScreen: BCSCScreens.OnboardingNotificationsScreen,
-    previousScreen: BCSCScreens.OnboardingPrivacyPolicyScreen,
+    nextStep: 'Notifications',
+    previousStep: 'PrivacyPolicy',
   },
-  {
+  Notifications: {
     screen: BCSCScreens.OnboardingNotificationsScreen,
-    nextScreen: BCSCScreens.OnboardingSecureAppScreen,
-    previousScreen: BCSCScreens.OnboardingTermsOfUseScreen,
+    nextStep: 'SecureApp',
+    previousStep: 'TermsOfUse',
   },
-  {
+  SecureApp: {
     screen: BCSCScreens.OnboardingSecureAppScreen,
-    nextScreen: (secureMethod: OnboardingSecureAppMethod) => {
+    nextStep: (secureMethod: OnboardingSecureAppMethod) => {
       if (secureMethod === OnboardingSecureAppMethod.PIN) {
-        return 'TODO (MD): Replace with Create PIN screen'
+        // TODO (MD): Replace with Create PIN step
+        return '' as OnboardingWorkflowSteps
       }
 
       if (secureMethod === OnboardingSecureAppMethod.BIOMETRICS) {
-        return 'TODO (MD): Replace with Biometric setup screen'
+        // TODO (MD): Replace with Biometric setup step
+        return '' as OnboardingWorkflowSteps
       }
 
-      throw new Error(`Invalid secure app method for workflow engine step: ${secureMethod}`)
+      throw new Error(`OnboardingWorkflow: invalid SecureApp method: ${secureMethod}`)
     },
-    previousScreen: BCSCScreens.OnboardingNotificationsScreen,
+    previousStep: 'Notifications',
   },
-]
+}

@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native'
 import { createContext, PropsWithChildren, useCallback, useContext, useMemo, useState } from 'react'
 
-export interface WorkflowStep {
+export interface WorkflowStep<WorkflowKey extends string = string> {
   /**
    * The name of the screen associated with this workflow step.
    * @type {string}
@@ -9,26 +9,43 @@ export interface WorkflowStep {
   screen: string
   /**
    * The name of the next screen in the workflow, or a function that determines the next screen based on context.
-   * @type {string | ((context: any) => string)}
+   * @type {WorkflowKey | ((context: any) => WorkflowKey)}
    */
-  nextScreen: string | ((context: any) => string)
+  nextStep: WorkflowKey | ((context: any) => WorkflowKey)
   /**
    * The name of the previous screen in the workflow, or null if this is the first step.
-   * @type {string | null}
+   * @type {WorkflowKey | null}
    */
-  previousScreen: string | null
+  previousStep: WorkflowKey | null
 }
 
-export interface WorkflowEngineContextType {
-  currentStep: WorkflowStep
-  nextStep: (context?: any) => void
-  previousStep: () => void
+export interface WorkflowEngineContextType<WorkflowKey extends string> {
+  /**
+   * The current step in the workflow.
+   * @type {WorkflowStep<WorkflowKey>}
+   */
+  currentStep: WorkflowStep<WorkflowKey>
+  /**
+   * Advances to the next step in the workflow.
+   * @param {any} [context] - Optional context for determining the next screen.
+   * @returns {void}
+   */
+  goToNextStep: (context?: any) => void
+  /**
+   * Moves to the previous step in the workflow.
+   * @param {WorkflowKey} stepKey - The step to navigate to.
+   * @returns {void}
+   */
+  goToStep: (stepKey: WorkflowKey) => void
 }
 
-export const WorkflowEngineContext = createContext<WorkflowEngineContextType | null>(null)
+export const WorkflowEngineContext = createContext<WorkflowEngineContextType<any> | null>(null)
 
-export type WorkflowEngineProviderProps = PropsWithChildren<{
-  workflow: WorkflowStep[]
+export type WorkflowDefinition<WorkflowKey extends string> = Record<WorkflowKey, WorkflowStep<WorkflowKey>>
+
+export type WorkflowEngineProviderProps<WorkflowKey extends string> = PropsWithChildren<{
+  workflowDefinition: WorkflowDefinition<WorkflowKey>
+  initialWorkflowStep: WorkflowStep<WorkflowKey>
 }>
 
 /**
@@ -42,28 +59,9 @@ export type WorkflowEngineProviderProps = PropsWithChildren<{
  * @param {WorkflowEngineProviderProps} props - The provider props including workflow steps and children.
  * @returns {JSX.Element} The WorkflowEngineProvider component wrapping its children.
  */
-export const WorkflowEngineProvider = (props: WorkflowEngineProviderProps) => {
+export const WorkflowEngineProvider = <WorkflowKey extends string>(props: WorkflowEngineProviderProps<WorkflowKey>) => {
   const navigation = useNavigation()
-  const [workflowStep, setWorkflowStep] = useState<WorkflowStep>(props.workflow[0])
-
-  /**
-   * Finds a workflow step by its screen name.
-   *
-   * @param {string} screen - The screen name to find.
-   * @returns {WorkflowStep} The matching workflow step.
-   */
-  const _getWorkflowStepFromScreen = useCallback(
-    (screen: string) => {
-      const step = props.workflow.find((step) => step.screen === screen)
-
-      if (!step) {
-        throw new Error(`Screen "${screen}" not found in workflow engine steps.`)
-      }
-
-      return step
-    },
-    [props.workflow]
-  )
+  const [workflowStep, setWorkflowStep] = useState<WorkflowStep<WorkflowKey>>(props.initialWorkflowStep)
 
   /**
    * Advances to the next workflow step.
@@ -72,21 +70,20 @@ export const WorkflowEngineProvider = (props: WorkflowEngineProviderProps) => {
    * @param {any} [context] - Optional context for determining the next screen.
    * @returns {void}
    */
-  const nextWorkflowStep = useCallback(
+  const goToNextWorkflowStep = useCallback(
     (context?: any) => {
-      let nextScreen = workflowStep.nextScreen
+      let nextStep = workflowStep.nextStep
 
-      if (typeof nextScreen === 'function') {
-        nextScreen = nextScreen(context)
+      if (typeof nextStep === 'function') {
+        nextStep = nextStep(context)
       }
 
-      const nextStep = _getWorkflowStepFromScreen(nextScreen)
+      const goToNextWorkflowStep = props.workflowDefinition[nextStep]
 
-      navigation.navigate(workflowStep.nextScreen as never)
-
-      setWorkflowStep(nextStep)
+      navigation.navigate(goToNextWorkflowStep.screen as never)
+      setWorkflowStep(goToNextWorkflowStep)
     },
-    [_getWorkflowStepFromScreen, navigation, workflowStep.nextScreen]
+    [navigation, props.workflowDefinition, workflowStep.nextStep]
   )
 
   /**
@@ -95,30 +92,35 @@ export const WorkflowEngineProvider = (props: WorkflowEngineProviderProps) => {
    * @throws {Error} If no previous step is defined (ie: first step).
    * @returns {void}
    */
-  const previousWorkflowStep = useCallback(() => {
-    if (!workflowStep.previousScreen) {
-      throw new Error(`No previous step defined for screen "${workflowStep.screen}".`)
-    }
-    const previousStep = _getWorkflowStepFromScreen(workflowStep.previousScreen)
+  const goToWorkflowStep = useCallback(
+    (stepKey: WorkflowKey) => {
+      const step = props.workflowDefinition[stepKey]
 
-    navigation.navigate(workflowStep.previousScreen as never)
-
-    setWorkflowStep(previousStep)
-  }, [_getWorkflowStepFromScreen, navigation, workflowStep.previousScreen, workflowStep.screen])
+      navigation.navigate(step.screen as never)
+      setWorkflowStep(step)
+    },
+    [navigation, props.workflowDefinition]
+  )
 
   // Memoize the workflow engine context value
   const workflowEngine = useMemo(
     () => ({
       currentStep: workflowStep,
-      nextStep: nextWorkflowStep,
-      previousStep: previousWorkflowStep,
+      goToNextStep: goToNextWorkflowStep,
+      goToStep: goToWorkflowStep,
     }),
-    [nextWorkflowStep, previousWorkflowStep, workflowStep]
+    [goToNextWorkflowStep, goToWorkflowStep, workflowStep]
   )
 
   return <WorkflowEngineContext.Provider value={workflowEngine}>{props.children}</WorkflowEngineContext.Provider>
 }
 
+/**
+ * Hook to access the WorkflowEngine context.
+ *
+ * @throws {Error} If used outside of a WorkflowEngineProvider.
+ * @returns {WorkflowEngineContextType} The workflow engine context value.
+ */
 export const useWorkflowEngine = () => {
   const context = useContext(WorkflowEngineContext)
 
