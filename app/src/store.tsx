@@ -70,7 +70,7 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
-  nicknames: Set<string>
+  nicknames: string[]
   selectedNickname?: string
   email?: string
   emailConfirmed?: boolean
@@ -93,6 +93,7 @@ export interface BCSCState {
   verificationOptions: DeviceVerificationOption[]
   additionalEvidenceData: AdditionalEvidenceData[]
   registrationAccessToken?: string
+  completedOnboarding: boolean
 }
 
 export interface AdditionalEvidenceData {
@@ -129,6 +130,7 @@ enum RemoteDebuggingDispatchAction {
 
 enum BCSCDispatchAction {
   ADD_NICKNAME = 'bcsc/addNickname',
+  UPDATE_NICKNAME = 'bcsc/updateNickname',
   SELECT_ACCOUNT = 'bcsc/selectAccount',
   UPDATE_COMPLETED_NEW_SETUP = 'bcsc/updateCompletedNewSetup',
   UPDATE_VERIFIED = 'bcsc/updateVerified',
@@ -158,6 +160,7 @@ enum BCSCDispatchAction {
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateRegistrationAccessToken',
+  UPDATE_COMPLETED_ONBOARDING = 'bcsc/updateOnboardingCompleted',
 }
 
 enum ModeDispatchAction {
@@ -228,7 +231,7 @@ const bcscState: BCSCState = {
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
-  nicknames: new Set<string>(),
+  nicknames: [],
   selectedNickname: undefined,
   bookmarks: [],
   email: undefined,
@@ -241,6 +244,7 @@ const bcscState: BCSCState = {
   verificationRequestSha: undefined,
   verificationOptions: [],
   additionalEvidenceData: [],
+  completedOnboarding: false,
 }
 
 export enum BCLocalStorageKeys {
@@ -334,8 +338,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.ADD_NICKNAME: {
       const nickname = (action?.payload || []).pop() ?? ''
-      const newNicknames = new Set(state.bcsc.nicknames)
-      newNicknames.add(nickname)
+      const newNicknames = [...state.bcsc.nicknames, nickname]
       const bcsc = { ...state.bcsc, nicknames: newNicknames }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
@@ -346,6 +349,21 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = { ...state.bcsc, selectedNickname }
       const newState = { ...state, bcsc }
       // persist for now until selection screen is implemented
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_NICKNAME: {
+      const { nickname, newNickname } = (action?.payload || []).pop() ?? {}
+      const newNicknames = state.bcsc.nicknames.filter((n) => n !== nickname).concat([newNickname])
+      const bcsc = { ...state.bcsc, nicknames: newNicknames }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_COMPLETED_ONBOARDING: {
+      const completedOnboarding = (action?.payload || []).pop() ?? true
+      const bcsc = { ...state.bcsc, completedOnboarding }
+      const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }

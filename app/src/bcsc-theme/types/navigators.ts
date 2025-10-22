@@ -5,9 +5,11 @@ import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
   TabStack = 'BCSCTabStack',
+  OnboardingStack = 'BCSCOnboardingStack',
 }
 
 export enum BCSCScreens {
+  Splash = 'BCSCSplash',
   Home = 'BCSCHome',
   Services = 'BCSCServices',
   Account = 'BCSCAccount',
@@ -60,7 +62,14 @@ export enum BCSCScreens {
   TransferAccountSuccess = 'TransferAccountSuccessScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
   NicknameAccount = 'NicknameAccount',
-  RenameAccount = 'RenameAccount',
+  EditNickname = 'EditNickname',
+  // Onboarding Screens
+  OnboardingIntroCarouselScreen = 'BCSCOnboardingIntroCarousel',
+  OnboardingPrivacyPolicyScreen = 'BCSCOnboardingPrivacyPolicy',
+  OnboardingTermsOfUseScreen = 'BCSCOnboardingTermsOfUse',
+  OnboardingNotificationsScreen = 'BCSCOnboardingNotifications',
+  OnboardingSecureAppScreen = 'BCSCOnboardingSecureApp',
+  OnboardingCreatePINScreen = 'BCSCOnboardingCreatePIN',
 }
 
 export type BCSCTabStackParams = {
@@ -81,6 +90,16 @@ export type BCSCRootStackParams = {
   [BCSCScreens.TransferAccountQRInformation]: undefined
   [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
   [BCSCScreens.Settings]: undefined
+  [BCSCScreens.EditNickname]: undefined
+}
+
+export type BCSCOnboardingStackParams = {
+  [BCSCScreens.OnboardingIntroCarouselScreen]: undefined
+  [BCSCScreens.OnboardingPrivacyPolicyScreen]: undefined
+  [BCSCScreens.OnboardingTermsOfUseScreen]: undefined
+  [BCSCScreens.OnboardingNotificationsScreen]: undefined
+  [BCSCScreens.OnboardingSecureAppScreen]: undefined
+  [BCSCScreens.OnboardingCreatePINScreen]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {

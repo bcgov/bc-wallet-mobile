@@ -22,11 +22,10 @@ import { hasNickname } from '@/bcsc-theme/utils/account-utils'
 
 interface NicknameFormProps {
   isRenaming?: boolean
-  onSubmitSuccess?: (name: string) => void
   onCancel?: () => void
 }
 
-const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess, onCancel }) => {
+const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const navigation = useNavigation()
@@ -79,17 +78,25 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
       return
     }
 
+    if (hasNickname(store, trimmedAccountNickname)) {
+      setError(t('Unified.NicknameAccount.NameAlreadyExists'))
+      return
+    }
+
+    setError(null)
+    setLoading(true)
+
     if (isRenaming) {
-      onSubmitSuccess?.(trimmedAccountNickname)
+      dispatch({
+        type: BCDispatchAction.UPDATE_NICKNAME,
+        payload: [{ nickname: store.bcsc.selectedNickname, newNickname: trimmedAccountNickname }],
+      })
+      dispatch({
+        type: BCDispatchAction.SELECT_ACCOUNT,
+        payload: [trimmedAccountNickname],
+      })
+      navigation.goBack()
     } else {
-      setError(null)
-      setLoading(true)
-
-      if (hasNickname(store, trimmedAccountNickname)) {
-        setError(t('Unified.NicknameAccount.NameAlreadyExists'))
-        return
-      }
-
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedAccountNickname] })
 
       // Select the newly added nickname
@@ -97,7 +104,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }, [accountNickname, t, isRenaming, onSubmitSuccess, dispatch, navigation, store])
+  }, [accountNickname, t, isRenaming, dispatch, navigation, store])
 
   return (
     <KeyboardView>
@@ -107,7 +114,9 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
             {t('Unified.NicknameAccount.AccountName')}
           </ThemedText>
 
-          <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.NicknameAccount.CreateAccountName')}</ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.md }}>
+            {isRenaming ? t('Unified.NicknameAccount.EditAccountName') : t('Unified.NicknameAccount.CreateAccountName')}
+          </ThemedText>
 
           <View style={styles.bulletPointContainer}>
             <BulletPoint textStyle={styles.bulletPoint} text={t('Unified.NicknameAccount.AccountNameDescription1')} />
@@ -118,7 +127,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onSubmitSuccess
             showLimitCounter={false}
             defaultValue={accountNickname}
             label={t('Unified.NicknameAccount.AccountName')}
-            limit={50}
+            limit={formStringLengths.maximumLength}
             handleChangeText={handleChangeText}
             accessibilityLabel={t('Unified.NicknameAccount.AccountName')}
             testID={testIdWithKey('NameInput')}
