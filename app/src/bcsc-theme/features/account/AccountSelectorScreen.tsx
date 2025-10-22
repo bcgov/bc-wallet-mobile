@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 const AccountSelectorScreen: React.FC = () => {
   return (
-    <SafeAreaView edges={['bottom', 'top']} style={{ flex: 1 }}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={{ flex: 1 }}>
       <AccountSelector />
     </SafeAreaView>
   )

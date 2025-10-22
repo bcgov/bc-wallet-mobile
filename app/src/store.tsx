@@ -337,7 +337,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const newNicknames = [...state.bcsc.nicknames, nickname]
       const bcsc = { ...state.bcsc, nicknames: newNicknames }
       const newState = { ...state, bcsc }
-
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }

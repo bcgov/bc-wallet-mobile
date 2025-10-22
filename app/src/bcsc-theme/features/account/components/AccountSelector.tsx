@@ -2,9 +2,10 @@ import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
-import { useStore, useTheme, testIdWithKey, Button, ButtonType, ThemedText, KeyboardView } from '@bifold/core'
+import { useStore, useTheme, ThemedText } from '@bifold/core'
 import { BCDispatchAction, BCState } from '@/store'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
+import { CardButton } from '@/bcsc-theme/components/CardButton'
 
 const AccountSelector: React.FC = () => {
   const { t } = useTranslation()
@@ -14,21 +15,21 @@ const AccountSelector: React.FC = () => {
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
+      alignItems: 'center',
+      justifyContent: 'space-between',
     },
     contentContainer: {
       flex: 1,
-      paddingTop: Spacing.xl,
-      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     controlsContainer: {
+      flex: 1,
       marginTop: 'auto',
-    },
-    accountButton: {
-      marginBottom: Spacing.sm,
+      width: '100%',
+      gap: Spacing.sm,
     },
   })
 
@@ -40,42 +41,24 @@ const AccountSelector: React.FC = () => {
   )
 
   return (
-    <KeyboardView>
-      <View style={styles.pageContainer}>
-        <View style={styles.contentContainer}>
-          <GenericCardImage />
-          <View style={{ marginBottom: Spacing.md }} />
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.AccountSelector.SelectAccount')}
-          </ThemedText>
+    <View style={styles.pageContainer}>
+      <View style={styles.contentContainer}>
+        <GenericCardImage />
 
-          <ThemedText style={{ marginBottom: Spacing.lg }}>
-            {t('Unified.AccountSelector.SelectAccountDescription')}
-          </ThemedText>
+        <ThemedText variant={'headingThree'}>{t('Unified.AccountSelector.Title')}</ThemedText>
+      </View>
+      <View style={styles.controlsContainer}>
+        <View style={{ marginBottom: Spacing.md }}>
+          <ThemedText variant={'headingFour'}>{t('Unified.AccountSelector.ContinueAs')}</ThemedText>
+        </View>
 
-          {store.bcsc.nicknames.length > 0 ? (
-            <>
-              <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.md }}>
-                {t('Unified.AccountSelector.ExistingAccounts')}
-              </ThemedText>
-
-              {Array.from(store.bcsc.nicknames).map((nickname, index) => (
-                <Button
-                  key={nickname}
-                  title={nickname}
-                  buttonType={ButtonType.Secondary}
-                  testID={testIdWithKey(`Account-${index}`)}
-                  accessibilityLabel={nickname}
-                  onPress={() => handleAccountSelect(nickname)}
-                />
-              ))}
-            </>
-          ) : (
-            <ThemedText style={{ marginBottom: Spacing.lg }}>{t('Unified.AccountSelector.NoAccountsFound')}</ThemedText>
-          )}
+        <View style={{ gap: Spacing.sm }}>
+          {Array.from(store.bcsc.nicknames).map((nickname) => (
+            <CardButton key={nickname} title={nickname} onPress={() => handleAccountSelect(nickname)} />
+          ))}
         </View>
       </View>
-    </KeyboardView>
+    </View>
   )
 }
 

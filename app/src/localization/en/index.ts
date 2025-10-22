@@ -267,7 +267,6 @@ const translation = {
       "InformationRequired": "Information Required",
     },
     "Steps": {
-      "SaveAndContinue": "Save and continue",
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
       "Step1": "Step 1",
       "Step2": "Step 2",
@@ -284,13 +283,12 @@ const translation = {
       "CharCountTitle": "Character count exceeded",
       "EmptyNameTitle": "Enter an account nickname",
       "NameAlreadyExists": "This nickname already exists",
+      "SaveAndContinue": "Save and continue",
     },
     "AccountSelector": {
-      "SelectAccount": "Select Account",
-      "SelectAccountDescription": "Choose which account you would like to use on this device.",
-      "ExistingAccounts": "Your Accounts",
-      "NoAccountsFound": "No accounts found. Create a new account to get started.",
-      "AddNewAccount": "Add New Account",
+      "Header": "BC Services Card",
+      "Title": "BC Services Card Account",
+      "ContinueAs": "Continue as:",
     },
     "Onboarding": {
       "LearnMore": "Learn more",

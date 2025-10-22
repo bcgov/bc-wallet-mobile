@@ -8,7 +8,6 @@ import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
-import AccountSelectorScreen from '../features/account/AccountSelectorScreen'
 import BCSCOnboardingStack from './OnboardingStack'
 
 const BCSCRootStack: React.FC = () => {
@@ -75,12 +74,8 @@ const BCSCRootStack: React.FC = () => {
   // }
 
   // Show identity verification stack (setup steps) if user unverified
-  if (!store.bcsc.verified) {
+  if (!store.bcsc.verified || store.bcsc.selectedNickname === undefined) {
     return <VerifyIdentityStack />
-  }
-
-  if (store.bcsc.selectedNickname === undefined && store.bcsc.nicknames.length > 0) {
-    return <AccountSelectorScreen />
   }
 
   // Otherwise, show the main stack (app)
