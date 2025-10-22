@@ -6,6 +6,9 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
+import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { SettingsActionCard } from './components/SettingsActionCard'
 
@@ -20,6 +23,7 @@ const Settings: React.FC = () => {
   const [store] = useStore<BCState>()
   const auth = useAuth()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams>>()
 
   const styles = StyleSheet.create({
     container: {
@@ -83,6 +87,14 @@ const Settings: React.FC = () => {
             // TODO (MD): Export ChangePIN component from Bifold and make text content dynamic with props
             onPress={onPressActionTodo}
           />
+
+          <SettingsActionCard
+            title={t('BCSCSettings.EditNickname')}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.EditNickname)
+            }}
+          />
+
           {/* TODO (MD): Implement actions for these cards */}
           <SettingsActionCard
             title={t('BCSCSettings.AutoLockTime')}
