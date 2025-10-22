@@ -121,7 +121,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
             showLimitCounter={false}
             defaultValue={accountNickname}
             label={t('Unified.NicknameAccount.AccountName')}
-            limit={50}
+            limit={formStringLengths.maximumLength}
             handleChangeText={handleChangeText}
             accessibilityLabel={t('Unified.NicknameAccount.AccountName')}
             testID={testIdWithKey('NameInput')}
