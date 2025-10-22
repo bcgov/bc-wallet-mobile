@@ -4,6 +4,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Directions, FlingGestureHandler, State } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 // TODO (MD): Waiting on final content, replace mock content with real carousel text
@@ -105,41 +106,59 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.scrollContainer}>
-        <ScrollView>{carouselPages[carouselIndex]}</ScrollView>
+      <FlingGestureHandler
+        direction={Directions.LEFT}
+        onHandlerStateChange={(event) => {
+          if (event.nativeEvent.state === State.ACTIVE) {
+            handleNext()
+          }
+        }}
+      >
+        <FlingGestureHandler
+          direction={Directions.RIGHT}
+          onHandlerStateChange={(event) => {
+            if (event.nativeEvent.state === State.ACTIVE) {
+              handleBack()
+            }
+          }}
+        >
+          <View style={styles.scrollContainer}>
+            <ScrollView>{carouselPages[carouselIndex]}</ScrollView>
 
-        <View style={styles.carouselContainer}>
-          <TouchableOpacity
-            style={[styles.carouselActionButtonContainer, carouselIndex === 0 && { opacity: 0.5 }]}
-            onPress={handleBack}
-            testID={testIdWithKey('CarouselBack')}
-            accessibilityRole="button"
-            accessibilityLabel={t('Unified.Onboarding.CarouselBack')}
-            disabled={carouselIndex === 0}
-          >
-            <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselBack')}</ThemedText>
-          </TouchableOpacity>
+            <View style={styles.carouselContainer}>
+              <TouchableOpacity
+                style={[styles.carouselActionButtonContainer, carouselIndex === 0 && { opacity: 0.5 }]}
+                onPress={handleBack}
+                testID={testIdWithKey('CarouselBack')}
+                accessibilityRole="button"
+                accessibilityLabel={t('Unified.Onboarding.CarouselBack')}
+                disabled={carouselIndex === 0}
+              >
+                <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselBack')}</ThemedText>
+              </TouchableOpacity>
 
-          <View style={styles.carouselCirclesContainer}>
-            {carouselPages.map((element, index) => (
-              <View
-                key={`carousel-circle-${element.key}`}
-                style={[styles.carouselCircle, carouselIndex === index && styles.carouselCircleHighlighted]}
-              />
-            ))}
+              <View style={styles.carouselCirclesContainer}>
+                {carouselPages.map((element, index) => (
+                  <View
+                    key={`carousel-circle-${element.key}`}
+                    style={[styles.carouselCircle, carouselIndex === index && styles.carouselCircleHighlighted]}
+                  />
+                ))}
+              </View>
+
+              <TouchableOpacity
+                style={styles.carouselActionButtonContainer}
+                onPress={handleNext}
+                testID={testIdWithKey('CarouselNext')}
+                accessibilityRole="button"
+                accessibilityLabel={t('Unified.Onboarding.CarouselNext')}
+              >
+                <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselNext')}</ThemedText>
+              </TouchableOpacity>
+            </View>
           </View>
-
-          <TouchableOpacity
-            style={styles.carouselActionButtonContainer}
-            onPress={handleNext}
-            testID={testIdWithKey('CarouselNext')}
-            accessibilityRole="button"
-            accessibilityLabel={t('Unified.Onboarding.CarouselNext')}
-          >
-            <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselNext')}</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </View>
+        </FlingGestureHandler>
+      </FlingGestureHandler>
     </SafeAreaView>
   )
 }

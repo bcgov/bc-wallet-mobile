@@ -1,11 +1,9 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TERMS_OF_USE_URL } from '@/constants'
-import { useDebounce } from '@/hooks/useDebounce'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import WebView from 'react-native-webview'
 
@@ -45,7 +43,6 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <WebView
         style={styles.webViewContainer}
-        // source={{ uri: 'https://httpstat.us/200?sleep=5000' }}
         source={{ uri: TERMS_OF_USE_URL }}
         bounces={false}
         domStorageEnabled={true}
