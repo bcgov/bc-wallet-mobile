@@ -79,6 +79,7 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
           }}
           testID={testIdWithKey('AcceptAndContinue')}
           accessibilityLabel={t('Unified.Onboarding.AcceptAndContinueButton')}
+          // Content must be visible and loaded before user can accept terms
           disabled={!showWebView}
         />
       </View>
