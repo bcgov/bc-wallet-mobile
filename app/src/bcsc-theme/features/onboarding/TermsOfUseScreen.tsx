@@ -1,7 +1,9 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { TERMS_OF_USE_URL } from '@/constants'
+import { useDebounce } from '@/hooks/useDebounce'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -26,8 +28,7 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
     },
     webViewContainer: {
       flex: 1,
-      padding: theme.Spacing.md,
-      gap: theme.Spacing.lg,
+      margin: theme.Spacing.sm,
     },
     buttonContainer: {
       paddingTop: theme.Spacing.md,
@@ -44,15 +45,18 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <WebView
         style={styles.webViewContainer}
+        // source={{ uri: 'https://httpstat.us/200?sleep=5000' }}
         source={{ uri: TERMS_OF_USE_URL }}
-        renderLoading={() => <ActivityIndicator size={'large'} style={styles.activityIndicator} />}
         bounces={false}
         domStorageEnabled={true}
         javaScriptEnabled={true}
+        startInLoadingState={true}
         // Remove header, footer, and navigation elements for a cleaner view
         injectedJavaScriptBeforeContentLoaded={`
           document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
+            document.body.style.backgroundColor = '${theme.ColorPalette.brand.primaryBackground}';
+            document.body.style.color = '${theme.ColorPalette.brand.secondary}';
           });
         `}
       />
