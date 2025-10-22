@@ -9,7 +9,6 @@ import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { useTranslation } from 'react-i18next'
 import { OnboardingWorkflow } from '@/workflow/workflow-definitions/onboarding-workflow'
 import { WorkflowEngineProvider } from '@/workflow/WorkflowEngineContext'
-import { createWorkflowEngineBackHeaderButton } from '@/workflow/WorkflowEngineHeaderBackButton'
 import { BCDispatchAction } from '@/store'
 
 /**
@@ -41,7 +40,6 @@ const OnboardingStack = (): JSX.Element => {
           headerShadowVisible: false,
           headerBackTestID: testIdWithKey('Back'),
           headerBackAccessibilityLabel: t('Global.Back'),
-          headerLeft: createWorkflowEngineBackHeaderButton(),
         }}
       >
         <Stack.Screen name={BCSCScreens.OnboardingIntroCarouselScreen} component={IntroCarouselScreen} />

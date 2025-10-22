@@ -1,5 +1,5 @@
-import { useNavigation } from '@react-navigation/native'
-import { createContext, PropsWithChildren, useCallback, useMemo, useState } from 'react'
+import { useNavigation, useNavigationState } from '@react-navigation/native'
+import { createContext, PropsWithChildren, useCallback, useMemo } from 'react'
 
 export interface WorkflowStep<WorkflowKey extends string> {
   /**
@@ -23,16 +23,15 @@ export interface WorkflowStep<WorkflowKey extends string> {
 
 export interface WorkflowEngineContextType<WorkflowKey extends string> {
   /**
-   * The current step in the workflow.
+   * Get the current step in the workflow.
+   * @throws {Error} If there is no current step (ie: not in a workflow screen).
    * @type {WorkflowStep<WorkflowKey>}
    */
-  currentStep: WorkflowStep<WorkflowKey>
+  getCurrentStep: () => WorkflowStep<WorkflowKey>
   /**
    * Advances to the next step in the workflow.
-   *
    * Note: If the next step is null, the workflow is considered complete
    * and the onWorkflowComplete callback will be invoked.
-   *
    * @param {any} [context] - Optional context for determining the next screen.
    * @returns {void}
    */
@@ -73,7 +72,29 @@ export type WorkflowEngineProviderProps<WorkflowKey extends string> = PropsWithC
  */
 export const WorkflowEngineProvider = <WorkflowKey extends string>(props: WorkflowEngineProviderProps<WorkflowKey>) => {
   const navigation = useNavigation()
-  const [workflowStep, setWorkflowStep] = useState<WorkflowStep<WorkflowKey>>(props.initialWorkflowStep)
+  const currentRoute = useNavigationState((state) => state?.routes[state?.index]?.name)
+
+  // Determine the current workflow step based on the current route or return null if screen is not part of the workflow
+  const workflowStep: WorkflowStep<WorkflowKey> | null = useMemo(() => {
+    return (
+      Object.values<WorkflowStep<WorkflowKey>>(props.workflowDefinition).find((step) => step.screen === currentRoute) ??
+      null
+    )
+  }, [currentRoute, props.workflowDefinition])
+
+  /**
+   * Gets the current workflow step.
+   *
+   * @throws {Error} If there is no current workflow step.
+   * @return {WorkflowStep<WorkflowKey>} The current workflow step.
+   */
+  const getCurrentWorkflowStep = useCallback(() => {
+    if (!workflowStep) {
+      throw new Error('WorkflowEngineProvider: No current workflow step. Is this screen part of the workflow?')
+    }
+
+    return workflowStep
+  }, [workflowStep])
 
   /**
    * Moves to a specific workflow step.
@@ -85,7 +106,6 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
       const step = props.workflowDefinition[stepKey]
 
       navigation.navigate(step.screen as never)
-      setWorkflowStep(step)
     },
     [navigation, props.workflowDefinition]
   )
@@ -99,6 +119,10 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
    */
   const goToNextWorkflowStep = useCallback(
     (context?: any) => {
+      if (!workflowStep) {
+        return
+      }
+
       let nextStep = workflowStep.nextStep
 
       if (typeof nextStep === 'function') {
@@ -113,7 +137,7 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
 
       goToWorkflowStep(nextStep)
     },
-    [goToWorkflowStep, props, workflowStep.nextStep]
+    [goToWorkflowStep, props, workflowStep]
   )
 
   /**
@@ -123,22 +147,26 @@ export const WorkflowEngineProvider = <WorkflowKey extends string>(props: Workfl
    * @returns {void}
    */
   const goToPreviousWorkflowStep = useCallback(() => {
+    if (!workflowStep) {
+      return
+    }
+
     if (!workflowStep.previousStep) {
       throw new Error('WorkflowEngineProvider: No previous step defined for the current workflow step.')
     }
 
     goToWorkflowStep(workflowStep.previousStep)
-  }, [goToWorkflowStep, workflowStep.previousStep])
+  }, [goToWorkflowStep, workflowStep])
 
   // Memoize the workflow engine context value
   const workflowEngine = useMemo(
     () => ({
-      currentStep: workflowStep,
+      getCurrentStep: getCurrentWorkflowStep,
       goToNextStep: goToNextWorkflowStep,
       goToPreviousStep: goToPreviousWorkflowStep,
       goToStep: goToWorkflowStep,
     }),
-    [goToNextWorkflowStep, goToPreviousWorkflowStep, goToWorkflowStep, workflowStep]
+    [getCurrentWorkflowStep, goToNextWorkflowStep, goToPreviousWorkflowStep, goToWorkflowStep]
   )
 
   return <WorkflowEngineContext.Provider value={workflowEngine}>{props.children}</WorkflowEngineContext.Provider>
