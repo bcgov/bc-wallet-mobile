@@ -1,6 +1,6 @@
 import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ACCESSIBILITY_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -23,7 +23,7 @@ type SettingsScreenProps = {
 const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const auth = useAuth()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -48,10 +48,12 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
     versionContainer: {
       padding: Spacing.md,
       gap: Spacing.xs,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   })
 
-  // TODO (MD): Deprecate this once all settings actions have been implemented
+  // TODO (MD): Remove this once all settings actions have been implemented
   const onPressActionTodo = () => {
     logger.info('TODO: Settings action pressed')
   }
@@ -92,39 +94,54 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
     navigation.navigate(BCSCScreens.PrivacyPolicyScreen, { nonInteractive: true })
   }
 
+  const onPressEditNickname = () => {
+    navigation.navigate(BCSCScreens.EditNickname)
+  }
+
   return (
     <TabScreenWrapper>
       <View style={styles.container}>
         <View style={styles.sectionContainer}>
-          <SettingsActionCard
-            title={t('BCSCSettings.SignOut')}
-            startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
-            onPress={() => {
-              auth.lockOutUser(LockoutReason.Logout)
-            }}
-          />
+          {store.bcsc.verified ? (
+            <>
+              <SettingsActionCard
+                title={t('BCSCSettings.SignOut')}
+                startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
+                onPress={() => {
+                  auth.lockOutUser(LockoutReason.Logout)
+                  dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
+                }}
+              />
 
-          <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
+              <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
 
-          <SettingsActionCard
-            title={t('BCSCSettings.Biometrics')}
-            // TODO (MD): Export ToggleBiometry component from Bifold and make text content dynamic with props
-            onPress={onPressActionTodo}
-            endAdornmentText={store.preferences.useBiometry ? 'ON' : 'OFF'}
-          />
-          <SettingsActionCard
-            title={t('BCSCSettings.ChangePIN')}
-            // TODO (MD): Export ChangePIN component from Bifold and make text content dynamic with props
-            onPress={onPressActionTodo}
-          />
-          {/* TODO (MD): Implement actions for these cards */}
-          <SettingsActionCard
-            title={t('BCSCSettings.AutoLockTime')}
-            onPress={onPressActionTodo}
-            endAdornmentText={`${store.preferences.autoLockTime} min`}
-          />
-          <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
-          <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressActionTodo} />
+              <SettingsActionCard
+                // TODO (MD + BM): Update with like for like device auth screen if that is their chosen auth method
+                // only show one or the other (device auth or change pin)
+                title={t('BCSCSettings.Biometrics')}
+                onPress={onPressActionTodo}
+                endAdornmentText={store.preferences.useBiometry ? 'ON' : 'OFF'}
+              />
+              <SettingsActionCard
+                // TODO (MD + BM): Update with like for like change pin screen if that is their chosen auth method
+                // only show one or the other (device auth or change pin)
+                title={t('BCSCSettings.ChangePIN')}
+                onPress={onPressActionTodo}
+              />
+
+              <SettingsActionCard title={t('BCSCSettings.EditNickname')} onPress={onPressEditNickname} />
+
+              {/* TODO (MD + BM): Implement actions for these two cards */}
+              <SettingsActionCard
+                title={t('BCSCSettings.AutoLockTime')}
+                onPress={onPressActionTodo}
+                endAdornmentText={`${store.preferences.autoLockTime} min`}
+              />
+              <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
+
+              <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressActionTodo} />
+            </>
+          ) : null}
 
           <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderB')}</ThemedText>
 
@@ -139,7 +156,7 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
 
           <View style={styles.versionContainer}>
             <ThemedText variant="labelSubtitle">BC Services Card</ThemedText>
-            <ThemedText variant="labelSubtitle">{`Version ${getVersion()}-${getBuildNumber()}`}</ThemedText>
+            <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
           </View>
         </View>
       </View>

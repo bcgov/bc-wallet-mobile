@@ -17,6 +17,7 @@ import {
 } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
+import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 
 export interface IASEnvironment {
   name: string
@@ -69,7 +70,7 @@ export interface BCSCState {
   cardType: BCSCCardType
   serial: string
   birthdate?: Date
-  nicknames: Set<string>
+  nicknames: string[]
   selectedNickname?: string
   email?: string
   emailConfirmed?: boolean
@@ -89,6 +90,7 @@ export interface BCSCState {
   bookmarks: string[]
   verificationRequestId?: string
   verificationRequestSha?: string
+  verificationOptions: DeviceVerificationOption[]
   additionalEvidenceData: AdditionalEvidenceData[]
   registrationAccessToken?: string
   completedOnboarding: boolean
@@ -128,6 +130,7 @@ enum RemoteDebuggingDispatchAction {
 
 enum BCSCDispatchAction {
   ADD_NICKNAME = 'bcsc/addNickname',
+  UPDATE_NICKNAME = 'bcsc/updateNickname',
   SELECT_ACCOUNT = 'bcsc/selectAccount',
   UPDATE_COMPLETED_NEW_SETUP = 'bcsc/updateCompletedNewSetup',
   UPDATE_VERIFIED = 'bcsc/updateVerified',
@@ -147,6 +150,7 @@ enum BCSCDispatchAction {
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
+  UPDATE_VERIFICATION_OPTIONS = 'bcsc/updateVerificationOptions',
   ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
   UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
   UPDATE_USER_NAME_METADATA = 'bcsc/updateUserMetadataName',
@@ -227,7 +231,7 @@ const bcscState: BCSCState = {
   cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
-  nicknames: new Set<string>(),
+  nicknames: [],
   selectedNickname: undefined,
   bookmarks: [],
   email: undefined,
@@ -238,6 +242,7 @@ const bcscState: BCSCState = {
   refreshToken: undefined,
   verificationRequestId: undefined,
   verificationRequestSha: undefined,
+  verificationOptions: [],
   additionalEvidenceData: [],
   completedOnboarding: false,
 }
@@ -333,8 +338,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
     case BCSCDispatchAction.ADD_NICKNAME: {
       const nickname = (action?.payload || []).pop() ?? ''
-      const newNicknames = new Set(state.bcsc.nicknames)
-      newNicknames.add(nickname)
+      const newNicknames = [...state.bcsc.nicknames, nickname]
       const bcsc = { ...state.bcsc, nicknames: newNicknames }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
@@ -344,7 +348,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const selectedNickname = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, selectedNickname }
       const newState = { ...state, bcsc }
-      // persist for now until selection screen is implemented
+      // do not persist, should be checked on every app start
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_NICKNAME: {
+      const { nickname, newNickname } = (action?.payload || []).pop() ?? {}
+      const newNicknames = state.bcsc.nicknames.filter((n) => n !== nickname).concat([newNickname])
+      const bcsc = { ...state.bcsc, nicknames: newNicknames }
+      const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
@@ -475,6 +486,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_VERIFICATION_REQUEST: {
       const evidence = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, verificationRequestId: evidence?.id, verificationRequestSha: evidence?.sha256 }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_VERIFICATION_OPTIONS: {
+      const verificationOptions = (action?.payload || []).pop()
+      const bcsc = { ...state.bcsc, verificationOptions }
       const newState = { ...state, bcsc }
 
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)

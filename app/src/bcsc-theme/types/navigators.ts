@@ -64,7 +64,8 @@ export enum BCSCScreens {
   TransferAccountSuccess = 'TransferAccountSuccessScreen',
   ServiceLoginScreen = 'ServiceLoginScreen',
   NicknameAccount = 'NicknameAccount',
-  RenameAccount = 'RenameAccount',
+  EditNickname = 'EditNickname',
+  AccountSelector = 'AccountSelector',
   // Onboarding Screens
   OnboardingIntroCarouselScreen = 'BCSCOnboardingIntroCarousel',
   PrivacyPolicyScreen = 'BCSCPrivacyPolicy',
@@ -95,6 +96,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.PrivacyPolicyScreen]: { nonInteractive?: boolean }
   [BCSCScreens.ContactUsScreen]: undefined
   [BCSCScreens.HelpCentreScreen]: undefined
+  [BCSCScreens.EditNickname]: undefined
 }
 
 export type BCSCOnboardingStackParams = {
@@ -155,4 +157,6 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddressScreen]: undefined
   [BCSCScreens.NicknameAccount]: undefined
+  [BCSCScreens.AccountSelector]: undefined
+  [BCSCScreens.Settings]: undefined
 }

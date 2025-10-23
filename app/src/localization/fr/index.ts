@@ -169,6 +169,7 @@ const translation = {
     "SignOut": "Sign out (FR)",
     "Biometrics": "Biometrics (FR)",
     "ChangePIN": "Change PIN (FR)",
+    "EditNickname": "Edit Nickname (FR)",
     "AutoLockTime": "Auto lock time (FR)",
     "Notifications": "Notifications (FR)",
     "ForgetPairings": "Forget pairings (FR)",
@@ -273,11 +274,18 @@ const translation = {
     "NicknameAccount": {
       "AccountName": "Account Nickname (FR)",
       "CreateAccountName": "Create a nickname for your account on this device. It identifies your account: (FR)",
+      "EditAccountName": "Edit the nickname for your account on this device. It identifies your account: (FR)",
       "AccountNameDescription1": "When you open the app (FR)",
       "AccountNameDescription2": "In notifications (FR)",
       "CharCountTitle": "Character count exceeded (FR)",
       "EmptyNameTitle": "Enter an account nickname (FR)",
       "NameAlreadyExists": "This nickname already exists (FR)",
+      "SaveAndContinue": "Save and continue (FR)",
+    },
+    "AccountSelector": {
+      "Header": "BC Services Card (FR)",
+      "Title": "BC Services Card Account (FR)",
+      "ContinueAs": "Continue as: (FR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (FR)",
@@ -576,7 +584,15 @@ const translation = {
         "SendVideoInstead": "Send video instead (FR)",
         "TryAgain": "Try again (FR)"
       }
-    }
+    },
+    "VerificationMethods": {
+      "SendVideoTitle": "Send a video (FR)",
+      "SendVideoDescription": "Record a short video and we'll review it to verify your identity. (FR)",
+      "VideoCallTitle": "Video call",
+      "VideoCallDescription": "We will verify your identity during a video call. (FR)",
+      "InPersonTitle": "In person (FR)",
+      "InPersonDescription": "Find out where to go and what to bring. (FR)"
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Dépannage à distance",

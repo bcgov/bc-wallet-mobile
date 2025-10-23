@@ -169,6 +169,7 @@ const translation = {
     "SignOut": "Sign out (PT-BR)",
     "Biometrics": "Biometrics (PT-BR)",
     "ChangePIN": "Change PIN (PT-BR)",
+    "EditNickname": "Edit Nickname (PT-BR)",
     "AutoLockTime": "Auto lock time (PT-BR)",
     "Notifications": "Notifications (PT-BR)",
     "ForgetPairings": "Forget pairings (PT-BR)",
@@ -273,11 +274,18 @@ const translation = {
     "NicknameAccount": {
       "AccountName": "Account Nickname (PT-BR)",
       "CreateAccountName": "Create a nickname for your account on this device. It identifies your account: (PT-BR)",
+      "EditAccountName": "Edit the nickname for your account on this device. It identifies your account: (PT-BR)",
       "AccountNameDescription1": "When you open the app (PT-BR)",
       "AccountNameDescription2": "In notifications (PT-BR)",
       "CharCountTitle": "Character count exceeded (PT-BR)",
       "EmptyNameTitle": "Enter an account nickname (PT-BR)",
       "NameAlreadyExists": "This nickname already exists (PT-BR)",
+      "SaveAndContinue": "Save and continue (PT-BR)",
+    },
+    "AccountSelector": {
+      "Header": "BC Services Card (PT-BR)",
+      "Title": "BC Services Card Account (PT-BR)",
+      "ContinueAs": "Continue as: (PT-BR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",
@@ -576,7 +584,15 @@ const translation = {
         "SendVideoInstead": "Send video instead (PT-BR)",
         "TryAgain": "Try again (PT-BR)"
       }
-    }
+    },
+    "VerificationMethods": {
+      "SendVideoTitle": "Send a video (PT-BR)",
+      "SendVideoDescription": "Record a short video and we'll review it to verify your identity. (PT-BR)",
+      "VideoCallTitle": "Video call",
+      "VideoCallDescription": "We will verify your identity during a video call. (PT-BR)",
+      "InPersonTitle": "In person (PT-BR)",
+      "InPersonDescription": "Find out where to go and what to bring. (PT-BR)"
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting (PT-BR)",

@@ -47,6 +47,8 @@ import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
 import NicknameAccountScreen from '../account/NicknameAccountScreen'
+import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
+import Settings from '../settings/Settings'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -60,7 +62,7 @@ const VerifyIdentityStack = () => {
         name={BCSCScreens.SetupTypes}
         component={AccountSetupSelectionScreen}
         options={{
-          headerLeft: () => null,
+          headerLeft: createSettingsHeaderButton(),
           title: t('Unified.Screens.SetupTypes'),
         }}
       />
@@ -74,7 +76,15 @@ const VerifyIdentityStack = () => {
           headerLeft: () => null,
         }}
       />
-      <Stack.Screen name={BCSCScreens.NicknameAccount} component={NicknameAccountScreen} />
+      <Stack.Screen
+        name={BCSCScreens.NicknameAccount}
+        component={NicknameAccountScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          headerBackTestID: testIdWithKey('Back'),
+          headerLeft: createWebviewHeaderBackButton(navigation),
+        })}
+      />
       <Stack.Screen name={BCSCScreens.TransferAccountInformation} component={TransferInformationScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountSuccess} component={TransferSuccessScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
@@ -217,6 +227,17 @@ const VerifyIdentityStack = () => {
         options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
       <Stack.Screen name={BCSCScreens.ResidentialAddressScreen} component={ResidentialAddressScreen} />
+
+      <Stack.Screen
+        name={BCSCScreens.Settings}
+        component={Settings}
+        options={{
+          headerShown: true,
+          title: t('Screens.Settings'),
+          headerBackTestID: testIdWithKey('Back'),
+          headerShadowVisible: false,
+        }}
+      />
     </Stack.Navigator>
   )
 }

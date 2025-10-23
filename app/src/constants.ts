@@ -54,7 +54,7 @@ export enum HelpCentreUrl {
 
 export const formStringLengths = {
   minimumLength: 1,
-  maximumLength: 35,
+  maximumLength: 30,
 } as const
 
 export const RECONNECTION_GRACE_PERIOD_MS = 3000

@@ -19,6 +19,7 @@ import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
+import EditNicknameScreen from '../features/account/EditNicknameScreen'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -40,6 +41,16 @@ const MainStack: React.FC = () => {
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
+
+        <Stack.Screen
+          name={BCSCScreens.EditNickname}
+          component={EditNicknameScreen}
+          options={({ navigation }) => ({
+            headerShown: true,
+            headerBackTestID: testIdWithKey('Back'),
+            headerLeft: createWebviewHeaderBackButton(navigation),
+          })}
+        />
 
         <Stack.Screen
           name={BCSCScreens.Settings}

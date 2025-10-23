@@ -170,6 +170,7 @@ const translation = {
     "SignOut": "Sign out",
     "Biometrics": "Biometrics",
     "ChangePIN": "Change PIN",
+    "EditNickname": "Edit Nickname",
     "AutoLockTime": "Auto lock time",
     "Notifications": "Notifications",
     "ForgetPairings": "Forget pairings",
@@ -276,11 +277,18 @@ const translation = {
     "NicknameAccount": {
       "AccountName": "Account Nickname",
       "CreateAccountName": "Create a nickname for your account on this device. It identifies your account:",
+      "EditAccountName": "Edit the nickname for your account on this device. It identifies your account:",
       "AccountNameDescription1": "When you open the app",
       "AccountNameDescription2": "In notifications",
       "CharCountTitle": "Character count exceeded",
       "EmptyNameTitle": "Enter an account nickname",
       "NameAlreadyExists": "This nickname already exists",
+      "SaveAndContinue": "Save and continue",
+    },
+    "AccountSelector": {
+      "Header": "BC Services Card",
+      "Title": "BC Services Card Account",
+      "ContinueAs": "Continue as:",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
@@ -579,7 +587,15 @@ const translation = {
       "TransferAccount": "Transfer account to another device",
       "AccountDetails": "All account details",
       "AccountDetailsDescription": "View your account activity, manage your email address and more."
-    }
+    },
+    "VerificationMethods": {
+      "SendVideoTitle": "Send a video",
+      "SendVideoDescription": "Record a short video and we'll review it to verify your identity.",
+      "VideoCallTitle": "Video call",
+      "VideoCallDescription": "We will verify your identity during a video call.",
+      "InPersonTitle": "In person",
+      "InPersonDescription": "Find out where to go and what to bring."
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting",
