@@ -40,7 +40,15 @@ const MainStack: React.FC = () => {
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
 
-        <Stack.Screen name={BCSCScreens.EditNickname} component={EditNicknameScreen} />
+        <Stack.Screen
+          name={BCSCScreens.EditNickname}
+          component={EditNicknameScreen}
+          options={({ navigation }) => ({
+            headerShown: true,
+            headerBackTestID: testIdWithKey('Back'),
+            headerLeft: createWebviewHeaderBackButton(navigation),
+          })}
+        />
 
         <Stack.Screen
           name={BCSCScreens.Settings}

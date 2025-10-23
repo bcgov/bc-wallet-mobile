@@ -12,8 +12,8 @@ import {
   LimitedTextInput,
   ThemedText,
   KeyboardView,
-  BulletPoint,
 } from '@bifold/core'
+import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -22,10 +22,9 @@ import { hasNickname } from '@/bcsc-theme/utils/account-utils'
 
 interface NicknameFormProps {
   isRenaming?: boolean
-  onCancel?: () => void
 }
 
-const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => {
+const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const navigation = useNavigation()
@@ -40,23 +39,18 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
       flex: 1,
       justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
     },
     contentContainer: {
       flex: 1,
+      padding: Spacing.md,
     },
     controlsContainer: {
-      marginTop: 'auto',
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
-    },
-    bulletPoint: {
-      marginLeft: Spacing.sm,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
     },
     bulletPointContainer: {
       marginBottom: Spacing.md,
-      marginLeft: Spacing.md,
+      marginLeft: Spacing.sm,
     },
   })
 
@@ -119,8 +113,8 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
           </ThemedText>
 
           <View style={styles.bulletPointContainer}>
-            <BulletPoint textStyle={styles.bulletPoint} text={t('Unified.NicknameAccount.AccountNameDescription1')} />
-            <BulletPoint textStyle={styles.bulletPoint} text={t('Unified.NicknameAccount.AccountNameDescription2')} />
+            <BulletPoint pointsText={t('Unified.NicknameAccount.AccountNameDescription1')} />
+            <BulletPoint pointsText={t('Unified.NicknameAccount.AccountNameDescription2')} />
           </View>
 
           <LimitedTextInput
@@ -136,26 +130,15 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming, onCancel }) => 
         </View>
         <View style={styles.controlsContainer}>
           <Button
-            title={isRenaming ? t('Global.Save') : t('Global.Continue')}
+            title={isRenaming ? t('Global.Save') : t('Unified.NicknameAccount.SaveAndContinue')}
             buttonType={ButtonType.Primary}
-            testID={isRenaming ? testIdWithKey('Save') : testIdWithKey('Continue')}
-            accessibilityLabel={isRenaming ? t('Global.Save') : t('Global.Continue')}
+            testID={isRenaming ? testIdWithKey('Save') : testIdWithKey('SaveAndContinue')}
+            accessibilityLabel={isRenaming ? t('Global.Save') : t('Unified.NicknameAccount.SaveAndContinue')}
             onPress={handleContinuePressed}
             disabled={loading}
           >
             {loading && <ButtonLoading />}
           </Button>
-          {isRenaming && (
-            <View style={styles.secondButton}>
-              <Button
-                title={t('Global.Cancel')}
-                buttonType={ButtonType.Secondary}
-                testID={testIdWithKey('Cancel')}
-                accessibilityLabel={t('Global.Cancel')}
-                onPress={onCancel}
-              />
-            </View>
-          )}
         </View>
       </View>
     </KeyboardView>
