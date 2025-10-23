@@ -74,7 +74,15 @@ const VerifyIdentityStack = () => {
           headerLeft: () => null,
         }}
       />
-      <Stack.Screen name={BCSCScreens.NicknameAccount} component={NicknameAccountScreen} />
+      <Stack.Screen
+        name={BCSCScreens.NicknameAccount}
+        component={NicknameAccountScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          headerBackTestID: testIdWithKey('Back'),
+          headerLeft: createWebviewHeaderBackButton(navigation),
+        })}
+      />
       <Stack.Screen name={BCSCScreens.TransferAccountInformation} component={TransferInformationScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountSuccess} component={TransferSuccessScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />

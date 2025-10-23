@@ -280,6 +280,12 @@ const translation = {
       "CharCountTitle": "Character count exceeded (FR)",
       "EmptyNameTitle": "Enter an account nickname (FR)",
       "NameAlreadyExists": "This nickname already exists (FR)",
+      "SaveAndContinue": "Save and continue (FR)",
+    },
+    "AccountSelector": {
+      "Header": "BC Services Card (FR)",
+      "Title": "BC Services Card Account (FR)",
+      "ContinueAs": "Continue as: (FR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (FR)",

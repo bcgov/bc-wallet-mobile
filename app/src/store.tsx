@@ -348,8 +348,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const selectedNickname = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, selectedNickname }
       const newState = { ...state, bcsc }
-      // persist for now until selection screen is implemented
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      // do not persist, should be checked on every app start
       return newState
     }
     case BCSCDispatchAction.UPDATE_NICKNAME: {
