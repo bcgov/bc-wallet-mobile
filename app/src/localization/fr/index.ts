@@ -584,7 +584,15 @@ const translation = {
         "SendVideoInstead": "Send video instead (FR)",
         "TryAgain": "Try again (FR)"
       }
-    }
+    },
+    "VerificationMethods": {
+      "SendVideoTitle": "Send a video (FR)",
+      "SendVideoDescription": "Record a short video and we'll review it to verify your identity. (FR)",
+      "VideoCallTitle": "Video call",
+      "VideoCallDescription": "We will verify your identity during a video call. (FR)",
+      "InPersonTitle": "In person (FR)",
+      "InPersonDescription": "Find out where to go and what to bring. (FR)"
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Dépannage à distance",

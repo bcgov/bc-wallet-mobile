@@ -587,7 +587,15 @@ const translation = {
       "TransferAccount": "Transfer account to another device",
       "AccountDetails": "All account details",
       "AccountDetailsDescription": "View your account activity, manage your email address and more."
-    }
+    },
+    "VerificationMethods": {
+      "SendVideoTitle": "Send a video",
+      "SendVideoDescription": "Record a short video and we'll review it to verify your identity.",
+      "VideoCallTitle": "Video call",
+      "VideoCallDescription": "We will verify your identity during a video call.",
+      "InPersonTitle": "In person",
+      "InPersonDescription": "Find out where to go and what to bring."
+    },
   },
   "RemoteLogging": {
     "ScreenTitle": "Remote troubleshooting",
