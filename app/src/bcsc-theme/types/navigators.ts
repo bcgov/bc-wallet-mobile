@@ -150,4 +150,5 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.VerifyNotComplete]: undefined
   [BCSCScreens.ResidentialAddressScreen]: undefined
   [BCSCScreens.NicknameAccount]: undefined
+  [BCSCScreens.Settings]: undefined
 }
