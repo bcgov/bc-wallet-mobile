@@ -66,44 +66,48 @@ const Settings: React.FC = () => {
     <TabScreenWrapper>
       <View style={styles.container}>
         <View style={styles.sectionContainer}>
-          <SettingsActionCard
-            title={t('BCSCSettings.SignOut')}
-            startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
-            onPress={() => {
-              auth.lockOutUser(LockoutReason.Logout)
-              dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
-            }}
-          />
+          {store.bcsc.verified ? (
+            <>
+              <SettingsActionCard
+                title={t('BCSCSettings.SignOut')}
+                startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
+                onPress={() => {
+                  auth.lockOutUser(LockoutReason.Logout)
+                  dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
+                }}
+              />
 
-          <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
+              <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
 
-          <SettingsActionCard
-            title={t('BCSCSettings.Biometrics')}
-            // TODO (MD): Export ToggleBiometry component from Bifold and make text content dynamic with props
-            onPress={onPressActionTodo}
-            endAdornmentText={store.preferences.useBiometry ? 'ON' : 'OFF'}
-          />
-          <SettingsActionCard
-            title={t('BCSCSettings.ChangePIN')}
-            // TODO (MD): Export ChangePIN component from Bifold and make text content dynamic with props
-            onPress={onPressActionTodo}
-          />
+              <SettingsActionCard
+                title={t('BCSCSettings.Biometrics')}
+                // TODO (MD): Export ToggleBiometry component from Bifold and make text content dynamic with props
+                onPress={onPressActionTodo}
+                endAdornmentText={store.preferences.useBiometry ? 'ON' : 'OFF'}
+              />
+              <SettingsActionCard
+                title={t('BCSCSettings.ChangePIN')}
+                // TODO (MD): Export ChangePIN component from Bifold and make text content dynamic with props
+                onPress={onPressActionTodo}
+              />
 
-          <SettingsActionCard
-            title={t('BCSCSettings.EditNickname')}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.EditNickname)
-            }}
-          />
+              <SettingsActionCard
+                title={t('BCSCSettings.EditNickname')}
+                onPress={() => {
+                  navigation.navigate(BCSCScreens.EditNickname)
+                }}
+              />
 
-          {/* TODO (MD): Implement actions for these cards */}
-          <SettingsActionCard
-            title={t('BCSCSettings.AutoLockTime')}
-            onPress={onPressActionTodo}
-            endAdornmentText={`${store.preferences.autoLockTime} min`}
-          />
-          <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
-          <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressActionTodo} />
+              {/* TODO (MD): Implement actions for these cards */}
+              <SettingsActionCard
+                title={t('BCSCSettings.AutoLockTime')}
+                onPress={onPressActionTodo}
+                endAdornmentText={`${store.preferences.autoLockTime} min`}
+              />
+              <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
+              <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressActionTodo} />
+            </>
+          ) : null}
 
           <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderB')}</ThemedText>
 
