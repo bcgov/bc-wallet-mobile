@@ -2,7 +2,7 @@ import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
-import { testIdWithKey, useDefaultStackOptions, useStore, useTheme } from '@bifold/core'
+import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import AccountSetupSelectionScreen from '../account-transfer/AccountSetupSelectionScreen'
@@ -47,28 +47,15 @@ import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
 import NicknameAccountScreen from '../account/NicknameAccountScreen'
-import AccountSelectorScreen from '../account/AccountSelectorScreen'
-import { BCState } from '@/store'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
   const theme = useTheme()
   const { t } = useTranslation()
   const defaultStackOptions = useDefaultStackOptions(theme)
-  const [store] = useStore<BCState>()
 
   return (
     <Stack.Navigator screenOptions={{ ...defaultStackOptions, headerShown: true, title: '' }}>
-      {store.bcsc.nicknames.length > 0 && (
-        <Stack.Screen
-          name={BCSCScreens.AccountSelector}
-          component={AccountSelectorScreen}
-          options={{
-            headerShown: true,
-            title: t('Unified.AccountSelector.Header'),
-          }}
-        />
-      )}
       <Stack.Screen
         name={BCSCScreens.SetupTypes}
         component={AccountSetupSelectionScreen}
