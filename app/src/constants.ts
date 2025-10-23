@@ -36,6 +36,12 @@ export const BCThemeNames = {
 
 // BCSC Constants
 export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
+export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
+export const CONTACT_US_URL = 'http://www2.gov.bc.ca/gov/content?id=9F7F3266669643F79939055FB8F5EFE7'
+export const ACCESSIBILITY_URL = 'https://www2.gov.bc.ca/gov/content?id=796228EAF9304B489863A06E9C16D732'
+export const HELP_URL = 'http://www2.gov.bc.ca/gov/content?id=1AEB073331D547448009E506D6DAC395'
+export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1'
+
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html',
   HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html',

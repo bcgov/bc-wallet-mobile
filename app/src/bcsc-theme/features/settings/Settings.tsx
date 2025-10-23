@@ -1,7 +1,9 @@
-import { TERMS_OF_USE_URL } from '@/constants'
+import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { ACCESSIBILITY_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
@@ -9,12 +11,16 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { SettingsActionCard } from './components/SettingsActionCard'
 
+type SettingsScreenProps = {
+  navigation: StackNavigationProp<BCSCRootStackParams>
+}
+
 /**
  * The Settings screen for the BCSC theme.
  *
  * @returns {*} {JSX.Element}
  */
-const Settings: React.FC = () => {
+const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [store] = useStore<BCState>()
@@ -58,6 +64,34 @@ const Settings: React.FC = () => {
     }
   }
 
+  const onPressFeedback = async () => {
+    try {
+      await Linking.openURL(FEEDBACK_URL)
+    } catch (error) {
+      logger.error('Error opening Feedback URL', error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
+  const onPressContactUs = () => {
+    navigation.navigate(BCSCScreens.ContactUsScreen)
+  }
+
+  const onPressAccessibility = async () => {
+    try {
+      await Linking.openURL(ACCESSIBILITY_URL)
+    } catch (error) {
+      logger.error('Error opening Accessibility URL', error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
+  const onPressHelp = () => {
+    navigation.navigate(BCSCScreens.HelpCentreScreen)
+  }
+
+  const onPressPrivacy = () => {
+    navigation.navigate(BCSCScreens.PrivacyPolicyScreen, { nonInteractive: true })
+  }
+
   return (
     <TabScreenWrapper>
       <View style={styles.container}>
@@ -94,11 +128,11 @@ const Settings: React.FC = () => {
 
           <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderB')}</ThemedText>
 
-          <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onPressActionTodo} />
-          <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPressActionTodo} />
-          <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressActionTodo} />
-          <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressActionTodo} />
-          <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressActionTodo} />
+          <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onPressHelp} />
+          <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPressPrivacy} />
+          <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressContactUs} />
+          <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressFeedback} />
+          <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
 
           {/* TODO (MD): Add developer options */}

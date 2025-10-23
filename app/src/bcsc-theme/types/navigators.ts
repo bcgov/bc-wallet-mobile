@@ -15,6 +15,8 @@ export enum BCSCScreens {
   Account = 'BCSCAccount',
   WebView = 'BCSCWebView',
   Settings = 'BCSCSettings',
+  ContactUsScreen = 'BCSCContactUsScreen',
+  HelpCentreScreen = 'BCSCHelpCentreScreen',
   NewSetup = 'BCSCNewSetup',
   SetupSteps = 'BCSCSetupSteps',
   SetupTypes = 'BCSCSetupTypes',
@@ -65,7 +67,7 @@ export enum BCSCScreens {
   RenameAccount = 'RenameAccount',
   // Onboarding Screens
   OnboardingIntroCarouselScreen = 'BCSCOnboardingIntroCarousel',
-  OnboardingPrivacyPolicyScreen = 'BCSCOnboardingPrivacyPolicy',
+  PrivacyPolicyScreen = 'BCSCPrivacyPolicy',
   OnboardingTermsOfUseScreen = 'BCSCOnboardingTermsOfUse',
   OnboardingNotificationsScreen = 'BCSCOnboardingNotifications',
   OnboardingSecureAppScreen = 'BCSCOnboardingSecureApp',
@@ -90,11 +92,15 @@ export type BCSCRootStackParams = {
   [BCSCScreens.TransferAccountQRInformation]: undefined
   [BCSCScreens.ServiceLoginScreen]: { serviceClient: ClientMetadata }
   [BCSCScreens.Settings]: undefined
+  [BCSCScreens.PrivacyPolicyScreen]: { nonInteractive?: boolean }
+  [BCSCScreens.ContactUsScreen]: undefined
+  [BCSCScreens.HelpCentreScreen]: undefined
 }
 
 export type BCSCOnboardingStackParams = {
+  [BCSCScreens.Settings]: undefined
   [BCSCScreens.OnboardingIntroCarouselScreen]: undefined
-  [BCSCScreens.OnboardingPrivacyPolicyScreen]: undefined
+  [BCSCScreens.PrivacyPolicyScreen]: { nonInteractive?: boolean }
   [BCSCScreens.OnboardingTermsOfUseScreen]: undefined
   [BCSCScreens.OnboardingNotificationsScreen]: undefined
   [BCSCScreens.OnboardingSecureAppScreen]: undefined

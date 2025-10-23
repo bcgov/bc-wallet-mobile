@@ -13,6 +13,8 @@ import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountCo
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
+import { ContactUsScreen } from '../features/settings/ContactUsScreen'
+import { HelpCentreScreen } from '../features/settings/HelpCentreScreen'
 import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
@@ -110,6 +112,26 @@ const MainStack: React.FC = () => {
           component={ServiceLoginScreen}
           options={() => ({
             headerShown: true,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.ContactUsScreen}
+          component={ContactUsScreen}
+          options={() => ({
+            headerShown: true,
+            title: 'Contact Us',
+            headerBackTestID: testIdWithKey('Back'),
+            headerShadowVisible: false,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.HelpCentreScreen}
+          component={HelpCentreScreen}
+          options={() => ({
+            headerShown: true,
+            title: 'Help Centre',
+            headerBackTestID: testIdWithKey('Back'),
+            headerShadowVisible: false,
           })}
         />
       </Stack.Navigator>
