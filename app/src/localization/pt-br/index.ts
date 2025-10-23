@@ -280,6 +280,12 @@ const translation = {
       "CharCountTitle": "Character count exceeded (PT-BR)",
       "EmptyNameTitle": "Enter an account nickname (PT-BR)",
       "NameAlreadyExists": "This nickname already exists (PT-BR)",
+      "SaveAndContinue": "Save and continue (PT-BR)",
+    },
+    "AccountSelector": {
+      "Header": "BC Services Card (PT-BR)",
+      "Title": "BC Services Card Account (PT-BR)",
+      "ContinueAs": "Continue as: (PT-BR)",
     },
     "Onboarding": {
       "LearnMore": "Learn more (PT-BR)",

@@ -74,7 +74,7 @@ const BCSCRootStack: React.FC = () => {
   // }
 
   // Show identity verification stack (setup steps) if user unverified
-  if (!store.bcsc.verified) {
+  if (!store.bcsc.verified || store.bcsc.selectedNickname === undefined) {
     return <VerifyIdentityStack />
   }
 
