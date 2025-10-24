@@ -7,7 +7,7 @@ import { Dispatch } from 'react'
 
 // TODO (MD): Rename to SystemCheckStrategy?
 
-type StartupCheckStrategy = {
+type SystemCheckStrategy = {
   /**
    * Runs the startup check.
    * @returns {Promise<boolean>} - A promise that resolves to true if the check passes, false otherwise.
@@ -23,10 +23,10 @@ type StartupCheckStrategy = {
 /**
  * Runs a series of startup checks and handles failures accordingly.
  *
- * @param {StartupCheckStrategy[]} checks - An array of startup checks to run.
+ * @param {SystemCheckStrategy[]} checks - An array of startup checks to run.
  * @returns {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
  */
-export async function runStartupChecks(checks: StartupCheckStrategy[]) {
+export async function runSystemChecks(checks: SystemCheckStrategy[]) {
   const startupPromises: Promise<boolean>[] = []
 
   // Add all startup check promises to array
@@ -55,9 +55,9 @@ export async function runStartupChecks(checks: StartupCheckStrategy[]) {
  * it dispatches a warning banner message.
  *
  * @class DeviceCountStartupCheck
- * @implements {StartupCheckStrategy}
+ * @implements {SystemCheckStrategy}
  */
-export class DeviceCountStartupCheck implements StartupCheckStrategy {
+export class DeviceCountSystemCheck implements SystemCheckStrategy {
   constructor(
     private config: {
       getIdToken: () => Promise<IdToken>
@@ -99,9 +99,9 @@ export class DeviceCountStartupCheck implements StartupCheckStrategy {
  * Note: On failure, it dispatches a warning banner message.
  *
  * @class ServerStatusStartupCheck
- * @implements {StartupCheckStrategy}
+ * @implements {SystemCheckStrategy}
  */
-export class ServerStatusStartupCheck implements StartupCheckStrategy {
+export class ServerStatusSystemCheck implements SystemCheckStrategy {
   constructor(
     private config: {
       getServerStatus: () => Promise<ServerStatusResponseData>

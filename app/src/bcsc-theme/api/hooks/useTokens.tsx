@@ -74,10 +74,11 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
         throw new Error('No tokens available')
       }
 
-      if (config.refreshCache) {
-        // Fetch new tokens to ensure we have the latest ID token
-        await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
-      }
+      // TODO (MD): This is still causing an invalid_access_token error when called in quick succession
+      // if (config.refreshCache) {
+      //   // Fetch new tokens to ensure we have the latest ID token
+      //   await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
+      // }
 
       return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
     },
