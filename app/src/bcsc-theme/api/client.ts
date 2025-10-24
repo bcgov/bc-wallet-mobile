@@ -207,18 +207,17 @@ class BCSCApiClient {
         return this.tokensPromise
       }
 
-      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
-
-      const tokensPromise = this.post<TokenResponse>(this.endpoints.token, tokenBody, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        skipBearerAuth: true,
-      })
-        // Extract data from response
-        .then((response) => response.data)
-
-      this.tokensPromise = tokensPromise
-
       try {
+        const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
+
+        const tokensPromise = this.post<TokenResponse>(this.endpoints.token, tokenBody, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          skipBearerAuth: true,
+        })
+          // Extract data from response
+          .then((response) => response.data)
+
+        this.tokensPromise = tokensPromise
         this.tokens = await tokensPromise
       } finally {
         // Clear the promise cache regardless of success or failure
