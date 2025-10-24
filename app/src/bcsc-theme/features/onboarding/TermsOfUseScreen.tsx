@@ -1,4 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { createThemedWebViewScript } from '@/bcsc-theme/utils/webview-utils'
 import { TERMS_OF_USE_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -60,16 +61,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
           </SafeAreaView>
         )}
         onLoad={() => setShowWebView(true)}
-        injectedJavaScriptBeforeContentLoaded={`
-          document.addEventListener('DOMContentLoaded', function() {
-          document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
-            document.body.style.backgroundColor = '${ColorPalette.brand.primaryBackground}';
-            document.body.style.color = '${ColorPalette.brand.secondary}';
-            document.querySelectorAll('a').forEach(link => {
-              link.style.color = '${ColorPalette.brand.link}';
-            });
-          });
-        `}
+        injectedJavaScriptBeforeContentLoaded={createThemedWebViewScript(ColorPalette)}
       />
 
       <View style={styles.buttonContainer}>

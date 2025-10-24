@@ -1,3 +1,4 @@
+import { createThemedWebViewScript } from '@/bcsc-theme/utils/webview-utils'
 import { HELP_URL } from '@/constants'
 import { useTheme } from '@bifold/core'
 import { ActivityIndicator, StyleSheet } from 'react-native'
@@ -43,15 +44,7 @@ export const HelpCentreScreen = (): JSX.Element => {
         bounces={false}
         domStorageEnabled={true}
         javaScriptEnabled={true}
-        injectedJavaScriptBeforeContentLoaded={`
-          document.addEventListener('DOMContentLoaded', function() {
-            document.body.style.backgroundColor = '${ColorPalette.brand.primaryBackground}';
-            document.body.style.color = '${ColorPalette.brand.secondary}';
-            document.querySelectorAll('a').forEach(link => {
-              link.style.color = '${ColorPalette.brand.link}';
-            });
-          });
-        `}
+        injectedJavaScriptBeforeContentLoaded={createThemedWebViewScript(ColorPalette)}
       />
     </SafeAreaView>
   )
