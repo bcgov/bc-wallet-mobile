@@ -12,7 +12,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import { SettingsActionCard } from './components/SettingsActionCard'
 
 type SettingsScreenProps = {
-  navigation: StackNavigationProp<BCSCRootStackParams>
+  navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.Settings>
 }
 
 /**
@@ -75,7 +75,7 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   }
 
   const onPressContactUs = () => {
-    navigation.navigate(BCSCScreens.ContactUsScreen)
+    navigation.navigate(BCSCScreens.ContactUs)
   }
 
   const onPressAccessibility = async () => {
@@ -87,15 +87,19 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   }
 
   const onPressHelp = () => {
-    navigation.navigate(BCSCScreens.HelpCentreScreen)
+    navigation.navigate(BCSCScreens.HelpCentre)
   }
 
   const onPressPrivacy = () => {
-    navigation.navigate(BCSCScreens.PrivacyPolicyScreen, { nonInteractive: true })
+    navigation.navigate(BCSCScreens.PrivacyPolicy, { nonInteractive: true })
   }
 
   const onPressEditNickname = () => {
     navigation.navigate(BCSCScreens.EditNickname)
+  }
+
+  const onPressForgetAllPairings = () => {
+    navigation.navigate(BCSCScreens.ForgetAllPairings)
   }
 
   return (
@@ -139,7 +143,7 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
               />
               <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
 
-              <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressActionTodo} />
+              <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressForgetAllPairings} />
             </>
           ) : null}
 

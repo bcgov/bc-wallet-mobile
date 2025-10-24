@@ -1,24 +1,17 @@
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { HELP_URL } from '@/constants'
 import { useTheme } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import WebView from 'react-native-webview'
-
-interface HelpCentreScreenProps {
-  navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.HelpCentreScreen>
-}
 
 /**
  * Help Centre screen component that presents help documentation and support information.
  *
  * @returns {*} {JSX.Element} The HelpCentreScreen component.
  */
-export const HelpCentreScreen = (props: HelpCentreScreenProps): JSX.Element => {
-  const { t } = useTranslation()
+export const HelpCentreScreen = (): JSX.Element => {
   const theme = useTheme()
+  const { Spacing, ColorPalette } = theme
 
   const styles = StyleSheet.create({
     container: {
@@ -26,8 +19,8 @@ export const HelpCentreScreen = (props: HelpCentreScreenProps): JSX.Element => {
     },
     webViewContainer: {
       flex: 1,
-      padding: theme.Spacing.md,
-      gap: theme.Spacing.lg,
+      padding: Spacing.md,
+      gap: Spacing.lg,
     },
     activityIndicator: {
       flex: 1,
@@ -41,14 +34,21 @@ export const HelpCentreScreen = (props: HelpCentreScreenProps): JSX.Element => {
       <WebView
         style={styles.webViewContainer}
         source={{ uri: HELP_URL }}
-        renderLoading={() => <ActivityIndicator size={'large'} style={styles.activityIndicator} />}
+        renderLoading={() => (
+          <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
+            <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+          </SafeAreaView>
+        )}
         bounces={false}
         domStorageEnabled={true}
         javaScriptEnabled={true}
-        // Remove header, footer, and navigation elements for a cleaner view
         injectedJavaScriptBeforeContentLoaded={`
           document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
+            document.body.style.backgroundColor = '${ColorPalette.brand.primaryBackground}';
+            document.body.style.color = '${ColorPalette.brand.secondary}';
+            document.querySelectorAll('a').forEach(link => {
+              link.style.color = '${ColorPalette.brand.link}';
+            });
           });
         `}
       />

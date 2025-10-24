@@ -1,16 +1,16 @@
+import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCDispatchAction, BCState } from '@/store'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useFilterServiceClients } from '../../services/hooks/useFilterServiceClients'
-import { BCDispatchAction, BCState } from '@/store'
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { useNavigation } from '@react-navigation/native'
-import { useTranslation } from 'react-i18next'
 import { SavedServiceCard } from './SavedServiceCard'
 
-type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
+type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLogin>
 
 const SavedServices: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
@@ -60,7 +60,7 @@ const SavedServices: React.FC = () => {
             key={serviceClient.client_ref_id}
             title={serviceClient.client_name}
             onPress={() => {
-              navigation.navigate(BCSCScreens.ServiceLoginScreen, {
+              navigation.navigate(BCSCScreens.ServiceLogin, {
                 serviceClient: serviceClient,
               })
             }}

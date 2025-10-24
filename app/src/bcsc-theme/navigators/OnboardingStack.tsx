@@ -1,12 +1,12 @@
-import { createStackNavigator } from '@react-navigation/stack'
-import { BCSCScreens } from '../types/navigators'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
-import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
-import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
-import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
-import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
-import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
+import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
+import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
+import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
+import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
+import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
+import { BCSCScreens } from '../types/navigators'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -21,7 +21,7 @@ const OnboardingStack = (): JSX.Element => {
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.OnboardingIntroCarouselScreen}
+      initialRouteName={BCSCScreens.OnboardingIntroCarousel}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: false,
@@ -31,10 +31,10 @@ const OnboardingStack = (): JSX.Element => {
         headerBackAccessibilityLabel: t('Global.Back'),
       }}
     >
-      <Stack.Screen name={BCSCScreens.OnboardingIntroCarouselScreen} component={IntroCarouselScreen} />
+      <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />
 
       <Stack.Screen
-        name={BCSCScreens.OnboardingPrivacyPolicyScreen}
+        name={BCSCScreens.PrivacyPolicy}
         component={PrivacyPolicyScreen}
         options={{
           title: t('Unified.Onboarding.PrivacyPolicyTitle'),
@@ -43,7 +43,7 @@ const OnboardingStack = (): JSX.Element => {
       />
 
       <Stack.Screen
-        name={BCSCScreens.OnboardingTermsOfUseScreen}
+        name={BCSCScreens.OnboardingTermsOfUse}
         component={TermsOfUseScreen}
         options={{
           title: t('Unified.Onboarding.TermsOfUseTitle'),
@@ -51,10 +51,10 @@ const OnboardingStack = (): JSX.Element => {
         }}
       />
 
-      <Stack.Screen name={BCSCScreens.OnboardingNotificationsScreen} component={NotificationsScreen} />
+      <Stack.Screen name={BCSCScreens.OnboardingNotifications} component={NotificationsScreen} />
 
       <Stack.Screen
-        name={BCSCScreens.OnboardingSecureAppScreen}
+        name={BCSCScreens.OnboardingSecureApp}
         component={SecureAppScreen}
         options={{
           headerShown: true,

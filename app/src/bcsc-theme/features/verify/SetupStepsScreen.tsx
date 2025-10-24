@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 import { hitSlop } from '@/constants'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCDispatchAction, BCState } from '@/store'
@@ -13,7 +14,6 @@ import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SetupStep } from './components/SetupStep'
-import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 
 type SetupStepsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
@@ -91,7 +91,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   })
 
   const handleEmailStepPress = () => {
-    navigation.navigate(BCSCScreens.EnterEmailScreen, { cardType: store.bcsc.cardType })
+    navigation.navigate(BCSCScreens.EnterEmail, { cardType: store.bcsc.cardType })
   }
 
   const handleCheckStatus = async () => {
@@ -294,7 +294,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
           isComplete={step.address.completed}
           isFocused={step.address.focused}
           onPress={() => {
-            navigation.navigate(BCSCScreens.ResidentialAddressScreen)
+            navigation.navigate(BCSCScreens.ResidentialAddress)
           }}
         />
 

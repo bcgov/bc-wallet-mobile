@@ -11,8 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 // Navigation will only be called from the onboarding stack
 // Route params can be provided in either stack
 interface PrivacyPolicyScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.PrivacyPolicyScreen>
-  route: RouteProp<BCSCRootStackParams | BCSCOnboardingStackParams, BCSCScreens.PrivacyPolicyScreen>
+  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.PrivacyPolicy>
+  route: RouteProp<BCSCRootStackParams | BCSCOnboardingStackParams, BCSCScreens.PrivacyPolicy>
 }
 
 /**
@@ -20,7 +20,10 @@ interface PrivacyPolicyScreenProps {
  *
  * @returns {*} {JSX.Element} The PrivacyPolicyScreen component.
  */
-export const PrivacyPolicyScreen = ({ navigation, route }: PrivacyPolicyScreenProps): JSX.Element => {
+export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({
+  navigation,
+  route,
+}: PrivacyPolicyScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -78,7 +81,7 @@ export const PrivacyPolicyScreen = ({ navigation, route }: PrivacyPolicyScreenPr
             title={t('Global.Continue')}
             buttonType={ButtonType.Primary}
             onPress={() => {
-              navigation.navigate(BCSCScreens.OnboardingTermsOfUseScreen)
+              navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
             }}
             testID={testIdWithKey('Continue')}
             accessibilityLabel={t('Global.Continue')}

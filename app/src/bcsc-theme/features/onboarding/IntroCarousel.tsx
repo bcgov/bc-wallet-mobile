@@ -12,7 +12,7 @@ const mockCarouselContent =
   'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
 
 interface IntroCarouselScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingIntroCarouselScreen>
+  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingIntroCarousel>
 }
 
 /**
@@ -25,9 +25,9 @@ interface IntroCarouselScreenProps {
  *
  * @returns {*} {JSX.Element} The IntroCarouselScreen component.
  */
-export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Element => {
+export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): JSX.Element => {
   const { t } = useTranslation()
-  const theme = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const [carouselIndex, setCarouselIndex] = useState(0)
 
   const styles = StyleSheet.create({
@@ -36,10 +36,10 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
     },
     scrollContainer: {
       flex: 1,
-      padding: theme.Spacing.md,
+      padding: Spacing.md,
     },
     contentContainer: {
-      gap: theme.Spacing.md,
+      gap: Spacing.md,
     },
     carouselContainer: {
       flexDirection: 'row',
@@ -48,23 +48,23 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
     carouselCirclesContainer: {
       alignItems: 'center',
       flexDirection: 'row',
-      gap: theme.Spacing.lg,
+      gap: Spacing.lg,
     },
     carouselCircle: {
       width: 12,
       height: 12,
       borderRadius: 6,
-      backgroundColor: theme.ColorPalette.brand.secondary,
+      backgroundColor: ColorPalette.brand.secondary,
     },
     carouselCircleHighlighted: {
-      backgroundColor: theme.ColorPalette.brand.primary,
+      backgroundColor: ColorPalette.brand.primary,
     },
     carouselActionButtonContainer: {
-      padding: theme.Spacing.md,
+      padding: Spacing.md,
     },
     carouselActionButtonText: {
       fontWeight: 'bold',
-      color: theme.ColorPalette.brand.buttonText,
+      color: ColorPalette.brand.buttonText,
     },
   })
 
@@ -91,7 +91,7 @@ export const IntroCarouselScreen = (props: IntroCarouselScreenProps): JSX.Elemen
 
   const handleNext = () => {
     if (carouselIndex === carouselPages.length - 1) {
-      props.navigation.navigate(BCSCScreens.OnboardingPrivacyPolicyScreen)
+      navigation.navigate(BCSCScreens.PrivacyPolicy, { nonInteractive: false })
       return
     }
 

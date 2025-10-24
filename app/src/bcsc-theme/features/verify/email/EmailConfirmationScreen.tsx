@@ -19,7 +19,7 @@ import { CodeField, Cursor, useClearByFocusCell } from 'react-native-confirmatio
 import Toast from 'react-native-toast-message'
 
 type EmailConfirmationScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EmailConfirmationScreen>
+  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EmailConfirmation>
   route: {
     params: {
       emailAddressId: string

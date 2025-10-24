@@ -35,22 +35,21 @@ export const BCThemeNames = {
 } as const
 
 // BCSC Constants
-export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
-export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
-export const CONTACT_US_URL = 'http://www2.gov.bc.ca/gov/content?id=9F7F3266669643F79939055FB8F5EFE7'
-export const ACCESSIBILITY_URL = 'https://www2.gov.bc.ca/gov/content?id=796228EAF9304B489863A06E9C16D732'
-export const HELP_URL = 'http://www2.gov.bc.ca/gov/content?id=1AEB073331D547448009E506D6DAC395'
+// appending param fromapp=1 to id.gov urls automatically removes header and footer and such
+export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html?fromapp=1'
+export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html?fromapp=1'
+export const ACCESSIBILITY_URL =
+  'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/accessibility'
+export const HELP_URL = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1'
 export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1'
 
 export enum HelpCentreUrl {
-  HOME = 'https://id.gov.bc.ca/static/help/topics.html',
-  HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html',
-  ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html',
-  VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html#section-options-app',
-  VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html#section-inperson',
+  HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',
+  HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html?fromapp=1',
+  ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html?fromapp=1',
+  VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-options-app',
+  VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-inperson',
 }
-
-// BCSC Constants
 
 export const formStringLengths = {
   minimumLength: 1,

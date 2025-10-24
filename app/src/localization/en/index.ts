@@ -265,6 +265,9 @@ const translation = {
       "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",
       "InformationRequired": "Information Required",
+      "ContactUs": "Contact Us",
+      "HelpCentre": "Help Centre",
+      "PrivacyInformation": "Privacy Information",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
@@ -273,6 +276,16 @@ const translation = {
       "Step3": "Step 3",
       "Step4": "Step 4",
       "Step5": "Step 5",
+    },
+    "ForgetAllPairings": {
+      "Title": "Forget all pairings?",
+      "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
+      "Description2": "By forgetting all pairings this device will be removed as an option on any computer you previously paired with. You can use this app again to log in on another computer by pairing it again.",
+      "ButtonTitle": "Forget all pairings",
+      "SuccessTitle": "Success",
+      "SuccessMessage": "Successfully unpaired your device",
+      "ErrorTitle": "Error",
+      "ErrorMessage": "Failed to unpair device",
     },
     "NicknameAccount": {
       "AccountName": "Account Nickname",
