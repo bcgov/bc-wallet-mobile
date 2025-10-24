@@ -9,11 +9,15 @@ export enum BCSCBanner {
   LIVE_CALL_STATUS = 'LiveCallStatusBanner',
 }
 
-export interface AppBannerSectionProps {
-  id: string
+export interface BCSCBannerMessage {
+  id: BCSCBanner
   title: string
   type: 'error' | 'warning' | 'info' | 'success'
   dismissible?: boolean
+  description?: string
+}
+
+export interface AppBannerSectionProps extends BCSCBannerMessage {
   onPress?: (id: string) => void
 }
 

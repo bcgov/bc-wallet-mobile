@@ -1,8 +1,11 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
-import { DispatchAction, ReducerAction } from '@bifold/core'
+import { BCDispatchAction } from '@/store'
+import { ReducerAction } from '@bifold/core'
 import { Dispatch } from 'react'
+
+// TODO (MD): Rename to SystemCheckStrategy?
 
 type StartupCheckStrategy = {
   /**
@@ -76,7 +79,7 @@ export class DeviceCountStartupCheck implements StartupCheckStrategy {
 
   onFail() {
     this.config.dispatch({
-      type: DispatchAction.BANNER_MESSAGES,
+      type: BCDispatchAction.ADD_BANNER_MESSAGE,
       payload: [
         {
           id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
@@ -118,7 +121,7 @@ export class ServerStatusStartupCheck implements StartupCheckStrategy {
 
   onFail() {
     this.config.dispatch({
-      type: DispatchAction.BANNER_MESSAGES,
+      type: BCDispatchAction.ADD_BANNER_MESSAGE,
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,

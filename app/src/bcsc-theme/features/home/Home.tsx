@@ -8,8 +8,6 @@ import SectionButton from '../../components/SectionButton'
 import { StackScreenProps } from '@react-navigation/stack'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { AppBanner, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { useBannerMessages } from '@/bcsc-theme/hooks/useBannerMessages'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 
 // to be replaced with API response or translation entries, whichever ends up being the case
@@ -25,11 +23,6 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { Spacing } = useTheme()
   const { user } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const banners = useBannerMessages({
-    [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: () => {
-      console.log('Device limit banner dismissed')
-    },
-  })
 
   const {
     load: loadUserInfo,
@@ -65,7 +58,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
         <>
-          <AppBanner messages={banners.bannerMessages} />
+          {/* <AppBanner messages={banners.bannerMessages} /> */}
 
           <HomeHeader name={`${userInfo?.family_name}, ${userInfo?.given_name}`} />
           <View style={styles.buttonsContainer}>
