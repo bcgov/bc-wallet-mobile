@@ -9,15 +9,19 @@ import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
+import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
+import { ContactUsScreen } from '../features/settings/ContactUsScreen'
+import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
+import { HelpCentreScreen } from '../features/settings/HelpCentreScreen'
 import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
-import EditNicknameScreen from '../features/account/EditNicknameScreen'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -117,10 +121,49 @@ const MainStack: React.FC = () => {
           })}
         />
         <Stack.Screen
-          name={BCSCScreens.ServiceLoginScreen}
+          name={BCSCScreens.ServiceLogin}
           component={ServiceLoginScreen}
           options={() => ({
             headerShown: true,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.ContactUs}
+          component={ContactUsScreen}
+          options={() => ({
+            headerShown: true,
+            title: t('Unified.Screens.ContactUs'),
+            headerBackTestID: testIdWithKey('Back'),
+            headerShadowVisible: false,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.HelpCentre}
+          component={HelpCentreScreen}
+          options={() => ({
+            headerShown: true,
+            title: t('Unified.Screens.HelpCentre'),
+            headerBackTestID: testIdWithKey('Back'),
+            headerShadowVisible: false,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.PrivacyPolicy}
+          component={PrivacyPolicyScreen}
+          options={() => ({
+            headerShown: true,
+            title: t('Unified.Screens.PrivacyInformation'),
+            headerBackTestID: testIdWithKey('Back'),
+            headerShadowVisible: false,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.ForgetAllPairings}
+          component={ForgetAllPairingsScreen}
+          options={() => ({
+            headerShown: true,
+            headerBackTestID: testIdWithKey('Back'),
+            headerShadowVisible: false,
           })}
         />
       </Stack.Navigator>

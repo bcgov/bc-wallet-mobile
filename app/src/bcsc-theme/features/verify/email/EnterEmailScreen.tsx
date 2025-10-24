@@ -19,7 +19,7 @@ import { Alert, StyleSheet, View } from 'react-native'
 import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EnterEmailScreen>
+  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EnterEmail>
   route: {
     params: {
       cardType: BCSCCardType
@@ -72,7 +72,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       setLoading(true)
       const { email_address_id } = await evidence.createEmailVerification(email)
       dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email, emailConfirmed: false }] })
-      navigation.navigate(BCSCScreens.EmailConfirmationScreen, { emailAddressId: email_address_id })
+      navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
       setError('Error submitting email')
 

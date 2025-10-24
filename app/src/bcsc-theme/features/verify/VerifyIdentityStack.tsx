@@ -1,4 +1,5 @@
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
+import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
@@ -10,6 +11,8 @@ import TransferInformationScreen from '../account-transfer/TransferInformationSc
 import TransferInstructionsScreen from '../account-transfer/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../account-transfer/TransferQRScannerScreen'
 import TransferSuccessScreen from '../account-transfer/TransferSuccessScreen'
+import NicknameAccountScreen from '../account/NicknameAccountScreen'
+import Settings from '../settings/Settings'
 import WebViewScreen from '../webview/WebViewScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
@@ -46,9 +49,6 @@ import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
-import NicknameAccountScreen from '../account/NicknameAccountScreen'
-import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
-import Settings from '../settings/Settings'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -113,8 +113,8 @@ const VerifyIdentityStack = () => {
       />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
       <Stack.Screen name={BCSCScreens.MismatchedSerial} component={MismatchedSerialScreen} />
-      <Stack.Screen name={BCSCScreens.EnterEmailScreen} component={EnterEmailScreen} />
-      <Stack.Screen name={BCSCScreens.EmailConfirmationScreen} component={EmailConfirmationScreen} />
+      <Stack.Screen name={BCSCScreens.EnterEmail} component={EnterEmailScreen} />
+      <Stack.Screen name={BCSCScreens.EmailConfirmation} component={EmailConfirmationScreen} />
       <Stack.Screen
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
@@ -226,7 +226,7 @@ const VerifyIdentityStack = () => {
         component={CallBusyOrClosedScreen}
         options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
-      <Stack.Screen name={BCSCScreens.ResidentialAddressScreen} component={ResidentialAddressScreen} />
+      <Stack.Screen name={BCSCScreens.ResidentialAddress} component={ResidentialAddressScreen} />
 
       <Stack.Screen
         name={BCSCScreens.Settings}

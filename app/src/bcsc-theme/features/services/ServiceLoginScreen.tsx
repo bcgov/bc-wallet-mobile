@@ -8,7 +8,7 @@ import { Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-type ServiceLoginScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
+type ServiceLoginScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ServiceLogin>
 
 /**
  * Renders the service details screen component, which displays information about a specific serviceClient.

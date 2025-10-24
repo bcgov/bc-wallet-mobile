@@ -1,24 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
-import ServiceButton from './components/ServiceButton'
-import { BCState, Mode } from '@/store'
-import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
-import { useDebounce } from '@/hooks/useDebounce'
-import { useNavigation } from '@react-navigation/native'
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { useTranslation } from 'react-i18next'
-import Icon from 'react-native-vector-icons/MaterialIcons'
-import { useFilterServiceClients } from './hooks/useFilterServiceClients'
-import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
+import { useDebounce } from '@/hooks/useDebounce'
+import { BCState, Mode } from '@/store'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Keyboard, StyleSheet, TextInput, View } from 'react-native'
+import Icon from 'react-native-vector-icons/MaterialIcons'
+import ServiceButton from './components/ServiceButton'
+import { useFilterServiceClients } from './hooks/useFilterServiceClients'
 
 const SEARCH_DEBOUNCE_DELAY_MS = 300
 
-type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLoginScreen>
+type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLogin>
 
 /**
  * Services screen component that displays a list of services accessible
@@ -157,7 +157,7 @@ const Services: React.FC = () => {
           title={service.client_name}
           description={service.client_description}
           onPress={() => {
-            navigation.navigate(BCSCScreens.ServiceLoginScreen, {
+            navigation.navigate(BCSCScreens.ServiceLogin, {
               serviceClient: service,
             })
           }}

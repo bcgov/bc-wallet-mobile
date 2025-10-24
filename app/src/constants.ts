@@ -36,15 +36,22 @@ export const BCThemeNames = {
 
 // BCSC Constants
 export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
-export enum HelpCentreUrl {
-  HOME = 'https://id.gov.bc.ca/static/help/topics.html',
-  HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html',
-  ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html',
-  VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html#section-options-app',
-  VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html#section-inperson',
-}
+export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
+export const ACCESSIBILITY_URL =
+  'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/accessibility'
+// appending param fromapp=1 to certain id.gov urls automatically removes header and footer and such
+export const HELP_URL = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1'
+export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html'
+export const CONTACT_US_GOVERNMENT_WEBSITE_URL =
+  'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-services-card/contact-us'
 
-// BCSC Constants
+export enum HelpCentreUrl {
+  HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',
+  HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html?fromapp=1',
+  ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html?fromapp=1',
+  VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-options-app',
+  VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-inperson',
+}
 
 export const formStringLengths = {
   minimumLength: 1,

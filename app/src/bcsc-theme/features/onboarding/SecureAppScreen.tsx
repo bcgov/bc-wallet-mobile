@@ -8,7 +8,7 @@ import { Platform, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface SecureAppScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureAppScreen>
+  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSecureApp>
 }
 
 /**
@@ -16,9 +16,9 @@ interface SecureAppScreenProps {
  *
  * @returns {*} {JSX.Element} The SecureAppScreen component.
  */
-export const SecureAppScreen = (props: SecureAppScreenProps): JSX.Element => {
+export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Element => {
   const { t } = useTranslation()
-  const theme = useTheme()
+  const { Spacing } = useTheme()
   const [, dispatch] = useStore()
 
   const styles = StyleSheet.create({
@@ -26,8 +26,8 @@ export const SecureAppScreen = (props: SecureAppScreenProps): JSX.Element => {
       flex: 1,
     },
     scollContainer: {
-      padding: theme.Spacing.md,
-      gap: theme.Spacing.lg,
+      padding: Spacing.md,
+      gap: Spacing.lg,
     },
   })
 
@@ -62,7 +62,7 @@ export const SecureAppScreen = (props: SecureAppScreenProps): JSX.Element => {
           onPress={() => {
             // TODO (MD): Implement PIN setup (Remove completed onboarding dispatch when implemented)
             dispatch({ type: BCDispatchAction.UPDATE_COMPLETED_ONBOARDING, payload: [true] })
-            props.navigation.navigate(BCSCScreens.OnboardingNotificationsScreen)
+            navigation.navigate(BCSCScreens.OnboardingNotifications)
           }}
         />
 
