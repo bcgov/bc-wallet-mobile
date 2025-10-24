@@ -1,5 +1,5 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useTheme, useServices, TOKENS } from '@bifold/core'
+import { useTheme, useServices, TOKENS, useStore, BannerMessage, DispatchAction } from '@bifold/core'
 import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import HomeHeader from './components/HomeHeader'
@@ -9,7 +9,7 @@ import { StackScreenProps } from '@react-navigation/stack'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { NotificationBannerContainer } from './components/NotificationBannerContainer'
+import { AppBanner, AppBannerSectionProps, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 
 // to be replaced with API response or translation entries, whichever ends up being the case
 const mockFindTitle = 'Where to use'
@@ -26,6 +26,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store, dispatch] = useStore()
 
   useEffect(() => {
     const asyncEffect = async () => {
@@ -57,13 +58,45 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
   }
 
+  const addActionsToBannerMessages = (
+    banners: Array<BannerMessage>,
+    actionsMap: Partial<Record<BCSCBanner, () => void>>
+  ): AppBannerSectionProps[] => {
+    return banners.map((banner) => {
+      return {
+        id: banner.id,
+        title: banner.title,
+        type: banner.type,
+        onPress: () => {
+          const mappedBannerAction = actionsMap[banner.id as BCSCBanner]
+
+          // if there's an action in the map, use it
+          if (mappedBannerAction) {
+            mappedBannerAction()
+            return
+          }
+
+          // otherwise, remove the banner on press
+          dispatch({ type: DispatchAction.REMOVE_BANNER_MESSAGE, payload: [banner.id] })
+        },
+      }
+    })
+  }
+
   return (
     <TabScreenWrapper>
       {loading ? (
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
         <>
-          <NotificationBannerContainer />
+          <AppBanner
+            messages={addActionsToBannerMessages(store.preferences.bannerMessages, {
+              [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: () => {
+                console.log('Device limit banner dismissed')
+              },
+            })}
+          />
+
           <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
           <View style={styles.buttonsContainer}>
             <SectionButton

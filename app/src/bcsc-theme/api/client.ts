@@ -192,8 +192,6 @@ class BCSCApiClient {
       config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
     }
 
-    this.logger.debug(`Sending request to ${String(config.url)} with method ${String(config.method)}`, config as any)
-
     return config
   }
 

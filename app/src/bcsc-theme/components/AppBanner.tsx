@@ -1,49 +1,46 @@
 import { ThemedText, testIdWithKey, useTheme } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+
+export enum BCSCBanner {
+  IAS_SERVER_UNAVAILABLE = 'IASServerUnavailableBanner',
+  DEVICE_LIMIT_EXCEEDED = 'DeviceLimitExceededBanner',
+  LIVE_CALL_STATUS = 'LiveCallStatusBanner',
+}
+
 export interface AppBannerSectionProps {
+  id: string
   title: string
   type: 'error' | 'warning' | 'info' | 'success'
-  dismissible?: boolean
-  onDismiss?: () => void
+  onPress?: (id: string) => void
 }
 
 interface AppBannerProps {
   messages: AppBannerSectionProps[]
 }
 
-export const AppBanner: React.FC<AppBannerProps> = ({ messages }) => {
-  const [bannerMessages, setBannerMessages] = useState(messages)
-
-  const dismissBanner = (index: number) => {
-    setBannerMessages((prevMessages) => prevMessages.filter((_, i) => i !== index))
-  }
-
-  useEffect(() => {
-    setBannerMessages(messages)
-  }, [messages])
-
-  if (!bannerMessages || bannerMessages.length == 0) {
+export const AppBanner: React.FC<AppBannerProps> = (props: AppBannerProps) => {
+  if (!props.messages || props.messages.length == 0) {
     return null
   }
 
   return (
     <View>
-      {bannerMessages.map((message, index) => (
+      {props.messages.map((message) => (
         <AppBannerSection
+          key={message.id}
+          id={message.id}
           title={message.title}
           type={message.type}
-          onDismiss={() => dismissBanner(index)}
-          key={`${message.title}-${message.type}`}
-          dismissible={message.dismissible}
+          onPress={message.onPress}
         />
       ))}
     </View>
   )
 }
 
-export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type, onDismiss, dismissible = true }) => {
+export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ id, title, type, onPress }) => {
   const { Spacing, ColorPalette } = useTheme()
   const styles = StyleSheet.create({
     container: {
@@ -95,9 +92,7 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ title, type,
       style={{ ...styles.container, backgroundColor: bannerColor(type) }}
       testID={testIdWithKey(`button-${type}`)}
       onPress={() => {
-        if (dismissible && onDismiss) {
-          onDismiss()
-        }
+        onPress?.(id)
       }}
     >
       <Icon
