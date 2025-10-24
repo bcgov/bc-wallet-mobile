@@ -9,6 +9,7 @@ import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
 import BCSCOnboardingStack from './OnboardingStack'
+import { useSystemStartupChecks } from '../hooks/useStartupSystemChecks'
 
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
@@ -16,7 +17,8 @@ const BCSCRootStack: React.FC = () => {
   const theme = useTheme()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const initializeBCSC = useInitializeBCSC()
-  const { client, isClientReady } = useBCSCApiClientState()
+  const { isClientReady } = useBCSCApiClientState()
+  useSystemStartupChecks()
 
   const LoadingView = () => (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.ColorPalette.brand.primaryBackground }}>
@@ -59,7 +61,7 @@ const BCSCRootStack: React.FC = () => {
   }, [dispatch, store.authentication.didAuthenticate])
 
   // Show loading screen if state or wallet secret not loaded yet
-  if (!store.stateLoaded || initializeBCSC.loading || !isClientReady || !client) {
+  if (!store.stateLoaded || initializeBCSC.loading || !isClientReady) {
     return <LoadingView />
   }
 

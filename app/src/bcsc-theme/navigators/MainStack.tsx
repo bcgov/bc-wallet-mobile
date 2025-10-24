@@ -18,7 +18,6 @@ import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
-import { useSystemChecks } from '../hooks/useStartupSystemChecks'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -27,7 +26,6 @@ const MainStack: React.FC = () => {
   const Stack = createStackNavigator<BCSCRootStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
-  useSystemChecks()
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>

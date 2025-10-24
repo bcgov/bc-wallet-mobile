@@ -7,17 +7,15 @@ import useConfigApi from '../api/hooks/useConfigApi'
 import BCSCApiClient from '../api/client'
 import useTokenApi from '../api/hooks/useTokens'
 
-export const useSystemChecks = () => {
+export const useSystemStartupChecks = () => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
   const { client, isClientReady } = useBCSCApiClientState()
-
   const configApi = useConfigApi(client as BCSCApiClient)
   const tokenApi = useTokenApi(client as BCSCApiClient)
 
   const startupCheckRef = useRef<boolean>(false)
 
-  // TODO (MD): Move into its own file (useMainStackStartupChecks or useStartupChecks)
   useEffect(() => {
     const asyncEffect = async () => {
       if (startupCheckRef.current || !isClientReady || !client) {
