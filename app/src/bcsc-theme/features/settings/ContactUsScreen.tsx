@@ -14,9 +14,11 @@ export const ContactUsScreen = (): JSX.Element => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     webViewContainer: {
       flex: 1,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
   })
 
@@ -29,7 +31,7 @@ export const ContactUsScreen = (): JSX.Element => {
         <title></title>
         <style>
             body {
-                margin: 30px 25px;
+                margin: 16px;
                 color: ${ColorPalette.brand.secondary};
                 background-color: ${ColorPalette.brand.primaryBackground};
                 font-size: 18px;
@@ -83,6 +85,7 @@ export const ContactUsScreen = (): JSX.Element => {
       <WebView
         style={styles.webViewContainer}
         source={{ html: contactUsHTML }}
+        startInLoadingState={true}
         renderLoading={() => (
           <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
             <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />

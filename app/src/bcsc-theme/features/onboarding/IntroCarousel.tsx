@@ -91,7 +91,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
 
   const handleNext = () => {
     if (carouselIndex === carouselPages.length - 1) {
-      navigation.navigate(BCSCScreens.PrivacyPolicy, { nonInteractive: false })
+      navigation.navigate(BCSCScreens.PrivacyPolicy, { interactive: true })
       return
     }
 

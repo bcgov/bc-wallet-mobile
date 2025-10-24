@@ -94,7 +94,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.TransferAccountQRInformation]: undefined
   [BCSCScreens.ServiceLogin]: { serviceClient: ClientMetadata }
   [BCSCScreens.Settings]: undefined
-  [BCSCScreens.PrivacyPolicy]?: { nonInteractive?: boolean }
+  [BCSCScreens.PrivacyPolicy]?: { interactive?: boolean }
   [BCSCScreens.ContactUs]: undefined
   [BCSCScreens.HelpCentre]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
@@ -104,7 +104,7 @@ export type BCSCRootStackParams = {
 export type BCSCOnboardingStackParams = {
   [BCSCScreens.Settings]: undefined
   [BCSCScreens.OnboardingIntroCarousel]: undefined
-  [BCSCScreens.PrivacyPolicy]?: { nonInteractive?: boolean }
+  [BCSCScreens.PrivacyPolicy]?: { interactive?: boolean }
   [BCSCScreens.OnboardingTermsOfUse]: undefined
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined

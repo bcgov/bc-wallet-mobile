@@ -91,7 +91,7 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   }
 
   const onPressPrivacy = () => {
-    navigation.navigate(BCSCScreens.PrivacyPolicy, { nonInteractive: true })
+    navigation.navigate(BCSCScreens.PrivacyPolicy)
   }
 
   const onPressEditNickname = () => {

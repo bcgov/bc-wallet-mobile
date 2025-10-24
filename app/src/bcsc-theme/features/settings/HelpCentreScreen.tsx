@@ -11,16 +11,16 @@ import WebView from 'react-native-webview'
  */
 export const HelpCentreScreen = (): JSX.Element => {
   const theme = useTheme()
-  const { Spacing, ColorPalette } = theme
+  const { ColorPalette } = theme
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     webViewContainer: {
       flex: 1,
-      padding: Spacing.md,
-      gap: Spacing.lg,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     activityIndicator: {
       flex: 1,
@@ -34,6 +34,7 @@ export const HelpCentreScreen = (): JSX.Element => {
       <WebView
         style={styles.webViewContainer}
         source={{ uri: HELP_URL }}
+        startInLoadingState={true}
         renderLoading={() => (
           <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
             <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />

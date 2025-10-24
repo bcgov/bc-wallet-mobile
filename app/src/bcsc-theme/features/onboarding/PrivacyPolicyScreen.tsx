@@ -27,7 +27,7 @@ export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({
   const { t } = useTranslation()
   const theme = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const nonInteractive = route.params?.nonInteractive
+  const interactive = route.params?.interactive
 
   const styles = StyleSheet.create({
     container: {
@@ -75,7 +75,7 @@ export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({
         <CardButton title={t('Unified.Onboarding.LearnMore')} onPress={handlePressLearnMore} endIcon="open-in-new" />
       </ScrollView>
 
-      {!nonInteractive ? (
+      {interactive ? (
         <View style={styles.buttonContainer}>
           <Button
             title={t('Global.Continue')}

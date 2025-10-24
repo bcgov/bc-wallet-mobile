@@ -10,7 +10,6 @@ import {
   useServices,
   useTheme,
 } from '@bifold/core'
-import { RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -20,7 +19,6 @@ import Toast from 'react-native-toast-message'
 
 interface ForgetAllPairingsScreenProps {
   navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.ForgetAllPairings>
-  route: RouteProp<BCSCRootStackParams, BCSCScreens.ForgetAllPairings>
 }
 
 /**

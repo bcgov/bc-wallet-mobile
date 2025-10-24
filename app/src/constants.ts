@@ -35,13 +35,13 @@ export const BCThemeNames = {
 } as const
 
 // BCSC Constants
-// appending param fromapp=1 to id.gov urls automatically removes header and footer and such
-export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html?fromapp=1'
-export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html?fromapp=1'
+export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
+export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
 export const ACCESSIBILITY_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bcservicescardapp/accessibility'
+// appending param fromapp=1 to certain id.gov urls automatically removes header and footer and such
 export const HELP_URL = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1'
-export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html?fromapp=1'
+export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html'
 
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',

@@ -62,6 +62,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
         onLoad={() => setShowWebView(true)}
         injectedJavaScriptBeforeContentLoaded={`
           document.addEventListener('DOMContentLoaded', function() {
+          document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
             document.body.style.backgroundColor = '${ColorPalette.brand.primaryBackground}';
             document.body.style.color = '${ColorPalette.brand.secondary}';
             document.querySelectorAll('a').forEach(link => {
