@@ -1,5 +1,5 @@
 import { ThemedText, testIdWithKey, useTheme } from '@bifold/core'
-import React from 'react'
+import React, { useState } from 'react'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -13,6 +13,7 @@ export interface AppBannerSectionProps {
   id: string
   title: string
   type: 'error' | 'warning' | 'info' | 'success'
+  dismissible?: boolean
   onPress?: (id: string) => void
 }
 
@@ -20,28 +21,31 @@ interface AppBannerProps {
   messages: AppBannerSectionProps[]
 }
 
-export const AppBanner: React.FC<AppBannerProps> = (props: AppBannerProps) => {
-  if (!props.messages || props.messages.length == 0) {
+export const AppBanner: React.FC<AppBannerProps> = ({ messages }: AppBannerProps) => {
+  if (!messages || messages.length == 0) {
     return null
   }
 
   return (
     <View>
-      {props.messages.map((message) => (
+      {messages.map((message) => (
         <AppBannerSection
           key={message.id}
           id={message.id}
           title={message.title}
           type={message.type}
           onPress={message.onPress}
+          dismissible={message.dismissible}
         />
       ))}
     </View>
   )
 }
 
-export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ id, title, type, onPress }) => {
+export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ id, title, type, onPress, dismissible = true }) => {
   const { Spacing, ColorPalette } = useTheme()
+  const [showBanner, setShowBanner] = useState(true)
+
   const styles = StyleSheet.create({
     container: {
       backgroundColor: ColorPalette.brand.primary,
@@ -89,9 +93,12 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ id, title, t
   // If more details are needed we might need to push the banner down to accommodate the extra information
   return (
     <TouchableOpacity
-      style={{ ...styles.container, backgroundColor: bannerColor(type) }}
+      style={[{ ...styles.container, backgroundColor: bannerColor(type) }, !showBanner && { display: 'none' }]}
       testID={testIdWithKey(`button-${type}`)}
       onPress={() => {
+        if (dismissible) {
+          setShowBanner(false)
+        }
         onPress?.(id)
       }}
     >

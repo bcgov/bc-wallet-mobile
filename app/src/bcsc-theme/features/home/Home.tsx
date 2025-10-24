@@ -1,15 +1,16 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useTheme, useServices, TOKENS, useStore, BannerMessage, DispatchAction } from '@bifold/core'
-import React, { useEffect, useState } from 'react'
+import { useTheme, useServices, TOKENS } from '@bifold/core'
+import React, { useEffect } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import HomeHeader from './components/HomeHeader'
 import SavedServices from './components/SavedServices'
 import SectionButton from '../../components/SectionButton'
 import { StackScreenProps } from '@react-navigation/stack'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { AppBanner, AppBannerSectionProps, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { AppBanner, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { useBannerMessages } from '@/bcsc-theme/hooks/useBannerMessages'
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 
 // to be replaced with API response or translation entries, whichever ends up being the case
 const mockFindTitle = 'Where to use'
@@ -23,26 +24,26 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { Spacing } = useTheme()
   const { user } = useApi()
-  const [loading, setLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const [store, dispatch] = useStore()
+  const banners = useBannerMessages({
+    [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: () => {
+      console.log('Device limit banner dismissed')
+    },
+  })
+
+  const {
+    load: loadUserInfo,
+    data: userInfo,
+    isLoading,
+  } = useDataLoader(user.getUserInfo, {
+    onError(error) {
+      logger.error(`Error while fetching user info: ${error}`)
+    },
+  })
 
   useEffect(() => {
-    const asyncEffect = async () => {
-      try {
-        setLoading(true)
-        const userInfo = await user.getUserInfo()
-        setUserInfo(userInfo)
-      } catch (error) {
-        logger.error(`Error while fetching user info`)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    asyncEffect()
-  }, [user, logger])
+    loadUserInfo()
+  }, [loadUserInfo])
 
   const styles = StyleSheet.create({
     buttonsContainer: {
@@ -58,46 +59,15 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
     navigation.getParent()?.navigate(BCSCScreens.ManualPairingCode)
   }
 
-  const addActionsToBannerMessages = (
-    banners: Array<BannerMessage>,
-    actionsMap: Partial<Record<BCSCBanner, () => void>>
-  ): AppBannerSectionProps[] => {
-    return banners.map((banner) => {
-      return {
-        id: banner.id,
-        title: banner.title,
-        type: banner.type,
-        onPress: () => {
-          const mappedBannerAction = actionsMap[banner.id as BCSCBanner]
-
-          // if there's an action in the map, use it
-          if (mappedBannerAction) {
-            mappedBannerAction()
-            return
-          }
-
-          // otherwise, remove the banner on press
-          dispatch({ type: DispatchAction.REMOVE_BANNER_MESSAGE, payload: [banner.id] })
-        },
-      }
-    })
-  }
-
   return (
     <TabScreenWrapper>
-      {loading ? (
+      {isLoading ? (
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
         <>
-          <AppBanner
-            messages={addActionsToBannerMessages(store.preferences.bannerMessages, {
-              [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: () => {
-                console.log('Device limit banner dismissed')
-              },
-            })}
-          />
+          <AppBanner messages={banners.bannerMessages} />
 
-          <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
+          <HomeHeader name={`${userInfo?.family_name}, ${userInfo?.given_name}`} />
           <View style={styles.buttonsContainer}>
             <SectionButton
               title={mockFindTitle}

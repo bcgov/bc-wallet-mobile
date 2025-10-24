@@ -35,7 +35,7 @@ export async function runStartupChecks(checks: StartupCheckStrategy[]) {
   const results = await Promise.all(startupPromises)
 
   // Handle failures in order
-  // To be determined if we want automatic failure handling or not
+  // To be determined if we want automatic failure handling or not (pass param if not)
   results.forEach(async (result, index) => {
     if (!result) {
       await checks[index].onFail()
