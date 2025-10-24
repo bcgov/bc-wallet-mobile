@@ -48,6 +48,7 @@ class BCSCApiClient {
   baseURL: string
   // TODO (MD): Persist tokens securely using PersistentStorage ie: loadTokens(), saveTokens()
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
+  tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
 
   constructor(baseURL: string, logger: RemoteLogger) {
     this.baseURL = baseURL
@@ -63,6 +64,8 @@ class BCSCApiClient {
     } else {
       this.logger.error('BCSCApiClient initialized with empty URL.')
     }
+
+    this.tokensPromise = null
 
     // fallback config
     this.config = {
@@ -178,7 +181,8 @@ class BCSCApiClient {
   }
 
   private async handleRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
-    this.logger.info(`Handling request for URL: ${String(config.url)}`)
+    this.logger.info(`[${config.method?.toUpperCase()}] ${String(config.url)}`)
+
     // skip processing if skipBearerAuth is set in the config
     if (config.skipBearerAuth) {
       return config
@@ -192,21 +196,34 @@ class BCSCApiClient {
       config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
     }
 
-    this.logger.debug(`Sending request to ${String(config.url)} with method ${String(config.method)}`, config as any)
-
     return config
   }
 
   async getTokensForRefreshToken(refreshToken: string): Promise<TokenResponse> {
     return withAccount(async (account) => {
+      // Return the existing promise if already in progress
+      // Prevents the `invalid_access_token` error from IAS due to multiple simultaneous refresh requests
+      if (this.tokensPromise) {
+        return this.tokensPromise
+      }
+
       const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
 
-      const tokenResponse = await this.post<TokenResponse>(this.endpoints.token, tokenBody, {
+      const tokensPromise = this.post<TokenResponse>(this.endpoints.token, tokenBody, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         skipBearerAuth: true,
       })
+        // Extract data from response
+        .then((response) => response.data)
 
-      this.tokens = tokenResponse.data
+      this.tokensPromise = tokensPromise
+
+      try {
+        this.tokens = await tokensPromise
+      } finally {
+        // Clear the promise cache regardless of success or failure
+        this.tokensPromise = null
+      }
 
       return this.tokens
     })
