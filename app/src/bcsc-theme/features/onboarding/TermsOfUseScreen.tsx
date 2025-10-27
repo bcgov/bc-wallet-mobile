@@ -1,4 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { createThemedWebViewScript } from '@/bcsc-theme/utils/webview-utils'
 import { TERMS_OF_USE_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -9,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import WebView from 'react-native-webview'
 
 interface TermsOfUseScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingTermsOfUseScreen>
+  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingTermsOfUse>
 }
 
 /**
@@ -17,9 +18,9 @@ interface TermsOfUseScreenProps {
  *
  * @returns {*} {JSX.Element} The TermsOfUseScreen component.
  */
-export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
+export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Element => {
   const { t } = useTranslation()
-  const theme = useTheme()
+  const { Spacing, ColorPalette } = useTheme()
   const [showWebView, setShowWebView] = useState(false)
 
   const styles = StyleSheet.create({
@@ -31,11 +32,11 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
     },
     webViewContainerLoaded: {
       flex: 1,
-      margin: theme.Spacing.sm,
+      margin: Spacing.sm,
     },
     buttonContainer: {
-      paddingTop: theme.Spacing.md,
-      paddingHorizontal: theme.Spacing.md,
+      paddingTop: Spacing.md,
+      paddingHorizontal: Spacing.md,
     },
     activityIndicator: {
       flex: 1,
@@ -55,19 +56,12 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
         // Show loading indicator while the WebView is loading
         startInLoadingState={true}
         renderLoading={() => (
-          <SafeAreaView style={{ flex: 1, backgroundColor: theme.ColorPalette.brand.primaryBackground }}>
+          <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
             <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
           </SafeAreaView>
         )}
         onLoad={() => setShowWebView(true)}
-        // Remove header, footer, and navigation elements for a cleaner view
-        injectedJavaScriptBeforeContentLoaded={`
-          document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
-            document.body.style.backgroundColor = '${theme.ColorPalette.brand.primaryBackground}';
-            document.body.style.color = '${theme.ColorPalette.brand.secondary}';
-          });
-        `}
+        injectedJavaScriptBeforeContentLoaded={createThemedWebViewScript(ColorPalette)}
       />
 
       <View style={styles.buttonContainer}>
@@ -75,7 +69,7 @@ export const TermsOfUseScreen = (props: TermsOfUseScreenProps): JSX.Element => {
           title={t('Unified.Onboarding.AcceptAndContinueButton')}
           buttonType={ButtonType.Primary}
           onPress={() => {
-            props.navigation.navigate(BCSCScreens.OnboardingNotificationsScreen)
+            navigation.navigate(BCSCScreens.OnboardingNotifications)
           }}
           testID={testIdWithKey('AcceptAndContinue')}
           accessibilityLabel={t('Unified.Onboarding.AcceptAndContinueButton')}

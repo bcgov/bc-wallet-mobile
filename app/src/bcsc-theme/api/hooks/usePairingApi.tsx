@@ -41,11 +41,25 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
     [apiClient]
   )
 
+  /**
+   * Forgets all device pairings by making a DELETE request to the pairings endpoint.
+   *
+   * @returns {*} {Promise<void>} A promise that resolves when the pairings are successfully removed - resolves even if there were no pairings to delete.
+   */
+  const forgetAllPairings = useCallback(async () => {
+    return withAccount<void>(async (account) => {
+      const { clientID } = account
+      // this endpoint is not yet available through the .well-known/openid-configuration so it needs to be hardcoded
+      await apiClient.delete(`${apiClient.baseURL}/cardtap/v3/devices/${clientID}/pairings`)
+    })
+  }, [apiClient])
+
   return useMemo(
     () => ({
       loginByPairingCode,
+      forgetAllPairings,
     }),
-    [loginByPairingCode]
+    [loginByPairingCode, forgetAllPairings]
   )
 }
 
