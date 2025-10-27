@@ -3,25 +3,32 @@ import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
 import { BCDispatchAction } from '@/store'
 import { ReducerAction } from '@bifold/core'
+import { TFunction } from 'i18next'
 import { Dispatch } from 'react'
 
-// TODO (MD): Rename to SystemCheckStrategy?
-
-type SystemCheckStrategy = {
+export type SystemCheckStrategy = {
   /**
    * Runs the startup check.
+   *
    * @returns {Promise<boolean>} - A promise that resolves to true if the check passes, false otherwise.
    */
   runCheck: () => Promise<boolean>
   /**
    * Handles the failure of the startup check.
+   *
    * @returns {Promise<void> | void} - A promise that resolves when the failure handling is complete.
    */
   onFail: () => Promise<void> | void
+  /**
+   * Handles the success of the startup check.
+   *
+   * @returns {Promise<void> | void} - A promise that resolves when the success handling is complete.
+   */
+  onSuccess?: () => Promise<void> | void
 }
 
 /**
- * Runs a series of startup checks and handles failures accordingly.
+ * Runs a series of startup checks and handles failures and successes accordingly.
  *
  * @param {SystemCheckStrategy[]} checks - An array of startup checks to run.
  * @returns {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
@@ -42,7 +49,10 @@ export async function runSystemChecks(checks: SystemCheckStrategy[]) {
   results.forEach(async (result, index) => {
     if (!result) {
       await checks[index].onFail()
+      return
     }
+
+    await checks[index].onSuccess?.()
   })
 
   return results
@@ -51,8 +61,9 @@ export async function runSystemChecks(checks: SystemCheckStrategy[]) {
 /**
  * Checks if the number of registered devices exceeds the allowed limit.
  *
- * Note: Determines the limit based on the values in the ID token. On failure,
- * it dispatches a warning banner message.
+ * Note: Determines the limit based on the values in the ID token.
+ *   On failure, it dispatches a warning banner message.
+ *   On success, it removes the banner if it exists.
  *
  * @class DeviceCountStartupCheck
  * @implements {SystemCheckStrategy}
@@ -60,9 +71,9 @@ export async function runSystemChecks(checks: SystemCheckStrategy[]) {
 export class DeviceCountSystemCheck implements SystemCheckStrategy {
   constructor(
     private config: {
-      getIdToken: () => Promise<IdToken>
       dispatch: Dispatch<ReducerAction<any>>
-      bannerTitle: string
+      translation: TFunction
+      getIdToken: () => Promise<IdToken>
     }
   ) {}
 
@@ -72,7 +83,6 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
 
       return idToken.bcsc_devices_count < idToken.bcsc_max_devices
     } catch (error) {
-      // QUESTION (MD): Should we fail true or false if we can't get the ID token?
       return false
     }
   }
@@ -83,7 +93,7 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
-          title: this.config.bannerTitle,
+          title: this.config.translation('StartupChecks.DeviceLimitBannerTitle'),
           type: 'warning',
           variant: 'summary',
           dismissible: true,
@@ -91,12 +101,18 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
       ],
     })
   }
+
+  onSuccess() {
+    this.config.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED] })
+  }
 }
 
 /**
  * Checks the IAS server status.
  *
- * Note: On failure, it dispatches a warning banner message.
+ * Note: Determines server availability via the config API.
+ *   On failure, it dispatches a warning banner message.
+ *   On success, it removes the banner if it exists.
  *
  * @class ServerStatusStartupCheck
  * @implements {SystemCheckStrategy}
@@ -104,9 +120,9 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
 export class ServerStatusSystemCheck implements SystemCheckStrategy {
   constructor(
     private config: {
-      getServerStatus: () => Promise<ServerStatusResponseData>
       dispatch: Dispatch<ReducerAction<any>>
-      bannerTitle: string
+      translation: TFunction
+      getServerStatus: () => Promise<ServerStatusResponseData>
     }
   ) {}
 
@@ -125,12 +141,16 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-          title: this.config.bannerTitle,
+          title: this.config.translation('StartupChecks.ServerStatusBannerTitle'),
           type: 'warning',
           variant: 'summary',
           dismissible: true,
         },
       ],
     })
+  }
+
+  onSuccess() {
+    this.config.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
   }
 }

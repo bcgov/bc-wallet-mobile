@@ -9,6 +9,7 @@ import { StackScreenProps } from '@react-navigation/stack'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
+import { NotificationsBanner } from '@/bcsc-theme/components/NotificationsBanner'
 
 // to be replaced with API response or translation entries, whichever ends up being the case
 const mockFindTitle = 'Where to use'
@@ -58,8 +59,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
         <>
-          {/* <AppBanner messages={banners.bannerMessages} /> */}
-
+          <NotificationsBanner />
           <HomeHeader name={`${userInfo?.family_name}, ${userInfo?.given_name}`} />
           <View style={styles.buttonsContainer}>
             <SectionButton

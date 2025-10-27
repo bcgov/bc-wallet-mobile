@@ -7,6 +7,7 @@ import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { BCSCScreens } from '../types/navigators'
+import HeaderWithBanner from '../components/HeaderWithBanner'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -29,6 +30,7 @@ const OnboardingStack = (): JSX.Element => {
         headerShadowVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),
+        header: (props) => <HeaderWithBanner {...props} hideNotificationsBanner />,
       }}
     >
       <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />

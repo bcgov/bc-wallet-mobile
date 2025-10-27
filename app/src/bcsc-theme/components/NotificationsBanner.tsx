@@ -1,11 +1,22 @@
 import { useMemo } from 'react'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
-import { BCState } from '@/store'
 import { useStore } from '@bifold/core'
+import { BCState } from '@/store'
 
-export const NotificationBanner = () => {
+/**
+ * Component to display notification banners based on the BCSC state.
+ * Injects banner actions mapped to their IDs to handle user interactions.
+ *
+ * @returns {*} {JSX.Element} The NotificationsBanner component.
+ */
+export const NotificationsBanner = () => {
   const [store] = useStore<BCState>()
 
+  /**
+   * Why is this needed?
+   * The persistent storage is unable to store functions,
+   * so we need to map banner IDs to their corresponding actions here.
+   */
   const bannerActionsMap: Partial<Record<BCSCBanner, () => void>> = useMemo(
     () => ({
       [BCSCBanner.DEVICE_LIMIT_EXCEEDED]: () => {
@@ -26,6 +37,7 @@ export const NotificationBanner = () => {
           const onPressAction = bannerActionsMap[banner.id]
 
           if (!onPressAction) {
+            // QUESTION (MD): Should we default to some action here? Like permanently deleting the banner?
             return
           }
 
@@ -34,5 +46,6 @@ export const NotificationBanner = () => {
       }
     })
   }, [bannerActionsMap, store.bcsc.bannerMessages])
+
   return <AppBanner messages={bannerMessages} />
 }

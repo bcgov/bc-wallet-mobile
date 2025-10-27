@@ -192,9 +192,9 @@ class BCSCApiClient {
       return config
     }
 
-    this.tokens = await this.fetchAccessToken()
+    const tokens = await this.fetchAccessToken()
 
-    config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
+    config.headers.set('Authorization', `Bearer ${tokens.access_token}`)
 
     return config
   }
