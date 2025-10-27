@@ -1,6 +1,6 @@
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { useCallback, useMemo } from 'react'
-import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
+import { getDeviceCodeRequestBody, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { VerifyAttestationPayload } from './useDeviceAttestationApi'
 import { withAccount } from './withAccountGuard'
@@ -70,15 +70,10 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
    */
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {
+      config // TODO (MD): Deprecate config param
       if (!apiClient.tokens) {
         throw new Error('No tokens available')
       }
-
-      // TODO (MD): This is still causing an invalid_access_token error when called in quick succession
-      // if (config.refreshCache) {
-      //   // Fetch new tokens to ensure we have the latest ID token
-      //   await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
-      // }
 
       return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
     },

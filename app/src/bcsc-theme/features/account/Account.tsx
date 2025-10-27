@@ -44,7 +44,7 @@ const Account: React.FC = () => {
     refresh: refreshIdTokenMetadata,
   } = useDataLoader(
     // refresh the cache to get latest device count when returning from a webview
-    () => token.getCachedIdTokenMetadata({ refreshCache: true }),
+    () => token.getCachedIdTokenMetadata({ refreshCache: false }),
     {
       onError: (error) => logger.error('Error loading ID token metadata', error as Error),
     }
@@ -71,6 +71,7 @@ const Account: React.FC = () => {
       if (nextAppState === 'active' && openedWebview.current) {
         logger.info('Returning from webview, refreshing user and device metadata...')
         openedWebview.current = false
+        await client.getTokensForRefreshToken(String(client.tokens?.refresh_token))
         refreshUserMeta()
         refreshIdTokenMetadata()
       }
@@ -78,7 +79,7 @@ const Account: React.FC = () => {
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [logger, refreshIdTokenMetadata, refreshUserMeta])
+  }, [client, logger, refreshIdTokenMetadata, refreshUserMeta])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {

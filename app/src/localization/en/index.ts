@@ -277,6 +277,23 @@ const translation = {
       "Step4": "Step 4",
       "Step5": "Step 5",
     },
+    // TODO (MD): Add missing translations for system checks
+    "SystemChecks": {
+      "Devices": {
+        "DeviceLimitReachedBannerTitle": "Device limit reached",
+        "ManageDevicesButton": "Manage devices",
+        "CloseButton": "Close",
+        "ReviewDevicesTitle": "Review your devices",
+        "ReviewDevicesContentA1": "You can have this account on a maximum of",
+        "ReviewDevicesContentA2": "devices.",
+        "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices.",
+        "ReviewDevicesContentC": "Remove any devices from your account that are no longer in use.",
+        "ReviewDevicesContentD": "If you deleted the app from a device, without resetting it first, then it will still count as an active device."
+      },
+      "ServerStatus": {
+        "UnavailableBannerTitle": "Service Unavailable",
+      }
+    },
     "ForgetAllPairings": {
       "Title": "Forget all pairings?",
       "Description1": "When you use this app to log in on another computer, you are asked if you want to remember this device to skip the pairing step.",
@@ -562,7 +579,7 @@ const translation = {
         "TroubleshootingTips": "If you are having issues with audio or video, try out the following tips. If you're still having trouble, call us.",
         "SendVideoInstead": "Send video instead",
         "TryAgain": "Try again"
-      }
+      },
     },
     "EvidenceTypeList": {
       "Heading": "Choose photo ID",

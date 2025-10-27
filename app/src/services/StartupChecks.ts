@@ -93,10 +93,10 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
-          title: this.config.translation('StartupChecks.DeviceLimitBannerTitle'),
+          title: this.config.translation('Unified.SystemChecks.Devices.DeviceLimitReachedBannerTitle'),
           type: 'warning',
           variant: 'summary',
-          dismissible: true,
+          dismissible: false, // Non-dismissible banner (user must dismiss from screen)
         },
       ],
     })
@@ -141,8 +141,8 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-          title: this.config.translation('StartupChecks.ServerStatusBannerTitle'),
-          type: 'warning',
+          title: this.config.translation('Unified.SystemChecks.ServerStatus.UnavailableBannerTitle'),
+          type: 'error',
           variant: 'summary',
           dismissible: true,
         },

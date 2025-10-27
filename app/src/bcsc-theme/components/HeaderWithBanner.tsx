@@ -1,7 +1,7 @@
 import React from 'react'
 import { View } from 'react-native'
 import { StackHeaderProps, Header } from '@react-navigation/stack'
-import { NotificationsBanner } from './NotificationsBanner'
+import { NotificationsBannerContainer } from './NotificationsBannerContainer'
 
 interface HeaderWithBannerProps extends StackHeaderProps {
   hideNotificationsBanner?: boolean
@@ -17,7 +17,7 @@ const HeaderWithBanner = (props: HeaderWithBannerProps): JSX.Element => {
   return (
     <View>
       <Header {...props} />
-      {props.hideNotificationsBanner ? null : <NotificationsBanner />}
+      {props.hideNotificationsBanner ? null : <NotificationsBannerContainer />}
     </View>
   )
 }
