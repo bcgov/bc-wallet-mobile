@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BC Wallet Mobile - AI Documentation Index",
+  "description": "Master index for all AI-readable documentation",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-08",
+  "purpose": "Comprehensive machine-readable documentation system for AI agents to understand and work with the BC Wallet Mobile codebase",
+  "documentation": {
+    "overview": {
+      "project": "BC Wallet Mobile - React Native app for verifiable credentials and digital identity in British Columbia",
+      "domain": "Digital Identity, Self-Sovereign Identity, Verifiable Credentials, Government Services",
+      "technology": "React Native, TypeScript, Hyperledger Aries, Credo-TS, Bifold Wallet Framework",
+      "security": "HIGH - Handles sensitive government identity data and credentials"
+    },
+    "files": [
+      {
+        "name": "project-metadata.json",
+        "description": "Comprehensive project structure, technology stack, and architecture overview",
+        "content": [
+          "Project information and repository structure",
+          "Technology stack and frameworks",
+          "Architecture patterns and design principles", 
+          "Development environment and tooling",
+          "Build and deployment processes",
+          "Features and capabilities",
+          "External integrations and APIs"
+        ],
+        "useCase": "Understanding overall project structure and technical landscape"
+      },
+      {
+        "name": "api-documentation.json", 
+        "description": "Complete API documentation for all modules, services, and interfaces",
+        "content": [
+          "BCSC Core API (react-native-bcsc-core package)",
+          "Agent modules and Aries protocol implementation",
+          "Internal services and utilities",
+          "State management interfaces",
+          "Navigation and routing structure",
+          "Theme and component systems",
+          "Protocol implementations (Aries, OpenID4VC)"
+        ],
+        "useCase": "Understanding available APIs, functions, and data structures for development"
+      },
+      {
+        "name": "development-workflows.md",
+        "description": "Comprehensive development workflows, processes, and guidelines",
+        "content": [
+          "Project structure and file organization",
+          "Development environment setup instructions",
+          "Code quality workflows and tools",
+          "Git workflows and commit conventions",
+          "Testing strategies and frameworks",
+          "Build and deployment processes",
+          "Troubleshooting guides",
+          "Contributing guidelines and code review process"
+        ],
+        "useCase": "Setting up development environment and following proper development practices"
+      },
+      {
+        "name": "security-analysis.json",
+        "description": "Security practices, threat analysis, and dependency management",
+        "content": [
+          "Security threat model and risk assessment",
+          "Security practices and compliance frameworks",
+          "Critical dependency analysis with security risks",
+          "Vulnerability management processes",
+          "Data flow security analysis",
+          "Encryption and key management",
+          "Platform-specific security features",
+          "Incident response procedures"
+        ],
+        "useCase": "Understanding security requirements and implementing secure code practices"
+      },
+      {
+        "name": "configuration-guide.json",
+        "description": "Complete configuration documentation for all environments and tools",
+        "content": [
+          "Environment variable configuration",
+          "Build tool configurations (TypeScript, Babel, Metro)",
+          "Code quality tool configurations (ESLint, Prettier, Jest)",
+          "Native platform configurations (Android, iOS)",
+          "Dependency and workspace management",
+          "Security and monitoring configurations",
+          "Environment-specific settings and best practices"
+        ],
+        "useCase": "Configuring development environment and understanding build processes"
+      }
+    ]
+  },
+  "ai_usage_patterns": {
+    "code_development": {
+      "description": "When developing new features or fixing bugs",
+      "primary_docs": ["api-documentation.json", "development-workflows.md"],
+      "workflow": [
+        "Review API documentation for available functions and interfaces",
+        "Follow development workflows for setup and coding standards",
+        "Check security analysis for security requirements",
+        "Validate configuration needs for new features"
+      ]
+    },
+    "environment_setup": {
+      "description": "When setting up development environment or CI/CD",
+      "primary_docs": ["configuration-guide.json", "development-workflows.md"],
+      "workflow": [
+        "Follow environment setup in development workflows",
+        "Configure tools using configuration guide",
+        "Validate security requirements from security analysis",
+        "Reference project metadata for technology requirements"
+      ]
+    },
+    "security_implementation": {
+      "description": "When implementing security features or reviewing security",
+      "primary_docs": ["security-analysis.json", "api-documentation.json"],
+      "workflow": [
+        "Review threat model and security requirements",
+        "Check critical dependencies and their risks",
+        "Implement security-focused APIs and patterns",
+        "Follow security best practices and compliance requirements"
+      ]
+    },
+    "architecture_understanding": {
+      "description": "When understanding overall system architecture and design",
+      "primary_docs": ["project-metadata.json", "api-documentation.json"],
+      "workflow": [
+        "Review project structure and technology stack",
+        "Understand architecture patterns and design principles",
+        "Explore API structure and module organization",
+        "Analyze integration points and data flows"
+      ]
+    }
+  },
+  "key_concepts": {
+    "digital_identity": {
+      "description": "Self-sovereign identity using Hyperledger Aries protocols",
+      "components": ["Verifiable credentials", "Decentralized identifiers", "Zero-knowledge proofs"],
+      "standards": ["W3C Verifiable Credentials", "W3C DIDs", "Aries RFCs", "OpenID4VC"]
+    },
+    "mobile_architecture": {
+      "description": "React Native cross-platform mobile application",
+      "components": ["React Native framework", "Native modules", "Bifold wallet framework"],
+      "patterns": ["Dependency injection", "Event-driven architecture", "Modular theming"]
+    },
+    "government_integration": {
+      "description": "Integration with BC government services and identity verification",
+      "components": ["BC Services Card", "Identity Assurance Service", "Government credentials"],
+      "compliance": ["PIPEDA", "BC FOIPPA", "Privacy by design"]
+    },
+    "security_model": {
+      "description": "High-security mobile wallet for sensitive identity data",
+      "components": ["Hardware-backed storage", "Biometric authentication", "Encrypted communications"],
+      "practices": ["Zero-trust architecture", "Minimal data disclosure", "Secure by default"]
+    }
+  },
+  "common_tasks": {
+    "add_new_screen": {
+      "files_to_check": ["api-documentation.json", "development-workflows.md"],
+      "process": [
+        "Create screen component in appropriate theme directory",
+        "Add navigation configuration",
+        "Implement state management if needed",
+        "Add tests and follow coding standards",
+        "Update routing and navigation"
+      ]
+    },
+    "integrate_new_api": {
+      "files_to_check": ["api-documentation.json", "security-analysis.json", "configuration-guide.json"],
+      "process": [
+        "Define API interface and types",
+        "Implement security measures (authentication, encryption)",
+        "Add configuration for API endpoints",
+        "Create service layer and error handling",
+        "Add comprehensive tests"
+      ]
+    },
+    "update_dependencies": {
+      "files_to_check": ["security-analysis.json", "configuration-guide.json"],
+      "process": [
+        "Review security implications of updates",
+        "Check compatibility with current configuration",
+        "Update lockfiles and test thoroughly",
+        "Review and update security analysis",
+        "Update documentation if needed"
+      ]
+    },
+    "add_new_credential_type": {
+      "files_to_check": ["api-documentation.json", "project-metadata.json"],
+      "process": [
+        "Define credential schema and OCA bundle",
+        "Implement credential processing logic",
+        "Add UI components for credential display",
+        "Update proof presentation logic",
+        "Test credential lifecycle end-to-end"
+      ]
+    }
+  },
+  "update_process": {
+    "frequency": "Documentation should be updated with each significant change",
+    "triggers": [
+      "New features or major changes",
+      "Dependency updates",
+      "Security updates",
+      "Configuration changes",
+      "API changes"
+    ],
+    "validation": [
+      "Ensure all JSON files are valid",
+      "Check that examples are current",
+      "Verify links and references",
+      "Test instructions and workflows",
+      "Review for completeness and accuracy"
+    ]
+  },
+  "maintenance": {
+    "responsibilities": {
+      "developers": "Update documentation when making changes",
+      "security_team": "Review and update security analysis",
+      "devops_team": "Maintain configuration and deployment documentation",
+      "product_team": "Ensure documentation reflects current requirements"
+    },
+    "review_schedule": {
+      "monthly": "Review and update all documentation",
+      "quarterly": "Comprehensive documentation audit",
+      "release": "Validate documentation before each release"
+    }
+  },
+  "feedback": {
+    "improvement_suggestions": [
+      "Add more specific examples for common development tasks",
+      "Include troubleshooting guides for common issues",
+      "Add performance optimization guidelines",
+      "Include accessibility guidelines",
+      "Add integration testing documentation"
+    ],
+    "contact": "Submit issues and suggestions to the GitHub repository"
+  }
+}
