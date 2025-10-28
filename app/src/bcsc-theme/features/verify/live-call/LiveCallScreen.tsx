@@ -311,7 +311,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
             <ThemedText>{t('Unified.VideoCall.ServiceBC')}</ThemedText>
             {callTimer ? <ThemedText>{callTimer}</ThemedText> : null}
           </View>
-          {banner ? <BannerSection id={BCSCBanner.LIVE_CALL_STATUS} type={banner.type} title={banner.title} /> : null}
+          {banner ? (
+            <BannerSection
+              id={BCSCBanner.LIVE_CALL_STATUS}
+              type={banner.type}
+              title={banner.title}
+              dismissible={false}
+            />
+          ) : null}
         </View>
         <View style={styles.lowerContainer}>
           {localStream && !videoHidden && (
