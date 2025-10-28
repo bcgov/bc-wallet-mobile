@@ -1,4 +1,5 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
+import { AxiosInstance } from 'axios'
 
 describe('BCSC Client', () => {
   it('should suppress logging for status codes if suppressStatusCodeLogs prop is set', async () => {
@@ -95,6 +96,55 @@ describe('BCSC Client', () => {
       expect(privateFetchTokens).toHaveBeenCalledWith('refreshToken1')
       expect(client.tokens).toBe(mockTokens)
       expect(client.tokensPromise).toBeNull()
+    })
+  })
+
+  describe('tokens race condition smoke test', () => {
+    it('should never have stale tokens when multiple requests are made simultaneously', async () => {
+      const mockLogger = { info: jest.fn(), error: jest.fn() }
+      const baseURL = 'https://example.com'
+      const client = new BCSCApiClient(baseURL, mockLogger as any)
+
+      jest.spyOn(client.client, 'get').mockResolvedValue({ data: 'response' })
+
+      const mockInitialTokens = {
+        access_token: 'accessToken',
+        refresh_token: 'refreshToken',
+      }
+
+      const mockRefreshedTokens = {
+        access_token: 'newAccessToken',
+        refresh_token: 'newRefreshToken',
+      }
+
+      jest
+        .spyOn(BCSCApiClient.prototype as any, 'fetchTokens')
+        .mockResolvedValueOnce(mockInitialTokens)
+        .mockResolvedValueOnce(mockRefreshedTokens)
+
+      // Initialize tokens
+      await client.getTokensForRefreshToken('initialRefreshToken')
+      await client.get('/endpointA')
+      expect(client.tokens).toBe(mockInitialTokens)
+      expect(client.tokensPromise).toBeNull()
+
+      // Trigger refresh
+      const tokenRefresh = client.getTokensForRefreshToken('newRefreshToken')
+      expect(client.tokens).toBe(mockInitialTokens)
+      expect(client.tokensPromise).toBeInstanceOf(Promise)
+
+      // Parallel request during refresh
+      const clientReqB = client.get('/endpointB')
+
+      // Wait for refresh completion
+      await tokenRefresh
+      expect(client.tokens).toBe(mockRefreshedTokens)
+      expect(client.tokensPromise).toBeNull()
+
+      // Request after refresh
+      const clientReqC = client.get('/endpointC')
+
+      await Promise.all([clientReqB, clientReqC])
     })
   })
 })
