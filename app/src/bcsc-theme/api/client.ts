@@ -151,10 +151,10 @@ class BCSCApiClient {
     }
   }
 
-  async ensureValidTokens(): Promise<TokenResponse> {
+  private async ensureValidTokens(): Promise<TokenResponse> {
     return withAccount(async () => {
       if (this.tokensPromise) {
-        // Return the existing promise if currently refreshing
+        // return the existing promise if currently refreshing
         return this.tokensPromise
       }
 
@@ -164,7 +164,7 @@ class BCSCApiClient {
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
-        // note: refresh tokens should not expire
+        // refresh tokens should not expire
         throw new Error('Refresh token expired')
       }
 
