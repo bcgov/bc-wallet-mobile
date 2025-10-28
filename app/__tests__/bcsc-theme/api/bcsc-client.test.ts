@@ -1,5 +1,4 @@
 import BCSCApiClient from '@/bcsc-theme/api/client'
-import { AxiosResponse } from 'axios'
 
 describe('BCSC Client', () => {
   it('should suppress logging for status codes if suppressStatusCodeLogs prop is set', async () => {
