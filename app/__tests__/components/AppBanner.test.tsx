@@ -1,13 +1,18 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react-native'
-import { AppBanner, AppBannerSection, AppBannerSectionProps } from '../../src/bcsc-theme/components/AppBanner'
+import {
+  AppBanner,
+  AppBannerSection,
+  AppBannerSectionProps,
+  BCSCBanner,
+} from '../../src/bcsc-theme/components/AppBanner'
 import { testIdWithKey } from '@bifold/core'
 
 describe('AppBanner', () => {
   it('renders correctly with multiple messages', () => {
     const messages: AppBannerSectionProps[] = [
-      { title: 'Error Message', type: 'error', dismissible: true },
-      { title: 'Warning Message', type: 'warning', dismissible: false },
+      { id: 'A' as BCSCBanner, title: 'Error Message', type: 'error', dismissible: true },
+      { id: 'B' as BCSCBanner, title: 'Warning Message', type: 'warning', dismissible: false },
     ]
 
     const { getByText } = render(<AppBanner messages={messages} />)
@@ -18,8 +23,8 @@ describe('AppBanner', () => {
 
   it('dismisses a banner when dismissible and tapped', () => {
     const messages: AppBannerSectionProps[] = [
-      { title: 'Dismissible Message', type: 'info', dismissible: true },
-      { title: 'Non dismissible Message', type: 'warning', dismissible: false },
+      { id: 'A' as BCSCBanner, title: 'Dismissible Message', type: 'info', dismissible: true },
+      { id: 'B' as BCSCBanner, title: 'Non dismissible Message', type: 'warning', dismissible: false },
     ]
 
     const { getByText, queryByText } = render(<AppBanner messages={messages} />)
@@ -34,7 +39,7 @@ describe('AppBanner', () => {
 
   it('does not dismiss a non-dismissible banner when tapped', () => {
     const messages: AppBannerSectionProps[] = [
-      { title: 'Non dismissible Message', type: 'warning', dismissible: false },
+      { id: 'A' as BCSCBanner, title: 'Non dismissible Message', type: 'warning', dismissible: false },
     ]
 
     const { getByText } = render(<AppBanner messages={messages} />)
@@ -48,34 +53,46 @@ describe('AppBanner', () => {
 describe('AppBannerSection', () => {
   it('renders correctly with the correct icon and color for type', () => {
     const { getByText, getByTestId } = render(
-      <AppBannerSection title="Success Message" type="success" dismissible={true} />
+      <AppBannerSection id={'A' as BCSCBanner} title="Success Message" type="success" dismissible={true} />
     )
 
     expect(getByText('Success Message')).toBeTruthy()
     expect(getByTestId(testIdWithKey('icon-success'))).toBeTruthy()
   })
 
-  it('calls onDismiss when tapped and dismissible', () => {
-    const onDismissMock = jest.fn()
+  it('calls onPress when tapped and dismissible', () => {
+    const onPressMock = jest.fn()
 
     const { getByText } = render(
-      <AppBannerSection title="Dismissible Message" type="info" dismissible={true} onDismiss={onDismissMock} />
+      <AppBannerSection
+        id={'A' as BCSCBanner}
+        title="Dismissible Message"
+        type="info"
+        dismissible={true}
+        onPress={onPressMock}
+      />
     )
 
     fireEvent.press(getByText('Dismissible Message'))
 
-    expect(onDismissMock).toHaveBeenCalled()
+    expect(onPressMock).toHaveBeenCalled()
   })
 
-  it('does not call onDismiss when not dismissible', () => {
-    const onDismissMock = jest.fn()
+  it('calls onPress when not dismissible', () => {
+    const onPressMock = jest.fn()
 
     const { getByText } = render(
-      <AppBannerSection title="Non-dismissible Message" type="warning" dismissible={false} onDismiss={onDismissMock} />
+      <AppBannerSection
+        id={'A' as BCSCBanner}
+        title="Non-dismissible Message"
+        type="warning"
+        dismissible={false}
+        onPress={onPressMock}
+      />
     )
 
     fireEvent.press(getByText('Non-dismissible Message'))
 
-    expect(onDismissMock).not.toHaveBeenCalled()
+    expect(onPressMock).toHaveBeenCalled()
   })
 })

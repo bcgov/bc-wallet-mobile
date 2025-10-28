@@ -4,7 +4,7 @@ import {
   runSystemChecks,
   ServerStatusSystemCheck,
   SystemCheckStrategy,
-} from '@/services/system-checks/system-checks'
+} from '@/services/system-checks'
 import { BCDispatchAction } from '@/store'
 
 describe('System Checks', () => {
