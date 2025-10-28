@@ -160,11 +160,13 @@ class BCSCApiClient {
 
       if (!this.tokens) {
         // initialize tokens using `getTokensForRefreshToken`
+        this.logger.error('BCSCClient: Missing tokens - call getTokensForRefreshToken to initialize tokens')
         throw new Error('Client missing tokens')
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
         // refresh tokens should not expire
+        this.logger.error('BCSCClient: Refresh token expired - fatal error detected')
         throw new Error('Refresh token expired')
       }
 
@@ -198,7 +200,6 @@ class BCSCApiClient {
     }
 
     const tokens = await this.ensureValidTokens()
-
     config.headers.set('Authorization', `Bearer ${tokens.access_token}`)
 
     return config
