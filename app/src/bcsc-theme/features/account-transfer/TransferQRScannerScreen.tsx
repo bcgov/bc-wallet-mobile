@@ -95,6 +95,11 @@ const TransferQRScannerScreen: React.FC = () => {
 
   const handleScan = useCallback(
     async (value: string) => {
+      // exit early if processing a scan already
+      if (isLoading) {
+        return
+      }
+
       setIsLoading(true)
       setScanError(null)
       const account = await getAccount()
@@ -160,7 +165,7 @@ const TransferQRScannerScreen: React.FC = () => {
         setIsLoading(false)
       }
     },
-    [store.bcsc.deviceCode, deviceAttestation, client, dispatch, navigator, t, token]
+    [store.bcsc.deviceCode, deviceAttestation, client, dispatch, navigator, t, token, isLoading]
   )
 
   if (isLoading) {
