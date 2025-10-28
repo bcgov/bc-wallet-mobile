@@ -20,6 +20,10 @@ export enum SystemCheckScope {
 /**
  * Hook to run system checks based on the provided scope.
  *
+ * Scopes:
+ *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: server status, internet connectivity
+ *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
+ *
  * @param {SystemCheckScope} scope - The scope of the system checks to run.
  * @returns {void}
  */

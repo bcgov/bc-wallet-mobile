@@ -9,7 +9,7 @@ import { StackScreenProps } from '@react-navigation/stack'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { NotificationBannerContainer } from './components/NotificationBannerContainer'
+import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 
 // to be replaced with API response or translation entries, whichever ends up being the case
 const mockFindTitle = 'Where to use'
