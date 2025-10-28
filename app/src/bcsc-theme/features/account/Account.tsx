@@ -44,7 +44,7 @@ const Account: React.FC = () => {
     refresh: refreshIdTokenMetadata,
   } = useDataLoader(
     // refresh the cache to get latest device count when returning from a webview
-    () => token.getCachedIdTokenMetadata({ refreshCache: false }),
+    () => token.getCachedIdTokenMetadata({ refreshCache: true }),
     {
       onError: (error) => logger.error('Error loading ID token metadata', error as Error),
     }

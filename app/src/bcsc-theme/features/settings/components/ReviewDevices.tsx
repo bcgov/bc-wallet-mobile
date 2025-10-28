@@ -64,8 +64,8 @@ export const ReviewDevices = ({ bannerId, handleClose }: ReviewDevicesProps) => 
     <SafeAreaView style={styles.container}>
       <IconButton
         buttonLocation={ButtonLocation.Left}
-        accessibilityLabel={''}
-        testID={''}
+        accessibilityLabel={t('Unified.SystemChecks.Devices.CloseButton')}
+        testID={testIdWithKey('CloseReviewDevices')}
         onPress={() => handleClose({ shouldAnimate: true })}
         icon={'close'}
       />

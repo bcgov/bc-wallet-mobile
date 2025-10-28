@@ -1,6 +1,6 @@
 import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { useCallback, useMemo } from 'react'
-import { getDeviceCodeRequestBody, getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
 import { VerifyAttestationPayload } from './useDeviceAttestationApi'
 import { withAccount } from './withAccountGuard'
@@ -73,6 +73,10 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
       config // TODO (MD): Deprecate config param
       if (!apiClient.tokens) {
         throw new Error('No tokens available')
+      }
+
+      if (config.refreshCache) {
+        await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
       }
 
       return getIdTokenMetadata(apiClient.tokens.id_token, apiClient.logger)
