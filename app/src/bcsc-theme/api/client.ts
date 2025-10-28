@@ -169,7 +169,7 @@ class BCSCApiClient {
       }
 
       if (!this.isTokenExpired(this.tokens.access_token)) {
-        // access token is still valid don't refresh
+        // access token is still valid, don't refresh
         return this.tokens
       }
 
