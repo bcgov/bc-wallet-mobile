@@ -46,6 +46,7 @@ class BCSCApiClient {
   endpoints: BCSCEndpoints
   config: BCSCConfig
   baseURL: string
+  // TODO (MD): Persist tokens securely using PersistentStorage ie: loadTokens(), saveTokens()
   tokens?: TokenResponse // this token will be used to interact and access data from IAS servers
   tokensPromise: Promise<TokenResponse> | null // to prevent multiple simultaneous token fetches
 
@@ -151,26 +152,16 @@ class BCSCApiClient {
     }
   }
 
-  async ensureValidTokens(): Promise<TokenResponse> {
+  async fetchAccessToken(): Promise<TokenResponse> {
     return withAccount(async () => {
-      if (this.tokensPromise) {
-        // Return the existing promise if currently refreshing
-        return this.tokensPromise
-      }
-
       if (!this.tokens) {
         // initialize tokens using `getTokensForRefreshToken`
-        throw new Error('Client missing tokens')
+        throw new Error('Client tokens not initialized')
       }
 
       if (this.isTokenExpired(this.tokens.refresh_token)) {
         // note: refresh tokens should not expire
         throw new Error('Refresh token expired')
-      }
-
-      if (!this.isTokenExpired(this.tokens.access_token)) {
-        // access token is still valid don't refresh
-        return this.tokens
       }
 
       // access token is expired, fetch new tokens using refresh token
@@ -197,41 +188,44 @@ class BCSCApiClient {
       return config
     }
 
-    const tokens = await this.ensureValidTokens()
+    if (!this.tokens || !this.isTokenExpired(this.tokens.access_token)) {
+      this.tokens = await this.fetchAccessToken()
+    }
 
-    config.headers.set('Authorization', `Bearer ${tokens.access_token}`)
+    if (this.tokens) {
+      config.headers.set('Authorization', `Bearer ${this.tokens.access_token}`)
+    }
 
     return config
   }
 
-  private fetchTokens(refreshToken: string): Promise<TokenResponse> {
-    return withAccount(async (account) => {
-      const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
-
-      const tokensResponse = await this.post<TokenResponse>(this.endpoints.token, tokenBody, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        skipBearerAuth: true,
-      })
-
-      return tokensResponse.data
-    })
-  }
-
   async getTokensForRefreshToken(refreshToken: string): Promise<TokenResponse> {
-    if (this.tokensPromise) {
-      // Return the existing promise if currently refreshing
-      return this.tokensPromise
-    }
+    return withAccount(async (account) => {
+      // Return the existing promise if already in progress
+      // Prevents the `invalid_access_token` error from IAS due to multiple simultaneous refresh requests
+      if (this.tokensPromise) {
+        return this.tokensPromise
+      }
 
-    try {
-      this.tokensPromise = this.fetchTokens(refreshToken)
-      this.tokens = await this.tokensPromise
-    } finally {
-      // Clear the promise cache regardless of success or failure
-      this.tokensPromise = null
-    }
+      try {
+        const tokenBody = await getRefreshTokenRequestBody(account.issuer, account.clientID, refreshToken)
 
-    return this.tokens
+        const tokensPromise = this.post<TokenResponse>(this.endpoints.token, tokenBody, {
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          skipBearerAuth: true,
+        })
+          // Extract data from response
+          .then((response) => response.data)
+
+        this.tokensPromise = tokensPromise
+        this.tokens = await tokensPromise
+      } finally {
+        // Clear the promise cache regardless of success or failure
+        this.tokensPromise = null
+      }
+
+      return this.tokens
+    })
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {

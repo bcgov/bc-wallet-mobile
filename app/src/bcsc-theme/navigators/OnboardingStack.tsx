@@ -30,7 +30,7 @@ const OnboardingStack = (): JSX.Element => {
         headerShadowVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),
-        header: (props) => <HeaderWithBanner {...props} hideNotificationsBanner />,
+        header: (props) => <HeaderWithBanner {...props} hideNotificationBanner />,
       }}
     >
       <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />

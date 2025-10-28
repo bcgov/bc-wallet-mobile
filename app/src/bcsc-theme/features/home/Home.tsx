@@ -1,15 +1,15 @@
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useTheme, useServices, TOKENS } from '@bifold/core'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import HomeHeader from './components/HomeHeader'
 import SavedServices from './components/SavedServices'
 import SectionButton from '../../components/SectionButton'
 import { StackScreenProps } from '@react-navigation/stack'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
+import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { NotificationsBannerContainer } from '@/bcsc-theme/components/NotificationsBannerContainer'
+import { NotificationBannerContainer } from './components/NotificationBannerContainer'
 
 // to be replaced with API response or translation entries, whichever ends up being the case
 const mockFindTitle = 'Where to use'
@@ -23,21 +23,25 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { Spacing } = useTheme()
   const { user } = useApi()
+  const [loading, setLoading] = useState(true)
+  const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const {
-    load: loadUserInfo,
-    data: userInfo,
-    isLoading,
-  } = useDataLoader(user.getUserInfo, {
-    onError(error) {
-      logger.error(`Error while fetching user info: ${error}`)
-    },
-  })
-
   useEffect(() => {
-    loadUserInfo()
-  }, [loadUserInfo])
+    const asyncEffect = async () => {
+      try {
+        setLoading(true)
+        const userInfo = await user.getUserInfo()
+        setUserInfo(userInfo)
+      } catch (error) {
+        logger.error(`Error while fetching user info`)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    asyncEffect()
+  }, [user, logger])
 
   const styles = StyleSheet.create({
     buttonsContainer: {
@@ -55,12 +59,12 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
 
   return (
     <TabScreenWrapper>
-      {isLoading ? (
+      {loading ? (
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
         <>
-          <NotificationsBannerContainer />
-          <HomeHeader name={`${userInfo?.family_name}, ${userInfo?.given_name}`} />
+          <NotificationBannerContainer />
+          <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
           <View style={styles.buttonsContainer}>
             <SectionButton
               title={mockFindTitle}

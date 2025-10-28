@@ -1,16 +1,16 @@
 import { useCallback, useRef, useState } from 'react'
 import { BCSCBanner } from './AppBanner'
 import { View } from 'react-native'
-import { NotificationsBanner } from './NotificationsBanner'
+import { NotificationBanner } from './NotificationBanner'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { SafeAreaModal } from '@bifold/core'
 
 /**
  * Container component for displaying notification banners and handling their interactions.
  *
- * @returns {*} {JSX.Element} The NotificationsBannerContainer component.
+ * @returns {*} {JSX.Element} The NotificationBannerContainer component.
  */
-export const NotificationsBannerContainer = () => {
+export const NotificationBannerContainer = () => {
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
 
@@ -41,7 +41,7 @@ export const NotificationsBannerContainer = () => {
         />
       </SafeAreaModal>
 
-      <NotificationsBanner onPressBanner={handleBannerPress} />
+      <NotificationBanner onPressBanner={handleBannerPress} />
     </View>
   )
 }

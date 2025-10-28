@@ -71,7 +71,6 @@ const Account: React.FC = () => {
       if (nextAppState === 'active' && openedWebview.current) {
         logger.info('Returning from webview, refreshing user and device metadata...')
         openedWebview.current = false
-        await client.getTokensForRefreshToken(String(client.tokens?.refresh_token))
         refreshUserMeta()
         refreshIdTokenMetadata()
       }
@@ -79,7 +78,7 @@ const Account: React.FC = () => {
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [client, logger, refreshIdTokenMetadata, refreshUserMeta])
+  }, [logger, refreshIdTokenMetadata, refreshUserMeta])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {

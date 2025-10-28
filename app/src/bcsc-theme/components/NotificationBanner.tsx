@@ -3,17 +3,17 @@ import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
 import { useStore } from '@bifold/core'
 import { BCState } from '@/store'
 
-interface NotificationsBannerProps {
+interface NotificationBannerProps {
   onPressBanner?: (bannerId: BCSCBanner) => void
 }
 
 /**
  * Component to display notification banners based on the BCSC state.
  *
- * @param {NotificationsBannerProps} props - The component props.
- * @returns {*} {JSX.Element} The NotificationsBanner component.
+ * @param {NotificationBannerProps} props - The component props.
+ * @returns {*} {JSX.Element} The NotificationBanner component.
  */
-export const NotificationsBanner = ({ onPressBanner }: NotificationsBannerProps) => {
+export const NotificationBanner = ({ onPressBanner }: NotificationBannerProps) => {
   const [store] = useStore<BCState>()
 
   const bannerMessages: BCSCBannerMessage[] = useMemo(() => {

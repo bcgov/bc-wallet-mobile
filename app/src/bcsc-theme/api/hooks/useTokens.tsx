@@ -5,7 +5,7 @@ import BCSCApiClient from '../client'
 import { VerifyAttestationPayload } from './useDeviceAttestationApi'
 import { withAccount } from './withAccountGuard'
 
-export interface IdTokenMetadataConfig {
+interface IdTokenMetadataConfig {
   refreshCache: boolean
 }
 
@@ -70,12 +70,12 @@ const useTokenApi = (apiClient: BCSCApiClient) => {
    */
   const getCachedIdTokenMetadata = useCallback(
     async (config: IdTokenMetadataConfig) => {
-      config // TODO (MD): Deprecate config param
       if (!apiClient.tokens) {
         throw new Error('No tokens available')
       }
 
       if (config.refreshCache) {
+        // Fetch new tokens to ensure we have the latest ID token
         await apiClient.getTokensForRefreshToken(apiClient.tokens.refresh_token)
       }
 
