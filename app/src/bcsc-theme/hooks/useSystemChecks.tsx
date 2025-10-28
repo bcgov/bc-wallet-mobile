@@ -61,7 +61,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
           new DeviceCountSystemCheck({
             dispatch,
             translation: t,
-            getIdToken: () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false }),
+            getIdToken: () => tokenApi.getCachedIdTokenMetadata({ refreshCache: true }),
           }),
         ]
       }
