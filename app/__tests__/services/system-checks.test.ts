@@ -1,5 +1,10 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { DeviceCountSystemCheck, runSystemChecks, SystemCheckStrategy } from '@/services/system-checks'
+import {
+  DeviceCountSystemCheck,
+  runSystemChecks,
+  ServerStatusSystemCheck,
+  SystemCheckStrategy,
+} from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
 
 describe('System Checks', () => {
@@ -177,6 +182,80 @@ describe('System Checks', () => {
         expect(mockDispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
           payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED],
+        })
+      })
+    })
+  })
+
+  describe('ServerStatusSystemCheck', () => {
+    describe('runCheck', () => {
+      it('should return true when server status ok', async () => {
+        const deviceCountCheck = new ServerStatusSystemCheck({
+          dispatch: jest.fn(),
+          translation: jest.fn(),
+          getServerStatus: jest.fn().mockResolvedValue({ status: 'ok' }),
+        })
+
+        const result = await deviceCountCheck.runCheck()
+
+        expect(result).toBe(true)
+      })
+
+      it('should return false when server status not ok', async () => {
+        const deviceCountCheck = new ServerStatusSystemCheck({
+          dispatch: jest.fn(),
+          translation: jest.fn(),
+          getServerStatus: jest.fn().mockResolvedValue({ status: 'down' }),
+        })
+
+        const result = await deviceCountCheck.runCheck()
+
+        expect(result).toBe(false)
+      })
+    })
+
+    describe('onFail', () => {
+      it('should dispatch an error banner message', async () => {
+        const mockDispatch = jest.fn()
+
+        const serverStatusCheck = new ServerStatusSystemCheck({
+          dispatch: mockDispatch,
+          translation: jest.fn().mockReturnValue('Server unavailable'),
+          getServerStatus: jest.fn(),
+        })
+
+        serverStatusCheck.onFail()
+
+        expect(mockDispatch).toHaveBeenCalledWith({
+          type: BCDispatchAction.ADD_BANNER_MESSAGE,
+          payload: [
+            expect.objectContaining({
+              id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
+              title: 'Server unavailable',
+              type: 'error',
+              variant: 'summary',
+              dismissible: true,
+            }),
+          ],
+        })
+      })
+    })
+
+    describe('onSuccess', () => {
+      it('should dispatch action to remove the banner message', async () => {
+        const mockDispatch = jest.fn()
+
+        const serverStatusCheck = new ServerStatusSystemCheck({
+          dispatch: mockDispatch,
+          translation: jest.fn(),
+          getServerStatus: jest.fn(),
+        })
+
+        serverStatusCheck.onSuccess()
+
+        expect(mockDispatch).toHaveBeenCalledWith({
+          type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
+          payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE],
         })
       })
     })

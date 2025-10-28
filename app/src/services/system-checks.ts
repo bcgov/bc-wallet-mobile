@@ -31,7 +31,7 @@ export type SystemCheckStrategy = {
  * Runs a series of startup checks and handles failures and successes accordingly.
  *
  * @param {SystemCheckStrategy[]} checks - An array of startup checks to run.
- * @returns {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
+ * @returns {*} {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
  */
 export async function runSystemChecks(checks: SystemCheckStrategy[]) {
   const startupPromises: Promise<boolean>[] = []
@@ -77,6 +77,11 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
     }
   ) {}
 
+  /**
+   * Runs the device count check to verify if the number of registered devices is within the allowed limit.
+   *
+   * @returns {Promise<boolean>} - A promise that resolves to true if the device count is within the limit, false otherwise.
+   */
   async runCheck() {
     try {
       const idToken = await this.config.getIdToken()
@@ -87,6 +92,11 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
     }
   }
 
+  /**
+   * Handles the failure of the device count check by dispatching a warning banner message.
+   *
+   * @returns {*} {void}
+   */
   onFail() {
     this.config.dispatch({
       type: BCDispatchAction.ADD_BANNER_MESSAGE,
@@ -102,6 +112,11 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
     })
   }
 
+  /**
+   * Handles the success of the device count check by removing the warning banner message if it exists.
+   *
+   * @returns {*} {void}
+   */
   onSuccess() {
     this.config.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED] })
   }
@@ -126,6 +141,11 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
     }
   ) {}
 
+  /**
+   * Runs the server status check to verify if the IAS server is available.
+   *
+   * @returns {*} {Promise<boolean>} - A promise that resolves to true if the server is available, false otherwise.
+   */
   async runCheck() {
     try {
       const serverStatus = await this.config.getServerStatus()
@@ -135,6 +155,11 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
     }
   }
 
+  /**
+   * Handles the failure of the server status check by dispatching an error banner message.
+   *
+   * @returns {*} {void}
+   */
   onFail() {
     this.config.dispatch({
       type: BCDispatchAction.ADD_BANNER_MESSAGE,
@@ -150,6 +175,11 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
     })
   }
 
+  /**
+   * Handles the success of the server status check by removing the error banner message if it exists.
+   *
+   * @returns {*} {void}
+   */
   onSuccess() {
     this.config.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
   }
