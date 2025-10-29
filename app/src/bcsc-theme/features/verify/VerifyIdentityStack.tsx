@@ -49,6 +49,7 @@ import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
+import HeaderWithBanner from '@/bcsc-theme/components/HeaderWithBanner'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -57,7 +58,14 @@ const VerifyIdentityStack = () => {
   const defaultStackOptions = useDefaultStackOptions(theme)
 
   return (
-    <Stack.Navigator screenOptions={{ ...defaultStackOptions, headerShown: true, title: '' }}>
+    <Stack.Navigator
+      screenOptions={{
+        ...defaultStackOptions,
+        headerShown: true,
+        title: '',
+        header: HeaderWithBanner,
+      }}
+    >
       <Stack.Screen
         name={BCSCScreens.SetupTypes}
         component={AccountSetupSelectionScreen}

@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { AppBannerSection as BannerSection } from '@/bcsc-theme/components/AppBanner'
+import { AppBannerSection as BannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import useVideoCallFlow from '@/bcsc-theme/features/verify/live-call/hooks/useVideoCallFlow'
 import { VideoCallFlowState } from '@/bcsc-theme/features/verify/live-call/types/live-call'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
@@ -311,7 +311,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
             <ThemedText>{t('Unified.VideoCall.ServiceBC')}</ThemedText>
             {callTimer ? <ThemedText>{callTimer}</ThemedText> : null}
           </View>
-          {banner ? <BannerSection type={banner.type} title={banner.title} dismissible={false} /> : null}
+          {banner ? (
+            <BannerSection
+              id={BCSCBanner.LIVE_CALL_STATUS}
+              type={banner.type}
+              title={banner.title}
+              dismissible={false}
+            />
+          ) : null}
         </View>
         <View style={styles.lowerContainer}>
           {localStream && !videoHidden && (

@@ -18,6 +18,7 @@ import {
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
+import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 
 export interface IASEnvironment {
   name: string
@@ -94,6 +95,7 @@ export interface BCSCState {
   additionalEvidenceData: AdditionalEvidenceData[]
   registrationAccessToken?: string
   completedOnboarding: boolean
+  bannerMessages: BCSCBannerMessage[]
 }
 
 export interface AdditionalEvidenceData {
@@ -161,6 +163,8 @@ enum BCSCDispatchAction {
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateRegistrationAccessToken',
   UPDATE_COMPLETED_ONBOARDING = 'bcsc/updateOnboardingCompleted',
+  ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
+  REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
 }
 
 enum ModeDispatchAction {
@@ -245,6 +249,7 @@ const bcscState: BCSCState = {
   verificationOptions: [],
   additionalEvidenceData: [],
   completedOnboarding: false,
+  bannerMessages: [],
 }
 
 export enum BCLocalStorageKeys {
@@ -603,6 +608,33 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
+    case BCSCDispatchAction.ADD_BANNER_MESSAGE: {
+      const bannerMessage: BCSCBannerMessage = (action?.payload || []).pop()
+
+      // Remove any existing banner with the same id before adding the new one
+      // This allows us to update existing banners and prevents duplicates
+      const bannerMessages = state.bcsc.bannerMessages.filter((banner) => banner.id !== bannerMessage.id)
+      bannerMessages.push(bannerMessage)
+
+      const bcsc = { ...state.bcsc, bannerMessages }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.REMOVE_BANNER_MESSAGE: {
+      const bannerId = (action?.payload || []).pop()
+
+      // Filter out the banner with the specified id
+      const bannerMessages = state.bcsc.bannerMessages.filter((banner) => banner.id !== bannerId)
+
+      const bcsc = { ...state.bcsc, bannerMessages }
+      const newState = { ...state, bcsc }
+
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
     default:
       return state
   }
