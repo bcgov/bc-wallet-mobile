@@ -1,0 +1,8 @@
+flows:
+  - auth/*
+executionOrder:
+  flowsOrder:
+    - Onboarding
+    - AddAccount
+    - SetupStepsComboCard
+    # - SetupStepAccountNickname

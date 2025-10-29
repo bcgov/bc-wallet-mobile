@@ -132,6 +132,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
             date={date}
             onDateChange={onDateChange}
             onStateChange={setPickerState}
+            testID={testIdWithKey('BirthdateInput')}
           />
         </View>
       </ScrollView>

@@ -1,0 +1,10 @@
+appId: ca.bc.gov.BCWallet
+---
+- tapOn: "Add account"
+- tapOn: "Someone else's ID"
+- tapOn: "No"
+- assertVisible: "You will not be able to finish.*"
+- tapOn: "Yes"
+- assertNotVisible: "You will not be able to finish.*"
+- tapOn: "My own ID"
+- tapOn: "Continue"

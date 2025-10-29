@@ -1,0 +1,39 @@
+appId: ca.bc.gov.BCWallet
+---
+# Onboarding Flow
+- clearState
+- launchApp:
+    permissions:
+      notifications: allow
+
+# Intro Carousel
+- swipe:
+    direction: left
+- swipe:
+    direction: right
+- assertVisible: "Access services online"
+- tapOn: "Next"
+- assertVisible: "Prove who you are online"
+- tapOn: "Back"
+- tapOn: "Next"
+- tapOn: "Next"
+- assertVisible: "Cannot use as a health card.*"
+- tapOn: "Next"
+
+# Privacy Policy
+- tapOn: "Continue"
+
+# Terms of Use
+- assertVisible: "BC Login Service Terms of Use"
+- tapOn: "Accept and continue"
+
+# Notifications
+- tapOn: "Continue"
+
+# Secure app
+- tapOn: "Use Face ID"
+
+# Final Screen
+- assertVisible: "BC Services Card"
+- assertVisible: "Add account"
+- assertVisible: "Transfer from another device"

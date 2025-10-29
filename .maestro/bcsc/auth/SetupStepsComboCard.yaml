@@ -1,0 +1,14 @@
+appId: ca.bc.gov.BCWallet
+---
+- runFlow: ../common/SetupStepAccountNickname.yaml
+
+- tapOn: "Step 2" 
+- tapOn: ".*combined.*"
+- tapOn: "Enter Serial Number Manually"
+- tapOn:
+    id: "SerialInput"
+- eraseText
+- inputText: "C68011351"
+- hideKeyboard
+- tapOn: "Serial number" # iOS keyboard dismiss
+- tapOn: "Continue"

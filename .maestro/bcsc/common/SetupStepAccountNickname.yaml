@@ -1,0 +1,7 @@
+appId: ca.bc.gov.BCWallet
+---
+- tapOn: "Step 1" 
+- tapOn:
+    id: "NameInput"
+- inputText: "Integration Test Account"
+- tapOn: "Save and continue"
