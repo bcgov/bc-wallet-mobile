@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface ReviewDevicesProps {
   bannerId: BCSCBanner
+  maxDevices: number
   handleClose: ({ shouldAnimate }: { shouldAnimate: boolean }) => void
 }
 
@@ -30,7 +31,7 @@ interface ReviewDevicesProps {
  * @param {ReviewDevicesProps} props - The properties for the ReviewDevices component.
  * @returns {*} {JSX.Element} The ReviewDevices component.
  */
-export const ReviewDevices = ({ bannerId, handleClose }: ReviewDevicesProps) => {
+export const ReviewDevices = ({ bannerId, maxDevices, handleClose }: ReviewDevicesProps) => {
   const [, dispatch] = useStore()
   const client = useBCSCApiClient()
   const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams>>()
@@ -72,9 +73,7 @@ export const ReviewDevices = ({ bannerId, handleClose }: ReviewDevicesProps) => 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <ThemedText variant={'headingThree'}>{t('Unified.SystemChecks.Devices.ReviewDevicesTitle')}</ThemedText>
 
-        {/* TODO (MD): Pull the device limit from the idToken (ie: not hardcoded 3 devices) */}
-
-        <ThemedText>{`${t('Unified.SystemChecks.Devices.ReviewDevicesContentA1')} 3 ${t(
+        <ThemedText>{`${t('Unified.SystemChecks.Devices.ReviewDevicesContentA1')} ${maxDevices} ${t(
           'Unified.SystemChecks.Devices.ReviewDevicesContentA2'
         )}`}</ThemedText>
 

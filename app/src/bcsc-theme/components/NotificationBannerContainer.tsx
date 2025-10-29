@@ -37,6 +37,7 @@ export const NotificationBannerContainer = () => {
       >
         <ReviewDevices
           bannerId={BCSCBanner.DEVICE_LIMIT_EXCEEDED}
+          maxDevices={3}
           handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
         />
       </SafeAreaModal>
