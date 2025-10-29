@@ -265,6 +265,37 @@ describe('System Checks', () => {
           ],
         })
       })
+
+      it('should use server status message if available', async () => {
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn().mockReturnValue('Server unavailable'),
+          logger: {} as any,
+        }
+
+        const getServerStatus = jest.fn()
+
+        const serverStatusCheck: any = new ServerStatusSystemCheck(getServerStatus, mockUtils)
+
+        serverStatusCheck.serverStatus = {}
+        serverStatusCheck.serverStatus.statusMessage = 'Custom server down message'
+
+        serverStatusCheck.onFail()
+
+        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
+          type: BCDispatchAction.ADD_BANNER_MESSAGE,
+          payload: [
+            expect.objectContaining({
+              id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
+              title: 'Custom server down message',
+              type: 'error',
+              variant: 'summary',
+              dismissible: true,
+            }),
+          ],
+        })
+      })
     })
 
     describe('onSuccess', () => {
@@ -281,10 +312,41 @@ describe('System Checks', () => {
 
         serverStatusCheck.onSuccess()
 
-        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockUtils.dispatch).toHaveBeenCalledTimes(2)
         expect(mockUtils.dispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
           payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE],
+        })
+      })
+
+      it('should dispatch info banner if server status message exists', async () => {
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn(),
+          logger: {} as any,
+        }
+
+        const getServerStatus = jest.fn()
+
+        const serverStatusCheck: any = new ServerStatusSystemCheck(getServerStatus, mockUtils)
+
+        serverStatusCheck.serverStatus = {}
+        serverStatusCheck.serverStatus.statusMessage = 'Server maintenance scheduled'
+
+        serverStatusCheck.onSuccess()
+
+        expect(mockUtils.dispatch).toHaveBeenCalledTimes(3)
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
+          type: BCDispatchAction.ADD_BANNER_MESSAGE,
+          payload: [
+            expect.objectContaining({
+              id: BCSCBanner.IAS_SERVER_NOTIFICATION,
+              title: 'Server maintenance scheduled',
+              type: 'info',
+              variant: 'summary',
+              dismissible: true,
+            }),
+          ],
         })
       })
     })

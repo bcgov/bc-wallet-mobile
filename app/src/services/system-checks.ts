@@ -146,7 +146,8 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
 }
 
 /**
- * Checks the IAS server status.
+ * Checks the IAS server status and dispatches banner messages based on availability.
+ * Will show error banner if server is unavailable, or info banner if there is a status message.
  *
  * Note: Determines server availability via the config API.
  *   On failure, it dispatches a warning banner message.
@@ -158,6 +159,7 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
 export class ServerStatusSystemCheck implements SystemCheckStrategy {
   private readonly getServerStatus: () => Promise<ServerStatusResponseData>
   private readonly utils: SystemCheckUtils
+  private serverStatus?: ServerStatusResponseData
 
   constructor(getServerStatus: () => Promise<ServerStatusResponseData>, utils: SystemCheckUtils) {
     this.getServerStatus = getServerStatus
@@ -172,6 +174,10 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
   async runCheck() {
     try {
       const serverStatus = await this.getServerStatus()
+
+      // Store the server status for use in onFail/onSuccess
+      this.serverStatus = serverStatus
+
       return serverStatus.status === 'ok'
     } catch (error) {
       this.utils.logger.error('ServerStatusSystemCheck: Server status request failed', error as Error)
@@ -190,7 +196,9 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
-          title: this.utils.translation('Unified.SystemChecks.ServerStatus.UnavailableBannerTitle'),
+          title:
+            this.serverStatus?.statusMessage ??
+            this.utils.translation('Unified.SystemChecks.ServerStatus.UnavailableBannerTitle'),
           type: 'error',
           variant: 'summary',
           dismissible: true,
@@ -205,6 +213,25 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
    * @returns {*} {void}
    */
   onSuccess() {
+    this.utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_NOTIFICATION] })
     this.utils.dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE] })
+
+    if (!this.serverStatus?.statusMessage) {
+      return
+    }
+
+    // If the server has a status message, show it as an info banner
+    this.utils.dispatch({
+      type: BCDispatchAction.ADD_BANNER_MESSAGE,
+      payload: [
+        {
+          id: BCSCBanner.IAS_SERVER_NOTIFICATION,
+          title: this.serverStatus.statusMessage,
+          type: 'info',
+          variant: 'summary',
+          dismissible: true,
+        },
+      ],
+    })
   }
 }

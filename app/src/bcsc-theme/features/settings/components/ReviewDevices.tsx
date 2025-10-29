@@ -57,9 +57,9 @@ export const ReviewDevices = ({ bannerId, maxDevices, handleClose }: ReviewDevic
     handleClose({ shouldAnimate: false })
     navigation.navigate(BCSCScreens.WebView, {
       url: `${client.baseURL}/account/embedded/devices`,
-      title: 'Manage Devices',
+      title: t('Unified.Screens.ManageDevices'),
     })
-  }, [client.baseURL, handleClose, navigation])
+  }, [client.baseURL, handleClose, navigation, t])
 
   return (
     <SafeAreaView style={styles.container}>
