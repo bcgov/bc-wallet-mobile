@@ -1,9 +1,4 @@
-import {
-  DeviceCountSystemCheck,
-  runSystemChecks,
-  ServerStatusSystemCheck,
-  SystemCheckStrategy,
-} from '@/services/system-checks/system-checks'
+import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -11,10 +6,13 @@ import { useBCSCApiClientState } from './useBCSCApiClient'
 import useConfigApi from '../api/hooks/useConfigApi'
 import BCSCApiClient from '../api/client'
 import useTokenApi from '../api/hooks/useTokens'
+import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
+import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 
 export enum SystemCheckScope {
   STARTUP = 'startup',
   MAIN_STACK = 'mainStack',
+  LISTENER = 'listener',
 }
 
 /**
@@ -23,11 +21,12 @@ export enum SystemCheckScope {
  * Scopes:
  *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: server status, internet connectivity
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
+ *   - LISTENER: Checks that need to subscribe to events and or state changes
  *
- * @param {SystemCheckScope} scope - The scope of the system checks to run.
+ * @param {SystemCheckScope[]} scopes - The scopes determining which checks to run.
  * @returns {void}
  */
-export const useSystemChecks = (scope: SystemCheckScope) => {
+export const useSystemChecks = (scopes: SystemCheckScope[]) => {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
   const { client, isClientReady } = useBCSCApiClientState()
@@ -36,6 +35,28 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const [loading, setLoading] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const startupCheckRef = useRef<boolean>(false)
+
+  // console.log({
+  //   isConnected: netInfo.isConnected,
+  //   isInternetReachable: netInfo.isInternetReachable,
+  // })
+
+  /**
+   * Checks to run as listeners for real-time updates (eg: internet connectivity)
+   */
+  // useEffect(() => {
+  //   if (!scopes.includes(SystemCheckScope.LISTENER)) {
+  //     return
+  //   }
+  //
+  //   const asyncEffect = async () => {
+  //     const systemChecks = [new InternetStatusSystemCheck(Boolean(false))]
+  //
+  //     await runSystemChecks(systemChecks)
+  //   }
+  //
+  //   asyncEffect()
+  // }, [scopes])
 
   /**
    * Checks to run on app startup to ensure system is operational.
@@ -49,19 +70,19 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       setLoading(true)
       startupCheckRef.current = true
 
-      let systemChecks: SystemCheckStrategy[] = []
+      const systemChecks: SystemCheckStrategy[] = []
 
       const utils = { dispatch, translation: t, logger }
 
       // Checks to run on app startup (root stack)
-      if (scope === SystemCheckScope.STARTUP) {
-        systemChecks = [new ServerStatusSystemCheck(configApi.getServerStatus, utils)]
+      if (scopes.includes(SystemCheckScope.STARTUP)) {
+        systemChecks.push(new InternetStatusSystemCheck(Boolean(false)))
       }
 
       // Checks to run on main stack (verified users)
-      if (scope === SystemCheckScope.MAIN_STACK) {
+      if (scopes.includes(SystemCheckScope.MAIN_STACK)) {
         const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: true })
-        systemChecks = [new DeviceCountSystemCheck(getIdToken, utils)]
+        systemChecks.push(new DeviceCountSystemCheck(getIdToken, utils))
       }
 
       try {
@@ -74,7 +95,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     asyncEffect()
-  }, [client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi])
+  }, [client, configApi, dispatch, isClientReady, logger, scopes, t, tokenApi])
 
   return { loading }
 }

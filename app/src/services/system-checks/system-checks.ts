@@ -1,7 +1,3 @@
-import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { IdToken } from '@/bcsc-theme/utils/id-token'
-import { BCDispatchAction } from '@/store'
 import { BifoldLogger, ReducerAction } from '@bifold/core'
 import { TFunction } from 'i18next'
 import { Dispatch } from 'react'

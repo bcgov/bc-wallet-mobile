@@ -3,15 +3,19 @@ import { SystemCheckStrategy } from './system-checks'
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
   private isOnline: boolean
 
-  constructor() {}
+  constructor(isOnline: boolean) {
+    this.isOnline = isOnline
+  }
 
-  async runCheck() {}
+  async runCheck() {
+    return this.isOnline
+  }
 
   onFail() {
-    // No-op
+    console.log('InternetStatusSystemCheck: No internet connection detected')
   }
 
   onSuccess() {
-    // No-op
+    console.log('InternetStatusSystemCheck: Internet connection is available')
   }
 }

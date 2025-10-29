@@ -32,7 +32,7 @@ const MainStack: React.FC = () => {
   const Stack = createStackNavigator<BCSCRootStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
-  useSystemChecks(SystemCheckScope.MAIN_STACK)
+  useSystemChecks([SystemCheckScope.MAIN_STACK])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
