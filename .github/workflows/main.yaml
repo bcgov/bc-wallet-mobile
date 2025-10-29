@@ -426,12 +426,12 @@ jobs:
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
-          ./gradlew bundleRelease assembleRelease --no-parallel && \
-          find . -type f -name '*.apk'
+          ./gradlew bundleRelease assembleRelease --no-parallel
 
       - name: List Artifacts
         run: |
           find . -type f -name '*.apk'
+          find . -type f -name '*.aab'
 
       # - name: Upload artifact
       #   if: github.ref_name == 'main'
@@ -458,7 +458,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-apk
-          path: app/android/app/build/outputs/bundle/release/app-release.apk
+          path: app/android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
 
