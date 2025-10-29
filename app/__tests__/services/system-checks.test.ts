@@ -1,10 +1,7 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import {
-  DeviceCountSystemCheck,
-  runSystemChecks,
-  ServerStatusSystemCheck,
-  SystemCheckStrategy,
-} from '@/services/system-checks'
+import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
+import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
+import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
 
 describe('System Checks', () => {

@@ -3,7 +3,7 @@ import {
   runSystemChecks,
   ServerStatusSystemCheck,
   SystemCheckStrategy,
-} from '@/services/system-checks'
+} from '@/services/system-checks/system-checks'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
