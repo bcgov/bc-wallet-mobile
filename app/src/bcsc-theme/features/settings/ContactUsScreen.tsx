@@ -43,16 +43,28 @@ export const ContactUsScreen = (): JSX.Element => {
           {t('Unified.ContactUs.HoursOfServiceTitle')}
         </ThemedText>
         <ThemedText>{t('Unified.ContactUs.HoursOfServiceDescription1')}</ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.ContactUs.HoursOfServiceDescription2')}</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>
+          {t('Unified.ContactUs.HoursOfServiceDescription2')}
+        </ThemedText>
         <ThemedText>{t('Unified.ContactUs.TollFreeLabel')}</ThemedText>
-        <Link style={{ marginBottom: Spacing.md }} linkText={t('Unified.ContactUs.TollFreeNumber')} onPress={onPressTollFree} />
+        <Link
+          style={{ marginBottom: Spacing.md }}
+          linkText={t('Unified.ContactUs.TollFreeNumber')}
+          onPress={onPressTollFree}
+        />
         <ThemedText>{t('Unified.ContactUs.LowerMainlandLabel')}</ThemedText>
-        <Link style={{ marginBottom: Spacing.xl }} linkText={t('Unified.ContactUs.LowerMainlandNumber')} onPress={onPressLowerMainland} />
+        <Link
+          style={{ marginBottom: Spacing.xl }}
+          linkText={t('Unified.ContactUs.LowerMainlandNumber')}
+          onPress={onPressLowerMainland}
+        />
         <ThemedText variant={'bold'} style={{ marginBottom: Spacing.md }}>
           {t('Unified.ContactUs.OtherContactsTitle')}
         </ThemedText>
         <ThemedText style={{ marginBottom: Spacing.md }}>
-          {t('Unified.ContactUs.VisitThe')} <Link linkText={t('Unified.ContactUs.GovernmentWebsiteText')} onPress={onPressGovernmentWebsite} /> {t('Unified.ContactUs.ToFindWhoToContact')}
+          {t('Unified.ContactUs.VisitThe')}{' '}
+          <Link linkText={t('Unified.ContactUs.GovernmentWebsiteText')} onPress={onPressGovernmentWebsite} />{' '}
+          {t('Unified.ContactUs.ToFindWhoToContact')}
         </ThemedText>
         <BulletPoint pointsText={t('Unified.ContactUs.BulletPoint1')} />
         <BulletPoint pointsText={t('Unified.ContactUs.BulletPoint2')} />
