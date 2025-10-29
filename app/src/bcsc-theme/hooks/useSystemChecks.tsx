@@ -4,8 +4,8 @@ import {
   ServerStatusSystemCheck,
   SystemCheckStrategy,
 } from '@/services/system-checks'
-import { useStore } from '@bifold/core'
-import { useEffect, useRef } from 'react'
+import { TOKENS, useServices, useStore } from '@bifold/core'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 import useConfigApi from '../api/hooks/useConfigApi'
@@ -33,6 +33,8 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
   const tokenApi = useTokenApi(client as BCSCApiClient)
+  const [loading, setLoading] = useState(false)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const startupCheckRef = useRef<boolean>(false)
 
   /**
@@ -44,36 +46,35 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         return
       }
 
+      setLoading(true)
       startupCheckRef.current = true
 
       let systemChecks: SystemCheckStrategy[] = []
 
+      const utils = { dispatch, translation: t, logger }
+
       // Checks to run on app startup (root stack)
       if (scope === SystemCheckScope.STARTUP) {
-        systemChecks = [
-          new ServerStatusSystemCheck({
-            dispatch,
-            translation: t,
-            getServerStatus: configApi.getServerStatus,
-          }),
-        ]
+        systemChecks = [new ServerStatusSystemCheck(configApi.getServerStatus, utils)]
       }
 
       // Checks to run on main stack (verified users)
       if (scope === SystemCheckScope.MAIN_STACK) {
-        systemChecks = [
-          new DeviceCountSystemCheck({
-            dispatch,
-            translation: t,
-            getIdToken: () => tokenApi.getCachedIdTokenMetadata({ refreshCache: true }),
-          }),
-        ]
+        const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: true })
+        systemChecks = [new DeviceCountSystemCheck(getIdToken, utils)]
       }
 
-      await runSystemChecks(systemChecks)
+      try {
+        await runSystemChecks(systemChecks)
+      } catch (error) {
+        logger.error(`System checks failed: ${(error as Error).message}`)
+      } finally {
+        setLoading(false)
+      }
     }
 
     asyncEffect()
-  }, [client, configApi, dispatch, isClientReady, scope, t, tokenApi])
-  // TODO (MD): Return something if needed?
+  }, [client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi])
+
+  return { loading }
 }

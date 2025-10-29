@@ -95,64 +95,78 @@ describe('System Checks', () => {
   describe('DeviceCountSystemCheck', () => {
     describe('runCheck', () => {
       it('should return true when device count is within limit', async () => {
-        const deviceCountCheck = new DeviceCountSystemCheck({
+        const mockUtils = {
           dispatch: jest.fn(),
           translation: jest.fn(),
-          getIdToken: jest.fn().mockResolvedValue({
-            bcsc_devices_count: 2,
-            bcsc_max_devices: 5,
-          }),
+          logger: {} as any,
+        }
+        const getIdToken = jest.fn().mockResolvedValue({
+          bcsc_devices_count: 3,
+          bcsc_max_devices: 5,
         })
+
+        const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils)
 
         const result = await deviceCountCheck.runCheck()
 
+        expect(getIdToken).toHaveBeenCalledTimes(1)
         expect(result).toBe(true)
       })
 
       it('should return false when device count exceeds limit', async () => {
-        const deviceCountCheck = new DeviceCountSystemCheck({
+        const mockUtils = {
           dispatch: jest.fn(),
           translation: jest.fn(),
-          getIdToken: jest.fn().mockResolvedValue({
-            bcsc_devices_count: 6,
-            bcsc_max_devices: 5,
-          }),
+          logger: {} as any,
+        }
+        const getIdToken = jest.fn().mockResolvedValue({
+          bcsc_devices_count: 6,
+          bcsc_max_devices: 5,
         })
+
+        const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils)
 
         const result = await deviceCountCheck.runCheck()
 
+        expect(getIdToken).toHaveBeenCalledTimes(1)
         expect(result).toBe(false)
       })
 
       it('should return false when device count is equal to limit', async () => {
-        const deviceCountCheck = new DeviceCountSystemCheck({
+        const mockUtils = {
           dispatch: jest.fn(),
           translation: jest.fn(),
-          getIdToken: jest.fn().mockResolvedValue({
-            bcsc_devices_count: 5,
-            bcsc_max_devices: 5,
-          }),
+          logger: {} as any,
+        }
+        const getIdToken = jest.fn().mockResolvedValue({
+          bcsc_devices_count: 5,
+          bcsc_max_devices: 5,
         })
+
+        const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils)
 
         const result = await deviceCountCheck.runCheck()
 
+        expect(getIdToken).toHaveBeenCalledTimes(1)
         expect(result).toBe(false)
       })
     })
 
     describe('onFail', () => {
       it('should dispatch a warning banner message', async () => {
-        const mockDispatch = jest.fn()
-
-        const deviceCountCheck = new DeviceCountSystemCheck({
-          dispatch: mockDispatch,
+        const mockUtils = {
+          dispatch: jest.fn(),
           translation: jest.fn().mockReturnValue('Device limit reached'),
-          getIdToken: jest.fn(),
-        })
+          logger: {} as any,
+        }
+        const getIdToken = jest.fn()
+
+        const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils)
 
         deviceCountCheck.onFail()
 
-        expect(mockDispatch).toHaveBeenCalledWith({
+        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.ADD_BANNER_MESSAGE,
           payload: [
             expect.objectContaining({
@@ -169,17 +183,19 @@ describe('System Checks', () => {
 
     describe('onSuccess', () => {
       it('should dispatch action to remove the banner message', async () => {
-        const mockDispatch = jest.fn()
-
-        const deviceCountCheck = new DeviceCountSystemCheck({
-          dispatch: mockDispatch,
+        const mockUtils = {
+          dispatch: jest.fn(),
           translation: jest.fn(),
-          getIdToken: jest.fn(),
-        })
+          logger: {} as any,
+        }
+        const getIdToken = jest.fn()
+
+        const deviceCountCheck = new DeviceCountSystemCheck(getIdToken, mockUtils)
 
         deviceCountCheck.onSuccess()
 
-        expect(mockDispatch).toHaveBeenCalledWith({
+        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
           payload: [BCSCBanner.DEVICE_LIMIT_EXCEEDED],
         })
@@ -190,43 +206,53 @@ describe('System Checks', () => {
   describe('ServerStatusSystemCheck', () => {
     describe('runCheck', () => {
       it('should return true when server status ok', async () => {
-        const deviceCountCheck = new ServerStatusSystemCheck({
+        const mockUtils = {
           dispatch: jest.fn(),
           translation: jest.fn(),
-          getServerStatus: jest.fn().mockResolvedValue({ status: 'ok' }),
-        })
+          logger: {} as any,
+        }
+        const getServerStatus = jest.fn().mockResolvedValue({ status: 'ok' })
+
+        const deviceCountCheck = new ServerStatusSystemCheck(getServerStatus, mockUtils)
 
         const result = await deviceCountCheck.runCheck()
 
+        expect(getServerStatus).toHaveBeenCalledTimes(1)
         expect(result).toBe(true)
       })
 
       it('should return false when server status not ok', async () => {
-        const deviceCountCheck = new ServerStatusSystemCheck({
+        const mockUtils = {
           dispatch: jest.fn(),
           translation: jest.fn(),
-          getServerStatus: jest.fn().mockResolvedValue({ status: 'down' }),
-        })
+          logger: {} as any,
+        }
+        const getServerStatus = jest.fn().mockResolvedValue({ status: 'down' })
+
+        const deviceCountCheck = new ServerStatusSystemCheck(getServerStatus, mockUtils)
 
         const result = await deviceCountCheck.runCheck()
 
+        expect(getServerStatus).toHaveBeenCalledTimes(1)
         expect(result).toBe(false)
       })
     })
 
     describe('onFail', () => {
       it('should dispatch an error banner message', async () => {
-        const mockDispatch = jest.fn()
-
-        const serverStatusCheck = new ServerStatusSystemCheck({
-          dispatch: mockDispatch,
+        const mockUtils = {
+          dispatch: jest.fn(),
           translation: jest.fn().mockReturnValue('Server unavailable'),
-          getServerStatus: jest.fn(),
-        })
+          logger: {} as any,
+        }
+        const getServerStatus = jest.fn()
+
+        const serverStatusCheck = new ServerStatusSystemCheck(getServerStatus, mockUtils)
 
         serverStatusCheck.onFail()
 
-        expect(mockDispatch).toHaveBeenCalledWith({
+        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.ADD_BANNER_MESSAGE,
           payload: [
             expect.objectContaining({
@@ -243,17 +269,20 @@ describe('System Checks', () => {
 
     describe('onSuccess', () => {
       it('should dispatch action to remove the banner message', async () => {
-        const mockDispatch = jest.fn()
-
-        const serverStatusCheck = new ServerStatusSystemCheck({
-          dispatch: mockDispatch,
+        const mockUtils = {
+          dispatch: jest.fn(),
           translation: jest.fn(),
-          getServerStatus: jest.fn(),
-        })
+          logger: {} as any,
+        }
+
+        const getServerStatus = jest.fn()
+
+        const serverStatusCheck = new ServerStatusSystemCheck(getServerStatus, mockUtils)
 
         serverStatusCheck.onSuccess()
 
-        expect(mockDispatch).toHaveBeenCalledWith({
+        expect(mockUtils.dispatch).toHaveBeenCalledTimes(1)
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
           type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
           payload: [BCSCBanner.IAS_SERVER_UNAVAILABLE],
         })
