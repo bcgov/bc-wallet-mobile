@@ -63,7 +63,7 @@ const VerifyIdentityStack = () => {
         ...defaultStackOptions,
         headerShown: true,
         title: '',
-        header: (props) => <HeaderWithBanner {...props} />,
+        header: HeaderWithBanner,
       }}
     >
       <Stack.Screen
