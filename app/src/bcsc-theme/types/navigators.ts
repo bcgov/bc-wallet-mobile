@@ -161,4 +161,9 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.NicknameAccount]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.Settings]: undefined
+  [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.ForgetAllPairings]: undefined
+  [BCSCScreens.HelpCentre]: undefined
+  [BCSCScreens.PrivacyPolicy]?: { interactive?: boolean }
+  [BCSCScreens.ContactUs]: undefined
 }
