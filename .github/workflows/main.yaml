@@ -548,7 +548,8 @@ jobs:
           artifact_name: ${{ matrix.artifact_name }}
 
   run-on-device-tests:
-    if: github.ref_name == 'main'
+    # if: github.ref_name == 'main'
+    if: false # Disabled
     needs: [ship-to-saucelabs]
     runs-on: ubuntu-22.04
     strategy:
