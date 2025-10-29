@@ -91,8 +91,8 @@ export async function runSystemChecks(checks: SystemCheckStrategy[]) {
  * @implements {SystemCheckStrategy}
  */
 export class DeviceCountSystemCheck implements SystemCheckStrategy {
-  private getIdToken: () => Promise<IdToken>
-  private utils: SystemCheckUtils
+  private readonly getIdToken: () => Promise<IdToken>
+  private readonly utils: SystemCheckUtils
 
   constructor(getIdToken: () => Promise<IdToken>, utils: SystemCheckUtils) {
     this.getIdToken = getIdToken
@@ -156,8 +156,8 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
  * @implements {SystemCheckStrategy}
  */
 export class ServerStatusSystemCheck implements SystemCheckStrategy {
-  private getServerStatus: () => Promise<ServerStatusResponseData>
-  private utils: SystemCheckUtils
+  private readonly getServerStatus: () => Promise<ServerStatusResponseData>
+  private readonly utils: SystemCheckUtils
 
   constructor(getServerStatus: () => Promise<ServerStatusResponseData>, utils: SystemCheckUtils) {
     this.getServerStatus = getServerStatus
