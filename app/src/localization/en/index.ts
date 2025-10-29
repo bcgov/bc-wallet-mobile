@@ -268,6 +268,7 @@ const translation = {
       "ContactUs": "Contact Us",
       "HelpCentre": "Help Centre",
       "PrivacyInformation": "Privacy Information",
+      "ManageDevices": "Manage Devices",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
@@ -277,7 +278,6 @@ const translation = {
       "Step4": "Step 4",
       "Step5": "Step 5",
     },
-    // TODO (MD): Add missing translations for system checks
     "SystemChecks": {
       "Devices": {
         "DeviceLimitReachedBannerTitle": "Device limit reached",
