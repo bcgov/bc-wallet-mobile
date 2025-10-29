@@ -288,7 +288,7 @@ jobs:
         uses: ./.github/workflows/actions/export-ios-archive
         with:
           export_options: ${{ matrix.export_options }}
-          ouput_artifact_ref: ${{ matrix.artifact_name }}
+          output_artifact_ref: ${{ matrix.artifact_name }}
 
       - name: Ship to iTunes
         if: github.ref_name == 'main'
@@ -433,33 +433,42 @@ jobs:
         run: |
           find . -type f -name '*.apk'
 
-      - name: Upload artifact
+      # - name: Upload artifact
+      #   if: github.ref_name == 'main'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: android-${{ matrix.build_type }}
+      #     path: |
+      #       app/android/app/build/outputs/bundle/release/app-release.aab
+      #       app/android/app/build/outputs/apk/release/app-release.apk
+      #     if-no-files-found: error
+      #     retention-days: 7
+
+      - name: Upload Android AAB artifact
         if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
-          name: android-${{ matrix.build_type }}
-          path: |
-            app/android/app/build/outputs/bundle/release/app-release.aab
-            app/android/app/build/outputs/apk/release/app-release.apk
+          name: ${{ matrix.artifact_name }}-aab
+          path: app/android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
           retention-days: 7
 
-      - name: Upload Android artifact
+      - name: Upload Android APK artifact
         if: github.ref_name == 'main'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: app/android/app/build/outputs/bundle/release/app-release.aab
+          name: ${{ matrix.artifact_name }}-apk
+          path: app/android/app/build/outputs/bundle/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
 
       - name: Ship to Google Play
         if: github.ref_name == 'main'
-        working-directory: app/android
+        # working-directory: app/android
         env:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
           GOOGLE_API_CREDENTIALS: "api_keys.json"
-          ANDROID_BUNDLE_PATH: "./android/app/build/outputs/bundle/release/app-release.aab"
+          ANDROID_BUNDLE_PATH: "app/android/app/build/outputs/bundle/release/app-release.aab"
           ANDROID_PACKAGE_NAME: ${{ env.ANDROID_PACKAGE_NAME }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}

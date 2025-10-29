@@ -7,7 +7,7 @@ inputs:
       The file containing the export options to use 
       for signing the archive.
     required: true
-  ouput_artifact_ref:
+  output_artifact_ref:
     description: |
       The reference ID / name of the uploaded GitHub artifact
       stored in GitHub by the upload action.
@@ -29,7 +29,7 @@ runs:
     - name: Upload signed artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.ouput_artifact_ref }}
+        name: ${{ inputs.output_artifact_ref }}
         path: export/BCWallet.ipa
         if-no-files-found: error
         retention-days: 7
