@@ -1,5 +1,5 @@
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
-import { createStackNavigator, Header } from '@react-navigation/stack'
+import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
@@ -7,6 +7,7 @@ import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { BCSCScreens } from '../types/navigators'
+import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -29,7 +30,7 @@ const OnboardingStack = (): JSX.Element => {
         headerShadowVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),
-        header: Header,
+        header: createHeaderWithoutBanner,
       }}
     >
       <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />
