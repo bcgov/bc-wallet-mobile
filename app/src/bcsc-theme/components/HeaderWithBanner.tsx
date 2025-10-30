@@ -18,4 +18,7 @@ const HeaderWithBanner = (props: StackHeaderProps): JSX.Element => {
   )
 }
 
+export const createHeaderWithBanner = (props: StackHeaderProps) => <HeaderWithBanner {...props} />
+export const createHeaderWithoutBanner = (props: StackHeaderProps) => <Header {...props} />
+
 export default HeaderWithBanner

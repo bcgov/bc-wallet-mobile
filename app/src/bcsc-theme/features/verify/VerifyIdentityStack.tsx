@@ -49,7 +49,7 @@ import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
-import HeaderWithBanner from '@/bcsc-theme/components/HeaderWithBanner'
+import { createHeaderWithBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -63,7 +63,7 @@ const VerifyIdentityStack = () => {
         ...defaultStackOptions,
         headerShown: true,
         title: '',
-        header: (props) => <HeaderWithBanner {...props} />,
+        header: createHeaderWithBanner,
       }}
     >
       <Stack.Screen
