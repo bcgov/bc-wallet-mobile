@@ -1,5 +1,5 @@
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
+import { createStackNavigator, Header } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
@@ -29,6 +29,7 @@ const OnboardingStack = (): JSX.Element => {
         headerShadowVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),
+        header: Header,
       }}
     >
       <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />

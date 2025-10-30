@@ -265,6 +265,7 @@ const translation = {
       "ContactUs": "Contact Us (PT-BR)",
       "HelpCentre": "Help Centre (PT-BR)",
       "PrivacyInformation": "Privacy Information (PT-BR)",
+      "ManageDevices": "Manage Devices (PT-BR)",
     },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
@@ -279,6 +280,22 @@ const translation = {
       "Step3": "Step 3 (PT-BR)",
       "Step4": "Step 4 (PT-BR)",
       "Step5": "Step 5 (PT-BR)",
+    },
+    "SystemChecks": {
+      "Devices": {
+        "DeviceLimitReachedBannerTitle": "Device limit reached (PT-BR)",
+        "ManageDevicesButton": "Manage devices (PT-BR)",
+        "CloseButton": "Close (PT-BR)",
+        "ReviewDevicesTitle": "Review your devices",
+        "ReviewDevicesContentA1": "You can have this account on a maximum of (PT-BR)",
+        "ReviewDevicesContentA2": "devices. (PT-BR)",
+        "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices. (PT-BR)",
+        "ReviewDevicesContentC": "Remove any devices from your account that are no longer in use. (PT-BR)",
+        "ReviewDevicesContentD": "If you deleted the app from a device, without resetting it first, then it will still count as an active device. (PT-BR)"
+      },
+      "ServerStatus": {
+        "UnavailableBannerTitle": "Service Unavailable (PT-BR)",
+      }
     },
     "ForgetAllPairings": {
       "Title": "Forget all pairings? (PT-BR)",

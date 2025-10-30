@@ -1,3 +1,4 @@
+import HeaderWithBanner from '@/bcsc-theme/components/HeaderWithBanner'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
@@ -58,7 +59,13 @@ const VerifyIdentityStack = () => {
 
   return (
     <Stack.Navigator
-      screenOptions={{ ...defaultStackOptions, headerShown: true, title: '', headerShadowVisible: false }}
+      screenOptions={{
+        ...defaultStackOptions,
+        headerShown: true,
+        title: '',
+        headerShadowVisible: false,
+        header: HeaderWithBanner,
+      }}
     >
       <Stack.Screen
         name={BCSCScreens.SetupTypes}
