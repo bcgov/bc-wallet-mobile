@@ -171,14 +171,16 @@ const MainStack: React.FC = () => {
             headerShadowVisible: false,
           })}
         />
+
         {/* React navigation docs suggest modals at bottom of stack */}
         <Stack.Screen
           name={BCSCModals.InternetDisconnected}
           component={InternetDisconnected}
           options={{
             presentation: 'modal',
+            headerShown: false,
           }}
-        ></Stack.Screen>
+        />
       </Stack.Navigator>
     </View>
   )

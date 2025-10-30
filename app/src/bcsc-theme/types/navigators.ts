@@ -102,7 +102,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.HelpCentre]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
-  [BCSCModals.InternetDisconnected]: undefined // QUESTION (MD): What other stacks?
+  [BCSCModals.InternetDisconnected]: undefined
 }
 
 export type BCSCOnboardingStackParams = {
@@ -165,4 +165,5 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.NicknameAccount]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.Settings]: undefined
+  [BCSCModals.InternetDisconnected]: undefined
 }

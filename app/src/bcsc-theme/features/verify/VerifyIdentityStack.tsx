@@ -1,7 +1,7 @@
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCModals, BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
@@ -50,6 +50,7 @@ import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
 import HeaderWithBanner from '@/bcsc-theme/components/HeaderWithBanner'
+import { InternetDisconnected } from '../modal/InternetDisconnected'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -244,6 +245,16 @@ const VerifyIdentityStack = () => {
           title: t('Screens.Settings'),
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
+        }}
+      />
+
+      {/* React navigation docs suggest modals at bottom of stack */}
+      <Stack.Screen
+        name={BCSCModals.InternetDisconnected}
+        component={InternetDisconnected}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

@@ -1,16 +1,19 @@
 import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
 import { TOKENS, useServices, useStore } from '@bifold/core'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 import useConfigApi from '../api/hooks/useConfigApi'
 import BCSCApiClient from '../api/client'
 import useTokenApi from '../api/hooks/useTokens'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
-import NetInfo from '@react-native-community/netinfo'
+import NetInfo, { NetInfoSubscription } from '@react-native-community/netinfo'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
-import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
-import { useNavigation } from '@react-navigation/native'
+import {
+  InternetStatusStackNavigation,
+  InternetStatusSystemCheck,
+} from '@/services/system-checks/InternetStatusSystemCheck'
+import { createNavigationContainerRef, useNavigation } from '@react-navigation/native'
 
 export enum SystemCheckScope {
   STARTUP = 'startup',
@@ -37,41 +40,18 @@ export const useSystemChecks = (scopes: SystemCheckScope[]) => {
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const [loading, setLoading] = useState(false)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  // Refs to ensure certain checks only run once
+  const navigation = useNavigation<InternetStatusStackNavigation>()
   const startupCheckRef = useRef(false)
-  // const listenerCheckRef = useRef(false)
-  //
-  // if (scopes.includes(SystemCheckScope.STARTUP) && scopes.includes(SystemCheckScope.MAIN_STACK)) {
-  //   throw new Error('useSystemChecks: Cannot include both STARTUP and MAIN_STACK scopes in the same hook instance.')
-  // }
-  //
-  // /**
-  //  * Checks to run as listeners for real-time updates (eg: internet connectivity)
-  //  */
-  // useEffect(() => {
-  //   if (listenerCheckRef.current || !scopes.includes(SystemCheckScope.LISTENER)) {
-  //     return
-  //   }
-  //
-  //   listenerCheckRef.current = true
-  //
-  //   // Internet connectivity listener
-  //   const removeInternetListener = NetInfo.addEventListener(async (netInfo) => {
-  //     await runSystemChecks([new InternetStatusSystemCheck(netInfo, logger)])
-  //   })
-  //
-  //   return () => {
-  //     removeInternetListener()
-  //     listenerCheckRef.current = false
-  //   }
-  // }, [logger, scopes])
+  const navigationRef = createNavigationContainerRef()
 
   /**
    * Checks to run on app startup to ensure system is operational.
    */
   useEffect(() => {
+    let removeInternetListener: NetInfoSubscription
+
     const asyncEffect = async () => {
-      if (startupCheckRef.current || !isClientReady || !client || loading) {
+      if (startupCheckRef.current || !navigationRef.isReady() || loading) {
         return
       }
 
@@ -82,13 +62,21 @@ export const useSystemChecks = (scopes: SystemCheckScope[]) => {
 
       const utils = { dispatch, translation: t, logger }
 
+      // Listener checks
+      if (scopes.includes(SystemCheckScope.LISTENER)) {
+        removeInternetListener = NetInfo.addEventListener(async (netInfo) => {
+          // Run internet connectivity check on network status change
+          await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
+        })
+      }
+
       // Checks to run on app startup (root stack)
-      if (scopes.includes(SystemCheckScope.STARTUP)) {
+      if (scopes.includes(SystemCheckScope.STARTUP) && isClientReady && client) {
         systemChecks = [new ServerStatusSystemCheck(configApi.getServerStatus, utils)]
       }
 
       // Checks to run on main stack (verified users)
-      if (scopes.includes(SystemCheckScope.MAIN_STACK)) {
+      if (scopes.includes(SystemCheckScope.MAIN_STACK) && isClientReady && client) {
         const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: true })
         systemChecks = [new DeviceCountSystemCheck(getIdToken, utils)]
       }
@@ -97,14 +85,20 @@ export const useSystemChecks = (scopes: SystemCheckScope[]) => {
         await runSystemChecks(systemChecks)
       } catch (error) {
         logger.error(`System checks failed: ${(error as Error).message}`)
-        startupCheckRef.current = false
       } finally {
         setLoading(false)
       }
     }
 
     asyncEffect()
-  }, [client, configApi, dispatch, isClientReady, loading, logger, scopes, t, tokenApi])
+
+    return () => {
+      if (removeInternetListener) {
+        removeInternetListener()
+      }
+      startupCheckRef.current = false
+    }
+  }, [client, configApi.getServerStatus, dispatch, isClientReady, loading, logger, navigation, scopes, t, tokenApi])
 
   return { loading }
 }
