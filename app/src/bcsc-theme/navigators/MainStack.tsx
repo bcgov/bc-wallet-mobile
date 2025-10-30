@@ -22,7 +22,7 @@ import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCModals, BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
-import HeaderWithBanner from '../components/HeaderWithBanner'
+import { createHeaderWithBanner } from '../components/HeaderWithBanner'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 
@@ -44,7 +44,7 @@ const MainStack: React.FC = () => {
           headerShown: false,
           title: '',
           headerBackTestID: testIdWithKey('Back'),
-          header: HeaderWithBanner,
+          header: createHeaderWithBanner,
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
