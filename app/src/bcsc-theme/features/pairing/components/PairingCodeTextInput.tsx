@@ -2,6 +2,7 @@ import { useTheme } from '@bifold/core'
 import React, { useState } from 'react'
 import { StyleSheet, TextInput, TextInputProps, View } from 'react-native'
 
+import { PAIRING_CODE_LENGTH } from '@/constants'
 import { splitSplice } from '@utils/splitSplice'
 
 interface Props extends TextInputProps {
@@ -26,12 +27,12 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, ...textInputP
     const normalized = text.toUpperCase().replace(/\s/g, '')
 
     // Limit to 6 characters max
-    const limitedNormalized = normalized.slice(0, 6)
+    const limitedNormalized = normalized.slice(0, PAIRING_CODE_LENGTH)
 
     // Format the display value (add space after first 3 characters for readability)
     let formatted = limitedNormalized
-    if (limitedNormalized.length > 3) {
-      formatted = splitSplice(limitedNormalized, 3, 0, ' ')
+    if (limitedNormalized.length > PAIRING_CODE_LENGTH / 2) {
+      formatted = splitSplice(limitedNormalized, PAIRING_CODE_LENGTH / 2, 0, ' ')
     }
 
     // Update the displayed value
@@ -44,7 +45,7 @@ const PairingCodeTextInput: React.FC<Props> = ({ handleChangeCode, ...textInputP
   return (
     <View style={styles.container}>
       <TextInput
-        maxLength={7}
+        maxLength={PAIRING_CODE_LENGTH + 1} // +1 for the space
         autoCapitalize={'characters'}
         autoComplete={'off'}
         autoCorrect={false}

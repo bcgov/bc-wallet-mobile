@@ -1,6 +1,7 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
+import { ACCOUNT_SERVICES_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -68,10 +69,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
         <View>
           <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
             <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.LimitedAccess')}</ThemedText>
-            <TouchableOpacity
-              style={{ marginLeft: Spacing.sm }}
-              onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}
-            >
+            <TouchableOpacity style={{ marginLeft: Spacing.sm }} onPress={() => Linking.openURL(ACCOUNT_SERVICES_URL)}>
               <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
             </TouchableOpacity>
           </View>
