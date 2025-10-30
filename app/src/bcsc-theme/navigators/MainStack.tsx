@@ -43,7 +43,7 @@ const MainStack: React.FC = () => {
           headerShown: false,
           title: '',
           headerBackTestID: testIdWithKey('Back'),
-          header: HeaderWithBanner,
+          header: (props) => <HeaderWithBanner {...props} />,
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
