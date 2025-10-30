@@ -1,4 +1,4 @@
-import HeaderWithBanner from '@/bcsc-theme/components/HeaderWithBanner'
+import { createHeaderWithBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
@@ -64,7 +64,7 @@ const VerifyIdentityStack = () => {
         headerShown: true,
         title: '',
         headerShadowVisible: false,
-        header: HeaderWithBanner,
+        header: createHeaderWithBanner,
       }}
     >
       <Stack.Screen

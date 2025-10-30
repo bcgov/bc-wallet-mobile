@@ -46,7 +46,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <View style={styles.contentContainer}>
         <GenericCardImage />
-        <ThemedText variant={'headerTitle'}>{t('Unified.AccountSetup.Title')}</ThemedText>
+        <ThemedText variant={'headingFour'}>{t('Unified.AccountSetup.Title')}</ThemedText>
       </View>
 
       {store.bcsc.nicknames.length > 0 ? (

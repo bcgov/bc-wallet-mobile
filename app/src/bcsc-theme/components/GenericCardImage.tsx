@@ -16,7 +16,7 @@ const GenericCardImage = () => {
         margin: Spacing.lg,
       }}
     >
-      <CardDetails {...{ height: 80, width: 160 }} />
+      <CardDetails {...{ height: 75, width: 120 }} />
     </View>
   )
 }

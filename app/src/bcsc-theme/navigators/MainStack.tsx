@@ -4,7 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
-import HeaderWithBanner from '../components/HeaderWithBanner'
+import { createHeaderWithBanner } from '../components/HeaderWithBanner'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
@@ -44,11 +44,10 @@ const MainStack: React.FC = () => {
           title: '',
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
-          header: HeaderWithBanner,
+          header: createHeaderWithBanner,
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
-
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}
@@ -58,7 +57,6 @@ const MainStack: React.FC = () => {
             headerLeft: createWebviewHeaderBackButton(navigation),
           })}
         />
-
         <Stack.Screen
           name={BCSCScreens.Settings}
           component={Settings}
