@@ -18,7 +18,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   }
 
   runCheck() {
-    return Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable)
+    return Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable) === false
   }
 
   onFail() {
@@ -27,7 +27,6 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   }
 
   onSuccess() {
-    console.log('InternetStatusSystemCheck: Internet connection is available') // TODO (MD): remove
     this.navigation.goBack()
   }
 }

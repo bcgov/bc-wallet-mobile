@@ -24,6 +24,7 @@ import { BCSCModals, BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../typ
 import BCSCTabStack from './TabStack'
 import HeaderWithBanner from '../components/HeaderWithBanner'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -173,7 +174,7 @@ const MainStack: React.FC = () => {
         {/* React navigation docs suggest modals at bottom of stack */}
         <Stack.Screen
           name={BCSCModals.InternetDisconnected}
-          component={{} as any}
+          component={InternetDisconnected}
           options={{
             presentation: 'modal',
           }}
