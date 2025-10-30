@@ -1,21 +1,31 @@
+import { NetInfoState } from '@react-native-community/netinfo'
 import { SystemCheckStrategy } from './system-checks'
+import { BifoldLogger } from '@bifold/core'
+import { Alert } from 'react-native'
 
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
-  private isOnline: boolean
+  private netInfo: NetInfoState
+  private readonly showModal: (show: boolean) => void
+  private readonly logger: BifoldLogger
 
-  constructor(isOnline: boolean) {
-    this.isOnline = isOnline
+  constructor(netInfo: NetInfoState, showModal: (show: boolean) => void, logger: BifoldLogger) {
+    this.netInfo = netInfo
+    this.showModal = showModal
+    this.logger = logger
   }
 
-  async runCheck() {
-    return this.isOnline
+  runCheck() {
+    return Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable)
   }
 
   onFail() {
-    console.log('InternetStatusSystemCheck: No internet connection detected')
+    this.logger.warn('InternetStatusSystemCheck: No internet connection detected')
+    this.showModal(true)
   }
 
   onSuccess() {
-    console.log('InternetStatusSystemCheck: Internet connection is available')
+    console.log('InternetStatusSystemCheck: Internet connection is available') // TODO (MD): remove
+    this.showModal(false)
+    Alert.alert('Internet Connection Restored', 'Test message')
   }
 }

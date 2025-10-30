@@ -6,9 +6,9 @@ export type SystemCheckStrategy = {
   /**
    * Runs the startup check.
    *
-   * @returns {Promise<boolean>} - A promise that resolves to true if the check passes, false otherwise.
+   * @returns {Promise<boolean> | boolean} - A promise that resolves to true if the check passes, false otherwise.
    */
-  runCheck: () => Promise<boolean>
+  runCheck: () => Promise<boolean> | boolean
   /**
    * Handles the failure of the startup check.
    *
@@ -52,15 +52,15 @@ export interface SystemCheckUtils {
  * @returns {*} {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
  */
 export async function runSystemChecks(checks: SystemCheckStrategy[]) {
-  const startupPromises: Promise<boolean>[] = []
+  const runCheckPromises: Array<Promise<boolean> | boolean> = []
 
   // Add all startup check promises to array
   for (const check of checks) {
-    startupPromises.push(check.runCheck())
+    runCheckPromises.push(check.runCheck())
   }
 
   // Wait for all startup checks to complete in parallel
-  const results = await Promise.all(startupPromises)
+  const results = await Promise.all(runCheckPromises)
 
   // Handle failures in order
   // To be determined if we want automatic failure handling or not (pass param if not)

@@ -3,7 +3,7 @@ import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifol
 import { createStackNavigator } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
+import { Alert, View } from 'react-native'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
