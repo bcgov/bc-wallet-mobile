@@ -3,10 +3,11 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 
+import { SafeAreaView } from 'react-native-safe-area-context'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 
 const maxSerialNumberLength = 15
@@ -77,7 +78,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   }
 
   return (
-    <View style={styles.screenContainer}>
+    <SafeAreaView style={styles.screenContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.cameraContainer}>
         <CodeScanningCamera codeTypes={['code-128']} onCodeScanned={onCodeScanned} cameraType={'back'} />
       </View>
@@ -95,7 +96,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           />
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

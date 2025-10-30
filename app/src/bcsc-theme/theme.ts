@@ -126,7 +126,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         inlineErrorText: {
           ...theme.TextTheme.inlineErrorText,
-          color: theme.ColorPalette.notification.errorText,
+          color: '#FF816B',
         },
         inlineWarningText: {
           color: theme.ColorPalette.notification.warnText,

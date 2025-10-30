@@ -50,9 +50,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     },
     controlsContainer: {
       marginTop: 'auto',
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
+      gap: Spacing.md,
     },
   })
 
@@ -135,15 +133,13 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             {loading && <ButtonLoading />}
           </Button>
           {cardType !== BCSCCardType.Other ? (
-            <View style={styles.secondButton}>
-              <Button
-                buttonType={ButtonType.Secondary}
-                onPress={handleSkip}
-                title={'Skip'}
-                accessibilityLabel={'Skip'}
-                testID={'SkipButton'}
-              />
-            </View>
+            <Button
+              buttonType={ButtonType.Secondary}
+              onPress={handleSkip}
+              title={'Skip'}
+              accessibilityLabel={'Skip'}
+              testID={'SkipButton'}
+            />
           ) : null}
         </View>
       </View>

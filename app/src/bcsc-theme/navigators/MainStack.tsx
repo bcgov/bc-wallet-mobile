@@ -40,6 +40,7 @@ const MainStack: React.FC = () => {
           headerShown: false,
           title: '',
           headerBackTestID: testIdWithKey('Back'),
+          headerShadowVisible: false,
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
@@ -61,7 +62,6 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: t('Screens.Settings'),
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           }}
         />
         <Stack.Screen
@@ -104,6 +104,7 @@ const MainStack: React.FC = () => {
           component={TransferQRInformationScreen}
           options={() => ({
             headerShown: true,
+            title: t('Unified.TransferInformation.TransferAccount'),
           })}
         />
         <Stack.Screen
@@ -134,7 +135,6 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: t('Unified.Screens.ContactUs'),
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           })}
         />
         <Stack.Screen
@@ -144,7 +144,6 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: t('Unified.Screens.HelpCentre'),
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           })}
         />
         <Stack.Screen
@@ -154,7 +153,6 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: t('Unified.Screens.PrivacyInformation'),
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           })}
         />
         <Stack.Screen
@@ -163,7 +161,6 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           })}
         />
       </Stack.Navigator>

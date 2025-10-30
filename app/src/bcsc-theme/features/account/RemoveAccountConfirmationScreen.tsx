@@ -5,7 +5,8 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
 
@@ -25,6 +26,11 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
     container: {
       padding: Spacing.md,
       flex: 1,
+      justifyContent: 'space-between',
+    },
+    scrollView: {
+      flexGrow: 1,
+      gap: Spacing.md,
     },
     buttonsContainer: {
       gap: Spacing.md,
@@ -36,11 +42,11 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   })
 
   return (
-    <View style={styles.container}>
-      <View style={styles.textContainer}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
         <ThemedText variant={'headingThree'}>{t('Unified.Account.RemoveAccountTitle')}</ThemedText>
         <ThemedText>{t('Unified.Account.RemoveAccountParagraph')}</ThemedText>
-      </View>
+      </ScrollView>
       <View style={styles.buttonsContainer}>
         <Button
           accessibilityLabel={t('Unified.Account.RemoveAccount')}
@@ -62,7 +68,7 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
         />
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 

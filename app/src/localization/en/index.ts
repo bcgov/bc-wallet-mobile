@@ -269,6 +269,12 @@ const translation = {
       "HelpCentre": "Help Centre",
       "PrivacyInformation": "Privacy Information",
     },
+    "Home": {
+      "WhereToUseTitle": "Where to use",
+      "WhereToUseDescription": "Find the websites you can log in to with this app.",
+      "LogInFromComputerTitle": "Log in from a computer",
+      "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet.",
+    },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
       "Step1": "Step 1",
@@ -315,6 +321,16 @@ const translation = {
       "EmptyNameTitle": "Enter an account nickname",
       "NameAlreadyExists": "This nickname already exists",
       "SaveAndContinue": "Save and continue",
+      "RenameSuccessToastMessage": "Account nickname updated successfully",
+    },
+    "ManualPairing": {
+      "EnterPairingCodeTitle": "Enter pairing code",
+      "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device.",
+      "InvalidPairingCodeMessage": "Pairing code must be six characters long",
+      "EmptyPairingCodeMessage": "Pairing code cannot be empty",
+      "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
+      "CompletionTitle": "You're done in this app",
+      "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
     },
     "AccountSelector": {
       "Header": "BC Services Card",
@@ -441,7 +457,8 @@ const translation = {
       "ScanQRCode": "Scan QR Code",
     },
     "TransferQRDisplay": {
-      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device."
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device",
+      "GetNewQRCode": "Get new QR code",
     },
     "TransferSuccess": {
       "Title": "QR code scan complete",
