@@ -12,8 +12,11 @@ export type InternetStatusStackNavigation = StackNavigationProp<
 /**
  * System check strategy to verify internet connectivity.
  *
+ *
  * If the device is not connected to the internet, navigates to the InternetDisconnected modal.
  * If the device regains connectivity, navigates back to the previous screen.
+ *
+ * @see {InternetDisonnected.tsx} for the modal displayed when disconnected.
  *
  * @class InternetStatusSystemCheck
  * @implements {SystemCheckStrategy}
@@ -29,19 +32,37 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
     this.logger = logger
   }
 
+  /**
+   * Runs the internet connectivity check.
+   *
+   * @returns {boolean} True if the device is connected to the internet, false otherwise.
+   */
   runCheck() {
     return Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable)
   }
 
+  /**
+   * Handles the failure of the internet connectivity check
+   * by navigating to the InternetDisconnected modal.
+   *
+   * @returns {*} {void}
+   */
   onFail() {
     this.logger.warn('InternetStatusSystemCheck: No internet connection detected')
     this.navigation.navigate(BCSCModals.InternetDisconnected)
   }
 
+  /**
+   * Handles the success of the internet connectivity check
+   * by navigating back if currently on the InternetDisconnected modal.
+   *
+   * @returns {*} {void}
+   */
   onSuccess() {
     const routeIndex = this.navigation.getState().index
     const currentRoute = this.navigation.getState().routes[routeIndex]
 
+    // Only go back if we are currently on the InternetDisconnected modal
     if (currentRoute.name !== BCSCModals.InternetDisconnected || !this.navigation.canGoBack()) {
       return
     }

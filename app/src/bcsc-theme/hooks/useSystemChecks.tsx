@@ -98,7 +98,19 @@ export const useSystemChecks = (scopes: SystemCheckScope[]) => {
       }
       startupCheckRef.current = false
     }
-  }, [client, configApi.getServerStatus, dispatch, isClientReady, loading, logger, navigation, scopes, t, tokenApi])
+  }, [
+    client,
+    configApi.getServerStatus,
+    dispatch,
+    isClientReady,
+    loading,
+    logger,
+    navigation,
+    navigationRef,
+    scopes,
+    t,
+    tokenApi,
+  ])
 
   return { loading }
 }

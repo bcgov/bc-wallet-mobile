@@ -113,6 +113,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
+  [BCSCModals.InternetDisconnected]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {
