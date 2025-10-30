@@ -77,41 +77,25 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
     },
   })
 
-  const carouselPages = [
-    {
-      key: 'access',
-      content: (
-        <View style={[styles.contentContainer, styles.carouselPage]}>
-          {/* TODO: replace with image */}
-          <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-          <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselServicesHeader')}</ThemedText>
-          <ThemedText>{mockCarouselContent}</ThemedText>
-        </View>
-      ),
-    },
-    {
-      key: 'prove',
-      content: (
-        <View style={[styles.contentContainer, styles.carouselPage]}>
-          {/* TODO: replace with image */}
-          <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-          <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselProveHeader')}</ThemedText>
-          <ThemedText>{mockCarouselContent}</ThemedText>
-        </View>
-      ),
-    },
-    {
-      key: 'cannot',
-      content: (
-        <View style={[styles.contentContainer, styles.carouselPage]}>
-          {/* TODO: replace with image */}
-          <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-          <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselCannotUseHeader')}</ThemedText>
-          <ThemedText>{mockCarouselContent}</ThemedText>
-        </View>
-      ),
-    },
+  const carouselPageData = [
+    { key: 'access', headerKey: 'Unified.Onboarding.CarouselServicesHeader' },
+    { key: 'prove', headerKey: 'Unified.Onboarding.CarouselProveHeader' },
+    { key: 'cannot', headerKey: 'Unified.Onboarding.CarouselCannotUseHeader' },
   ]
+
+  const renderCarouselPage = (pageData: { key: string; headerKey: string }) => (
+    <View key={pageData.key} style={[styles.contentContainer, styles.carouselPage]}>
+      {/* TODO (md): replace with image */}
+      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
+      <ThemedText variant={'headingThree'}>{t(pageData.headerKey)}</ThemedText>
+      <ThemedText>{mockCarouselContent}</ThemedText>
+    </View>
+  )
+
+  const carouselPages = carouselPageData.map((pageData) => ({
+    key: pageData.key,
+    content: renderCarouselPage(pageData),
+  }))
 
   const animateToPage = (pageIndex: number) => {
     const toValue = -pageIndex * (screenWidth - Spacing.md * 2)
