@@ -1,9 +1,9 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Animated, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { Directions, FlingGestureHandler, State } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -29,6 +29,8 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [carouselIndex, setCarouselIndex] = useState(0)
+  const slideAnim = useRef(new Animated.Value(0)).current
+  const { width: screenWidth } = useWindowDimensions()
 
   const styles = StyleSheet.create({
     container: {
@@ -66,28 +68,43 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
       fontWeight: 'bold',
       color: ColorPalette.brand.buttonText,
     },
+    carouselPagesContainer: {
+      flexDirection: 'row',
+      width: screenWidth * 3, // Width for all 3 pages
+    },
+    carouselPage: {
+      width: screenWidth - Spacing.md * 2, // Account for container padding
+    },
   })
 
-  const carouselPages = [
-    <View key="services" style={styles.contentContainer}>
-      {/* TODO: replace with image */}
-      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-      <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselServicesHeader')}</ThemedText>
-      <ThemedText>{mockCarouselContent}</ThemedText>
-    </View>,
-    <View key="prove" style={styles.contentContainer}>
-      {/* TODO: replace with image */}
-      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-      <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselProveHeader')}</ThemedText>
-      <ThemedText>{mockCarouselContent}</ThemedText>
-    </View>,
-    <View key="use" style={styles.contentContainer}>
-      {/* TODO: replace with image */}
-      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-      <ThemedText variant={'headingThree'}>{t('Unified.Onboarding.CarouselCannotUseHeader')}</ThemedText>
-      <ThemedText>{mockCarouselContent}</ThemedText>
-    </View>,
+  const carouselPageData = [
+    { key: 'access', headerKey: 'Unified.Onboarding.CarouselServicesHeader' },
+    { key: 'prove', headerKey: 'Unified.Onboarding.CarouselProveHeader' },
+    { key: 'cannot', headerKey: 'Unified.Onboarding.CarouselCannotUseHeader' },
   ]
+
+  const renderCarouselPage = (pageData: { key: string; headerKey: string }) => (
+    <View key={pageData.key} style={[styles.contentContainer, styles.carouselPage]}>
+      {/* TODO (md): replace with image */}
+      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
+      <ThemedText variant={'headingThree'}>{t(pageData.headerKey)}</ThemedText>
+      <ThemedText>{mockCarouselContent}</ThemedText>
+    </View>
+  )
+
+  const carouselPages = carouselPageData.map((pageData) => ({
+    key: pageData.key,
+    content: renderCarouselPage(pageData),
+  }))
+
+  const animateToPage = (pageIndex: number) => {
+    const toValue = -pageIndex * (screenWidth - Spacing.md * 2)
+    Animated.timing(slideAnim, {
+      toValue,
+      duration: 300,
+      useNativeDriver: true,
+    }).start()
+  }
 
   const handleNext = () => {
     if (carouselIndex === carouselPages.length - 1) {
@@ -95,12 +112,16 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
       return
     }
 
-    setCarouselIndex(carouselIndex + 1)
+    const nextIndex = carouselIndex + 1
+    setCarouselIndex(nextIndex)
+    animateToPage(nextIndex)
   }
 
   const handleBack = () => {
     if (carouselIndex > 0) {
-      setCarouselIndex(carouselIndex - 1)
+      const prevIndex = carouselIndex - 1
+      setCarouselIndex(prevIndex)
+      animateToPage(prevIndex)
     }
   }
 
@@ -123,7 +144,22 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
           }}
         >
           <View style={styles.scrollContainer}>
-            <ScrollView>{carouselPages[carouselIndex]}</ScrollView>
+            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+              <Animated.View
+                style={[
+                  styles.carouselPagesContainer,
+                  {
+                    transform: [{ translateX: slideAnim }],
+                  },
+                ]}
+              >
+                {carouselPages.map((page) => (
+                  <View key={page.key} style={styles.carouselPage}>
+                    {page.content}
+                  </View>
+                ))}
+              </Animated.View>
+            </ScrollView>
 
             <View style={styles.carouselContainer}>
               <TouchableOpacity
@@ -138,9 +174,9 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
               </TouchableOpacity>
 
               <View style={styles.carouselCirclesContainer}>
-                {carouselPages.map((element, index) => (
+                {carouselPages.map((page, index) => (
                   <View
-                    key={`carousel-circle-${element.key}`}
+                    key={`carousel-circle-${page.key}`}
                     style={[styles.carouselCircle, carouselIndex === index && styles.carouselCircleHighlighted]}
                   />
                 ))}

@@ -34,22 +34,16 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
       padding: Spacing.md,
     },
     sectionHeader: {
-      padding: Spacing.md,
-      fontWeight: 'bold',
-      fontSize: 16,
+      paddingVertical: Spacing.md,
     },
     sectionContainer: {
       gap: Spacing.xs / 2,
-    },
-    cardContainer: {
-      padding: Spacing.md,
-      backgroundColor: ColorPalette.brand.secondaryBackground,
+      borderRadius: Spacing.sm,
+      overflow: 'hidden',
     },
     versionContainer: {
-      padding: Spacing.md,
+      paddingTop: Spacing.md,
       gap: Spacing.xs,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
   })
 
@@ -103,11 +97,11 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   }
 
   return (
-    <TabScreenWrapper>
+    <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
-        <View style={styles.sectionContainer}>
-          {store.bcsc.verified ? (
-            <>
+        {store.bcsc.verified ? (
+          <>
+            <View style={styles.sectionContainer}>
               <SettingsActionCard
                 title={t('BCSCSettings.SignOut')}
                 startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
@@ -116,9 +110,13 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
                   dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
                 }}
               />
+            </View>
 
-              <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderA')}</ThemedText>
+            <ThemedText variant={'bold'} style={styles.sectionHeader}>
+              {t('BCSCSettings.HeaderA')}
+            </ThemedText>
 
+            <View style={styles.sectionContainer}>
               <SettingsActionCard
                 // TODO (MD + BM): Update with like for like device auth screen if that is their chosen auth method
                 // only show one or the other (device auth or change pin)
@@ -144,24 +142,28 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
               <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
 
               <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressForgetAllPairings} />
-            </>
-          ) : null}
+            </View>
+          </>
+        ) : null}
 
-          <ThemedText style={styles.sectionHeader}>{t('BCSCSettings.HeaderB')}</ThemedText>
+        <ThemedText variant={'bold'} style={styles.sectionHeader}>
+          {t('BCSCSettings.HeaderB')}
+        </ThemedText>
 
+        <View style={styles.sectionContainer}>
           <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onPressHelp} />
           <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPressPrivacy} />
           <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressContactUs} />
           <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressFeedback} />
           <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
+        </View>
 
-          {/* TODO (MD): Add developer options */}
+        {/* TODO (MD): Add developer options */}
 
-          <View style={styles.versionContainer}>
-            <ThemedText variant="labelSubtitle">BC Services Card</ThemedText>
-            <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
-          </View>
+        <View style={styles.versionContainer}>
+          <ThemedText variant="labelSubtitle">BC Services Card</ThemedText>
+          <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
         </View>
       </View>
     </TabScreenWrapper>

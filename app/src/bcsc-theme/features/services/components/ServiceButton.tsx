@@ -1,6 +1,6 @@
+import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
-import { ThemedText, useTheme } from '@bifold/core'
 
 interface ServiceButtonProps {
   title: string
@@ -14,8 +14,6 @@ const ServiceButton: React.FC<ServiceButtonProps> = ({ title, description, onPre
   const styles = StyleSheet.create({
     container: {
       padding: Spacing.md,
-      borderBottomWidth: 1,
-      borderBottomColor: ColorPalette.brand.primaryBackground,
       backgroundColor: ColorPalette.brand.secondaryBackground,
     },
     title: {

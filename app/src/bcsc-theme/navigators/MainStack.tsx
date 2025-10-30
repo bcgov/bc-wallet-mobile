@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
+import { createHeaderWithBanner } from '../components/HeaderWithBanner'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
@@ -20,10 +21,9 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { HelpCentreScreen } from '../features/settings/HelpCentreScreen'
 import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
-import { createHeaderWithBanner } from '../components/HeaderWithBanner'
-import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -43,11 +43,11 @@ const MainStack: React.FC = () => {
           headerShown: false,
           title: '',
           headerBackTestID: testIdWithKey('Back'),
+          headerShadowVisible: false,
           header: createHeaderWithBanner,
         }}
       >
         <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
-
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}
@@ -57,7 +57,6 @@ const MainStack: React.FC = () => {
             headerLeft: createWebviewHeaderBackButton(navigation),
           })}
         />
-
         <Stack.Screen
           name={BCSCScreens.Settings}
           component={Settings}
@@ -65,7 +64,6 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: t('Screens.Settings'),
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           }}
         />
         <Stack.Screen
@@ -108,6 +106,7 @@ const MainStack: React.FC = () => {
           component={TransferQRInformationScreen}
           options={() => ({
             headerShown: true,
+            title: t('Unified.TransferInformation.TransferAccount'),
           })}
         />
         <Stack.Screen
@@ -138,7 +137,6 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: t('Unified.Screens.ContactUs'),
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           })}
         />
         <Stack.Screen
@@ -148,7 +146,6 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: t('Unified.Screens.HelpCentre'),
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           })}
         />
         <Stack.Screen
@@ -158,7 +155,6 @@ const MainStack: React.FC = () => {
             headerShown: true,
             title: t('Unified.Screens.PrivacyInformation'),
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           })}
         />
         <Stack.Screen
@@ -167,7 +163,6 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             headerBackTestID: testIdWithKey('Back'),
-            headerShadowVisible: false,
           })}
         />
       </Stack.Navigator>

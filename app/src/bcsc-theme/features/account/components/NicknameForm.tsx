@@ -2,23 +2,24 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
+import BulletPoint from '@/bcsc-theme/components/BulletPoint'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { hasNickname } from '@/bcsc-theme/utils/account-utils'
+import { formStringLengths } from '@/constants'
+import { BCDispatchAction, BCState } from '@/store'
 import {
-  useStore,
-  useTheme,
-  testIdWithKey,
-  useAnimatedComponents,
   Button,
   ButtonType,
-  LimitedTextInput,
-  ThemedText,
   KeyboardView,
+  LimitedTextInput,
+  testIdWithKey,
+  ThemedText,
+  useAnimatedComponents,
+  useStore,
+  useTheme,
 } from '@bifold/core'
-import BulletPoint from '@/bcsc-theme/components/BulletPoint'
-import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions, useNavigation } from '@react-navigation/native'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { formStringLengths } from '@/constants'
-import { hasNickname } from '@/bcsc-theme/utils/account-utils'
+import Toast from 'react-native-toast-message'
 
 interface NicknameFormProps {
   isRenaming?: boolean
@@ -39,15 +40,12 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
       flex: 1,
       justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
+      padding: Spacing.md,
     },
     contentContainer: {
       flex: 1,
-      padding: Spacing.md,
     },
-    controlsContainer: {
-      paddingHorizontal: Spacing.md,
-      paddingVertical: Spacing.md,
-    },
+    controlsContainer: {},
     bulletPointContainer: {
       marginBottom: Spacing.md,
       marginLeft: Spacing.sm,
@@ -89,6 +87,12 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
         type: BCDispatchAction.SELECT_ACCOUNT,
         payload: [trimmedAccountNickname],
       })
+      Toast.show({
+        type: 'success',
+        text1: t('Global.Success'),
+        text2: t('Unified.NicknameAccount.RenameSuccessToastMessage'),
+        position: 'bottom',
+      })
       navigation.goBack()
     } else {
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedAccountNickname] })
@@ -101,7 +105,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
   }, [accountNickname, t, isRenaming, dispatch, navigation, store])
 
   return (
-    <KeyboardView>
+    <KeyboardView keyboardAvoiding={false}>
       <View style={styles.pageContainer}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>

@@ -47,7 +47,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
     },
     controlsContainer: {
       marginTop: 'auto',
-      gap: Spacing.sm,
+      gap: Spacing.md,
     },
     bulletContainer: {
       flexDirection: 'row',

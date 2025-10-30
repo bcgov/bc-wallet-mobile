@@ -1,12 +1,12 @@
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { useTheme, ThemedText, Button, ButtonType, testIdWithKey } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { CommonActions } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import ServiceBookmarkButton from './components/ServiceBookmarkButton'
-import { useTranslation } from 'react-i18next'
-import { CommonActions } from '@react-navigation/native'
 
 type ManualPairingProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.PairingConfirmation>
 
@@ -40,13 +40,13 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'}>{"You're done in this app"}</ThemedText>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        <ThemedText variant={'headingThree'}>{t('Unified.ManualPairing.CompletionTitle')}</ThemedText>
         <ThemedText style={{ marginVertical: Spacing.md }}>
-          Go back to the device you started on to continue logging in to {serviceName}.
+          {t('Unified.ManualPairing.CompletionDescription', { serviceName })}
         </ThemedText>
         <ServiceBookmarkButton serviceId={serviceId} serviceName={serviceName} />
-      </View>
+      </ScrollView>
       <View style={styles.controlsContainer}>
         <Button
           title={t('Global.Close')}

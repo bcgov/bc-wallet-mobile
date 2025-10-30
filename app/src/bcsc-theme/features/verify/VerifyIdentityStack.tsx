@@ -1,3 +1,4 @@
+import { createHeaderWithBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
@@ -49,7 +50,6 @@ import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
-import { createHeaderWithBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -63,6 +63,7 @@ const VerifyIdentityStack = () => {
         ...defaultStackOptions,
         headerShown: true,
         title: '',
+        headerShadowVisible: false,
         header: createHeaderWithBanner,
       }}
     >
@@ -81,7 +82,7 @@ const VerifyIdentityStack = () => {
         options={{
           title: t('Unified.Screens.SetupSteps'),
           headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOW_TO_SETUP }),
-          headerLeft: () => null,
+          headerLeft: createSettingsHeaderButton(),
         }}
       />
       <Stack.Screen
@@ -93,7 +94,11 @@ const VerifyIdentityStack = () => {
           headerLeft: createWebviewHeaderBackButton(navigation),
         })}
       />
-      <Stack.Screen name={BCSCScreens.TransferAccountInformation} component={TransferInformationScreen} />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountInformation}
+        component={TransferInformationScreen}
+        options={{ title: t('Unified.TransferInformation.TransferAccount') }}
+      />
       <Stack.Screen name={BCSCScreens.TransferAccountSuccess} component={TransferSuccessScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountQRScan} component={TransferQRScannerScreen} />
