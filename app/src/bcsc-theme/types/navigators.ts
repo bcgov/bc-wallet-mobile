@@ -75,6 +75,10 @@ export enum BCSCScreens {
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
 }
 
+export enum BCSCModals {
+  InternetDisconnected = 'BCSCNoInternet',
+}
+
 export type BCSCTabStackParams = {
   [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
@@ -98,6 +102,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.HelpCentre]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
+  [BCSCModals.InternetDisconnected]: undefined // QUESTION (MD): What other stacks?
 }
 
 export type BCSCOnboardingStackParams = {

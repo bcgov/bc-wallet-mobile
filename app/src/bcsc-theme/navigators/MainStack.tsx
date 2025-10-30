@@ -3,7 +3,7 @@ import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifol
 import { createStackNavigator } from '@react-navigation/stack'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, View } from 'react-native'
+import { View } from 'react-native'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
@@ -20,7 +20,7 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { HelpCentreScreen } from '../features/settings/HelpCentreScreen'
 import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
-import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
+import { BCSCModals, BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
 import HeaderWithBanner from '../components/HeaderWithBanner'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -170,6 +170,14 @@ const MainStack: React.FC = () => {
             headerShadowVisible: false,
           })}
         />
+        {/* React navigation docs suggest modals at bottom of stack */}
+        <Stack.Screen
+          name={BCSCModals.InternetDisconnected}
+          component={{} as any}
+          options={{
+            presentation: 'modal',
+          }}
+        ></Stack.Screen>
       </Stack.Navigator>
     </View>
   )

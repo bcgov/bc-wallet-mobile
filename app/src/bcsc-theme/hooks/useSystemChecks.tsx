@@ -10,6 +10,7 @@ import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSyst
 import NetInfo from '@react-native-community/netinfo'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
+import { useNavigation } from '@react-navigation/native'
 
 export enum SystemCheckScope {
   STARTUP = 'startup',

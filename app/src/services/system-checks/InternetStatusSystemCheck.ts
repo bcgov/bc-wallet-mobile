@@ -1,16 +1,19 @@
 import { NetInfoState } from '@react-native-community/netinfo'
 import { SystemCheckStrategy } from './system-checks'
 import { BifoldLogger } from '@bifold/core'
-import { Alert } from 'react-native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { BCSCModals, BCSCRootStackParams } from '@/bcsc-theme/types/navigators'
+
+type InternetNavigation = StackNavigationProp<BCSCRootStackParams, BCSCModals.InternetDisconnected>
 
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
   private netInfo: NetInfoState
-  private readonly showModal: (show: boolean) => void
+  private readonly navigation: InternetNavigation
   private readonly logger: BifoldLogger
 
-  constructor(netInfo: NetInfoState, showModal: (show: boolean) => void, logger: BifoldLogger) {
+  constructor(netInfo: NetInfoState, navigation: InternetNavigation, logger: BifoldLogger) {
     this.netInfo = netInfo
-    this.showModal = showModal
+    this.navigation = navigation
     this.logger = logger
   }
 
@@ -20,12 +23,11 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
 
   onFail() {
     this.logger.warn('InternetStatusSystemCheck: No internet connection detected')
-    this.showModal(true)
+    this.navigation.navigate(BCSCModals.InternetDisconnected)
   }
 
   onSuccess() {
     console.log('InternetStatusSystemCheck: Internet connection is available') // TODO (MD): remove
-    this.showModal(false)
-    Alert.alert('Internet Connection Restored', 'Test message')
+    this.navigation.goBack()
   }
 }
