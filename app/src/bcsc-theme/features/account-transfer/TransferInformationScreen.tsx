@@ -20,31 +20,25 @@ const TransferInformationScreen: React.FC = () => {
     container: {
       padding: Spacing.md,
     },
-    scrollViewContentContainer: { flexGrow: 1, justifyContent: 'space-between', flexDirection: 'column' },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: Spacing.sm,
+    scrollViewContentContainer: {
+      flexGrow: 1,
+      justifyContent: 'space-between',
+      flexDirection: 'column',
     },
-    topContainer: {
-      justifyContent: 'flex-start',
+    contentContainer: {
+      gap: Spacing.md,
     },
-    bottomContainer: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
+    controlsContainer: {},
   })
   return (
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
-      <ScrollView style={{ padding: Spacing.md }} contentContainerStyle={styles.scrollViewContentContainer}>
-        <View style={styles.topContainer}>
+      <ScrollView style={{ flex: 1, padding: Spacing.md }} contentContainerStyle={styles.scrollViewContentContainer}>
+        <View style={styles.contentContainer}>
           <Image source={TWO_PHONES} style={{ height: 300, width: 'auto' }} resizeMode={'contain'} />
-          <ThemedText style={styles.title} variant="headerTitle">
-            {t('Unified.TransferInformation.Title')}
-          </ThemedText>
+          <ThemedText variant={'headingThree'}>{t('Unified.TransferInformation.Title')}</ThemedText>
           <ThemedText>{t('Unified.TransferInformation.Instructions')}</ThemedText>
         </View>
-        <View style={styles.bottomContainer}>
+        <View style={styles.controlsContainer}>
           <Button
             title={t('Unified.TransferInformation.TransferAccount')}
             buttonType={ButtonType.Primary}

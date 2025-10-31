@@ -49,9 +49,9 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
 
   const onSubmit = async () => {
     if (code.length < 6) {
-      setMessage('Pairing code must be six characters long.')
+      setMessage(t('Unified.ManualPairing.InvalidPairingCodeMessage'))
     } else if (!code.length) {
-      setMessage('Pairing code cannot be empty.')
+      setMessage(t('Unified.ManualPairing.EmptyPairingCodeMessage'))
     } else {
       try {
         setLoading(true)
@@ -66,7 +66,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         })
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)
-        setMessage('Failed to submit pairing code.')
+        setMessage(t('Unified.ManualPairing.FailedToSubmitPairingCodeMessage'))
       } finally {
         setLoading(false)
       }
@@ -74,11 +74,15 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   }
 
   return (
-    <KeyboardView>
+    <KeyboardView keyboardAvoiding={false}>
       <View style={styles.container}>
         <View style={styles.contentContainer}>
-          <ThemedText variant={'headingOne'}>Enter pairing code</ThemedText>
-          <ThemedText>A pairing code will be provided when you log in to a website on another device.</ThemedText>
+          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+            {t('Unified.ManualPairing.EnterPairingCodeTitle')}
+          </ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.md }}>
+            {t('Unified.ManualPairing.EnterPairingCodeMessage')}
+          </ThemedText>
           <PairingCodeTextInput handleChangeCode={handleChangeCode} />
           <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
         </View>

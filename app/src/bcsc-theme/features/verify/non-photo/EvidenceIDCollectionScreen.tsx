@@ -1,5 +1,8 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { Spacing } from '@/bcwallet-theme/theme'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
@@ -12,14 +15,11 @@ import {
   useServices,
   useStore,
 } from '@bifold/core'
-import { ScrollView, View } from 'react-native'
 import { CommonActions } from '@react-navigation/native'
-import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { useTranslation } from 'react-i18next'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { useTranslation } from 'react-i18next'
+import { StyleSheet, View } from 'react-native'
 
 type EvidenceCollectionFormState = {
   documentNumber: string
@@ -61,6 +61,13 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
   const additionalEvidenceRequired =
     store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1
+
+  const styles = StyleSheet.create({
+    controlsContainer: {
+      gap: Spacing.md,
+      marginTop: 'auto',
+    },
+  })
 
   /**
    * Handles changes to the form fields.
@@ -217,86 +224,80 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 16 }} edges={['bottom', 'left', 'right']}>
-      <KeyboardView>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <ThemedText variant={'headingOne'}>{cardType.evidence_type_label}</ThemedText>
-          <ThemedText style={{ paddingVertical: 16 }}>
-            Enter the information <Text style={{ fontWeight: 'bold' }}>{'exactly as shown'}</Text> on the ID.
-          </ThemedText>
-          <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
-            <InputWithValidation
-              id={'documentNumber'}
-              label={cardType.document_reference_label}
-              value={formState.documentNumber}
-              onChange={(value) => handleChange('documentNumber', value)}
-              error={formErrors.documentNumber}
-              subtext={`${t('Unified.EvidenceIDCollection.DocumentNumberSubtext')} ${
-                cardType.document_reference_sample
-              }`}
-            />
+    <View style={{ flex: 1, padding: Spacing.md }}>
+      <KeyboardView keyboardAvoiding={false}>
+        <ThemedText variant={'headingOne'}>{cardType.evidence_type_label}</ThemedText>
+        <ThemedText style={{ paddingVertical: 16 }}>
+          Enter the information <Text style={{ fontWeight: 'bold' }}>{'exactly as shown'}</Text> on the ID.
+        </ThemedText>
+        <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
+          <InputWithValidation
+            id={'documentNumber'}
+            label={cardType.document_reference_label}
+            value={formState.documentNumber}
+            onChange={(value) => handleChange('documentNumber', value)}
+            error={formErrors.documentNumber}
+            subtext={`${t('Unified.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
+          />
 
-            {additionalEvidenceRequired ? (
-              <>
-                <InputWithValidation
-                  id={'lastName'}
-                  label={t('Unified.EvidenceIDCollection.LastNameLabel')}
-                  value={formState.lastName}
-                  onChange={(value) => handleChange('lastName', value)}
-                  error={formErrors.lastName}
-                  subtext={t('Unified.EvidenceIDCollection.LastNameSubtext')}
-                />
-
-                <InputWithValidation
-                  id={'firstName'}
-                  label={t('Unified.EvidenceIDCollection.FirstNameLabel')}
-                  value={formState.firstName}
-                  onChange={(value) => handleChange('firstName', value)}
-                  error={formErrors.firstName}
-                  subtext={t('Unified.EvidenceIDCollection.FirstNameSubtext')}
-                />
-
-                <InputWithValidation
-                  id={'middleNames'}
-                  label={t('Unified.EvidenceIDCollection.MiddleNamesLabel')}
-                  value={formState.middleNames}
-                  onChange={(value) => handleChange('middleNames', value)}
-                  error={formErrors.middleNames}
-                  subtext={t('Unified.EvidenceIDCollection.MiddleNamesSubtext')}
-                />
-
-                <InputWithValidation
-                  id={'birthDate'}
-                  label={t('Unified.EvidenceIDCollection.BirthDateLabel')}
-                  value={formState.birthDate}
-                  onChange={(value) => handleChange('birthDate', value)}
-                  error={formErrors.birthDate}
-                  subtext={t('Unified.EvidenceIDCollection.BirthDateSubtext')}
-                />
-              </>
-            ) : null}
-          </View>
-          <View style={{ marginTop: 48, width: '100%' }}>
-            <View style={{ marginBottom: 20 }}>
-              <Button
-                title="Continue"
-                accessibilityLabel={'Continue'}
-                testID={testIdWithKey('EvidenceIDCollectionContinue')}
-                buttonType={ButtonType.Primary}
-                onPress={handleOnContinue}
+          {additionalEvidenceRequired ? (
+            <>
+              <InputWithValidation
+                id={'lastName'}
+                label={t('Unified.EvidenceIDCollection.LastNameLabel')}
+                value={formState.lastName}
+                onChange={(value) => handleChange('lastName', value)}
+                error={formErrors.lastName}
+                subtext={t('Unified.EvidenceIDCollection.LastNameSubtext')}
               />
-            </View>
-            <Button
-              title="Cancel"
-              accessibilityLabel={'Cancel'}
-              testID={testIdWithKey('EvidenceIDCollectionCancel')}
-              buttonType={ButtonType.Tertiary}
-              onPress={() => navigation.goBack()}
-            />
-          </View>
-        </ScrollView>
+
+              <InputWithValidation
+                id={'firstName'}
+                label={t('Unified.EvidenceIDCollection.FirstNameLabel')}
+                value={formState.firstName}
+                onChange={(value) => handleChange('firstName', value)}
+                error={formErrors.firstName}
+                subtext={t('Unified.EvidenceIDCollection.FirstNameSubtext')}
+              />
+
+              <InputWithValidation
+                id={'middleNames'}
+                label={t('Unified.EvidenceIDCollection.MiddleNamesLabel')}
+                value={formState.middleNames}
+                onChange={(value) => handleChange('middleNames', value)}
+                error={formErrors.middleNames}
+                subtext={t('Unified.EvidenceIDCollection.MiddleNamesSubtext')}
+              />
+
+              <InputWithValidation
+                id={'birthDate'}
+                label={t('Unified.EvidenceIDCollection.BirthDateLabel')}
+                value={formState.birthDate}
+                onChange={(value) => handleChange('birthDate', value)}
+                error={formErrors.birthDate}
+                subtext={t('Unified.EvidenceIDCollection.BirthDateSubtext')}
+              />
+            </>
+          ) : null}
+        </View>
+        <View style={styles.controlsContainer}>
+          <Button
+            title="Continue"
+            accessibilityLabel={'Continue'}
+            testID={testIdWithKey('EvidenceIDCollectionContinue')}
+            buttonType={ButtonType.Primary}
+            onPress={handleOnContinue}
+          />
+          <Button
+            title="Cancel"
+            accessibilityLabel={'Cancel'}
+            testID={testIdWithKey('EvidenceIDCollectionCancel')}
+            buttonType={ButtonType.Tertiary}
+            onPress={() => navigation.goBack()}
+          />
+        </View>
       </KeyboardView>
-    </SafeAreaView>
+    </View>
   )
 }
 

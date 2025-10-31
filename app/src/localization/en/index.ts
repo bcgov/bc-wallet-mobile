@@ -268,6 +268,13 @@ const translation = {
       "ContactUs": "Contact Us",
       "HelpCentre": "Help Centre",
       "PrivacyInformation": "Privacy Information",
+      "ManageDevices": "Manage Devices",
+    },
+    "Home": {
+      "WhereToUseTitle": "Where to use",
+      "WhereToUseDescription": "Find the websites you can log in to with this app.",
+      "LogInFromComputerTitle": "Log in from a computer",
+      "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet.",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID.",
@@ -276,6 +283,22 @@ const translation = {
       "Step3": "Step 3",
       "Step4": "Step 4",
       "Step5": "Step 5",
+    },
+    "SystemChecks": {
+      "Devices": {
+        "DeviceLimitReachedBannerTitle": "Device limit reached",
+        "ManageDevicesButton": "Manage devices",
+        "CloseButton": "Close",
+        "ReviewDevicesTitle": "Review your devices",
+        "ReviewDevicesContentA1": "You can have this account on a maximum of",
+        "ReviewDevicesContentA2": "devices.",
+        "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices.",
+        "ReviewDevicesContentC": "Remove any devices from your account that are no longer in use.",
+        "ReviewDevicesContentD": "If you deleted the app from a device, without resetting it first, then it will still count as an active device."
+      },
+      "ServerStatus": {
+        "UnavailableBannerTitle": "Service Unavailable",
+      }
     },
     "ForgetAllPairings": {
       "Title": "Forget all pairings?",
@@ -315,6 +338,16 @@ const translation = {
       "EmptyNameTitle": "Enter an account nickname",
       "NameAlreadyExists": "This nickname already exists",
       "SaveAndContinue": "Save and continue",
+      "RenameSuccessToastMessage": "Account nickname updated successfully",
+    },
+    "ManualPairing": {
+      "EnterPairingCodeTitle": "Enter pairing code",
+      "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device.",
+      "InvalidPairingCodeMessage": "Pairing code must be six characters long",
+      "EmptyPairingCodeMessage": "Pairing code cannot be empty",
+      "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
+      "CompletionTitle": "You're done in this app",
+      "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
     },
     "AccountSelector": {
       "Header": "BC Services Card",
@@ -441,7 +474,8 @@ const translation = {
       "ScanQRCode": "Scan QR Code",
     },
     "TransferQRDisplay": {
-      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device."
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device",
+      "GetNewQRCode": "Get new QR code",
     },
     "TransferSuccess": {
       "Title": "QR code scan complete",
@@ -562,7 +596,7 @@ const translation = {
         "TroubleshootingTips": "If you are having issues with audio or video, try out the following tips. If you're still having trouble, call us.",
         "SendVideoInstead": "Send video instead",
         "TryAgain": "Try again"
-      }
+      },
     },
     "EvidenceTypeList": {
       "Heading": "Choose photo ID",

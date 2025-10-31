@@ -1,6 +1,6 @@
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -55,7 +55,7 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <View style={styles.contentContainer}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
         <Icon name={iconName} size={iconSize} color={iconColor ?? ColorPalette.brand.primary} />
         <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.md, textAlign: 'center' }}>
           {title}
@@ -74,7 +74,7 @@ const StatusDetails: React.FC<StatusScreenProps> = ({
         {extraText ? (
           <ThemedText style={{ marginBottom: Spacing.md, textAlign: 'center' }}>{extraText}</ThemedText>
         ) : null}
-      </View>
+      </ScrollView>
       <View style={styles.controlsContainer}>
         <Button
           testID={testIdWithKey(buttonText)}

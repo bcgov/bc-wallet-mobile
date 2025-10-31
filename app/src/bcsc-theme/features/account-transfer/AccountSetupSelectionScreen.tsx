@@ -25,13 +25,13 @@ const AccountSetupSelectionScreen: React.FC = () => {
       justifyContent: 'space-between',
     },
     contentContainer: {
-      flexGrow: 2,
+      flexGrow: 1,
       alignItems: 'center',
       justifyContent: 'center',
     },
     controlsContainer: {
       width: '100%',
-      gap: Spacing.sm,
+      gap: Spacing.md,
     },
   })
 
@@ -46,14 +46,12 @@ const AccountSetupSelectionScreen: React.FC = () => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <View style={styles.contentContainer}>
         <GenericCardImage />
-        <ThemedText variant={'headerTitle'}>{t('Unified.AccountSetup.Title')}</ThemedText>
+        <ThemedText variant={'headingFour'}>{t('Unified.AccountSetup.Title')}</ThemedText>
       </View>
 
       {store.bcsc.nicknames.length > 0 ? (
         <View style={{ ...styles.controlsContainer, flexGrow: 1 }}>
-          <View style={{ marginBottom: Spacing.md }}>
-            <ThemedText variant={'headingFour'}>{t('Unified.AccountSelector.ContinueAs')}</ThemedText>
-          </View>
+          <ThemedText variant={'headingFour'}>{t('Unified.AccountSelector.ContinueAs')}</ThemedText>
 
           <View style={{ gap: Spacing.sm }}>
             {Array.from(store.bcsc.nicknames).map((nickname) => (

@@ -1,6 +1,7 @@
 import { Button, ButtonType, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
 import { Image, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoReviewProps = {
   photoPath: string
@@ -19,14 +20,12 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
     },
     controlsContainer: {
       position: 'absolute',
+      gap: Spacing.md,
       bottom: 0,
       left: 0,
       right: 0,
       padding: Spacing.md,
       backgroundColor: ColorPalette.notification.popupOverlay,
-    },
-    secondButton: {
-      marginTop: Spacing.sm,
     },
   })
 
@@ -41,7 +40,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
   return (
     <View style={styles.contentContainer}>
       <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
-      <View style={styles.controlsContainer}>
+      <SafeAreaView style={styles.controlsContainer} edges={['bottom', 'left', 'right']}>
         <Button
           buttonType={ButtonType.Primary}
           onPress={handleAccept}
@@ -52,16 +51,14 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
         >
           {loading && <ButtonLoading />}
         </Button>
-        <View style={styles.secondButton}>
-          <Button
-            buttonType={ButtonType.Tertiary}
-            onPress={onRetake}
-            testID={testIdWithKey(`RetakePhoto`)}
-            title={'Retake photo'}
-            accessibilityLabel={'Retake photo'}
-          />
-        </View>
-      </View>
+        <Button
+          buttonType={ButtonType.Tertiary}
+          onPress={onRetake}
+          testID={testIdWithKey(`RetakePhoto`)}
+          title={'Retake photo'}
+          accessibilityLabel={'Retake photo'}
+        />
+      </SafeAreaView>
     </View>
   )
 }

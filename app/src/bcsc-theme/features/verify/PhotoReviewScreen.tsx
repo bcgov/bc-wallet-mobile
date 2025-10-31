@@ -72,7 +72,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   }
 
   return (
-    <SafeAreaView style={styles.pageContainer}>
+    <SafeAreaView style={styles.pageContainer} edges={['top', 'left', 'right']}>
       <PhotoReview photoPath={photoPath} onAccept={onPressUse} onRetake={onPressRetake} />
     </SafeAreaView>
   )

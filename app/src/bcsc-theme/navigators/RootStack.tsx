@@ -9,6 +9,7 @@ import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import BCSCMainStack from './MainStack'
 import BCSCOnboardingStack from './OnboardingStack'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
@@ -17,6 +18,7 @@ const BCSCRootStack: React.FC = () => {
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const initializeBCSC = useInitializeBCSC()
   const { isClientReady } = useBCSCApiClientState()
+  useSystemChecks(SystemCheckScope.STARTUP)
 
   const LoadingView = () => (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.ColorPalette.brand.primaryBackground }}>

@@ -67,7 +67,6 @@ export enum BCSCScreens {
   NicknameAccount = 'NicknameAccount',
   EditNickname = 'EditNickname',
   AccountSelector = 'AccountSelector',
-  // Onboarding s
   OnboardingIntroCarousel = 'BCSCOnboardingIntroCarousel',
   PrivacyPolicy = 'BCSCPrivacyPolicy',
   OnboardingTermsOfUse = 'BCSCOnboardingTermsOfUse',

@@ -1,26 +1,21 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
+import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
-import { useTheme, useServices, TOKENS } from '@bifold/core'
+import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
+import { TOKENS, useServices, useTheme } from '@bifold/core'
+import { StackScreenProps } from '@react-navigation/stack'
 import React, { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import SavedServices from './components/SavedServices'
-import SectionButton from '../../components/SectionButton'
-import { StackScreenProps } from '@react-navigation/stack'
-import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { NotificationBannerContainer } from './components/NotificationBannerContainer'
-
-// to be replaced with API response or translation entries, whichever ends up being the case
-const mockFindTitle = 'Where to use'
-const mockFindDescription = 'Find the websites you can log in to with this app.'
-const mockLogInTitle = 'Log in from a computer'
-const mockLogInDescription =
-  'Enter pairing code to log in from a different device – like a computer, laptop, or tablet.'
 
 type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 
 const Home: React.FC<HomeProps> = ({ navigation }) => {
+  const { t } = useTranslation()
   const { Spacing } = useTheme()
   const { user } = useApi()
   const [loading, setLoading] = useState(true)
@@ -67,12 +62,16 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
           <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
           <View style={styles.buttonsContainer}>
             <SectionButton
-              title={mockFindTitle}
-              description={mockFindDescription}
+              title={t('Unified.Home.WhereToUseTitle')}
+              description={t('Unified.Home.WhereToUseDescription')}
               style={{ marginBottom: Spacing.md }}
               onPress={handleWhereToUsePress}
             />
-            <SectionButton title={mockLogInTitle} description={mockLogInDescription} onPress={handlePairingCodePress} />
+            <SectionButton
+              title={t('Unified.Home.LogInFromComputerTitle')}
+              description={t('Unified.Home.LogInFromComputerDescription')}
+              onPress={handlePairingCodePress}
+            />
           </View>
           <SavedServices />
         </>

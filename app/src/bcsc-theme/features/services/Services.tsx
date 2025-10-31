@@ -80,6 +80,10 @@ const Services: React.FC = () => {
       color: TextTheme.normal.color,
       marginLeft: Spacing.sm,
     },
+    servicesContainer: {
+      paddingHorizontal: Spacing.md,
+      gap: 2,
+    },
     bottomContainer: {
       margin: Spacing.md,
     },
@@ -151,18 +155,20 @@ const Services: React.FC = () => {
         </View>
       </View>
 
-      {serviceClients.map((service) => (
-        <ServiceButton
-          key={service.client_ref_id}
-          title={service.client_name}
-          description={service.client_description}
-          onPress={() => {
-            navigation.navigate(BCSCScreens.ServiceLogin, {
-              serviceClient: service,
-            })
-          }}
-        />
-      ))}
+      <View style={styles.servicesContainer}>
+        {serviceClients.map((service) => (
+          <ServiceButton
+            key={service.client_ref_id}
+            title={service.client_name}
+            description={service.client_description}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.ServiceLogin, {
+                serviceClient: service,
+              })
+            }}
+          />
+        ))}
+      </View>
 
       <View style={styles.bottomContainer}>
         <ThemedText variant={'bold'}>{t('Services.NotListed')}</ThemedText>

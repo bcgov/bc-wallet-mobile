@@ -265,6 +265,13 @@ const translation = {
       "ContactUs": "Contact Us (PT-BR)",
       "HelpCentre": "Help Centre (PT-BR)",
       "PrivacyInformation": "Privacy Information (PT-BR)",
+      "ManageDevices": "Manage Devices (PT-BR)",
+    },
+    "Home": {
+      "WhereToUseTitle": "Where to use (PT-BR)",
+      "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
+      "LogInFromComputerTitle": "Log in from a computer (PT-BR)",
+      "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (PT-BR)",
     },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (PT-BR)",
@@ -273,6 +280,22 @@ const translation = {
       "Step3": "Step 3 (PT-BR)",
       "Step4": "Step 4 (PT-BR)",
       "Step5": "Step 5 (PT-BR)",
+    },
+    "SystemChecks": {
+      "Devices": {
+        "DeviceLimitReachedBannerTitle": "Device limit reached (PT-BR)",
+        "ManageDevicesButton": "Manage devices (PT-BR)",
+        "CloseButton": "Close (PT-BR)",
+        "ReviewDevicesTitle": "Review your devices",
+        "ReviewDevicesContentA1": "You can have this account on a maximum of (PT-BR)",
+        "ReviewDevicesContentA2": "devices. (PT-BR)",
+        "ReviewDevicesContentB": "You can continue using these devices, but you won't be able to set up any more devices. (PT-BR)",
+        "ReviewDevicesContentC": "Remove any devices from your account that are no longer in use. (PT-BR)",
+        "ReviewDevicesContentD": "If you deleted the app from a device, without resetting it first, then it will still count as an active device. (PT-BR)"
+      },
+      "ServerStatus": {
+        "UnavailableBannerTitle": "Service Unavailable (PT-BR)",
+      }
     },
     "ForgetAllPairings": {
       "Title": "Forget all pairings? (PT-BR)",
@@ -312,6 +335,16 @@ const translation = {
       "EmptyNameTitle": "Enter an account nickname (PT-BR)",
       "NameAlreadyExists": "This nickname already exists (PT-BR)",
       "SaveAndContinue": "Save and continue (PT-BR)",
+      "RenameSuccessToastMessage": "Account nickname updated successfully (PT-BR)",
+    },
+    "ManualPairing": {
+      "EnterPairingCodeTitle": "Enter pairing code (PT-BR)",
+      "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (PT-BR)",
+      "InvalidPairingCodeMessage": "Pairing code must be six characters long (PT-BR)",
+      "EmptyPairingCodeMessage": "Pairing code cannot be empty (PT-BR)",
+      "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code (PT-BR)",
+      "CompletionTitle": "You're done in this app (PT-BR)",
+      "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (PT-BR)",
     },
     "AccountSelector": {
       "Header": "BC Services Card (PT-BR)",
@@ -438,7 +471,8 @@ const translation = {
       "ScanQRCode": "Scan QR Code (PT-BR)",
     },
     "TransferQRDisplay": {
-      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device. (PT-BR)"
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device (PT-BR)",
+      "GetNewQRCode": "Get new QR code (PT-BR)"
     },
     "TransferSuccess": {
       "Title": "QR code scan complete (PT-BR)",

@@ -12,10 +12,10 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
 
-import { BCDispatchAction, BCState } from '@/store'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCDispatchAction, BCState } from '@/store'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
+import { StackNavigationProp } from '@react-navigation/stack'
 
 const SERIAL_HIGHLIGHT_IMAGE = Image.resolveAssetSource(SerialHighlightImage).uri
 
@@ -96,7 +96,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   }, [serial, t, dispatch, navigation])
 
   return (
-    <KeyboardView>
+    <KeyboardView keyboardAvoiding={false}>
       <View style={styles.screenContainer}>
         <View style={styles.contentContainer}>
           <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />

@@ -30,7 +30,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
       flex: 1,
     },
     controlsContainer: {
-      gap: Spacing.sm,
+      gap: Spacing.md,
       marginTop: Spacing.md,
     },
     iconContainer: {
