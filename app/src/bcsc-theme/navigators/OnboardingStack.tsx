@@ -8,8 +8,7 @@ import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { BCSCScreens } from '../types/navigators'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
-import Developer from '../../screens/Developer'
-
+import BCSCDeveloperScreen from '../features/settings/BCSCDeveloperScreen'
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
  *
@@ -65,7 +64,7 @@ const OnboardingStack = (): JSX.Element => {
       />
       <Stack.Screen
         name={BCSCScreens.Developer}
-        component={Developer}
+        component={BCSCDeveloperScreen}
         options={() => ({
           title: t('Developer.DeveloperMode'),
           headerShown: true,

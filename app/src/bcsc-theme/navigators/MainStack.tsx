@@ -24,7 +24,7 @@ import WebViewScreen from '../features/webview/WebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
-import Developer from '../../screens/Developer'
+import BCSCDeveloperScreen from '../features/settings/BCSCDeveloperScreen'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -168,7 +168,7 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           name={BCSCScreens.Developer}
-          component={Developer}
+          component={BCSCDeveloperScreen}
           options={() => ({
             title: t('Developer.DeveloperMode'),
             headerShown: true,
