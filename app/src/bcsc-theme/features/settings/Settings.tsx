@@ -35,11 +35,6 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   const [store, dispatch] = useStore<BCState>()
   const auth = useAuth()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const onDevModeTriggered = () => {
-    Vibration.vibrate()
-    navigation.navigate(BCSCScreens.Developer)
-  }
-  const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
 
   const styles = StyleSheet.create({
     container: {
@@ -66,6 +61,12 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
       alignItems: 'center',
     },
   })
+
+  const onDevModeTriggered = () => {
+    Vibration.vibrate()
+    navigation.navigate(BCSCScreens.Developer)
+  }
+  const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
 
   // TODO (MD): Remove this once all settings actions have been implemented
   const onPressActionTodo = () => {
