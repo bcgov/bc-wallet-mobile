@@ -108,11 +108,31 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountQRScan} component={TransferQRScannerScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
-      <Stack.Screen name={BCSCScreens.EditNickname} component={EditNicknameScreen} />
-      <Stack.Screen name={BCSCScreens.ForgetAllPairings} component={ForgetAllPairingsScreen} />
-      <Stack.Screen name={BCSCScreens.HelpCentre} component={HelpCentreScreen} />
-      <Stack.Screen name={BCSCScreens.PrivacyPolicy} component={PrivacyPolicyScreen} />
-      <Stack.Screen name={BCSCScreens.ContactUs} component={ContactUsScreen} />
+      <Stack.Screen
+        name={BCSCScreens.EditNickname}
+        component={EditNicknameScreen}
+        options={{ title: t('BCSCSettings.EditNickname') }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ForgetAllPairings}
+        component={ForgetAllPairingsScreen}
+        options={{ title: t('BCSCSettings.ForgetPairings') }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.HelpCentre}
+        component={HelpCentreScreen}
+        options={{ title: t('Unified.Screens.HelpCentre') }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PrivacyPolicy}
+        component={PrivacyPolicyScreen}
+        options={{ title: t('Unified.Screens.PrivacyInformation') }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ContactUs}
+        component={ContactUsScreen}
+        options={{ title: t('Unified.Screens.ContactUs') }}
+      />
       <Stack.Screen
         name={BCSCScreens.SerialInstructions}
         component={SerialInstructionsScreen}
