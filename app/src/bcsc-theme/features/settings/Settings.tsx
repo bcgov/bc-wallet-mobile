@@ -2,11 +2,20 @@ import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ACCESSIBILITY_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
-import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  LockoutReason,
+  ThemedText,
+  TOKENS,
+  useAuth,
+  useServices,
+  useStore,
+  useTheme,
+  useDeveloperMode,
+} from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Linking, StyleSheet, View } from 'react-native'
+import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { SettingsActionCard } from './components/SettingsActionCard'
@@ -26,6 +35,11 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   const [store, dispatch] = useStore<BCState>()
   const auth = useAuth()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const onDevModeTriggered = () => {
+    Vibration.vibrate()
+    navigation.navigate({ name: BCSCScreens.Developer } as any)
+  }
+  const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
 
   const styles = StyleSheet.create({
     container: {
@@ -34,16 +48,22 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
       padding: Spacing.md,
     },
     sectionHeader: {
-      paddingVertical: Spacing.md,
+      padding: Spacing.md,
+      fontWeight: 'bold',
+      fontSize: 16,
     },
     sectionContainer: {
       gap: Spacing.xs / 2,
-      borderRadius: Spacing.sm,
-      overflow: 'hidden',
+    },
+    cardContainer: {
+      padding: Spacing.md,
+      backgroundColor: ColorPalette.brand.secondaryBackground,
     },
     versionContainer: {
-      paddingTop: Spacing.md,
+      padding: Spacing.md,
       gap: Spacing.xs,
+      justifyContent: 'center',
+      alignItems: 'center',
     },
   })
 
@@ -96,12 +116,16 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
     navigation.navigate(BCSCScreens.ForgetAllPairings)
   }
 
+  const onPressDeveloperOptions = () => {
+    navigation.navigate({ name: BCSCScreens.Developer } as any)
+  }
+
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
-        {store.bcsc.verified ? (
-          <>
-            <View style={styles.sectionContainer}>
+        <View style={styles.sectionContainer}>
+          {store.bcsc.verified ? (
+            <>
               <SettingsActionCard
                 title={t('BCSCSettings.SignOut')}
                 startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
@@ -110,13 +134,11 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
                   dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
                 }}
               />
-            </View>
 
-            <ThemedText variant={'bold'} style={styles.sectionHeader}>
-              {t('BCSCSettings.HeaderA')}
-            </ThemedText>
+              <ThemedText variant={'bold'} style={styles.sectionHeader}>
+                {t('BCSCSettings.HeaderA')}
+              </ThemedText>
 
-            <View style={styles.sectionContainer}>
               <SettingsActionCard
                 // TODO (MD + BM): Update with like for like device auth screen if that is their chosen auth method
                 // only show one or the other (device auth or change pin)
@@ -142,28 +164,37 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
               <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
 
               <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressForgetAllPairings} />
-            </View>
-          </>
-        ) : null}
 
-        <ThemedText variant={'bold'} style={styles.sectionHeader}>
-          {t('BCSCSettings.HeaderB')}
-        </ThemedText>
+              {store.preferences.developerModeEnabled && (
+                <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperOptions} />
+              )}
+            </>
+          ) : null}
 
-        <View style={styles.sectionContainer}>
+          <ThemedText variant={'bold'} style={styles.sectionHeader}>
+            {t('BCSCSettings.HeaderB')}
+          </ThemedText>
+
           <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onPressHelp} />
           <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPressPrivacy} />
           <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressContactUs} />
           <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressFeedback} />
           <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
-        </View>
 
-        {/* TODO (MD): Add developer options */}
+          {/* TODO (MD): Add developer options */}
 
-        <View style={styles.versionContainer}>
-          <ThemedText variant="labelSubtitle">BC Services Card</ThemedText>
-          <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
+          <View style={styles.versionContainer}>
+            <TouchableWithoutFeedback
+              onPress={incrementDeveloperMenuCounter}
+              disabled={store.preferences.developerModeEnabled}
+            >
+              <View>
+                <ThemedText variant="labelSubtitle">BC Services Card</ThemedText>
+                <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
         </View>
       </View>
     </TabScreenWrapper>

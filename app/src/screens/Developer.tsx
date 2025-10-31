@@ -31,19 +31,10 @@ const Developer: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
-  const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
-  const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
-  const [useConnectionInviterCapability, setConnectionInviterCapability] = useState(
-    !!store.preferences.useConnectionInviterCapability
-  )
+
   const [remoteLoggingWarningModalVisible, setRemoteLoggingWarningModalVisible] = useState(false)
-  const [useDevVerifierTemplates, setDevVerifierTemplates] = useState(!!store.preferences.useDevVerifierTemplates)
-  const [enableWalletNaming, setEnableWalletNaming] = useState(!!store.preferences.enableWalletNaming)
-  const [preventAutoLock, setPreventAutoLock] = useState(!!store.preferences.preventAutoLock)
   const [remoteLoggingEnabled, setRemoteLoggingEnabled] = useState(logger?.remoteLoggingEnabled)
-  const [enableShareableLink, setEnableShareableLink] = useState(!!store.preferences.enableShareableLink)
   const [enableProxy, setEnableProxy] = useState(!!store.developer.enableProxy)
-  const [enableAppToAppPersonFlow, setEnableAppToAppPersonFlow] = useState(!!store.developer.enableAppToAppPersonFlow)
   const navigation = useNavigation()
 
   const BCSCMode = store.mode === Mode.BCSC
@@ -153,64 +144,6 @@ const Developer: React.FC = () => {
     setDevMode(!devMode)
   }
 
-  const toggleVerifierCapabilitySwitch = () => {
-    // if verifier feature is switched off then also turn off the dev templates
-    if (useVerifierCapability) {
-      dispatch({
-        type: DispatchAction.USE_DEV_VERIFIER_TEMPLATES,
-        payload: [false],
-      })
-      setDevVerifierTemplates(false)
-    }
-    dispatch({
-      type: DispatchAction.USE_VERIFIER_CAPABILITY,
-      payload: [!useVerifierCapability],
-    })
-    setUseVerifierCapability((previousState) => !previousState)
-  }
-
-  const toggleAcceptDevCredentialsSwitch = () => {
-    dispatch({
-      type: DispatchAction.ACCEPT_DEV_CREDENTIALS,
-      payload: [!acceptDevCredentials],
-    })
-    setAcceptDevCredentials((previousState) => !previousState)
-  }
-
-  const toggleConnectionInviterCapabilitySwitch = () => {
-    dispatch({
-      type: DispatchAction.USE_CONNECTION_INVITER_CAPABILITY,
-      payload: [!useConnectionInviterCapability],
-    })
-    setConnectionInviterCapability((previousState) => !previousState)
-  }
-
-  const toggleDevVerifierTemplatesSwitch = () => {
-    // if we switch on dev templates we can assume the user also
-    // wants to enable the verifier capability
-    if (!useDevVerifierTemplates) {
-      dispatch({
-        type: DispatchAction.USE_VERIFIER_CAPABILITY,
-        payload: [true],
-      })
-      setUseVerifierCapability(true)
-    }
-    dispatch({
-      type: DispatchAction.USE_DEV_VERIFIER_TEMPLATES,
-      payload: [!useDevVerifierTemplates],
-    })
-    setDevVerifierTemplates((previousState) => !previousState)
-  }
-
-  const toggleWalletNamingSwitch = () => {
-    dispatch({
-      type: DispatchAction.ENABLE_WALLET_NAMING,
-      payload: [!enableWalletNaming],
-    })
-
-    setEnableWalletNaming((previousState) => !previousState)
-  }
-
   const toggleRemoteLoggingSwitch = () => {
     if (remoteLoggingEnabled) {
       const remoteLoggingEnabled = false
@@ -249,37 +182,12 @@ const Developer: React.FC = () => {
     setRemoteLoggingWarningModalVisible(false)
   }
 
-  const togglePreventAutoLockSwitch = () => {
-    dispatch({
-      type: DispatchAction.PREVENT_AUTO_LOCK,
-      payload: [!preventAutoLock],
-    })
-
-    setPreventAutoLock((previousState) => !previousState)
-  }
-
-  const toggleShareableLinkSwitch = () => {
-    dispatch({
-      type: DispatchAction.USE_SHAREABLE_LINK,
-      payload: [!enableShareableLink],
-    })
-    setEnableShareableLink((previousState) => !previousState)
-  }
-
   const toggleEnableProxySwitch = () => {
     dispatch({
       type: BCDispatchAction.TOGGLE_PROXY,
       payload: [!enableProxy],
     })
     setEnableProxy((previousState) => !previousState)
-  }
-
-  const toggleEnableAppToAppPersonFlowSwitch = () => {
-    dispatch({
-      type: BCDispatchAction.TOGGLE_APP_TO_APP_PERSON_FLOW,
-      payload: [!enableAppToAppPersonFlow],
-    })
-    setEnableAppToAppPersonFlow((previousState) => !previousState)
   }
 
   const toggleTheme = () => {
@@ -291,7 +199,7 @@ const Developer: React.FC = () => {
   }
 
   const toggleMode = () => {
-    lockOutUser(LockoutReason.Timeout)
+    lockOutUser(LockoutReason.Logout)
 
     const newMode = BCSCMode ? Mode.BCWallet : Mode.BCSC
     const newTheme = BCSCMode ? BCThemeNames.BCWallet : BCThemeNames.BCSC
@@ -355,92 +263,6 @@ const Developer: React.FC = () => {
         </SectionRow>
         <View style={styles.sectionSeparator}></View>
         <SectionRow
-          title={t('Verifier.UseVerifierCapability')}
-          accessibilityLabel={t('Verifier.Toggle')}
-          testID={testIdWithKey('ToggleVerifierCapability')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useVerifierCapability ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleVerifierCapabilitySwitch}
-            value={useVerifierCapability}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Verifier.AcceptDevCredentials')}
-          accessibilityLabel={t('Verifier.Toggle')}
-          testID={testIdWithKey('ToggleAcceptDevCredentials')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={acceptDevCredentials ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleAcceptDevCredentialsSwitch}
-            value={acceptDevCredentials}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Connection.UseConnectionInviterCapability')}
-          accessibilityLabel={t('Connection.Toggle')}
-          testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useConnectionInviterCapability ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleConnectionInviterCapabilitySwitch}
-            value={useConnectionInviterCapability}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Verifier.UseDevVerifierTemplates')}
-          accessibilityLabel={t('Verifier.ToggleDevTemplates')}
-          testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useDevVerifierTemplates ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleDevVerifierTemplatesSwitch}
-            value={useDevVerifierTemplates}
-          />
-        </SectionRow>
-        {!store.onboarding.didCreatePIN && (
-          <SectionRow
-            title={t('NameWallet.EnableWalletNaming')}
-            accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
-            testID={testIdWithKey('ToggleWalletNamingSwitch')}
-            showRowSeparator
-          >
-            <Switch
-              trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-              thumbColor={enableWalletNaming ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-              ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-              onValueChange={toggleWalletNamingSwitch}
-              value={enableWalletNaming}
-            />
-          </SectionRow>
-        )}
-        <SectionRow
-          title={t('Settings.PreventAutoLock')}
-          accessibilityLabel={t('Settings.TogglePreventAutoLock')}
-          testID={testIdWithKey('TogglePreventAutoLockSwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={preventAutoLock ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={togglePreventAutoLockSwitch}
-            value={preventAutoLock}
-          />
-        </SectionRow>
-        <SectionRow
           title={'Remote Logging'}
           accessibilityLabel={'Remote Logging'}
           testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
@@ -463,22 +285,6 @@ const Developer: React.FC = () => {
             value={remoteLoggingEnabled}
           />
         </SectionRow>
-
-        <SectionRow
-          title={t('PasteUrl.UseShareableLink')}
-          accessibilityLabel={t('PasteUrl.UseShareableLink')}
-          testID={testIdWithKey('ToggleUseShareableLink')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={enableShareableLink ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleShareableLinkSwitch}
-            value={enableShareableLink}
-            disabled={!store.authentication.didAuthenticate}
-          />
-        </SectionRow>
-
         <SectionRow
           title={t('Developer.EnableProxy')}
           accessibilityLabel={t('Developer.EnableProxy')}
@@ -490,20 +296,6 @@ const Developer: React.FC = () => {
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleEnableProxySwitch}
             value={enableProxy}
-          />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.EnableAppToAppPersonFlow')}
-          accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
-          testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={enableAppToAppPersonFlow ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleEnableAppToAppPersonFlowSwitch}
-            value={enableAppToAppPersonFlow}
           />
         </SectionRow>
 

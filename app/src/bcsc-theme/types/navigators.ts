@@ -73,6 +73,7 @@ export enum BCSCScreens {
   OnboardingNotifications = 'BCSCOnboardingNotifications',
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
+  Developer = 'Developer',
 }
 
 export type BCSCTabStackParams = {
@@ -98,6 +99,7 @@ export type BCSCRootStackParams = {
   [BCSCScreens.HelpCentre]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.Developer]: undefined
 }
 
 export type BCSCOnboardingStackParams = {
@@ -108,6 +110,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
+  [BCSCScreens.Developer]: undefined
 }
 
 export type BCSCVerifyIdentityStackParams = {
@@ -165,4 +168,5 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.HelpCentre]: undefined
   [BCSCScreens.PrivacyPolicy]?: { interactive?: boolean }
   [BCSCScreens.ContactUs]: undefined
+  [BCSCScreens.Developer]: undefined
 }
