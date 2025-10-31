@@ -39,7 +39,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<InternetStatusStackNavigation>()
-  const isNavigationReady = useNavigationState((state) => Boolean(state))
+  const isNavigationReady = useNavigationState((state) => Boolean(state && !state.stale))
   const ranSystemChecksRef = useRef(false)
 
   // Internet connectivity event listener

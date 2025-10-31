@@ -3,7 +3,10 @@ import { useEffect, useRef } from 'react'
 type RemoveListenerCallback = () => void
 
 /**
- * Convenience hook to attach and detach event listeners.
+ * Hook to manage attaching and detaching to event listeners.
+ *
+ * Note: The eventListener function should return a function that removes the event listener when called.
+ * This is to prevent memory leaks by ensuring that all event listners are properly cleaned up on component unmount.
  *
  * @param {() => RemoveListenerCallback} eventListener - Function that attaches the event listener and returns a function to remove it.
  * @param {boolean} [canAttach=true] - Flag to determine if the event listener should be attached.

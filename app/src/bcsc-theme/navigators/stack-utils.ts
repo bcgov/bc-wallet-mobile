@@ -15,5 +15,6 @@ export function getDefaultModalOptions(title?: string): StackNavigationOptions {
     title: title,
     headerShadowVisible: false,
     header: createHeaderWithoutBanner,
+    gestureEnabled: true,
   }
 }
