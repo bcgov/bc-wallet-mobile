@@ -22,9 +22,10 @@ import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCModals, BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
-import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithBanner } from '../components/HeaderWithBanner'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
+import { getDefaultModalOptions } from './stack-utils'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -177,12 +178,8 @@ const MainStack: React.FC = () => {
           name={BCSCModals.InternetDisconnected}
           component={InternetDisconnected}
           options={{
-            presentation: 'modal',
-            headerShown: true,
-            headerLeft: () => null,
-            title: t('Unified.BCSC'),
-            headerShadowVisible: false,
-            header: createHeaderWithoutBanner,
+            ...getDefaultModalOptions(t('Unified.BCSC')),
+            gestureEnabled: false, // Disable swipe to dismiss
           }}
         />
       </Stack.Navigator>

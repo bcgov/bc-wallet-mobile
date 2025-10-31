@@ -28,7 +28,7 @@ export enum SystemCheckScope {
  *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: server status, internet connectivity
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
  *
- * @param {SystemCheckScope[]} scope - The scope of system checks to run.
+ * @param {SystemCheckScope} scope - The scope of the system checks to run
  * @returns {void}
  */
 export const useSystemChecks = (scope: SystemCheckScope) => {
@@ -40,7 +40,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<InternetStatusStackNavigation>()
   const isNavigationReady = useNavigationState((state) => Boolean(state))
-  const startupCheckRef = useRef(false)
+  const ranSystemChecksRef = useRef(false)
 
   // Internet connectivity event listener
   useEventListener(() => {
@@ -54,11 +54,11 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
    */
   useEffect(() => {
     const runChecksByScope = async () => {
-      if (startupCheckRef.current || !isClientReady || !client) {
+      if (ranSystemChecksRef.current || !isClientReady || !client) {
         return
       }
 
-      startupCheckRef.current = true
+      ranSystemChecksRef.current = true
 
       const utils = { dispatch, translation: t, logger }
 
@@ -75,8 +75,8 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         }
       } catch (error) {
         logger.error(`System checks failed: ${(error as Error).message}`)
-      } finally {
-        startupCheckRef.current = false
+        // QUESTION (MD): Should we reset this to allow re-running on next effect?
+        ranSystemChecksRef.current = false
       }
     }
 

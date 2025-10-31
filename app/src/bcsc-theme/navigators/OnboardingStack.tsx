@@ -9,6 +9,7 @@ import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { getDefaultModalOptions } from './stack-utils'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -69,12 +70,8 @@ const OnboardingStack = (): JSX.Element => {
         name={BCSCModals.InternetDisconnected}
         component={InternetDisconnected}
         options={{
-          presentation: 'modal',
-          headerShown: true,
-          headerLeft: () => null,
-          title: t('Unified.BCSC'),
-          headerShadowVisible: false,
-          header: createHeaderWithoutBanner,
+          ...getDefaultModalOptions(t('Unified.BCSC')),
+          gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
     </Stack.Navigator>
