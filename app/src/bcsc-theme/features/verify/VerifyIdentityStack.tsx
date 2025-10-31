@@ -17,6 +17,7 @@ import Settings from '../settings/Settings'
 import WebViewScreen from '../webview/WebViewScreen'
 import EnterBirthdateScreen from './EnterBirthdateScreen'
 import IdentitySelectionScreen from './IdentitySelectionScreen'
+import EditNicknameScreen from '../account/EditNicknameScreen'
 import ManualSerialScreen from './ManualSerialScreen'
 import MismatchedSerialScreen from './MismatchedSerialScreen'
 import NewSetupScreen from './NewSetupScreen'
@@ -50,6 +51,10 @@ import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
+import { ForgetAllPairingsScreen } from '../settings/ForgetAllPairingsScreen'
+import { HelpCentreScreen } from '../settings/HelpCentreScreen'
+import { PrivacyPolicyScreen } from '../onboarding/PrivacyPolicyScreen'
+import { ContactUsScreen } from '../settings/ContactUsScreen'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -103,6 +108,31 @@ const VerifyIdentityStack = () => {
       <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountQRScan} component={TransferQRScannerScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
+      <Stack.Screen
+        name={BCSCScreens.EditNickname}
+        component={EditNicknameScreen}
+        options={{ title: t('BCSCSettings.EditNickname') }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ForgetAllPairings}
+        component={ForgetAllPairingsScreen}
+        options={{ title: t('BCSCSettings.ForgetPairings') }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.HelpCentre}
+        component={HelpCentreScreen}
+        options={{ title: t('Unified.Screens.HelpCentre') }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.PrivacyPolicy}
+        component={PrivacyPolicyScreen}
+        options={{ title: t('Unified.Screens.PrivacyInformation') }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.ContactUs}
+        component={ContactUsScreen}
+        options={{ title: t('Unified.Screens.ContactUs') }}
+      />
       <Stack.Screen
         name={BCSCScreens.SerialInstructions}
         component={SerialInstructionsScreen}
