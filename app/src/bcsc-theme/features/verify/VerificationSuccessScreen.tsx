@@ -1,11 +1,17 @@
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCDispatchAction, BCState } from '@/store'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useStore } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 
 const VerificationSuccessScreen = () => {
   const { t } = useTranslation()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
+  const { registration } = useApi()
+
+  const handleUpdateRegistration = async () => {
+    await registration.updateRegistration(store.bcsc)
+  }
 
   return (
     <StatusDetails
@@ -16,6 +22,7 @@ const VerificationSuccessScreen = () => {
       onButtonPress={() => {
         dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
         dispatch({ type: BCDispatchAction.CLEAR_USER_METADATA })
+        handleUpdateRegistration()
       }}
     />
   )

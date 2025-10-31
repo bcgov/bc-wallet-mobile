@@ -20,6 +20,7 @@ import {
 } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import Toast from 'react-native-toast-message'
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 
 interface NicknameFormProps {
   isRenaming?: boolean
@@ -34,6 +35,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
   const [loading, setLoading] = useState(false)
   const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
   const [error, setError] = useState<string | null>(null)
+  const { registration } = useApi()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -56,7 +58,11 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
     setAccountNickname(text)
   }, [])
 
-  const handleContinuePressed = useCallback(() => {
+  const handleContinuePressed = useCallback(async () => {
+    const handleUpdateRegistration = async (nickname: string) => {
+      await registration.updateRegistration({ ...store.bcsc, selectedNickname: nickname })
+    }
+
     //trim the account nickname
     const trimmedAccountNickname = accountNickname.trim()
 
@@ -93,6 +99,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
         text2: t('Unified.NicknameAccount.RenameSuccessToastMessage'),
         position: 'bottom',
       })
+      await handleUpdateRegistration(trimmedAccountNickname)
       navigation.goBack()
     } else {
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedAccountNickname] })
@@ -102,7 +109,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }, [accountNickname, t, isRenaming, dispatch, navigation, store])
+  }, [accountNickname, t, isRenaming, dispatch, navigation, store, registration])
 
   return (
     <KeyboardView keyboardAvoiding={false}>
