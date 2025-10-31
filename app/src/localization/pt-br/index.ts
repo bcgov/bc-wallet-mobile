@@ -89,6 +89,14 @@ const translation = {
     "VerifyIdentityStep": {
       "Stage1": "TODO",
     },
+  "Modals": {
+    "InternetDisconnected": {
+      "Header": "No internet connection (PT-BR)",
+      "ContentA": "It looks like you aren’t connected to the internet. A connection is required for this app to function. (PT-BR)",
+      "ContentB": "Check that your device is connected to the internet or try again. (PT-BR)",
+      "RetryButton": "Retry (PT-BR)",
+    },
+  },
   },
   "PINCreate": {
     "Header": "BC Wallet (PT-BR)",
@@ -257,6 +265,7 @@ const translation = {
     "NoSavedServices": "No saved services (PT-BR)",
   },
   "Unified": {
+    "BCSC": "BC Services Card (PT-BR)",
     "Screens": {
       "SetupTypes": "BC Services Card (PT-BR)",
       "SetupSteps": "Setup Steps (PT-BR)",

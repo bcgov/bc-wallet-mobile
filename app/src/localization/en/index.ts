@@ -90,6 +90,14 @@ const translation = {
       "Stage1": "TODO",
     },
   },
+  "Modals": {
+    "InternetDisconnected": {
+      "Header": "No internet connection",
+      "ContentA": "It looks like you aren’t connected to the internet. A connection is required for this app to function.",
+      "ContentB": "Check that your device is connected to the internet or try again.",
+      "RetryButton": "Retry",
+    },
+  },
   "PINCreate": {
     "Header": "BC Wallet",
     "Subheader": "Secure your wallet",
@@ -260,6 +268,7 @@ const translation = {
     "NoSavedServices": "No saved services",
   },
   "Unified": {
+    "BCSC": "BC Services Card",
     "Screens": {
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",

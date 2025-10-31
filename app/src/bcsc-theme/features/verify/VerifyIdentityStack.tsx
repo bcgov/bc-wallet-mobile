@@ -2,7 +2,7 @@ import { createHeaderWithBanner } from '@/bcsc-theme/components/HeaderWithBanner
 import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
 import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCModals, BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
@@ -51,6 +51,8 @@ import TakeVideoScreen from './send-video/TakeVideoScreen'
 import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
+import { InternetDisconnected } from '../modal/InternetDisconnected'
+import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { ForgetAllPairingsScreen } from '../settings/ForgetAllPairingsScreen'
 import { HelpCentreScreen } from '../settings/HelpCentreScreen'
 import { PrivacyPolicyScreen } from '../onboarding/PrivacyPolicyScreen'
@@ -279,6 +281,16 @@ const VerifyIdentityStack = () => {
           title: t('Screens.Settings'),
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
+        }}
+      />
+
+      {/* React navigation docs suggest modals at bottom of stack */}
+      <Stack.Screen
+        name={BCSCModals.InternetDisconnected}
+        component={InternetDisconnected}
+        options={{
+          ...getDefaultModalOptions(t('Unified.BCSC')),
+          gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
     </Stack.Navigator>
