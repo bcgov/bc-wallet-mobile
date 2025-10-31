@@ -5,6 +5,7 @@ import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-toke
 import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
+import { withAccount } from './withAccountGuard'
 
 export interface RegistrationResponseData {
   client_id: string
@@ -114,85 +115,83 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
   const updateRegistration = useCallback(
     async (bcsc: BCSCState) => {
-      if (!isClientReady || !apiClient) {
-        throw new Error('BCSC client not ready for registration update')
-      }
+      return withAccount(async (account) => {
+        if (!isClientReady || !apiClient) {
+          throw new Error('BCSC client not ready for registration update')
+        }
 
-      const account = await getAccount()
-      if (!account) {
-        throw new Error('No account found for registration update')
-      }
+        const registrationAccessToken = store.bcsc.registrationAccessToken
+        if (!registrationAccessToken) {
+          throw new Error('No registration access token found for registration update')
+        }
 
-      const registrationAccessToken = store.bcsc.registrationAccessToken
-      if (!registrationAccessToken) {
-        throw new Error('No registration access token found for registration update')
-      }
+        const clientName = bcsc.selectedNickname
+        if (!clientName) {
+          throw new Error('No client name found for registration update')
+        }
 
-      const clientName = bcsc.selectedNickname
-      if (!clientName) {
-        throw new Error('No client name found for registration update')
-      }
+        let fcmDeviceToken = 'fallback_fcm_token'
+        let apnsToken: string | null = ''
 
-      let fcmDeviceToken = 'fallback_fcm_token'
-      let apnsToken: string | null = ''
+        try {
+          const tokens = await getNotificationTokens(logger)
+          fcmDeviceToken = tokens.fcmDeviceToken || fcmDeviceToken
+          apnsToken = tokens.apnsToken || apnsToken
+        } catch (error) {
+          // Log warning but continue with fallback tokens
+          logger.warn(
+            `Failed to retrieve tokens for registration update: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          )
+        }
 
-      try {
-        const tokens = await getNotificationTokens(logger)
-        fcmDeviceToken = tokens.fcmDeviceToken || fcmDeviceToken
-        apnsToken = tokens.apnsToken || apnsToken
-      } catch (error) {
-        // Log warning but continue with fallback tokens
-        logger.warn(
-          `Failed to retrieve tokens for registration update: ${error instanceof Error ? error.message : String(error)}`
-        )
-      }
+        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken || '')
 
-      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken || '')
+        let updatedRegistrationData: RegistrationResponseData | null = null
 
-      let updatedRegistrationData: RegistrationResponseData | null = null
+        try {
+          const updatePayload = typeof body === 'string' ? JSON.parse(body) : body
+          // Add required fields for PUT request: client_id, client_name, and scope
+          updatePayload.client_id = account.clientID
+          updatePayload.client_name = clientName
+          updatePayload.scope = 'openid profile address offline_access'
 
-      try {
-        const updatePayload = typeof body === 'string' ? JSON.parse(body) : body
-        // Add required fields for PUT request: client_id, client_name, and scope
-        updatePayload.client_id = account.clientID
-        updatePayload.client_name = clientName
-        updatePayload.scope = 'openid profile address offline_access'
+          const { data } = await apiClient.put<RegistrationResponseData>(
+            `${apiClient.endpoints.registration}/${account.clientID}`,
+            updatePayload,
+            {
+              skipBearerAuth: true,
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${registrationAccessToken}`,
+              },
+            }
+          )
 
-        const { data } = await apiClient.put<RegistrationResponseData>(
-          `${apiClient.endpoints.registration}/${account.clientID}`,
-          updatePayload,
-          {
-            skipBearerAuth: true,
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-              Authorization: `Bearer ${registrationAccessToken}`,
-            },
-          }
-        )
+          updatedRegistrationData = data
+        } catch (error) {
+          logger.error('Failed to update registration', { error })
+          throw error
+        }
 
-        updatedRegistrationData = data
-      } catch (error) {
-        logger.error('Failed to update registration', { error })
-        throw error
-      }
+        logger.info('Completed registration update request')
 
-      logger.info('Completed registration update request')
+        dispatch({
+          type: BCDispatchAction.UPDATE_REGISTRATION_ACCESS_TOKEN,
+          payload: [{ registrationAccessToken: updatedRegistrationData?.registration_access_token }],
+        })
 
-      dispatch({
-        type: BCDispatchAction.UPDATE_REGISTRATION_ACCESS_TOKEN,
-        payload: [{ registrationAccessToken: updatedRegistrationData?.registration_access_token }],
+        await setAccount({
+          clientID: updatedRegistrationData?.client_id,
+          issuer: apiClient.endpoints.issuer,
+          securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+          nickname: bcsc.selectedNickname,
+          didPostNicknameToServer: true,
+        })
+
+        return updatedRegistrationData
       })
-
-      await setAccount({
-        clientID: updatedRegistrationData?.client_id,
-        issuer: apiClient.endpoints.issuer,
-        securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-        nickname: bcsc.selectedNickname,
-        didPostNicknameToServer: true,
-      })
-
-      return updatedRegistrationData
     },
     [isClientReady, apiClient, logger, dispatch, store.bcsc]
   )
