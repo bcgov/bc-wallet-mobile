@@ -29,7 +29,7 @@ const TransferQRScannerScreen: React.FC = () => {
   const navigator = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const [store, dispatch] = useStore<BCState>()
   const { ColorPalette, Spacing } = useTheme()
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [scanError, setScanError] = useState<QrCodeScanError | null>(null)
   const { hasPermission, requestPermission } = useCameraPermission()
   const { t } = useTranslation()
@@ -95,8 +95,8 @@ const TransferQRScannerScreen: React.FC = () => {
 
   const handleScan = useCallback(
     async (value: string) => {
-      // exit early if processing a scan already
-      if (isLoading) {
+      // exit early if processing a scan already or if there's an error showing
+      if (isLoading || scanError != null) {
         return
       }
 
@@ -140,6 +140,8 @@ const TransferQRScannerScreen: React.FC = () => {
                 'No attestation response, check your connection and try again.'
               )
             )
+            setIsLoading(false)
+            return
           }
 
           const deviceToken = await token.deviceToken({
@@ -161,11 +163,12 @@ const TransferQRScannerScreen: React.FC = () => {
         }
       } catch (error) {
         setScanError(new QrCodeScanError(t('Scan.InvalidQrCode'), value, (error as Error)?.message))
+        setIsLoading(false)
       } finally {
         setIsLoading(false)
       }
     },
-    [store.bcsc.deviceCode, deviceAttestation, client, dispatch, navigator, t, token, isLoading]
+    [store.bcsc.deviceCode, deviceAttestation, client, dispatch, navigator, t, token, isLoading, scanError]
   )
 
   if (isLoading) {
@@ -183,7 +186,7 @@ const TransferQRScannerScreen: React.FC = () => {
   }
   return (
     <View style={styles.container}>
-      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} />
+      <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
       <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
       <View style={styles.messageContainer}>
         <Icon name="qrcode-scan" size={40} style={styles.icon} />
