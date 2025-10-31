@@ -27,7 +27,7 @@ export type InternetStatusStackNavigation = StackNavigationProp<
  * @implements {SystemCheckStrategy}
  */
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
-  private netInfo: NetInfoState
+  private readonly netInfo: NetInfoState
   private readonly navigation: InternetStatusStackNavigation
   private readonly logger: BifoldLogger
 

@@ -56,7 +56,9 @@ export async function runSystemChecks(checks: SystemCheckStrategy[]) {
 
   // Add all startup check promises to array
   for (const check of checks) {
-    runCheckPromises.push(check.runCheck())
+    // Ensure each check is a promise (SonarQube compliance)
+    const ensurePromise = Promise.resolve(check.runCheck())
+    runCheckPromises.push(ensurePromise)
   }
 
   // Wait for all startup checks to complete in parallel
