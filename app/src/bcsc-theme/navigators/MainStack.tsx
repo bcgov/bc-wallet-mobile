@@ -172,7 +172,6 @@ const MainStack: React.FC = () => {
           options={() => ({
             title: t('Developer.DeveloperMode'),
             headerShown: true,
-            headerBackTestID: testIdWithKey('Back'),
           })}
         />
       </Stack.Navigator>

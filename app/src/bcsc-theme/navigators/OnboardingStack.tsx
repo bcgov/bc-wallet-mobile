@@ -68,7 +68,6 @@ const OnboardingStack = (): JSX.Element => {
         options={() => ({
           title: t('Developer.DeveloperMode'),
           headerShown: true,
-          headerBackTestID: testIdWithKey('Back'),
         })}
       />
     </Stack.Navigator>
