@@ -21,7 +21,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 import { SettingsActionCard } from './components/SettingsActionCard'
 
 type SettingsScreenProps = {
-  navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.Settings>
+  navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.Settings | BCSCScreens.Developer>
 }
 
 /**
@@ -37,7 +37,7 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const onDevModeTriggered = () => {
     Vibration.vibrate()
-    navigation.navigate({ name: BCSCScreens.Developer } as any)
+    navigation.navigate(BCSCScreens.Developer)
   }
   const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
 
@@ -117,7 +117,7 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   }
 
   const onPressDeveloperOptions = () => {
-    navigation.navigate({ name: BCSCScreens.Developer } as any)
+    navigation.navigate(BCSCScreens.Developer)
   }
 
   return (
@@ -190,7 +190,7 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
               disabled={store.preferences.developerModeEnabled}
             >
               <View>
-                <ThemedText variant="labelSubtitle">BC Services Card</ThemedText>
+                <ThemedText variant="labelSubtitle">{t('Unified.Screens.SetupTypes')}</ThemedText>
                 <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
               </View>
             </TouchableWithoutFeedback>
