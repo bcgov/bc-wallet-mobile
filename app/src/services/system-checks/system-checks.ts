@@ -52,12 +52,11 @@ export interface SystemCheckUtils {
  * @returns {*} {Promise<boolean[]>} - An array of boolean results indicating the success of each check.
  */
 export async function runSystemChecks(checks: SystemCheckStrategy[]) {
-  const runCheckPromises: Array<Promise<boolean> | boolean> = []
+  const runCheckPromises: Promise<boolean>[] = []
 
   // Add all startup check promises to array
   for (const check of checks) {
-    // Ensure each check is a promise (SonarQube compliance)
-    const ensurePromise = Promise.resolve(check.runCheck())
+    const ensurePromise = Promise.resolve(check.runCheck()) // SonarQube compliance
     runCheckPromises.push(ensurePromise)
   }
 
