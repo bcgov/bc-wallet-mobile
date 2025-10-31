@@ -1,6 +1,7 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
+import { ACCOUNT_SERVICES_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -30,22 +31,22 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
       flex: 1,
       justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
+      padding: Spacing.md,
     },
     scrollView: {
-      paddingHorizontal: Spacing.lg,
-      paddingBottom: Spacing.lg,
+      flexGrow: 1,
+      gap: Spacing.lg,
     },
   })
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['left', 'right', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
+      <ScrollView contentContainerStyle={styles.scrollView} showsVerticalScrollIndicator={false}>
         <GenericCardImage />
-        <View style={{ marginBottom: Spacing.lg }}>
-          <ThemedText variant={'headingFour'}>{t('Unified.DualNonBCSCEvidence.Heading')}</ThemedText>
-          <ThemedText>{t('Unified.DualNonBCSCEvidence.Description')}</ThemedText>
-        </View>
-        <View style={{ marginBottom: Spacing.lg }}>
+        <ThemedText variant={'headingFour'}>{t('Unified.DualNonBCSCEvidence.Heading')}</ThemedText>
+        <ThemedText>{t('Unified.DualNonBCSCEvidence.Description')}</ThemedText>
+
+        <View>
           <ThemedText variant={'headingFour'}>{t('Unified.DualNonBCSCEvidence.CheckYourID')}</ThemedText>
           <BulletPointWithText
             translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet1')}
@@ -65,16 +66,16 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
             iconColor={ColorPalette.brand.icon}
           />
         </View>
-        <View style={{ marginBottom: Spacing.lg }}>
+        <View>
           <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
             <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.LimitedAccess')}</ThemedText>
-            <TouchableOpacity onPress={() => Linking.openURL('https://id.gov.bc.ca/account/services')}>
+            <TouchableOpacity style={{ marginLeft: Spacing.sm }} onPress={() => Linking.openURL(ACCOUNT_SERVICES_URL)}>
               <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
             </TouchableOpacity>
           </View>
           <ThemedText>{t('Unified.AdditionalEvidence.LimitedAccessDescription')}</ThemedText>
         </View>
-        <View style={{ marginTop: Spacing.md }}>
+        <View style={{ marginTop: 'auto' }}>
           <Button
             title={t('Unified.AdditionalEvidence.ChooseID')}
             accessibilityLabel={t('Unified.AdditionalEvidence.ChooseID')}

@@ -276,6 +276,12 @@ const translation = {
       "PrivacyInformation": "Privacy Information (FR)",
       "ManageDevices": "Manage Devices (FR)",
     },
+    "Home": {
+      "WhereToUseTitle": "Where to use (FR)",
+      "WhereToUseDescription": "Find the websites you can log in to with this app. (FR)",
+      "LogInFromComputerTitle": "Log in from a computer (FR)",
+      "LogInFromComputerDescription": "Enter pairing code to log in from a different device – like a computer, laptop, or tablet. (FR)",
+    },
     "Steps": {
       "ScanOrTakePhotos": "Scan or take photos of your ID. (FR)",
       "Step1": "Step 1 (FR)",
@@ -338,6 +344,16 @@ const translation = {
       "EmptyNameTitle": "Enter an account nickname (FR)",
       "NameAlreadyExists": "This nickname already exists (FR)",
       "SaveAndContinue": "Save and continue (FR)",
+      "RenameSuccessToastMessage": "Account nickname updated successfully (FR)",
+    },
+    "ManualPairing": {
+      "EnterPairingCodeTitle": "Enter pairing code (FR)",
+      "EnterPairingCodeMessage": "A pairing code will be provided when you log in to a website on another device. (FR)",
+      "InvalidPairingCodeMessage": "Pairing code must be six characters long (FR)",
+      "EmptyPairingCodeMessage": "Pairing code cannot be empty (FR)",
+      "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code (FR)",
+      "CompletionTitle": "You're done in this app (FR)",
+      "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}. (FR)",
     },
     "AccountSelector": {
       "Header": "BC Services Card (FR)",
@@ -464,7 +480,8 @@ const translation = {
       "ScanQRCode": "Scan QR Code (FR)",
     },
     "TransferQRDisplay": {
-      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device. (FR)"
+      "Instructions": "Scan this QR code in the BC Services Card app on your other mobile device (FR)",
+      "GetNewQRCode": "Get new QR Code (FR)"
     },
     "TransferSuccess": {
       "Title": "QR code scan complete (FR)",

@@ -1,16 +1,16 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useCallback, useEffect, useState } from 'react'
-import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { EvidenceMetadataResponseData, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { BCDispatchAction, BCState } from '@/store'
+import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { useTranslation } from 'react-i18next'
+import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
+import { BCDispatchAction, BCState } from '@/store'
+import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -185,6 +185,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
         sections={evidenceSections || []}
         SectionSeparatorComponent={SectionSeparator}
         ItemSeparatorComponent={ItemSeparator}
+        showsVerticalScrollIndicator={false}
         renderSectionHeader={(item) => (
           <ThemedText style={[styles.cardSection, { color: ColorPalette.brand.primary }]} variant={'headingFour'}>
             {item.section.title}

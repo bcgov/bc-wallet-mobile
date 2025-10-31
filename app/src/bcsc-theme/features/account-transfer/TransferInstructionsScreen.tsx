@@ -8,6 +8,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, ScrollView, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const TAB_NAVIGATOR = Image.resolveAssetSource(TabNavigator)
 const QR_CODE_PHONE = Image.resolveAssetSource(QRCodePhone)
@@ -19,53 +20,49 @@ const TransferInstructionsScreen: React.FC = () => {
 
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
   const styles = StyleSheet.create({
-    container: {
+    contentContainer: {
       flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: Spacing.md,
+      gap: Spacing.md,
     },
+    controlsContainer: {},
   })
 
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        <ThemedText variant="headerTitle" style={{ paddingBottom: Spacing.lg }}>
-          {t('Unified.TransferInstructions.Title')}
-        </ThemedText>
+    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: Spacing.md }} showsVerticalScrollIndicator={false}>
+        <View style={styles.contentContainer}>
+          <ThemedText variant={'headingThree'}>{t('Unified.TransferInstructions.Title')}</ThemedText>
 
-        <ThemedText>{t('Unified.TransferInstructions.Step1')}</ThemedText>
-        <Image
-          source={TAB_NAVIGATOR}
-          style={{ height: 200, aspectRatio: 1, marginTop: Spacing.md }}
-          resizeMode={'contain'}
-        />
+          <ThemedText>{t('Unified.TransferInstructions.Step1')}</ThemedText>
+          <Image
+            source={TAB_NAVIGATOR}
+            style={{ height: 100, aspectRatio: 2, alignSelf: 'center' }}
+            resizeMode={'contain'}
+          />
 
-        <ThemedText>{t('Unified.TransferInstructions.Step2')}</ThemedText>
-        <Image
-          source={QR_CODE_PHONE}
-          style={{ height: 300, aspectRatio: 0.5, marginTop: Spacing.md }}
-          resizeMode={'contain'}
-        />
+          <ThemedText>{t('Unified.TransferInstructions.Step2')}</ThemedText>
+          <Image
+            source={QR_CODE_PHONE}
+            style={{ height: 300, aspectRatio: 0.5, alignSelf: 'center' }}
+            resizeMode={'contain'}
+          />
 
-        <ThemedText>{t('Unified.TransferInstructions.Step3')}</ThemedText>
-        <Image
-          source={QR_SCAN}
-          style={{ height: 300, aspectRatio: 0.5, marginTop: Spacing.md }}
-          resizeMode={'contain'}
-        />
-
-        <View style={{ margin: Spacing.lg, gap: Spacing.sm, width: '100%' }}>
-          <Button
-            buttonType={ButtonType.Primary}
-            title={t('Unified.TransferInstructions.ScanQRCode')}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.TransferAccountQRScan)
-            }}
+          <ThemedText>{t('Unified.TransferInstructions.Step3')}</ThemedText>
+          <Image
+            source={QR_SCAN}
+            style={{ height: 300, aspectRatio: 0.5, alignSelf: 'center' }}
+            resizeMode={'contain'}
           />
         </View>
-      </View>
-    </ScrollView>
+        <Button
+          buttonType={ButtonType.Primary}
+          title={t('Unified.TransferInstructions.ScanQRCode')}
+          onPress={() => {
+            navigation.navigate(BCSCScreens.TransferAccountQRScan)
+          }}
+        />
+      </ScrollView>
+    </SafeAreaView>
   )
 }
 

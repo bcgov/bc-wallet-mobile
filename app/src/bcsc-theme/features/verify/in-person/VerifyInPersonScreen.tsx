@@ -1,5 +1,6 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
 import {
   Button,
   ButtonType,
@@ -12,11 +13,10 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { BCDispatchAction, BCState } from '@/store'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 type VerifyInPersonScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerifyInPerson>
@@ -80,7 +80,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
 
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <View style={styles.contentContainer}>
+      <ScrollView style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
           Verify in person
         </ThemedText>
@@ -108,7 +108,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
           {store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}
         </ThemedText>
-      </View>
+      </ScrollView>
       <View style={styles.controlsContainer}>
         <View style={{ marginBottom: Spacing.md }}>
           {error && (

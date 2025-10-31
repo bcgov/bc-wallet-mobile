@@ -1,13 +1,14 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
-import { Button, ButtonType, QRRenderer, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, QRRenderer, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import uuid from 'react-native-uuid'
 
 const TransferQRDisplayScreen: React.FC = () => {
@@ -25,20 +26,20 @@ const TransferQRDisplayScreen: React.FC = () => {
     container: {
       flex: 1,
       justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: Spacing.xl,
+      padding: Spacing.md,
+    },
+    scrollView: {
+      flex: 1,
     },
     qrCodeContainer: {
       backgroundColor: ColorPalette.grayscale.white,
-      flex: 1,
+      flexShrink: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
       padding: Spacing.sm,
       borderRadius: Spacing.sm,
-      overflow: 'hidden',
     },
-    refreshButton: {
-      padding: Spacing.lg,
-      width: '100%',
-    },
+    controlsContainer: {},
   })
 
   const createToken = useCallback(async () => {
@@ -116,22 +117,25 @@ const TransferQRDisplayScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        <ThemedText variant="headerTitle" style={{ textAlign: 'center', paddingBottom: Spacing.md }}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+        <ThemedText style={{ marginBottom: Spacing.xxl }} variant={'headingThree'}>
           {t('Unified.TransferQRDisplay.Instructions')}
         </ThemedText>
-
         {qrValue && (
           <View style={styles.qrCodeContainer}>
             <QRRenderer value={qrValue} />
           </View>
         )}
-        <View style={styles.refreshButton}>
-          <Button buttonType={ButtonType.Primary} title="Refresh QR Code" onPress={refreshToken} />
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+      <Button
+        buttonType={ButtonType.Secondary}
+        accessibilityLabel={t('Unified.TransferQRDisplay.GetNewQRCode')}
+        title={t('Unified.TransferQRDisplay.GetNewQRCode')}
+        testID={testIdWithKey('GetNewQRCode')}
+        onPress={refreshToken}
+      />
+    </SafeAreaView>
   )
 }
 

@@ -102,6 +102,8 @@ export type BCSCRootStackParams = {
   [BCSCScreens.HelpCentre]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
+
+  // Modal screens
   [BCSCModals.InternetDisconnected]: undefined
 }
 
@@ -113,6 +115,8 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
+
+  // Modal screens
   [BCSCModals.InternetDisconnected]: undefined
 }
 
@@ -166,5 +170,12 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.NicknameAccount]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.Settings]: undefined
+  [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.ForgetAllPairings]: undefined
+  [BCSCScreens.HelpCentre]: undefined
+  [BCSCScreens.PrivacyPolicy]?: { interactive?: boolean }
+  [BCSCScreens.ContactUs]: undefined
+
+  // Modal screens
   [BCSCModals.InternetDisconnected]: undefined
 }

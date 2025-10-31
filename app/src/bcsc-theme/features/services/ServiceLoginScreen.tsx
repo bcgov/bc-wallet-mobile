@@ -28,19 +28,22 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
 
   const styles = StyleSheet.create({
     screenContainer: {
-      flex: 1,
-      paddingHorizontal: Spacing.lg,
-      paddingTop: Spacing.lg,
-      gap: Spacing.xl,
+      flexGrow: 1,
+      padding: Spacing.md,
+      justifyContent: 'space-between',
     },
     cardsContainer: {
-      gap: Spacing.lg,
+      gap: Spacing.md,
     },
     descriptionText: {
       lineHeight: 30,
     },
     continueButtonContainer: {
       marginBottom: 10,
+    },
+    contentContainer: {
+      flex: 1,
+      gap: Spacing.md,
     },
     buttonsContainer: {
       marginTop: 'auto',
@@ -77,9 +80,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
   // render an alternative screen if the serviceClient does not support OIDC login
   if (!serviceClient.initiate_login_uri) {
     return (
-      <SafeAreaView edges={['bottom']}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View style={styles.screenContainer}>
+      <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.screenContainer}>
+          <View style={styles.contentContainer}>
             <ThemedText variant={'headingThree'}>{serviceClient.client_name}</ThemedText>
             <ThemedText style={styles.descriptionText}>{t('Services.NoLoginInstructions')}</ThemedText>
             <ThemedText style={styles.descriptionText}>{t('Services.NoLoginProof')}</ThemedText>
@@ -108,9 +111,9 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
   }
 
   return (
-    <SafeAreaView edges={['bottom']}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={styles.screenContainer}>
+    <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.screenContainer}>
+        <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
             {`${t('Services.WantToLogin')}\n`}
             <ThemedText variant={'headingThree'}>{serviceClient.client_name}?</ThemedText>
@@ -154,34 +157,33 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
           <ThemedText variant={'bold'}>
             {t('Services.ReportSuspiciousPrefix')} <ThemedText>{t('Services.ReportSuspicious')}</ThemedText>
           </ThemedText>
-
-          <View style={styles.buttonsContainer}>
-            <View style={styles.continueButtonContainer}>
-              <Button
-                title="Continue"
-                accessibilityLabel={'Continue'}
-                testID={testIdWithKey('ServiceLoginContinue')}
-                buttonType={ButtonType.Primary}
-                onPress={async () => {
-                  const generateQuickLogin = await getQuickLoginURL(serviceClient)
-
-                  if (generateQuickLogin.success) {
-                    Linking.openURL(generateQuickLogin.url)
-                    return
-                  }
-
-                  Alert.alert(t('Services.LoginErrorTitle'), generateQuickLogin.error)
-                }}
-              />
-            </View>
+        </View>
+        <View style={styles.buttonsContainer}>
+          <View style={styles.continueButtonContainer}>
             <Button
-              title="Cancel"
-              accessibilityLabel={'Cancel'}
-              testID={testIdWithKey('ServiceLoginCancel')}
-              buttonType={ButtonType.Tertiary}
-              onPress={() => props.navigation.goBack()}
+              title="Continue"
+              accessibilityLabel={'Continue'}
+              testID={testIdWithKey('ServiceLoginContinue')}
+              buttonType={ButtonType.Primary}
+              onPress={async () => {
+                const generateQuickLogin = await getQuickLoginURL(serviceClient)
+
+                if (generateQuickLogin.success) {
+                  Linking.openURL(generateQuickLogin.url)
+                  return
+                }
+
+                Alert.alert(t('Services.LoginErrorTitle'), generateQuickLogin.error)
+              }}
             />
           </View>
+          <Button
+            title="Cancel"
+            accessibilityLabel={'Cancel'}
+            testID={testIdWithKey('ServiceLoginCancel')}
+            buttonType={ButtonType.Tertiary}
+            onPress={() => props.navigation.goBack()}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

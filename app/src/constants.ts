@@ -35,6 +35,7 @@ export const BCThemeNames = {
 } as const
 
 // BCSC Constants
+export const ACCOUNT_SERVICES_URL = 'https://id.gov.bc.ca/account/services'
 export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
 export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'
 export const ACCESSIBILITY_URL =
@@ -57,7 +58,7 @@ export const formStringLengths = {
   minimumLength: 1,
   maximumLength: 30,
 } as const
-
+export const PAIRING_CODE_LENGTH = 6
 export const RECONNECTION_GRACE_PERIOD_MS = 3000
 export const KEEP_ALIVE_INTERVAL_MS = 30000
 export const CROP_DELAY_MS = 11000

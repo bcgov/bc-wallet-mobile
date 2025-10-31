@@ -1,10 +1,10 @@
-import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import SelfieImage from '@assets/img/selfie_example.png'
-import { Image, StyleSheet, View } from 'react-native'
 import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
+import SelfieImage from '@assets/img/selfie_example.png'
+import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { Image, ScrollView, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const SELFIE_IMAGE = Image.resolveAssetSource(SelfieImage).uri
 
@@ -45,7 +45,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   })
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
-      <View style={styles.contentContainer}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
         <Image source={{ uri: SELFIE_IMAGE }} style={styles.image} />
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
           Take a photo of your face. The agent will use this photo when verifying your identity.
@@ -66,7 +66,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
           <ThemedText>Look like the photo on your BC Services Card or photo ID</ThemedText>
         </View>
-      </View>
+      </ScrollView>
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
