@@ -38,8 +38,11 @@ const AccountSetupSelectionScreen: React.FC = () => {
   const handleAccountSelect = useCallback(
     (nickname: string) => {
       dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [nickname] })
+      if (store.bcsc.completedNewSetup) {
+        navigation.navigate(BCSCScreens.SetupSteps)
+      }
     },
-    [dispatch]
+    [dispatch, navigation, store.bcsc.completedNewSetup]
   )
 
   return (
