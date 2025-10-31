@@ -107,7 +107,6 @@ const TransferQRScannerScreen: React.FC = () => {
         setScanError(
           new QrCodeScanError(t('Scan.InvalidQrCode'), value, 'No account found, restart the app and try again.')
         )
-        setIsLoading(false)
         return
       }
       try {
@@ -140,7 +139,6 @@ const TransferQRScannerScreen: React.FC = () => {
                 'No attestation response, check your connection and try again.'
               )
             )
-            setIsLoading(false)
             return
           }
 
@@ -159,11 +157,11 @@ const TransferQRScannerScreen: React.FC = () => {
           dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [deviceToken.refresh_token] })
 
           navigator.navigate(BCSCScreens.VerificationSuccess)
-          setIsLoading(false)
+        } else {
+          setScanError(new QrCodeScanError(t('Scan.InvalidQrCode'), value, 'No device code found.'))
         }
       } catch (error) {
         setScanError(new QrCodeScanError(t('Scan.InvalidQrCode'), value, (error as Error)?.message))
-        setIsLoading(false)
       } finally {
         setIsLoading(false)
       }
