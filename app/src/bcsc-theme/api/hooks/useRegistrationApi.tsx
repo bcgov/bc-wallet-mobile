@@ -177,7 +177,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         throw error
       }
 
-      logger.info('Completed registration update request', { updatedRegistrationData })
+      logger.info('Completed registration update request')
 
       dispatch({
         type: BCDispatchAction.UPDATE_REGISTRATION_ACCESS_TOKEN,
