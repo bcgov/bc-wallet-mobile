@@ -55,7 +55,7 @@ import { ForgetAllPairingsScreen } from '../settings/ForgetAllPairingsScreen'
 import { HelpCentreScreen } from '../settings/HelpCentreScreen'
 import { PrivacyPolicyScreen } from '../onboarding/PrivacyPolicyScreen'
 import { ContactUsScreen } from '../settings/ContactUsScreen'
-import BCSCDeveloperScreen from '../settings/BCSCDeveloperScreen'
+import Developer from '../../../screens/Developer'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -136,7 +136,7 @@ const VerifyIdentityStack = () => {
       />
       <Stack.Screen
         name={BCSCScreens.Developer}
-        component={BCSCDeveloperScreen}
+        component={Developer}
         options={{ title: t('Developer.DeveloperMode') }}
       />
       <Stack.Screen

@@ -73,7 +73,7 @@ export enum BCSCScreens {
   OnboardingNotifications = 'BCSCOnboardingNotifications',
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
-  Developer = 'BCSCDeveloperScreen',
+  Developer = 'Developer',
 }
 
 export type BCSCTabStackParams = {

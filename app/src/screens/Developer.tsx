@@ -354,92 +354,7 @@ const Developer: React.FC = () => {
           </Text>
         </SectionRow>
         <View style={styles.sectionSeparator}></View>
-        <SectionRow
-          title={t('Verifier.UseVerifierCapability')}
-          accessibilityLabel={t('Verifier.Toggle')}
-          testID={testIdWithKey('ToggleVerifierCapability')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useVerifierCapability ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleVerifierCapabilitySwitch}
-            value={useVerifierCapability}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Verifier.AcceptDevCredentials')}
-          accessibilityLabel={t('Verifier.Toggle')}
-          testID={testIdWithKey('ToggleAcceptDevCredentials')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={acceptDevCredentials ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleAcceptDevCredentialsSwitch}
-            value={acceptDevCredentials}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Connection.UseConnectionInviterCapability')}
-          accessibilityLabel={t('Connection.Toggle')}
-          testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useConnectionInviterCapability ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleConnectionInviterCapabilitySwitch}
-            value={useConnectionInviterCapability}
-          />
-        </SectionRow>
-        <SectionRow
-          title={t('Verifier.UseDevVerifierTemplates')}
-          accessibilityLabel={t('Verifier.ToggleDevTemplates')}
-          testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={useDevVerifierTemplates ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleDevVerifierTemplatesSwitch}
-            value={useDevVerifierTemplates}
-          />
-        </SectionRow>
-        {!store.onboarding.didCreatePIN && (
-          <SectionRow
-            title={t('NameWallet.EnableWalletNaming')}
-            accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
-            testID={testIdWithKey('ToggleWalletNamingSwitch')}
-            showRowSeparator
-          >
-            <Switch
-              trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-              thumbColor={enableWalletNaming ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-              ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-              onValueChange={toggleWalletNamingSwitch}
-              value={enableWalletNaming}
-            />
-          </SectionRow>
-        )}
-        <SectionRow
-          title={t('Settings.PreventAutoLock')}
-          accessibilityLabel={t('Settings.TogglePreventAutoLock')}
-          testID={testIdWithKey('TogglePreventAutoLockSwitch')}
-          showRowSeparator
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={preventAutoLock ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={togglePreventAutoLockSwitch}
-            value={preventAutoLock}
-          />
-        </SectionRow>
+
         <SectionRow
           title={'Remote Logging'}
           accessibilityLabel={'Remote Logging'}
@@ -465,21 +380,6 @@ const Developer: React.FC = () => {
         </SectionRow>
 
         <SectionRow
-          title={t('PasteUrl.UseShareableLink')}
-          accessibilityLabel={t('PasteUrl.UseShareableLink')}
-          testID={testIdWithKey('ToggleUseShareableLink')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={enableShareableLink ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleShareableLinkSwitch}
-            value={enableShareableLink}
-            disabled={!store.authentication.didAuthenticate}
-          />
-        </SectionRow>
-
-        <SectionRow
           title={t('Developer.EnableProxy')}
           accessibilityLabel={t('Developer.EnableProxy')}
           testID={testIdWithKey('ToggleEnableProxy')}
@@ -490,20 +390,6 @@ const Developer: React.FC = () => {
             ios_backgroundColor={ColorPalette.grayscale.lightGrey}
             onValueChange={toggleEnableProxySwitch}
             value={enableProxy}
-          />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.EnableAppToAppPersonFlow')}
-          accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
-          testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={enableAppToAppPersonFlow ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleEnableAppToAppPersonFlowSwitch}
-            value={enableAppToAppPersonFlow}
           />
         </SectionRow>
 
@@ -536,6 +422,127 @@ const Developer: React.FC = () => {
             value={BCSCMode}
           />
         </SectionRow>
+
+        {store.mode === Mode.BCSC ? null : (
+          <View>
+            <SectionRow
+              title={t('Developer.EnableAppToAppPersonFlow')}
+              accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
+              testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={enableAppToAppPersonFlow ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleEnableAppToAppPersonFlowSwitch}
+                value={enableAppToAppPersonFlow}
+              />
+            </SectionRow>
+
+            <SectionRow
+              title={t('PasteUrl.UseShareableLink')}
+              accessibilityLabel={t('PasteUrl.UseShareableLink')}
+              testID={testIdWithKey('ToggleUseShareableLink')}
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={enableShareableLink ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleShareableLinkSwitch}
+                value={enableShareableLink}
+                disabled={!store.authentication.didAuthenticate}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Verifier.UseVerifierCapability')}
+              accessibilityLabel={t('Verifier.Toggle')}
+              testID={testIdWithKey('ToggleVerifierCapability')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={useVerifierCapability ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleVerifierCapabilitySwitch}
+                value={useVerifierCapability}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Verifier.AcceptDevCredentials')}
+              accessibilityLabel={t('Verifier.Toggle')}
+              testID={testIdWithKey('ToggleAcceptDevCredentials')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={acceptDevCredentials ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleAcceptDevCredentialsSwitch}
+                value={acceptDevCredentials}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Connection.UseConnectionInviterCapability')}
+              accessibilityLabel={t('Connection.Toggle')}
+              testID={testIdWithKey('ToggleConnectionInviterCapabilitySwitch')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={
+                  useConnectionInviterCapability ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey
+                }
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleConnectionInviterCapabilitySwitch}
+                value={useConnectionInviterCapability}
+              />
+            </SectionRow>
+            <SectionRow
+              title={t('Verifier.UseDevVerifierTemplates')}
+              accessibilityLabel={t('Verifier.ToggleDevTemplates')}
+              testID={testIdWithKey('ToggleDevVerifierTemplatesSwitch')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={useDevVerifierTemplates ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleDevVerifierTemplatesSwitch}
+                value={useDevVerifierTemplates}
+              />
+            </SectionRow>
+            {!store.onboarding.didCreatePIN && (
+              <SectionRow
+                title={t('NameWallet.EnableWalletNaming')}
+                accessibilityLabel={t('NameWallet.ToggleWalletNaming')}
+                testID={testIdWithKey('ToggleWalletNamingSwitch')}
+                showRowSeparator
+              >
+                <Switch
+                  trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                  thumbColor={enableWalletNaming ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+                  ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                  onValueChange={toggleWalletNamingSwitch}
+                  value={enableWalletNaming}
+                />
+              </SectionRow>
+            )}
+            <SectionRow
+              title={t('Settings.PreventAutoLock')}
+              accessibilityLabel={t('Settings.TogglePreventAutoLock')}
+              testID={testIdWithKey('TogglePreventAutoLockSwitch')}
+              showRowSeparator
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={preventAutoLock ? ColorPalette.brand.primary : ColorPalette.grayscale.mediumGrey}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={togglePreventAutoLockSwitch}
+                value={preventAutoLock}
+              />
+            </SectionRow>
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   )
