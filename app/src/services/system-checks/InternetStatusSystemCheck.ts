@@ -33,6 +33,17 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
   }
 
   /**
+   * Checks if the InternetDisconnected modal is currently visible.
+   *
+   * @returns {*} {boolean} True if the modal is visible, false otherwise.
+   */
+  private get isModalVisible() {
+    const state = this.navigation.getState()
+    const currentRouteName = state.routes[state.index].name
+    return currentRouteName === BCSCModals.InternetDisconnected
+  }
+
+  /**
    * Runs the internet connectivity check.
    *
    * @returns {boolean} True if the device is connected to the internet, false otherwise.
@@ -49,6 +60,12 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    */
   onFail() {
     this.logger.warn('InternetStatusSystemCheck: No internet connection detected')
+
+    // Only navigate if the modal is not already visible
+    if (this.isModalVisible) {
+      return
+    }
+
     this.navigation.navigate(BCSCModals.InternetDisconnected)
   }
 
@@ -59,16 +76,8 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    * @returns {*} {void}
    */
   onSuccess() {
-    const state = this.navigation.getState()
-
-    if (!state) {
-      return
-    }
-
-    const currentRouteName = state.routes[state.index].name
-
-    // Only go back if we are currently on the InternetDisconnected modal
-    if (currentRouteName !== BCSCModals.InternetDisconnected || !this.navigation.canGoBack()) {
+    // Only navigate back if the modal is visible
+    if (!this.isModalVisible || !this.navigation.canGoBack()) {
       return
     }
 
