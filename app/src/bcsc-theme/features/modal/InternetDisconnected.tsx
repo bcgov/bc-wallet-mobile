@@ -1,4 +1,7 @@
-import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
+import {
+  InternetStatusStackNavigation,
+  InternetStatusSystemCheck,
+} from '@/services/system-checks/InternetStatusSystemCheck'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
@@ -16,7 +19,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 export const InternetDisconnected = (): JSX.Element => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const navigation = useNavigation()
+  const navigation = useNavigation<InternetStatusStackNavigation>()
   const netInfo = useNetInfo()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -26,24 +29,33 @@ export const InternetDisconnected = (): JSX.Element => {
       backgroundColor: ColorPalette.brand.modalPrimaryBackground,
     },
     scollContainer: {
-      padding: Spacing.md,
-      gap: Spacing.lg,
+      alignItems: 'center',
+    },
+    icon: {
+      paddingVertical: Spacing.lg,
     },
     buttonContainer: {
       padding: Spacing.md,
     },
+    textContent: {
+      lineHeight: 30,
+    },
+    textContainer: {
+      padding: Spacing.md,
+      gap: Spacing.lg,
+    },
   })
 
   /**
-   * Handler for the retry button press, which rechecks internet connectivity.
+   * Handler for the retry button press to re-check internet connectivity.
    *
    * Note: There is a listener elsewhere in the app that will also handle connectivity changes.
-   * Which will automatically close this modal when connectivity is restored.
+   * That listener will automatically close this modal when connectivity is restored.
    *
    * @returns {void}
    */
   const handleRetry = useCallback(() => {
-    const internetStatusCheck = new InternetStatusSystemCheck(netInfo, navigation as any, logger)
+    const internetStatusCheck = new InternetStatusSystemCheck(netInfo, navigation, logger)
 
     if (internetStatusCheck.runCheck()) {
       internetStatusCheck.onSuccess()
@@ -53,10 +65,12 @@ export const InternetDisconnected = (): JSX.Element => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scollContainer}>
-        <Icon name="wifi-off" size={64} />
-        <ThemedText variant="headingThree">{t('Modals.InternetDisconnected.Header')}</ThemedText>
-        <ThemedText>{t('Modals.InternetDisconnected.ContentA')}</ThemedText>
-        <ThemedText>{t('Modals.InternetDisconnected.ContentB')}</ThemedText>
+        <Icon name="wifi-off" size={200} color={ColorPalette.brand.icon} style={styles.icon} />
+        <View style={styles.textContainer}>
+          <ThemedText variant="headingThree">{t('Modals.InternetDisconnected.Header')}</ThemedText>
+          <ThemedText style={styles.textContent}>{t('Modals.InternetDisconnected.ContentA')}</ThemedText>
+          <ThemedText style={styles.textContent}>{t('Modals.InternetDisconnected.ContentB')}</ThemedText>
+        </View>
       </ScrollView>
 
       <View style={styles.buttonContainer}>

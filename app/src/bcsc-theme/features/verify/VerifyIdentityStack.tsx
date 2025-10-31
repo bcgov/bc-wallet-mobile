@@ -50,7 +50,7 @@ import VideoInstructionsScreen from './send-video/VideoInstructionsScreen'
 import VideoReviewScreen from './send-video/VideoReviewScreen'
 import VideoTooLongScreen from './send-video/VideoTooLongScreen'
 import { InternetDisconnected } from '../modal/InternetDisconnected'
-import { createHeaderWithBanner } from '@/bcsc-theme/components/HeaderWithBanner'
+import { createHeaderWithBanner, createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 
 const VerifyIdentityStack = () => {
   const Stack = createStackNavigator<BCSCVerifyIdentityStackParams>()
@@ -254,7 +254,11 @@ const VerifyIdentityStack = () => {
         component={InternetDisconnected}
         options={{
           presentation: 'modal',
-          headerShown: false,
+          headerShown: true,
+          headerLeft: () => null,
+          title: t('Unified.BCSC'),
+          headerShadowVisible: false,
+          header: createHeaderWithoutBanner,
         }}
       />
     </Stack.Navigator>

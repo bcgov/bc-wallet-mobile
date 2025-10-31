@@ -18,7 +18,8 @@ const BCSCRootStack: React.FC = () => {
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const initializeBCSC = useInitializeBCSC()
   const { isClientReady } = useBCSCApiClientState()
-  useSystemChecks([SystemCheckScope.STARTUP, SystemCheckScope.LISTENER])
+  useSystemChecks(SystemCheckScope.STARTUP)
+  useSystemChecks(SystemCheckScope.LISTENER)
 
   const LoadingView = () => (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.ColorPalette.brand.primaryBackground }}>

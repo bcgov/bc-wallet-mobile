@@ -70,7 +70,11 @@ const OnboardingStack = (): JSX.Element => {
         component={InternetDisconnected}
         options={{
           presentation: 'modal',
-          headerShown: false,
+          headerShown: true,
+          headerLeft: () => null,
+          title: t('Unified.BCSC'),
+          headerShadowVisible: false,
+          header: createHeaderWithoutBanner,
         }}
       />
     </Stack.Navigator>

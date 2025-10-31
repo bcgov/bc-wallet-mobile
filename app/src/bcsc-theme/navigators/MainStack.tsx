@@ -22,7 +22,7 @@ import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCModals, BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
-import { createHeaderWithBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 
@@ -33,7 +33,7 @@ const MainStack: React.FC = () => {
   const Stack = createStackNavigator<BCSCRootStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
-  useSystemChecks([SystemCheckScope.MAIN_STACK])
+  useSystemChecks(SystemCheckScope.MAIN_STACK)
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -178,7 +178,11 @@ const MainStack: React.FC = () => {
           component={InternetDisconnected}
           options={{
             presentation: 'modal',
-            headerShown: false,
+            headerShown: true,
+            headerLeft: () => null,
+            title: t('Unified.BCSC'),
+            headerShadowVisible: false,
+            header: createHeaderWithoutBanner,
           }}
         />
       </Stack.Navigator>

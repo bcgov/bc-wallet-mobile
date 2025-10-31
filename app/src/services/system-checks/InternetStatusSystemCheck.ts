@@ -59,11 +59,16 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    * @returns {*} {void}
    */
   onSuccess() {
-    const routeIndex = this.navigation.getState().index
-    const currentRoute = this.navigation.getState().routes[routeIndex]
+    const state = this.navigation.getState()
+
+    if (!state) {
+      return
+    }
+
+    const currentRouteName = state.routes[state.index].name
 
     // Only go back if we are currently on the InternetDisconnected modal
-    if (currentRoute.name !== BCSCModals.InternetDisconnected || !this.navigation.canGoBack()) {
+    if (currentRouteName !== BCSCModals.InternetDisconnected || !this.navigation.canGoBack()) {
       return
     }
 

@@ -268,6 +268,7 @@ const translation = {
     "NoSavedServices": "No saved services",
   },
   "Unified": {
+    "BCSC": "BC Services Card",
     "Screens": {
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",
