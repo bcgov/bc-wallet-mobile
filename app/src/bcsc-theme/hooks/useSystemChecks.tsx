@@ -41,7 +41,8 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const navigation = useNavigation<InternetStatusStackNavigation>()
   const isNavigationReady = useNavigationState((state) => Boolean(state))
   const startupCheckRef = useRef(false)
-  // Startup: Internet connectivity listener
+
+  // Internet connectivity event listener
   useEventListener(() => {
     return NetInfo.addEventListener(async (netInfo) => {
       await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])

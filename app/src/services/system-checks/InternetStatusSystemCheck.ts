@@ -2,10 +2,15 @@ import { NetInfoState } from '@react-native-community/netinfo'
 import { SystemCheckStrategy } from './system-checks'
 import { BifoldLogger } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { BCSCModals, BCSCRootStackParams, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import {
+  BCSCModals,
+  BCSCOnboardingStackParams,
+  BCSCRootStackParams,
+  BCSCVerifyIdentityStackParams,
+} from '@/bcsc-theme/types/navigators'
 
 export type InternetStatusStackNavigation = StackNavigationProp<
-  BCSCRootStackParams | BCSCVerifyIdentityStackParams,
+  BCSCRootStackParams | BCSCVerifyIdentityStackParams | BCSCOnboardingStackParams,
   BCSCModals.InternetDisconnected
 >
 
