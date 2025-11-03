@@ -175,7 +175,7 @@ const MainStack: React.FC = () => {
             title: t('Developer.DeveloperMode'),
             headerShown: true,
           })}
-
+        />
         {/* React navigation docs suggest modals at bottom of stack */}
         <Stack.Screen
           name={BCSCModals.InternetDisconnected}
