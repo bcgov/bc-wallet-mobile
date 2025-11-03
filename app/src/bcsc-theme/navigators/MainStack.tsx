@@ -21,9 +21,11 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { HelpCentreScreen } from '../features/settings/HelpCentreScreen'
 import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
-import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
+import { BCSCModals, BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import { InternetDisconnected } from '../features/modal/InternetDisconnected'
+import { getDefaultModalOptions } from './stack-utils'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
@@ -164,6 +166,16 @@ const MainStack: React.FC = () => {
             headerShown: true,
             headerBackTestID: testIdWithKey('Back'),
           })}
+        />
+
+        {/* React navigation docs suggest modals at bottom of stack */}
+        <Stack.Screen
+          name={BCSCModals.InternetDisconnected}
+          component={InternetDisconnected}
+          options={{
+            ...getDefaultModalOptions(t('Unified.BCSC')),
+            gestureEnabled: false, // Disable swipe to dismiss
+          }}
         />
       </Stack.Navigator>
     </View>
