@@ -6,9 +6,11 @@ import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
-import { BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCScreens } from '../types/navigators'
+import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import Developer from '../../screens/Developer'
+import { getDefaultModalOptions } from './stack-utils'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -70,6 +72,15 @@ const OnboardingStack = (): JSX.Element => {
           title: t('Developer.DeveloperMode'),
           headerShown: true,
         })}
+
+      {/* React navigation docs suggest modals at bottom of stack */}
+      <Stack.Screen
+        name={BCSCModals.InternetDisconnected}
+        component={InternetDisconnected}
+        options={{
+          ...getDefaultModalOptions(t('Unified.BCSC')),
+          gestureEnabled: false, // Disable swipe to dismiss
+        }}
       />
     </Stack.Navigator>
   )
