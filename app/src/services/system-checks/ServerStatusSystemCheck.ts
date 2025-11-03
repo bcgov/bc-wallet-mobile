@@ -7,40 +7,29 @@ import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
  * Checks the IAS server status and dispatches banner messages based on availability.
  * Will show error banner if server is unavailable, or info banner if there is a status message.
  *
- * Note: Determines server availability via the config API.
- *   On failure, it dispatches a warning banner message.
- *   On success, it removes the banner if it exists.
+ * Note:
+ *   On server failure, it dispatches a warning banner message.
+ *   On server success, it removes the banner if it exists.
  *
- * @class ServerStatusStartupCheck
+ * @class ServerStatusSystemCheck
  * @implements {SystemCheckStrategy}
  */
 export class ServerStatusSystemCheck implements SystemCheckStrategy {
-  private readonly getServerStatus: () => Promise<ServerStatusResponseData>
+  private readonly serverStatus: ServerStatusResponseData
   private readonly utils: SystemCheckUtils
-  private serverStatus?: ServerStatusResponseData
 
-  constructor(getServerStatus: () => Promise<ServerStatusResponseData>, utils: SystemCheckUtils) {
-    this.getServerStatus = getServerStatus
+  constructor(serverStatus: ServerStatusResponseData, utils: SystemCheckUtils) {
+    this.serverStatus = serverStatus
     this.utils = utils
   }
 
   /**
    * Runs the server status check to verify if the IAS server is available.
    *
-   * @returns {*} {Promise<boolean>} - A promise that resolves to true if the server is available, false otherwise.
+   * @returns {*} {boolean} - A boolean indicating if the server is unavailable.
    */
-  async runCheck() {
-    try {
-      const serverStatus = await this.getServerStatus()
-
-      // Store the server status for use in onFail/onSuccess
-      this.serverStatus = serverStatus
-
-      return serverStatus.status === 'ok'
-    } catch (error) {
-      this.utils.logger.error('ServerStatusSystemCheck: Server status request failed', error as Error)
-      return false
-    }
+  runCheck() {
+    return this.serverStatus.status === 'ok'
   }
 
   /**

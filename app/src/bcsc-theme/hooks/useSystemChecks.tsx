@@ -15,6 +15,8 @@ import {
 } from '@/services/system-checks/InternetStatusSystemCheck'
 import { useNavigation, useNavigationState } from '@react-navigation/native'
 import { useEventListener } from '@/hooks/useEventListener'
+import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
+import { getVersion } from 'react-native-device-info'
 
 export enum SystemCheckScope {
   STARTUP = 'startup',
@@ -65,7 +67,12 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       try {
         // Checks to run once on app startup (root stack)
         if (scope === SystemCheckScope.STARTUP) {
-          await runSystemChecks([new ServerStatusSystemCheck(configApi.getServerStatus, utils)])
+          const serverStatus = await configApi.getServerStatus()
+
+          await runSystemChecks([
+            new ServerStatusSystemCheck(serverStatus, utils),
+            new UpdateAppSystemCheck(serverStatus, getVersion(), utils),
+          ])
         }
 
         // Checks to run once on main stack (verified users)
@@ -75,14 +82,13 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         }
       } catch (error) {
         logger.error(`System checks failed: ${(error as Error).message}`)
-        // QUESTION (MD): Should we reset this to allow re-running on next effect?
-        ranSystemChecksRef.current = false
       }
     }
 
     runChecksByScope()
   }, [
     client,
+    configApi,
     configApi.getServerStatus,
     dispatch,
     isClientReady,
