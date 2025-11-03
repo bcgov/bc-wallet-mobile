@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BC Wallet</string>
+    <string name="bcsc_services_tab_description">Access the service</string>
 </resources>
