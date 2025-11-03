@@ -9,6 +9,7 @@ import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import Developer from '../../screens/Developer'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -64,7 +65,14 @@ const OnboardingStack = (): JSX.Element => {
           headerShown: true,
         }}
       />
-
+      <Stack.Screen
+        name={BCSCScreens.Developer}
+        component={Developer}
+        options={() => ({
+          title: t('Developer.DeveloperMode'),
+          headerShown: true,
+        })}
+      />
       {/* React navigation docs suggest modals at bottom of stack */}
       <Stack.Screen
         name={BCSCModals.InternetDisconnected}

@@ -23,6 +23,7 @@ import Settings from '../features/settings/Settings'
 import WebViewScreen from '../features/webview/WebViewScreen'
 import { BCSCModals, BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
+import Developer from '../../screens/Developer'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { getDefaultModalOptions } from './stack-utils'
@@ -167,7 +168,14 @@ const MainStack: React.FC = () => {
             headerBackTestID: testIdWithKey('Back'),
           })}
         />
-
+        <Stack.Screen
+          name={BCSCScreens.Developer}
+          component={Developer}
+          options={() => ({
+            title: t('Developer.DeveloperMode'),
+            headerShown: true,
+          })}
+        />
         {/* React navigation docs suggest modals at bottom of stack */}
         <Stack.Screen
           name={BCSCModals.InternetDisconnected}
