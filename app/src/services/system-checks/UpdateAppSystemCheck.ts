@@ -2,22 +2,43 @@ import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 import { BCDispatchAction } from '@/store'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { BCSCModals, ModalNavigation } from '@/bcsc-theme/types/navigators'
+import { getAndroidIdSync, getBundleId, getVersion } from 'react-native-device-info'
+
+const BC_WALLET_BUNDLE_ID = 'ca.bc.gov.BCWallet'
+const BC_WALLET_ANDROID_ID = 'TODO (MD): What is this value?'
 
 /**
- * Checks if the app version meets the minimum required version.
+ * Checks if the application needs to be updated.
  *
  * @class UpdateAppSystemCheck
  * @implements {SystemCheckStrategy}
  */
 export class UpdateAppSystemCheck implements SystemCheckStrategy {
   private readonly serverStatus: ServerStatusResponseData
-  private readonly appVersion: string
+  private readonly navigation: ModalNavigation
   private readonly utils: SystemCheckUtils
 
-  constructor(serverStatus: ServerStatusResponseData, appVersion: string, utils: SystemCheckUtils) {
+  constructor(serverStatus: ServerStatusResponseData, navigation: ModalNavigation, utils: SystemCheckUtils) {
     this.serverStatus = serverStatus
-    this.appVersion = appVersion
+    this.navigation = navigation
     this.utils = utils
+  }
+
+  /**
+   * Retrieves the current application version.
+   *
+   * Note: This returns null for BC Wallet identifiers (iOS and Android).
+   * Preventing update prompts for single-app development builds.
+   *
+   * @returns {string | null} - The current app version or null for BC Wallet.
+   */
+  get appVersion(): string | null {
+    if (getAndroidIdSync() === BC_WALLET_ANDROID_ID || getBundleId() === BC_WALLET_BUNDLE_ID) {
+      return null
+    }
+
+    return getVersion()
   }
 
   /**
@@ -57,6 +78,11 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
    * @returns {*} {boolean} - A boolean indicating if the app should be updated.
    */
   runCheck() {
+    if (!this.appVersion) {
+      // Single-app default development build - skip update check
+      return true
+    }
+
     const maxKnownVersion = this.serverStatus.supportedVersions.pop()
 
     if (!maxKnownVersion) {
@@ -74,23 +100,30 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
    * @returns {*} {void}
    */
   onFail() {
-    const updateAvailable = this.isVersionGreaterThan(this.appVersion, this.serverStatus.minVersion)
-
-    if (updateAvailable) {
-      // Optional update available
-      return this.utils.dispatch({
-        type: BCDispatchAction.ADD_BANNER_MESSAGE,
-        payload: [
-          {
-            id: BCSCBanner.APP_UPDATE_AVAILABLE,
-            title: 'TODO: optional update available banner title',
-            type: 'info',
-            variant: 'warning',
-            dismissible: true,
-          },
-        ],
-      })
+    if (!this.appVersion) {
+      return
     }
+
+    const mandatoryUpdate = !this.isVersionGreaterThan(this.appVersion, this.serverStatus.minVersion)
+
+    if (mandatoryUpdate) {
+      this.navigation.navigate(BCSCModals.MandatoryUpdate)
+      return
+    }
+
+    // Optional update available
+    return this.utils.dispatch({
+      type: BCDispatchAction.ADD_BANNER_MESSAGE,
+      payload: [
+        {
+          id: BCSCBanner.APP_UPDATE_AVAILABLE,
+          title: 'TODO: optional update available banner title',
+          type: 'info',
+          variant: 'warning',
+          dismissible: true,
+        },
+      ],
+    })
   }
 
   /**

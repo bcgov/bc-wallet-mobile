@@ -9,14 +9,25 @@ import useTokenApi from '../api/hooks/useTokens'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import NetInfo from '@react-native-community/netinfo'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
-import {
-  InternetStatusStackNavigation,
-  InternetStatusSystemCheck,
-} from '@/services/system-checks/InternetStatusSystemCheck'
+import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { useNavigation, useNavigationState } from '@react-navigation/native'
 import { useEventListener } from '@/hooks/useEventListener'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
-import { getVersion } from 'react-native-device-info'
+import { getAndroidIdSync, getBundleId, getVersion } from 'react-native-device-info'
+import { StackNavigationProp } from '@react-navigation/stack'
+import {
+  BCSCModals,
+  BCSCOnboardingStackParams,
+  BCSCRootStackParams,
+  BCSCVerifyIdentityStackParams,
+} from '../types/navigators'
+import { checkVersion } from 'react-native-check-version'
+import { Platform } from 'react-native'
+
+export type SystemCheckModalNavigation = StackNavigationProp<
+  BCSCRootStackParams | BCSCVerifyIdentityStackParams | BCSCOnboardingStackParams,
+  BCSCModals.InternetDisconnected | BCSCModals.MandatoryUpdate
+>
 
 export enum SystemCheckScope {
   STARTUP = 'startup',
@@ -40,7 +51,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const configApi = useConfigApi(client as BCSCApiClient)
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const navigation = useNavigation<InternetStatusStackNavigation>()
+  const navigation = useNavigation<SystemCheckModalNavigation>()
   const isNavigationReady = useNavigationState((state) => Boolean(state && !state.stale))
   const ranSystemChecksRef = useRef(false)
 
@@ -56,7 +67,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
    */
   useEffect(() => {
     const runChecksByScope = async () => {
-      if (ranSystemChecksRef.current || !isClientReady || !client) {
+      if (ranSystemChecksRef.current || !isClientReady || !client || !isNavigationReady) {
         return
       }
 
@@ -69,15 +80,22 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         if (scope === SystemCheckScope.STARTUP) {
           const serverStatus = await configApi.getServerStatus()
 
+          console.log(
+            await checkVersion({
+              bundleId: 'ca.bc.gov.id.servicescard',
+            })
+          )
+
           await runSystemChecks([
             new ServerStatusSystemCheck(serverStatus, utils),
-            new UpdateAppSystemCheck(serverStatus, getVersion(), utils),
+            new UpdateAppSystemCheck(serverStatus, navigation, utils),
           ])
         }
 
         // Checks to run once on main stack (verified users)
         if (scope === SystemCheckScope.MAIN_STACK) {
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
+
           await runSystemChecks([new DeviceCountSystemCheck(getIdToken, utils)])
         }
       } catch (error) {

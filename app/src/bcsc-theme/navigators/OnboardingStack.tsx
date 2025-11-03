@@ -74,6 +74,15 @@ const OnboardingStack = (): JSX.Element => {
           gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
+
+      <Stack.Screen
+        name={BCSCModals.MandatoryUpdate}
+        component={InternetDisconnected}
+        options={{
+          ...getDefaultModalOptions(t('Unified.BCSC')),
+          gestureEnabled: false, // Disable swipe to dismiss
+        }}
+      />
     </Stack.Navigator>
   )
 }

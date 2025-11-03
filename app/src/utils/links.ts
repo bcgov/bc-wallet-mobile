@@ -1,3 +1,4 @@
+import { appleAppStoreUrl, googlePlayStoreUrl } from '@/constants'
 import { Linking, Platform } from 'react-native'
 
 export const openLink = async (url: string) => {
@@ -15,10 +16,10 @@ export const openLink = async (url: string) => {
  *
  * @return {string} The App Store URL.
  */
-export const getAppStoreUrl = (): string => {
+export const getPlatformStoreUrl = (): string => {
   if (Platform.OS === 'ios') {
-    return 'https://apps.apple.com/us/app/id1234298467'
+    return appleAppStoreUrl
   }
 
-  return 'https://play.google.com/store/apps/details?id=ca.bc.gov.id.servicescard'
+  return googlePlayStoreUrl
 }

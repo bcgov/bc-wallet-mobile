@@ -5,7 +5,7 @@ import { NotificationBanner } from './NotificationBanner'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { SafeAreaModal, useStore } from '@bifold/core'
 import { BCDispatchAction, BCState } from '@/store'
-import { getAppStoreUrl } from '@/utils/links'
+import { getPlatformStoreUrl } from '@/utils/links'
 
 /**
  * Container component for displaying notification banners and handling their interactions.
@@ -25,7 +25,7 @@ export const NotificationBannerContainer = () => {
     }
 
     if (bannerId === BCSCBanner.APP_UPDATE_AVAILABLE) {
-      Linking.openURL(getAppStoreUrl())
+      Linking.openURL(getPlatformStoreUrl())
     }
 
     // Default action: remove the banner permanently on press

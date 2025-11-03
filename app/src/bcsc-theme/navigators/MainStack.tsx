@@ -177,6 +177,15 @@ const MainStack: React.FC = () => {
             gestureEnabled: false, // Disable swipe to dismiss
           }}
         />
+
+        <Stack.Screen
+          name={BCSCModals.MandatoryUpdate}
+          component={InternetDisconnected}
+          options={{
+            ...getDefaultModalOptions(t('Unified.BCSC')),
+            gestureEnabled: false, // Disable swipe to dismiss
+          }}
+        />
       </Stack.Navigator>
     </View>
   )

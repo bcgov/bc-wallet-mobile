@@ -1,18 +1,7 @@
 import { NetInfoState } from '@react-native-community/netinfo'
 import { SystemCheckStrategy } from './system-checks'
 import { BifoldLogger } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
-import {
-  BCSCModals,
-  BCSCOnboardingStackParams,
-  BCSCRootStackParams,
-  BCSCVerifyIdentityStackParams,
-} from '@/bcsc-theme/types/navigators'
-
-export type InternetStatusStackNavigation = StackNavigationProp<
-  BCSCRootStackParams | BCSCVerifyIdentityStackParams | BCSCOnboardingStackParams,
-  BCSCModals.InternetDisconnected
->
+import { BCSCModals, ModalNavigation } from '@/bcsc-theme/types/navigators'
 
 /**
  * System check strategy to verify internet connectivity.
@@ -28,10 +17,10 @@ export type InternetStatusStackNavigation = StackNavigationProp<
  */
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
   private readonly netInfo: NetInfoState
-  private readonly navigation: InternetStatusStackNavigation
+  private readonly navigation: ModalNavigation
   private readonly logger: BifoldLogger
 
-  constructor(netInfo: NetInfoState, navigation: InternetStatusStackNavigation, logger: BifoldLogger) {
+  constructor(netInfo: NetInfoState, navigation: ModalNavigation, logger: BifoldLogger) {
     this.netInfo = netInfo
     this.navigation = navigation
     this.logger = logger
