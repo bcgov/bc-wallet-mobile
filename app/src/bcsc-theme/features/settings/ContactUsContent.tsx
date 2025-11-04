@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 export const ContactUsContent = (): JSX.Element => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
-  
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
