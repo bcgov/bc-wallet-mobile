@@ -131,12 +131,12 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         }
 
         let fcmDeviceToken = 'fallback_fcm_token'
-        let apnsToken: string | null = ''
+        let apnsToken = ''
 
         try {
           const tokens = await getNotificationTokens(logger)
-          fcmDeviceToken = tokens.fcmDeviceToken || fcmDeviceToken
-          apnsToken = tokens.apnsToken || apnsToken
+          fcmDeviceToken = tokens.fcmDeviceToken ?? fcmDeviceToken
+          apnsToken = tokens.apnsToken ?? apnsToken
         } catch (error) {
           // Log warning but continue with fallback tokens
           logger.warn(
@@ -146,7 +146,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           )
         }
 
-        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken || '')
+        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
 
         let updatedRegistrationData: RegistrationResponseData | null = null
 
