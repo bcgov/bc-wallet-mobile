@@ -11,6 +11,10 @@ export enum BCSCStacks {
   Main = 'BCSCMainStack',
 }
 
+export enum BCSCModals {
+  InternetDisconnected = 'BCSCNoInternet',
+}
+
 export enum BCSCScreens {
   Splash = 'BCSCSplash',
   Home = 'BCSCHome',
@@ -77,11 +81,13 @@ export enum BCSCScreens {
   MainContactUs = 'BCSCMainContactUs',
   MainHelpCentre = 'BCSCMainHelpCentre',
   MainPrivacyPolicy = 'BCSCMainPrivacyPolicy',
+  MainDeveloper = 'BCSCMainDeveloper',
   VerifySettings = 'BCSCVerifySettings',
   VerifyWebView = 'BCSCVerifyWebView',
   VerifyContactUs = 'BCSCVerifyContactUs',
   VerifyHelpCentre = 'BCSCVerifyHelpCentre',
   VerifyPrivacyPolicy = 'BCSCVerifyPrivacyPolicy',
+  VerifyDeveloper = 'BCSCVerifyDeveloper',
 }
 
 export type BCSCStartupStackParams = {
@@ -95,6 +101,8 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
+
+  [BCSCModals.InternetDisconnected]: undefined
 }
 
 export type BCSCVerifyStackParams = {
@@ -104,7 +112,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.TransferAccountInformation]: undefined
-
   [BCSCScreens.VerifyWebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
@@ -150,6 +157,9 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyHelpCentre]: undefined
   [BCSCScreens.VerifyPrivacyPolicy]: undefined
   [BCSCScreens.VerifyContactUs]: undefined
+  [BCSCScreens.VerifyDeveloper]: undefined
+
+  [BCSCModals.InternetDisconnected]: undefined
 }
 
 export type BCSCTabStackParams = {
@@ -175,4 +185,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainHelpCentre]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.MainDeveloper]: undefined
+
+  [BCSCModals.InternetDisconnected]: undefined
 }

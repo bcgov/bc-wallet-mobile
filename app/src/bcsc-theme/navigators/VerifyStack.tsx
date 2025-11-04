@@ -1,25 +1,23 @@
 import { createHeaderWithBanner } from '@/bcsc-theme/components/HeaderWithBanner'
-import createHelpHeaderButton from '@/bcsc-theme/components/HelpHeaderButton'
-import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
-import { createWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
+import { createVerifyHelpHeaderButton } from '@/bcsc-theme/components/HelpHeaderButton'
+import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
+import { createVerifyWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
+import { BCSCModals, BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
+import Developer from '../../screens/Developer'
 import AccountSetupSelectionScreen from '../features/account-transfer/AccountSetupSelectionScreen'
 import TransferInformationScreen from '../features/account-transfer/TransferInformationScreen'
 import TransferInstructionsScreen from '../features/account-transfer/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/TransferQRScannerScreen'
-
 import NicknameAccountScreen from '../features/account/NicknameAccountScreen'
-import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
-import { VerifyContactUsScreen } from '../features/settings/VerifyContactUsScreen'
-import { VerifyHelpCentreScreen } from '../features/settings/VerifyHelpCentreScreen'
-import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
+import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdateScreen'
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
 import ManualSerialScreen from '../features/verify/ManualSerialScreen'
@@ -55,6 +53,11 @@ import TakeVideoScreen from '../features/verify/send-video/TakeVideoScreen'
 import VideoInstructionsScreen from '../features/verify/send-video/VideoInstructionsScreen'
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
+
+import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
+import { VerifyContactUsScreen } from '../features/settings/VerifyContactUsScreen'
+import { VerifyHelpCentreScreen } from '../features/settings/VerifyHelpCentreScreen'
+import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
 
 const VerifyStack = () => {
@@ -74,6 +77,7 @@ const VerifyStack = () => {
 
   return (
     <Stack.Navigator
+      initialRouteName={BCSCScreens.SetupTypes}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: true,
@@ -86,7 +90,7 @@ const VerifyStack = () => {
         name={BCSCScreens.SetupTypes}
         component={AccountSetupSelectionScreen}
         options={{
-          headerLeft: createSettingsHeaderButton<BCSCVerifyStackParams>(BCSCScreens.VerifySettings),
+          headerLeft: createVerifySettingsHeaderButton(),
           title: t('Unified.Screens.SetupTypes'),
         }}
       />
@@ -96,18 +100,18 @@ const VerifyStack = () => {
         component={SetupStepsScreen}
         options={{
           title: t('Unified.Screens.SetupSteps'),
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOW_TO_SETUP }),
-          headerLeft: createSettingsHeaderButton<BCSCVerifyStackParams>(BCSCScreens.VerifySettings),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOW_TO_SETUP }),
+          headerLeft: createVerifySettingsHeaderButton(),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.NicknameAccount}
         component={NicknameAccountScreen}
-        options={({ navigation }) => ({
+        options={{
           headerShown: true,
           headerBackTestID: testIdWithKey('Back'),
-          headerLeft: createWebviewHeaderBackButton(navigation),
-        })}
+          headerLeft: createVerifyWebviewHeaderBackButton(),
+        }}
       />
       <Stack.Screen
         name={BCSCScreens.TransferAccountInformation}
@@ -133,24 +137,29 @@ const VerifyStack = () => {
         options={{ title: t('Unified.Screens.ContactUs') }}
       />
       <Stack.Screen
+        name={BCSCScreens.VerifyDeveloper}
+        component={Developer}
+        options={{ title: t('Developer.DeveloperMode') }}
+      />
+      <Stack.Screen
         name={BCSCScreens.SerialInstructions}
         component={SerialInstructionsScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.ManualSerial}
         component={ManualSerialScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.ScanSerial}
         component={ScanSerialScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen name={BCSCScreens.EnterBirthdate} component={EnterBirthdateScreen} />
@@ -162,14 +171,14 @@ const VerifyStack = () => {
         component={VerificationMethodSelectionScreen}
         options={{
           title: t('Unified.Screens.VerificationMethodSelection'),
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFICATION_METHODS }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFICATION_METHODS }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyInPerson}
         component={VerifyInPersonScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFY_IN_PERSON }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFY_IN_PERSON }),
         }}
       />
       <Stack.Screen
@@ -199,77 +208,76 @@ const VerifyStack = () => {
         name={BCSCScreens.AdditionalIdentificationRequired}
         component={AdditionalIdentificationRequiredScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.DualIdentificationRequired}
         component={DualIdentificationRequiredScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.IDPhotoInformation}
         component={IDPhotoInformationScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceTypeList}
         component={EvidenceTypeListScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceCapture}
         component={EvidenceCaptureScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.EvidenceIDCollection}
         component={EvidenceIDCollectionScreen}
         options={{
-          headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+          headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
         }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyWebView}
         component={VerifyWebViewScreen}
-        options={({ route, navigation }) => ({
+        options={({ route }) => ({
           headerShown: true,
           title: route.params.title,
           headerBackTestID: testIdWithKey('Back'),
-          headerLeft: createWebviewHeaderBackButton(navigation),
+          headerLeft: createVerifyWebviewHeaderBackButton(),
         })}
       />
       <Stack.Screen
         name={BCSCScreens.BeforeYouCall}
         component={BeforeYouCallScreen}
-        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+        options={{ headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
       <Stack.Screen
         name={BCSCScreens.StartCall}
         component={StartCallScreen}
-        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+        options={{ headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
       <Stack.Screen name={BCSCScreens.LiveCall} component={LiveCallScreen} options={{ headerShown: false }} />
       <Stack.Screen
         name={BCSCScreens.VerifyNotComplete}
         component={VerifyNotCompleteScreen}
-        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+        options={{ headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
       <Stack.Screen
         name={BCSCScreens.CallBusyOrClosed}
         component={CallBusyOrClosedScreen}
-        options={{ headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
+        options={{ headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }) }}
       />
       <Stack.Screen name={BCSCScreens.ResidentialAddress} component={ResidentialAddressScreen} />
-
       <Stack.Screen
         name={BCSCScreens.VerifySettings}
         component={VerifySettingsScreen}
@@ -278,6 +286,15 @@ const VerifyStack = () => {
           title: t('Screens.Settings'),
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
+        }}
+      />
+      {/* React navigation docs suggest modals at bottom of stack */}
+      <Stack.Screen
+        name={BCSCModals.InternetDisconnected}
+        component={InternetDisconnected}
+        options={{
+          ...getDefaultModalOptions(t('Unified.BCSC')),
+          gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
     </Stack.Navigator>

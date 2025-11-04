@@ -23,5 +23,17 @@ export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navi
   const onPrivacy = () => {
     navigation.navigate(BCSCScreens.VerifyPrivacyPolicy)
   }
-  return <SettingsContent onContactUs={onContactUs} onHelp={onHelp} onPrivacy={onPrivacy} />
+
+  const onPressDeveloperMode = () => {
+    navigation.navigate(BCSCScreens.VerifyDeveloper)
+  }
+
+  return (
+    <SettingsContent
+      onContactUs={onContactUs}
+      onHelp={onHelp}
+      onPrivacy={onPrivacy}
+      onPressDeveloperMode={onPressDeveloperMode}
+    />
+  )
 }

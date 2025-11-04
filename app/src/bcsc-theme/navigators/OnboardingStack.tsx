@@ -2,12 +2,14 @@ import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
-import { BCSCScreens } from '../types/navigators'
+import { BCSCModals, BCSCScreens } from '../types/navigators'
+import { getDefaultModalOptions } from './stack-utils'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -34,7 +36,6 @@ const OnboardingStack = (): JSX.Element => {
       }}
     >
       <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />
-
       <Stack.Screen
         name={BCSCScreens.OnboardingPrivacyPolicy}
         component={OnboardingPrivacyPolicyScreen}
@@ -43,7 +44,6 @@ const OnboardingStack = (): JSX.Element => {
           headerShown: true,
         }}
       />
-
       <Stack.Screen
         name={BCSCScreens.OnboardingTermsOfUse}
         component={TermsOfUseScreen}
@@ -52,14 +52,21 @@ const OnboardingStack = (): JSX.Element => {
           headerShown: true,
         }}
       />
-
       <Stack.Screen name={BCSCScreens.OnboardingNotifications} component={NotificationsScreen} />
-
       <Stack.Screen
         name={BCSCScreens.OnboardingSecureApp}
         component={SecureAppScreen}
         options={{
           headerShown: true,
+        }}
+      />
+      {/* React navigation docs suggest modals at bottom of stack */}
+      <Stack.Screen
+        name={BCSCModals.InternetDisconnected}
+        component={InternetDisconnected}
+        options={{
+          ...getDefaultModalOptions(t('Unified.BCSC')),
+          gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
     </Stack.Navigator>

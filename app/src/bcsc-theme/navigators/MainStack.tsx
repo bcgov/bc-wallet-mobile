@@ -1,31 +1,33 @@
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
-import { useMemo, useCallback } from 'react'
+import { useNavigation } from '@react-navigation/native'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
+import Developer from '../../screens/Developer'
 import { createHeaderWithBanner } from '../components/HeaderWithBanner'
-import createHelpHeaderButton from '../components/HelpHeaderButton'
-import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
+import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
+import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
-import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
+import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
 import { MainHelpCentreScreen } from '../features/settings/MainHelpCentreScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
+import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
+import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
+import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
 const MainStack: React.FC = () => {
@@ -63,11 +65,11 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}
-          options={({ navigation }) => ({
+          options={{
             headerShown: true,
             headerBackTestID: testIdWithKey('Back'),
-            headerLeft: createWebviewHeaderBackButton(navigation),
-          })}
+            headerLeft: createMainWebviewHeaderBackButton(),
+          }}
         />
         <Stack.Screen
           name={BCSCScreens.MainSettings}
@@ -84,17 +86,17 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             headerBackTitleVisible: false,
-            headerRight: createHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+            headerRight: createMainHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
           })}
         />
         <Stack.Screen
           name={BCSCScreens.MainWebView}
           component={MainWebViewScreen}
-          options={({ route, navigation }) => ({
+          options={({ route }) => ({
             headerShown: true,
             title: route.params.title,
             headerBackTestID: testIdWithKey('Back'),
-            headerLeft: createWebviewHeaderBackButton(navigation),
+            headerLeft: createMainWebviewHeaderBackButton(),
           })}
         />
         <Stack.Screen
@@ -176,6 +178,23 @@ const MainStack: React.FC = () => {
             headerShown: true,
             headerBackTestID: testIdWithKey('Back'),
           })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.MainDeveloper}
+          component={Developer}
+          options={() => ({
+            title: t('Developer.DeveloperMode'),
+            headerShown: true,
+          })}
+        />
+        {/* React navigation docs suggest modals at bottom of stack */}
+        <Stack.Screen
+          name={BCSCModals.InternetDisconnected}
+          component={InternetDisconnected}
+          options={{
+            ...getDefaultModalOptions(t('Unified.BCSC')),
+            gestureEnabled: false, // Disable swipe to dismiss
+          }}
         />
       </Stack.Navigator>
     </View>
