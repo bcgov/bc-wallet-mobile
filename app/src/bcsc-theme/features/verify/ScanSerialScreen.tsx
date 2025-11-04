@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { StackNavigationProp } from '@react-navigation/stack'
 
@@ -13,7 +13,7 @@ import CodeScanningCamera from '../../components/CodeScanningCamera'
 const maxSerialNumberLength = 15
 
 type ScanSerialScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.ManualSerial>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
 }
 
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {

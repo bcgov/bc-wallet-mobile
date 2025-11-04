@@ -6,13 +6,13 @@ import { Linking, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 /**
- * Contact Us screen component that presents the contact information and support options.
- *
- * @returns {*} {JSX.Element} The ContactUsScreen component.
+ * Shared contact us content component that can be used across different navigation stacks.
+ * Pure content component with no navigation dependencies.
  */
-export const ContactUsScreen = (): JSX.Element => {
+export const ContactUsContent = (): JSX.Element => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,

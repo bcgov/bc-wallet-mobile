@@ -1,4 +1,4 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import SelfieImage from '@assets/img/selfie_example.png'
 import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
@@ -9,8 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 const SELFIE_IMAGE = Image.resolveAssetSource(SelfieImage).uri
 
 type PhotoInstructionsScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.PhotoInstructions>
-  route: RouteProp<BCSCVerifyIdentityStackParams, BCSCScreens.PhotoInstructions>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PhotoInstructions>
+  route: RouteProp<BCSCVerifyStackParams, BCSCScreens.PhotoInstructions>
 }
 
 const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {

@@ -1,17 +1,17 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Image, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 
 const SERIAL_HIGHLIGHT_IMAGE = Image.resolveAssetSource(SerialHighlightImage).uri
 
 const twoThirds = 0.67
 
 type SerialInstructionsScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SerialInstructions>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SerialInstructions>
 }
 
 const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({

@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCDispatchAction, BCState } from '@/store'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
@@ -19,7 +19,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type VerifyInPersonScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VerifyInPerson>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyInPerson>
 }
 
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {

@@ -1,4 +1,3 @@
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ACCESSIBILITY_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
@@ -7,12 +6,11 @@ import {
   ThemedText,
   TOKENS,
   useAuth,
+  useDeveloperMode,
   useServices,
   useStore,
   useTheme,
-  useDeveloperMode,
 } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, TouchableWithoutFeedback, Vibration, View } from 'react-native'
@@ -20,16 +18,27 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { SettingsActionCard } from './components/SettingsActionCard'
 
-type SettingsScreenProps = {
-  navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.Settings | BCSCScreens.Developer>
+interface SettingsContentProps {
+  onContactUs: () => void
+  onHelp: () => void
+  onPrivacy: () => void
+  onPressDeveloperMode: () => void
+  onEditNickname?: () => void
+  onForgetAllPairings?: () => void
 }
 
 /**
- * The Settings screen for the BCSC theme.
- *
- * @returns {*} {JSX.Element}
+ * Shared settings content component that can be used across different navigation stacks.
+ * Receives navigation callbacks as props to handle stack-specific navigation.
  */
-const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenProps) => {
+export const SettingsContent: React.FC<SettingsContentProps> = ({
+  onContactUs,
+  onHelp,
+  onPrivacy,
+  onPressDeveloperMode,
+  onEditNickname,
+  onForgetAllPairings,
+}) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
@@ -39,7 +48,6 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      justifyContent: 'space-between',
       padding: Spacing.md,
     },
     sectionHeader: {
@@ -64,7 +72,7 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
 
   const onDevModeTriggered = () => {
     Vibration.vibrate()
-    navigation.navigate(BCSCScreens.Developer)
+    onPressDeveloperMode()
   }
   const { incrementDeveloperMenuCounter } = useDeveloperMode(onDevModeTriggered)
 
@@ -89,10 +97,6 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
     }
   }
 
-  const onPressContactUs = () => {
-    navigation.navigate(BCSCScreens.ContactUs)
-  }
-
   const onPressAccessibility = async () => {
     try {
       await Linking.openURL(ACCESSIBILITY_URL)
@@ -101,45 +105,24 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
     }
   }
 
-  const onPressHelp = () => {
-    navigation.navigate(BCSCScreens.HelpCentre)
-  }
-
-  const onPressPrivacy = () => {
-    navigation.navigate(BCSCScreens.PrivacyPolicy)
-  }
-
-  const onPressEditNickname = () => {
-    navigation.navigate(BCSCScreens.EditNickname)
-  }
-
-  const onPressForgetAllPairings = () => {
-    navigation.navigate(BCSCScreens.ForgetAllPairings)
-  }
-
-  const onPressDeveloperOptions = () => {
-    navigation.navigate(BCSCScreens.Developer)
-  }
-
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
-        <View style={styles.sectionContainer}>
-          {store.bcsc.verified ? (
-            <>
-              <SettingsActionCard
-                title={t('BCSCSettings.SignOut')}
-                startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
-                onPress={() => {
-                  auth.lockOutUser(LockoutReason.Logout)
-                  dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
-                }}
-              />
+        {store.bcsc.verified ? (
+          <>
+            <SettingsActionCard
+              title={t('BCSCSettings.SignOut')}
+              startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
+              onPress={() => {
+                auth.lockOutUser(LockoutReason.Logout)
+                dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
+              }}
+            />
 
-              <ThemedText variant={'bold'} style={styles.sectionHeader}>
-                {t('BCSCSettings.HeaderA')}
-              </ThemedText>
-
+            <ThemedText variant={'bold'} style={styles.sectionHeader}>
+              {t('BCSCSettings.HeaderA')}
+            </ThemedText>
+            <View style={styles.sectionContainer}>
               <SettingsActionCard
                 // TODO (MD + BM): Update with like for like device auth screen if that is their chosen auth method
                 // only show one or the other (device auth or change pin)
@@ -153,9 +136,9 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
                 title={t('BCSCSettings.ChangePIN')}
                 onPress={onPressActionTodo}
               />
-
-              <SettingsActionCard title={t('BCSCSettings.EditNickname')} onPress={onPressEditNickname} />
-
+              {onEditNickname ? (
+                <SettingsActionCard title={t('BCSCSettings.EditNickname')} onPress={onEditNickname} />
+              ) : null}
               {/* TODO (MD + BM): Implement actions for these two cards */}
               <SettingsActionCard
                 title={t('BCSCSettings.AutoLockTime')}
@@ -163,43 +146,40 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
                 endAdornmentText={`${store.preferences.autoLockTime} min`}
               />
               <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
+              {onForgetAllPairings ? (
+                <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onForgetAllPairings} />
+              ) : null}
+            </View>
+          </>
+        ) : null}
 
-              <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressForgetAllPairings} />
-
-              {store.preferences.developerModeEnabled && (
-                <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperOptions} />
-              )}
-            </>
-          ) : null}
-
-          <ThemedText variant={'bold'} style={styles.sectionHeader}>
-            {t('BCSCSettings.HeaderB')}
-          </ThemedText>
-
-          <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onPressHelp} />
-          <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPressPrivacy} />
-          <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressContactUs} />
+        <ThemedText variant={'bold'} style={styles.sectionHeader}>
+          {t('BCSCSettings.HeaderB')}
+        </ThemedText>
+        <View style={styles.sectionContainer}>
+          <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onHelp} />
+          <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPrivacy} />
+          <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onContactUs} />
           <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressFeedback} />
           <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
+          {store.preferences.developerModeEnabled ? (
+            <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperMode} />
+          ) : null}
+        </View>
 
-          {/* TODO (MD): Add developer options */}
-
-          <View style={styles.versionContainer}>
-            <TouchableWithoutFeedback
-              onPress={incrementDeveloperMenuCounter}
-              disabled={store.preferences.developerModeEnabled}
-            >
-              <View>
-                <ThemedText variant="labelSubtitle">{t('Unified.Screens.SetupTypes')}</ThemedText>
-                <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
-              </View>
-            </TouchableWithoutFeedback>
-          </View>
+        <View style={styles.versionContainer}>
+          <TouchableWithoutFeedback
+            onPress={incrementDeveloperMenuCounter}
+            disabled={store.preferences.developerModeEnabled}
+          >
+            <View>
+              <ThemedText variant="labelSubtitle">{t('Unified.BCSC')}</ThemedText>
+              <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
+            </View>
+          </TouchableWithoutFeedback>
         </View>
       </View>
     </TabScreenWrapper>
   )
 }
-
-export default Settings

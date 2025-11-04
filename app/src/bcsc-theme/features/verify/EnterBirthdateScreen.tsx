@@ -17,14 +17,14 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 
 type EnterBirthdateScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EnterBirthdate>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
 }
 
 const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation }: EnterBirthdateScreenProps) => {

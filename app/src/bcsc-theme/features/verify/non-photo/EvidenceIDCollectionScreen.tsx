@@ -1,7 +1,7 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Spacing } from '@/bcwallet-theme/theme'
 import { BCDispatchAction, BCState } from '@/store'
 import {
@@ -32,7 +32,7 @@ type EvidenceCollectionFormState = {
 type EvidenceCollectionFormErrors = Partial<EvidenceCollectionFormState>
 
 type EvidenceIDCollectionScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceIDCollection>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceIDCollection>
   route: { params: { cardType: EvidenceType } }
 }
 

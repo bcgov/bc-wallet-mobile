@@ -1,6 +1,6 @@
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { BCDispatchAction, BCState } from '@/store'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@bcsc-theme/utils/file-info'
 import { TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
@@ -9,8 +9,8 @@ import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoReviewScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.PhotoReview>
-  route: RouteProp<BCSCVerifyIdentityStackParams, BCSCScreens.PhotoReview>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PhotoReview>
+  route: RouteProp<BCSCVerifyStackParams, BCSCScreens.PhotoReview>
 }
 
 const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {

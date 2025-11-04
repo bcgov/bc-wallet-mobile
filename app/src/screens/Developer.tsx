@@ -1,5 +1,6 @@
 import {
   DispatchAction,
+  LockoutReason,
   SafeAreaModal,
   Screens,
   testIdWithKey,
@@ -8,7 +9,6 @@ import {
   useServices,
   useStore,
   useTheme,
-  LockoutReason,
 } from '@bifold/core'
 import { RemoteLogger, RemoteLoggerEventTypes } from '@bifold/remote-logs'
 import { useNavigation } from '@react-navigation/native'
@@ -18,10 +18,10 @@ import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, Vi
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
+import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
-import { BCThemeNames } from '@/constants'
 
 const Developer: React.FC = () => {
   const { t } = useTranslation()
@@ -358,88 +358,8 @@ const Developer: React.FC = () => {
         </SectionRow>
         <View style={styles.sectionSeparator}></View>
 
-        <SectionRow
-          title={'Remote Logging'}
-          accessibilityLabel={'Remote Logging'}
-          testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
-          subContent={
-            remoteLoggingEnabled ? (
-              <Text style={[styles.rowTitle, { marginTop: 10 }]}>
-                {`${t('RemoteLogging.SessionID')}: `}
-                <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>{logger.sessionId.toString()}</Text>
-              </Text>
-            ) : (
-              <></>
-            )
-          }
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(remoteLoggingEnabled)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleRemoteLoggingSwitch}
-            value={remoteLoggingEnabled}
-          />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.EnableProxy')}
-          accessibilityLabel={t('Developer.EnableProxy')}
-          testID={testIdWithKey('ToggleEnableProxy')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(enableProxy)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleEnableProxySwitch}
-            value={enableProxy}
-          />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.SwitchTheme')}
-          accessibilityLabel={t('Developer.SwitchTheme')}
-          testID={testIdWithKey('ToggleTheme')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(themeName === BCThemeNames.BCSC)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleTheme}
-            value={themeName === BCThemeNames.BCSC}
-          />
-        </SectionRow>
-
-        <SectionRow
-          title={t('Developer.SwitchMode')}
-          accessibilityLabel={t('Developer.SwitchMode')}
-          testID={testIdWithKey('ToggleMode')}
-        >
-          <Switch
-            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-            thumbColor={getSwitchColor(BCSCMode)}
-            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-            onValueChange={toggleMode}
-            value={BCSCMode}
-          />
-        </SectionRow>
-
         {store.mode === Mode.BCSC ? null : (
           <View>
-            <SectionRow
-              title={t('Developer.EnableAppToAppPersonFlow')}
-              accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
-              testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
-            >
-              <Switch
-                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
-                thumbColor={getSwitchColor(enableAppToAppPersonFlow)}
-                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
-                onValueChange={toggleEnableAppToAppPersonFlowSwitch}
-                value={enableAppToAppPersonFlow}
-              />
-            </SectionRow>
-
             <SectionRow
               title={t('PasteUrl.UseShareableLink')}
               accessibilityLabel={t('PasteUrl.UseShareableLink')}
@@ -540,8 +460,86 @@ const Developer: React.FC = () => {
                 value={preventAutoLock}
               />
             </SectionRow>
+            <SectionRow
+              title={t('Developer.EnableAppToAppPersonFlow')}
+              accessibilityLabel={t('Developer.EnableAppToAppPersonFlow')}
+              testID={testIdWithKey('ToggleEnableAppToAppPersonFlow')}
+            >
+              <Switch
+                trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+                thumbColor={getSwitchColor(enableAppToAppPersonFlow)}
+                ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+                onValueChange={toggleEnableAppToAppPersonFlowSwitch}
+                value={enableAppToAppPersonFlow}
+              />
+            </SectionRow>
           </View>
         )}
+        <SectionRow
+          title={'Remote Logging'}
+          accessibilityLabel={'Remote Logging'}
+          testID={testIdWithKey('ToggleRemoteLoggingSwitch')}
+          subContent={
+            remoteLoggingEnabled ? (
+              <Text style={[styles.rowTitle, { marginTop: 10 }]}>
+                {`${t('RemoteLogging.SessionID')}: `}
+                <Text style={[styles.rowTitle, { fontWeight: 'bold' }]}>{logger.sessionId.toString()}</Text>
+              </Text>
+            ) : (
+              <></>
+            )
+          }
+        >
+          <Switch
+            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+            thumbColor={getSwitchColor(remoteLoggingEnabled)}
+            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+            onValueChange={toggleRemoteLoggingSwitch}
+            value={remoteLoggingEnabled}
+          />
+        </SectionRow>
+
+        <SectionRow
+          title={t('Developer.EnableProxy')}
+          accessibilityLabel={t('Developer.EnableProxy')}
+          testID={testIdWithKey('ToggleEnableProxy')}
+        >
+          <Switch
+            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+            thumbColor={getSwitchColor(enableProxy)}
+            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+            onValueChange={toggleEnableProxySwitch}
+            value={enableProxy}
+          />
+        </SectionRow>
+
+        <SectionRow
+          title={t('Developer.SwitchTheme')}
+          accessibilityLabel={t('Developer.SwitchTheme')}
+          testID={testIdWithKey('ToggleTheme')}
+        >
+          <Switch
+            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+            thumbColor={getSwitchColor(themeName === BCThemeNames.BCSC)}
+            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+            onValueChange={toggleTheme}
+            value={themeName === BCThemeNames.BCSC}
+          />
+        </SectionRow>
+
+        <SectionRow
+          title={t('Developer.SwitchMode')}
+          accessibilityLabel={t('Developer.SwitchMode')}
+          testID={testIdWithKey('ToggleMode')}
+        >
+          <Switch
+            trackColor={{ false: ColorPalette.grayscale.lightGrey, true: ColorPalette.brand.primaryDisabled }}
+            thumbColor={getSwitchColor(BCSCMode)}
+            ios_backgroundColor={ColorPalette.grayscale.lightGrey}
+            onValueChange={toggleMode}
+            value={BCSCMode}
+          />
+        </SectionRow>
       </ScrollView>
     </SafeAreaView>
   )

@@ -12,7 +12,7 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
 
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -28,7 +28,7 @@ type ErrorState = {
 }
 
 type ManualSerialScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.ManualSerial>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.ManualSerial>
 }
 
 const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: ManualSerialScreenProps) => {

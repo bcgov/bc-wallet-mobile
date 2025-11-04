@@ -4,8 +4,15 @@ import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
-  TabStack = 'BCSCTabStack',
-  OnboardingStack = 'BCSCOnboardingStack',
+  Startup = 'BCSCStartupStack',
+  Onboarding = 'BCSCOnboardingStack',
+  Verify = 'BCSCVerifyStack',
+  Tab = 'BCSCTabStack',
+  Main = 'BCSCMainStack',
+}
+
+export enum BCSCModals {
+  InternetDisconnected = 'BCSCNoInternet',
 }
 
 export enum BCSCScreens {
@@ -13,10 +20,6 @@ export enum BCSCScreens {
   Home = 'BCSCHome',
   Services = 'BCSCServices',
   Account = 'BCSCAccount',
-  WebView = 'BCSCWebView',
-  Settings = 'BCSCSettings',
-  ContactUs = 'BCSCContactUs',
-  HelpCentre = 'BCSCHelpCentre',
   ForgetAllPairings = 'BCSCForgetAllPairings',
   NewSetup = 'BCSCNewSetup',
   SetupSteps = 'BCSCSetupSteps',
@@ -47,7 +50,7 @@ export enum BCSCScreens {
   AdditionalIdentificationRequired = 'BCSCAdditionalIdentificationRequired',
   DualIdentificationRequired = 'BCSCDualIdentificationRequired',
   IDPhotoInformation = 'BCSCIDPhotoInformation',
-  EvidenceTypeList = 'EvidenceTypeList',
+  EvidenceTypeList = 'BCSCEvidenceTypeList',
   EvidenceCapture = 'BCSCEvidenceCapture',
   EvidenceIDCollection = 'BCSCEvidenceIDCollection',
   BeforeYouCall = 'BCSCBeforeYouCall',
@@ -56,82 +59,60 @@ export enum BCSCScreens {
   LiveCall = 'BCSCLiveCall',
   VerifyNotComplete = 'BCSCVerifyNotComplete',
   ResidentialAddress = 'BCSCResidentialAddress',
-  RemoveAccountConfirmation = 'RemoveAccountConfirmation',
-  TransferAccountInformation = 'TransferAccountInformation',
-  TransferAccountInstructions = 'TransferAccountInstructions',
-  TransferAccountQRDisplay = 'TransferAccountQRDisplay',
-  TransferAccountQRScan = 'TransferAccountQRScan',
-  TransferAccountQRInformation = 'TransferQRInformation',
-  TransferAccountSuccess = 'TransferAccountSuccess',
-  ServiceLogin = 'ServiceLogin',
-  NicknameAccount = 'NicknameAccount',
-  EditNickname = 'EditNickname',
-  AccountSelector = 'AccountSelector',
+  RemoveAccountConfirmation = 'BCSCRemoveAccountConfirmation',
+  TransferAccountInformation = 'BCSCTransferAccountInformation',
+  TransferAccountInstructions = 'BCSCTransferAccountInstructions',
+  TransferAccountQRDisplay = 'BCSCTransferAccountQRDisplay',
+  TransferAccountQRScan = 'BCSCTransferAccountQRScan',
+  TransferAccountQRInformation = 'BCSCTransferQRInformation',
+  TransferAccountSuccess = 'BCSCTransferAccountSuccess',
+  ServiceLogin = 'BCSCServiceLogin',
+  NicknameAccount = 'BCSCNicknameAccount',
+  EditNickname = 'BCSCEditNickname',
+  AccountSelector = 'BCSCAccountSelector',
   OnboardingIntroCarousel = 'BCSCOnboardingIntroCarousel',
-  PrivacyPolicy = 'BCSCPrivacyPolicy',
+  OnboardingPrivacyPolicy = 'BCSCOnboardingPrivacyPolicy',
   OnboardingTermsOfUse = 'BCSCOnboardingTermsOfUse',
   OnboardingNotifications = 'BCSCOnboardingNotifications',
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
-  Developer = 'Developer',
+  MainSettings = 'BCSCMainSettings',
+  MainWebView = 'BCSCMainWebView',
+  MainContactUs = 'BCSCMainContactUs',
+  MainHelpCentre = 'BCSCMainHelpCentre',
+  MainPrivacyPolicy = 'BCSCMainPrivacyPolicy',
+  MainDeveloper = 'BCSCMainDeveloper',
+  VerifySettings = 'BCSCVerifySettings',
+  VerifyWebView = 'BCSCVerifyWebView',
+  VerifyContactUs = 'BCSCVerifyContactUs',
+  VerifyHelpCentre = 'BCSCVerifyHelpCentre',
+  VerifyPrivacyPolicy = 'BCSCVerifyPrivacyPolicy',
+  VerifyDeveloper = 'BCSCVerifyDeveloper',
 }
 
-export enum BCSCModals {
-  InternetDisconnected = 'BCSCNoInternet',
-}
-
-export type BCSCTabStackParams = {
-  [BCSCScreens.Home]: undefined
-  [BCSCScreens.Services]: undefined
-  [BCSCScreens.Account]: undefined
-}
-
-export type BCSCRootStackParams = {
-  [BCSCStacks.TabStack]: NavigatorScreenParams<BCSCTabStackParams>
-  [BCSCScreens.WebView]: { url: string; title: string }
-  [BCSCScreens.ManualPairingCode]: undefined
-  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
-  [BCSCScreens.RemoveAccountConfirmation]: undefined
-  [BCSCScreens.SetupSteps]: undefined
-  [BCSCScreens.TransferAccountQRDisplay]: undefined
-  [BCSCScreens.TransferAccountSuccess]: undefined
-  [BCSCScreens.TransferAccountQRInformation]: undefined
-  [BCSCScreens.ServiceLogin]: { serviceClient: ClientMetadata }
-  [BCSCScreens.Settings]: undefined
-  [BCSCScreens.PrivacyPolicy]?: { interactive?: boolean }
-  [BCSCScreens.ContactUs]: undefined
-  [BCSCScreens.HelpCentre]: undefined
-  [BCSCScreens.ForgetAllPairings]: undefined
-  [BCSCScreens.EditNickname]: undefined
-  [BCSCScreens.Developer]: undefined
-
-  // Modal screens
-  [BCSCModals.InternetDisconnected]: undefined
+export type BCSCStartupStackParams = {
+  [BCSCScreens.Splash]: undefined
 }
 
 export type BCSCOnboardingStackParams = {
-  [BCSCScreens.Settings]: undefined
   [BCSCScreens.OnboardingIntroCarousel]: undefined
-  [BCSCScreens.PrivacyPolicy]?: { interactive?: boolean }
+  [BCSCScreens.OnboardingPrivacyPolicy]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
-  [BCSCScreens.Developer]: undefined
 
-  // Modal screens
   [BCSCModals.InternetDisconnected]: undefined
 }
 
-export type BCSCVerifyIdentityStackParams = {
+export type BCSCVerifyStackParams = {
   [BCSCScreens.NewSetup]: undefined
   [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.SetupTypes]: undefined
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.TransferAccountInformation]: undefined
-  [BCSCScreens.TransferAccountSuccess]: undefined
-  [BCSCScreens.WebView]: { url: string; title: string }
+  [BCSCScreens.VerifyWebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
   [BCSCScreens.ManualSerial]: undefined
@@ -172,14 +153,39 @@ export type BCSCVerifyIdentityStackParams = {
   [BCSCScreens.ResidentialAddress]: undefined
   [BCSCScreens.NicknameAccount]: undefined
   [BCSCScreens.AccountSelector]: undefined
-  [BCSCScreens.Settings]: undefined
-  [BCSCScreens.EditNickname]: undefined
-  [BCSCScreens.ForgetAllPairings]: undefined
-  [BCSCScreens.HelpCentre]: undefined
-  [BCSCScreens.PrivacyPolicy]?: { interactive?: boolean }
-  [BCSCScreens.ContactUs]: undefined
-  [BCSCScreens.Developer]: undefined
+  [BCSCScreens.VerifySettings]: undefined
+  [BCSCScreens.VerifyHelpCentre]: undefined
+  [BCSCScreens.VerifyPrivacyPolicy]: undefined
+  [BCSCScreens.VerifyContactUs]: undefined
+  [BCSCScreens.VerifyDeveloper]: undefined
 
-  // Modal screens
+  [BCSCModals.InternetDisconnected]: undefined
+}
+
+export type BCSCTabStackParams = {
+  [BCSCScreens.Home]: undefined
+  [BCSCScreens.Services]: undefined
+  [BCSCScreens.Account]: undefined
+}
+
+export type BCSCMainStackParams = {
+  [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCScreens.MainWebView]: { url: string; title: string }
+  [BCSCScreens.ManualPairingCode]: undefined
+  [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
+  [BCSCScreens.RemoveAccountConfirmation]: undefined
+  [BCSCScreens.SetupSteps]: undefined
+  [BCSCScreens.TransferAccountQRDisplay]: undefined
+  [BCSCScreens.TransferAccountSuccess]: undefined
+  [BCSCScreens.TransferAccountQRInformation]: undefined
+  [BCSCScreens.ServiceLogin]: { serviceClient: ClientMetadata }
+  [BCSCScreens.MainSettings]: undefined
+  [BCSCScreens.MainPrivacyPolicy]: undefined
+  [BCSCScreens.MainContactUs]: undefined
+  [BCSCScreens.MainHelpCentre]: undefined
+  [BCSCScreens.ForgetAllPairings]: undefined
+  [BCSCScreens.EditNickname]: undefined
+  [BCSCScreens.MainDeveloper]: undefined
+
   [BCSCModals.InternetDisconnected]: undefined
 }

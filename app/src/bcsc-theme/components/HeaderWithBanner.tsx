@@ -1,24 +1,40 @@
+import { Header, StackHeaderProps } from '@react-navigation/stack'
 import React from 'react'
 import { View } from 'react-native'
-import { Header, StackHeaderProps } from '@react-navigation/stack'
 import { NotificationBannerContainer } from './NotificationBannerContainer'
+
+interface HeaderWithBannerProps extends StackHeaderProps {
+  onManageDevices: () => void
+}
 
 /**
  * A header component that includes a notifications banner below the standard header.
  *
- * @param {StackHeaderProps} props - The properties for the header component.
+ * @param {HeaderWithBannerProps} props - The properties for the header component.
  * @returns {*} {JSX.Element} The header component with an optional notification banner.
  */
-const HeaderWithBanner = (props: StackHeaderProps): JSX.Element => {
+const HeaderWithBanner = ({ onManageDevices, ...headerProps }: HeaderWithBannerProps): JSX.Element => {
   return (
     <View>
-      <Header {...props} />
-      <NotificationBannerContainer />
+      <Header {...headerProps} />
+      <NotificationBannerContainer onManageDevices={onManageDevices} />
     </View>
   )
 }
 
-export const createHeaderWithBanner = (props: StackHeaderProps) => <HeaderWithBanner {...props} />
+/**
+ * Creates a header with banner component that includes navigation callback for device management.
+ *
+ * @param {() => void} onManageDevices - Callback function for managing devices navigation
+ * @returns {(props: StackHeaderProps) => JSX.Element} A header component with banner
+ */
+export const createHeaderWithBanner = (onManageDevices: () => void) => {
+  const HeaderWithBannerComponent = (props: StackHeaderProps) => (
+    <HeaderWithBanner {...props} onManageDevices={onManageDevices} />
+  )
+  return HeaderWithBannerComponent
+}
+
 export const createHeaderWithoutBanner = (props: StackHeaderProps) => <Header {...props} />
 
 export default HeaderWithBanner

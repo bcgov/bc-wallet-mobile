@@ -1,5 +1,5 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import SCAN_ID_IMAGE from '@assets/img/credential-scan.png'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -10,7 +10,7 @@ import { ScrollView } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type IDPhotoInformationScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IDPhotoInformation>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.IDPhotoInformation>
   route: { params: { cardType: EvidenceType } }
 }
 

@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
@@ -19,7 +19,7 @@ import { Alert, StyleSheet, View } from 'react-native'
 import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EnterEmail>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterEmail>
   route: {
     params: {
       cardType: BCSCCardType
