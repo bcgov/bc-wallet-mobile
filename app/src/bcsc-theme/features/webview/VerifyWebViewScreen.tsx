@@ -1,11 +1,9 @@
-import React from 'react'
-import { StackNavigationProp } from '@react-navigation/stack'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { RouteProp } from '@react-navigation/native'
-import { BCSCVerifyStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import React from 'react'
 import { WebViewContent } from './WebViewContent'
 
 interface VerifyWebViewScreenProps {
-  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerifyWebView>
   route: RouteProp<BCSCVerifyStackParams, BCSCScreens.VerifyWebView>
 }
 

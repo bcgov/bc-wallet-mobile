@@ -1,11 +1,9 @@
-import React from 'react'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { RouteProp } from '@react-navigation/native'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { RouteProp } from '@react-navigation/native'
+import React from 'react'
 import { WebViewContent } from './WebViewContent'
 
 interface MainWebViewScreenProps {
-  navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainWebView>
   route: RouteProp<BCSCMainStackParams, BCSCScreens.MainWebView>
 }
 
