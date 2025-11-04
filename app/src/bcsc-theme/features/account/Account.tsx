@@ -4,7 +4,7 @@ import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -15,7 +15,7 @@ import { ActivityIndicator, AppState, Linking, StyleSheet, View } from 'react-na
 import AccountField from './components/AccountField'
 import AccountPhoto from './components/AccountPhoto'
 
-type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
+type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
 
 /**
  * Renders the account screen component, which displays user information and provides navigation to account-related actions.
@@ -83,7 +83,7 @@ const Account: React.FC = () => {
   const handleMyDevicesPress = useCallback(async () => {
     try {
       const fullUrl = `${client.baseURL}/account/embedded/devices`
-      navigation.navigate(BCSCScreens.WebView, {
+      navigation.navigate(BCSCScreens.MainWebView, {
         url: fullUrl,
         title: 'Manage Devices',
       })

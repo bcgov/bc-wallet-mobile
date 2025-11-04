@@ -5,12 +5,17 @@ import { NotificationBanner } from './NotificationBanner'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { SafeAreaModal } from '@bifold/core'
 
+interface NotificationBannerContainerProps {
+  onManageDevices: () => void
+}
+
 /**
  * Container component for displaying notification banners and handling their interactions.
  *
+ * @param {NotificationBannerContainerProps} props - The properties for the NotificationBannerContainer component.
  * @returns {*} {JSX.Element} The NotificationBannerContainer component.
  */
-export const NotificationBannerContainer = () => {
+export const NotificationBannerContainer = ({ onManageDevices }: NotificationBannerContainerProps) => {
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
 
@@ -39,6 +44,7 @@ export const NotificationBannerContainer = () => {
           bannerId={BCSCBanner.DEVICE_LIMIT_EXCEEDED}
           maxDevices={3}
           handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
+          onManageDevices={onManageDevices}
         />
       </SafeAreaModal>
 

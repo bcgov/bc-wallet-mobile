@@ -1,22 +1,24 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
+import { createThemedWebViewScript } from '@/bcsc-theme/utils/webview-utils'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
-import { RouteProp } from '@react-navigation/native'
 import React, { useCallback } from 'react'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
-import { BCSCRootStackParams, BCSCScreens } from '../../types/navigators'
 
-export interface WebViewScreenProps {
-  route: RouteProp<BCSCRootStackParams, BCSCScreens.WebView>
+interface WebViewContentProps {
+  url: string
 }
 
-const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
+const WebViewContent: React.FC<WebViewContentProps> = ({ url }) => {
   const { ColorPalette } = useTheme()
   const client = useBCSCApiClient()
-  const { url } = route.params
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  //TODO(bm): This checks if this is the "My Devices" endpoint - don't apply theming for it
+  // in future we should update the themed webview script to handle the styles on the my devices page as well
+  const isMyDevicesEndpoint = url.includes('/account/embedded/devices')
 
   const handleError = useCallback(
     (syntheticEvent: WebViewErrorEvent) => {
@@ -51,7 +53,10 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
   return (
     <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <WebView
-        source={{ uri: url, headers: { Authorization: `Bearer ${client.tokens?.access_token}` } }}
+        source={{
+          uri: url,
+          headers: { Authorization: `Bearer ${client.tokens?.access_token}` },
+        }}
         style={styles.webview}
         startInLoadingState={true}
         javaScriptEnabled={true}
@@ -64,9 +69,13 @@ const WebViewScreen: React.FC<WebViewScreenProps> = ({ route }) => {
         sharedCookiesEnabled={true}
         thirdPartyCookiesEnabled={true}
         userAgent="Single App"
+        injectedJavaScriptBeforeContentLoaded={
+          !isMyDevicesEndpoint ? createThemedWebViewScript(ColorPalette) : undefined
+        }
+        onMessage={() => {}} // Required for injectedJavaScript to work
       />
     </SafeAreaView>
   )
 }
 
-export default WebViewScreen
+export { WebViewContent }

@@ -1,33 +1,28 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
-import { BCSCOnboardingStackParams, BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
-import { RouteProp } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Linking, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-// Navigation will only be called from the onboarding stack
-// Route params can be provided in either stack
-interface PrivacyPolicyScreenProps {
-  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.PrivacyPolicy>
-  route: RouteProp<BCSCRootStackParams | BCSCOnboardingStackParams, BCSCScreens.PrivacyPolicy>
+interface PrivacyPolicyContentProps {
+  onPress?: () => void
 }
 
 /**
- * Privacy Policy screen component that informs users about the app's privacy practices.
+ * Privacy Policy content that informs users about the app's privacy practices.
  *
- * @returns {*} {JSX.Element} The PrivacyPolicyScreen component.
+ * onPress: optional function to be called when the Continue button is pressed,
+ * if not provided, the Continue button will not be displayed.
+ *
+ * @returns {*} {JSX.Element} The PrivacyPolicyContent component.
  */
-export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({
-  navigation,
-  route,
-}: PrivacyPolicyScreenProps): JSX.Element => {
+export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
+  onPress,
+}: PrivacyPolicyContentProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const interactive = route.params?.interactive
 
   const styles = StyleSheet.create({
     container: {
@@ -75,14 +70,12 @@ export const PrivacyPolicyScreen: React.FC<PrivacyPolicyScreenProps> = ({
         <CardButton title={t('Unified.Onboarding.LearnMore')} onPress={handlePressLearnMore} endIcon="open-in-new" />
       </ScrollView>
 
-      {interactive ? (
+      {onPress ? (
         <View style={styles.buttonContainer}>
           <Button
             title={t('Global.Continue')}
             buttonType={ButtonType.Primary}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
-            }}
+            onPress={onPress}
             testID={testIdWithKey('Continue')}
             accessibilityLabel={t('Global.Continue')}
           />

@@ -1,7 +1,7 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { BCDispatchAction, BCState } from '@/store'
 import { MaskType, useStore, useTheme } from '@bifold/core'
@@ -11,7 +11,7 @@ import { useCallback, useState } from 'react'
 import { StyleSheet, useWindowDimensions, View } from 'react-native'
 
 type EvidenceCaptureScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EvidenceCapture>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EvidenceCapture>
   route: { params: { cardType: EvidenceType } }
 }
 

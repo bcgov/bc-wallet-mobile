@@ -1,4 +1,4 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
 import { RouteProp } from '@react-navigation/native'
@@ -9,8 +9,8 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type BeforeYouCallScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.BeforeYouCall>
-  route: RouteProp<BCSCVerifyIdentityStackParams, BCSCScreens.BeforeYouCall>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.BeforeYouCall>
+  route: RouteProp<BCSCVerifyStackParams, BCSCScreens.BeforeYouCall>
 }
 
 const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) => {

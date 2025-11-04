@@ -1,21 +1,15 @@
 import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
-import { t } from 'i18next'
-import { BCSCRootStackParams, BCSCScreens } from '../types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useNavigation } from '@react-navigation/native'
-
-type SettingsHeaderButtonNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.Settings>
+import { StackNavigationProp } from '@react-navigation/stack'
+import { t } from 'i18next'
+import { BCSCMainStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 
 /**
- * Creates a Settings Header Button component that navigates to the Settings screen.
- *
- * Note: This is a curried function to avoid re-rendering in navigation stacks.
- *
- * @returns {*} {React.FC<SettingsHeaderButtonProps>} A React functional component that renders the Settings Header Button.
+ * Creates a Settings Header Button for the Main Stack that navigates to MainSettings.
  */
-export const createSettingsHeaderButton = () => {
-  const SettingsHeaderButton = () => {
-    const navigation = useNavigation<SettingsHeaderButtonNavigationProp>()
+export const createMainSettingsHeaderButton = () => {
+  const MainSettingsHeaderButton = () => {
+    const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
 
     return (
       <IconButton
@@ -23,12 +17,29 @@ export const createSettingsHeaderButton = () => {
         icon={'menu'}
         accessibilityLabel={t('Settings.ButtonTitle')}
         testID={testIdWithKey('SettingsMenuButton')}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.Settings)
-        }}
+        onPress={() => navigation.navigate(BCSCScreens.MainSettings)}
       />
     )
   }
+  return MainSettingsHeaderButton
+}
 
-  return SettingsHeaderButton
+/**
+ * Creates a Settings Header Button for the Verify Stack that navigates to VerifySettings.
+ */
+export const createVerifySettingsHeaderButton = () => {
+  const VerifySettingsHeaderButton = () => {
+    const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
+
+    return (
+      <IconButton
+        buttonLocation={ButtonLocation.Left}
+        icon={'menu'}
+        accessibilityLabel={t('Settings.ButtonTitle')}
+        testID={testIdWithKey('SettingsMenuButton')}
+        onPress={() => navigation.navigate(BCSCScreens.VerifySettings)}
+      />
+    )
+  }
+  return VerifySettingsHeaderButton
 }

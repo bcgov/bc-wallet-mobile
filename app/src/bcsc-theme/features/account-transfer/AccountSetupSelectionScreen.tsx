@@ -1,6 +1,6 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 const AccountSetupSelectionScreen: React.FC = () => {
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
+  const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const { Spacing } = useTheme()
 
   const styles = StyleSheet.create({

@@ -38,10 +38,10 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
     },
     scrollContainer: {
       flex: 1,
-      padding: Spacing.md,
     },
     contentContainer: {
       gap: Spacing.md,
+      padding: Spacing.md,
     },
     carouselContainer: {
       flexDirection: 'row',
@@ -73,7 +73,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
       width: screenWidth * 3, // Width for all 3 pages
     },
     carouselPage: {
-      width: screenWidth - Spacing.md * 2, // Account for container padding
+      width: screenWidth,
     },
   })
 
@@ -98,7 +98,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
   }))
 
   const animateToPage = (pageIndex: number) => {
-    const toValue = -pageIndex * (screenWidth - Spacing.md * 2)
+    const toValue = -pageIndex * screenWidth
     Animated.timing(slideAnim, {
       toValue,
       duration: 300,
@@ -108,7 +108,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
 
   const handleNext = () => {
     if (carouselIndex === carouselPages.length - 1) {
-      navigation.navigate(BCSCScreens.PrivacyPolicy, { interactive: true })
+      navigation.navigate(BCSCScreens.OnboardingPrivacyPolicy)
       return
     }
 

@@ -1,4 +1,4 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 
 import { StackNavigationProp } from '@react-navigation/stack'
 
@@ -9,8 +9,8 @@ import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoInstructionsScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
-  route: RouteProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakePhoto>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
+  route: RouteProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
 }
 
 const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {

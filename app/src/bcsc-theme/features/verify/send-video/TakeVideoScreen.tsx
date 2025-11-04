@@ -1,16 +1,16 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { hitSlop } from '@/constants'
 import { BCState } from '@/store'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
-import { StyleSheet, View, Text, Alert, TouchableOpacity, Animated } from 'react-native'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 
 type PhotoInstructionsScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.TakeVideo>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
 }
 
 const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {

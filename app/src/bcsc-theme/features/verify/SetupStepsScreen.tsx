@@ -5,7 +5,7 @@ import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 import { hitSlop } from '@/constants'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCDispatchAction, BCState } from '@/store'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
@@ -16,7 +16,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { SetupStep } from './components/SetupStep'
 
 type SetupStepsScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.SetupSteps>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SetupSteps>
 }
 
 /**

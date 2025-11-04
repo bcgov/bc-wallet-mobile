@@ -1,5 +1,5 @@
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState, Mode } from '@/store'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -8,15 +8,18 @@ import { Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-type ServiceLoginScreenProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.ServiceLogin>
+type ServiceLoginScreenProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ServiceLogin>
 
 /**
  * Renders the service details screen component, which displays information about a specific serviceClient.
  *
  * @returns {*} {JSX.Element} The service screen component or null if not implemented.
  */
-export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: ServiceLoginScreenProps) => {
-  const { serviceClient } = props.route.params
+export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
+  navigation,
+  route,
+}: ServiceLoginScreenProps) => {
+  const { serviceClient } = route.params
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
@@ -137,7 +140,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
               <TouchableOpacity
                 onPress={() => {
                   try {
-                    props.navigation.navigate(BCSCScreens.WebView, {
+                    navigation.navigate(BCSCScreens.MainWebView, {
                       url: privacyPolicyUri,
                       title: t('Services.PrivacyPolicy'),
                     })
@@ -182,7 +185,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = (props: Ser
             accessibilityLabel={'Cancel'}
             testID={testIdWithKey('ServiceLoginCancel')}
             buttonType={ButtonType.Tertiary}
-            onPress={() => props.navigation.goBack()}
+            onPress={() => navigation.goBack()}
           />
         </View>
       </ScrollView>

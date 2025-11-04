@@ -6,11 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import WebView from 'react-native-webview'
 
 /**
- * Help Centre screen component that presents help documentation and support information.
- *
- * @returns {*} {JSX.Element} The HelpCentreScreen component.
+ * Shared help centre content component that can be used across different navigation stacks.
+ * Pure content component with no navigation dependencies.
  */
-export const HelpCentreScreen = (): JSX.Element => {
+export const HelpCentreContent = (): JSX.Element => {
   const theme = useTheme()
   const { ColorPalette } = theme
 
