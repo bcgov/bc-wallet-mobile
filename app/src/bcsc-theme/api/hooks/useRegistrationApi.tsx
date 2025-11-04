@@ -120,7 +120,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           throw new Error('BCSC client not ready for registration update')
         }
 
-        const registrationAccessToken = store.bcsc.registrationAccessToken
+        const registrationAccessToken = bcsc.registrationAccessToken
         if (!registrationAccessToken) {
           throw new Error('No registration access token found for registration update')
         }
@@ -193,7 +193,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, dispatch, store.bcsc]
+    [isClientReady, apiClient, logger, dispatch]
   )
 
   const deleteRegistration = useCallback(
