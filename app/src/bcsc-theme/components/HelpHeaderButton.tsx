@@ -19,48 +19,58 @@ type HelpHeaderButtonActionProps = {
 type HelpHeaderButtonProps = HelpHeaderButtonUrlProps | HelpHeaderButtonActionProps
 
 /**
- * Creates a Help Header Button component that can either navigate to a Help Centre URL or execute a custom action.
- *
- * Note: This is a curried function to avoid re-rendering in navigation stacks.
- *
- * @param {HelpHeaderButtonProps} helpHeaderProps - The properties for the Help Header Button.
- * @returns {*} {React.FC} A React functional component that renders the Help Header Button.
+ * Shared Help Header Button component that accepts a navigation callback.
+ */
+const HelpHeaderButton: React.FC<{
+  helpHeaderProps: HelpHeaderButtonProps
+  navigateToWebView: (url: string, title: string) => void
+}> = ({ helpHeaderProps, navigateToWebView }) => {
+  const { t } = useTranslation()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  const handleHelpCentreNavigation = useCallback(
+    async (helpCentreUrl: HelpCentreUrl) => {
+      try {
+        navigateToWebView(helpCentreUrl, t('HelpCentre.Title'))
+      } catch (error) {
+        logger.error(`Error navigating to Help Center webview: ${error}`)
+      }
+    },
+    [navigateToWebView, logger, t]
+  )
+
+  return (
+    <IconButton
+      buttonLocation={ButtonLocation.Right}
+      icon={'help-circle'}
+      accessibilityLabel={t('PersonCredential.HelpLink')}
+      testID={testIdWithKey('Help')}
+      onPress={() => {
+        if (helpHeaderProps.helpCentreUrl) {
+          handleHelpCentreNavigation(helpHeaderProps.helpCentreUrl)
+          return
+        }
+        helpHeaderProps.helpAction()
+      }}
+    />
+  )
+}
+
+/**
+ * Creates a Help Header Button for the Main Stack that navigates to MainWebView or executes a custom action.
  */
 export const createMainHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonProps) => {
   const MainHeaderRight = () => {
-    const { t } = useTranslation()
-    const [logger] = useServices([TOKENS.UTIL_LOGGER])
     const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
 
-    const handleHelpCentreNavigation = useCallback(
-      async (helpCentreUrl: HelpCentreUrl) => {
-        try {
-          navigation.navigate(BCSCScreens.MainWebView, {
-            url: helpCentreUrl,
-            title: t('HelpCentre.Title'),
-          })
-        } catch (error) {
-          logger.error(`Error navigating to Help Center webview: ${error}`)
-        }
+    const navigateToWebView = useCallback(
+      (url: string, title: string) => {
+        navigation.navigate(BCSCScreens.MainWebView, { url, title })
       },
-      [navigation, logger, t]
+      [navigation]
     )
 
-    return (
-      <IconButton
-        buttonLocation={ButtonLocation.Right}
-        icon={'help-circle'}
-        accessibilityLabel={t('PersonCredential.HelpLink')}
-        testID={testIdWithKey('Help')}
-        onPress={() => {
-          if (helpHeaderProps.helpCentreUrl) {
-            handleHelpCentreNavigation(helpHeaderProps.helpCentreUrl)
-            return
-          }
-          helpHeaderProps.helpAction()
-        }}
-      />
-    )
+    return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />
   }
   return MainHeaderRight
 }
@@ -70,39 +80,16 @@ export const createMainHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonProp
  */
 export const createVerifyHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonProps) => {
   const VerifyHeaderRight = () => {
-    const { t } = useTranslation()
-    const [logger] = useServices([TOKENS.UTIL_LOGGER])
     const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
 
-    const handleHelpCentreNavigation = useCallback(
-      async (helpCentreUrl: HelpCentreUrl) => {
-        try {
-          navigation.navigate(BCSCScreens.VerifyWebView, {
-            url: helpCentreUrl,
-            title: t('HelpCentre.Title'),
-          })
-        } catch (error) {
-          logger.error(`Error navigating to Help Center webview: ${error}`)
-        }
+    const navigateToWebView = useCallback(
+      (url: string, title: string) => {
+        navigation.navigate(BCSCScreens.VerifyWebView, { url, title })
       },
-      [navigation, logger, t]
+      [navigation]
     )
 
-    return (
-      <IconButton
-        buttonLocation={ButtonLocation.Right}
-        icon={'help-circle'}
-        accessibilityLabel={t('PersonCredential.HelpLink')}
-        testID={testIdWithKey('Help')}
-        onPress={() => {
-          if (helpHeaderProps.helpCentreUrl) {
-            handleHelpCentreNavigation(helpHeaderProps.helpCentreUrl)
-            return
-          }
-          helpHeaderProps.helpAction()
-        }}
-      />
-    )
+    return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />
   }
   return VerifyHeaderRight
 }
