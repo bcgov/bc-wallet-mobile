@@ -32,11 +32,10 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
     },
     webViewContainerLoaded: {
       flex: 1,
-      margin: Spacing.sm,
+      marginHorizontal: Spacing.sm,
     },
     buttonContainer: {
-      paddingTop: Spacing.md,
-      paddingHorizontal: Spacing.md,
+      padding: Spacing.md,
     },
     activityIndicator: {
       flex: 1,

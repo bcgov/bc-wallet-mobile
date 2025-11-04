@@ -1,21 +1,22 @@
 import { ButtonLocation, IconButton, testIdWithKey } from '@bifold/core'
-import { t } from 'i18next'
-import { BCSCRootStackParams, BCSCScreens } from '../types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useNavigation } from '@react-navigation/native'
-
-type SettingsHeaderButtonNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.Settings>
+import { StackNavigationProp } from '@react-navigation/stack'
+import { t } from 'i18next'
 
 /**
- * Creates a Settings Header Button component that navigates to the Settings screen.
+ * Creates a generic Settings Header Button component that navigates to the specified settings screen.
  *
  * Note: This is a curried function to avoid re-rendering in navigation stacks.
  *
- * @returns {*} {React.FC<SettingsHeaderButtonProps>} A React functional component that renders the Settings Header Button.
+ * @template TParamList - The parameter list type for the navigation stack
+ * @param {keyof TParamList} screenName - The screen name to navigate to
+ * @returns {React.FC} A React functional component that renders the Settings Header Button.
  */
-export const createSettingsHeaderButton = () => {
+export const createSettingsHeaderButton = <TParamList extends Record<string, object | undefined>>(
+  screenName: keyof TParamList
+) => {
   const SettingsHeaderButton = () => {
-    const navigation = useNavigation<SettingsHeaderButtonNavigationProp>()
+    const navigation = useNavigation<StackNavigationProp<TParamList>>()
 
     return (
       <IconButton
@@ -24,7 +25,9 @@ export const createSettingsHeaderButton = () => {
         accessibilityLabel={t('Settings.ButtonTitle')}
         testID={testIdWithKey('SettingsMenuButton')}
         onPress={() => {
-          navigation.navigate(BCSCScreens.Settings)
+          // TypeScript can't infer the exact parameter types for generic navigation
+          // but we know this is safe because screenName is constrained to keyof TParamList
+          navigation.navigate(screenName as never)
         }}
       />
     )

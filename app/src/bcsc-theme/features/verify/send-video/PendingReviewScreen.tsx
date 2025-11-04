@@ -1,11 +1,11 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PendingReviewScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.PendingReview>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PendingReview>
 }
 
 const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {

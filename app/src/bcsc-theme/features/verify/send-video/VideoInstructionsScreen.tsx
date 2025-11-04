@@ -1,15 +1,15 @@
-import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
-import { StackNavigationProp } from '@react-navigation/stack'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
-import { BCState } from '@/store'
 import { VerificationPrompt } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BCState } from '@/store'
+import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { Fragment } from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type VideoInstructionsScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VideoInstructions>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VideoInstructions>
 }
 
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {

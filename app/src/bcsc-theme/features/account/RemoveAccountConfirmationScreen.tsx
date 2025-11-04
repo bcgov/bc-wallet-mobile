@@ -1,5 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCSCRootStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
-type AccountNavigationProp = StackNavigationProp<BCSCRootStackParams>
+type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
 
 /**
  * Screen that confirms the user's intent to remove their account.

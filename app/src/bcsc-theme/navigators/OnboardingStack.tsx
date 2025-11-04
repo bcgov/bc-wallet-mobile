@@ -1,13 +1,13 @@
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
-import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
+import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { BCSCScreens } from '../types/navigators'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -36,8 +36,8 @@ const OnboardingStack = (): JSX.Element => {
       <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />
 
       <Stack.Screen
-        name={BCSCScreens.PrivacyPolicy}
-        component={PrivacyPolicyScreen}
+        name={BCSCScreens.OnboardingPrivacyPolicy}
+        component={OnboardingPrivacyPolicyScreen}
         options={{
           title: t('Unified.Onboarding.PrivacyPolicyTitle'),
           headerShown: true,

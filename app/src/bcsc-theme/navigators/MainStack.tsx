@@ -1,9 +1,12 @@
 import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
+import { useNavigation } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
+import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { createHeaderWithBanner } from '../components/HeaderWithBanner'
 import createHelpHeaderButton from '../components/HelpHeaderButton'
 import { createWebviewHeaderBackButton } from '../components/WebViewBackButton'
@@ -12,42 +15,51 @@ import TransferQRInformationScreen from '../features/account-transfer/TransferQR
 import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
-import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
-import { ContactUsScreen } from '../features/settings/ContactUsScreen'
+import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
-import { HelpCentreScreen } from '../features/settings/HelpCentreScreen'
-import Settings from '../features/settings/Settings'
-import WebViewScreen from '../features/webview/WebViewScreen'
+import { MainHelpCentreScreen } from '../features/settings/MainHelpCentreScreen'
+import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
+import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
+import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '../types/navigators'
 import BCSCTabStack from './TabStack'
 
 const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const theme = useTheme()
   const { t } = useTranslation()
-  const Stack = createStackNavigator<BCSCRootStackParams>()
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  const client = useBCSCApiClient()
+  const Stack = createStackNavigator<BCSCMainStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
   useSystemChecks(SystemCheckScope.MAIN_STACK)
 
+  const handleManageDevices = useCallback(() => {
+    navigation.navigate(BCSCScreens.MainWebView, {
+      url: `${client.baseURL}/account/embedded/devices`,
+      title: t('Unified.Screens.ManageDevices'),
+    })
+  }, [client.baseURL, navigation, t])
+
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
-        initialRouteName={BCSCStacks.TabStack}
+        initialRouteName={BCSCStacks.Tab}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
           title: '',
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
-          header: createHeaderWithBanner,
+          header: createHeaderWithBanner(handleManageDevices),
         }}
       >
-        <Stack.Screen name={BCSCStacks.TabStack} component={BCSCTabStack} />
+        <Stack.Screen name={BCSCStacks.Tab} component={BCSCTabStack} />
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}
@@ -58,8 +70,8 @@ const MainStack: React.FC = () => {
           })}
         />
         <Stack.Screen
-          name={BCSCScreens.Settings}
-          component={Settings}
+          name={BCSCScreens.MainSettings}
+          component={MainSettingsScreen}
           options={{
             headerShown: true,
             title: t('Screens.Settings'),
@@ -76,8 +88,8 @@ const MainStack: React.FC = () => {
           })}
         />
         <Stack.Screen
-          name={BCSCScreens.WebView}
-          component={WebViewScreen}
+          name={BCSCScreens.MainWebView}
+          component={MainWebViewScreen}
           options={({ route, navigation }) => ({
             headerShown: true,
             title: route.params.title,
@@ -131,8 +143,8 @@ const MainStack: React.FC = () => {
           })}
         />
         <Stack.Screen
-          name={BCSCScreens.ContactUs}
-          component={ContactUsScreen}
+          name={BCSCScreens.MainContactUs}
+          component={MainContactUsScreen}
           options={() => ({
             headerShown: true,
             title: t('Unified.Screens.ContactUs'),
@@ -140,8 +152,8 @@ const MainStack: React.FC = () => {
           })}
         />
         <Stack.Screen
-          name={BCSCScreens.HelpCentre}
-          component={HelpCentreScreen}
+          name={BCSCScreens.MainHelpCentre}
+          component={MainHelpCentreScreen}
           options={() => ({
             headerShown: true,
             title: t('Unified.Screens.HelpCentre'),
@@ -149,8 +161,8 @@ const MainStack: React.FC = () => {
           })}
         />
         <Stack.Screen
-          name={BCSCScreens.PrivacyPolicy}
-          component={PrivacyPolicyScreen}
+          name={BCSCScreens.MainPrivacyPolicy}
+          component={SettingsPrivacyPolicyScreen}
           options={() => ({
             headerShown: true,
             title: t('Unified.Screens.PrivacyInformation'),

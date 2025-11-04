@@ -1,6 +1,4 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction } from '@/store'
 import {
   Button,
@@ -12,8 +10,6 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -23,6 +19,7 @@ interface ReviewDevicesProps {
   bannerId: BCSCBanner
   maxDevices: number
   handleClose: ({ shouldAnimate }: { shouldAnimate: boolean }) => void
+  onManageDevices: () => void
 }
 
 /**
@@ -31,10 +28,8 @@ interface ReviewDevicesProps {
  * @param {ReviewDevicesProps} props - The properties for the ReviewDevices component.
  * @returns {*} {JSX.Element} The ReviewDevices component.
  */
-export const ReviewDevices = ({ bannerId, maxDevices, handleClose }: ReviewDevicesProps) => {
+export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevices }: ReviewDevicesProps) => {
   const [, dispatch] = useStore()
-  const client = useBCSCApiClient()
-  const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams>>()
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
 
@@ -55,11 +50,8 @@ export const ReviewDevices = ({ bannerId, maxDevices, handleClose }: ReviewDevic
 
   const handleManageDevices = useCallback(async () => {
     handleClose({ shouldAnimate: false })
-    navigation.navigate(BCSCScreens.WebView, {
-      url: `${client.baseURL}/account/embedded/devices`,
-      title: t('Unified.Screens.ManageDevices'),
-    })
-  }, [client.baseURL, handleClose, navigation, t])
+    onManageDevices()
+  }, [handleClose, onManageDevices])
 
   return (
     <SafeAreaView style={styles.container}>

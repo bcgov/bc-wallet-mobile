@@ -1,23 +1,23 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { useTheme, Button, ButtonType, testIdWithKey, useStore, ThemedText, useAnimatedComponents } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useAnimatedComponents, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
-import { Video, VideoRef } from 'react-native-video'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
+import { Buffer } from 'buffer'
 import { useRef, useState } from 'react'
+import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
-import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import { Buffer } from 'buffer'
+import { Video, VideoRef } from 'react-native-video'
 
 const pauseButtonSize = 60
 
 type VideoReviewScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.VideoReview>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VideoReview>
   route: {
     params: {
       videoPath: string

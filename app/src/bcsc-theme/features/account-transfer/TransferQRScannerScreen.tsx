@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   DismissiblePopupModal,
@@ -26,7 +26,7 @@ import { useCameraPermission } from 'react-native-vision-camera'
 const TransferQRScannerScreen: React.FC = () => {
   const { deviceAttestation, authorization, token } = useApi()
   const { client } = useBCSCApiClientState()
-  const navigator = useNavigation<StackNavigationProp<BCSCVerifyIdentityStackParams>>()
+  const navigator = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const [store, dispatch] = useStore<BCState>()
   const { ColorPalette, Spacing } = useTheme()
   const [isLoading, setIsLoading] = useState(true)

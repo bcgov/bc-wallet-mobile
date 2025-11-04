@@ -19,7 +19,7 @@ export const SettingsActionCard = (props: SettingsActionCardProps) => {
 
   const styles = StyleSheet.create({
     cardContainer: {
-      height: 56,
+      height: 'auto',
       justifyContent: 'center',
       padding: Spacing.md,
       backgroundColor: ColorPalette.brand.secondaryBackground,

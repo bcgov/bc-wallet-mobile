@@ -1,9 +1,7 @@
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { ACCESSIBILITY_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import { LockoutReason, ThemedText, TOKENS, useAuth, useServices, useStore, useTheme } from '@bifold/core'
-import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, StyleSheet, View } from 'react-native'
@@ -11,16 +9,25 @@ import { getBuildNumber, getVersion } from 'react-native-device-info'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { SettingsActionCard } from './components/SettingsActionCard'
 
-type SettingsScreenProps = {
-  navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.Settings>
+interface SettingsContentProps {
+  onContactUs: () => void
+  onHelp: () => void
+  onPrivacy: () => void
+  onEditNickname?: () => void
+  onForgetAllPairings?: () => void
 }
 
 /**
- * The Settings screen for the BCSC theme.
- *
- * @returns {*} {JSX.Element}
+ * Shared settings content component that can be used across different navigation stacks.
+ * Receives navigation callbacks as props to handle stack-specific navigation.
  */
-const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenProps) => {
+export const SettingsContent: React.FC<SettingsContentProps> = ({
+  onContactUs,
+  onHelp,
+  onPrivacy,
+  onEditNickname,
+  onForgetAllPairings,
+}) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
@@ -30,7 +37,6 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      justifyContent: 'space-between',
       padding: Spacing.md,
     },
     sectionHeader: {
@@ -68,32 +74,12 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
     }
   }
 
-  const onPressContactUs = () => {
-    navigation.navigate(BCSCScreens.ContactUs)
-  }
-
   const onPressAccessibility = async () => {
     try {
       await Linking.openURL(ACCESSIBILITY_URL)
     } catch (error) {
       logger.error('Error opening Accessibility URL', error instanceof Error ? error : new Error(String(error)))
     }
-  }
-
-  const onPressHelp = () => {
-    navigation.navigate(BCSCScreens.HelpCentre)
-  }
-
-  const onPressPrivacy = () => {
-    navigation.navigate(BCSCScreens.PrivacyPolicy)
-  }
-
-  const onPressEditNickname = () => {
-    navigation.navigate(BCSCScreens.EditNickname)
-  }
-
-  const onPressForgetAllPairings = () => {
-    navigation.navigate(BCSCScreens.ForgetAllPairings)
   }
 
   return (
@@ -115,7 +101,6 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
             <ThemedText variant={'bold'} style={styles.sectionHeader}>
               {t('BCSCSettings.HeaderA')}
             </ThemedText>
-
             <View style={styles.sectionContainer}>
               <SettingsActionCard
                 // TODO (MD + BM): Update with like for like device auth screen if that is their chosen auth method
@@ -130,9 +115,9 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
                 title={t('BCSCSettings.ChangePIN')}
                 onPress={onPressActionTodo}
               />
-
-              <SettingsActionCard title={t('BCSCSettings.EditNickname')} onPress={onPressEditNickname} />
-
+              {onEditNickname ? (
+                <SettingsActionCard title={t('BCSCSettings.EditNickname')} onPress={onEditNickname} />
+              ) : null}
               {/* TODO (MD + BM): Implement actions for these two cards */}
               <SettingsActionCard
                 title={t('BCSCSettings.AutoLockTime')}
@@ -140,8 +125,9 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
                 endAdornmentText={`${store.preferences.autoLockTime} min`}
               />
               <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
-
-              <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onPressForgetAllPairings} />
+              {onForgetAllPairings ? (
+                <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onForgetAllPairings} />
+              ) : null}
             </View>
           </>
         ) : null}
@@ -149,18 +135,16 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
         <ThemedText variant={'bold'} style={styles.sectionHeader}>
           {t('BCSCSettings.HeaderB')}
         </ThemedText>
-
         <View style={styles.sectionContainer}>
-          <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onPressHelp} />
-          <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPressPrivacy} />
-          <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onPressContactUs} />
+          <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onHelp} />
+          <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPrivacy} />
+          <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onContactUs} />
           <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressFeedback} />
           <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
         </View>
 
         {/* TODO (MD): Add developer options */}
-
         <View style={styles.versionContainer}>
           <ThemedText variant="labelSubtitle">BC Services Card</ThemedText>
           <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
@@ -169,5 +153,3 @@ const Settings: React.FC<SettingsScreenProps> = ({ navigation }: SettingsScreenP
     </TabScreenWrapper>
   )
 }
-
-export default Settings

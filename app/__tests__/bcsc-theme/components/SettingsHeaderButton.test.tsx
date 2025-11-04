@@ -1,5 +1,5 @@
 import { createSettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
 import { NavigationContainer } from '@react-navigation/native'
 import { fireEvent, render } from '@testing-library/react-native'
@@ -20,26 +20,26 @@ describe('SettingsHeaderButton', () => {
     jest.resetAllMocks()
   })
 
-  it('renders the settings menu button', () => {
-    const SettingsHeaderButton = createSettingsHeaderButton()
+  it('renders the main settings menu button', () => {
+    const MainSettingsHeaderButton = createSettingsHeaderButton<BCSCMainStackParams>(BCSCScreens.MainSettings)
 
     const { getByTestId } = render(
       <NavigationContainer>
-        <SettingsHeaderButton />
+        <MainSettingsHeaderButton />
       </NavigationContainer>
     )
 
     expect(getByTestId(testIdWithKey('SettingsMenuButton'))).toBeTruthy()
   })
 
-  it('should navigate to Settings screen on press', async () => {
-    const SettingsHeaderButton = createSettingsHeaderButton()
+  it('should navigate to MainSettings screen on press', async () => {
+    const MainSettingsHeaderButton = createSettingsHeaderButton<BCSCMainStackParams>(BCSCScreens.MainSettings)
 
     mockNavigate = jest.fn()
 
     const { getByTestId } = render(
       <NavigationContainer>
-        <SettingsHeaderButton />
+        <MainSettingsHeaderButton />
       </NavigationContainer>
     )
 
@@ -47,6 +47,6 @@ describe('SettingsHeaderButton', () => {
 
     fireEvent.press(button)
 
-    expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.Settings)
+    expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.MainSettings)
   })
 })

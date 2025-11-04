@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
@@ -19,7 +19,7 @@ import { CodeField, Cursor, useClearByFocusCell } from 'react-native-confirmatio
 import Toast from 'react-native-toast-message'
 
 type EmailConfirmationScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.EmailConfirmation>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EmailConfirmation>
   route: {
     params: {
       emailAddressId: string
