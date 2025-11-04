@@ -1,5 +1,5 @@
-import { Agent } from '@credo-ts/core'
 import { Config, OnboardingTask, Screens } from '@bifold/core'
+import { Agent } from '@credo-ts/core'
 
 import { BCState } from './store'
 

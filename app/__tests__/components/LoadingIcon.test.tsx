@@ -1,8 +1,8 @@
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
-import LoadingIcon from '../../src/components/LoadingIcon'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
+import LoadingIcon from '../../src/components/LoadingIcon'
 
 describe('LoadingIcon Component', () => {
   test('renders correctly', () => {

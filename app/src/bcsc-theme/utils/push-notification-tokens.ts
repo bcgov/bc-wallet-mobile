@@ -1,6 +1,6 @@
-import { Platform } from 'react-native'
-import messaging from '@react-native-firebase/messaging'
 import { BifoldLogger } from '@bifold/core'
+import messaging from '@react-native-firebase/messaging'
+import { Platform } from 'react-native'
 
 // Define a structured return type for clarity
 export interface NotificationTokens {

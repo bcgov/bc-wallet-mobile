@@ -1,4 +1,4 @@
-import { useTheme, ThemedText } from '@bifold/core'
+import { ThemedText, useTheme } from '@bifold/core'
 import React from 'react'
 import { StyleSheet, TouchableOpacity } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'

@@ -1,9 +1,9 @@
+import Splash from '@/screens/Splash'
 import { testIdWithKey, useDefaultStackOptions, useTheme, WalletSecret } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BCSCScreens } from '../types/navigators'
-import Splash from '@/screens/Splash'
-import { useCallback } from 'react'
 
 interface StartupStackProps {
   initializeAgent: (walletSecret: WalletSecret) => Promise<void>

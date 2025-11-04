@@ -2,11 +2,11 @@ import {
   Button,
   ButtonType,
   CheckBoxRow,
+  DeveloperModal,
   DispatchAction,
   Link,
   testIdWithKey,
   useDeveloperMode,
-  DeveloperModal,
   useStore,
   useTheme,
 } from '@bifold/core'

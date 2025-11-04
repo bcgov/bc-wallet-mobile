@@ -1,10 +1,10 @@
 import { TOKENS, useServices } from '@bifold/core'
+import { useCallback } from 'react'
+import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
 import useApi from '../api/hooks/useApi'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
-import { createQuickLoginJWT, getAccount } from 'react-native-bcsc-core'
 import { getNotificationTokens } from '../utils/push-notification-tokens'
 import { useBCSCApiClient } from './useBCSCApiClient'
-import { useCallback } from 'react'
 
 // Only a subset of the ClientMetadata is needed for this hook
 type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login_uri'>

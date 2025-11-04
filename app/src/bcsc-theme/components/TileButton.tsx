@@ -1,5 +1,5 @@
 import { testIdWithKey, useTheme } from '@bifold/core'
-import { Text, View, Image, StyleSheet, ImageSourcePropType, ViewStyle, TouchableOpacity } from 'react-native'
+import { Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 export type TileButtonProps = {

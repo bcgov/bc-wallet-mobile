@@ -1,8 +1,8 @@
 import { render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 
-import ProgressBar from '../../src/components/ProgressBar'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
+import ProgressBar from '../../src/components/ProgressBar'
 
 describe('ProgressBar Component', () => {
   test('renders correctly', () => {

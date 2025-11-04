@@ -1,9 +1,9 @@
-import { useCallback, useRef, useState } from 'react'
-import { BCSCBanner } from './AppBanner'
-import { View } from 'react-native'
-import { NotificationBanner } from './NotificationBanner'
-import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { SafeAreaModal } from '@bifold/core'
+import { useCallback, useRef, useState } from 'react'
+import { View } from 'react-native'
+import { ReviewDevices } from '../features/settings/components/ReviewDevices'
+import { BCSCBanner } from './AppBanner'
+import { NotificationBanner } from './NotificationBanner'
 
 interface NotificationBannerContainerProps {
   onManageDevices: () => void

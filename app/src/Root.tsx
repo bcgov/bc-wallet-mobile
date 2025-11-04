@@ -1,6 +1,6 @@
-import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
 import { BCState, Mode } from '@/store'
 import BCSCRootStack from '@bcsc-theme/navigators/RootStack'
+import { RootStack as BCWalletRootStack, useStore } from '@bifold/core'
 import { BCSCApiClientProvider } from './bcsc-theme/contexts/BCSCApiClientContext'
 
 const Root: React.FC = () => {

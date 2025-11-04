@@ -1,7 +1,7 @@
+import { BCState } from '@/store'
+import { useStore } from '@bifold/core'
 import { useMemo } from 'react'
 import { AppBanner, BCSCBanner, BCSCBannerMessage } from './AppBanner'
-import { useStore } from '@bifold/core'
-import { BCState } from '@/store'
 
 interface NotificationBannerProps {
   onPressBanner?: (bannerId: BCSCBanner) => void
