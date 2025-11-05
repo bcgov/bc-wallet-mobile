@@ -54,7 +54,11 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    * @returns {boolean} True if the device is connected to the internet, false otherwise.
    */
   runCheck() {
-    return Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable)
+    return (
+      Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable) ||
+      // Treat connected but unknown reachability as connected (ie: while pinging)
+      Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable === null)
+    )
   }
 
   /**
@@ -63,7 +67,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    *
    * @returns {*} {void}
    */
-  onFail() {
+  async onFail() {
     this.logger.warn('InternetStatusSystemCheck: No internet connection detected')
 
     // Only navigate if the modal is not already visible
@@ -80,7 +84,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    *
    * @returns {*} {void}
    */
-  onSuccess() {
+  async onSuccess() {
     // Only navigate back if the modal is visible
     if (!this.isModalVisible || !this.navigation.canGoBack()) {
       return

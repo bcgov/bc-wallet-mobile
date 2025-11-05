@@ -8,7 +8,8 @@ import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSy
 import { runSystemChecks } from '@/services/system-checks/system-checks'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
-import { useNavigation, useNavigationState } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
+import { navigationRef } from 'App'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import BCSCApiClient from '../api/client'
@@ -39,15 +40,19 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<InternetStatusStackNavigation>()
-  const isNavigationReady = useNavigationState((state) => Boolean(state && !state.stale))
   const ranSystemChecksRef = useRef(false)
 
   // Internet connectivity event listener
   useEventListener(() => {
     return NetInfo.addEventListener(async (netInfo) => {
-      await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
+      // On connectivity change, wait for navigation to be ready before running the check
+      const navigationReady = await _waitForNavigationToBeReady()
+
+      if (navigationReady) {
+        await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
+      }
     })
-  }, scope === SystemCheckScope.STARTUP && isNavigationReady)
+  }, scope === SystemCheckScope.STARTUP)
 
   /**
    * Checks to run on app startup to ensure system is operational.
@@ -81,16 +86,25 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     runChecksByScope()
-  }, [
-    client,
-    configApi.getServerStatus,
-    dispatch,
-    isClientReady,
-    isNavigationReady,
-    logger,
-    navigation,
-    scope,
-    t,
-    tokenApi,
-  ])
+  }, [client, configApi.getServerStatus, dispatch, isClientReady, logger, scope, t, tokenApi])
+}
+
+/**
+ * Waits for the navigation to be mounted and ready.
+ *
+ * @returns {Promise<true>} A promise that resolves to true when navigation is ready.
+ */
+function _waitForNavigationToBeReady(): Promise<true> {
+  return new Promise((resolve) => {
+    if (navigationRef.current?.getRootState()) {
+      resolve(true)
+    }
+
+    const interval = setInterval(() => {
+      if (navigationRef.current?.getRootState()) {
+        clearInterval(interval)
+        resolve(true)
+      }
+    }, 10)
+  })
 }
