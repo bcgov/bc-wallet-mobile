@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { hasNickname } from '@/bcsc-theme/utils/account-utils'
@@ -14,14 +15,14 @@ import {
   LimitedTextInput,
   testIdWithKey,
   ThemedText,
+  TOKENS,
   useAnimatedComponents,
+  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import Toast from 'react-native-toast-message'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { TOKENS, useServices } from '@bifold/core'
 
 interface NicknameFormProps {
   isRenaming?: boolean

@@ -1,9 +1,8 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCDispatchAction, BCState } from '@/store'
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useStore } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { TOKENS, useServices } from '@bifold/core'
 
 const VerificationSuccessScreen = () => {
   const { t } = useTranslation()
