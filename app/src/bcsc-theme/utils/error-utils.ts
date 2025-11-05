@@ -73,7 +73,7 @@ export function formatAxiosErrorForLogger(options: LogAxiosErrorOptions): Record
     url: options.error.config?.url,
     baseURL: options.error.config?.baseURL,
     isTimeout: options.error.code === 'ECONNABORTED',
-    isNetworkError: !options.error.response && !options.error.code,
+    isNetworkError: isNetworkError(options.error),
   }
 
   if (options.error.config) {
@@ -109,6 +109,7 @@ export function formatAxiosErrorForLogger(options: LogAxiosErrorOptions): Record
 export function isNetworkError(error: unknown): boolean {
   if (error instanceof AxiosError) {
     return (
+      (error as any)?.isNetworkError === true ||
       (error.code === NETWORK_ERROR_CODE && error.message === NETWORK_ERROR_MESSAGE) ||
       (error.code === 'ERR_NETWORK' && error.message === 'Network Error')
     )
