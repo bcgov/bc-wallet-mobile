@@ -128,8 +128,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           throw new Error('No client name found for registration update')
         }
 
-        let fcmDeviceToken = 'fallback_fcm_token'
-        let apnsToken = ''
+        let fcmDeviceToken = null
+        let apnsToken = null
 
         try {
           const tokens = await getNotificationTokens(logger)
@@ -144,12 +144,16 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           )
         }
 
+        if (!fcmDeviceToken) {
+          throw new Error('No FCM device token found for registration update')
+        }
+
         const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
 
         let updatedRegistrationData: RegistrationResponseData | null = null
 
         try {
-          const updatePayload = typeof body === 'string' ? JSON.parse(body) : body
+          const updatePayload = body ? JSON.parse(body) : body
           // Add required fields for PUT request: client_id, client_name, and scope
           updatePayload.client_id = account.clientID
           updatePayload.client_name = selectedNickname
