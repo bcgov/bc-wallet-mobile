@@ -8,8 +8,8 @@ import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import { hitSlop } from '@/constants'
 import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
+import { hitSlop } from '@/constants'
 import { BCWalletEventTypes } from '@events/eventTypes'
 
 export default function AddCredentialSlider() {

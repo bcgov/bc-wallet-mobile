@@ -1,25 +1,25 @@
-import { useAgent } from '@credo-ts/react-hooks'
 import {
-  useStore,
-  useTheme,
   Button,
   ButtonType,
-  testIdWithKey,
   Link,
-  Screens,
   NotificationStackParams,
+  Screens,
+  testIdWithKey,
+  useStore,
+  useTheme,
 } from '@bifold/core'
+import { useAgent } from '@credo-ts/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, Text, View, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native'
+import { Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
+import { BCState } from '@/store'
 import PersonIssuance1 from '@assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '@assets/img/PersonIssuance2.svg'
 import { openLink } from '@utils/links'
-import { BCState } from '@/store'
 
 const links = {
   WhatIsPersonCredential: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential',

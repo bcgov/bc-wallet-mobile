@@ -42,9 +42,9 @@ const useConnectionById = jest.fn()
 export {
   useAgent,
   useConnectionById,
-  useCredentials,
   useCredentialById,
   useCredentialByState,
+  useCredentials,
   useProofById,
   useProofByState,
 }

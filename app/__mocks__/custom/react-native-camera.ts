@@ -22,4 +22,4 @@ Camera.Constants = Constants
 const useCameraDevice = jest.fn()
 const useCodeScanner = jest.fn()
 const useCameraFormat = jest.fn()
-export { Camera, useCameraDevice, useCodeScanner, useCameraFormat }
+export { Camera, useCameraDevice, useCameraFormat, useCodeScanner }

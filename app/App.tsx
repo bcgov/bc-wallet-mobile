@@ -33,8 +33,8 @@ import { themes } from '@/theme'
 import BCLogger from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
 import WebDisplay from '@screens/WebDisplay'
-import { AppContainer } from './container-imp'
 import Config from 'react-native-config'
+import { AppContainer } from './container-imp'
 
 initLanguages(localization)
 

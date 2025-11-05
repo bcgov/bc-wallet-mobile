@@ -1,3 +1,7 @@
+import { BCLocalStorageKeys, BCState } from '@/store'
+import { activate } from '@/utils/PushNotificationsHelper'
+import { getBCAgentModules } from '@/utils/bc-agent-modules'
+import { batchPickup } from '@/utils/mediator'
 import {
   createLinkSecretIfRequired,
   DispatchAction,
@@ -16,10 +20,6 @@ import moment from 'moment'
 import { useCallback, useRef, useState } from 'react'
 import { Config } from 'react-native-config'
 import { CachesDirectoryPath } from 'react-native-fs'
-import { activate } from '@/utils/PushNotificationsHelper'
-import { getBCAgentModules } from '@/utils/bc-agent-modules'
-import { BCState, BCLocalStorageKeys } from '@/store'
-import { batchPickup } from '@/utils/mediator'
 
 const loadCachedLedgers = async (): Promise<IndyVdrPoolConfig[] | undefined> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

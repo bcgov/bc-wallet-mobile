@@ -1,6 +1,6 @@
+import { Buffer } from 'buffer'
 import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
-import { Buffer } from 'buffer'
 
 export interface PhotoMetadata {
   label: string

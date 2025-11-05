@@ -2,8 +2,8 @@ import { AuthProvider } from '@bifold/core'
 import { render } from '@testing-library/react-native'
 import React from 'react'
 
-import Developer from '../../src/screens/Developer'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
+import Developer from '../../src/screens/Developer'
 
 const mockNavigation = jest.fn()
 jest.mock('@react-navigation/native', () => ({

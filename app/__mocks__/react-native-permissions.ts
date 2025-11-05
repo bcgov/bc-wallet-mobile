@@ -11,4 +11,4 @@ const RESULTS = {
   GRANTED: 'granted',
 }
 
-export { check, request, PERMISSIONS, RESULTS }
+export { PERMISSIONS, RESULTS, check, request }

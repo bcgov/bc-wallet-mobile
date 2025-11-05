@@ -1,5 +1,5 @@
 import React from 'react'
-import { useTranslation, Trans } from 'react-i18next'
+import { Trans, useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import { ThemedText } from '@bifold/core'

@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 // if you use expo remove this line
 import { withKnobs } from '@storybook/addon-knobs'
-import { getStorybookUI, configure, addDecorator } from '@storybook/react-native'
+import { addDecorator, configure, getStorybookUI } from '@storybook/react-native'
 import { Platform } from 'react-native'
 
 import './rn-addons'

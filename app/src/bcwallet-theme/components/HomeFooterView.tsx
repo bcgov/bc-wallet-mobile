@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import { surveyMonkeyUrl, surveyMonkeyExitUrl } from '@/constants'
+import { surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import WebDisplay from '@screens/WebDisplay'
 
 interface HomeFooterViewProps extends PropsWithChildren {}

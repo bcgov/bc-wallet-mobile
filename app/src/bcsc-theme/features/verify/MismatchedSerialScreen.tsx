@@ -1,8 +1,8 @@
 import { BCState } from '@/store'
+import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
 
 const CARD_NOT_FOUND_IMAGE = Image.resolveAssetSource(CardNotFoundImage).uri
 
