@@ -21,6 +21,7 @@ import {
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import Toast from 'react-native-toast-message'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { TOKENS, useServices } from '@bifold/core'
 
 interface NicknameFormProps {
   isRenaming?: boolean
@@ -36,6 +37,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
   const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
   const [error, setError] = useState<string | null>(null)
   const { registration } = useApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -59,10 +61,6 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
   }, [])
 
   const handleContinuePressed = useCallback(async () => {
-    const handleUpdateRegistration = async (nickname: string) => {
-      await registration.updateRegistration({ ...store.bcsc, selectedNickname: nickname })
-    }
-
     //trim the account nickname
     const trimmedAccountNickname = accountNickname.trim()
 
@@ -93,13 +91,18 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
         type: BCDispatchAction.SELECT_ACCOUNT,
         payload: [trimmedAccountNickname],
       })
+      try {
+        await registration.updateRegistration(store.bcsc.registrationAccessToken, trimmedAccountNickname)
+      } catch (error) {
+        logger.error('Failed to update registration', { error })
+        return
+      }
       Toast.show({
         type: 'success',
         text1: t('Global.Success'),
         text2: t('Unified.NicknameAccount.RenameSuccessToastMessage'),
         position: 'bottom',
       })
-      await handleUpdateRegistration(trimmedAccountNickname)
       navigation.goBack()
     } else {
       dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedAccountNickname] })
@@ -109,7 +112,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }, [accountNickname, t, isRenaming, dispatch, navigation, store, registration])
+  }, [accountNickname, t, isRenaming, dispatch, navigation, store, registration, logger])
 
   return (
     <KeyboardView keyboardAvoiding={false}>

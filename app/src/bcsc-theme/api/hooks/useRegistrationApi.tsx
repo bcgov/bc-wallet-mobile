@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { AccountSecurityMethod, getAccount, getDynamicClientRegistrationBody, setAccount } from 'react-native-bcsc-core'
 
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
-import { BCDispatchAction, BCSCState, BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -114,19 +114,17 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   }, [isClientReady, apiClient, logger, dispatch])
 
   const updateRegistration = useCallback(
-    async (bcsc: BCSCState) => {
+    async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
       return withAccount(async (account) => {
         if (!isClientReady || !apiClient) {
           throw new Error('BCSC client not ready for registration update')
         }
 
-        const registrationAccessToken = bcsc.registrationAccessToken
         if (!registrationAccessToken) {
           throw new Error('No registration access token found for registration update')
         }
 
-        const clientName = bcsc.selectedNickname
-        if (!clientName) {
+        if (!selectedNickname) {
           throw new Error('No client name found for registration update')
         }
 
@@ -154,8 +152,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           const updatePayload = typeof body === 'string' ? JSON.parse(body) : body
           // Add required fields for PUT request: client_id, client_name, and scope
           updatePayload.client_id = account.clientID
-          updatePayload.client_name = clientName
-          updatePayload.scope = 'openid profile address offline_access'
+          updatePayload.client_name = selectedNickname
+          updatePayload.scope = 'openid profile email address offline_access'
 
           const { data } = await apiClient.put<RegistrationResponseData>(
             `${apiClient.endpoints.registration}/${account.clientID}`,
@@ -186,7 +184,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           clientID: updatedRegistrationData?.client_id,
           issuer: apiClient.endpoints.issuer,
           securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-          nickname: bcsc.selectedNickname,
+          nickname: selectedNickname,
           didPostNicknameToServer: true,
         })
 

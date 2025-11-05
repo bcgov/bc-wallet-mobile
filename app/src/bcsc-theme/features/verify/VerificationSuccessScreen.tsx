@@ -3,14 +3,21 @@ import { BCDispatchAction, BCState } from '@/store'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useStore } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
+import { TOKENS, useServices } from '@bifold/core'
 
 const VerificationSuccessScreen = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { registration } = useApi()
 
   const handleUpdateRegistration = async () => {
-    await registration.updateRegistration(store.bcsc)
+    try {
+      await registration.updateRegistration(store.bcsc.registrationAccessToken, store.bcsc.selectedNickname)
+    } catch (error) {
+      logger.error('Failed to update registration', { error })
+      return
+    }
   }
 
   return (
