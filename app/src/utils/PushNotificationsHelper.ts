@@ -1,9 +1,9 @@
-import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
 import { PersistentStorage } from '@bifold/core'
+import { Agent, ConnectionRecord, ConnectionType } from '@credo-ts/core'
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging'
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
-import { RESULTS, PermissionStatus, requestNotifications, checkNotifications } from 'react-native-permissions'
+import { checkNotifications, PermissionStatus, requestNotifications, RESULTS } from 'react-native-permissions'
 
 import { BCLocalStorageKeys } from '../store'
 
@@ -226,4 +226,4 @@ const deactivate = async (agent: Agent): Promise<void> => {
   await setDeviceInfo(agent, true)
 }
 
-export { isEnabled, isRegistered, isMediatorCapable, isUserDenied, setDeviceInfo, setup, activate, deactivate, status }
+export { activate, deactivate, isEnabled, isMediatorCapable, isRegistered, isUserDenied, setDeviceInfo, setup, status }

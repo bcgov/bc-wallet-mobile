@@ -1,5 +1,5 @@
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { StackNavigationOptions } from '@react-navigation/stack'
+import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 
 /**
  * Returns default screen options for modal presentations.

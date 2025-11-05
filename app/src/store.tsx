@@ -9,16 +9,16 @@ import {
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
 import Config from 'react-native-config'
+import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import {
   EvidenceType,
   VerificationPhotoUploadPayload,
   VerificationPrompt,
   VerificationVideoUploadPayload,
 } from './bcsc-theme/api/hooks/useEvidenceApi'
+import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
-import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 
 export interface IASEnvironment {
   name: string

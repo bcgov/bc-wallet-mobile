@@ -1,7 +1,7 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
-import { BCDispatchAction } from '@/store'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { BCDispatchAction } from '@/store'
+import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks the IAS server status and dispatches banner messages based on availability.

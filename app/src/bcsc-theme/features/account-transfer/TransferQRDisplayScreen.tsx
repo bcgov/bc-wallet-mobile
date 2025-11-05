@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCScreens, BCSCMainStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { Button, ButtonType, QRRenderer, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'

@@ -1,4 +1,4 @@
-import { BCSCVerifyStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { ContactUsContent } from './ContactUsContent'

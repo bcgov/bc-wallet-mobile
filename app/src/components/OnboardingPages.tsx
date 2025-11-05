@@ -1,12 +1,12 @@
 import {
-  useStore,
   Button,
   ButtonType,
-  ITheme,
+  ContentGradient,
   createStyles,
   GenericFn,
+  ITheme,
   testIdWithKey,
-  ContentGradient,
+  useStore,
 } from '@bifold/core'
 import React from 'react'
 import { useTranslation } from 'react-i18next'

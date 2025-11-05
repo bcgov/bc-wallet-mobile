@@ -1,7 +1,7 @@
-import { IdToken } from '@/bcsc-theme/utils/id-token'
-import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
-import { BCDispatchAction } from '@/store'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { IdToken } from '@/bcsc-theme/utils/id-token'
+import { BCDispatchAction } from '@/store'
+import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks if the number of registered devices exceeds the allowed limit.

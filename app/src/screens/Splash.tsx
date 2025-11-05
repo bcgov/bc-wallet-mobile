@@ -1,25 +1,25 @@
 import {
-  useTheme,
+  BifoldError,
   InfoBox,
   InfoBoxType,
+  SplashProps,
   testIdWithKey,
   TOKENS,
-  useServices,
-  BifoldError,
-  useStore,
   useAuth,
-  SplashProps,
+  useServices,
+  useStore,
+  useTheme,
 } from '@bifold/core'
 import { RemoteOCABundleResolver } from '@bifold/oca/build/legacy'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View, Text, Image, useWindowDimensions, ScrollView } from 'react-native'
+import { Image, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import { BCState } from '@/store'
 import ProgressBar from '@components/ProgressBar'
 import TipCarousel from '@components/TipCarousel'
-import { BCState } from '@/store'
 
 /*
   To customize this splash screen set the background color of the

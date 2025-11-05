@@ -1,5 +1,5 @@
-import { Platform } from 'react-native'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { Platform } from 'react-native'
 
 // Mock the messaging module
 const mockGetToken = jest.fn()

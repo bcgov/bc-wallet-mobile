@@ -1,12 +1,12 @@
+import { BifoldAgent } from '@bifold/core'
+import { Attribute, Predicate } from '@bifold/oca/build/legacy'
 import {
   AnonCredsCredentialInfo,
   AnonCredsPredicateType,
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
 } from '@credo-ts/anoncreds'
-import { CredentialExchangeRecord, ProofExchangeRecord, GetCredentialsForProofRequestReturn } from '@credo-ts/core'
-import { BifoldAgent } from '@bifold/core'
-import { Attribute, Predicate } from '@bifold/oca/build/legacy'
+import { CredentialExchangeRecord, GetCredentialsForProofRequestReturn, ProofExchangeRecord } from '@credo-ts/core'
 
 export type Fields = Record<string, AnonCredsRequestedAttributeMatch[] | AnonCredsRequestedPredicateMatch[]>
 

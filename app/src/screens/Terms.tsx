@@ -1,12 +1,12 @@
 import {
   Button,
   ButtonType,
+  DispatchAction,
   InfoBox,
   InfoBoxType,
-  DispatchAction,
   testIdWithKey,
-  useTheme,
   useStore,
+  useTheme,
 } from '@bifold/core'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

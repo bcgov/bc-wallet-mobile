@@ -1,6 +1,6 @@
-import { BCSCCardType } from '../types/cards'
-import { decodePayload } from 'react-native-bcsc-core'
 import { BifoldLogger } from '@bifold/core'
+import { decodePayload } from 'react-native-bcsc-core'
+import { BCSCCardType } from '../types/cards'
 
 export enum BCSCAccountType {
   Photo = 'BC Services Card with photo',

@@ -1,20 +1,20 @@
-import { runSystemChecks } from '@/services/system-checks/system-checks'
-import { TOKENS, useServices, useStore } from '@bifold/core'
-import { useEffect, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useBCSCApiClientState } from './useBCSCApiClient'
-import useConfigApi from '../api/hooks/useConfigApi'
-import BCSCApiClient from '../api/client'
-import useTokenApi from '../api/hooks/useTokens'
+import { useEventListener } from '@/hooks/useEventListener'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
-import NetInfo from '@react-native-community/netinfo'
-import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import {
   InternetStatusStackNavigation,
   InternetStatusSystemCheck,
 } from '@/services/system-checks/InternetStatusSystemCheck'
+import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
+import { runSystemChecks } from '@/services/system-checks/system-checks'
+import { TOKENS, useServices, useStore } from '@bifold/core'
+import NetInfo from '@react-native-community/netinfo'
 import { useNavigation, useNavigationState } from '@react-navigation/native'
-import { useEventListener } from '@/hooks/useEventListener'
+import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import BCSCApiClient from '../api/client'
+import useConfigApi from '../api/hooks/useConfigApi'
+import useTokenApi from '../api/hooks/useTokens'
+import { useBCSCApiClientState } from './useBCSCApiClient'
 
 export enum SystemCheckScope {
   STARTUP = 'startup',

@@ -1,3 +1,12 @@
+import {
+  BasicMessageMetadata,
+  BifoldAgent,
+  CredentialMetadata,
+  basicMessageCustomMetadata,
+  credentialCustomMetadata,
+  useStore,
+} from '@bifold/core'
+import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
 import { AnonCredsCredentialMetadataKey } from '@credo-ts/anoncreds/build/utils/metadata'
 import {
   BasicMessageRecord,
@@ -6,22 +15,13 @@ import {
   ProofExchangeRecord,
   ProofState,
 } from '@credo-ts/core'
-import { useCredentialByState, useProofByState, useBasicMessages, useAgent } from '@credo-ts/react-hooks'
-import {
-  BifoldAgent,
-  useStore,
-  BasicMessageMetadata,
-  CredentialMetadata,
-  basicMessageCustomMetadata,
-  credentialCustomMetadata,
-} from '@bifold/core'
-import { ProofCustomMetadata, ProofMetadata } from '@bifold/verifier'
+import { useAgent, useBasicMessages, useCredentialByState, useProofByState } from '@credo-ts/react-hooks'
 import { useEffect, useState } from 'react'
 
-import { AttestationRestrictions } from '@/constants'
 import { showPersonCredentialSelector } from '@/bcwallet-theme/features/person-flow/utils/BCIDHelper'
-import { isProofRequestingAttestation } from '@services/attestation'
+import { AttestationRestrictions } from '@/constants'
 import { BCState } from '@/store'
+import { isProofRequestingAttestation } from '@services/attestation'
 
 export const useNotifications = (): Array<BasicMessageRecord | CredentialRecord | ProofExchangeRecord> => {
   const { agent } = useAgent()
