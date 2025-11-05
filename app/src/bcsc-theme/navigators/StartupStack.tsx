@@ -1,8 +1,8 @@
 import Splash from '@/screens/Splash'
-import { testIdWithKey, useDefaultStackOptions, useTheme, WalletSecret } from '@bifold/core'
+import { useTheme, WalletSecret } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
+import { ActivityIndicator, SafeAreaView } from 'react-native'
 import { BCSCScreens } from '../types/navigators'
 
 interface StartupStackProps {
@@ -15,6 +15,7 @@ interface StartupStackProps {
  * This is a collection of screens that are shown to the user every time the app is launched.
  *
  * Screens in this stack should include:
+ *    - Loading screen
  *    - Splash screen
  *    - Biometrics
  *    - PIN entry
@@ -22,25 +23,26 @@ interface StartupStackProps {
  * @returns {*} {JSX.Element} The StartupStack component.
  */
 export const StartupStack = (props: StartupStackProps) => {
-  const { t } = useTranslation()
   const theme = useTheme()
   const Stack = createStackNavigator()
-  const defaultStackOptions = useDefaultStackOptions(theme)
 
   const SplashScreen = useCallback(() => <Splash initializeAgent={props.initializeAgent} />, [props.initializeAgent])
 
+  const LoadingView = () => (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.ColorPalette.brand.primaryBackground }}>
+      <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+    </SafeAreaView>
+  )
+
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.Splash}
+      initialRouteName={BCSCScreens.Loading}
       screenOptions={{
-        ...defaultStackOptions,
         headerShown: false,
-        title: '',
-        headerShadowVisible: false,
-        headerBackTestID: testIdWithKey('Back'),
-        headerBackAccessibilityLabel: t('Global.Back'),
       }}
     >
+      <Stack.Screen name={BCSCScreens.Loading} component={LoadingView} />
+
       <Stack.Screen name={BCSCScreens.Splash} component={SplashScreen} />
 
       {/* TODO (MD): Add Biometrics, PIN entry and other auth related screens */}

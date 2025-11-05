@@ -88,9 +88,11 @@ export enum BCSCScreens {
   VerifyHelpCentre = 'BCSCVerifyHelpCentre',
   VerifyPrivacyPolicy = 'BCSCVerifyPrivacyPolicy',
   VerifyDeveloper = 'BCSCVerifyDeveloper',
+  Loading = 'BCSCLoading',
 }
 
 export type BCSCStartupStackParams = {
+  [BCSCScreens.Loading]: undefined
   [BCSCScreens.Splash]: undefined
 }
 
