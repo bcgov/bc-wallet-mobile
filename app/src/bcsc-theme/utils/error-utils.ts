@@ -1,5 +1,8 @@
 import { AxiosError } from 'axios'
 
+export const NETWORK_ERROR_CODE = 'NETWORK_ERROR'
+export const NETWORK_ERROR_MESSAGE = 'A network error occurred. Please check your internet connection and try again.'
+
 interface LogAxiosErrorOptions {
   /**
    * The axios error to log
@@ -23,8 +26,8 @@ interface LogAxiosErrorOptions {
 export function formatIasAxiosResponseError(error: AxiosError<any>): AxiosError {
   // Network error (no response received)
   if (!error.response) {
-    error.code = 'NETWORK_ERROR'
-    error.message = 'A network error occurred. Please check your internet connection and try again.'
+    error.code = NETWORK_ERROR_CODE
+    error.message = NETWORK_ERROR_MESSAGE
     return error
   }
 
@@ -95,4 +98,21 @@ export function formatAxiosErrorForLogger(options: LogAxiosErrorOptions): Record
   }
 
   return errorDetails
+}
+
+/**
+ * Determines if the provided error is a network error.
+ *
+ * @param {unknown} error - The error to check
+ * @returns {*} {boolean} True if the error is a network error, false otherwise.
+ */
+export function isNetworkError(error: unknown): boolean {
+  if (error instanceof AxiosError) {
+    return (
+      (error.code === NETWORK_ERROR_CODE && error.message === NETWORK_ERROR_MESSAGE) ||
+      (error.code === 'ERR_NETWORK' && error.message === 'Network Error')
+    )
+  }
+
+  return false
 }

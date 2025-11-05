@@ -1,23 +1,30 @@
 import { BCState } from '@/store'
-import { BifoldError, DispatchAction, EventTypes, TOKENS, useServices, useStore } from '@bifold/core'
+import { BifoldError, DispatchAction, EventTypes, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DeviceEventEmitter } from 'react-native'
+import { ActivityIndicator, DeviceEventEmitter } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import BCSCMainStack from './MainStack'
 import BCSCOnboardingStack from './OnboardingStack'
-import { StartupStack } from './StartupStack'
 import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
+  const theme = useTheme()
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const initializeBCSC = useInitializeBCSC()
   const { isClientReady } = useBCSCApiClientState()
   useSystemChecks(SystemCheckScope.STARTUP)
+
+  const LoadingView = () => (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.ColorPalette.brand.primaryBackground }}>
+      <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+    </SafeAreaView>
+  )
 
   useEffect(() => {
     // Load state only if it hasn't been loaded yet
@@ -55,7 +62,7 @@ const BCSCRootStack: React.FC = () => {
 
   // Show loading screen if state or wallet secret not loaded yet
   if (!store.stateLoaded || initializeBCSC.loading || !isClientReady) {
-    return <StartupStack initializeAgent={async () => {}} />
+    return <LoadingView />
   }
 
   // Show onboarding stack if onboarding not completed yet
