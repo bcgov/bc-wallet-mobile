@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { hasNickname } from '@/bcsc-theme/utils/account-utils'
@@ -14,7 +15,9 @@ import {
   LimitedTextInput,
   testIdWithKey,
   ThemedText,
+  TOKENS,
   useAnimatedComponents,
+  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
@@ -34,6 +37,8 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
   const [loading, setLoading] = useState(false)
   const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
   const [error, setError] = useState<string | null>(null)
+  const { registration } = useApi()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -56,7 +61,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
     setAccountNickname(text)
   }, [])
 
-  const handleContinuePressed = useCallback(() => {
+  const handleContinuePressed = useCallback(async () => {
     //trim the account nickname
     const trimmedAccountNickname = accountNickname.trim()
 
@@ -87,6 +92,12 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
         type: BCDispatchAction.SELECT_ACCOUNT,
         payload: [trimmedAccountNickname],
       })
+      try {
+        await registration.updateRegistration(store.bcsc.registrationAccessToken, trimmedAccountNickname)
+      } catch (error) {
+        logger.error('Failed to update registration', { error })
+        return
+      }
       Toast.show({
         type: 'success',
         text1: t('Global.Success'),
@@ -102,7 +113,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     }
-  }, [accountNickname, t, isRenaming, dispatch, navigation, store])
+  }, [accountNickname, t, isRenaming, dispatch, navigation, store, registration, logger])
 
   return (
     <KeyboardView keyboardAvoiding={false}>
