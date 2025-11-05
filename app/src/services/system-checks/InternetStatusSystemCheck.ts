@@ -67,7 +67,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    *
    * @returns {*} {void}
    */
-  async onFail() {
+  onFail() {
     this.logger.warn('InternetStatusSystemCheck: No internet connection detected')
 
     // Only navigate if the modal is not already visible
@@ -84,7 +84,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    *
    * @returns {*} {void}
    */
-  async onSuccess() {
+  onSuccess() {
     // Only navigate back if the modal is visible
     if (!this.isModalVisible || !this.navigation.canGoBack()) {
       return
