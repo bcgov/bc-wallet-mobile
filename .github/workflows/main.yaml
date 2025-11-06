@@ -368,6 +368,14 @@ jobs:
           yarn install --immutable && \
           git status
 
+      - name: Patch for Single App build
+        if: matrix.build_type == 'single-app'
+        run: |
+          echo "Patching for Single App build"
+          git config user.email "github-action@users.noreply.github.com"
+          git config user.name "GitHub Actions"
+          git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
+
         # Actual environment variables are not being picked up
         # by the build so they're put into an .env file.
       - name: Create environment settings
@@ -393,14 +401,6 @@ jobs:
           echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
-
-      - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
-        run: |
-          echo "Patching for Single App build"
-          git config user.email "github-action@users.noreply.github.com"
-          git config user.name "GitHub Actions"
-          git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access
