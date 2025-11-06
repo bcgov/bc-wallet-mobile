@@ -109,4 +109,29 @@ describe('UpdateAppSystemCheck', () => {
       })
     })
   })
+
+  describe('isVersionGreaterOrEqualThan', () => {
+    describe('valid version strings', () => {
+      it('should return false for lower versions', () => {
+        const updateCheck = new UpdateAppSystemCheck({} as any, {} as any, {} as any)
+
+        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.0', '1.0.1')).toBe(false)
+        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.0', '1.1.0')).toBe(false)
+        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.0', '2.0.0')).toBe(false)
+        expect(updateCheck.isVersionGreaterOrEqualThan('0.0.0', '0.0.1')).toBe(false)
+        expect(updateCheck.isVersionGreaterOrEqualThan('0.0.0', '999.999.999')).toBe(false)
+      })
+
+      it('should return true for equal or higher versions', () => {
+        const updateCheck = new UpdateAppSystemCheck({} as any, {} as any, {} as any)
+
+        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.0', '1.0.0')).toBe(true)
+        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.1', '1.0.0')).toBe(true)
+        expect(updateCheck.isVersionGreaterOrEqualThan('1.1.0', '1.0.0')).toBe(true)
+        expect(updateCheck.isVersionGreaterOrEqualThan('2.0.0', '1.0.0')).toBe(true)
+        expect(updateCheck.isVersionGreaterOrEqualThan('0.0.1', '0.0.0')).toBe(true)
+        expect(updateCheck.isVersionGreaterOrEqualThan('999.999.999', '0.0.0')).toBe(true)
+      })
+    })
+  })
 })

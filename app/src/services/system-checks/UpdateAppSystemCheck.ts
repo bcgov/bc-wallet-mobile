@@ -37,6 +37,9 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
   /**
    * Compares two semantic versions to determine order.
    *
+   * Note: This only works for semantic versioning where versions are in the format X.Y.Z.
+   * If versions deviate from this format, the comparison may not work as expected.
+   *
    * Rules:
    *     3.0.0 > 2.9.9 because '3' > '2'
    *     3.1.0 > 3.0.9 because '1' > '0'
@@ -48,22 +51,7 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
    * @returns {*} {boolean} - Indicates if version1 is greater than or equal to version2.
    */
   isVersionGreaterOrEqualThan(version1: string, version2: string): boolean {
-    const maxLength = Math.max(version1.length, version2.length)
-
-    for (let i = 0; i < maxLength; i++) {
-      const charCode1 = version1.charCodeAt(i) || 0
-      const charCode2 = version2.charCodeAt(i) || 0
-
-      if (charCode1 > charCode2) {
-        return true
-      }
-
-      if (charCode1 < charCode2) {
-        return false
-      }
-    }
-
-    return true
+    return version1.localeCompare(version2, undefined, { numeric: true, sensitivity: 'base' }) >= 0
   }
 
   /**
