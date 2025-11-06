@@ -54,7 +54,11 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    * @returns {boolean} True if the device is connected to the internet, false otherwise.
    */
   runCheck() {
-    return Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable)
+    return (
+      Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable) ||
+      // Treat connected but unknown reachability as connected (ie: while pinging)
+      Boolean(this.netInfo.isConnected && this.netInfo.isInternetReachable === null)
+    )
   }
 
   /**

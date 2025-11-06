@@ -1,8 +1,9 @@
 import { BCState } from '@/store'
-import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import React, { createContext, useEffect, useMemo, useState } from 'react'
 import BCSCApiClient from '../api/client'
+import { isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
@@ -34,6 +35,12 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  const handleNewClient = (client: BCSCApiClient | null, errorMessage?: string) => {
+    BCSC_API_CLIENT_SINGLETON = client
+    setIsClientReady(Boolean(client))
+    setError(errorMessage ?? null)
+  }
+
   useEffect(() => {
     // Only attempt to configure the client if the store is loaded and the IAS API base URL is available
     if (!store.stateLoaded || !store.developer.environment.iasApiBaseUrl) {
@@ -44,40 +51,35 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsClientReady(false)
       setError(null)
 
+      let newClient = BCSC_API_CLIENT_SINGLETON
+
       try {
         // If the singleton doesn't exist or the base URL has changed, create a new instance
         if (
           !BCSC_API_CLIENT_SINGLETON ||
           BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
         ) {
-          const newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
+          newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
           await newClient.fetchEndpointsAndConfig()
 
-          BCSC_API_CLIENT_SINGLETON = newClient
+          handleNewClient(newClient)
+        }
+      } catch (err) {
+        /**
+         * Special case:
+         * If it's a network error, we still want to set the client.
+         * This prevents the app from being blocked by a permanent loading state,
+         * while also alowing the Internet Disconnected modal to be displayed.
+         */
+        if (isNetworkError(err)) {
+          handleNewClient(newClient)
+          return
         }
 
-        setIsClientReady(true)
-      } catch (err) {
         const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
           (err as Error)?.message
         }`
-        setError(errorMessage)
-        setIsClientReady(false)
-
-        BCSC_API_CLIENT_SINGLETON = null
-
-        dispatch({
-          type: DispatchAction.BANNER_MESSAGES,
-          payload: [
-            {
-              id: 'IASServerError',
-              title: 'Unable to retrieve server status',
-              type: 'error',
-              variant: 'summary',
-              dismissible: true,
-            },
-          ],
-        })
+        handleNewClient(null, errorMessage)
       }
     }
 
