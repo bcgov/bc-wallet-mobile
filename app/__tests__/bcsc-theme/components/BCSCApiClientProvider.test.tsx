@@ -5,8 +5,8 @@ import {
   BCSCApiClientProvider,
 } from '@/bcsc-theme/contexts/BCSCApiClientContext'
 import * as Bifold from '@bifold/core'
-import { DispatchAction } from '@bifold/core'
 import { renderHook, waitFor } from '@testing-library/react-native'
+import { AxiosError } from 'axios'
 import { useContext } from 'react'
 
 jest.mock('@/bcsc-theme/api/client')
@@ -175,18 +175,37 @@ describe('BCSCApiClientProvider', () => {
       expect(result.current?.error).toBeDefined()
       expect(result.current?.error).toContain('Initialization failed')
       expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).toHaveBeenCalledTimes(1)
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: DispatchAction.BANNER_MESSAGES,
-        payload: [
-          {
-            id: 'IASServerError',
-            title: 'Unable to retrieve server status',
-            type: 'error',
-            variant: 'summary',
-            dismissible: true,
-          },
-        ],
-      })
+    })
+  })
+
+  it('should handle network errors gracefully during initialization', async () => {
+    const bifoldMock = jest.mocked(Bifold)
+    const bcscApiClientMock = jest.mocked(BCSCApiClient)
+
+    const mockStore: any = {
+      stateLoaded: true,
+      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+    }
+    const dispatchMock = jest.fn()
+    bifoldMock.useServices.mockReturnValue([{}])
+    bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
+
+    const mockError: any = new AxiosError()
+    mockError.isNetworkError = true
+
+    bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockRejectedValue(mockError)
+
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <BCSCApiClientProvider>{children}</BCSCApiClientProvider>
+    )
+
+    const { result } = renderHook(() => useContext(BCSCApiClientContext), { wrapper })
+
+    await waitFor(() => {
+      expect(result.current?.isClientReady).toBe(true)
+      expect(result.current?.client).toBeInstanceOf(BCSCApiClient)
+      expect(result.current?.error).toBeNull()
+      expect(bcscApiClientMock.prototype.fetchEndpointsAndConfig).toHaveBeenCalledTimes(1)
     })
   })
 
