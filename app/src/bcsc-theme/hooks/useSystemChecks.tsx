@@ -17,7 +17,6 @@ import useTokenApi from '../api/hooks/useTokens'
 import { ModalNavigation } from '../types/navigators'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
-const PROD_BCSC_BUNDLE_ID = 'ca.bc.gov.id.servicescard'
 const BCSC_BUILD_SUFFIX = '.servicescard'
 
 export enum SystemCheckScope {
@@ -62,6 +61,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
    */
   useEffect(() => {
     const runChecksByScope = async () => {
+      // Wait for navigation to be ready before running checks that may interact with it
       const navigationReady = await _waitForNavigationToBeReady()
 
       if (ranSystemChecksRef.current || !isClientReady || !client || !navigationReady) {
@@ -75,13 +75,15 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       try {
         // Checks to run once on app startup (root stack)
         if (scope === SystemCheckScope.STARTUP) {
-          const startupChecks: SystemCheckStrategy[] = [new ServerStatusSystemCheck(configApi.getServerStatus, utils)]
+          const serverStatus = await configApi.getServerStatus()
+
+          const startupChecks: SystemCheckStrategy[] = [new ServerStatusSystemCheck(serverStatus, utils)]
 
           const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
 
           // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
-            startupChecks.push(new UpdateAppSystemCheck(PROD_BCSC_BUNDLE_ID, navigation, utils))
+            startupChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
           }
 
           await runSystemChecks(startupChecks)
@@ -99,7 +101,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     runChecksByScope()
-  }, [client, configApi.getServerStatus, dispatch, isClientReady, logger, navigation, scope, t, tokenApi])
+  }, [client, configApi, dispatch, isClientReady, logger, navigation, scope, t, tokenApi])
 }
 
 /**
