@@ -281,9 +281,10 @@ const translation = {
     },
     "Modals": {
       "MandatoryUpdate": {
-        "Header": "App Update Required",
-        "ContentA": "A new version of this app is available and must be installed to continue using it.",
-        "ContentB": "Please update to the latest version from the {{ platformStore }} store.",
+        "Header": "App update required",
+        "ContentA": "You must update this app to continue.",
+        "ContentB": "Please update to the latest version from the {{platformStore}}.",
+        "UpdateButton": "Go to {{platformStore}}",
       }
     },
     "Home": {

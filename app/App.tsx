@@ -16,7 +16,7 @@ import {
   TourProvider,
 } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
-import { useNavigationContainerRef } from '@react-navigation/native'
+import { createNavigationContainerRef } from '@react-navigation/native'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { isTablet } from 'react-native-device-info'
@@ -44,9 +44,10 @@ messaging().setBackgroundMessageHandler(async () => {})
 // Do nothing with push notifications received while the app is in the foreground
 messaging().onMessage(async () => {})
 
+export const navigationRef = createNavigationContainerRef()
+
 const App = () => {
   const { t } = useTranslation()
-  const navigationRef = useNavigationContainerRef()
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
   const [surveyVisible, setSurveyVisible] = useState(false)
   const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()

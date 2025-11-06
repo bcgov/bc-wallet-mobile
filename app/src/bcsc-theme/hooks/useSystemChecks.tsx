@@ -7,6 +7,7 @@ import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCh
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
+import { navigationRef } from 'App'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
@@ -47,7 +48,12 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   // Internet connectivity event listener
   useEventListener(() => {
     return NetInfo.addEventListener(async (netInfo) => {
-      await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
+      // On connectivity change, wait for navigation to be ready before running the check
+      const navigationReady = await _waitForNavigationToBeReady()
+
+      if (navigationReady) {
+        await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
+      }
     })
   }, scope === SystemCheckScope.STARTUP)
 
@@ -56,7 +62,9 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
    */
   useEffect(() => {
     const runChecksByScope = async () => {
-      if (ranSystemChecksRef.current || !isClientReady || !client) {
+      const navigationReady = await _waitForNavigationToBeReady()
+
+      if (ranSystemChecksRef.current || !isClientReady || !client || !navigationReady) {
         return
       }
 
@@ -92,4 +100,37 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
     runChecksByScope()
   }, [client, configApi.getServerStatus, dispatch, isClientReady, logger, navigation, scope, t, tokenApi])
+}
+
+/**
+ * Waits for the navigation to be mounted and ready.
+ *
+ * Note: This will time out after MAX_WAIT_MS to prevent hanging indefinitely.
+ *
+ * @throws {Error} If navigation does not become ready within the maximum wait time.
+ * @returns {Promise<true>} A promise that resolves to true when navigation is ready.
+ */
+const _waitForNavigationToBeReady = (): Promise<true> => {
+  const MAX_WAIT_MS = 5000
+
+  return new Promise((resolve, reject) => {
+    if (navigationRef.current?.getRootState()) {
+      resolve(true)
+    }
+
+    const startTime = Date.now()
+
+    const interval = setInterval(() => {
+      if (navigationRef.current?.getRootState()) {
+        clearInterval(interval)
+        resolve(true)
+      }
+
+      // Prevent waiting indefinitely, timeout after MAX_WAIT_MS
+      if (Date.now() - startTime >= MAX_WAIT_MS) {
+        clearInterval(interval)
+        return reject(new Error('Navigation did not become ready...'))
+      }
+    }, 10)
+  })
 }

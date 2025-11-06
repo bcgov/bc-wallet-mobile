@@ -1,5 +1,6 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { isNetworkError } from '@/bcsc-theme/utils/error-utils'
 import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -39,7 +40,8 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
       return serverStatus.status === 'ok'
     } catch (error) {
       this.utils.logger.error('ServerStatusSystemCheck: Server status request failed', error as Error)
-      return false
+      // Treat network errors as non-failures (handled by InternetStatusSystemCheck)
+      return isNetworkError(error)
     }
   }
 

@@ -17,7 +17,6 @@ import TransferInformationScreen from '../features/account-transfer/TransferInfo
 import TransferInstructionsScreen from '../features/account-transfer/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/TransferQRScannerScreen'
 import NicknameAccountScreen from '../features/account/NicknameAccountScreen'
-import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import EnterBirthdateScreen from '../features/verify/EnterBirthdateScreen'
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
 import ManualSerialScreen from '../features/verify/ManualSerialScreen'
@@ -54,6 +53,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 
+import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { VerifyContactUsScreen } from '../features/settings/VerifyContactUsScreen'
 import { VerifyHelpCentreScreen } from '../features/settings/VerifyHelpCentreScreen'
@@ -291,7 +291,7 @@ const VerifyStack = () => {
       {/* React navigation docs suggest modals at bottom of stack */}
       <Stack.Screen
         name={BCSCModals.InternetDisconnected}
-        component={InternetDisconnected}
+        component={MandatoryUpdate}
         options={{
           ...getDefaultModalOptions(t('Unified.BCSC')),
           gestureEnabled: false, // Disable swipe to dismiss

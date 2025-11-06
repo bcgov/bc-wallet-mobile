@@ -15,6 +15,7 @@ import TransferSuccessScreen from '../features/account-transfer/TransferSuccessS
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
+import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import ManualPairingCode from '../features/pairing/ManualPairing'
 import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
@@ -199,7 +200,7 @@ const MainStack: React.FC = () => {
 
         <Stack.Screen
           name={BCSCModals.MandatoryUpdate}
-          component={InternetDisconnected}
+          component={MandatoryUpdate}
           options={{
             ...getDefaultModalOptions(t('Unified.BCSC')),
             gestureEnabled: false, // Disable swipe to dismiss

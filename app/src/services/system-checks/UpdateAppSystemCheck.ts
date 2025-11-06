@@ -1,5 +1,6 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals, ModalNavigation } from '@/bcsc-theme/types/navigators'
+import { isNetworkError } from '@/bcsc-theme/utils/error-utils'
 import { BCDispatchAction } from '@/store'
 import { checkVersion, CheckVersionResponse } from 'react-native-check-version'
 import { getVersion } from 'react-native-device-info'
@@ -24,21 +25,37 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
     this.versionInfoCache = null
   }
 
+  // Optional update:
+  // 1. Exact match
+  // 2. Greater than minVersion
+  // 3. Less than latestVersion
+  //
+  // Mandatory update:
+  // A. Less than minVersion
+  //
+  // Do nothing:
+  // i. Exact match latestVersion
+  // ii. Greater than latestVersion
+
   /**
    * Runs the app version check to verify the app does not need an update.
    *
    * @returns {*} {boolean} - A boolean indicating if the app should be updated.
    */
   async runCheck() {
-    // Cache the version info for use in onFail/onSuccess
-    this.versionInfoCache = await checkVersion({
-      bundleId: this.bundleId,
-      currentVersion: getVersion(),
-    })
+    try {
+      // Cache the version info for use in onFail/onSuccess
+      this.versionInfoCache = await checkVersion({
+        bundleId: this.bundleId,
+        currentVersion: getVersion(),
+      })
 
-    // TODO: check for network error
-
-    return this.versionInfoCache.needsUpdate === false
+      return this.versionInfoCache.needsUpdate === false
+    } catch (error) {
+      this.utils.logger.error('UpdateAppSystemCheck: Check version against store failed', error as Error)
+      // Treat network errors as non-failures (handled by InternetStatusSystemCheck)
+      return isNetworkError(error)
+    }
   }
 
   /**

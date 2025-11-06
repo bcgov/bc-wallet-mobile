@@ -1,4 +1,5 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { isNetworkError } from '@/bcsc-theme/utils/error-utils'
 import { IdToken } from '@/bcsc-theme/utils/id-token'
 import { BCDispatchAction } from '@/store'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
@@ -34,7 +35,8 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
       return idToken.bcsc_devices_count < idToken.bcsc_max_devices
     } catch (error) {
       this.utils.logger.error('DeviceSystemCheck: Id token request failed', error as Error)
-      return false
+      // Treat network errors as non-failures (handled by InternetStatusSystemCheck)
+      return isNetworkError(error)
     }
   }
 
