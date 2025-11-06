@@ -4,9 +4,16 @@ import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSyst
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
+import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { BCDispatchAction } from '@/store'
+import * as checkVersion from 'react-native-check-version'
+import * as deviceInfo from 'react-native-device-info'
 
 describe('System Checks', () => {
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
   describe('runSystemChecks', () => {
     it('should run all checks and return statuses', async () => {
       const mockSystemCheck: SystemCheckStrategy = {
@@ -470,6 +477,140 @@ describe('System Checks', () => {
         internetStatusCheck.onSuccess()
 
         expect(mockNavigation.goBack).not.toHaveBeenCalled()
+      })
+    })
+  })
+
+  describe('UpdateAppSystemCheck', () => {
+    describe('runCheck', () => {
+      it('should return true when no update is needed', async () => {
+        const mockBundleId = 'com.example.app'
+        const mockNavigation = {} as any
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn(),
+          logger: {} as any,
+        }
+        const spyGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.0.0')
+        const spyCheckVersion = jest
+          .spyOn(checkVersion, 'checkVersion')
+          .mockResolvedValue({ needsUpdate: false } as any)
+
+        const updateAppCheck = new UpdateAppSystemCheck(mockBundleId, mockNavigation, mockUtils)
+
+        const result = await updateAppCheck.runCheck()
+
+        expect(spyGetVersion).toHaveBeenCalledTimes(1)
+        expect(spyCheckVersion).toHaveBeenCalledWith({
+          bundleId: mockBundleId,
+          currentVersion: '1.0.0',
+        })
+        expect(result).toBe(true)
+      })
+
+      it('should return false when update is needed', async () => {
+        const mockBundleId = 'com.example.app'
+        const mockNavigation = {} as any
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn(),
+          logger: {} as any,
+        }
+        const spyGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.0.0')
+        const spyCheckVersion = jest.spyOn(checkVersion, 'checkVersion').mockResolvedValue({ needsUpdate: true } as any)
+
+        const updateAppCheck = new UpdateAppSystemCheck(mockBundleId, mockNavigation, mockUtils)
+
+        const result = await updateAppCheck.runCheck()
+
+        expect(spyGetVersion).toHaveBeenCalledTimes(1)
+        expect(spyCheckVersion).toHaveBeenCalledWith({
+          bundleId: mockBundleId,
+          currentVersion: '1.0.0',
+        })
+        expect(result).toBe(false)
+      })
+    })
+    describe('onFail', () => {
+      it('should throw error if version info cache is empty', () => {
+        const mockBundleId = 'com.example.app'
+        const mockNavigation = {} as any
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn(),
+          logger: {} as any,
+        }
+        const updateAppCheck: any = new UpdateAppSystemCheck(mockBundleId, mockNavigation, mockUtils)
+
+        expect(() => updateAppCheck.onFail()).toThrow('UpdateAppSystemCheck: Version info cache empty.')
+      })
+      it('should navigate to MandatoryUpdate modal when major update is required', () => {
+        const mockBundleId = 'com.example.app'
+        const mockNavigation = {
+          navigate: jest.fn(),
+        } as any
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn(),
+          logger: {} as any,
+        }
+
+        const updateAppCheck: any = new UpdateAppSystemCheck(mockBundleId, mockNavigation, mockUtils)
+
+        updateAppCheck.versionInfoCache = { updateType: 'major' } as any
+
+        updateAppCheck.onFail()
+
+        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.MandatoryUpdate)
+        expect(mockUtils.dispatch).not.toHaveBeenCalled()
+      })
+      it('should dispatch optional update banner when optional update is available', () => {
+        const mockBundleId = 'com.example.app'
+        const mockNavigation = { navigate: jest.fn() } as any
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn().mockReturnValue('Update available'),
+          logger: {} as any,
+        }
+
+        const updateAppCheck: any = new UpdateAppSystemCheck(mockBundleId, mockNavigation, mockUtils)
+
+        updateAppCheck.versionInfoCache = { updateType: 'minor' } as any
+
+        updateAppCheck.onFail()
+
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
+          type: BCDispatchAction.ADD_BANNER_MESSAGE,
+          payload: [
+            expect.objectContaining({
+              id: BCSCBanner.APP_UPDATE_AVAILABLE,
+              title: expect.any(String),
+              type: 'info',
+              variant: 'warning',
+              dismissible: true,
+            }),
+          ],
+        })
+        expect(mockNavigation.navigate).not.toHaveBeenCalled()
+      })
+    })
+    describe('onSuccess', () => {
+      it('should dispatch action to remove the app update banner message', () => {
+        const mockBundleId = 'com.example.app'
+        const mockNavigation = {} as any
+        const mockUtils = {
+          dispatch: jest.fn(),
+          translation: jest.fn(),
+          logger: {} as any,
+        }
+
+        const updateAppCheck = new UpdateAppSystemCheck(mockBundleId, mockNavigation, mockUtils)
+        updateAppCheck.onSuccess()
+
+        expect(mockUtils.dispatch).toHaveBeenCalledWith({
+          type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
+          payload: [BCSCBanner.APP_UPDATE_AVAILABLE],
+        })
       })
     })
   })

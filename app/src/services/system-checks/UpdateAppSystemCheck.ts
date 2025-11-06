@@ -1,9 +1,9 @@
-import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
-import { BCDispatchAction } from '@/store'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals, ModalNavigation } from '@/bcsc-theme/types/navigators'
+import { BCDispatchAction } from '@/store'
 import { checkVersion, CheckVersionResponse } from 'react-native-check-version'
 import { getVersion } from 'react-native-device-info'
+import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks if the application needs to be updated.
@@ -35,6 +35,8 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
       bundleId: this.bundleId,
       currentVersion: getVersion(),
     })
+
+    // TODO: check for network error
 
     return this.versionInfoCache.needsUpdate === false
   }

@@ -71,7 +71,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
           const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
 
-          // Only inject the update check when explicitly using BCSC bundles ie: ca.bc.gov.id.servicescard
+          // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
             startupChecks.push(new UpdateAppSystemCheck(PROD_BCSC_BUNDLE_ID, navigation, utils))
           }

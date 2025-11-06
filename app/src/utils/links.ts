@@ -1,4 +1,4 @@
-import { appleAppStoreUrl, googlePlayStoreUrl } from '@/constants'
+import { BCSC_APPLE_STORE_URL, BCSC_GOOGLE_PLAY_STORE_URL } from '@/constants'
 import { Linking, Platform } from 'react-native'
 
 export const openLink = async (url: string) => {
@@ -12,14 +12,14 @@ export const openLink = async (url: string) => {
 }
 
 /**
- * Get the App Store URL based on the platform.
+ * Get the BCSC App Store URL based on the platform.
  *
- * @return {string} The App Store URL.
+ * @returns {*} {string} The BCSC app store URL.
  */
-export const getPlatformStoreUrl = (): string => {
+export const getBCSCAppStoreUrl = (): string => {
   if (Platform.OS === 'ios') {
-    return appleAppStoreUrl
+    return BCSC_APPLE_STORE_URL
   }
 
-  return googlePlayStoreUrl
+  return BCSC_GOOGLE_PLAY_STORE_URL
 }

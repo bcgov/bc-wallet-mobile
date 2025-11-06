@@ -1,0 +1,69 @@
+import { getBCSCAppStoreUrl } from '@/utils/links'
+import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useTranslation } from 'react-i18next'
+import { Linking, ScrollView, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import Icon from 'react-native-vector-icons/MaterialIcons'
+
+/**
+ * Component displayed when a mandatory app update is required.
+ *
+ * @returns {*} {JSX.Element} The MandatoryUpdate component.
+ */
+export const MandatoryUpdate = (): JSX.Element => {
+  const { t } = useTranslation()
+  const { Spacing, ColorPalette } = useTheme()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: ColorPalette.brand.modalPrimaryBackground,
+    },
+    scollContainer: {
+      alignItems: 'center',
+    },
+    icon: {
+      paddingVertical: Spacing.lg,
+    },
+    buttonContainer: {
+      padding: Spacing.md,
+    },
+    textContent: {
+      lineHeight: 30,
+    },
+    textContainer: {
+      padding: Spacing.md,
+      gap: Spacing.lg,
+    },
+  })
+
+  const handleGoToStore = () => {
+    try {
+      Linking.openURL(getBCSCAppStoreUrl())
+    } catch (error) {
+      logger.error('MandatoryUpdate: Failed to open app store link.', error as Error)
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.scollContainer}>
+        <Icon name="wifi-off" size={200} color={ColorPalette.brand.icon} style={styles.icon} />
+        <View style={styles.textContainer}>
+          <ThemedText variant="headingThree">{t('Modals.MandatoryUpdate.Header')}</ThemedText>
+          <ThemedText style={styles.textContent}>{t('Modals.MandatoryUpdate.ContentA')}</ThemedText>
+          <ThemedText style={styles.textContent}>{t('Modals.MandatoryUpdate.ContentB')}</ThemedText>
+        </View>
+      </ScrollView>
+
+      <View style={styles.buttonContainer}>
+        <Button
+          title={t('Modals.MandatoryUpdate.RetryButton')}
+          buttonType={ButtonType.Primary}
+          onPress={handleGoToStore}
+        />
+      </View>
+    </SafeAreaView>
+  )
+}
