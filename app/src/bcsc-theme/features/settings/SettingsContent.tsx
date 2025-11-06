@@ -51,22 +51,20 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       padding: Spacing.md,
     },
     sectionHeader: {
-      padding: Spacing.md,
-      fontWeight: 'bold',
-      fontSize: 16,
+      paddingVertical: Spacing.md,
     },
     sectionContainer: {
       gap: Spacing.xs / 2,
+      borderRadius: Spacing.sm,
+      overflow: 'hidden',
     },
     cardContainer: {
       padding: Spacing.md,
       backgroundColor: ColorPalette.brand.secondaryBackground,
     },
     versionContainer: {
-      padding: Spacing.md,
+      paddingTop: Spacing.md,
       gap: Spacing.xs,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
   })
 
@@ -110,14 +108,16 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
       <View style={styles.container}>
         {store.bcsc.verified ? (
           <>
-            <SettingsActionCard
-              title={t('BCSCSettings.SignOut')}
-              startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
-              onPress={() => {
-                auth.lockOutUser(LockoutReason.Logout)
-                dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
-              }}
-            />
+            <View style={styles.sectionContainer}>
+              <SettingsActionCard
+                title={t('BCSCSettings.SignOut')}
+                startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
+                onPress={() => {
+                  auth.lockOutUser(LockoutReason.Logout)
+                  dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [undefined] })
+                }}
+              />
+            </View>
 
             <ThemedText variant={'bold'} style={styles.sectionHeader}>
               {t('BCSCSettings.HeaderA')}
