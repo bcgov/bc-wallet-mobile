@@ -1,35 +1,46 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
-import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
-import { BCDispatchAction } from '@/store'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { BCDispatchAction } from '@/store'
+import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks the IAS server status and dispatches banner messages based on availability.
  * Will show error banner if server is unavailable, or info banner if there is a status message.
  *
- * Note:
- *   On server failure, it dispatches a warning banner message.
- *   On server success, it removes the banner if it exists.
+ * Note: Determines server availability via the config API.
+ *   On failure, it dispatches a warning banner message.
+ *   On success, it removes the banner if it exists.
  *
- * @class ServerStatusSystemCheck
+ * @class ServerStatusStartupCheck
  * @implements {SystemCheckStrategy}
  */
 export class ServerStatusSystemCheck implements SystemCheckStrategy {
-  private readonly serverStatus: ServerStatusResponseData
+  private readonly getServerStatus: () => Promise<ServerStatusResponseData>
   private readonly utils: SystemCheckUtils
+  private serverStatus?: ServerStatusResponseData
 
-  constructor(serverStatus: ServerStatusResponseData, utils: SystemCheckUtils) {
-    this.serverStatus = serverStatus
+  constructor(getServerStatus: () => Promise<ServerStatusResponseData>, utils: SystemCheckUtils) {
+    this.getServerStatus = getServerStatus
     this.utils = utils
   }
 
   /**
    * Runs the server status check to verify if the IAS server is available.
    *
-   * @returns {*} {boolean} - A boolean indicating if the server is unavailable.
+   * @returns {*} {Promise<boolean>} - A promise that resolves to true if the server is available, false otherwise.
    */
-  runCheck() {
-    return this.serverStatus.status === 'ok'
+  async runCheck() {
+    try {
+      const serverStatus = await this.getServerStatus()
+
+      // Store the server status for use in onFail/onSuccess
+      this.serverStatus = serverStatus
+
+      return serverStatus.status === 'ok'
+    } catch (error) {
+      this.utils.logger.error('ServerStatusSystemCheck: Server status request failed', error as Error)
+      return false
+    }
   }
 
   /**

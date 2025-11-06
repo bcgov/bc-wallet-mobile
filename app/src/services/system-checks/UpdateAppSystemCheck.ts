@@ -1,12 +1,9 @@
-import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 import { BCDispatchAction } from '@/store'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals, ModalNavigation } from '@/bcsc-theme/types/navigators'
-import { getAndroidIdSync, getBundleId, getVersion } from 'react-native-device-info'
-
-const BC_WALLET_BUNDLE_ID = 'ca.bc.gov.BCWallet'
-const BC_WALLET_ANDROID_ID = 'TODO (MD): What is this value?'
+import { checkVersion, CheckVersionResponse } from 'react-native-check-version'
+import { getVersion } from 'react-native-device-info'
 
 /**
  * Checks if the application needs to be updated.
@@ -15,61 +12,16 @@ const BC_WALLET_ANDROID_ID = 'TODO (MD): What is this value?'
  * @implements {SystemCheckStrategy}
  */
 export class UpdateAppSystemCheck implements SystemCheckStrategy {
-  private readonly serverStatus: ServerStatusResponseData
+  private readonly bundleId: string
   private readonly navigation: ModalNavigation
   private readonly utils: SystemCheckUtils
+  private versionInfoCache: CheckVersionResponse | null
 
-  constructor(serverStatus: ServerStatusResponseData, navigation: ModalNavigation, utils: SystemCheckUtils) {
-    this.serverStatus = serverStatus
+  constructor(bundleId: string, navigation: ModalNavigation, utils: SystemCheckUtils) {
+    this.bundleId = bundleId
     this.navigation = navigation
     this.utils = utils
-  }
-
-  /**
-   * Retrieves the current application version.
-   *
-   * Note: This returns null for BC Wallet identifiers (iOS and Android).
-   * Preventing update prompts for single-app development builds.
-   *
-   * @returns {string | null} - The current app version or null for BC Wallet.
-   */
-  get appVersion(): string | null {
-    if (getAndroidIdSync() === BC_WALLET_ANDROID_ID || getBundleId() === BC_WALLET_BUNDLE_ID) {
-      return null
-    }
-
-    return getVersion()
-  }
-
-  /**
-   * Compares two semantic versions to determine order.
-   *
-   * Rules:
-   *     3.0.0 > 2.9.9 because '3' > '2'
-   *     3.1.0 > 3.0.9 because '1' > '0'
-   *     3.0.1 > 3.0.0 because '1' > '0'
-   *     3.0.0 >= 3.0.0 because equal
-   *
-   * @param {string} version1 - The first version string to compare.
-   * @param {string} version2 - The second version string to compare.
-   * @returns {*} {boolean} - Indicates if version1 is greater than or equal to version2.
-   */
-  private isVersionGreaterThan(version1: string, version2: string): boolean {
-    const maxLength = Math.max(version1.length, version2.length)
-
-    for (let i = 0; i < maxLength; i++) {
-      const charCode1 = version1.charCodeAt(i) || 0
-      const charCode2 = version2.charCodeAt(i) || 0
-
-      if (charCode1 > charCode2) {
-        return true
-      }
-
-      if (charCode1 < charCode2) {
-        return false
-      }
-    }
-    return true
+    this.versionInfoCache = null
   }
 
   /**
@@ -77,21 +29,14 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
    *
    * @returns {*} {boolean} - A boolean indicating if the app should be updated.
    */
-  runCheck() {
-    if (!this.appVersion) {
-      // Single-app default development build - skip update check
-      return true
-    }
+  async runCheck() {
+    // Cache the version info for use in onFail/onSuccess
+    this.versionInfoCache = await checkVersion({
+      bundleId: this.bundleId,
+      currentVersion: getVersion(),
+    })
 
-    const maxKnownVersion = this.serverStatus.supportedVersions.pop()
-
-    if (!maxKnownVersion) {
-      return true
-    }
-
-    // If app version is greater than or equal to the max known version, no update needed
-    // ie: 3.15.1 >= 3.14.0  =>  true (no update needed)
-    return this.isVersionGreaterThan(this.appVersion, maxKnownVersion)
+    return this.versionInfoCache.needsUpdate === false
   }
 
   /**
@@ -100,13 +45,13 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
    * @returns {*} {void}
    */
   onFail() {
-    if (!this.appVersion) {
-      return
+    if (!this.versionInfoCache) {
+      throw new Error('UpdateAppSystemCheck: Version info cache empty.')
     }
 
-    const mandatoryUpdate = !this.isVersionGreaterThan(this.appVersion, this.serverStatus.minVersion)
+    const updateRequired = this.versionInfoCache.updateType === 'major'
 
-    if (mandatoryUpdate) {
+    if (updateRequired) {
       this.navigation.navigate(BCSCModals.MandatoryUpdate)
       return
     }
@@ -117,7 +62,7 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.APP_UPDATE_AVAILABLE,
-          title: 'TODO: optional update available banner title',
+          title: this.utils.translation('Unified.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'),
           type: 'info',
           variant: 'warning',
           dismissible: true,
