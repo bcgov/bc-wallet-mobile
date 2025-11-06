@@ -1,0 +1,417 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BC Wallet Mobile - Dependency Analysis & Security Documentation",
+  "description": "Comprehensive analysis of dependencies, security practices, and risk assessment",
+  "version": "1.0.0",
+  "lastUpdated": "2024-01-08",
+  "security": {
+    "overview": {
+      "riskLevel": "HIGH",
+      "justification": "Digital identity wallet handling sensitive user credentials and personal information",
+      "complianceFrameworks": ["PIPEDA", "BC FOIPPA", "SOC 2", "NIST Cybersecurity Framework"],
+      "threatModel": {
+        "assets": [
+          "User credentials and personal information",
+          "Private cryptographic keys",
+          "Authentication tokens",
+          "Government service access tokens",
+          "Biometric authentication data"
+        ],
+        "threats": [
+          "Data exfiltration",
+          "Key compromise",
+          "Man-in-the-middle attacks",
+          "Device compromise",
+          "Social engineering",
+          "Supply chain attacks"
+        ],
+        "mitigations": [
+          "Hardware-backed keystore",
+          "Certificate pinning",
+          "Biometric authentication",
+          "Encrypted storage",
+          "Code obfuscation",
+          "Runtime application self-protection"
+        ]
+      }
+    },
+    "practices": {
+      "development": [
+        {
+          "practice": "Secure Code Review",
+          "implementation": "Mandatory peer review for all code changes",
+          "tools": ["GitHub pull requests", "SonarCloud static analysis"]
+        },
+        {
+          "practice": "Dependency Scanning",
+          "implementation": "Automated vulnerability scanning of npm packages",
+          "tools": ["Dependabot", "yarn audit", "Snyk"]
+        },
+        {
+          "practice": "Secret Management",
+          "implementation": "No secrets in source code, environment-based configuration",
+          "tools": ["GitHub Secrets", "iOS Keychain", "Android Keystore"]
+        },
+        {
+          "practice": "Static Analysis",
+          "implementation": "Continuous code quality and security analysis",
+          "tools": ["SonarCloud", "ESLint security rules", "TypeScript strict mode"]
+        }
+      ],
+      "runtime": [
+        {
+          "practice": "Certificate Pinning",
+          "implementation": "TLS certificate pinning for API communications"
+        },
+        {
+          "practice": "Root Detection",
+          "implementation": "Detection and blocking of rooted/jailbroken devices"
+        },
+        {
+          "practice": "Screen Recording Protection",
+          "implementation": "react-native-screenguard for preventing screen capture"
+        },
+        {
+          "practice": "Biometric Authentication",
+          "implementation": "Hardware-backed biometric authentication"
+        },
+        {
+          "practice": "Encrypted Storage",
+          "implementation": "All sensitive data encrypted at rest"
+        }
+      ]
+    },
+    "compliance": {
+      "dataProtection": {
+        "framework": "PIPEDA (Personal Information Protection and Electronic Documents Act)",
+        "requirements": [
+          "Consent for data collection",
+          "Purpose limitation",
+          "Data minimization",
+          "Accuracy requirements",
+          "Retention limits",
+          "Security safeguards",
+          "Breach notification"
+        ],
+        "implementation": [
+          "Explicit user consent flows",
+          "Minimal data collection",
+          "Local-first data storage",
+          "Encryption of sensitive data",
+          "Automatic data expiration",
+          "Security audit trails"
+        ]
+      },
+      "government": {
+        "framework": "BC FOIPPA (Freedom of Information and Protection of Privacy Act)",
+        "requirements": [
+          "Privacy impact assessments",
+          "Data sovereignty",
+          "Government data protection",
+          "Public accountability"
+        ]
+      }
+    }
+  },
+  "dependencies": {
+    "critical": {
+      "cryptography": [
+        {
+          "name": "@hyperledger/aries-askar-react-native",
+          "version": "0.2.3",
+          "purpose": "Secure storage and cryptographic operations",
+          "securityRisk": "HIGH",
+          "risks": [
+            "Private key exposure",
+            "Cryptographic vulnerabilities",
+            "Side-channel attacks"
+          ],
+          "mitigations": [
+            "Hardware security module integration",
+            "Regular security updates",
+            "Formal cryptographic verification"
+          ]
+        },
+        {
+          "name": "@hyperledger/anoncreds-react-native",
+          "version": "0.2.4",
+          "purpose": "Anonymous credentials cryptography",
+          "securityRisk": "HIGH",
+          "risks": [
+            "Zero-knowledge proof vulnerabilities",
+            "Credential linking attacks",
+            "Implementation flaws"
+          ]
+        },
+        {
+          "name": "@hyperledger/indy-vdr-react-native",
+          "version": "0.2.2",
+          "purpose": "Verifiable data registry client",
+          "securityRisk": "MEDIUM",
+          "risks": [
+            "Network tampering",
+            "Ledger data integrity",
+            "Consensus attacks"
+          ]
+        }
+      ],
+      "authentication": [
+        {
+          "name": "react-native-keychain",
+          "version": "~8.1.3",
+          "purpose": "Secure credential storage",
+          "securityRisk": "HIGH",
+          "risks": [
+            "Keychain bypass attacks",
+            "Device unlock vulnerabilities",
+            "Data extraction"
+          ]
+        },
+        {
+          "name": "react-native-encrypted-storage",
+          "version": "~4.0.3",
+          "purpose": "Encrypted local storage",
+          "securityRisk": "MEDIUM",
+          "risks": [
+            "Encryption key management",
+            "Side-channel attacks",
+            "Implementation vulnerabilities"
+          ]
+        }
+      ],
+      "networking": [
+        {
+          "name": "axios",
+          "version": "~1.4.0",
+          "purpose": "HTTP client for API communications",
+          "securityRisk": "MEDIUM",
+          "risks": [
+            "Request/response interception",
+            "SSRF vulnerabilities",
+            "Certificate validation bypass"
+          ],
+          "mitigations": [
+            "Certificate pinning",
+            "Request/response validation",
+            "Timeout configurations"
+          ]
+        }
+      ]
+    },
+    "framework": [
+      {
+        "name": "react-native",
+        "version": "0.73.11",
+        "purpose": "Mobile application framework",
+        "securityRisk": "MEDIUM",
+        "updatePolicy": "Regular updates following React Native security advisories",
+        "risks": [
+          "JavaScript bridge vulnerabilities",
+          "Native module security issues",
+          "Platform-specific security flaws"
+        ]
+      },
+      {
+        "name": "@bifold/core",
+        "version": "2.4.0",
+        "purpose": "Wallet framework and UI components",
+        "securityRisk": "MEDIUM",
+        "risks": [
+          "UI injection attacks",
+          "State management vulnerabilities",
+          "Component security flaws"
+        ]
+      }
+    ],
+    "development": [
+      {
+        "name": "@typescript-eslint/eslint-plugin",
+        "version": "~7.18.0",
+        "purpose": "TypeScript linting",
+        "securityRisk": "LOW",
+        "securityBenefit": "Helps prevent security-related coding errors"
+      },
+      {
+        "name": "jest",
+        "version": "~29.6.4",
+        "purpose": "Testing framework",
+        "securityRisk": "LOW",
+        "securityBenefit": "Enables security-focused unit testing"
+      }
+    ]
+  },
+  "vulnerabilityManagement": {
+    "scanning": {
+      "frequency": "Daily automated scans",
+      "tools": [
+        "Dependabot (GitHub)",
+        "SonarCloud",
+        "yarn audit",
+        "npm audit"
+      ],
+      "scope": [
+        "Direct dependencies",
+        "Transitive dependencies",
+        "Development dependencies",
+        "Native modules"
+      ]
+    },
+    "response": {
+      "classification": {
+        "CRITICAL": "Immediate patch within 24 hours",
+        "HIGH": "Patch within 72 hours",
+        "MEDIUM": "Patch within 1 week",
+        "LOW": "Patch in next release cycle"
+      },
+      "process": [
+        "Automated vulnerability detection",
+        "Security team triage",
+        "Impact assessment",
+        "Patch development and testing",
+        "Emergency release if critical",
+        "Post-incident review"
+      ]
+    },
+    "exceptions": {
+      "process": "Documented risk acceptance for vulnerabilities that cannot be immediately patched",
+      "approval": "Security team and product owner sign-off required",
+      "review": "Monthly review of accepted risks"
+    }
+  },
+  "dataFlows": {
+    "credentialIssuance": {
+      "description": "Process of receiving verifiable credentials",
+      "dataTypes": ["Personal information", "Credential metadata", "Cryptographic proofs"],
+      "security": [
+        "End-to-end encryption",
+        "Digital signatures",
+        "Zero-knowledge proofs"
+      ],
+      "storage": "Encrypted local storage with hardware-backed keys"
+    },
+    "credentialPresentation": {
+      "description": "Process of presenting credentials for verification",
+      "dataTypes": ["Selective disclosure", "Cryptographic proofs", "Presentation metadata"],
+      "security": [
+        "Minimal disclosure",
+        "Unlinkable presentations",
+        "User consent"
+      ]
+    },
+    "authentication": {
+      "description": "User authentication and session management",
+      "dataTypes": ["Biometric templates", "Authentication tokens", "Session data"],
+      "security": [
+        "Hardware-backed biometrics",
+        "Token rotation",
+        "Session timeout"
+      ]
+    }
+  },
+  "encryption": {
+    "algorithms": {
+      "symmetric": ["AES-256-GCM", "ChaCha20-Poly1305"],
+      "asymmetric": ["RSA-2048", "ECDSA P-256", "Ed25519"],
+      "hashing": ["SHA-256", "SHA-3", "Blake2b"],
+      "keyDerivation": ["PBKDF2", "scrypt", "Argon2"]
+    },
+    "keyManagement": {
+      "generation": "Hardware security module when available",
+      "storage": "Platform keystore (iOS Keychain, Android Keystore)",
+      "rotation": "Automatic key rotation for session keys",
+      "backup": "Secure key backup and recovery mechanisms"
+    }
+  },
+  "platformSecurity": {
+    "ios": {
+      "features": [
+        "Keychain Services",
+        "Secure Enclave",
+        "App Transport Security",
+        "Code signing",
+        "Sandbox environment"
+      ],
+      "requirements": [
+        "iOS 11.0+",
+        "Valid Apple Developer Certificate",
+        "App Store distribution"
+      ]
+    },
+    "android": {
+      "features": [
+        "Android Keystore",
+        "Hardware Security Module",
+        "Network Security Config",
+        "APK signing",
+        "SELinux policies"
+      ],
+      "requirements": [
+        "Android API Level 21+",
+        "Google Play signing",
+        "Play Store distribution"
+      ]
+    }
+  },
+  "auditTrail": {
+    "logging": {
+      "events": [
+        "Authentication attempts",
+        "Credential operations",
+        "Network requests",
+        "Error conditions",
+        "Security events"
+      ],
+      "retention": "30 days local, 1 year aggregated",
+      "protection": "Encrypted logs with integrity protection"
+    },
+    "monitoring": {
+      "realtime": [
+        "Failed authentication attempts",
+        "Unusual credential activity",
+        "Network anomalies",
+        "Application crashes"
+      ],
+      "alerting": "Security team notification for high-risk events"
+    }
+  },
+  "incidentResponse": {
+    "preparation": {
+      "team": "Security incident response team with defined roles",
+      "procedures": "Documented incident response procedures",
+      "tools": "Incident management and forensic tools"
+    },
+    "detection": {
+      "automated": "Security monitoring and alerting systems",
+      "manual": "User reporting and security team analysis"
+    },
+    "response": {
+      "containment": "Immediate threat containment and user notification",
+      "eradication": "Root cause analysis and vulnerability patching",
+      "recovery": "System restoration and security validation"
+    },
+    "postIncident": {
+      "analysis": "Post-incident review and lessons learned",
+      "improvement": "Security process and tool improvements"
+    }
+  },
+  "recommendations": {
+    "immediate": [
+      "Implement automated dependency vulnerability scanning",
+      "Add certificate pinning for all API communications",
+      "Enable runtime application self-protection (RASP)",
+      "Implement comprehensive security logging"
+    ],
+    "shortTerm": [
+      "Conduct third-party security audit",
+      "Implement advanced threat detection",
+      "Add security-focused unit tests",
+      "Enhance incident response procedures"
+    ],
+    "longTerm": [
+      "Achieve security certification (SOC 2 Type II)",
+      "Implement zero-trust architecture",
+      "Add behavioral analysis for fraud detection",
+      "Continuous security monitoring and improvement"
+    ]
+  }
+}
