@@ -1,5 +1,5 @@
 import { RadioGroup } from '@/bcsc-theme/components/RadioGroup'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
@@ -21,7 +21,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 const iconSize = 40
 
 type NewSetupScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.NewSetup>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.NewSetup>
 }
 
 const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {

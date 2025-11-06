@@ -2,10 +2,11 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
+import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
@@ -21,6 +22,14 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const [loading, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const apiClient = useBCSCApiClient()
+
+  const handleManageDevices = useCallback(() => {
+    navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
+      url: `${apiClient.baseURL}/account/embedded/devices`,
+      title: t('Unified.Screens.ManageDevices'),
+    })
+  }, [apiClient.baseURL, navigation, t])
 
   useEffect(() => {
     const asyncEffect = async () => {
@@ -58,7 +67,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
         <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
       ) : (
         <>
-          <NotificationBannerContainer />
+          <NotificationBannerContainer onManageDevices={handleManageDevices} />
           <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
           <View style={styles.buttonsContainer}>
             <SectionButton

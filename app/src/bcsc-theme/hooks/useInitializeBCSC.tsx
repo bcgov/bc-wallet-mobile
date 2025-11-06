@@ -1,7 +1,7 @@
+import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useEffect, useRef, useState } from 'react'
 import { getToken, TokenType } from 'react-native-bcsc-core'
-import { BCDispatchAction, BCState } from '@/store'
 import useRegistrationApi from '../api/hooks/useRegistrationApi'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 

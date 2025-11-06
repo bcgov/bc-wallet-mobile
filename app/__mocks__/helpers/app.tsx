@@ -1,12 +1,12 @@
-import 'reflect-metadata'
+import { ContainerProvider, MainContainer, StoreProvider, ThemeProvider } from '@bifold/core'
 import * as React from 'react'
 import { PropsWithChildren, useMemo } from 'react'
+import 'reflect-metadata'
 import { container } from 'tsyringe'
-import { MainContainer, ContainerProvider, ThemeProvider, StoreProvider } from '@bifold/core'
 
-import { themes } from '@/theme'
 import { BCThemeNames } from '@/constants'
 import { initialState, reducer } from '@/store'
+import { themes } from '@/theme'
 
 export const BasicAppContext: React.FC<PropsWithChildren> = ({ children }) => {
   const context = useMemo(() => new MainContainer(container.createChildContainer()).init(), [])

@@ -1,20 +1,20 @@
 import {
-  ISpacing,
-  IBrandColors,
-  ISemanticColors,
-  INotificationColors,
-  IGrayscaleColors,
-  IColorPalette,
   bifoldTheme,
-  ThemeBuilder,
-  ITheme,
   DeepPartial,
+  IBrandColors,
+  IColorPalette,
+  IGrayscaleColors,
+  INotificationColors,
+  ISemanticColors,
+  ISpacing,
+  ITheme,
+  ThemeBuilder,
 } from '@bifold/core'
 import React from 'react'
 
+import { BCThemeNames } from '@/constants'
 import Logo from '@assets/img/logo-with-text.svg'
 import SecurePIN from '@assets/img/secure-pin.svg'
-import { BCThemeNames } from '@/constants'
 
 export const maxFontSizeMultiplier = 2
 export const borderRadius = 4

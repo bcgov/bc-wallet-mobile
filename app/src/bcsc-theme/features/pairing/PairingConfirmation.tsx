@@ -1,4 +1,4 @@
-import { BCSCRootStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -8,7 +8,7 @@ import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import ServiceBookmarkButton from './components/ServiceBookmarkButton'
 
-type ManualPairingProps = StackScreenProps<BCSCRootStackParams, BCSCScreens.PairingConfirmation>
+type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.PairingConfirmation>
 
 const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   const { Spacing } = useTheme()
@@ -33,7 +33,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
-        routes: [{ name: BCSCStacks.TabStack }],
+        routes: [{ name: BCSCStacks.Tab }],
       })
     )
   }

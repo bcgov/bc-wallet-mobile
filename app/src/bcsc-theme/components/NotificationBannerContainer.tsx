@@ -1,18 +1,23 @@
-import { useCallback, useRef, useState } from 'react'
-import { BCSCBanner } from './AppBanner'
-import { Linking, View } from 'react-native'
-import { NotificationBanner } from './NotificationBanner'
-import { ReviewDevices } from '../features/settings/components/ReviewDevices'
-import { SafeAreaModal, useStore } from '@bifold/core'
 import { BCDispatchAction, BCState } from '@/store'
 import { getPlatformStoreUrl } from '@/utils/links'
+import { SafeAreaModal, useStore } from '@bifold/core'
+import { useCallback, useRef, useState } from 'react'
+import { Linking, View } from 'react-native'
+import { ReviewDevices } from '../features/settings/components/ReviewDevices'
+import { BCSCBanner } from './AppBanner'
+import { NotificationBanner } from './NotificationBanner'
+
+interface NotificationBannerContainerProps {
+  onManageDevices: () => void
+}
 
 /**
  * Container component for displaying notification banners and handling their interactions.
  *
+ * @param {NotificationBannerContainerProps} props - The properties for the NotificationBannerContainer component.
  * @returns {*} {JSX.Element} The NotificationBannerContainer component.
  */
-export const NotificationBannerContainer = () => {
+export const NotificationBannerContainer = ({ onManageDevices }: NotificationBannerContainerProps) => {
   const [, dispatch] = useStore<BCState>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
@@ -49,6 +54,7 @@ export const NotificationBannerContainer = () => {
           bannerId={BCSCBanner.DEVICE_LIMIT_EXCEEDED}
           maxDevices={3}
           handleClose={() => handleCloseDevicesModal({ shouldAnimate: true })}
+          onManageDevices={onManageDevices}
         />
       </SafeAreaModal>
 

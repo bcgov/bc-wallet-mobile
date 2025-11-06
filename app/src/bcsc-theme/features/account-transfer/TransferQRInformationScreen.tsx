@@ -1,4 +1,4 @@
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 
 import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -12,7 +12,7 @@ const TransferQRInformationScreen: React.FC = () => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
 
-  const navigation = useNavigation<StackNavigationProp<BCSCRootStackParams>>()
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const styles = StyleSheet.create({
     scrollView: {
       flex: 1,

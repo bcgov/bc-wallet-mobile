@@ -1,13 +1,13 @@
-import { DidRepository } from '@credo-ts/core'
 import {
-  BifoldError,
   Agent,
+  BifoldError,
   EventTypes as BifoldEventTypes,
-  removeExistingInvitationsById,
   BifoldLogger,
+  removeExistingInvitationsById,
 } from '@bifold/core'
+import { DidRepository } from '@credo-ts/core'
 import { TFunction } from 'react-i18next'
-import { Linking, DeviceEventEmitter } from 'react-native'
+import { DeviceEventEmitter, Linking } from 'react-native'
 import { InAppBrowser, RedirectResult } from 'react-native-inappbrowser-reborn'
 
 const legacyDidKey = '_internal/legacyDid' // TODO:(jl) Waiting for AFJ export of this.

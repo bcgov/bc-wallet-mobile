@@ -1,5 +1,5 @@
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { ACCOUNT_SERVICES_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type DualIdentificationRequiredScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.DualIdentificationRequired>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.DualIdentificationRequired>
 }
 
 /**

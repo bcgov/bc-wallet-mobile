@@ -1,12 +1,12 @@
+import { testIdWithKey } from '@bifold/core'
+import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
-import { render, fireEvent } from '@testing-library/react-native'
 import {
   AppBanner,
   AppBannerSection,
   AppBannerSectionProps,
   BCSCBanner,
 } from '../../src/bcsc-theme/components/AppBanner'
-import { testIdWithKey } from '@bifold/core'
 
 describe('AppBanner', () => {
   it('renders correctly with multiple messages', () => {

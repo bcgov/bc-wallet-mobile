@@ -1,11 +1,11 @@
 /* eslint-disable no-undef */
-import 'reflect-metadata'
-import 'react-native-gesture-handler/jestSetup'
-import mockRNLocalize from 'react-native-localize/mock'
-import mockRNDeviceInfo from 'react-native-device-info/jest/react-native-device-info-mock'
-import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock'
 import mockRNCNetInfo from '@react-native-community/netinfo/jest/netinfo-mock.js'
 import React from 'react'
+import mockRNDeviceInfo from 'react-native-device-info/jest/react-native-device-info-mock'
+import 'react-native-gesture-handler/jestSetup'
+import mockRNLocalize from 'react-native-localize/mock'
+import mockSafeAreaContext from 'react-native-safe-area-context/jest/mock'
+import 'reflect-metadata'
 global.React = React
 
 mockRNDeviceInfo.getVersion = jest.fn(() => '1')

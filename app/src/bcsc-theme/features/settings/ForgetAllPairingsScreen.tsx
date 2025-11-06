@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 
 interface ForgetAllPairingsScreenProps {
-  navigation: StackNavigationProp<BCSCRootStackParams, BCSCScreens.ForgetAllPairings>
+  navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.ForgetAllPairings>
 }
 
 /**

@@ -1,10 +1,10 @@
-import { renderHook, act } from '@testing-library/react-native'
-import * as BcscCore from 'react-native-bcsc-core'
-import * as Bifold from '@bifold/core'
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { BCDispatchAction } from '@/store'
+import * as Bifold from '@bifold/core'
 import { DispatchAction } from '@bifold/core'
+import { act, renderHook } from '@testing-library/react-native'
+import * as BcscCore from 'react-native-bcsc-core'
 
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@bifold/core')

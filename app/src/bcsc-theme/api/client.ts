@@ -2,9 +2,9 @@ import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
+import { formatAxiosErrorForLogger, formatIasAxiosResponseError } from '../utils/error-utils'
 import { TokenResponse } from './hooks/useTokens'
 import { withAccount } from './hooks/withAccountGuard'
-import { formatIasAxiosResponseError, formatAxiosErrorForLogger } from '../utils/error-utils'
 
 // Extend AxiosRequestConfig to include skipBearerAuth
 declare module 'axios' {

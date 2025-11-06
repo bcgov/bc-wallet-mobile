@@ -4,12 +4,12 @@ import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, DeviceEventEmitter } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import VerifyIdentityStack from '../features/verify/VerifyIdentityStack'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import BCSCMainStack from './MainStack'
 import BCSCOnboardingStack from './OnboardingStack'
-import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
+import VerifyStack from './VerifyStack'
 
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
@@ -77,7 +77,7 @@ const BCSCRootStack: React.FC = () => {
 
   // Show identity verification stack (setup steps) if user unverified
   if (!store.bcsc.verified || store.bcsc.selectedNickname === undefined) {
-    return <VerifyIdentityStack />
+    return <VerifyStack />
   }
 
   // Otherwise, show the main stack (app)

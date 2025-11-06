@@ -5,7 +5,7 @@ import { Image, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } f
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
@@ -19,7 +19,7 @@ const PHOTO_CARD = Image.resolveAssetSource(PhotoCardImage).uri
 const NO_PHOTO_CARD = Image.resolveAssetSource(NoPhotoCardImage).uri
 
 type IdentitySelectionScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.IdentitySelection>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.IdentitySelection>
 }
 
 const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({

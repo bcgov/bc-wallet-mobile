@@ -2,7 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataResponseData, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
@@ -13,7 +13,7 @@ import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type EvidenceTypeListScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.AdditionalIdentificationRequired>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.AdditionalIdentificationRequired>
 }
 
 interface SectionData {

@@ -1,4 +1,4 @@
-import { BCSCScreens, BCSCVerifyIdentityStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { BCState } from '@/store'
 import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -8,7 +8,7 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 type StartCallScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyIdentityStackParams, BCSCScreens.StartCall>
+  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.StartCall>
 }
 
 const StartCallScreen = ({ navigation }: StartCallScreenProps) => {

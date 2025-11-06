@@ -1,14 +1,14 @@
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
-import { PrivacyPolicyScreen } from '../features/onboarding/PrivacyPolicyScreen'
+import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
 import { BCSCModals, BCSCScreens } from '../types/navigators'
-import { InternetDisconnected } from '../features/modal/InternetDisconnected'
-import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -36,16 +36,14 @@ const OnboardingStack = (): JSX.Element => {
       }}
     >
       <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />
-
       <Stack.Screen
-        name={BCSCScreens.PrivacyPolicy}
-        component={PrivacyPolicyScreen}
+        name={BCSCScreens.OnboardingPrivacyPolicy}
+        component={OnboardingPrivacyPolicyScreen}
         options={{
           title: t('Unified.Onboarding.PrivacyPolicyTitle'),
           headerShown: true,
         }}
       />
-
       <Stack.Screen
         name={BCSCScreens.OnboardingTermsOfUse}
         component={TermsOfUseScreen}
@@ -54,9 +52,7 @@ const OnboardingStack = (): JSX.Element => {
           headerShown: true,
         }}
       />
-
       <Stack.Screen name={BCSCScreens.OnboardingNotifications} component={NotificationsScreen} />
-
       <Stack.Screen
         name={BCSCScreens.OnboardingSecureApp}
         component={SecureAppScreen}
@@ -64,7 +60,6 @@ const OnboardingStack = (): JSX.Element => {
           headerShown: true,
         }}
       />
-
       {/* React navigation docs suggest modals at bottom of stack */}
       <Stack.Screen
         name={BCSCModals.InternetDisconnected}

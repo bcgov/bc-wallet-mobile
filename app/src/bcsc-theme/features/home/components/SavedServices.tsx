@@ -1,4 +1,4 @@
-import { BCSCRootStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useFilterServiceClients } from '../../services/hooks/useFilterServiceClients'
 import { SavedServiceCard } from './SavedServiceCard'
 
-type ServicesNavigationProp = StackNavigationProp<BCSCRootStackParams, BCSCScreens.ServiceLogin>
+type ServicesNavigationProp = StackNavigationProp<BCSCMainStackParams, BCSCScreens.ServiceLogin>
 
 const SavedServices: React.FC = () => {
   const { ColorPalette, Spacing } = useTheme()
