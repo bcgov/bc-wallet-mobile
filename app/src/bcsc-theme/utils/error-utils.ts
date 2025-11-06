@@ -23,7 +23,7 @@ interface LogAxiosErrorOptions {
  * @param {AxiosError<any>} error - The original AxiosError to format
  * @returns {*} {AxiosError} The formatted AxiosError with updated code and message
  */
-export function formatIasAxiosResponseError(error: AxiosError<any>): AxiosError {
+export const formatIasAxiosResponseError = (error: AxiosError<any>): AxiosError => {
   // Network error (no response received)
   if (!error.response) {
     error.code = NETWORK_ERROR_CODE
@@ -63,7 +63,7 @@ export function formatIasAxiosResponseError(error: AxiosError<any>): AxiosError 
  * @param {LogAxiosErrorOptions} options - The options for logging the error
  * @returns {*} {void}
  */
-export function formatAxiosErrorForLogger(options: LogAxiosErrorOptions): Record<string, unknown> {
+export const formatAxiosErrorForLogger = (options: LogAxiosErrorOptions): Record<string, unknown> => {
   const errorDetails: Record<string, unknown> = {
     name: options.error.name,
     code: options.error.code,
@@ -106,7 +106,7 @@ export function formatAxiosErrorForLogger(options: LogAxiosErrorOptions): Record
  * @param {unknown} error - The error to check
  * @returns {*} {boolean} True if the error is a network error, false otherwise.
  */
-export function isNetworkError(error: unknown): boolean {
+export const isNetworkError = (error: unknown): boolean => {
   if (error instanceof AxiosError) {
     return (
       (error as any)?.isNetworkError === true ||

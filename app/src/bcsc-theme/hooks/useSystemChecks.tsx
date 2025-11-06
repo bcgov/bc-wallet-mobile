@@ -94,7 +94,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
  *
  * @returns {Promise<true>} A promise that resolves to true when navigation is ready.
  */
-function _waitForNavigationToBeReady(): Promise<true> {
+const _waitForNavigationToBeReady = (): Promise<true> => {
   return new Promise((resolve) => {
     if (navigationRef.current?.getRootState()) {
       resolve(true)
