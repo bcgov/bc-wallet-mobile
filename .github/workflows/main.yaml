@@ -338,7 +338,7 @@ jobs:
             artifact_name: "android-bc-wallet-artifact"
           - build_type: "single-app"
             app_version: "4.0.0"
-            android_package_name: "ca.bc.gov.iddev.servicescard"
+            android_package_name: "ca.bc.gov.id.servicescard.dev"
             jks_base64_secret: "PLAY_STORE_JKS_BASE64_SADEV"
             jks_alias_secret: "PLAY_STORE_JKS_ALIAS_SADEV"
             jks_passwd_secret: "PLAY_STORE_JKS_PASSWD_SADEV"
@@ -465,7 +465,7 @@ jobs:
           GOOGLE_API_CREDENTIALS_BASE64: ${{ secrets.GOOGLE_API_CREDENTIALS_BASE64 }}
           GOOGLE_API_CREDENTIALS_FILE: "api_keys.json"
           ANDROID_BUNDLE_PATH: "app/android/app/build/outputs/bundle/release/app-release.aab"
-          ANDROID_PACKAGE_NAME: ${{ env.ANDROID_PACKAGE_NAME }}
+          ANDROID_PACKAGE_NAME: ${{ env.ANDROID_PACKAGE_NAME }} // may be redundant?
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
