@@ -276,6 +276,14 @@ const translation = {
       "PrivacyInformation": "Privacy Information (PT-BR)",
       "ManageDevices": "Manage Devices (PT-BR)",
     },
+    "Modals": {
+      "MandatoryUpdate": {
+        "Header": "App update required (PT-BR)",
+        "ContentA": "You must update this app to continue. (PT-BR)",
+        "ContentB": "Please update to the latest version from the {{platformStore}}. (PT-BR)",
+        "UpdateButton": "Go to {{platformStore}} (PT-BR)",
+      }
+    },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
       "WhereToUseDescription": "Find the websites you can log in to with this app. (PT-BR)",
@@ -304,7 +312,10 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable (PT-BR)",
-      }
+      },
+      "UpdateApp": {
+        "UpdateAvailableBannerTitle": "App update available (PT-BR)",
+      },
     },
     "ForgetAllPairings": {
       "Title": "Forget all pairings? (PT-BR)",
