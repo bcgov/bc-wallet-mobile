@@ -23,6 +23,8 @@ const useUserApi = (apiClient: BCSCApiClient) => {
   /**
    * Get user information and decode.
    *
+   * Question: Should we cache this response to avoid multiple network calls?
+   *
    * @returns {*} {Promise<UserInfoResponseData>} A promise that resolves to the user information.
    */
   const getUserInfo = useCallback(async (): Promise<UserInfoResponseData> => {
