@@ -338,7 +338,7 @@ jobs:
             artifact_name: "android-bc-wallet-artifact"
           - build_type: "single-app"
             app_version: "4.0.0"
-            android_package_name: "ca.bc.gov.id.servicescard.dev"
+            android_package_name: "ca.bc.gov.iddev.servicescard"
             jks_base64_secret: "PLAY_STORE_JKS_BASE64_SADEV"
             jks_alias_secret: "PLAY_STORE_JKS_ALIAS_SADEV"
             jks_passwd_secret: "PLAY_STORE_JKS_PASSWD_SADEV"
@@ -399,15 +399,15 @@ jobs:
           REMOTE_LOGGING_URL: ${{ secrets.REMOTE_LOGGING_URL }}
           INDY_VDR_PROXY_URL: ${{ vars.INDY_VDR_PROXY_URL }}
         run: |
-          echo "BUILD_TARGET=${BUILD_TARGET}" >.env.production
-          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env.production
-          echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env.production
-          echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env.production
-          echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env.production
-          echo "OCA_URL=${OCA_URL}" >>.env.production
-          echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env.production
-          echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env.production
-          echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env.production
+          echo "BUILD_TARGET=${BUILD_TARGET}" >.env
+          echo "MEDIATOR_USE_PUSH_NOTIFICATIONS=${MEDIATOR_USE_PUSH_NOTIFICATIONS}" >>.env
+          echo "MEDIATOR_URL=${MEDIATOR_URL}" >>.env
+          echo "IAS_PORTAL_URL=${IAS_PORTAL_URL}" >>.env
+          echo "IAS_AGENT_INVITE_URL=${IAS_AGENT_INVITE_URL}" >>.env
+          echo "OCA_URL=${OCA_URL}" >>.env
+          echo "PROOF_TEMPLATE_URL=${PROOF_TEMPLATE_URL}" >>.env
+          echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
+          echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
 
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access
