@@ -75,7 +75,7 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
       minVersion: this.serverStatus.minVersionNumber,
       maxVersion: maxVersion,
       appVersion: this.appVersion,
-      supportedVersions: this.serverStatus.supportedVersions.join(', '),
+      supportedVersions: this.serverStatus.supportedVersions,
     })
 
     if (!maxVersion) {

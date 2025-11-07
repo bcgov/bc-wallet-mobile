@@ -1,8 +1,7 @@
 import { BCDispatchAction, BCState } from '@/store'
-import { getBCSCAppStoreUrl } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
-import { Linking, View } from 'react-native'
+import { View } from 'react-native'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
 import { BCSCBanner } from './AppBanner'
 import { NotificationBanner } from './NotificationBanner'
@@ -22,15 +21,11 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
 
-  const handleBannerPress = (bannerId: BCSCBanner) => {
+  const handleBannerPress = (bannerId: BCSCBanner): void => {
     // Handle other banner types as needed
 
     if (bannerId === BCSCBanner.DEVICE_LIMIT_EXCEEDED) {
       return setDevicesModalVisible(true)
-    }
-
-    if (bannerId === BCSCBanner.APP_UPDATE_AVAILABLE) {
-      Linking.openURL(getBCSCAppStoreUrl())
     }
 
     // Default action: remove the banner permanently on press
