@@ -9,20 +9,21 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
  * Checks if the application needs to be updated.
  *
  * Rules for determining update status (in logical order):
- * No update:
- *  A. Greater than or equal to maxVersion
- *       ie: app: 3.0.0, max: 3.0.0 => no update (equal)
- *       ie: app: 3.0.0, max: 2.9.9 => no update (greater than)
  *
- * Mandatory update:
- *  A. SupportedVersions does not include appVersion
- *      ie: app: 2.0.0, supported: [3.0.0, 3.1.0] => mandatory update (too old)
- *      ie: app: 3.0.1, supported: [3.0.0, 3.1.0] => mandatory update (unrecognized)
+ *   No update:
+ *    A. App greater than or equal to maxVersion
+ *         ie: app: 3.0.0, max: 3.0.0 => no update (equal)
+ *         ie: app: 3.0.0, max: 2.9.9 => no update (greater than)
  *
- * Optional update:
- *  A. Greater than or equal to minVersion
- *      ie: app: 2.9.9, min: 2.0.0 => optional update (greater than)
- *      ie: app: 2.0.0, min: 2.0.0 => optional update (equal)
+ *   Mandatory update:
+ *    A. IAS supported versions does not include app version
+ *        ie: app: 2.0.0, supported: [3.0.0, 3.1.0] => mandatory update (too old)
+ *        ie: app: 3.0.1, supported: [3.0.0, 3.1.0] => mandatory update (unrecognized)
+ *
+ *   Optional update:
+ *    A. App greater than or equal to min version
+ *        ie: app: 2.9.9, min: 2.0.0 => optional update (greater than)
+ *        ie: app: 2.0.0, min: 2.0.0 => optional update (equal)
  *
  * @class UpdateAppSystemCheck
  * @implements {SystemCheckStrategy}
