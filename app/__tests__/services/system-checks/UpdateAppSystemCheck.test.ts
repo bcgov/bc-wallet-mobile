@@ -6,9 +6,10 @@ import deviceInfo from 'react-native-device-info'
 
 describe('UpdateAppSystemCheck', () => {
   describe('runCheck', () => {
-    it('should return true when no update is needed', async () => {
+    it('should return true when app build is same as min build', async () => {
       const mockServerStatus: any = {
-        supportedVersions: ['1.0.0', '1.1.0', '1.2.0'],
+        minVersion: '100',
+        supportedVersions: [],
       }
       const mockNavigation = {} as any
       const mockUtils = {
@@ -17,18 +18,62 @@ describe('UpdateAppSystemCheck', () => {
         logger: { info: jest.fn() } as any,
       }
 
-      const mockGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.2.0')
+      const mockGetVersion = jest.spyOn(deviceInfo, 'getBuildNumber').mockReturnValue('100')
 
       const updateAppCheck = new UpdateAppSystemCheck(mockServerStatus, mockNavigation, mockUtils)
 
-      const result = await updateAppCheck.runCheck()
+      const result = updateAppCheck.runCheck()
 
       expect(mockGetVersion).toHaveBeenCalled()
       expect(result).toBe(true)
     })
+
+    it('should return true when app build is greater than min build', async () => {
+      const mockServerStatus: any = {
+        minVersion: '100',
+        supportedVersions: [],
+      }
+      const mockNavigation = {} as any
+      const mockUtils = {
+        dispatch: jest.fn(),
+        translation: jest.fn(),
+        logger: { info: jest.fn() } as any,
+      }
+
+      const mockGetVersion = jest.spyOn(deviceInfo, 'getBuildNumber').mockReturnValue('101')
+
+      const updateAppCheck = new UpdateAppSystemCheck(mockServerStatus, mockNavigation, mockUtils)
+
+      const result = updateAppCheck.runCheck()
+
+      expect(mockGetVersion).toHaveBeenCalled()
+      expect(result).toBe(true)
+    })
+
+    it('should return false when app build is less than min build', async () => {
+      const mockServerStatus: any = {
+        minVersion: '100',
+        supportedVersions: [],
+      }
+      const mockNavigation = {} as any
+      const mockUtils = {
+        dispatch: jest.fn(),
+        translation: jest.fn(),
+        logger: { info: jest.fn() } as any,
+      }
+
+      const mockGetVersion = jest.spyOn(deviceInfo, 'getBuildNumber').mockReturnValue('99')
+
+      const updateAppCheck = new UpdateAppSystemCheck(mockServerStatus, mockNavigation, mockUtils)
+
+      const result = updateAppCheck.runCheck()
+
+      expect(mockGetVersion).toHaveBeenCalled()
+      expect(result).toBe(false)
+    })
   })
   describe('onFail', () => {
-    it('should navigate to MandatoryUpdate modal when major update is required', () => {
+    it('MandatoryUpdate: should navigate to blocking modal when app version not in supported versions', () => {
       const mockServerStatus: any = {
         supportedVersions: ['2.0.0'],
       }
@@ -52,34 +97,8 @@ describe('UpdateAppSystemCheck', () => {
       expect(mockGetVersion).toHaveBeenCalled()
     })
 
-    it('should fail when version bigger than minVersion but unrecognized', () => {
+    it('OptionalUpdate: should dispatch update app banner when app version supported', () => {
       const mockServerStatus: any = {
-        minVersion: '1.0.0',
-        supportedVersions: ['1.0.0', '1.1.0', '1.2.0'],
-      }
-      const mockNavigation = {
-        navigate: jest.fn(),
-      } as any
-      const mockUtils = {
-        dispatch: jest.fn(),
-        translation: jest.fn(),
-        logger: {} as any,
-      }
-
-      const mockGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.3.0')
-
-      const updateAppCheck: any = new UpdateAppSystemCheck(mockServerStatus, mockNavigation, mockUtils)
-
-      updateAppCheck.onFail()
-
-      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.MandatoryUpdate)
-      expect(mockUtils.dispatch).not.toHaveBeenCalled()
-      expect(mockGetVersion).toHaveBeenCalled()
-    })
-
-    it('should dispatch optional update banner when optional update is available', () => {
-      const mockServerStatus: any = {
-        minVersion: '1.0.0',
         supportedVersions: ['1.0.0', '1.1.0', '1.2.0'],
       }
       const mockNavigation = { navigate: jest.fn() } as any
@@ -127,31 +146,6 @@ describe('UpdateAppSystemCheck', () => {
       expect(mockUtils.dispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.REMOVE_BANNER_MESSAGE,
         payload: [BCSCBanner.APP_UPDATE_AVAILABLE],
-      })
-    })
-  })
-
-  describe('isVersionGreaterOrEqualThan', () => {
-    describe('valid version strings', () => {
-      it('should return false for lower versions', () => {
-        const updateCheck = new UpdateAppSystemCheck({} as any, {} as any, {} as any)
-
-        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.0', '1.0.1')).toBe(false)
-        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.0', '1.1.0')).toBe(false)
-        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.0', '2.0.0')).toBe(false)
-        expect(updateCheck.isVersionGreaterOrEqualThan('0.0.0', '0.0.1')).toBe(false)
-        expect(updateCheck.isVersionGreaterOrEqualThan('0.0.0', '999.999.999')).toBe(false)
-      })
-
-      it('should return true for equal or higher versions', () => {
-        const updateCheck = new UpdateAppSystemCheck({} as any, {} as any, {} as any)
-
-        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.0', '1.0.0')).toBe(true)
-        expect(updateCheck.isVersionGreaterOrEqualThan('1.0.1', '1.0.0')).toBe(true)
-        expect(updateCheck.isVersionGreaterOrEqualThan('1.1.0', '1.0.0')).toBe(true)
-        expect(updateCheck.isVersionGreaterOrEqualThan('2.0.0', '1.0.0')).toBe(true)
-        expect(updateCheck.isVersionGreaterOrEqualThan('0.0.1', '0.0.0')).toBe(true)
-        expect(updateCheck.isVersionGreaterOrEqualThan('999.999.999', '0.0.0')).toBe(true)
       })
     })
   })
