@@ -1,5 +1,5 @@
 import { BCDispatchAction, BCState } from '@/store'
-import { getPlatformStoreUrl } from '@/utils/links'
+import { getBCSCAppStoreUrl } from '@/utils/links'
 import { SafeAreaModal, useStore } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { Linking, View } from 'react-native'
@@ -30,7 +30,7 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
     }
 
     if (bannerId === BCSCBanner.APP_UPDATE_AVAILABLE) {
-      Linking.openURL(getPlatformStoreUrl())
+      Linking.openURL(getBCSCAppStoreUrl())
     }
 
     // Default action: remove the banner permanently on press

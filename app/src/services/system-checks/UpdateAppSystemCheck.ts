@@ -13,7 +13,7 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
  *  A.2. Less than latestVersion
  *
  * Mandatory update:
- *  A. Less than minVersion
+ *  A. Not in supportedVersions (less than minVersion or unrecognized version)
  *
  * Do nothing:
  *  A. Greater than or equal to latestVersion
@@ -60,13 +60,15 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
    * @returns {*} {boolean} - A boolean indicating if the app should be updated.
    */
   async runCheck() {
-    const maxVersion = this.serverStatus.supportedVersions.pop()
+    const maxVersion = this.serverStatus.supportedVersions[this.serverStatus.supportedVersions.length - 1]
 
-    if (!maxVersion) {
-      this.utils.logger.warn('UpdateAppSystemCheck: No supported versions found in server status.')
-      return false
-    }
+    this.utils.logger.info('UpdateAppSystemCheck', {
+      minVersion: this.serverStatus.minVersionNumber,
+      maxVersion: maxVersion,
+      appVersion: this.appVersion,
+    })
 
+    // App version is greater than or equal max supported version => no update
     return this.isVersionGreaterOrEqualThan(this.appVersion, maxVersion)
   }
 
@@ -76,9 +78,10 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
    * @returns {*} {void}
    */
   onFail() {
-    const updateRequired = this.isVersionGreaterOrEqualThan(this.appVersion, this.serverStatus.minVersion) === false
+    const appVersionSupported = this.serverStatus.supportedVersions.includes(this.appVersion)
 
-    if (updateRequired) {
+    // App version not supported => force mandatory update
+    if (!appVersionSupported) {
       this.navigation.navigate(BCSCModals.MandatoryUpdate)
       return
     }

@@ -61,6 +61,7 @@ const OnboardingStack = (): JSX.Element => {
           headerShown: true,
         }}
       />
+
       {/* React navigation docs suggest modals at bottom of stack */}
       <Stack.Screen
         name={BCSCModals.InternetDisconnected}

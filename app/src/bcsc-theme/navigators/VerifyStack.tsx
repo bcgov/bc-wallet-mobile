@@ -288,9 +288,19 @@ const VerifyStack = () => {
           headerShadowVisible: false,
         }}
       />
+
       {/* React navigation docs suggest modals at bottom of stack */}
       <Stack.Screen
         name={BCSCModals.InternetDisconnected}
+        component={MandatoryUpdate}
+        options={{
+          ...getDefaultModalOptions(t('Unified.BCSC')),
+          gestureEnabled: false, // Disable swipe to dismiss
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
         options={{
           ...getDefaultModalOptions(t('Unified.BCSC')),

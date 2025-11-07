@@ -61,10 +61,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
    */
   useEffect(() => {
     const runChecksByScope = async () => {
-      // Wait for navigation to be ready before running checks that may interact with it
-      const navigationReady = await _waitForNavigationToBeReady()
-
-      if (ranSystemChecksRef.current || !isClientReady || !client || !navigationReady) {
+      if (ranSystemChecksRef.current || !isClientReady || !client) {
         return
       }
 
@@ -83,6 +80,8 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
           // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
+            // Wait for navigation to be ready before injecting navigation dependency
+            await _waitForNavigationToBeReady()
             startupChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
           }
 
@@ -116,14 +115,14 @@ const _waitForNavigationToBeReady = (): Promise<true> => {
   const MAX_WAIT_MS = 5000
 
   return new Promise((resolve, reject) => {
-    if (navigationRef.current?.getRootState()) {
+    if (navigationRef.isReady()) {
       resolve(true)
     }
 
     const startTime = Date.now()
 
     const interval = setInterval(() => {
-      if (navigationRef.current?.getRootState()) {
+      if (navigationRef.isReady()) {
         clearInterval(interval)
         resolve(true)
       }

@@ -14,7 +14,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockUtils = {
         dispatch: jest.fn(),
         translation: jest.fn(),
-        logger: {} as any,
+        logger: { info: jest.fn() } as any,
       }
 
       const mockGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.2.0')
@@ -30,7 +30,7 @@ describe('UpdateAppSystemCheck', () => {
   describe('onFail', () => {
     it('should navigate to MandatoryUpdate modal when major update is required', () => {
       const mockServerStatus: any = {
-        minVersion: '2.0.0',
+        supportedVersions: ['2.0.0'],
       }
       const mockNavigation = {
         navigate: jest.fn(),
@@ -45,7 +45,30 @@ describe('UpdateAppSystemCheck', () => {
 
       const updateAppCheck: any = new UpdateAppSystemCheck(mockServerStatus, mockNavigation, mockUtils)
 
-      updateAppCheck.versionInfoCache = { updateType: 'major' } as any
+      updateAppCheck.onFail()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCModals.MandatoryUpdate)
+      expect(mockUtils.dispatch).not.toHaveBeenCalled()
+      expect(mockGetVersion).toHaveBeenCalled()
+    })
+
+    it('should fail when version bigger than minVersion but unrecognized', () => {
+      const mockServerStatus: any = {
+        minVersion: '1.0.0',
+        supportedVersions: ['1.0.0', '1.1.0', '1.2.0'],
+      }
+      const mockNavigation = {
+        navigate: jest.fn(),
+      } as any
+      const mockUtils = {
+        dispatch: jest.fn(),
+        translation: jest.fn(),
+        logger: {} as any,
+      }
+
+      const mockGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.3.0')
+
+      const updateAppCheck: any = new UpdateAppSystemCheck(mockServerStatus, mockNavigation, mockUtils)
 
       updateAppCheck.onFail()
 
@@ -69,8 +92,6 @@ describe('UpdateAppSystemCheck', () => {
       const mockGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.0.0')
 
       const updateAppCheck: any = new UpdateAppSystemCheck(mockServerStatus, mockNavigation, mockUtils)
-
-      updateAppCheck.versionInfoCache = { updateType: 'minor' } as any
 
       updateAppCheck.onFail()
 
