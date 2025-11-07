@@ -67,13 +67,18 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
    * @returns {*} {boolean} - A boolean indicating if the app should be updated.
    */
   async runCheck() {
-    const maxVersion = this.serverStatus.supportedVersions[this.serverStatus.supportedVersions.length - 1]
+    const maxVersion = this.serverStatus.supportedVersions.at(-1)
 
     this.utils.logger.info('UpdateAppSystemCheck', {
       minVersion: this.serverStatus.minVersionNumber,
       maxVersion: maxVersion,
       appVersion: this.appVersion,
     })
+
+    if (!maxVersion) {
+      // No max version provided => no update
+      return true
+    }
 
     // App version is greater than or equal max supported version => no update
     return this.isVersionGreaterOrEqualThan(this.appVersion, maxVersion)
