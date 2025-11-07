@@ -1,4 +1,4 @@
-import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { BCSCModals, ModalNavigation } from '@/bcsc-theme/types/navigators'
 import { BifoldLogger } from '@bifold/core'
 import { NetInfoState } from '@react-native-community/netinfo'
 import { SystemCheckStrategy } from './system-checks'
