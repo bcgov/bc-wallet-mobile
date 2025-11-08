@@ -25,7 +25,7 @@ jobs:
     name: Update Indy ledgers
     steps:
       - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
@@ -34,7 +34,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Cache app node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .yarn/cache
           # Cache will be invalidated if yarn.lock changes
@@ -49,7 +49,7 @@ jobs:
         run: node app/scripts/refresh-ledgers.cjs
 
       # note: picking a specific commit SHA to ensure the action is not updated unexpectedly and satisfies the SonarQube security requirements
-      - uses: stefanzweifel/git-auto-commit-action@778341af668090896ca464160c2def5d1d1a3eb0
+      - uses: stefanzweifel/git-auto-commit-action@28e16e81777b558cc906c8750092100bbb34c5e3
         with:
           # Optional. Commit message for the created commit.
           # Defaults to "Apply automatic changes"
