@@ -2,11 +2,10 @@ import { useEventListener } from '@/hooks/useEventListener'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
-import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
+import { runSystemChecks, SystemCheckNavigation, SystemCheckStrategy } from '@/services/system-checks/system-checks'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
-import { NavigationState } from '@react-navigation/native'
 import { navigationRef } from 'App'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,7 +13,6 @@ import { getBundleId } from 'react-native-device-info'
 import BCSCApiClient from '../api/client'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
-import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -22,14 +20,6 @@ const BCSC_BUILD_SUFFIX = '.servicescard'
 export enum SystemCheckScope {
   STARTUP = 'startup',
   MAIN_STACK = 'mainStack',
-}
-
-// Simple interface to abstract navigation methods needed for system checks
-export type SystemCheckNavigation = {
-  navigate: (screen: BCSCScreens | BCSCModals) => void
-  canGoBack: () => boolean
-  goBack: () => void
-  getState: () => NavigationState | undefined
 }
 
 /**

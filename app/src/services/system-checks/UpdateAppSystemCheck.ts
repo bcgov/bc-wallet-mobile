@@ -1,10 +1,9 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { SystemCheckNavigation } from '@/bcsc-theme/hooks/useSystemChecks'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction } from '@/store'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
-import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
+import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 /**
  * Checks if the application needs to be updated.

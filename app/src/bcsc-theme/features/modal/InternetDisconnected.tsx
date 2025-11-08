@@ -1,4 +1,3 @@
-import { ModalNavigation } from '@/bcsc-theme/types/navigators'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
@@ -17,7 +16,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 export const InternetDisconnected = (): JSX.Element => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const navigation = useNavigation<ModalNavigation>()
+  const navigation = useNavigation()
   const netInfo = useNetInfo()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 

@@ -1,8 +1,7 @@
-import { SystemCheckNavigation } from '@/bcsc-theme/hooks/useSystemChecks'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BifoldLogger } from '@bifold/core'
 import { NetInfoState } from '@react-native-community/netinfo'
-import { SystemCheckStrategy } from './system-checks'
+import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
 
 /**
  * System check strategy to verify internet connectivity.
@@ -34,7 +33,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    */
   private get isModalVisible() {
     const state = this.navigation.getState()
-    const currentRouteName = state.routes[state.index].name
+    const currentRouteName = state?.routes[state.index].name
     return currentRouteName === BCSCModals.InternetDisconnected
   }
 
