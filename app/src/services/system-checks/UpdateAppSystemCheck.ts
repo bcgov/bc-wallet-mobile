@@ -1,6 +1,7 @@
 import { ServerStatusResponseData } from '@/bcsc-theme/api/hooks/useConfigApi'
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
-import { BCSCModals, ModalNavigation } from '@/bcsc-theme/types/navigators'
+import { SystemCheckNavigation } from '@/bcsc-theme/hooks/useSystemChecks'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction } from '@/store'
 import { getBuildNumber, getVersion } from 'react-native-device-info'
 import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
@@ -12,15 +13,16 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
  *
  *   No update:
  *    A. App build is greater than or equal to min build
- *        ie: app: [3.0.1] (build [102]), min: [3.0.0] (build [101]) => **no update** (greater than)
+ *      ie: app: [3.0.0-101], minBuild: [100] => **no update** (build greater than)
+ *      ie: app: [3.0.0-101], minBuild: [101] => **no update** (build equal to)
  *
  *   Mandatory update:
  *    A. App build is less than min build and app version is *not* supported
- *        ie: app: [3.2.0], supported: [3.0.0, 3.1.0] => **mandatory update** (too new)
+ *      ie: app: [3.0.1-99], minBuild: [100], supported: [3.0.0] => **mandatory update** (version not supported)
  *
  *   Optional update:
  *    A. App build is less than min build and app version **is** supported
- *        ie: app: [2.9.9], min: [2.0.0] => **optional update** (greater than)
+ *      ie: app: [3.0.0-99], minBuild: [100], supported: [3.0.0] => **optional update** (version supported)
  *
  * @see {MandatoryUpdate.tsx} for the modal displayed during a mandatory update.
  *
@@ -31,10 +33,10 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
   private readonly serverStatus: ServerStatusResponseData
   private readonly appVersion: string
   private readonly appBuild: number
-  private readonly navigation: ModalNavigation
+  private readonly navigation: SystemCheckNavigation
   private readonly utils: SystemCheckUtils
 
-  constructor(serverStatus: ServerStatusResponseData, navigation: ModalNavigation, utils: SystemCheckUtils) {
+  constructor(serverStatus: ServerStatusResponseData, navigation: SystemCheckNavigation, utils: SystemCheckUtils) {
     this.serverStatus = serverStatus
     this.appVersion = getVersion()
     this.appBuild = Number(getBuildNumber())

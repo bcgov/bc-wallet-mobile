@@ -6,7 +6,7 @@ import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/s
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
-import { useNavigation } from '@react-navigation/native'
+import { NavigationState } from '@react-navigation/native'
 import { navigationRef } from 'App'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,7 +14,7 @@ import { getBundleId } from 'react-native-device-info'
 import BCSCApiClient from '../api/client'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
-import { ModalNavigation } from '../types/navigators'
+import { BCSCModals, BCSCScreens } from '../types/navigators'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -22,6 +22,14 @@ const BCSC_BUILD_SUFFIX = '.servicescard'
 export enum SystemCheckScope {
   STARTUP = 'startup',
   MAIN_STACK = 'mainStack',
+}
+
+// Simple interface to abstract navigation methods needed for system checks
+export type SystemCheckNavigation = {
+  navigate: (screen: BCSCScreens | BCSCModals) => void
+  canGoBack: () => boolean
+  goBack: () => void
+  getState: () => NavigationState | undefined
 }
 
 /**
@@ -41,18 +49,14 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const configApi = useConfigApi(client as BCSCApiClient)
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const navigation = useNavigation<ModalNavigation>()
   const ranSystemChecksRef = useRef(false)
 
   // Internet connectivity event listener
   useEventListener(() => {
     return NetInfo.addEventListener(async (netInfo) => {
-      // On connectivity change, wait for navigation to be ready before running the check
-      const navigationReady = await _waitForNavigationToBeReady()
+      const navigation = await getSystemCheckNavigation()
 
-      if (navigationReady) {
-        await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
-      }
+      await runSystemChecks([new InternetStatusSystemCheck(netInfo, navigation, logger)])
     })
   }, scope === SystemCheckScope.STARTUP)
 
@@ -61,7 +65,9 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
    */
   useEffect(() => {
     const runChecksByScope = async () => {
-      if (ranSystemChecksRef.current || !isClientReady || !client) {
+      const navigation = await getSystemCheckNavigation()
+
+      if (ranSystemChecksRef.current || !isClientReady || !client || !navigation) {
         return
       }
 
@@ -80,8 +86,6 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
           // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
-            // Wait for navigation to be ready before injecting navigation dependency
-            await _waitForNavigationToBeReady()
             startupChecks.push(new UpdateAppSystemCheck(serverStatus, navigation, utils))
           }
 
@@ -100,7 +104,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     runChecksByScope()
-  }, [client, configApi, dispatch, isClientReady, logger, navigation, scope, t, tokenApi])
+  }, [client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi])
 }
 
 /**
@@ -112,17 +116,17 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
  * @returns {Promise<true>} A promise that resolves to true when navigation is ready.
  */
 const _waitForNavigationToBeReady = (): Promise<true> => {
-  const MAX_WAIT_MS = 5000
+  const MAX_WAIT_MS = 5000 // Question: Is this timeout reasonable?
 
   return new Promise((resolve, reject) => {
-    if (navigationRef.isReady()) {
+    if (navigationRef.isReady() && navigationRef.getRootState()) {
       resolve(true)
     }
 
     const startTime = Date.now()
 
     const interval = setInterval(() => {
-      if (navigationRef.isReady()) {
+      if (navigationRef.isReady() && navigationRef.getRootState()) {
         clearInterval(interval)
         resolve(true)
       }
@@ -134,4 +138,20 @@ const _waitForNavigationToBeReady = (): Promise<true> => {
       }
     }, 10)
   })
+}
+
+/**
+ * Waits for navigation to be ready and returns the navigation interface stub for system checks.
+ *
+ * @returns {Promise<SystemCheckNavigation>} A promise that resolves to the system check navigation interface.
+ */
+const getSystemCheckNavigation = async (): Promise<SystemCheckNavigation> => {
+  await _waitForNavigationToBeReady()
+
+  return {
+    navigate: navigationRef.navigate,
+    canGoBack: navigationRef.canGoBack,
+    goBack: navigationRef.goBack,
+    getState: navigationRef.getState,
+  }
 }

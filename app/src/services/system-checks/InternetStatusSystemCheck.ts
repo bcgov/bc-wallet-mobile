@@ -1,4 +1,5 @@
-import { BCSCModals, ModalNavigation } from '@/bcsc-theme/types/navigators'
+import { SystemCheckNavigation } from '@/bcsc-theme/hooks/useSystemChecks'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BifoldLogger } from '@bifold/core'
 import { NetInfoState } from '@react-native-community/netinfo'
 import { SystemCheckStrategy } from './system-checks'
@@ -17,10 +18,10 @@ import { SystemCheckStrategy } from './system-checks'
  */
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
   private readonly netInfo: NetInfoState
-  private readonly navigation: ModalNavigation
+  private readonly navigation: SystemCheckNavigation
   private readonly logger: BifoldLogger
 
-  constructor(netInfo: NetInfoState, navigation: ModalNavigation, logger: BifoldLogger) {
+  constructor(netInfo: NetInfoState, navigation: SystemCheckNavigation, logger: BifoldLogger) {
     this.netInfo = netInfo
     this.navigation = navigation
     this.logger = logger
