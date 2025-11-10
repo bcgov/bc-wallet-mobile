@@ -182,6 +182,12 @@ const translation = {
         "ContentB": "Check that your device is connected to the internet or try again.",
         "RetryButton": "Retry",
       },
+      "MandatoryUpdate": {
+        "Header": "App update required",
+        "ContentA": "You must update this app to continue.",
+        "ContentB": "Please update to the latest version from the {{platformStore}}.",
+        "UpdateButton": "Go to {{platformStore}}",
+      }    
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
@@ -232,6 +238,9 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable",
+      },
+      "UpdateApp": {
+        "UpdateAvailableBannerTitle": "App update available",
       }
     },
     "ForgetAllPairings": {

@@ -12,14 +12,14 @@ import { useAgent } from '@credo-ts/react-hooks'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import { BCState } from '@/store'
 import PersonIssuance1 from '@assets/img/PersonIssuance1.svg'
 import PersonIssuance2 from '@assets/img/PersonIssuance2.svg'
-import { openLink } from '@utils/links'
+import { getBCSCAppStoreUrl, openLink } from '@utils/links'
 
 const links = {
   WhatIsPersonCredential: 'https://www2.gov.bc.ca/gov/content/governments/government-id/person-credential',
@@ -117,11 +117,7 @@ const PersonCredential: React.FC<PersonProps> = ({ navigation }) => {
 
   const getBCServicesCardApp = useCallback(() => {
     setAppInstalled(true)
-    const url =
-      Platform.OS === 'ios'
-        ? 'https://apps.apple.com/us/app/id1234298467'
-        : 'https://play.google.com/store/apps/details?id=ca.bc.gov.id.servicescard'
-    return Linking.openURL(url)
+    return Linking.openURL(getBCSCAppStoreUrl())
   }, [])
 
   return (

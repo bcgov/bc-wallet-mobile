@@ -226,7 +226,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   return (
     <View style={{ flex: 1, padding: Spacing.md }}>
       <KeyboardView keyboardAvoiding={false}>
-        <ThemedText variant={'headingOne'}>{cardType.evidence_type_label}</ThemedText>
+        <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
         <ThemedText style={{ paddingVertical: 16 }}>
           {t('Unified.EvidenceIDCollection.Heading1')}{' '}
           <Text style={{ fontWeight: 'bold' }}>{t('Unified.EvidenceIDCollection.Heading2')}</Text>{' '}
