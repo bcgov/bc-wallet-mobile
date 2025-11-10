@@ -35,6 +35,8 @@ export const BCThemeNames = {
 } as const
 
 // BCSC Constants
+export const BCSC_APPLE_STORE_URL = 'https://apps.apple.com/us/app/id1234298467'
+export const BCSC_GOOGLE_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=ca.bc.gov.id.servicescard'
 export const ACCOUNT_SERVICES_URL = 'https://id.gov.bc.ca/account/services'
 export const TERMS_OF_USE_URL = 'https://id.gov.bc.ca/static/termsOfUse.html'
 export const FEEDBACK_URL = 'https://id.gov.bc.ca/static/feedback.html'

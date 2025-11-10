@@ -1,14 +1,17 @@
-From 850fc75e5711e07d520db18eb45388d2fb57e962 Mon Sep 17 00:00:00 2001
-From: "Jason C. Leach" <jason.leach@fullboar.ca>
-Date: Mon, 25 Aug 2025 11:23:31 -0700
+From 9054961cd1c760b4598ffcb762e8d07e79d27151 Mon Sep 17 00:00:00 2001
+From: Bryce McMath <bryce.j.mcmath@gmail.com>
+Date: Fri, 7 Nov 2025 15:43:46 -0800
 Subject: [PATCH] chore: android app to bcsc dev
 
-Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
+Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
 ---
- app/android/app/build.gradle                  |   2 +-
+ app/android/app/BUCK                          |   4 +--
+ app/android/app/build.gradle                  |   4 +--
  app/android/app/google-services.json          |  30 ++++++++++--------
- app/android/app/src/main/AndroidManifest.xml  |   2 +-
+ app/android/app/src/main/AndroidManifest.xml  |   4 +--
  .../src/main/ic_launcher_mono-playstore.png   | Bin 0 -> 18297 bytes
+ .../java/ca/bc/gov/BCWallet/MainActivity.kt   |   2 +-
+ .../ca/bc/gov/BCWallet/MainApplication.kt     |   2 +-
  .../app/src/main/res/layout/launch_screen.xml |   2 +-
  .../res/mipmap-anydpi-v26/ic_launcher.xml     |   6 ----
  .../mipmap-anydpi-v26/ic_launcher_mono.xml    |   5 +++
@@ -45,7 +48,7 @@ Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
  .../ic_launcher_mono_round.webp               | Bin 0 -> 7468 bytes
  .../res/mipmap-xxxhdpi/ic_launcher_round.png  | Bin 12903 -> 0 bytes
  .../app/src/main/res/values/strings.xml       |   2 +-
- 40 files changed, 31 insertions(+), 29 deletions(-)
+ 43 files changed, 37 insertions(+), 35 deletions(-)
  create mode 100644 app/android/app/src/main/ic_launcher_mono-playstore.png
  delete mode 100644 app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
  create mode 100644 app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_mono.xml
@@ -82,10 +85,38 @@ Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
  create mode 100644 app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_mono_round.webp
  delete mode 100644 app/android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
 
+diff --git a/app/android/app/BUCK b/app/android/app/BUCK
+index 9e2f136e..5d0333df 100644
+--- a/app/android/app/BUCK
++++ b/app/android/app/BUCK
+@@ -35,12 +35,12 @@ android_library(
+ 
+ android_build_config(
+     name = "build_config",
+-    package = "ca.bc.gov.BCWallet",
++    package = "ca.bc.gov.id.servicescard.dev",
+ )
+ 
+ android_resource(
+     name = "res",
+-    package = "ca.bc.gov.BCWallet",
++    package = "ca.bc.gov.id.servicescard.dev",
+     res = "src/main/res",
+ )
+ 
 diff --git a/app/android/app/build.gradle b/app/android/app/build.gradle
-index 21529c9d..0fad9ae6 100644
+index f552ceb7..12914cd9 100644
 --- a/app/android/app/build.gradle
 +++ b/app/android/app/build.gradle
+@@ -97,7 +97,7 @@ def jscFlavor = 'org.webkit:android-jsc:+'
+ def nativeArchitectures = project.getProperties().get("reactNativeDebugArchitectures")
+ 
+ android {
+-    namespace 'ca.bc.gov.BCWallet'
++    namespace 'ca.bc.gov.id.servicescard.dev'
+     ndkVersion rootProject.ext.ndkVersion
+     compileSdkVersion rootProject.ext.compileSdkVersion
+     buildToolsVersion rootProject.ext.buildToolsVersion
 @@ -116,7 +116,7 @@ android {
      }
  
@@ -154,10 +185,16 @@ index a3a58790..d1ffc681 100644
        }
      }
 diff --git a/app/android/app/src/main/AndroidManifest.xml b/app/android/app/src/main/AndroidManifest.xml
-index 24c61bce..8ea1a764 100644
+index cd4c656c..dc895efe 100644
 --- a/app/android/app/src/main/AndroidManifest.xml
 +++ b/app/android/app/src/main/AndroidManifest.xml
-@@ -23,7 +23,7 @@
+@@ -1,4 +1,4 @@
+-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ca.bc.gov.BCWallet"
++<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ca.bc.gov.id.servicescard.dev"
+   xmlns:tools="http://schemas.android.com/tools">
+   <uses-feature android:name="android.hardware.camera" />
+   <uses-feature android:name="android.hardware.camera.autofocus" />
+@@ -37,7 +37,7 @@
    <application 
      android:name=".MainApplication"
      android:label="@string/app_name"
@@ -477,6 +514,26 @@ l|CQ4Js>c6Y_Hb#FoR8)aA>CG~1VV;r-quwsRkeQce*ngXk*5Fv
 literal 0
 HcmV?d00001
 
+diff --git a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
+index 8c3ac436..4893cd29 100644
+--- a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
++++ b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainActivity.kt
+@@ -1,4 +1,4 @@
+-package ca.bc.gov.BCWallet
++package ca.bc.gov.id.servicescard.dev
+ 
+ import android.content.Intent
+ import android.content.res.Configuration
+diff --git a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
+index b124e4f7..ea4b0efc 100644
+--- a/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
++++ b/app/android/app/src/main/java/ca/bc/gov/BCWallet/MainApplication.kt
+@@ -1,4 +1,4 @@
+-package ca.bc.gov.BCWallet
++package ca.bc.gov.id.servicescard.dev
+ 
+ import android.app.Application
+ import com.facebook.react.PackageList
 diff --git a/app/android/app/src/main/res/layout/launch_screen.xml b/app/android/app/src/main/res/layout/launch_screen.xml
 index aa1f8881..785a2d00 100644
 --- a/app/android/app/src/main/res/layout/launch_screen.xml
@@ -3048,5 +3105,5 @@ index 33b1443a..dc20330f 100644
 +    <string name="app_name">BC Services Card</string>
  </resources>
 -- 
-2.49.0
+2.50.1
 

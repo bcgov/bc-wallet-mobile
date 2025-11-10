@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
+import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
@@ -60,10 +61,20 @@ const OnboardingStack = (): JSX.Element => {
           headerShown: true,
         }}
       />
+
       {/* React navigation docs suggest modals at bottom of stack */}
       <Stack.Screen
         name={BCSCModals.InternetDisconnected}
         component={InternetDisconnected}
+        options={{
+          ...getDefaultModalOptions(t('Unified.BCSC')),
+          gestureEnabled: false, // Disable swipe to dismiss
+        }}
+      />
+
+      <Stack.Screen
+        name={BCSCModals.MandatoryUpdate}
+        component={MandatoryUpdate}
         options={{
           ...getDefaultModalOptions(t('Unified.BCSC')),
           gestureEnabled: false, // Disable swipe to dismiss
