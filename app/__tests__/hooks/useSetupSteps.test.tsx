@@ -197,7 +197,91 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.email.completed).toBe(false)
     })
 
-    it('should be completed when email and emailConfirmed are provided', () => {
+    it('should be focused when BCSC card (Photo/NonPhoto) has serial but no email after completing ID and address steps', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      store.bcsc.email = undefined
+      store.bcsc.deviceCode = 'ABCDEFGH'
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.id.completed).toBe(true)
+      expect(hook.result.current.id.focused).toBe(false)
+
+      expect(hook.result.current.address.completed).toBe(true)
+      expect(hook.result.current.address.focused).toBe(false)
+
+      expect(hook.result.current.email.focused).toBe(true)
+      expect(hook.result.current.email.completed).toBe(false)
+
+      expect(hook.result.current.verify.focused).toBe(false)
+      expect(hook.result.current.verify.completed).toBe(false)
+    })
+
+    it('should work with NonPhoto card type when serial available but email is falsey', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.NonPhoto
+      store.bcsc.serial = '123456789'
+      store.bcsc.email = ''
+      store.bcsc.deviceCode = 'ABCDEFGH'
+      store.bcsc.additionalEvidenceData = [
+        {
+          evidenceType: {
+            has_photo: true,
+          },
+        },
+      ] as any[]
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.id.completed).toBe(true)
+      expect(hook.result.current.id.focused).toBe(false)
+
+      expect(hook.result.current.address.completed).toBe(true)
+      expect(hook.result.current.address.focused).toBe(false)
+
+      expect(hook.result.current.email.focused).toBe(true)
+      expect(hook.result.current.email.completed).toBe(false)
+    })
+
+    it('should not be completed when email is provided but emailConfirmed is false', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      store.bcsc.email = 'steveBrule@email.com'
+      store.bcsc.deviceCode = 'ABCDEFGH'
+      store.bcsc.emailConfirmed = false
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.email.focused).toBe(true)
+      expect(hook.result.current.email.completed).toBe(false)
+    })
+
+    it('should not be completed when emailConfirmed is true but email is missing', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      store.bcsc.email = undefined
+      store.bcsc.deviceCode = 'ABCDEFGH'
+      store.bcsc.emailConfirmed = true
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      expect(hook.result.current.email.focused).toBe(true)
+      expect(hook.result.current.email.completed).toBe(false)
+    })
+
+    it('should be completed when both email and emailConfirmed are true (email may be set to BCSC_EMAIL_NOT_PROVIDED)', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
