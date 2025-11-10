@@ -82,9 +82,9 @@ const TransferQRScannerScreen: React.FC = () => {
         const permission = await requestPermission()
         if (!permission) {
           Alert.alert(
-            t('Unified.CameraDisclosure.CameraPermissionRequired'),
-            t('Unified.CameraDisclosure.CameraPermissionRequiredMessage2'),
-            [{ text: t('Unified.CameraDisclosure.OK'), onPress: () => navigator.goBack() }]
+            t('BCSC.CameraDisclosure.CameraPermissionRequired'),
+            t('BCSC.CameraDisclosure.CameraPermissionRequiredMessage2'),
+            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigator.goBack() }]
           )
           return
         }
@@ -106,7 +106,7 @@ const TransferQRScannerScreen: React.FC = () => {
       setScanError(null)
       const account = await getAccount()
       if (!account) {
-        setScanError(new QrCodeScanError(t('Unified.Scan.InvalidQrCode'), value, t('Unified.Scan.NoAccountFound')))
+        setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAccountFound')))
         return
       }
       try {
@@ -132,9 +132,7 @@ const TransferQRScannerScreen: React.FC = () => {
           })
 
           if (!response) {
-            setScanError(
-              new QrCodeScanError(t('Unified.Scan.InvalidQrCode'), value, t('Unified.Scan.NoAttestationResponse'))
-            )
+            setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoAttestationResponse')))
             return
           }
 
@@ -154,10 +152,10 @@ const TransferQRScannerScreen: React.FC = () => {
 
           navigator.navigate(BCSCScreens.VerificationSuccess)
         } else {
-          setScanError(new QrCodeScanError(t('Unified.Scan.InvalidQrCode'), value, t('Unified.Scan.NoDeviceCodeFound')))
+          setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoDeviceCodeFound')))
         }
       } catch (error) {
-        setScanError(new QrCodeScanError(t('Unified.Scan.InvalidQrCode'), value, (error as Error)?.message))
+        setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, (error as Error)?.message))
       } finally {
         setIsLoading(false)
       }
@@ -173,7 +171,7 @@ const TransferQRScannerScreen: React.FC = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ThemedText style={{ color: 'white' }}>{t('Unified.CameraDisclosure.CameraPermissionRequired')}</ThemedText>
+          <ThemedText style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</ThemedText>
         </View>
       </SafeAreaView>
     )
@@ -184,13 +182,13 @@ const TransferQRScannerScreen: React.FC = () => {
       <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
       <View style={styles.messageContainer}>
         <Icon name="qrcode-scan" size={40} style={styles.icon} />
-        <ThemedText variant="title">{t('Unified.Scan.WillScanAutomatically')}</ThemedText>
+        <ThemedText variant="title">{t('BCSC.Scan.WillScanAutomatically')}</ThemedText>
       </View>
       {scanError && (
         <DismissiblePopupModal
-          title={t('Unified.Scan.ErrorDetails')}
+          title={t('BCSC.Scan.ErrorDetails')}
           description={scanError.message}
-          onCallToActionLabel={t('Unified.Scan.Dismiss')}
+          onCallToActionLabel={t('BCSC.Scan.Dismiss')}
           onCallToActionPressed={() => setScanError(null)}
           onDismissPressed={() => setScanError(null)}
         />

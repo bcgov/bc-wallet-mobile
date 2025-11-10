@@ -65,15 +65,15 @@ const CallLoadingView = ({ onCancel, message }: CallLoadingViewProps) => {
         <ProgressBar dark={true} progressPercent={progressPercent} />
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingTwo'} style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
-            {t('Unified.VideoCall.Loading.OneMomentPlease')}
+            {t('BCSC.VideoCall.Loading.OneMomentPlease')}
           </ThemedText>
           <ThemedText style={{ marginTop: 2 * Spacing.xxl, textAlign: 'center' }}>
-            {message || t('Unified.VideoCall.Loading.SettingThingsUp')}
+            {message || t('BCSC.VideoCall.Loading.SettingThingsUp')}
           </ThemedText>
           <Mountains style={{ alignSelf: 'center', marginVertical: Spacing.md }} height={200} width={200} />
           {delayReached ? (
             <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-              {t('Unified.VideoCall.Loading.TakingLongerThanUsual')}
+              {t('BCSC.VideoCall.Loading.TakingLongerThanUsual')}
             </ThemedText>
           ) : null}
         </View>

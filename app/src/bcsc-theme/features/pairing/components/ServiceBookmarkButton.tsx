@@ -44,7 +44,7 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
     <View style={styles.container}>
       <View style={styles.row}>
         <View>
-          <ThemedText variant={'bold'}>{t('Unified.ManualPairing.BookmarkService')}</ThemedText>
+          <ThemedText variant={'bold'}>{t('BCSC.ManualPairing.BookmarkService')}</ThemedText>
           <ThemedText variant={'bold'}>{serviceName}</ThemedText>
         </View>
         <TouchableOpacity hitSlop={hitSlop} onPress={handleBookmarkPress}>

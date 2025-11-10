@@ -88,9 +88,9 @@ const MaskedCamera = ({
         const permission = await requestPermission()
         if (!permission) {
           Alert.alert(
-            t('Unified.CameraDisclosure.CameraPermissionRequired'),
-            t('Unified.CameraDisclosure.CameraPermissionRequiredMessage'),
-            [{ text: t('Unified.CameraDisclosure.OK'), onPress: () => navigation.goBack() }]
+            t('BCSC.CameraDisclosure.CameraPermissionRequired'),
+            t('BCSC.CameraDisclosure.CameraPermissionRequiredMessage'),
+            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigation.goBack() }]
           )
           return
         }
@@ -106,7 +106,7 @@ const MaskedCamera = ({
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{t('Unified.CameraDisclosure.CameraPermissionRequired')}</Text>
+          <Text style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</Text>
         </View>
       </SafeAreaView>
     )
@@ -116,7 +116,7 @@ const MaskedCamera = ({
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{t('Unified.CameraDisclosure.NoCameraAvailable', { device })}</Text>
+          <Text style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.NoCameraAvailable', { device })}</Text>
         </View>
       </SafeAreaView>
     )
@@ -127,7 +127,7 @@ const MaskedCamera = ({
   }
   const onError = (error: any) => {
     logger.error(`Camera error: ${error}`)
-    Alert.alert(t('Unified.CameraDisclosure.Error'), t('Unified.CameraDisclosure.ErrorMessage'))
+    Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'))
   }
 
   const takePhoto = async () => {
@@ -142,7 +142,7 @@ const MaskedCamera = ({
       }
     } catch (error) {
       logger.error(`Error taking photo: ${error}`)
-      Alert.alert(t('Unified.CameraDisclosure.Error'), t('Unified.CameraDisclosure.ErrorTakingPhoto'))
+      Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'))
     }
   }
 

@@ -38,31 +38,25 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'}>{t('Unified.SendVideo.PendingReview.Heading')}</ThemedText>
-        <ThemedText style={{ marginVertical: Spacing.md }}>
-          {t('Unified.SendVideo.PendingReview.Description1')}
-        </ThemedText>
+        <ThemedText variant={'headingThree'}>{t('BCSC.SendVideo.PendingReview.Heading')}</ThemedText>
+        <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description1')}</ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.SendVideo.PendingReview.Bullet1')}</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.PendingReview.Bullet1')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.SendVideo.PendingReview.Bullet2')}</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.PendingReview.Bullet2')}</ThemedText>
         </View>
-        <ThemedText style={{ marginBottom: Spacing.md }}>
-          {t('Unified.SendVideo.PendingReview.Description2')}
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>
-          {t('Unified.SendVideo.PendingReview.Description3')}
-        </ThemedText>
-        <ThemedText>{t('Unified.SendVideo.PendingReview.Description4')}</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description2')}</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description3')}</ThemedText>
+        <ThemedText>{t('BCSC.SendVideo.PendingReview.Description4')}</ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <Button
           testID={testIdWithKey('Ok')}
-          accessibilityLabel={t('Unified.SendVideo.PendingReview.ButtonText')}
-          title={t('Unified.SendVideo.PendingReview.ButtonText')}
+          accessibilityLabel={t('BCSC.SendVideo.PendingReview.ButtonText')}
+          title={t('BCSC.SendVideo.PendingReview.ButtonText')}
           buttonType={ButtonType.Primary}
           onPress={() => navigation.goBack()}
         />

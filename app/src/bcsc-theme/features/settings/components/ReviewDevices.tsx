@@ -57,43 +57,43 @@ export const ReviewDevices = ({ bannerId, maxDevices, handleClose, onManageDevic
     <SafeAreaView style={styles.container}>
       <IconButton
         buttonLocation={ButtonLocation.Left}
-        accessibilityLabel={t('Unified.SystemChecks.Devices.CloseButton')}
+        accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
         testID={testIdWithKey('CloseReviewDevices')}
         onPress={() => handleClose({ shouldAnimate: true })}
         icon={'close'}
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ThemedText variant={'headingThree'}>{t('Unified.SystemChecks.Devices.ReviewDevicesTitle')}</ThemedText>
+        <ThemedText variant={'headingThree'}>{t('BCSC.SystemChecks.Devices.ReviewDevicesTitle')}</ThemedText>
 
-        <ThemedText>{`${t('Unified.SystemChecks.Devices.ReviewDevicesContentA1')} ${maxDevices} ${t(
-          'Unified.SystemChecks.Devices.ReviewDevicesContentA2'
+        <ThemedText>{`${t('BCSC.SystemChecks.Devices.ReviewDevicesContentA1')} ${maxDevices} ${t(
+          'BCSC.SystemChecks.Devices.ReviewDevicesContentA2'
         )}`}</ThemedText>
 
-        <ThemedText>{t('Unified.SystemChecks.Devices.ReviewDevicesContentB')}</ThemedText>
+        <ThemedText>{t('BCSC.SystemChecks.Devices.ReviewDevicesContentB')}</ThemedText>
 
-        <ThemedText>{t('Unified.SystemChecks.Devices.ReviewDevicesContentC')}</ThemedText>
+        <ThemedText>{t('BCSC.SystemChecks.Devices.ReviewDevicesContentC')}</ThemedText>
 
-        <ThemedText>{t('Unified.SystemChecks.Devices.ReviewDevicesContentD')}</ThemedText>
+        <ThemedText>{t('BCSC.SystemChecks.Devices.ReviewDevicesContentD')}</ThemedText>
       </ScrollView>
 
       <View style={styles.buttonContainer}>
         <Button
-          title={t('Unified.SystemChecks.Devices.ManageDevicesButton')}
+          title={t('BCSC.SystemChecks.Devices.ManageDevicesButton')}
           buttonType={ButtonType.Primary}
           onPress={handleManageDevices}
           testID={testIdWithKey('ManageDevices')}
-          accessibilityLabel={t('Unified.SystemChecks.Devices.ManageDevicesButton')}
+          accessibilityLabel={t('BCSC.SystemChecks.Devices.ManageDevicesButton')}
         />
 
         <Button
-          title={t('Unified.SystemChecks.Devices.CloseButton')}
+          title={t('BCSC.SystemChecks.Devices.CloseButton')}
           buttonType={ButtonType.Secondary}
           onPress={() => {
             handleClose({ shouldAnimate: true })
             dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
           }}
           testID={testIdWithKey('Close')}
-          accessibilityLabel={t('Unified.SystemChecks.Devices.CloseButton')}
+          accessibilityLabel={t('BCSC.SystemChecks.Devices.CloseButton')}
         />
       </View>
     </SafeAreaView>

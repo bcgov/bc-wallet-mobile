@@ -22,7 +22,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   const { t } = useTranslation()
 
   if (!photoPath) {
-    throw new Error(t('Unified.PhotoReview.PathRequired'))
+    throw new Error(t('BCSC.PhotoReview.PathRequired'))
   }
 
   const styles = StyleSheet.create({

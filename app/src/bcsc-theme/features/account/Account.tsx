@@ -147,48 +147,45 @@ const Account: React.FC = () => {
               {userMeta.data?.user?.family_name}, {userMeta.data?.user.given_name}
             </ThemedText>
           </View>
-          <ThemedText style={styles.warning}>{t('Unified.Account.AccountInfo.Description')}</ThemedText>
+          <ThemedText style={styles.warning}>{t('BCSC.Account.AccountInfo.Description')}</ThemedText>
           <AccountField
-            label={t('Unified.Account.AccountInfo.AppExpiryDate')}
+            label={t('BCSC.Account.AccountInfo.AppExpiryDate')}
             value={userMeta.data?.user.card_expiry ?? ''}
           />
           <AccountField
-            label={t('Unified.Account.AccountInfo.AccountType')}
-            value={userMeta.data?.user.card_type ?? t('Unified.Account.AccountInfo.AccountTypeNonBCServicesCard')}
+            label={t('BCSC.Account.AccountInfo.AccountType')}
+            value={userMeta.data?.user.card_type ?? t('BCSC.Account.AccountInfo.AccountTypeNonBCServicesCard')}
           />
           <AccountField
-            label={t('Unified.Account.AccountInfo.Address')}
+            label={t('BCSC.Account.AccountInfo.Address')}
             value={userMeta.data?.user.address?.formatted ?? ''}
           />
-          <AccountField
-            label={t('Unified.Account.AccountInfo.DateOfBirth')}
-            value={userMeta.data?.user.birthdate ?? ''}
-          />
-          <AccountField label={t('Unified.Account.AccountInfo.EmailAddress')} value={store.bcsc.email ?? ''} />
+          <AccountField label={t('BCSC.Account.AccountInfo.DateOfBirth')} value={userMeta.data?.user.birthdate ?? ''} />
+          <AccountField label={t('BCSC.Account.AccountInfo.EmailAddress')} value={store.bcsc.email ?? ''} />
 
           <View style={styles.buttonsContainer}>
             <SectionButton
               onPress={handleMyDevicesPress}
               title={
                 typeof idTokenMetadata?.bcsc_devices_count === 'number'
-                  ? t('Unified.Account.AccountInfo.MyDevicesCount', { count: idTokenMetadata.bcsc_devices_count })
-                  : t('Unified.Account.AccountInfo.MyDevices')
+                  ? t('BCSC.Account.AccountInfo.MyDevicesCount', { count: idTokenMetadata.bcsc_devices_count })
+                  : t('BCSC.Account.AccountInfo.MyDevices')
               }
             />
             <SectionButton
               onPress={() => {
                 navigation.navigate(BCSCScreens.TransferAccountQRInformation)
               }}
-              title={t('Unified.Account.TransferAccount')}
+              title={t('BCSC.Account.TransferAccount')}
             />
             <SectionButton
               onPress={handleAllAccountDetailsPress}
-              title={t('Unified.Account.AccountDetails')}
-              description={t('Unified.Account.AccountDetailsDescription')}
+              title={t('BCSC.Account.AccountDetails')}
+              description={t('BCSC.Account.AccountDetailsDescription')}
             />
             <SectionButton
               onPress={() => navigation.navigate(BCSCScreens.RemoveAccountConfirmation)}
-              title={t('Unified.Account.RemoveAccount')}
+              title={t('BCSC.Account.RemoveAccount')}
             />
           </View>
         </View>

@@ -137,8 +137,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           onPress={() => {
             navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
           }}
-          title={t('Unified.SendVideo.InformationRequired.Heading1')}
-          actionLabel={t('Unified.SendVideo.InformationRequired.ActionLabel')}
+          title={t('BCSC.SendVideo.InformationRequired.Heading1')}
+          actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel')}
           thumbnailUri={store.bcsc.photoPath && `file://${store.bcsc.photoPath}`}
           style={{ borderBottomWidth: 0 }}
         />
@@ -146,8 +146,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           onPress={() => {
             navigation.navigate(BCSCScreens.VideoInstructions)
           }}
-          title={t('Unified.SendVideo.InformationRequired.Heading2')}
-          actionLabel={t('Unified.SendVideo.InformationRequired.ActionLabel2')}
+          title={t('BCSC.SendVideo.InformationRequired.Heading2')}
+          actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel2')}
           thumbnailUri={
             store.bcsc.videoPath && store.bcsc.videoThumbnailPath && `file://${store.bcsc.videoThumbnailPath}`
           }
@@ -156,10 +156,10 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
-          title={t('Unified.SendVideo.InformationRequired.ButtonText')}
+          title={t('BCSC.SendVideo.InformationRequired.ButtonText')}
           onPress={onPressSend}
           testID={'SendToServiceBCNow'}
-          accessibilityLabel={t('Unified.SendVideo.InformationRequired.ButtonText')}
+          accessibilityLabel={t('BCSC.SendVideo.InformationRequired.ButtonText')}
           disabled={!uploadedBoth || loading}
         >
           {loading && <ButtonLoading />}

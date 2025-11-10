@@ -47,8 +47,8 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
           buttonType={ButtonType.Primary}
           onPress={handleAccept}
           testID={testIdWithKey(`UsePhoto`)}
-          title={t('Unified.PhotoReview.UsePhoto')}
-          accessibilityLabel={t('Unified.PhotoReview.UsePhoto')}
+          title={t('BCSC.PhotoReview.UsePhoto')}
+          accessibilityLabel={t('BCSC.PhotoReview.UsePhoto')}
           disabled={loading}
         >
           {loading && <ButtonLoading />}
@@ -57,8 +57,8 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
           buttonType={ButtonType.Tertiary}
           onPress={onRetake}
           testID={testIdWithKey(`RetakePhoto`)}
-          title={t('Unified.PhotoReview.RetakePhoto')}
-          accessibilityLabel={t('Unified.PhotoReview.RetakePhoto')}
+          title={t('BCSC.PhotoReview.RetakePhoto')}
+          accessibilityLabel={t('BCSC.PhotoReview.RetakePhoto')}
         />
       </SafeAreaView>
     </View>

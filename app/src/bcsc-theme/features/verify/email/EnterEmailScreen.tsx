@@ -62,7 +62,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
 
   const handleSubmit = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setError(t('Unified.EmailConfirmation.EmailError'))
+      setError(t('BCSC.EmailConfirmation.EmailError'))
       return
     }
 
@@ -74,22 +74,22 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email, emailConfirmed: false }] })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
-      setError(t('Unified.EmailConfirmation.ErrorTitle'))
+      setError(t('BCSC.EmailConfirmation.ErrorTitle'))
 
-      logger.error(t('Unified.EmailConfirmation.ErrorTitle'), error)
+      logger.error(t('BCSC.EmailConfirmation.ErrorTitle'), error)
     } finally {
       setLoading(false)
     }
   }
 
   const handleSkip = () => {
-    Alert.alert(t('Unified.EnterEmail.EmailSkip'), t('Unified.EnterEmail.EmailSkipMessage'), [
+    Alert.alert(t('BCSC.EnterEmail.EmailSkip'), t('BCSC.EnterEmail.EmailSkipMessage'), [
       {
-        text: t('Unified.EnterEmail.EmailSkipButton'),
+        text: t('BCSC.EnterEmail.EmailSkipButton'),
         style: 'cancel',
       },
       {
-        text: t('Unified.EnterEmail.EmailSkipButton2'),
+        text: t('BCSC.EnterEmail.EmailSkipButton2'),
         onPress: () => {
           dispatch({
             type: BCDispatchAction.UPDATE_EMAIL,
@@ -106,12 +106,12 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       <View style={styles.pageContainer}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.EnterEmail.EnterEmailAddress')}
+            {t('BCSC.EnterEmail.EnterEmailAddress')}
           </ThemedText>
           {cardType !== BCSCCardType.Other ? (
-            <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.EnterEmail.EmailDescription1')}</ThemedText>
+            <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
           ) : null}
-          <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.EnterEmail.EmailDescription2')}</ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
           <EmailTextInput handleChangeEmail={handleChangeEmail} />
           {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
         </View>
@@ -129,8 +129,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             <Button
               buttonType={ButtonType.Secondary}
               onPress={handleSkip}
-              title={t('Unified.EnterEmail.Skip')}
-              accessibilityLabel={t('Unified.EnterEmail.Skip')}
+              title={t('BCSC.EnterEmail.Skip')}
+              accessibilityLabel={t('BCSC.EnterEmail.Skip')}
               testID={'SkipButton'}
             />
           ) : null}

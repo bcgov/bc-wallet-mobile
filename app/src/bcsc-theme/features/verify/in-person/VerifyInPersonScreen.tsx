@@ -60,7 +60,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       setError(false)
 
       if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
-        throw new Error(t('Unified.VerifyIdentity.DeviceCodeError'))
+        throw new Error(t('BCSC.VerifyIdentity.DeviceCodeError'))
       }
 
       const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
@@ -84,29 +84,29 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.VerifyIdentity.VerifyInPersonTitle')}
+          {t('BCSC.VerifyIdentity.VerifyInPersonTitle')}
         </ThemedText>
-        <ThemedText variant={'bold'}>{t('Unified.VerifyIdentity.WhereToGo')}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhereToGo')}</ThemedText>
         <Link
-          linkText={t('Unified.VerifyIdentity.WhereToGoLink')}
+          linkText={t('BCSC.VerifyIdentity.WhereToGoLink')}
           testID={testIdWithKey('ServiceBCLink')}
           onPress={() => null}
           style={{ marginBottom: Spacing.md }}
         />
-        <ThemedText variant={'bold'}>{t('Unified.VerifyIdentity.WhatToBring')}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhatToBring')}</ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.VerifyIdentity.ThisDevice')}</ThemedText>
+          <ThemedText>{t('BCSC.VerifyIdentity.ThisDevice')}</ThemedText>
         </View>
         <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.VerifyIdentity.YourBCServicesCard')}</ThemedText>
+          <ThemedText>{t('BCSC.VerifyIdentity.YourBCServicesCard')}</ThemedText>
         </View>
-        <ThemedText variant={'bold'}>{t('Unified.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
         <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
           {`${store.bcsc.userCode?.slice(0, 4)}-${store.bcsc.userCode?.slice(4, 8)}`}
         </ThemedText>
-        <ThemedText variant={'bold'}>{t('Unified.VerifyIdentity.YouMustCompleteThisBy')}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.YouMustCompleteThisBy')}</ThemedText>
         <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
           {store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}
         </ThemedText>
@@ -115,14 +115,14 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         <View style={{ marginBottom: Spacing.md }}>
           {error && (
             <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
-              {t('Unified.VerifyIdentity.YouHaveNotBeenVerified')}
+              {t('BCSC.VerifyIdentity.YouHaveNotBeenVerified')}
             </ThemedText>
           )}
           <Button
             buttonType={ButtonType.Primary}
             testID={testIdWithKey('Complete')}
-            accessibilityLabel={t('Unified.VerifyIdentity.Complete')}
-            title={t('Unified.VerifyIdentity.Complete')}
+            accessibilityLabel={t('BCSC.VerifyIdentity.Complete')}
+            title={t('BCSC.VerifyIdentity.Complete')}
             onPress={onPressComplete}
             disabled={loading}
           >
@@ -130,7 +130,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
           </Button>
         </View>
         <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-          {t('Unified.VerifyIdentity.CardSerialNumber', {
+          {t('BCSC.VerifyIdentity.CardSerialNumber', {
             serial: store.bcsc.serial ?? store.bcsc.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
           })}
         </ThemedText>

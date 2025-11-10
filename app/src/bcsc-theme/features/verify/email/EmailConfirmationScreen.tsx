@@ -84,7 +84,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
 
   const handleSubmit = async () => {
     if (!code || code.length !== 6) {
-      setError(t('Unified.EmailConfirmation.CodeError'))
+      setError(t('BCSC.EmailConfirmation.CodeError'))
       return
     }
 
@@ -101,7 +101,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         })
       )
     } catch (error) {
-      setError(t('Unified.EmailConfirmation.ErrorTitle'))
+      setError(t('BCSC.EmailConfirmation.ErrorTitle'))
     } finally {
       setLoading(false)
     }
@@ -116,13 +116,13 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       setId(email_address_id)
       Toast.show({
         type: ToastType.Success,
-        text1: t('Unified.EmailConfirmation.CodeResent'),
+        text1: t('BCSC.EmailConfirmation.CodeResent'),
         bottomOffset: Spacing.lg,
         autoHide: true,
         visibilityTime: 1500,
       })
     } catch (error) {
-      setError(t('Unified.EmailConfirmation.ErrorResendingCode'))
+      setError(t('BCSC.EmailConfirmation.ErrorResendingCode'))
     } finally {
       setResendLoading(false)
     }
@@ -137,11 +137,9 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     }
 
     Linking.openURL(url).catch(() => {
-      Alert.alert(
-        t('Unified.EmailConfirmation.UnableToOpenEmail'),
-        t('Unified.EmailConfirmation.UnableToOpenEmailMessage'),
-        [{ text: t('Global.OK') }]
-      )
+      Alert.alert(t('BCSC.EmailConfirmation.UnableToOpenEmail'), t('BCSC.EmailConfirmation.UnableToOpenEmailMessage'), [
+        { text: t('Global.OK') },
+      ])
     })
   }
 
@@ -150,10 +148,10 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       <View style={styles.pageContainer}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.EmailConfirmation.VerifyYourEmail')}
+            {t('BCSC.EmailConfirmation.VerifyYourEmail')}
           </ThemedText>
           <ThemedText>
-            {t('Unified.EmailConfirmation.EnterTheSixDigitCode')}{' '}
+            {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')}{' '}
             <ThemedText variant={'bold'}>{store.bcsc.email}</ThemedText>
           </ThemedText>
           <CodeField
@@ -191,8 +189,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
             <Button
               buttonType={ButtonType.Secondary}
               onPress={handleResendCode}
-              title={t('Unified.EmailConfirmation.ResendCode')}
-              accessibilityLabel={t('Unified.EmailConfirmation.ResendCode')}
+              title={t('BCSC.EmailConfirmation.ResendCode')}
+              accessibilityLabel={t('BCSC.EmailConfirmation.ResendCode')}
               testID={'ResendCodeButton'}
             >
               {resendLoading && <ButtonLoading />}
@@ -202,8 +200,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
             <Button
               buttonType={ButtonType.Secondary}
               onPress={handleGoToEmail}
-              title={t('Unified.EmailConfirmation.GoToEmail')}
-              accessibilityLabel={t('Unified.EmailConfirmation.GoToEmail')}
+              title={t('BCSC.EmailConfirmation.GoToEmail')}
+              accessibilityLabel={t('BCSC.EmailConfirmation.GoToEmail')}
               testID={'GoToEmailButton'}
             />
           </View>

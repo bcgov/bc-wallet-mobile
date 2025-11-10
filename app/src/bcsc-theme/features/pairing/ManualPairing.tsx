@@ -49,9 +49,9 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
 
   const onSubmit = async () => {
     if (code.length < 6) {
-      setMessage(t('Unified.ManualPairing.InvalidPairingCodeMessage'))
+      setMessage(t('BCSC.ManualPairing.InvalidPairingCodeMessage'))
     } else if (!code.length) {
-      setMessage(t('Unified.ManualPairing.EmptyPairingCodeMessage'))
+      setMessage(t('BCSC.ManualPairing.EmptyPairingCodeMessage'))
     } else {
       try {
         setLoading(true)
@@ -66,7 +66,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
         })
       } catch (error) {
         logger.error(`Error submitting pairing code: ${error}`)
-        setMessage(t('Unified.ManualPairing.FailedToSubmitPairingCodeMessage'))
+        setMessage(t('BCSC.ManualPairing.FailedToSubmitPairingCodeMessage'))
       } finally {
         setLoading(false)
       }
@@ -78,10 +78,10 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
       <View style={styles.container}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.ManualPairing.EnterPairingCodeTitle')}
+            {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
           </ThemedText>
           <ThemedText style={{ marginBottom: Spacing.md }}>
-            {t('Unified.ManualPairing.EnterPairingCodeMessage')}
+            {t('BCSC.ManualPairing.EnterPairingCodeMessage')}
           </ThemedText>
           <PairingCodeTextInput handleChangeCode={handleChangeCode} />
           <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>

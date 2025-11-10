@@ -89,16 +89,16 @@ export const ResidentialAddressScreen = () => {
     const errors: ResidentialAddressFormErrors = {}
 
     if (!values.streetAddress) {
-      errors.streetAddress = t('Unified.Address.StreetAddressRequired')
+      errors.streetAddress = t('BCSC.Address.StreetAddressRequired')
     }
     if (!values.city) {
-      errors.city = t('Unified.Address.CityRequired')
+      errors.city = t('BCSC.Address.CityRequired')
     }
     if (!getProvinceCode(values.province)) {
-      errors.province = t('Unified.Address.ProvinceInvalid')
+      errors.province = t('BCSC.Address.ProvinceInvalid')
     }
     if (!isCanadianPostalCode(values.postalCode)) {
-      errors.postalCode = t('Unified.Address.PostalCodeInvalid')
+      errors.postalCode = t('BCSC.Address.PostalCodeInvalid')
     }
 
     return errors
@@ -144,7 +144,7 @@ export const ResidentialAddressScreen = () => {
         name: store.bcsc.userMetadata?.name,
       })
 
-      throw new Error(t('Unified.Address.MissingPrerequisiteAttributes'))
+      throw new Error(t('BCSC.Address.MissingPrerequisiteAttributes'))
     }
 
     // TODO (MD): Handle if this request fails, but is not a registration error. ie: failed network request
@@ -164,7 +164,7 @@ export const ResidentialAddressScreen = () => {
     // device previously registered, but no deviceCode found in store
     if (deviceAuth === null && !store.bcsc.deviceCode) {
       logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found')
-      throw new Error(t('Unified.Address.NoDeviceCodeFound'))
+      throw new Error(t('BCSC.Address.NoDeviceCodeFound'))
     }
 
     Toast.show({
@@ -202,45 +202,45 @@ export const ResidentialAddressScreen = () => {
       <KeyboardView>
         <ScrollView contentContainerStyle={styles.scrollView}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.Address.Heading')}
+            {t('BCSC.Address.Heading')}
           </ThemedText>
 
-          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.Address.Paragraph')}</ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Address.Paragraph')}</ThemedText>
 
           <InputWithValidation
             id={'streetAddress1'}
-            label={t('Unified.Address.StreetAddressLabel')}
+            label={t('BCSC.Address.StreetAddressLabel')}
             value={formState.streetAddress}
             onChange={(value) => handleChange('streetAddress', value)}
             error={formErrors.streetAddress}
-            subtext={t('Unified.Address.StreetAddressSubtext')}
+            subtext={t('BCSC.Address.StreetAddressSubtext')}
           />
 
           <InputWithValidation
             id={'city'}
-            label={t('Unified.Address.CityLabel')}
+            label={t('BCSC.Address.CityLabel')}
             value={formState.city}
             onChange={(value) => handleChange('city', value)}
             error={formErrors.city}
-            subtext={t('Unified.Address.CitySubtext')}
+            subtext={t('BCSC.Address.CitySubtext')}
           />
 
           <InputWithValidation
             id={'province'}
-            label={t('Unified.Address.ProvinceLabel')}
+            label={t('BCSC.Address.ProvinceLabel')}
             value={formState.province}
             onChange={(value) => handleChange('province', value)}
             error={formErrors.province}
-            subtext={t('Unified.Address.ProvinceSubtext')}
+            subtext={t('BCSC.Address.ProvinceSubtext')}
           />
 
           <InputWithValidation
             id={'postalCode'}
-            label={t('Unified.Address.PostalCodeLabel')}
+            label={t('BCSC.Address.PostalCodeLabel')}
             value={formState.postalCode}
             onChange={(value) => handleChange('postalCode', value)}
             error={formErrors.postalCode}
-            subtext={t('Unified.Address.PostalCodeSubtext')}
+            subtext={t('BCSC.Address.PostalCodeSubtext')}
           />
 
           <View style={{ marginTop: 48, width: '100%' }}>

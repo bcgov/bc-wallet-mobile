@@ -17,7 +17,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { busy, formattedHours } = route.params
-  const serviceHours = formattedHours || t('Unified.VideoCall.DefaultHours')
+  const serviceHours = formattedHours || t('BCSC.VideoCall.DefaultHours')
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -51,27 +51,25 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }}>
-          {busy
-            ? t('Unified.VideoCall.CallBusyOrClosed.AllAgentsBusy')
-            : t('Unified.VideoCall.CallBusyOrClosed.CallUsLater')}
+          {busy ? t('BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusy') : t('BCSC.VideoCall.CallBusyOrClosed.CallUsLater')}
         </ThemedText>
 
         <ThemedText style={{ marginBottom: Spacing.lg }}>
           {busy
-            ? t('Unified.VideoCall.CallBusyOrClosed.AllAgentsBusyMessage')
-            : t('Unified.VideoCall.CallBusyOrClosed.CurrentlyClosedMessage')}
+            ? t('BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusyMessage')
+            : t('BCSC.VideoCall.CallBusyOrClosed.CurrentlyClosedMessage')}
         </ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.sm }}>
-          {t('Unified.VideoCall.CallBusyOrClosed.HoursOfService')}
+          {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
         </ThemedText>
         <ThemedText style={{ marginBottom: Spacing.md }}>{serviceHours}</ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          {t('Unified.VideoCall.CallBusyOrClosed.Reminder')}
+          {t('BCSC.VideoCall.CallBusyOrClosed.Reminder')}
         </ThemedText>
         <ThemedText>
-          {t('Unified.VideoCall.CallBusyOrClosed.AddCardAgainReminder', {
+          {t('BCSC.VideoCall.CallBusyOrClosed.AddCardAgainReminder', {
             date: store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
               month: 'long',
               day: 'numeric',
@@ -85,8 +83,8 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
         <Button
           buttonType={ButtonType.Primary}
           testID={testIdWithKey('SendVideo')}
-          accessibilityLabel={t('Unified.VideoCall.CallBusyOrClosed.SendVideoInstead')}
-          title={t('Unified.VideoCall.CallBusyOrClosed.SendVideoInstead')}
+          accessibilityLabel={t('BCSC.VideoCall.CallBusyOrClosed.SendVideoInstead')}
+          title={t('BCSC.VideoCall.CallBusyOrClosed.SendVideoInstead')}
           onPress={onPressSendVideo}
         />
       </View>

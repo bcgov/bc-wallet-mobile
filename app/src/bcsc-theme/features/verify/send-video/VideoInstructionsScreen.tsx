@@ -52,10 +52,10 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} />
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }}>
-          {t('Unified.SendVideo.VideoInstructions.Heading1')}
+          {t('BCSC.SendVideo.VideoInstructions.Heading1')}
         </ThemedText>
         <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>
-          {t('Unified.SendVideo.VideoInstructions.Heading2')}
+          {t('BCSC.SendVideo.VideoInstructions.Heading2')}
         </ThemedText>
         {store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
           <Fragment key={id}>
@@ -67,31 +67,31 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         ))}
         <View style={styles.lineBreak} />
         <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.xl }}>
-          {t('Unified.SendVideo.VideoInstructions.Heading3')}
+          {t('BCSC.SendVideo.VideoInstructions.Heading3')}
         </ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.SendVideo.VideoInstructions.Bullet1')}</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet1')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.SendVideo.VideoInstructions.Bullet2')}</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet2')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.SendVideo.VideoInstructions.Bullet3')}</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet3')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.SendVideo.VideoInstructions.Bullet4')}</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet4')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.SendVideo.VideoInstructions.Bullet5')}</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet5')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.SendVideo.VideoInstructions.Bullet6')}</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet6')}</ThemedText>
         </View>
         <Icon
           name={'alert'}
@@ -100,16 +100,16 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
           style={{ marginVertical: Spacing.lg, alignSelf: 'center' }}
         />
         <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xxl, textAlign: 'center' }}>
-          {t('Unified.SendVideo.VideoInstructions.Heading4')}
+          {t('BCSC.SendVideo.VideoInstructions.Heading4')}
         </ThemedText>
         <Button
           buttonType={ButtonType.Primary}
-          title={t('Unified.SendVideo.VideoInstructions.StartRecordingButton')}
+          title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
           onPress={() => {
             navigation.navigate(BCSCScreens.TakeVideo)
           }}
           testID={'StartRecordingButton'}
-          accessibilityLabel={t('Unified.SendVideo.VideoInstructions.StartRecordingButton')}
+          accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
         />
       </ScrollView>
     </SafeAreaView>

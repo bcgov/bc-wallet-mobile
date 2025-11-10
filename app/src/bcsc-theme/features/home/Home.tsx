@@ -27,7 +27,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
       url: `${apiClient.baseURL}/account/embedded/devices`,
-      title: t('Unified.Screens.ManageDevices'),
+      title: t('BCSC.Screens.ManageDevices'),
     })
   }, [apiClient.baseURL, navigation, t])
 
@@ -71,14 +71,14 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
           <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
           <View style={styles.buttonsContainer}>
             <SectionButton
-              title={t('Unified.Home.WhereToUseTitle')}
-              description={t('Unified.Home.WhereToUseDescription')}
+              title={t('BCSC.Home.WhereToUseTitle')}
+              description={t('BCSC.Home.WhereToUseDescription')}
               style={{ marginBottom: Spacing.md }}
               onPress={handleWhereToUsePress}
             />
             <SectionButton
-              title={t('Unified.Home.LogInFromComputerTitle')}
-              description={t('Unified.Home.LogInFromComputerDescription')}
+              title={t('BCSC.Home.LogInFromComputerTitle')}
+              description={t('BCSC.Home.LogInFromComputerDescription')}
               onPress={handlePairingCodePress}
             />
           </View>

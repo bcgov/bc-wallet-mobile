@@ -145,8 +145,8 @@ const translation = {
     "SavedServices": "Saved Services (PT-BR)",
     "NoSavedServices": "No saved services (PT-BR)",
   },
-  "Unified": {
-    "BCSC": "BC Services Card (PT-BR)",
+  "BCSC": {
+    "Title": "BC Services Card (PT-BR)",
     "Screens": {
       "Settings": "Menu (PT-BR)",
       "SetupTypes": "BC Services Card (PT-BR)",

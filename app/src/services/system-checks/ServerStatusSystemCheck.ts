@@ -45,7 +45,7 @@ export class ServerStatusSystemCheck implements SystemCheckStrategy {
           id: BCSCBanner.IAS_SERVER_UNAVAILABLE,
           title:
             this.serverStatus?.statusMessage ??
-            this.utils.translation('Unified.SystemChecks.ServerStatus.UnavailableBannerTitle'),
+            this.utils.translation('BCSC.SystemChecks.ServerStatus.UnavailableBannerTitle'),
           type: 'error',
           variant: 'summary',
           dismissible: true,

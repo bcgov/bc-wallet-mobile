@@ -118,13 +118,13 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <ThemedText style={{ marginBottom: Spacing.sm }}>
-          {t('Unified.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
+          {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
         </ThemedText>
         <View style={styles.lineBreak} />
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.Birthdate.Heading')}
+          {t('BCSC.Birthdate.Heading')}
         </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.Birthdate.Paragraph')}</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
         <View style={{ flex: 1, alignItems: 'center' }}>
           <DatePicker
             theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}

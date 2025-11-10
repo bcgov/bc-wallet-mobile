@@ -31,18 +31,16 @@ const MismatchedSerialScreen = () => {
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
-        {t('Unified.MismatchedSerial.Heading')}
+        {t('BCSC.MismatchedSerial.Heading')}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.lg }}>{t('Unified.MismatchedSerial.Description1')}</ThemedText>
-      <ThemedText variant={'bold'}>
-        {t('Unified.MismatchedSerial.SerialNumber', { serial: store.bcsc.serial })}
-      </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.lg }}>{t('BCSC.MismatchedSerial.Description1')}</ThemedText>
+      <ThemedText variant={'bold'}>{t('BCSC.MismatchedSerial.SerialNumber', { serial: store.bcsc.serial })}</ThemedText>
       <ThemedText variant={'bold'} style={{ marginBottom: Spacing.lg }}>
-        {t('Unified.MismatchedSerial.Birthdate', {
+        {t('BCSC.MismatchedSerial.Birthdate', {
           birthdate: store.bcsc.birthdate?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' }),
         })}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.lg }}>{t('Unified.MismatchedSerial.Description2')}</ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.lg }}>{t('BCSC.MismatchedSerial.Description2')}</ThemedText>
       <Image style={styles.image} source={{ uri: CARD_NOT_FOUND_IMAGE }} resizeMode={'contain'} />
     </SafeAreaView>
   )

@@ -46,29 +46,29 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
         <Image source={SCAN_ID_IMAGE} style={styles.image} />
         <View style={{ marginBottom: Spacing.md }}>
           <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>
-            {t('Unified.IDPhotoInformation.Heading')}
+            {t('BCSC.IDPhotoInformation.Heading')}
           </ThemedText>
           <BulletPointWithText
-            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet1')}
+            translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet1')}
             iconColor={ColorPalette.grayscale.white}
           />
           <BulletPointWithText
-            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet2')}
+            translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet2')}
             iconColor={ColorPalette.grayscale.white}
           />
           <BulletPointWithText
-            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet3')}
+            translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet3')}
             iconColor={ColorPalette.grayscale.white}
           />
           <BulletPointWithText
-            translationKey={t('Unified.IDPhotoInformation.IDPhotoInstructionsBullet4')}
+            translationKey={t('BCSC.IDPhotoInformation.IDPhotoInstructionsBullet4')}
             iconColor={ColorPalette.grayscale.white}
           />
         </View>
       </ScrollView>
       <Button
-        title={t('Unified.IDPhotoInformation.TakePhoto')}
-        accessibilityLabel={t('Unified.IDPhotoInformation.TakePhoto')}
+        title={t('BCSC.IDPhotoInformation.TakePhoto')}
+        accessibilityLabel={t('BCSC.IDPhotoInformation.TakePhoto')}
         testID={testIdWithKey('IDPhotoInformationTakePhoto')}
         onPress={() => {
           navigation.navigate(BCSCScreens.EvidenceCapture, {

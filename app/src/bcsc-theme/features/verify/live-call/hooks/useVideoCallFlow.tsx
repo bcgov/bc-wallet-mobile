@@ -122,7 +122,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
     try {
       if (!session) {
-        throw new Error(t('Unified.VideoCall.MissingSession'))
+        throw new Error(t('BCSC.VideoCall.MissingSession'))
       }
 
       await video.endVideoSession(session.session_id)
@@ -144,7 +144,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         if (session && clientCallId) {
           await video.updateVideoCallStatus(session.session_id, clientCallId, 'call_in_call')
         } else {
-          throw new Error(t('Unified.VideoCall.MissingSessionOrCallId'))
+          throw new Error(t('BCSC.VideoCall.MissingSessionOrCallId'))
         }
       } catch {
         // Just warn as one missed keep alive won't impact the call

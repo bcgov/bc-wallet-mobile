@@ -96,14 +96,14 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
   const handleCheckStatus = async () => {
     if (!store.bcsc.verificationRequestId) {
-      throw new Error(t('Unified.Steps.VerificationIDMissing'))
+      throw new Error(t('BCSC.Steps.VerificationIDMissing'))
     }
 
     const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId)
 
     if (status === 'verified') {
       if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
-        throw new Error(t('Unified.Steps.DeviceCodeOrUserCodeMissing'))
+        throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
       }
 
       const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
@@ -119,9 +119,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }
 
   const handleCancelVerification = async () => {
-    Alert.alert(t('Unified.Steps.AreYouSure'), t('Unified.Steps.YourVerificationRequestWillBeDeleted'), [
+    Alert.alert(t('BCSC.Steps.AreYouSure'), t('BCSC.Steps.YourVerificationRequestWillBeDeleted'), [
       {
-        text: t('Unified.Steps.DeleteVerifyRequest'),
+        text: t('BCSC.Steps.DeleteVerifyRequest'),
         onPress: async () => {
           try {
             await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId!)
@@ -148,10 +148,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    */
   const getVerificationStep1Subtext = useCallback((): string[] => {
     if (step.nickname.completed && store.bcsc.selectedNickname) {
-      return [`${t('Unified.NicknameAccount.AccountName')}: ${store.bcsc.selectedNickname}`]
+      return [`${t('BCSC.NicknameAccount.AccountName')}: ${store.bcsc.selectedNickname}`]
     }
 
-    return [t('Unified.NicknameAccount.AccountName')]
+    return [t('BCSC.NicknameAccount.AccountName')]
   }, [t, step.nickname.completed, store])
 
   /**
@@ -164,13 +164,13 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
     // if the bcsc card is registered, show the bcsc serial number
     if (step.id.completed && store.bcsc.serial) {
-      cards.push(t('Unified.Steps.GetVerificationStep2Subtext1', { serial: store.bcsc.serial }))
+      cards.push(t('BCSC.Steps.GetVerificationStep2Subtext1', { serial: store.bcsc.serial }))
     }
 
     // if the user has added additional evidence, add each to the list
     for (const evidence of store.bcsc.additionalEvidenceData) {
       cards.push(
-        t('Unified.Steps.GetVerificationStep2Subtext2', {
+        t('BCSC.Steps.GetVerificationStep2Subtext2', {
           evidenceType: evidence.evidenceType,
           documentNumber: evidence.documentNumber,
         })
@@ -182,7 +182,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     }
 
     // otherwise, show the default text
-    return [t('Unified.Steps.ScanOrTakePhotos')]
+    return [t('BCSC.Steps.ScanOrTakePhotos')]
   }, [store.bcsc.additionalEvidenceData, store.bcsc.serial, step.id.completed, t])
 
   /**
@@ -195,16 +195,16 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    */
   const getVerificationStep3Subtext = useCallback(() => {
     if (step.id.completed && store.bcsc.serial) {
-      return t('Unified.Steps.GetVerificationStep3Subtext1')
+      return t('BCSC.Steps.GetVerificationStep3Subtext1')
     }
 
     if (store.bcsc.userMetadata?.address && store.bcsc.deviceCode) {
-      return t('Unified.Steps.GetVerificationStep3Subtext2', {
+      return t('BCSC.Steps.GetVerificationStep3Subtext2', {
         address: formatAddressForDisplay(store.bcsc.userMetadata.address),
       })
     }
 
-    return t('Unified.Steps.GetVerificationStep3Subtext3')
+    return t('BCSC.Steps.GetVerificationStep3Subtext3')
   }, [step.id.completed, store.bcsc.serial, store.bcsc.userMetadata?.address, store.bcsc.deviceCode, t])
 
   /**
@@ -219,14 +219,14 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         month: 'long',
         year: 'numeric',
       })
-      return t('Unified.Steps.GetVerificationStep5Subtext1', { expirationDate })
+      return t('BCSC.Steps.GetVerificationStep5Subtext1', { expirationDate })
     }
 
     if (step.id.nonPhotoBcscNeedsAdditionalCard) {
-      return t('Unified.Steps.GetVerificationStep5Subtext2')
+      return t('BCSC.Steps.GetVerificationStep5Subtext2')
     }
 
-    return t('Unified.Steps.GetVerificationStep5Subtext3')
+    return t('BCSC.Steps.GetVerificationStep5Subtext3')
   }, [step.verify.focused, step.id.nonPhotoBcscNeedsAdditionalCard, store.bcsc.deviceCodeExpiresAt, t])
 
   return (
@@ -235,7 +235,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 1: Nickname Account */}
 
         <SetupStep
-          title={t('Unified.Steps.Step1')}
+          title={t('BCSC.Steps.Step1')}
           subtext={getVerificationStep1Subtext()}
           isComplete={step.nickname.completed}
           isFocused={step.nickname.focused}
@@ -249,7 +249,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 2: Identification submission */}
 
         <SetupStep
-          title={t('Unified.Steps.Step2')}
+          title={t('BCSC.Steps.Step2')}
           subtext={getVerificationStep2Subtext()}
           isComplete={step.id.completed}
           isFocused={step.id.focused}
@@ -274,14 +274,14 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               <View>
                 <View style={styles.addSecondIdTextContainer}>
                   <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>
-                    {t('Unified.Steps.AddSecondIdText')}
+                    {t('BCSC.Steps.AddSecondIdText')}
                   </ThemedText>
                   <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
                 </View>
                 {
                   // QUESTION (MD): Do we want the same for the non bcsc card verification?
                   store.bcsc.cardType === BCSCCardType.NonPhoto ? (
-                    <ThemedText>{t('Unified.Steps.AdditionalIdentificationRequired')}</ThemedText>
+                    <ThemedText>{t('BCSC.Steps.AdditionalIdentificationRequired')}</ThemedText>
                   ) : null
                 }
               </View>
@@ -294,7 +294,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 3: Residential Address */}
 
         <SetupStep
-          title={t('Unified.Steps.Step3')}
+          title={t('BCSC.Steps.Step3')}
           subtext={[getVerificationStep3Subtext()]}
           isComplete={step.address.completed}
           isFocused={step.address.focused}
@@ -307,7 +307,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 4: Email Address */}
 
         <SetupStep
-          title={t('Unified.Steps.Step4')}
+          title={t('BCSC.Steps.Step4')}
           subtext={[]}
           isComplete={step.email.completed}
           isFocused={step.email.focused}
@@ -318,17 +318,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               {step.email.completed ? (
                 <>
                   <ThemedText style={{ color: TextTheme.normal.color }}>
-                    {t('Unified.Steps.StoredEmail', { email: store.bcsc.email })}
+                    {t('BCSC.Steps.StoredEmail', { email: store.bcsc.email })}
                   </ThemedText>
                   <TouchableOpacity
                     style={styles.contentEmailButton}
                     onPress={handleEmailStepPress}
                     testID={testIdWithKey('EditEmail')}
-                    accessibilityLabel={t('Unified.Steps.EditEmail')}
+                    accessibilityLabel={t('BCSC.Steps.EditEmail')}
                     hitSlop={hitSlop}
                   >
                     <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
-                      {t('Unified.Steps.EditEmail')}
+                      {t('BCSC.Steps.EditEmail')}
                     </ThemedText>
                   </TouchableOpacity>
                 </>
@@ -338,7 +338,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
                     color: step.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
                   }}
                 >
-                  {t('Unified.Steps.EmailAddress')}
+                  {t('BCSC.Steps.EmailAddress')}
                 </ThemedText>
               )}
             </View>
@@ -350,7 +350,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {/* SETUP STEP 5: Identity Verification */}
 
         <SetupStep
-          title={t('Unified.Steps.Step5')}
+          title={t('BCSC.Steps.Step5')}
           subtext={[getVerificationStep5Subtext()]}
           isComplete={step.verify.completed}
           isFocused={step.verify.focused}
@@ -375,7 +375,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               onPress={handleCheckStatus}
             >
               <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
-                {t('Unified.Steps.CheckStatus')}
+                {t('BCSC.Steps.CheckStatus')}
               </ThemedText>
               <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
             </TouchableOpacity>
@@ -395,7 +395,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               onPress={handleCancelVerification}
             >
               <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
-                {t('Unified.Steps.ChooseAnotherWayToVerify')}
+                {t('BCSC.Steps.ChooseAnotherWayToVerify')}
               </ThemedText>
               <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
             </TouchableOpacity>
@@ -404,7 +404,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <View style={styles.itemSeparator} />
         <View style={{ padding: Spacing.md }}>
           <Button
-            title={t('Unified.Steps.ResetData')}
+            title={t('BCSC.Steps.ResetData')}
             onPress={async () => {
               const result = await factoryReset()
 
@@ -413,7 +413,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               }
             }}
             testID={testIdWithKey('ResetData')}
-            accessibilityLabel={t('Unified.Steps.ResetData')}
+            accessibilityLabel={t('BCSC.Steps.ResetData')}
             buttonType={ButtonType.Secondary}
           />
         </View>

@@ -50,29 +50,29 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Image source={{ uri: SELFIE_IMAGE }} style={styles.image} />
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.PhotoInstructions.Heading')}
+          {t('BCSC.PhotoInstructions.Heading')}
         </ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.PhotoInstructions.Bullet1')}</ThemedText>
+          <ThemedText>{t('BCSC.PhotoInstructions.Bullet1')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.PhotoInstructions.Bullet2')}</ThemedText>
+          <ThemedText>{t('BCSC.PhotoInstructions.Bullet2')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.PhotoInstructions.Bullet3')}</ThemedText>
+          <ThemedText>{t('BCSC.PhotoInstructions.Bullet3')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.PhotoInstructions.Bullet4')}</ThemedText>
+          <ThemedText>{t('BCSC.PhotoInstructions.Bullet4')}</ThemedText>
         </View>
       </ScrollView>
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
-          title={t('Unified.PhotoInstructions.TakePhoto')}
+          title={t('BCSC.PhotoInstructions.TakePhoto')}
           onPress={() => {
             navigation.navigate(BCSCScreens.TakePhoto, {
               deviceSide: 'front',
@@ -82,7 +82,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
             })
           }}
           testID={'TakePhotoButton'}
-          accessibilityLabel={t('Unified.PhotoInstructions.TakePhoto')}
+          accessibilityLabel={t('BCSC.PhotoInstructions.TakePhoto')}
         />
       </View>
     </SafeAreaView>

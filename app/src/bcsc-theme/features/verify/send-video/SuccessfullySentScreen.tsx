@@ -12,11 +12,11 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
   const { t } = useTranslation()
   return (
     <StatusDetails
-      title={t('Unified.SendVideo.SuccessfullySent.Heading')}
-      description={t('Unified.SendVideo.SuccessfullySent.Description1')}
-      bullets={[t('Unified.SendVideo.SuccessfullySent.Bullet1'), t('Unified.SendVideo.SuccessfullySent.Bullet2')]}
-      extraText={t('Unified.SendVideo.SuccessfullySent.Description3')}
-      buttonText={t('Unified.SendVideo.SuccessfullySent.ButtonText')}
+      title={t('BCSC.SendVideo.SuccessfullySent.Heading')}
+      description={t('BCSC.SendVideo.SuccessfullySent.Description1')}
+      bullets={[t('BCSC.SendVideo.SuccessfullySent.Bullet1'), t('BCSC.SendVideo.SuccessfullySent.Bullet2')]}
+      extraText={t('BCSC.SendVideo.SuccessfullySent.Description3')}
+      buttonText={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
       onButtonPress={() =>
         navigation.dispatch(
           CommonActions.reset({

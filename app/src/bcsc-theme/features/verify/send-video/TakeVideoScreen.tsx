@@ -224,16 +224,14 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const onError = (error: any) => {
     // eslint-disable-next-line no-console
     console.error('Camera error:', error)
-    Alert.alert(t('Unified.SendVideo.TakeVideo.CameraError'), t('Unified.SendVideo.TakeVideo.CameraErrorMessage'))
+    Alert.alert(t('BCSC.SendVideo.TakeVideo.CameraError'), t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'))
   }
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
     return (
       <SafeAreaView style={styles.pageContainer}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>
-            {t('Unified.SendVideo.TakeVideo.CameraAndMicrophonePermissionsRequired')}
-          </Text>
+          <Text style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.CameraAndMicrophonePermissionsRequired')}</Text>
         </View>
       </SafeAreaView>
     )
@@ -243,7 +241,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     return (
       <SafeAreaView style={styles.pageContainer}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{t('Unified.SendVideo.TakeVideo.NoFrontCameraAvailable')}</Text>
+          <Text style={{ color: 'white' }}>{t('BCSC.SendVideo.TakeVideo.NoFrontCameraAvailable')}</Text>
         </View>
       </SafeAreaView>
     )
@@ -272,7 +270,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           ) : (
             <>
               <ThemedText variant={'headingTwo'} style={{ textAlign: 'center' }}>
-                {t('Unified.SendVideo.TakeVideo.RecordingWillStartIn')}
+                {t('BCSC.SendVideo.TakeVideo.RecordingWillStartIn')}
               </ThemedText>
               <Animated.Text style={[{ textAlign: 'center', opacity: promptOpacity }, TextTheme.headingTwo]}>
                 {prompt}
@@ -301,12 +299,12 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
               buttonType={ButtonType.Primary}
               title={
                 prompts.indexOf(prompt) < prompts.length - 1
-                  ? t('Unified.SendVideo.TakeVideo.ShowNextPrompt')
-                  : t('Unified.SendVideo.TakeVideo.Done')
+                  ? t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')
+                  : t('BCSC.SendVideo.TakeVideo.Done')
               }
               onPress={onPressNextPrompt}
               testID={'StartRecordingButton'}
-              accessibilityLabel={t('Unified.SendVideo.TakeVideo.StartRecordingButton')}
+              accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
             />
           </View>
         ) : null}

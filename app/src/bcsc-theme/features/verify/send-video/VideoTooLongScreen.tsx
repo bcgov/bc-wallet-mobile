@@ -38,27 +38,27 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.SendVideo.VideoTooLong.Heading')}
+          {t('BCSC.SendVideo.VideoTooLong.Heading')}
         </ThemedText>
-        <ThemedText variant={'bold'}>{t('Unified.SendVideo.VideoTooLong.Description1')}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.SendVideo.VideoTooLong.Description1')}</ThemedText>
         <ThemedText variant={'bold'}>
-          {t('Unified.SendVideo.VideoTooLong.Description2', { videoLengthSeconds })}
+          {t('BCSC.SendVideo.VideoTooLong.Description2', { videoLengthSeconds })}
         </ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <View style={{ marginBottom: Spacing.md }}>
           <Button
             buttonType={ButtonType.Primary}
-            title={t('Unified.SendVideo.VideoTooLong.ButtonText')}
+            title={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
             onPress={() => {
               navigation.goBack()
             }}
-            accessibilityLabel={t('Unified.SendVideo.VideoTooLong.ButtonText')}
+            accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
           />
         </View>
         <Button
           buttonType={ButtonType.Secondary}
-          title={t('Unified.SendVideo.VideoTooLong.CancelButtonText')}
+          title={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
           onPress={() => {
             navigation.dispatch(
               CommonActions.reset({
@@ -68,7 +68,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
             )
           }}
           testID={'Cancel'}
-          accessibilityLabel={t('Unified.SendVideo.VideoTooLong.CancelButtonText')}
+          accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
         />
       </View>
     </SafeAreaView>

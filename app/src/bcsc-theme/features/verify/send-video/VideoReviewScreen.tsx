@@ -39,7 +39,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { t } = useTranslation()
 
   if (!videoPath || !videoThumbnailPath) {
-    throw new Error(t('Unified.SendVideo.VideoReview.VideoErrorPath'))
+    throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
   }
 
   const styles = StyleSheet.create({
@@ -141,7 +141,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       <View style={styles.contentContainer}>
         <View style={styles.videoContainer}>
           <ThemedText variant={'headingFour'} style={styles.heading}>
-            {t('Unified.SendVideo.VideoReview.Heading')}
+            {t('BCSC.SendVideo.VideoReview.Heading')}
           </ThemedText>
           <Video
             ref={videoRef}
@@ -167,8 +167,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
             buttonType={ButtonType.Primary}
             onPress={onPressUse}
             testID={testIdWithKey('UseVideo')}
-            title={t('Unified.SendVideo.VideoReview.UseVideo')}
-            accessibilityLabel={t('Unified.SendVideo.VideoReview.UseVideo')}
+            title={t('BCSC.SendVideo.VideoReview.UseVideo')}
+            accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
             disabled={!videoMetadata}
           >
             {!videoMetadata && <ButtonLoading />}
@@ -178,8 +178,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
               buttonType={ButtonType.Tertiary}
               onPress={onPressRetake}
               testID={testIdWithKey('RetakeVideo')}
-              title={t('Unified.SendVideo.VideoReview.RetakeVideo')}
-              accessibilityLabel={t('Unified.SendVideo.VideoReview.RetakeVideo')}
+              title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
+              accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
             />
           </View>
         </View>
