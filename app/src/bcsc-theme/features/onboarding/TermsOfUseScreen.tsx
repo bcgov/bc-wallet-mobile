@@ -5,9 +5,9 @@ import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import WebView from 'react-native-webview'
+import { WebViewContent } from '../webview/WebViewContent'
 
 interface TermsOfUseScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingTermsOfUse>
@@ -46,23 +46,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <WebView
-        style={showWebView ? styles.webViewContainerLoaded : styles.webViewContainerLoading}
-        source={{ uri: TERMS_OF_USE_URL }}
-        bounces={false}
-        domStorageEnabled={true}
-        javaScriptEnabled={true}
-        // Show loading indicator while the WebView is loading
-        startInLoadingState={true}
-        renderLoading={() => (
-          <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
-            <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-          </SafeAreaView>
-        )}
-        onLoad={() => setShowWebView(true)}
-        injectedJavaScriptBeforeContentLoaded={createThemedWebViewScript(ColorPalette)}
-      />
-
+      <WebViewContent url={TERMS_OF_USE_URL} injectedJavascript={createThemedWebViewScript(ColorPalette)} />
       <View style={styles.buttonContainer}>
         <Button
           title={t('Unified.Onboarding.AcceptAndContinueButton')}

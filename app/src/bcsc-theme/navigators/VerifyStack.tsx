@@ -57,7 +57,6 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { VerifyContactUsScreen } from '../features/settings/VerifyContactUsScreen'
-import { VerifyHelpCentreScreen } from '../features/settings/VerifyHelpCentreScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
 
@@ -122,11 +121,6 @@ const VerifyStack = () => {
       <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountQRScan} component={TransferQRScannerScreen} />
       <Stack.Screen name={BCSCScreens.IdentitySelection} component={IdentitySelectionScreen} />
-      <Stack.Screen
-        name={BCSCScreens.VerifyHelpCentre}
-        component={VerifyHelpCentreScreen}
-        options={{ title: t('Unified.Screens.HelpCentre') }}
-      />
       <Stack.Screen
         name={BCSCScreens.VerifyPrivacyPolicy}
         component={SettingsPrivacyPolicyScreen}

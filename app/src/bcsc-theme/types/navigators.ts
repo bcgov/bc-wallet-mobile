@@ -83,6 +83,7 @@ export enum BCSCScreens {
   OnboardingNotifications = 'BCSCOnboardingNotifications',
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
+  OnboardingWebview = 'BCSCOnboardingWebview',
   MainSettings = 'BCSCMainSettings',
   MainWebView = 'BCSCMainWebView',
   MainContactUs = 'BCSCMainContactUs',
@@ -108,6 +109,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
+  [BCSCScreens.OnboardingWebview]: { url: string; title: string; injectedJavascript?: string }
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -120,7 +122,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.TransferAccountInformation]: undefined
-  [BCSCScreens.VerifyWebView]: { url: string; title: string }
+  [BCSCScreens.VerifyWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
   [BCSCScreens.ManualSerial]: undefined
@@ -179,7 +181,7 @@ export type BCSCTabStackParams = {
 
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
-  [BCSCScreens.MainWebView]: { url: string; title: string }
+  [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
