@@ -1,7 +1,13 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
 import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { BCSCCardType } from './cards'
+
+export type ModalNavigation = StackNavigationProp<
+  BCSCMainStackParams | BCSCVerifyStackParams | BCSCOnboardingStackParams,
+  BCSCModals.InternetDisconnected | BCSCModals.MandatoryUpdate
+>
 
 export enum BCSCStacks {
   Startup = 'BCSCStartupStack',
@@ -13,6 +19,7 @@ export enum BCSCStacks {
 
 export enum BCSCModals {
   InternetDisconnected = 'BCSCNoInternet',
+  MandatoryUpdate = 'BCSCMandatoryUpdate',
 }
 
 export enum BCSCScreens {
@@ -103,6 +110,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingCreatePIN]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
+  [BCSCModals.MandatoryUpdate]: undefined
 }
 
 export type BCSCVerifyStackParams = {
@@ -160,6 +168,7 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.VerifyDeveloper]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
+  [BCSCModals.MandatoryUpdate]: undefined
 }
 
 export type BCSCTabStackParams = {
@@ -188,4 +197,5 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainDeveloper]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
+  [BCSCModals.MandatoryUpdate]: undefined
 }

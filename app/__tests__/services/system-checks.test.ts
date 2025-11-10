@@ -7,6 +7,10 @@ import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/s
 import { BCDispatchAction } from '@/store'
 
 describe('System Checks', () => {
+  beforeEach(() => {
+    jest.resetAllMocks()
+  })
+
   describe('runSystemChecks', () => {
     it('should run all checks and return statuses', async () => {
       const mockSystemCheck: SystemCheckStrategy = {
@@ -210,13 +214,12 @@ describe('System Checks', () => {
           translation: jest.fn(),
           logger: {} as any,
         }
-        const getServerStatus = jest.fn().mockResolvedValue({ status: 'ok' })
+        const serverStatus: any = { status: 'ok' }
 
-        const deviceCountCheck = new ServerStatusSystemCheck(getServerStatus, mockUtils)
+        const deviceCountCheck = new ServerStatusSystemCheck(serverStatus, mockUtils)
 
-        const result = await deviceCountCheck.runCheck()
+        const result = deviceCountCheck.runCheck()
 
-        expect(getServerStatus).toHaveBeenCalledTimes(1)
         expect(result).toBe(true)
       })
 
@@ -226,13 +229,12 @@ describe('System Checks', () => {
           translation: jest.fn(),
           logger: {} as any,
         }
-        const getServerStatus = jest.fn().mockResolvedValue({ status: 'down' })
+        const serverStatus: any = { status: 'unknown' }
 
-        const deviceCountCheck = new ServerStatusSystemCheck(getServerStatus, mockUtils)
+        const deviceCountCheck = new ServerStatusSystemCheck(serverStatus, mockUtils)
 
-        const result = await deviceCountCheck.runCheck()
+        const result = deviceCountCheck.runCheck()
 
-        expect(getServerStatus).toHaveBeenCalledTimes(1)
         expect(result).toBe(false)
       })
     })
@@ -244,9 +246,9 @@ describe('System Checks', () => {
           translation: jest.fn().mockReturnValue('Server unavailable'),
           logger: {} as any,
         }
-        const getServerStatus = jest.fn()
+        const serverStatus: any = { status: 'ok' }
 
-        const serverStatusCheck = new ServerStatusSystemCheck(getServerStatus, mockUtils)
+        const serverStatusCheck = new ServerStatusSystemCheck(serverStatus, mockUtils)
 
         serverStatusCheck.onFail()
 
@@ -272,9 +274,9 @@ describe('System Checks', () => {
           logger: {} as any,
         }
 
-        const getServerStatus = jest.fn()
+        const serverStatus: any = { status: 'ok' }
 
-        const serverStatusCheck: any = new ServerStatusSystemCheck(getServerStatus, mockUtils)
+        const serverStatusCheck: any = new ServerStatusSystemCheck(serverStatus, mockUtils)
 
         serverStatusCheck.serverStatus = {}
         serverStatusCheck.serverStatus.statusMessage = 'Custom server down message'
@@ -305,9 +307,9 @@ describe('System Checks', () => {
           logger: {} as any,
         }
 
-        const getServerStatus = jest.fn()
+        const serverStatus: any = { status: 'ok' }
 
-        const serverStatusCheck = new ServerStatusSystemCheck(getServerStatus, mockUtils)
+        const serverStatusCheck = new ServerStatusSystemCheck(serverStatus, mockUtils)
 
         serverStatusCheck.onSuccess()
 
@@ -325,9 +327,9 @@ describe('System Checks', () => {
           logger: {} as any,
         }
 
-        const getServerStatus = jest.fn()
+        const serverStatus: any = { status: 'ok' }
 
-        const serverStatusCheck: any = new ServerStatusSystemCheck(getServerStatus, mockUtils)
+        const serverStatusCheck: any = new ServerStatusSystemCheck(serverStatus, mockUtils)
 
         serverStatusCheck.serverStatus = {}
         serverStatusCheck.serverStatus.statusMessage = 'Server maintenance scheduled'

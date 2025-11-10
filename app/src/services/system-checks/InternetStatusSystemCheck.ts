@@ -1,18 +1,7 @@
-import {
-  BCSCMainStackParams,
-  BCSCModals,
-  BCSCOnboardingStackParams,
-  BCSCVerifyStackParams,
-} from '@/bcsc-theme/types/navigators'
+import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { BifoldLogger } from '@bifold/core'
 import { NetInfoState } from '@react-native-community/netinfo'
-import { StackNavigationProp } from '@react-navigation/stack'
-import { SystemCheckStrategy } from './system-checks'
-
-export type InternetStatusStackNavigation = StackNavigationProp<
-  BCSCMainStackParams | BCSCVerifyStackParams | BCSCOnboardingStackParams,
-  BCSCModals.InternetDisconnected
->
+import { SystemCheckNavigation, SystemCheckStrategy } from './system-checks'
 
 /**
  * System check strategy to verify internet connectivity.
@@ -28,10 +17,10 @@ export type InternetStatusStackNavigation = StackNavigationProp<
  */
 export class InternetStatusSystemCheck implements SystemCheckStrategy {
   private readonly netInfo: NetInfoState
-  private readonly navigation: InternetStatusStackNavigation
+  private readonly navigation: SystemCheckNavigation
   private readonly logger: BifoldLogger
 
-  constructor(netInfo: NetInfoState, navigation: InternetStatusStackNavigation, logger: BifoldLogger) {
+  constructor(netInfo: NetInfoState, navigation: SystemCheckNavigation, logger: BifoldLogger) {
     this.netInfo = netInfo
     this.navigation = navigation
     this.logger = logger
@@ -44,7 +33,7 @@ export class InternetStatusSystemCheck implements SystemCheckStrategy {
    */
   private get isModalVisible() {
     const state = this.navigation.getState()
-    const currentRouteName = state.routes[state.index].name
+    const currentRouteName = state?.routes[state.index].name
     return currentRouteName === BCSCModals.InternetDisconnected
   }
 

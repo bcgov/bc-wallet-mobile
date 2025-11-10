@@ -1,4 +1,5 @@
-import { SafeAreaModal } from '@bifold/core'
+import { BCDispatchAction, BCState } from '@/store'
+import { SafeAreaModal, useStore } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
@@ -16,15 +17,19 @@ interface NotificationBannerContainerProps {
  * @returns {*} {JSX.Element} The NotificationBannerContainer component.
  */
 export const NotificationBannerContainer = ({ onManageDevices }: NotificationBannerContainerProps) => {
+  const [, dispatch] = useStore<BCState>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
 
-  const handleBannerPress = (bannerId: BCSCBanner) => {
+  const handleBannerPress = (bannerId: BCSCBanner): void => {
+    // Handle other banner types as needed
+
     if (bannerId === BCSCBanner.DEVICE_LIMIT_EXCEEDED) {
-      setDevicesModalVisible(true)
+      return setDevicesModalVisible(true)
     }
 
-    // Handle other banner types as needed
+    // Default action: remove the banner permanently on press
+    dispatch({ type: BCDispatchAction.REMOVE_BANNER_MESSAGE, payload: [bannerId] })
   }
 
   const handleCloseDevicesModal = useCallback(({ shouldAnimate }: { shouldAnimate: boolean }) => {

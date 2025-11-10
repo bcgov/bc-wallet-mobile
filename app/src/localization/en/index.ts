@@ -279,6 +279,14 @@ const translation = {
       "PrivacyInformation": "Privacy Information",
       "ManageDevices": "Manage Devices",
     },
+    "Modals": {
+      "MandatoryUpdate": {
+        "Header": "App update required",
+        "ContentA": "You must update this app to continue.",
+        "ContentB": "Please update to the latest version from the {{platformStore}}.",
+        "UpdateButton": "Go to {{platformStore}}",
+      }
+    },
     "Home": {
       "WhereToUseTitle": "Where to use",
       "WhereToUseDescription": "Find the websites you can log in to with this app.",
@@ -307,6 +315,9 @@ const translation = {
       },
       "ServerStatus": {
         "UnavailableBannerTitle": "Service Unavailable",
+      },
+      "UpdateApp": {
+        "UpdateAvailableBannerTitle": "App update available",
       }
     },
     "ForgetAllPairings": {

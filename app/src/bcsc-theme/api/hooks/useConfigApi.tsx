@@ -3,7 +3,8 @@ import { Platform } from 'react-native'
 import BCSCApiClient from '../client'
 
 export interface ServerStatusResponseData {
-  minVersion: string
+  minVersion: string // build number
+  minVersionNumber: string // semantic version
   minVersionMessage: string
   supportedVersions: string[]
   service: string

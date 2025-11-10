@@ -1,4 +1,6 @@
+import { BCSCModals, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BifoldLogger, ReducerAction } from '@bifold/core'
+import { NavigationState } from '@react-navigation/native'
 import { TFunction } from 'i18next'
 import { Dispatch } from 'react'
 
@@ -43,6 +45,14 @@ export interface SystemCheckUtils {
    * @type {BifoldLogger}
    */
   logger: BifoldLogger
+}
+
+// Simple interface to abstract navigation methods needed for system checks
+export type SystemCheckNavigation = {
+  navigate: (screen: BCSCScreens | BCSCModals) => void
+  canGoBack: () => boolean
+  goBack: () => void
+  getState: () => NavigationState | undefined
 }
 
 /**
