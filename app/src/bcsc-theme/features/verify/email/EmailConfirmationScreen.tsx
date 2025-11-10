@@ -14,6 +14,7 @@ import {
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Alert, Linking, Platform, StyleSheet, View } from 'react-native'
 import { CodeField, Cursor, useClearByFocusCell } from 'react-native-confirmation-code-field'
 import Toast from 'react-native-toast-message'
@@ -42,6 +43,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     value: code,
     setValue: setCode,
   })
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -82,7 +84,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
 
   const handleSubmit = async () => {
     if (!code || code.length !== 6) {
-      setError('Please enter a six digit verification code')
+      setError(t('Unified.EmailConfirmation.CodeError'))
       return
     }
 
@@ -99,7 +101,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         })
       )
     } catch (error) {
-      setError('Error verifying confirmation code')
+      setError(t('Unified.EmailConfirmation.ErrorTitle'))
     } finally {
       setLoading(false)
     }
@@ -114,13 +116,13 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       setId(email_address_id)
       Toast.show({
         type: ToastType.Success,
-        text1: 'Code resent',
+        text1: t('Unified.EmailConfirmation.CodeResent'),
         bottomOffset: Spacing.lg,
         autoHide: true,
         visibilityTime: 1500,
       })
     } catch (error) {
-      setError('Error resending code')
+      setError(t('Unified.EmailConfirmation.ErrorResendingCode'))
     } finally {
       setResendLoading(false)
     }
@@ -135,9 +137,11 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     }
 
     Linking.openURL(url).catch(() => {
-      Alert.alert('Unable to open email', 'Please check your email manually using your preferred email app.', [
-        { text: 'OK' },
-      ])
+      Alert.alert(
+        t('Unified.EmailConfirmation.UnableToOpenEmail'),
+        t('Unified.EmailConfirmation.UnableToOpenEmailMessage'),
+        [{ text: t('Global.OK') }]
+      )
     })
   }
 
@@ -146,10 +150,11 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
       <View style={styles.pageContainer}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            Verify your email
+            {t('Unified.EmailConfirmation.VerifyYourEmail')}
           </ThemedText>
           <ThemedText>
-            Enter the six digit code sent to your email <ThemedText variant={'bold'}>{store.bcsc.email}</ThemedText>
+            {t('Unified.EmailConfirmation.EnterTheSixDigitCode')}{' '}
+            <ThemedText variant={'bold'}>{store.bcsc.email}</ThemedText>
           </ThemedText>
           <CodeField
             {...props}
@@ -176,8 +181,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
           <Button
             buttonType={ButtonType.Primary}
             onPress={handleSubmit}
-            title={'Continue'}
-            accessibilityLabel={'Continue'}
+            title={t('Global.Continue')}
+            accessibilityLabel={t('Global.Continue')}
             testID={'ContinueButton'}
           >
             {loading && <ButtonLoading />}
@@ -186,8 +191,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
             <Button
               buttonType={ButtonType.Secondary}
               onPress={handleResendCode}
-              title={'Resend code'}
-              accessibilityLabel={'Resend code'}
+              title={t('Unified.EmailConfirmation.ResendCode')}
+              accessibilityLabel={t('Unified.EmailConfirmation.ResendCode')}
               testID={'ResendCodeButton'}
             >
               {resendLoading && <ButtonLoading />}
@@ -197,8 +202,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
             <Button
               buttonType={ButtonType.Secondary}
               onPress={handleGoToEmail}
-              title={'Go to my email'}
-              accessibilityLabel={'Go to my email'}
+              title={t('Unified.EmailConfirmation.GoToEmail')}
+              accessibilityLabel={t('Unified.EmailConfirmation.GoToEmail')}
               testID={'GoToEmailButton'}
             />
           </View>

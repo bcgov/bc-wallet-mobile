@@ -147,22 +147,32 @@ const Account: React.FC = () => {
               {userMeta.data?.user?.family_name}, {userMeta.data?.user.given_name}
             </ThemedText>
           </View>
-          <ThemedText
-            style={styles.warning}
-          >{`This cannot be used as photo ID, a driver's licence, or a health card.`}</ThemedText>
-          <AccountField label={'App expiry date'} value={userMeta.data?.user.card_expiry ?? ''} />
-          <AccountField label={'Account type'} value={userMeta.data?.user.card_type ?? 'Non BC Services Card'} />
-          <AccountField label={'Address'} value={userMeta.data?.user.address?.formatted ?? ''} />
-          <AccountField label={'Date of birth'} value={userMeta.data?.user.birthdate ?? ''} />
-          <AccountField label={'Email address'} value={store.bcsc.email ?? ''} />
+          <ThemedText style={styles.warning}>{t('Unified.Account.AccountInfo.Description')}</ThemedText>
+          <AccountField
+            label={t('Unified.Account.AccountInfo.AppExpiryDate')}
+            value={userMeta.data?.user.card_expiry ?? ''}
+          />
+          <AccountField
+            label={t('Unified.Account.AccountInfo.AccountType')}
+            value={userMeta.data?.user.card_type ?? t('Unified.Account.AccountInfo.AccountTypeNonBCServicesCard')}
+          />
+          <AccountField
+            label={t('Unified.Account.AccountInfo.Address')}
+            value={userMeta.data?.user.address?.formatted ?? ''}
+          />
+          <AccountField
+            label={t('Unified.Account.AccountInfo.DateOfBirth')}
+            value={userMeta.data?.user.birthdate ?? ''}
+          />
+          <AccountField label={t('Unified.Account.AccountInfo.EmailAddress')} value={store.bcsc.email ?? ''} />
 
           <View style={styles.buttonsContainer}>
             <SectionButton
               onPress={handleMyDevicesPress}
               title={
                 typeof idTokenMetadata?.bcsc_devices_count === 'number'
-                  ? `My devices (${idTokenMetadata.bcsc_devices_count})`
-                  : 'My devices'
+                  ? t('Unified.Account.AccountInfo.MyDevicesCount', { count: idTokenMetadata.bcsc_devices_count })
+                  : t('Unified.Account.AccountInfo.MyDevices')
               }
             />
             <SectionButton

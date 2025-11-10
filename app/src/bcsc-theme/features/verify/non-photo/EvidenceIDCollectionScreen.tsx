@@ -228,7 +228,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       <KeyboardView keyboardAvoiding={false}>
         <ThemedText variant={'headingOne'}>{cardType.evidence_type_label}</ThemedText>
         <ThemedText style={{ paddingVertical: 16 }}>
-          Enter the information <Text style={{ fontWeight: 'bold' }}>{'exactly as shown'}</Text> on the ID.
+          {t('Unified.EvidenceIDCollection.Heading1')}{' '}
+          <Text style={{ fontWeight: 'bold' }}>{t('Unified.EvidenceIDCollection.Heading2')}</Text>{' '}
+          {t('Unified.EvidenceIDCollection.Heading3')}
         </ThemedText>
         <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
           <InputWithValidation

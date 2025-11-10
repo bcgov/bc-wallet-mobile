@@ -15,6 +15,7 @@ import {
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, View } from 'react-native'
 import EmailTextInput from './EmailTextInput'
 
@@ -37,6 +38,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { cardType } = route.params
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -60,7 +62,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
 
   const handleSubmit = async () => {
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setError('Please enter a valid email address')
+      setError(t('Unified.EmailConfirmation.EmailError'))
       return
     }
 
@@ -72,35 +74,31 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email, emailConfirmed: false }] })
       navigation.navigate(BCSCScreens.EmailConfirmation, { emailAddressId: email_address_id })
     } catch (error: any) {
-      setError('Error submitting email')
+      setError(t('Unified.EmailConfirmation.ErrorTitle'))
 
-      logger.error('Error submitting email', error)
+      logger.error(t('Unified.EmailConfirmation.ErrorTitle'), error)
     } finally {
       setLoading(false)
     }
   }
 
   const handleSkip = () => {
-    Alert.alert(
-      `Are you sure you don't want to provide it?`,
-      `It is less secure without it as we can't notify you of logins or changes to your account.`,
-      [
-        {
-          text: 'Provide email address',
-          style: 'cancel',
+    Alert.alert(t('Unified.EnterEmail.EmailSkip'), t('Unified.EnterEmail.EmailSkipMessage'), [
+      {
+        text: t('Unified.EnterEmail.EmailSkipButton'),
+        style: 'cancel',
+      },
+      {
+        text: t('Unified.EnterEmail.EmailSkipButton2'),
+        onPress: () => {
+          dispatch({
+            type: BCDispatchAction.UPDATE_EMAIL,
+            payload: [{ email: 'Not provided', emailConfirmed: true }],
+          })
+          navigation.goBack()
         },
-        {
-          text: 'Skip',
-          onPress: () => {
-            dispatch({
-              type: BCDispatchAction.UPDATE_EMAIL,
-              payload: [{ email: 'Not provided', emailConfirmed: true }],
-            })
-            navigation.goBack()
-          },
-        },
-      ]
-    )
+      },
+    ])
   }
 
   return (
@@ -108,17 +106,12 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       <View style={styles.pageContainer}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            Enter your email address
+            {t('Unified.EnterEmail.EnterEmailAddress')}
           </ThemedText>
           {cardType !== BCSCCardType.Other ? (
-            <ThemedText style={{ marginBottom: Spacing.md }}>
-              It is recommended that you provide one for security purposes.
-            </ThemedText>
+            <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.EnterEmail.EmailDescription1')}</ThemedText>
           ) : null}
-          <ThemedText style={{ marginBottom: Spacing.md }}>
-            You will only get emails about logins and changes to your account. It also makes it quicker to set up
-            another mobile card.
-          </ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.md }}>{t('Unified.EnterEmail.EmailDescription2')}</ThemedText>
           <EmailTextInput handleChangeEmail={handleChangeEmail} />
           {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
         </View>
@@ -126,8 +119,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
           <Button
             buttonType={ButtonType.Primary}
             onPress={handleSubmit}
-            title={'Continue'}
-            accessibilityLabel={'Continue'}
+            title={t('Global.Continue')}
+            accessibilityLabel={t('Global.Continue')}
             testID={'ContinueButton'}
           >
             {loading && <ButtonLoading />}
@@ -136,8 +129,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             <Button
               buttonType={ButtonType.Secondary}
               onPress={handleSkip}
-              title={'Skip'}
-              accessibilityLabel={'Skip'}
+              title={t('Unified.EnterEmail.Skip')}
+              accessibilityLabel={t('Unified.EnterEmail.Skip')}
               testID={'SkipButton'}
             />
           ) : null}

@@ -318,10 +318,10 @@ export class AppContainer implements Container {
             stackOptions: { headerShown: false },
           },
         ],
-        pageTitle: 'PersonCredential.PageTitle',
-        title: 'PersonCredentialNotification.Title',
-        description: 'PersonCredentialNotification.Description',
-        buttonTitle: 'PersonCredentialNotification.ButtonTitle',
+        pageTitle: this.t('PersonCredential.PageTitle'),
+        title: this.t('PersonCredentialNotification.Title'),
+        description: this.t('PersonCredentialNotification.Description'),
+        buttonTitle: this.t('PersonCredentialNotification.ButtonTitle'),
       },
     })
 

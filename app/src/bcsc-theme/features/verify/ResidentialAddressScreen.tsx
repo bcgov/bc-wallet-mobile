@@ -144,7 +144,7 @@ export const ResidentialAddressScreen = () => {
         name: store.bcsc.userMetadata?.name,
       })
 
-      throw new Error('Missing prerequisite user attributes')
+      throw new Error(t('Unified.Address.MissingPrerequisiteAttributes'))
     }
 
     // TODO (MD): Handle if this request fails, but is not a registration error. ie: failed network request
@@ -164,7 +164,7 @@ export const ResidentialAddressScreen = () => {
     // device previously registered, but no deviceCode found in store
     if (deviceAuth === null && !store.bcsc.deviceCode) {
       logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found')
-      throw new Error('Device previously registered, but no deviceCode found in store')
+      throw new Error(t('Unified.Address.NoDeviceCodeFound'))
     }
 
     Toast.show({
@@ -246,8 +246,8 @@ export const ResidentialAddressScreen = () => {
           <View style={{ marginTop: 48, width: '100%' }}>
             <View style={{ marginBottom: 20 }}>
               <Button
-                title="Continue"
-                accessibilityLabel={'Continue'}
+                title={t('Global.Continue')}
+                accessibilityLabel={t('Global.Continue')}
                 testID={testIdWithKey('ResidentialAddressContinue')}
                 buttonType={ButtonType.Primary}
                 onPress={handleSubmit}

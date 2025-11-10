@@ -20,7 +20,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { formattedHours } = route.params || {}
 
   // Use the passed formatted hours or fallback to default
-  const hoursText = formattedHours || 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+  const hoursText = formattedHours || t('Unified.VideoCall.DefaultHours')
   const isCellular = useMemo(() => networkType === 'cellular' && isConnected === true, [networkType, isConnected])
 
   const styles = StyleSheet.create({
@@ -70,7 +70,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
         <ThemedText>{t('Unified.VideoCall.MakeSureOnlyYou')}</ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          {t('Unified.VideoCall.HoursOfService')}
+          {t('Unified.VideoCall.CallBusyOrClosed.HoursOfService')}
         </ThemedText>
         <ThemedText>{hoursText}</ThemedText>
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>

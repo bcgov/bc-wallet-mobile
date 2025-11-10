@@ -283,7 +283,7 @@ const VerifyStack = () => {
         component={VerifySettingsScreen}
         options={{
           headerShown: true,
-          title: t('Screens.Settings'),
+          title: t('Unified.Screens.Settings'),
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
         }}

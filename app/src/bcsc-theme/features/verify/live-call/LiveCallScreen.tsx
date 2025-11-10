@@ -47,7 +47,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const leaveCall = useCallback(async () => {
     try {
       if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
-        throw new Error('Missing device or user code')
+        throw new Error(t('Unified.VideoCall.DeviceCodeError'))
       }
 
       const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
@@ -78,7 +78,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     }
-  }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger])
+  }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger, t])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {
@@ -216,17 +216,17 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const stateMessage = useMemo(() => {
     switch (flowState) {
       case VideoCallFlowState.CREATING_SESSION:
-        return t('Unified.VideoCall.CreatingSession')
+        return t('Unified.VideoCall.CallStates.CreatingSession')
       case VideoCallFlowState.CONNECTING_WEBRTC:
-        return t('Unified.VideoCall.ConnectingWebRTC')
+        return t('Unified.VideoCall.CallStates.ConnectingWebRTC')
       case VideoCallFlowState.WAITING_FOR_AGENT:
-        return t('Unified.VideoCall.WaitingForAgent')
+        return t('Unified.VideoCall.CallStates.WaitingForAgent')
       case VideoCallFlowState.IN_CALL:
         return null
       case VideoCallFlowState.ERROR:
-        return videoCallError?.message || t('Unified.VideoCall.GenericError')
+        return videoCallError?.message || t('Unified.VideoCall.Errors.GenericError')
       default:
-        return t('Unified.VideoCall.Initializing')
+        return t('Unified.VideoCall.CallStates.Initializing')
     }
   }, [flowState, videoCallError, t])
 

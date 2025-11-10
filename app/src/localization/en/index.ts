@@ -1,7 +1,6 @@
 // prettier-ignore
 const translation = {
   "BCID": {
-    "GetID": "Get BCID",
     "GetDigitalID": "Get your Person credential",
   },
   "Error": {
@@ -11,45 +10,18 @@ const translation = {
     "Message2021": "There was a problem receiving the invitation to connect.",
     "Title2022": "Unable to find legacy DID",
     "Message2022": "There was a problem extracting the did repository.",
-    "Title2025": "BCSC Authentication",
-    "Message2025": "There was a problem reported by BCSC.",
     "Title2026": "Oops! Something went wrong",
     "Message2026": "The app has encountered a problem. Try restarting the app.",
-    "Title2027": "Unable to parse invitation",
-    "Message2027": "There was a problem parsing the attestation connection invitation.",
-    "Title2028": "Unable to receive invitation",
-    "Message2028": "There was a problem receiving the attestation invitation to connect.",
-    "Title2029": "Unable to handle attestation proof",
-    "Message2029": "There was a problem while handling an attestation proof request.",
-    "Title2030": "Unable to complete app initialization",
-    "Message2030": "There was a problem while initializing the app.",
     "Title2031": "Unable to complete agent initialization",
     "Message2031": "There was a problem while initializing the agent.",
     "Title2032": "Unable to open app-to-app URL",
     "Message2032": "There was a problem while opening the app-to-app URL.",
+    "Title2033": "Failed to load services",
+    "Message2033": "There was a problem while loading the services. Please try again later.",
     "NoMessage": "No Message",
-  },
-  "CameraDisclosure": {
-    "AllowCameraUse": "Allow camera use",
-    "CameraDisclosure": "The camera is used to scan QR codes that initiate a credential offer or credential request. No information about the images is stored, used for analytics, or shared.",
-    "ToContinueUsing": "To continue using the BC Wallet scan feature, please allow camera permissions.",
-    "Allow": "Allow",
-    "OpenSettings": "Open settings",
-    "CameraPermissionRequired": "Camera permission required"
-  },
-  "Biometry": {
-    "Toggle": "Toggle Biometrics",
-    "EnabledText1": "Log in with your phone's biometrics instead of your wallet PIN.",
-    "EnabledText1Bold": "you will need to use biometrics to open your BC Wallet.",
-    "EnabledText2": "This means all fingerprint and facial data added on this phone can be used to access your BC Wallet.",
-    "EnabledText3": "Anyone who can access your phone with biometrics can access your BC Wallet.",
-    "EnabledText3Bold": "Ensure only you have access to your wallet.",
-    "Warning": "Ensure only you have access to your wallet.",
-    "UseToUnlock": "Use biometrics to unlock wallet?"
   },
   "Credentials": {
     "AddCredential": "Add Credential",
-    "EmptyList": "Your wallet is empty.",
     "AddFirstCredential": "Add your first credential"
   },
   "Onboarding": {
@@ -67,40 +39,7 @@ const translation = {
     "Paragraph2": "If BC Wallet isn't what you're looking for but you're curious, check out our",
     "Link2": "BC Wallet showcase",
   },
-  "Screens": {
-    "Onboarding": "BC Wallet",
-    "Terms": "Terms of Use",
-    "Settings": "Menu",
-    "Preface": "BC Wallet",
-    "VerificationSteps": "Setup steps",
-    "EvidenceCollectionStep": {
-      "Stage1": "Choose your identification",
-      "Stage2": "Instructions",
-      "Stage3": "Scan your identification",
-      "Stage4": "Enter serial number",
-      "Stage5": "Enter birthdate",
-    },
-    "ResidentialAddressStep": {
-      "Stage1": "TODO",
-    },
-    "EmailStep": {
-      "Stage1": "TODO",
-    },
-    "VerifyIdentityStep": {
-      "Stage1": "TODO",
-    },
-  },
-  "Modals": {
-    "InternetDisconnected": {
-      "Header": "No internet connection",
-      "ContentA": "It looks like you aren’t connected to the internet. A connection is required for this app to function.",
-      "ContentB": "Check that your device is connected to the internet or try again.",
-      "RetryButton": "Retry",
-    },
-  },
   "PINCreate": {
-    "Header": "BC Wallet",
-    "Subheader": "Secure your wallet",
     "Explainer": {
       "PrimaryHeading": "Create a PIN that is:",
       "Bullet1": "<b>Memorable.</b> If you forget your PIN, you can't recover it. You will need to reinstall and set up your wallet again.",
@@ -120,7 +59,6 @@ const translation = {
     "CreatePersonCred": "Step 2: Create your Person credential",
     "StartProcess": "Start the process",
     "PageTitle": "Person Credential",
-    "PleaseWait": "Please wait as we get things ready for you",
     "WhatIsPersonCredentialLink": "What is a Person credential",
     "WhereToUseLink": "Where to use",
     "HelpLink": "Help",
@@ -131,15 +69,7 @@ const translation = {
     "OfferingCredential": "Offering credential...",
     "InitiatingAppToAppFlow": "Initiating app-to-app flow...",
   },
-  "NetInfo": {
-    "NoInternetConnectionTitle": "No internet connection",
-    "NoInternetConnectionMessage": "You're unable to access services using BC Wallet or receive credentials until you're back online.\n\nPlease check your internet connection."
-  },
   "Tour": {
-    "GuideTitle": "Welcome to BC Wallet",
-    "WouldYouLike": "Would you like some guidance on how to use BC Wallet?",
-    "UseAppGuides": "Use app guides",
-    "DoNotUseAppGuides": "Don't use app guides",
     "AddAndShare": "Add and share credentials",
     "AddAndShareDescription": "To add and use credentials you scan a QR code displayed by the service provider.",
     "AddCredentials": "Add credentials",
@@ -165,39 +95,12 @@ const translation = {
     "GiveFeedback": "Give feedback",
     "ReportAProblem": "Report a problem",
     "TermsOfUse": "Terms of use",
-    "PrivacyStatement": "Privacy statement",
-    "VulnerabilityDisclosurePolicy": "Vulnerability disclosure policy",
-    "Accessibility": "Accessibility",
     "IntroductionToTheApp": "Introduction to the app",
-  },
-  // TODO (MD): Move to Unified section
-  "BCSCSettings": {
-    "HeaderA": "App Settings",
-    "HeaderB": "Information",
-    "Help": "Help",
-    "SignOut": "Sign out",
-    "Biometrics": "Biometrics",
-    "ChangePIN": "Change PIN",
-    "EditNickname": "Edit Nickname",
-    "AutoLockTime": "Auto lock time",
-    "Notifications": "Notifications",
-    "ForgetPairings": "Forget pairings",
-    "Privacy": "Privacy",
-    "ContactUs": "Contact us",
-    "Feedback": "Feedback",
-    "Accessibility": "Accessibility",
-    "TermsOfUse": "Terms of use",
-    "Version": "Version",
-    "ButtonTitle": "Settings Menu",
   },
   "Developer": {
     "Environment": "Environment",
-    "Production": "Production",
-    "Development": "Development",
-    "Test": "Test",
     "DeveloperMode": "Developer mode",
     "Toggle": "Toggle Developer Mode",
-    "AttestationSupport": "Attestation support",
     "EnableProxy": "Enable proxy",
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchMode": "Switch mode",
@@ -206,26 +109,10 @@ const translation = {
   "Tips": {
     "Header": "Tips",
     "GettingReady": "Getting your wallet ready...",
-    "Tip1": "For extra security, BC Wallet locks the app after 5 minutes of inactivity",
-    "Tip2": "Unlike showing physical cards, you share only what is necessary from your credentials",
-    "Tip3": "Your credentials are stored only on this phone, nowhere else",
-    "Tip4": "Information is sent and received over an untraceable encrypted connection",
-    "Tip5": "Remember your PIN. If you forget it, you'll need to reinstall and re-add your credentials",
-    "Tip6": "Skip the PIN and unlock your wallet using your biometrics for a faster experience",
-    "Tip7": "Your most recently added credentials are placed at the top",
-    "Tip8": "Remove credentials in your wallet from the credential details screen",
-    "Tip9": "You can dismiss notifications without opening them by tapping “X” in the top right corner",
-    "Tip10": "Need help? Find answers in the help section within the “☰” button on the top left corner",
-    "Tip11": "You can turn on the camera flash if the QR code is hard to see",
-    "Tip12": "If the QR code isn't scanning, try increasing the screen's brightness",
-    "Tip13": "Information sent via your wallet is trusted by you and your Contacts you interact with",
-    "Tip14": "Even revoked or expired credentials can be usable if the organization doesn't request for it",
   },
   "Init": {
     "Retry": "Retry",
     "Starting": "Starting...",
-    "FetchingPreferences": "Fetching preferences...",
-    "VerifyingOnboarding": "Verifying onboarding...",
     "CheckingOCA": "Checking for OCA updates...",
     "InitializingAgent": "Initializing agent...",
     "Finishing": "Finishing..."
@@ -233,18 +120,9 @@ const translation = {
   "Feedback": {
     "GiveFeedback": "Give Feedback",
   },
-  "PushNotifications": {
-    "NotificationsOffTitle": "Notifications for BC Wallet are turned off",
-  },
   "AddCredentialSlider": {
     "Choose": "Choose",
     "ScanQRCode": "Scan a QR code",
-  },
-  "Scan": {
-    "ScanOnySpecial": "Only special QR codes can be scanned by BC Wallet.",
-    "ScanOnlySpecial3": "BC Wallet currently doesn't support adding digital credential by scanning or taking photos of physical ones.",
-    "WhereToUseLink": "See where you can use BC Wallet",
-    "BadQRCodeDescription": "Ths QR code scanned doesn't work with BC Wallet. BC Wallet only works with participating services.\n\nIt currently can't add digital credentials by taking photos of physical ones."
   },
   "Services": {
     "CatalogueTitle": "Services",
@@ -270,6 +148,7 @@ const translation = {
   "Unified": {
     "BCSC": "BC Services Card",
     "Screens": {
+      "Settings": "Menu",
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",
@@ -278,6 +157,31 @@ const translation = {
       "HelpCentre": "Help Centre",
       "PrivacyInformation": "Privacy Information",
       "ManageDevices": "Manage Devices",
+    },
+    "Settings": {
+      "HeaderA": "App Settings",
+      "HeaderB": "Information",
+      "Help": "Help",
+      "SignOut": "Sign out",
+      "Biometrics": "Biometrics",
+      "ChangePIN": "Change PIN",
+      "EditNickname": "Edit Nickname",
+      "AutoLockTime": "Auto lock time",
+      "Notifications": "Notifications",
+      "ForgetPairings": "Forget pairings",
+      "Privacy": "Privacy",
+      "ContactUs": "Contact us",
+      "Feedback": "Feedback",
+      "Accessibility": "Accessibility",
+      "TermsOfUse": "Terms of use",
+    },
+    "Modals": {
+      "InternetDisconnected": {
+        "Header": "No internet connection",
+        "ContentA": "It looks like you aren’t connected to the internet. A connection is required for this app to function.",
+        "ContentB": "Check that your device is connected to the internet or try again.",
+        "RetryButton": "Retry",
+      },
     },
     "Home": {
       "WhereToUseTitle": "Where to use",
@@ -292,6 +196,27 @@ const translation = {
       "Step3": "Step 3",
       "Step4": "Step 4",
       "Step5": "Step 5",
+      "VerificationIDMissing": "Verification request ID is missing",
+      "DeviceCodeOrUserCodeMissing": "Device code or user code is missing for verification",
+      "AreYouSure": "Are you sure?",
+      "YourVerificationRequestWillBeDeleted": "Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.",
+      "DeleteVerifyRequest": "Delete Verify Request",
+      "GetVerificationStep2Subtext1": "ID: BC Services Card ({{ serial }})",
+      "GetVerificationStep2Subtext2": "ID: {{ evidenceType }} ({{ documentNumber }})",
+      "GetVerificationStep3Subtext1": "Address: Residential address from your BC Services Card will be used",
+      "GetVerificationStep3Subtext2": "Address: {{ address }}",
+      "GetVerificationStep3Subtext3": "Residential address",
+      "GetVerificationStep5Subtext1": "Verify identity by {{ expirationDate }}",
+      "GetVerificationStep5Subtext2": "Complete additional identification first",
+      "GetVerificationStep5Subtext3": "Verify identity",
+      "AddSecondIdText": "Add second ID",
+      "AdditionalIdentificationRequired": "Additional identification required for non-photo BC Services Card.",
+      "StoredEmail": "Email: {{ email }}",
+      "EmailAddress": "Email Address",
+      "EditEmail": "Edit",
+      "CheckStatus": "Check status",
+      "ChooseAnotherWayToVerify": "Choose another way to verify",
+      "ResetData": "Reset data",
     },
     "SystemChecks": {
       "Devices": {
@@ -357,11 +282,7 @@ const translation = {
       "FailedToSubmitPairingCodeMessage": "Failed to submit pairing code",
       "CompletionTitle": "You're done in this app",
       "CompletionDescription": "Go back to the device you started on to continue logging in to {{serviceName}}.",
-    },
-    "AccountSelector": {
-      "Header": "BC Services Card",
-      "Title": "BC Services Card Account",
-      "ContinueAs": "Continue as:",
+      "BookmarkService": "Save link to:",
     },
     "Onboarding": {
       "LearnMore": "Learn more",
@@ -384,6 +305,8 @@ const translation = {
       "SecureAppContent": "Protect your identity. For example, if your device is lost or stolen. Keep your access confidential",
       "SecureAppFaceIDTitle": "Use Face ID",
       "SecureAppFaceIDSubtext": "It’s already setup on this iPhone or iPad. It never leaves this device or is shared with us.",
+      "SecureAppBiometricsTitle": "TODO: Android title",
+      "SecureAppBiometricsSubtext": "TODO: Android subtext",
       "SecureAppPINTitle": "Create a PIN",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us."
     },
@@ -413,7 +336,15 @@ const translation = {
       "ScanBarcode": "Scan Barcode with Camera",
       "EnterManually": "Enter Serial Number Manually",
     },
-    "Scan": {},
+    "Scan": {
+      "NoAccountFound": "No account found, restart the app and try again.",
+      "NoAttestationResponse": "No attestation response, check your connection and try again.",
+      "NoDeviceCodeFound": "No device code found",
+      "InvalidQrCode": "Invalid QR code",
+      "WillScanAutomatically": "Will scan automatically",
+      "ErrorDetails": "Error details",
+      "Dismiss": "Dismiss",
+    },
     "ManualSerial": {
       "InputLabel": "Serial number",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card.",
@@ -424,10 +355,8 @@ const translation = {
       "CardSerialNumber": "Card serial number: {{ serial }}",
       "Heading": "Enter your birthdate",
       "Paragraph": "Your birthdate is only used to to set up this app. It is not shared.",
-      "InputLabel": "Birthdate",
     },
     "AdditionalEvidence": {
-      "Heading": "Additional ID required",
       "PhotoRequired": "You must provide additional ID because your BC Services Card doesn't have a photo on it.",
       "PhotoRequiredDescription": "It's needed to verify your identity. You'll be asked to provide one or two government-issued IDs.",
       "CheckYourID": "Check your ID",
@@ -441,7 +370,8 @@ const translation = {
     "AccountSetup": {
       "Title": "BC Services Card Account",
       "AddAccount": "Add account",
-      "TransferAccount": "Transfer from another device"
+      "TransferAccount": "Transfer from another device",
+      "ContinueAs": "Continue as:",
     },
     "NewSetup": {
       "Title": "New setup",
@@ -462,6 +392,145 @@ const translation = {
       "YouCanTypeOrScan": "Type, scan, or take pictures",
       "YouCannot": "You cannot",
       "YouCannotBeInVideo": "Be in video recordings or calls. Only the other person can be."
+    },
+    "CameraDisclosure": {
+      "CameraPermissionRequired": "Camera permission required",
+      "CameraPermissionRequiredMessage": "Please enable camera permission to take a photo.",
+      "CameraPermissionRequiredMessage2": "Please enable camera permission to scan a QR code.",
+      "NoCameraAvailable": "No {{device}} camera available",
+      "Error": "Camera Error",
+      "ErrorMessage": "An error occurred while using the camera. Please try again.",
+      "ErrorTakingPhoto": "Failed to take photo. Please try again.",
+      "OK": "OK",
+    },
+    "EnterEmail": {
+      "ErrorTitle": "Error submitting email",
+      "EmailError": "Please enter a valid email address",
+      "EmailSkip": "Are you sure you don't want to provide it?",
+      "EmailSkipMessage": "It is less secure without it as we can't notify you of logins or changes to your account.",
+      "EmailSkipButton": "Provide email address",
+      "EmailSkipButton2": "Skip",
+      "EnterEmailAddress": "Enter your email address",
+      "EmailDescription1": "It is recommended that you provide one for security purposes.",
+      "EmailDescription2": "You will only get emails about logins and changes to your account. It also makes it quicker to set up another mobile card.",
+    },
+    "EmailConfirmation": {
+      "ErrorTitle": "Error verifying confirmation code",
+      "CodeError": "Please enter a six digit verification code",
+      "ErrorResendingCode": "Error resending code",
+      "CodeResent": "Code resent",
+      "UnableToOpenEmail": "Unable to open email",
+      "UnableToOpenEmailMessage": "Please check your email manually using your preferred email app.",
+      "VerifyYourEmail": "Verify your email",
+      "EnterTheSixDigitCode": "Enter the six digit code sent to your email",
+      "ResendCode": "Resend code",
+      "GoToEmail": "Go to my email",
+    },
+    "VerifyIdentity": {
+      "DeviceCodeError": "Device code or user code is missing in the store.",
+      "VerifyInPersonTitle": "Verify in person",
+      "WhereToGo": "Where to go",
+      "WhereToGoLink": "A Service BC Location",
+      "WhatToBring": "What to bring",
+      "ThisDevice": "This device",
+      "YourBCServicesCard": "Your BC Services Card - if it's a non-photo card, bring your additional ID too",
+      "ShowThisConfirmationNumber": "Show this confirmation number",
+      "YouMustCompleteThisBy": "You must complete this by",
+      "YouHaveNotBeenVerified": "You have not yet been verified",
+      "Complete": "Complete",
+      "CardSerialNumber": "Card serial number: {{ serial }}",
+    },
+    "SendVideo": {
+      "InformationRequired": {
+        "Heading1": "Photo of your face",
+        "Heading2": "Video of your face",
+        "ActionLabel": "Take Photo",
+        "ActionLabel2": "Record Video",
+        "ButtonText": "Send to Service BC Now",
+      },
+      "PendingReview":{
+        "Heading": "Request pending review",
+        "Description1": "We review requests:",
+        "Bullet1": "Monday to Friday, 9am to 5pm",
+        "Bullet2": "In the order they're received",
+        "Description2": "Usually, we review requests within 2 business days. During busy periods, it may take longer.",
+        "Description3": "After it's reviewed, you will get an email if your provided your email.",
+        "Description4": "Do not resend your video. If you do, your request will go to the back of the queue.",
+        "ButtonText": "Ok",
+      },
+      "SuccessfullySent": {
+        "Heading": "We've received your request to verify your identity.",
+        "Description1": "We review requests:",
+        "Bullet1": "Monday to Friday, 9am to 5pm",
+        "Bullet2": "In the order they're received",
+        "Description3": "Usually, we review requests within 2 business days. During busy periods, it may take longer.",
+        "ButtonText": "Ok"
+      },
+      "TakePhoto": {
+        "CameraInstructions": "Position your face within the oval and press the button on the screen",
+      },
+      "TakeVideo": {
+        "RecordingError": "Recording error",
+        "RecordingErrorDescription": "There was an issue with the recording. Please try again.",
+        "CameraPermissionRequired": "Camera Permission Required",
+        "CameraPermissionRequiredDescription": "Please enable camera permission to take a photo.",
+        "MicrophonePermissionRequired": "Microphone Permission Required",
+        "MicrophonePermissionRequiredDescription": "Please enable microphone permission to record a video.",
+        "CameraError": "Camera Error",
+        "CameraErrorMessage": "There was an issue with the camera. Please try again.",
+        "CameraAndMicrophonePermissionsRequired": "Camera and microphone permissions required",
+        "NoFrontCameraAvailable": "No front camera available",
+        "RecordingWillStartIn": "Recording will start in",
+        "ShowNextPrompt": "Show Next Prompt",
+        "Done": "Done",
+        "StartRecordingButton": "Start Recording Video",
+      },
+      "VideoInstructions": {
+        "Heading1": "Record a short video.",
+        "Heading2": "You'll be asked to",
+        "Heading3": "A person at Service BC will watch the video. They need to hear and see you clearly.",
+        "Bullet1": "Keep the video under 30 seconds in length",
+        "Bullet2": "Be the only person in the video",
+        "Bullet3": "Be in a quiet place",
+        "Bullet4": "Hold this device in front of your face",
+        "Bullet5": "Check your face can be seen in the video",
+        "Bullet6": "Say your first and last name",
+        "Heading4": "Videos with inappropriate, offensive, or harassing behavior will not be accepted.",
+        "StartRecordingButton": "Start Recording Video",
+      },
+      "VideoReview": {
+        "VideoErrorPath":"Video path and thumbnail path are required",
+        "Heading": "Can you see and hear yourself clearly in the video?",
+        "UseVideo": "Use this video",
+        "RetakeVideo": "Retake video",
+      },
+      "VideoTooLong": {
+        "Heading": "Sorry, your video is too long.",
+        "Description1": "Your video has to be less than 30 seconds.",
+        "Description2": "Your video was {{videoLengthSeconds}} seconds.",
+        "ButtonText": "Retake",
+        "CancelButtonText": "Cancel",
+      }
+    },
+    "MismatchedSerial": {
+      "Heading": "Card not found",
+      "Description1": "Check the card serial number and birthdate match what is on your card:",
+      "Description2": "Check your card is a BC Services Card by looking at the front of your card:",
+      "SerialNumber": "Serial number: {{serial}}",
+      "Birthdate": "Birthdate: {{birthdate}}",
+    },
+    "PhotoInstructions": {
+      "Heading": "Take a photo of your face. The agent will use this photo when verifying your identity.",
+      "Bullet1": "Hold your phone in front of you",
+      "Bullet2": "Remove your glasses for the photo only",
+      "Bullet3": "Be the only person in the photo",
+      "Bullet4": "Look like the photo on your BC Services Card or photo ID",
+      "TakePhoto": "Take Photo of Face",
+    },
+    "PhotoReview": {
+      "PathRequired": "Photo path is required",
+      "UsePhoto": "Use this photo",
+      "RetakePhoto": "Retake photo",
     },
     "TransferQRInformation": {
       "Title": "Open the BC Services Card app on your other mobile device",
@@ -521,6 +590,9 @@ const translation = {
       "RemoveGlasses": "Remove your glasses (if possible)"
     },
     "VideoCall": {
+      "MissingSession": "Missing required parameters to end session",
+      "MissingSessionOrCallId": "Missing session or call ID for keep-alive update",
+      "DeviceCodeError": "Missing device or user code",
       "ServiceBC": "Service BC",
       "BeforeYouCallTitle": "Before you call",
       "WiFiRecommended": "Wi-Fi Recommended",
@@ -528,7 +600,6 @@ const translation = {
       "CellularNetworkWarning": "The app detected you're on a cellular network. ",
       "FindPrivatePlace": "Find a Private Place to Talk",
       "MakeSureOnlyYou": "Make sure you'll be the only person in the video.",
-      "HoursOfService": "Hours of Service",
       "DefaultHours": "Monday to Friday\n7:30am - 5:00pm Pacific Time",
       "ContactCentrePrivacy": "Contact Centre Privacy",
       "PrivacyNotice": "During a video call, Service BC will ask for and collect personal information. The personal information you will provide is collected for the purpose of verification of your BC Services Card. This information is collected under the authority of Section 26(c) and 26(e) of the Freedom of Information and Protection of Privacy Act (FIPPA).",
@@ -538,24 +609,6 @@ const translation = {
       "YouShould": "You should:",
       "StartCall": "Start call",
       "StartVideoCall": "Start video call",
-      "OneMomentPlease": "One moment please...",
-      "SettingThingsUp": "We're setting things up for you",
-      "TakingLongerThanUsual": "This is taking longer than usual. Please be patient.",
-      "CreatingSession": "Creating video session...",
-      "ConnectingWebRTC": "Connecting to video service...",
-      "WaitingForAgent": "Waiting for an agent to join...",
-      "Initializing": "Initializing...",
-      "ConnectionError": "Connection Error",
-      "GenericError": "An error occurred",
-      "TryAgain": "Try Again",
-      "GoBack": "Go Back",
-      "AllAgentsBusy": "All agents are busy",
-      "CallUsLater": "Call us later",
-      "AllAgentsBusyMessage": "We're sorry your call couldn't be answered. All of our agents are busy at the moment. Please call us back during our hours of service.",
-      "CurrentlyClosedMessage": "We are currently closed. To talk to one of our agents to verify by video, call us during our hours of service.",
-      "Reminder": "Reminder",
-      "AddCardAgainReminder": "You'll need to add your card again if you don't finish verifying by {{date}}.",
-      "SendVideoInstead": "Send video instead",
       "CallStates": {
         "CreatingSession": "Creating video session...",
         "ConnectingWebRTC": "Connecting to video service...",
@@ -567,7 +620,6 @@ const translation = {
         "OneMomentPlease": "One moment please...",
         "SettingThingsUp": "We're setting things up for you",
         "TakingLongerThanUsual": "This is taking longer than usual. Please be patient.",
-        "Cancel": "Cancel"
       },
       "Banners": {
         "VideoWillResume": "Video will resume when you return to this app",
@@ -577,13 +629,6 @@ const translation = {
       },
       "Errors": {
         "ConnectionError": "Connection Error",
-        "ConnectionTimeout": "Connection to video service timed out.",
-        "ConnectionFailed": "Failed to establish video connection.",
-        "SessionFailed": "Service is unavailable.",
-        "CallFailed": "Failed to initiate video call.",
-        "NetworkError": "Network connection is unavailable.",
-        "PermissionDenied": "Camera or microphone access was denied.",
-        "UnexpectedError": "An unexpected error occurred.",
         "GenericError": "An error occurred",
         "TryAgain": "Try Again",
         "GoBack": "Go Back"
@@ -615,21 +660,20 @@ const translation = {
       "SecondID": "Choose your second ID"
     },
     "EvidenceIDCollection": {
+      "Heading1": "Enter the information",
+      "Heading2": "exactly as shown",
+      "Heading3": "on the ID.",
       "DocumentNumberSubtext": "For example:",
       "DocumentNumberError": "Please enter a valid document number",
-
       "FirstNameLabel": "First name",
       "FirstNameSubtext": "Your first given name",
       "FirstNameError": "Please enter a first name",
-
       "LastNameLabel": "Last name",
       "LastNameError": "Please enter a last name",
       "LastNameSubtext": "Also known as surname or family name",
-
       "BirthDateLabel": "Birth date",
       "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
-
       "MiddleNamesLabel": "Middle names",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
       "MiddleNamesError": "Please enter up to two middle names",
@@ -637,22 +681,20 @@ const translation = {
     "Address": {
       "Heading": "Address",
       "Paragraph": "Enter the address of where you live.",
-
       "StreetAddressLabel": "Street Line 1",
       "StreetAddressSubtext": "Your residential street address",
       "StreetAddressRequired": "Please enter a street address",
-
       "CityLabel": "City",
       "CitySubtext": "The city of your current address",
       "CityRequired": "Please enter a city",
-
       "ProvinceLabel": "Province or Territory",
       "ProvinceSubtext": "Province or territory. For example, BC or British Columbia",
       "ProvinceInvalid": "Please enter a valid Canadian province or territory",
-
       "PostalCodeLabel": "Postal Code",
       "PostalCodeSubtext": "Your postal code in format A1A 2B2",
-      "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format"
+      "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format",
+      "MissingPrerequisiteAttributes": "Missing prerequisite user attributes",
+      "NoDeviceCodeFound": "Device previously registered, but no deviceCode found in store",
     },
     "Account": {
       "RemoveAccount": "Remove account",
@@ -660,7 +702,18 @@ const translation = {
       "RemoveAccountParagraph": "To use this app again, you'll need to provide your ID and verify your identity.",
       "TransferAccount": "Transfer account to another device",
       "AccountDetails": "All account details",
-      "AccountDetailsDescription": "View your account activity, manage your email address and more."
+      "AccountDetailsDescription": "View your account activity, manage your email address and more.",
+      "AccountInfo" : {
+        "Description": "This cannot be used as photo ID, a driver's licence, or a health card.",
+        "AppExpiryDate": "App expiry date",
+        "AccountType": "Account type",
+        "AccountTypeNonBCServicesCard": "Non BC Services Card",
+        "Address": "Address",
+        "DateOfBirth": "Date of birth",
+        "EmailAddress": "Email address",
+        "MyDevicesCount": "My devices ({{count}})",
+        "MyDevices": "My devices",
+      }
     },
     "VerificationMethods": {
       "SendVideoTitle": "Send a video",
@@ -684,10 +737,6 @@ const translation = {
     "ButtonTitle": "Turn on",
     "SessionID": "Session ID",
     "Banner": "Remote Troubleshoot on. ID: {{ sessionId }}"
-  },
-  "AppUpdate": {
-    "Heading": "Update BC Wallet to the latest version",
-    "Body": "BC Wallet was updated with new improvements. Update your app now to enjoy the latest features and enhancements."
   },
   "HelpCentre": {
     "Title": "Help Centre"

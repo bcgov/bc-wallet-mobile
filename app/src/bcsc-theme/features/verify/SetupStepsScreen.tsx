@@ -96,14 +96,14 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
   const handleCheckStatus = async () => {
     if (!store.bcsc.verificationRequestId) {
-      throw new Error('Verification request ID is missing')
+      throw new Error(t('Unified.Steps.VerificationIDMissing'))
     }
 
     const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId)
 
     if (status === 'verified') {
       if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
-        throw new Error('Device code or user code is missing for verification')
+        throw new Error(t('Unified.Steps.DeviceCodeOrUserCodeMissing'))
       }
 
       const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
@@ -119,30 +119,26 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }
 
   const handleCancelVerification = async () => {
-    Alert.alert(
-      'Are you sure?',
-      'Your verification request sent to Service BC will be deleted. Then you can choose another way to verify.',
-      [
-        {
-          text: 'Delete Verify Request',
-          onPress: async () => {
-            try {
-              await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId!)
-            } catch (error) {
-              logger.error(`Error cancelling verification request: ${error}`)
-            } finally {
-              dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [false] })
-              navigation.navigate(BCSCScreens.VerificationMethodSelection)
-            }
-          },
+    Alert.alert(t('Unified.Steps.AreYouSure'), t('Unified.Steps.YourVerificationRequestWillBeDeleted'), [
+      {
+        text: t('Unified.Steps.DeleteVerifyRequest'),
+        onPress: async () => {
+          try {
+            await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId!)
+          } catch (error) {
+            logger.error(`Error cancelling verification request: ${error}`)
+          } finally {
+            dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [false] })
+            navigation.navigate(BCSCScreens.VerificationMethodSelection)
+          }
         },
-        {
-          text: 'Cancel',
-          onPress: () => {},
-          style: 'cancel',
-        },
-      ]
-    )
+      },
+      {
+        text: t('Global.Cancel'),
+        onPress: () => {},
+        style: 'cancel',
+      },
+    ])
   }
 
   /**
@@ -168,12 +164,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
     // if the bcsc card is registered, show the bcsc serial number
     if (step.id.completed && store.bcsc.serial) {
-      cards.push(`ID: BC Services Card (${store.bcsc.serial})`)
+      cards.push(t('Unified.Steps.GetVerificationStep2Subtext1', { serial: store.bcsc.serial }))
     }
 
     // if the user has added additional evidence, add each to the list
     for (const evidence of store.bcsc.additionalEvidenceData) {
-      cards.push(`ID: ${evidence.evidenceType.evidence_type_label} (${evidence.documentNumber})`)
+      cards.push(
+        t('Unified.Steps.GetVerificationStep2Subtext2', {
+          evidenceType: evidence.evidenceType,
+          documentNumber: evidence.documentNumber,
+        })
+      )
     }
 
     if (cards.length) {
@@ -194,15 +195,17 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    */
   const getVerificationStep3Subtext = useCallback(() => {
     if (step.id.completed && store.bcsc.serial) {
-      return 'Address: Residential address from your BC Services Card will be used'
+      return t('Unified.Steps.GetVerificationStep3Subtext1')
     }
 
     if (store.bcsc.userMetadata?.address && store.bcsc.deviceCode) {
-      return `Address: ${formatAddressForDisplay(store.bcsc.userMetadata.address)}`
+      return t('Unified.Steps.GetVerificationStep3Subtext2', {
+        address: formatAddressForDisplay(store.bcsc.userMetadata.address),
+      })
     }
 
-    return 'Residential address'
-  }, [step.id.completed, store.bcsc.serial, store.bcsc.userMetadata?.address, store.bcsc.deviceCode])
+    return t('Unified.Steps.GetVerificationStep3Subtext3')
+  }, [step.id.completed, store.bcsc.serial, store.bcsc.userMetadata?.address, store.bcsc.deviceCode, t])
 
   /**
    * Returns the subtext for Step 5 (Verify Identity) of the verification process.
@@ -216,15 +219,15 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         month: 'long',
         year: 'numeric',
       })
-      return `Verify identity by ${expirationDate}`
+      return t('Unified.Steps.GetVerificationStep5Subtext1', { expirationDate })
     }
 
     if (step.id.nonPhotoBcscNeedsAdditionalCard) {
-      return 'Complete additional identification first'
+      return t('Unified.Steps.GetVerificationStep5Subtext2')
     }
 
-    return 'Verify identity'
-  }, [step.verify.focused, step.id.nonPhotoBcscNeedsAdditionalCard, store.bcsc.deviceCodeExpiresAt])
+    return t('Unified.Steps.GetVerificationStep5Subtext3')
+  }, [step.verify.focused, step.id.nonPhotoBcscNeedsAdditionalCard, store.bcsc.deviceCodeExpiresAt, t])
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -270,13 +273,15 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             step.id.nonBcscNeedsAdditionalCard || step.id.nonPhotoBcscNeedsAdditionalCard ? (
               <View>
                 <View style={styles.addSecondIdTextContainer}>
-                  <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>Add second ID</ThemedText>
+                  <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>
+                    {t('Unified.Steps.AddSecondIdText')}
+                  </ThemedText>
                   <Icon size={30} color={ColorPalette.brand.text} name={'chevron-right'} />
                 </View>
                 {
                   // QUESTION (MD): Do we want the same for the non bcsc card verification?
                   store.bcsc.cardType === BCSCCardType.NonPhoto ? (
-                    <ThemedText>{'Additional identification required for non-photo BC Services Card.'}</ThemedText>
+                    <ThemedText>{t('Unified.Steps.AdditionalIdentificationRequired')}</ThemedText>
                   ) : null
                 }
               </View>
@@ -312,16 +317,18 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             <View style={styles.contentEmailContainer}>
               {step.email.completed ? (
                 <>
-                  <ThemedText style={{ color: TextTheme.normal.color }}>{`Email: ${store.bcsc.email}`}</ThemedText>
+                  <ThemedText style={{ color: TextTheme.normal.color }}>
+                    {t('Unified.Steps.StoredEmail', { email: store.bcsc.email })}
+                  </ThemedText>
                   <TouchableOpacity
                     style={styles.contentEmailButton}
                     onPress={handleEmailStepPress}
                     testID={testIdWithKey('EditEmail')}
-                    accessibilityLabel={'Edit'}
+                    accessibilityLabel={t('Unified.Steps.EditEmail')}
                     hitSlop={hitSlop}
                   >
                     <ThemedText style={{ color: ColorPalette.brand.link, textDecorationLine: 'underline' }}>
-                      Edit
+                      {t('Unified.Steps.EditEmail')}
                     </ThemedText>
                   </TouchableOpacity>
                 </>
@@ -331,7 +338,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
                     color: step.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
                   }}
                 >
-                  Email Address
+                  {t('Unified.Steps.EmailAddress')}
                 </ThemedText>
               )}
             </View>
@@ -368,7 +375,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               onPress={handleCheckStatus}
             >
               <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
-                Check status
+                {t('Unified.Steps.CheckStatus')}
               </ThemedText>
               <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
             </TouchableOpacity>
@@ -388,7 +395,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               onPress={handleCancelVerification}
             >
               <ThemedText variant={'headingFour'} style={{ color: ColorPalette.brand.text }}>
-                Choose another way to verify
+                {t('Unified.Steps.ChooseAnotherWayToVerify')}
               </ThemedText>
               <Icon name={'chevron-right'} color={ColorPalette.brand.text} size={32} />
             </TouchableOpacity>
@@ -397,7 +404,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <View style={styles.itemSeparator} />
         <View style={{ padding: Spacing.md }}>
           <Button
-            title={'Reset data'}
+            title={t('Unified.Steps.ResetData')}
             onPress={async () => {
               const result = await factoryReset()
 
@@ -406,7 +413,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               }
             }}
             testID={testIdWithKey('ResetData')}
-            accessibilityLabel={'Reset data'}
+            accessibilityLabel={t('Unified.Steps.ResetData')}
             buttonType={ButtonType.Secondary}
           />
         </View>

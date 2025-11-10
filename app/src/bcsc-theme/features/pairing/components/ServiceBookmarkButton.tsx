@@ -2,6 +2,7 @@ import { hitSlop } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
@@ -13,6 +14,7 @@ type ServiceBookmarkButtonProps = {
 const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButtonProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     container: {
@@ -42,7 +44,7 @@ const ServiceBookmarkButton = ({ serviceName, serviceId }: ServiceBookmarkButton
     <View style={styles.container}>
       <View style={styles.row}>
         <View>
-          <ThemedText variant={'bold'}>Save link to:</ThemedText>
+          <ThemedText variant={'bold'}>{t('Unified.ManualPairing.BookmarkService')}</ThemedText>
           <ThemedText variant={'bold'}>{serviceName}</ThemedText>
         </View>
         <TouchableOpacity hitSlop={hitSlop} onPress={handleBookmarkPress}>

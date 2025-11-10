@@ -54,7 +54,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
 
       {store.bcsc.nicknames.length > 0 ? (
         <View style={{ ...styles.controlsContainer, flexGrow: 1 }}>
-          <ThemedText variant={'headingFour'}>{t('Unified.AccountSelector.ContinueAs')}</ThemedText>
+          <ThemedText variant={'headingFour'}>{t('Unified.AccountSetup.ContinueAs')}</ThemedText>
 
           <View style={{ gap: Spacing.sm }}>
             {Array.from(store.bcsc.nicknames).map((nickname) => (

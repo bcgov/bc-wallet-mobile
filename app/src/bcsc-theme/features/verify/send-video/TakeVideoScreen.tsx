@@ -5,6 +5,7 @@ import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
@@ -31,6 +32,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const promptOpacity = useRef(new Animated.Value(1)).current
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { t } = useTranslation()
 
   useEffect(() => {
     promptOpacity.setValue(0)
@@ -138,7 +140,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       onRecordingError: (error) => {
         logger.error(`Recording error: ${error.message}`)
         stopTimer() // Stop timer on error
-        Alert.alert('Recording Error', 'There was an issue with the recording. Please try again.')
+        Alert.alert(t('SendVideo.TakeVideo.RecordingError'), t('SendVideo.TakeVideo.RecordingErrorDescription'))
       },
       onRecordingFinished: async (video) => {
         logger.info(`Recording finished, duration: ${video.duration}`)
@@ -171,18 +173,22 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         if (!hasCameraPermission) {
           const permission = await requestCameraPermission()
           if (!permission) {
-            Alert.alert('Camera Permission Required', 'Please enable camera permission to take a photo.', [
-              { text: 'OK', onPress: () => navigation.goBack() },
-            ])
+            Alert.alert(
+              t('SendVideo.TakeVideo.CameraPermissionRequired'),
+              t('SendVideo.TakeVideo.CameraPermissionRequiredDescription'),
+              [{ text: 'OK', onPress: () => navigation.goBack() }]
+            )
             return
           }
         }
         if (!hasMicrophonePermission) {
           const permission = await requestMicrophonePermission()
           if (!permission) {
-            Alert.alert('Microphone Permission Required', 'Please enable microphone permission to record a video.', [
-              { text: 'OK', onPress: () => navigation.goBack() },
-            ])
+            Alert.alert(
+              t('SendVideo.TakeVideo.MicrophonePermissionRequired'),
+              t('SendVideo.TakeVideo.MicrophonePermissionRequiredDescription'),
+              [{ text: 'OK', onPress: () => navigation.goBack() }]
+            )
             return
           }
         }
@@ -218,14 +224,16 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const onError = (error: any) => {
     // eslint-disable-next-line no-console
     console.error('Camera error:', error)
-    Alert.alert('Camera Error', 'There was an issue with the camera. Please try again.')
+    Alert.alert(t('Unified.SendVideo.TakeVideo.CameraError'), t('Unified.SendVideo.TakeVideo.CameraErrorMessage'))
   }
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
     return (
       <SafeAreaView style={styles.pageContainer}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>Camera and microphone permissions required</Text>
+          <Text style={{ color: 'white' }}>
+            {t('Unified.SendVideo.TakeVideo.CameraAndMicrophonePermissionsRequired')}
+          </Text>
         </View>
       </SafeAreaView>
     )
@@ -235,7 +243,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     return (
       <SafeAreaView style={styles.pageContainer}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>No front camera available</Text>
+          <Text style={{ color: 'white' }}>{t('Unified.SendVideo.TakeVideo.NoFrontCameraAvailable')}</Text>
         </View>
       </SafeAreaView>
     )
@@ -264,7 +272,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           ) : (
             <>
               <ThemedText variant={'headingTwo'} style={{ textAlign: 'center' }}>
-                Recording will start in
+                {t('Unified.SendVideo.TakeVideo.RecordingWillStartIn')}
               </ThemedText>
               <Animated.Text style={[{ textAlign: 'center', opacity: promptOpacity }, TextTheme.headingTwo]}>
                 {prompt}
@@ -278,7 +286,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           <View style={styles.controlsContainer}>
             <View style={styles.cancelContainer}>
               <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} hitSlop={hitSlop}>
-                <ThemedText style={{ color: 'white' }}>Cancel</ThemedText>
+                <ThemedText style={{ color: 'white' }}>{t('Global.Cancel')}</ThemedText>
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
                 <ThemedText style={{ color: ColorPalette.semantic.error }}>{'\u2B24'}</ThemedText>
@@ -291,10 +299,14 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
             </View>
             <Button
               buttonType={ButtonType.Primary}
-              title={prompts.indexOf(prompt) < prompts.length - 1 ? 'Show Next Prompt' : 'Done'}
+              title={
+                prompts.indexOf(prompt) < prompts.length - 1
+                  ? t('Unified.SendVideo.TakeVideo.ShowNextPrompt')
+                  : t('Unified.SendVideo.TakeVideo.Done')
+              }
               onPress={onPressNextPrompt}
               testID={'StartRecordingButton'}
-              accessibilityLabel={'Start Recording Video'}
+              accessibilityLabel={t('Unified.SendVideo.TakeVideo.StartRecordingButton')}
             />
           </View>
         ) : null}

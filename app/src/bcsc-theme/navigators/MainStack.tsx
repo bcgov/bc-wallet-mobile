@@ -76,7 +76,7 @@ const MainStack: React.FC = () => {
           component={MainSettingsScreen}
           options={{
             headerShown: true,
-            title: t('Screens.Settings'),
+            title: t('Unified.Screens.Settings'),
             headerBackTestID: testIdWithKey('Back'),
           }}
         />

@@ -1,6 +1,7 @@
 import { BCState } from '@/store'
 import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -12,6 +13,7 @@ const MismatchedSerialScreen = () => {
   const { ColorPalette, Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { width } = useWindowDimensions()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -29,18 +31,18 @@ const MismatchedSerialScreen = () => {
   return (
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
-        Card not found
+        {t('Unified.MismatchedSerial.Heading')}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.lg }}>
-        Check the card serial number and birthdate match what is on your card:
+      <ThemedText style={{ marginBottom: Spacing.lg }}>{t('Unified.MismatchedSerial.Description1')}</ThemedText>
+      <ThemedText variant={'bold'}>
+        {t('Unified.MismatchedSerial.SerialNumber', { serial: store.bcsc.serial })}
       </ThemedText>
-      <ThemedText variant={'bold'}>Serial number: {store.bcsc.serial}</ThemedText>
       <ThemedText variant={'bold'} style={{ marginBottom: Spacing.lg }}>
-        Birthdate: {store.bcsc.birthdate?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}
+        {t('Unified.MismatchedSerial.Birthdate', {
+          birthdate: store.bcsc.birthdate?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' }),
+        })}
       </ThemedText>
-      <ThemedText style={{ marginBottom: Spacing.lg }}>
-        Check your card is a BC Services Card by looking at the front of your card:
-      </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.lg }}>{t('Unified.MismatchedSerial.Description2')}</ThemedText>
       <Image style={styles.image} source={{ uri: CARD_NOT_FOUND_IMAGE }} resizeMode={'contain'} />
     </SafeAreaView>
   )

@@ -51,23 +51,27 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }}>
-          {busy ? t('Unified.VideoCall.AllAgentsBusy') : t('Unified.VideoCall.CallUsLater')}
+          {busy
+            ? t('Unified.VideoCall.CallBusyOrClosed.AllAgentsBusy')
+            : t('Unified.VideoCall.CallBusyOrClosed.CallUsLater')}
         </ThemedText>
 
         <ThemedText style={{ marginBottom: Spacing.lg }}>
-          {busy ? t('Unified.VideoCall.AllAgentsBusyMessage') : t('Unified.VideoCall.CurrentlyClosedMessage')}
+          {busy
+            ? t('Unified.VideoCall.CallBusyOrClosed.AllAgentsBusyMessage')
+            : t('Unified.VideoCall.CallBusyOrClosed.CurrentlyClosedMessage')}
         </ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.sm }}>
-          {t('Unified.VideoCall.HoursOfService')}
+          {t('Unified.VideoCall.CallBusyOrClosed.HoursOfService')}
         </ThemedText>
         <ThemedText style={{ marginBottom: Spacing.md }}>{serviceHours}</ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          {t('Unified.VideoCall.Reminder')}
+          {t('Unified.VideoCall.CallBusyOrClosed.Reminder')}
         </ThemedText>
         <ThemedText>
-          {t('Unified.VideoCall.AddCardAgainReminder', {
+          {t('Unified.VideoCall.CallBusyOrClosed.AddCardAgainReminder', {
             date: store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
               month: 'long',
               day: 'numeric',
@@ -81,8 +85,8 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
         <Button
           buttonType={ButtonType.Primary}
           testID={testIdWithKey('SendVideo')}
-          accessibilityLabel={t('Unified.VideoCall.SendVideoInstead')}
-          title={t('Unified.VideoCall.SendVideoInstead')}
+          accessibilityLabel={t('Unified.VideoCall.CallBusyOrClosed.SendVideoInstead')}
+          title={t('Unified.VideoCall.CallBusyOrClosed.SendVideoInstead')}
           onPress={onPressSendVideo}
         />
       </View>

@@ -2,6 +2,7 @@ import useApi from '@bcsc-theme/api/hooks/useApi'
 import { VideoCall, VideoSession } from '@bcsc-theme/api/hooks/useVideoCallApi'
 import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AppState } from 'react-native'
 import uuid from 'react-native-uuid'
 import { MediaStream } from 'react-native-webrtc'
@@ -48,6 +49,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
   const handleRemoteDisconnectRef = useRef<(() => Promise<void>) | null>(null)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { video } = useApi()
+  const { t } = useTranslation()
 
   // this value is watched to determine which background-related action to take
   const backgroundMode: VideoCallBackgroundMode = useMemo(() => {
@@ -120,7 +122,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
     try {
       if (!session) {
-        throw new Error('Missing required parameters to end session')
+        throw new Error(t('Unified.VideoCall.MissingSession'))
       }
 
       await video.endVideoSession(session.session_id)
@@ -132,7 +134,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     setClientCallId(null)
     setConnection(null)
     setVideoCallError(null)
-  }, [video, stopAllMedia, clientCallId, session, connection, logger])
+  }, [video, stopAllMedia, clientCallId, session, connection, logger, t])
 
   const startBackendKeepAlive = useCallback(() => {
     clearIntervalIfExists(backendKeepAliveTimerRef)
@@ -142,7 +144,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
         if (session && clientCallId) {
           await video.updateVideoCallStatus(session.session_id, clientCallId, 'call_in_call')
         } else {
-          throw new Error('Missing session or call ID for keep-alive update')
+          throw new Error(t('Unified.VideoCall.MissingSessionOrCallId'))
         }
       } catch {
         // Just warn as one missed keep alive won't impact the call
@@ -151,7 +153,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }, KEEP_ALIVE_INTERVAL_MS)
 
     backendKeepAliveTimerRef.current = timer
-  }, [session, clientCallId, video, logger])
+  }, [session, clientCallId, video, logger, t])
 
   // when the call is disconnected by the agent or due to network issues
   const handleRemoteDisconnect = useCallback(async () => {

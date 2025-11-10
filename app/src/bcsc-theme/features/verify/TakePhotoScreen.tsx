@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
 import { MaskType } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -14,6 +15,7 @@ type PhotoInstructionsScreenProps = {
 }
 
 const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {
+  const { t } = useTranslation()
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
@@ -34,7 +36,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"
-        cameraLabel="Position your face within the oval and press the button on the screen"
+        cameraLabel={t('Unified.TakePhoto.CameraInstructions')}
         maskType={MaskType.OVAL}
         onPhotoTaken={handlePhotoTaken}
       />

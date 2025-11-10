@@ -15,6 +15,7 @@ import {
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -30,6 +31,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   const { token } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { ButtonLoading } = useAnimatedComponents()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -58,7 +60,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       setError(false)
 
       if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
-        throw new Error('Device code or user code is missing in the store.')
+        throw new Error(t('Unified.VerifyIdentity.DeviceCodeError'))
       }
 
       const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
@@ -82,29 +84,29 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          Verify in person
+          {t('Unified.VerifyIdentity.VerifyInPersonTitle')}
         </ThemedText>
-        <ThemedText variant={'bold'}>Where to go</ThemedText>
+        <ThemedText variant={'bold'}>{t('Unified.VerifyIdentity.WhereToGo')}</ThemedText>
         <Link
-          linkText={'A Service BC Location'}
+          linkText={t('Unified.VerifyIdentity.WhereToGoLink')}
           testID={testIdWithKey('ServiceBCLink')}
           onPress={() => null}
           style={{ marginBottom: Spacing.md }}
         />
-        <ThemedText variant={'bold'}>What to bring</ThemedText>
+        <ThemedText variant={'bold'}>{t('Unified.VerifyIdentity.WhatToBring')}</ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{'This device'}</ThemedText>
+          <ThemedText>{t('Unified.VerifyIdentity.ThisDevice')}</ThemedText>
         </View>
         <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{`Your BC Services Card - if it's a non-photo card, bring your additional ID too`}</ThemedText>
+          <ThemedText>{t('Unified.VerifyIdentity.YourBCServicesCard')}</ThemedText>
         </View>
-        <ThemedText variant={'bold'}>Show this confirmation number</ThemedText>
+        <ThemedText variant={'bold'}>{t('Unified.VerifyIdentity.ShowThisConfirmationNumber')}</ThemedText>
         <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal', marginBottom: Spacing.xl, letterSpacing: 7 }}>
           {`${store.bcsc.userCode?.slice(0, 4)}-${store.bcsc.userCode?.slice(4, 8)}`}
         </ThemedText>
-        <ThemedText variant={'bold'}>You must complete this by</ThemedText>
+        <ThemedText variant={'bold'}>{t('Unified.VerifyIdentity.YouMustCompleteThisBy')}</ThemedText>
         <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
           {store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}
         </ThemedText>
@@ -113,14 +115,14 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         <View style={{ marginBottom: Spacing.md }}>
           {error && (
             <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
-              You have not yet been verified
+              {t('Unified.VerifyIdentity.YouHaveNotBeenVerified')}
             </ThemedText>
           )}
           <Button
             buttonType={ButtonType.Primary}
             testID={testIdWithKey('Complete')}
-            accessibilityLabel={'Complete'}
-            title={'Complete'}
+            accessibilityLabel={t('Unified.VerifyIdentity.Complete')}
+            title={t('Unified.VerifyIdentity.Complete')}
             onPress={onPressComplete}
             disabled={loading}
           >
@@ -128,7 +130,9 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
           </Button>
         </View>
         <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
-          Card serial number: {store.bcsc.serial ?? store.bcsc.additionalEvidenceData[0]?.documentNumber ?? 'N/A'}
+          {t('Unified.VerifyIdentity.CardSerialNumber', {
+            serial: store.bcsc.serial ?? store.bcsc.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
+          })}
         </ThemedText>
       </View>
     </SafeAreaView>

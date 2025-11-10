@@ -47,8 +47,8 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
           />
         ) : (
           <CardButton
-            title={'TODO: Android title'}
-            subtext={'TODO: Android subtext'}
+            title={t('Unified.Onboarding.SecureAppBiometricsTitle')}
+            subtext={t('Unified.Onboarding.SecureAppBiometricsSubtext')}
             onPress={() => {
               // TODO (MD): Implement Android biometric setup (Remove completed onboarding dispatch when implemented)
               dispatch({ type: BCDispatchAction.UPDATE_COMPLETED_ONBOARDING, payload: [true] })
