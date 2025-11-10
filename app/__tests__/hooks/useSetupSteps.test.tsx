@@ -160,7 +160,6 @@ describe('useSetupSteps Hook', () => {
 
       const hook = renderHook(() => useSetupSteps(store))
 
-      // Address step should be focused
       expect(hook.result.current.address.focused).toBe(true)
       expect(hook.result.current.address.completed).toBe(false)
     })
@@ -221,7 +220,7 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.verify.completed).toBe(false)
     })
 
-    it('should work with NonPhoto card type when serial available but email is falsey', () => {
+    it('should be focused with NonPhoto card type when serial available but email is falsey', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
@@ -360,7 +359,6 @@ describe('useSetupSteps Hook', () => {
 
       const hook = renderHook(() => useSetupSteps(store))
 
-      // Step 1: Nickname step should be focused
       expect(hook.result.current.nickname.completed).toBe(false)
       expect(hook.result.current.nickname.focused).toBe(true)
       expect(hook.result.current.id.completed).toBe(false)
@@ -372,7 +370,6 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.verify.completed).toBe(false)
       expect(hook.result.current.verify.focused).toBe(false)
 
-      // Complete Step 1
       store.bcsc.nicknames = ['test']
       store.bcsc.selectedNickname = 'test'
 
@@ -381,11 +378,9 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.nickname.completed).toBe(true)
       expect(hook.result.current.nickname.focused).toBe(false)
 
-      // Step 2: ID step should be focused
       expect(hook.result.current.id.completed).toBe(false)
       expect(hook.result.current.id.focused).toBe(true)
 
-      // Complete Step 2
       store.bcsc.cardType = BCSCCardType.Combined
       store.bcsc.serial = '123456789'
       store.bcsc.email = 'steveBrule@email.com'
@@ -395,11 +390,9 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.id.completed).toBe(true)
       expect(hook.result.current.id.focused).toBe(false)
 
-      // Step 3: Address step should be focused
       expect(hook.result.current.address.completed).toBe(false)
       expect(hook.result.current.address.focused).toBe(true)
 
-      // Complete Step 3
       store.bcsc.deviceCode = 'ABCDEFGH'
 
       hook.rerender(store)
@@ -407,11 +400,9 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.address.completed).toBe(true)
       expect(hook.result.current.address.focused).toBe(false)
 
-      // Step 4: Email step should be focused
       expect(hook.result.current.email.completed).toBe(false)
       expect(hook.result.current.email.focused).toBe(true)
 
-      // Complete Step 4
       store.bcsc.emailConfirmed = true
 
       hook.rerender(store)
@@ -419,11 +410,9 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.email.completed).toBe(true)
       expect(hook.result.current.email.focused).toBe(false)
 
-      // Step 5: Verify step should be focused
       expect(hook.result.current.verify.completed).toBe(false)
       expect(hook.result.current.verify.focused).toBe(true)
 
-      // Complete Step 5
       store.bcsc.verified = true
       store.bcsc.pendingVerification = false
 
