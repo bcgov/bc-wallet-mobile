@@ -1,5 +1,5 @@
 import { useEventListener } from '@/hooks/useEventListener'
-import { CardExpirySystemCheck } from '@/services/system-checks/CardExpirySystemCheck'
+import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
@@ -88,13 +88,11 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         // Checks to run once on main stack (verified users)
         if (scope === SystemCheckScope.MAIN_STACK) {
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
-
-          const userInfo = await userApi.getUserInfo()
-          const cardExpiry = new Date(userInfo.card_expiry)
+          const accountExpiry = await userApi.getAccountExpirationDate()
 
           await runSystemChecks([
             new DeviceCountSystemCheck(getIdToken, utils),
-            new CardExpirySystemCheck(cardExpiry, utils),
+            new AccountExpirySystemCheck(accountExpiry, utils),
           ])
         }
       } catch (error) {
