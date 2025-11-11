@@ -1,15 +1,31 @@
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { TOKENS, useServices, useTheme } from '@bifold/core'
 import React, { useCallback } from 'react'
-import { ActivityIndicator, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { WebView } from 'react-native-webview'
 import type { WebViewErrorEvent, WebViewHttpErrorEvent } from 'react-native-webview/lib/WebViewTypes'
 
 interface WebViewContentProps {
+  /**
+   * The URL to load in the WebView.
+   *
+   * @type {string}
+   */
   url: string
+  /**
+   * Optional callback function that is called when the WebView has finished loading.
+   *
+   * @type {() => void}
+   */
+  onLoaded?: () => void
+  /**
+   * Optional JavaScript code to inject into the WebView before content loads.
+   * Why? This is used to apply theming or other customizations to the web content.
+   *
+   * @see webview-utils.ts -> createThemedWebViewScript for an example.
+   * @type {string | undefined}
+   */
   injectedJavascript?: string
-  // TODO (MD): onLoad - callback to fire when webview has finished loading?
 }
 
 /**
@@ -18,24 +34,24 @@ interface WebViewContentProps {
  * @param {WebViewContentProps} props - The component props.
  * @returns {*} {JSX.Element} The rendered WebView component.
  */
-const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript }) => {
+const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript, onLoaded }) => {
   const { ColorPalette } = useTheme()
   const client = useBCSCApiClient()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
+    loadingContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    webview: {
-      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 9999,
     },
   })
-
-  // //TODO(bm): This checks if this is the "My Devices" endpoint - don't apply theming for it
-  // // in future we should update the themed webview script to handle the styles on the my devices page as well
-  // const isMyDevicesEndpoint = url.includes('/account/embedded/devices')
 
   const handleError = useCallback(
     (syntheticEvent: WebViewErrorEvent) => {
@@ -58,33 +74,31 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
   )
 
   return (
-    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
-      <WebView
-        source={{
-          uri: url,
-          headers: { Authorization: `Bearer ${client.tokens?.access_token}` },
-        }}
-        style={styles.webview}
-        startInLoadingState={true}
-        javaScriptEnabled={true}
-        domStorageEnabled={true}
-        allowsBackForwardNavigationGestures={true}
-        renderLoading={() => (
-          <SafeAreaView style={{ flex: 1, backgroundColor: ColorPalette.brand.primaryBackground }}>
-            <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-          </SafeAreaView>
-        )}
-        onError={handleError}
-        onHttpError={handleHttpError}
-        originWhitelist={['*']}
-        mixedContentMode="compatibility"
-        sharedCookiesEnabled={true}
-        thirdPartyCookiesEnabled={true}
-        userAgent="Single App"
-        injectedJavaScriptBeforeContentLoaded={injectedJavascript}
-        onMessage={() => {}} // Required for injectedJavaScript to work
-      />
-    </SafeAreaView>
+    <WebView
+      source={{
+        uri: url,
+        headers: { Authorization: `Bearer ${client.tokens?.access_token}` },
+      }}
+      startInLoadingState={true}
+      javaScriptEnabled={true}
+      domStorageEnabled={true}
+      allowsBackForwardNavigationGestures={true}
+      renderLoading={() => (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size={'large'} />
+        </View>
+      )}
+      onError={handleError}
+      onHttpError={handleHttpError}
+      originWhitelist={['*']}
+      mixedContentMode="compatibility"
+      sharedCookiesEnabled={true}
+      thirdPartyCookiesEnabled={true}
+      userAgent="Single App"
+      injectedJavaScriptBeforeContentLoaded={injectedJavascript}
+      onMessage={() => {}} // Required for injectedJavaScript to work
+      onLoad={onLoaded}
+    />
   )
 }
 

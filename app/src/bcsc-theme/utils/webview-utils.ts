@@ -2,6 +2,7 @@ import { IColorPalette } from '@bifold/core'
 
 /**
  * Creates injected JavaScript that applies theme colors to a WebView's content.
+ *
  * This includes setting the background color, text color, and link colors to match the app theme.
  * It also removes nav sections from the page
  *

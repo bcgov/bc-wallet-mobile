@@ -21,7 +21,7 @@ interface TermsOfUseScreenProps {
 export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
-  const [showWebView, setShowWebView] = useState(false)
+  const [webViewIsLoaded, setWebViewIsLoaded] = useState(false)
 
   const styles = StyleSheet.create({
     container: {
@@ -46,7 +46,12 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <WebViewContent url={TERMS_OF_USE_URL} injectedJavascript={createThemedWebViewScript(ColorPalette)} />
+      <WebViewContent
+        url={TERMS_OF_USE_URL}
+        injectedJavascript={createThemedWebViewScript(ColorPalette)}
+        onLoaded={() => setWebViewIsLoaded(true)}
+      />
+
       <View style={styles.buttonContainer}>
         <Button
           title={t('Unified.Onboarding.AcceptAndContinueButton')}
@@ -57,7 +62,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
           testID={testIdWithKey('AcceptAndContinue')}
           accessibilityLabel={t('Unified.Onboarding.AcceptAndContinueButton')}
           // Content must be visible and loaded before user can accept terms
-          disabled={!showWebView}
+          disabled={!webViewIsLoaded}
         />
       </View>
     </SafeAreaView>
