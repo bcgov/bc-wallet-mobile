@@ -2,6 +2,7 @@ import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
@@ -9,7 +10,8 @@ import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
-import { BCSCModals, BCSCScreens } from '../types/navigators'
+import { OnboardingWebViewScreen } from '../features/webview/OnboardingWebViewScreen'
+import { BCSCModals, BCSCOnboardingStackParams, BCSCScreens } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 
 /**
@@ -20,7 +22,7 @@ import { getDefaultModalOptions } from './stack-utils'
 const OnboardingStack = (): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
-  const Stack = createStackNavigator()
+  const Stack = createStackNavigator<BCSCOnboardingStackParams>()
   const defaultStackOptions = useDefaultStackOptions(theme)
 
   return (
@@ -60,6 +62,16 @@ const OnboardingStack = (): JSX.Element => {
         options={{
           headerShown: true,
         }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.OnboardingWebview}
+        component={OnboardingWebViewScreen}
+        options={({ route }) => ({
+          headerShown: true,
+          title: route.params.title,
+          headerBackTestID: testIdWithKey('Back'),
+          headerLeft: createMainWebviewHeaderBackButton(),
+        })}
       />
 
       {/* React navigation docs suggest modals at bottom of stack */}

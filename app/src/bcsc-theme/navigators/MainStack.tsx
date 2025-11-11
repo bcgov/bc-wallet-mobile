@@ -91,7 +91,7 @@ const MainStack: React.FC = () => {
         />
         <Stack.Screen
           name={BCSCScreens.MainWebView}
-          component={MainWebViewScreen<any>}
+          component={MainWebViewScreen}
           options={({ route }) => ({
             headerShown: true,
             title: route.params.title,

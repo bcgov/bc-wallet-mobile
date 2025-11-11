@@ -110,7 +110,6 @@ const VerifyStack = () => {
         options={{
           headerShown: true,
           headerBackTestID: testIdWithKey('Back'),
-          headerLeft: createVerifyWebviewHeaderBackButton(),
         }}
       />
       <Stack.Screen

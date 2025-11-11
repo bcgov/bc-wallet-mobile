@@ -177,8 +177,8 @@ export type BCSCTabStackParams = {
 }
 
 export type BCSCMainStackParams = {
-  [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
