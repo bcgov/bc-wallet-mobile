@@ -4,7 +4,7 @@ import React from 'react'
 import { WebViewContent } from './WebViewContent'
 
 interface OnboardingWebViewScreenProps {
-  route: RouteProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingWebview>
+  route: RouteProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingWebView>
 }
 
 const OnboardingWebViewScreen: React.FC<OnboardingWebViewScreenProps> = ({ route }) => {

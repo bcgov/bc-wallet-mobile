@@ -64,7 +64,7 @@ const OnboardingStack = (): JSX.Element => {
         }}
       />
       <Stack.Screen
-        name={BCSCScreens.OnboardingWebview}
+        name={BCSCScreens.OnboardingWebView}
         component={OnboardingWebViewScreen}
         options={({ route }) => ({
           headerShown: true,
