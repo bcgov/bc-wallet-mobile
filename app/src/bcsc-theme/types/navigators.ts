@@ -83,7 +83,7 @@ export enum BCSCScreens {
   OnboardingNotifications = 'BCSCOnboardingNotifications',
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
-  OnboardingWebview = 'BCSCOnboardingWebview',
+  OnboardingWebView = 'BCSCOnboardingWebview',
   MainSettings = 'BCSCMainSettings',
   MainWebView = 'BCSCMainWebView',
   MainContactUs = 'BCSCMainContactUs',
@@ -101,7 +101,7 @@ export type BCSCStartupStackParams = {
 }
 
 export type BCSCOnboardingStackParams = {
-  [BCSCScreens.OnboardingWebview]: { url: string; title: string; injectedJavascript?: string }
+  [BCSCScreens.OnboardingWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.OnboardingIntroCarousel]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
