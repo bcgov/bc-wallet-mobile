@@ -27,9 +27,7 @@ export const useSetupSteps = (store: BCState) => {
   const nonPhotoBcscNeedsAdditionalCard = isNonPhotoCard && missingPhotoId
 
   // card registration state
-  const bcscRegistered = Boolean(
-    !isNonBCSCCards && !isNoneCard && bcscSerialNumber && emailAddress && !nonPhotoBcscNeedsAdditionalCard
-  )
+  const bcscRegistered = Boolean(!isNonBCSCCards && !isNoneCard && bcscSerialNumber && !nonPhotoBcscNeedsAdditionalCard)
   const nonBcscRegistered =
     isNonBCSCCards && store.bcsc.additionalEvidenceData.length === 2 && !nonBcscNeedsAdditionalCard
 
