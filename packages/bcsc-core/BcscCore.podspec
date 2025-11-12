@@ -20,6 +20,11 @@ Pod::Spec.new do |s|
   s.swift_version = '5.0'
   s.module_name = 'BcscCore'
 
+  # Disable Swift optimizations to prevent cryptographic operations from being broken
+  s.pod_target_xcconfig = {
+    'SWIFT_OPTIMIZATION_LEVEL' => '-Onone'
+  }
+
   if respond_to?(:install_modules_dependencies, true)
     install_modules_dependencies(s)
   else
