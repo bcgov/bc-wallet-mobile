@@ -87,9 +87,9 @@ const useUserApi = (apiClient: BCSCApiClient) => {
   }, [getPicture, getUserInfo])
 
   /**
-   * Retrieves the card expiration date from user information.
+   * Retrieves the account expiration date from user information.
    *
-   * @return {*} {Promise<Date>} A promise that resolves to the card expiration date.
+   * @return {*} {Promise<Date>} A promise that resolves to the account expiration date.
    */
   const getAccountExpirationDate = useCallback(async (): Promise<Date> => {
     const userInfo = await getUserInfo()
