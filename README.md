@@ -346,11 +346,55 @@ If issues are arising for the emulator, you may need to clear the caches.
 
 ### Debugging in WSL2 and Android Emulator
 
-If you're developing on Windows using WSL2, follow these setup steps:
+If you're developing on Windows using WSL2, follow these setup steps to set up an emulator running on Windows that can communicate with adb running in WSL:
 
-**Install in WSL2:**
+**Configure your Android Emulator**
 
-- Install Android Studio in WSL2
+- Install Android Studio on your Windows host (Windows)
+   - Download [Android Studio for Windows](https://developer.android.com/studio) and go through the installer, setting up an emulator / virtual device
+- Configure your wslconfig (Windows)
+   - locate your .wslconfig file
+   >HINT: it should be in `%userprofile%\.wslconfig`
+   - include in your config the following lines
+   ```
+   [wsl2]
+   networkingmode=mirrored
+   hostAddressLoopback=true
+   ```
+- Install Android Studio Command Line Tools in your WSL2 environment (WSL)
+   - Downloads are found near the bottom of the [Android Studio Downloads](https://developer.android.com/studio) page
+   - unzip the cmdline tools with `unzip commandlinetools-linux-[VERSION]_latest.zip -d ~/Android/Sdk/tools`
+   - in your .bashrc file, define the following paths
+   ```
+   export ANDROID_HOME=/home/[your-name]/Android/Sdk
+   export PATH=$PATH:$ANDROID_HOME/platform-tools
+   export PATH=$PATH:$ANDROID_HOME/tools/bin
+   ```
+   - restart your shell (i.e. `exit` and `wsl` again)
+   - run `sdkmanager "platform-tools"` to install adb
+- (Optional) add the emulator to Windows PATH (Windows)
+   - open `sysdm.cpl`
+   - go to the `Advanced` tab
+   - Click `Environment Variables...`
+   - Select `Path`
+   - Click `Edit...`
+   - Click `New`
+   - Enter the Android emulator directory installed in a previous step
+   > HINT: By default, it is `C:\Users\\[YOUR_USERNAME]AppData\Local\Android\Sdk\emulator`
+   - Click OK on all the control panel dialogs opened
+- Run the emulator (Windows)
+   - Open Powershell
+   >Shortcut: Windows + X, A
+   - run `emulator -avd DEVICE_NAME` where DEVICE_NAME is the name of an android virtual device you have configured in Android Studio for Windows
+- Run React-Native (WSL)
+   - from `bc-wallet-mobile/app` run `yarn android` or `yarn start` and wait until you are prompted to select android
+
+At this point you should see that the app builds in your wsl environment and runs on the emulator on your Windows host.
+
+
+
+**Configure BCWallet in WSL2:**
+
 - Clone bc-wallet-mobile repository in WSL2 filesystem
 - Install openJDK in WSL2 (version 17.0.16)
 - Install Gradle in WSL2 (version 9.0.0)
