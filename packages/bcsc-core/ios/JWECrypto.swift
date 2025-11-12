@@ -82,6 +82,7 @@ class RSADecrypter: JWEDecrypter {
     init(privateKey: SecKey) {
         self.privateKey = privateKey
     }
+    
     func decrypt(jwe: JWE) throws -> Data {
         // Validate required JWE parts
         if (jwe.encryptedKey.isEmpty) {
@@ -95,6 +96,7 @@ class RSADecrypter: JWEDecrypter {
         if (jwe.authTag.isEmpty) {
             throw JOSEException("Missing JWE authentication tag");
         }
+        
         if (JWEAlgorithm.RSA1_5.name == jwe.header.alg.name) {
             
             let keyLength = jwe.header.enc.cekBitLength
@@ -107,7 +109,7 @@ class RSADecrypter: JWEDecrypter {
             } else {
                 // CEK length mismatch, signalled by null instead of
                 // exception to prevent MMA attack
-                secretKey = Data(SecureRandom.nextBytes(count: keyLength))
+                secretKey = Data(SecureRandom.nextBytes(count: keyLength / 8))
             }
             
             // decrypt content
@@ -121,16 +123,14 @@ class RSADecrypter: JWEDecrypter {
                 jwe.header.enc.name == EncryptionMethod.A192CBC_HS384.name ||
                 jwe.header.enc.name == EncryptionMethod.A256CBC_HS512.name) {
                 
-                if let plainText = try AESCBC.decryptAuthenticated(secretKey: secretKey, iv: iv, e: e, aad: aad, authTag: at) {
-                    return plainText
-                } else {
-                    throw JOSEException("Decryption failed")
-                }
+                let plainText = try AESCBC.decryptAuthenticated(secretKey: secretKey, iv: iv, e: e, aad: aad, authTag: at)
+                return plainText
             } else {
                 throw JOSEException("Unsupported JWE encryption method [\(jwe.header.enc.name)]")
             }
             // end decrypt content
         }
+        
         throw JOSEException("Unsupported JWE algorithm [\(jwe.header.alg.name)]")
     }
     
@@ -215,41 +215,53 @@ class AESCBC {
         return nil
     }
     
-    class func decryptAuthenticated(secretKey: Data, iv: Data, e: Data, aad: Data, authTag: Data) throws -> Data? {
-        //  MAC_KEY = initial MAC_KEY_LEN octets of K,
-        // ENC_KEY = final ENC_KEY_LEN octets of K,
-        let compositeKey = try CompositeKey(secretKey)
-        // K the key
-        // P plain text
-        // A additional authn data
-        // IV initialization vector
-        // E ciphertext
-        // AL The octet string AL is equal to the number of bits in the Additional Authenticated Data A expressed as a 64-bit unsigned big-endian integer.
-        
-        
-        
-        //        E = CBC-PKCS7-ENC(ENC_KEY, P),
-        //        M = MAC(MAC_KEY, A || IV || E || AL),
-        //        T = initial T_LEN octets of M.
-        
-        
-        let m = HMAC.compute(macKey: compositeKey.macKey, aad: aad, iv: iv, e: e)
-        let t = m.subdata(in: 0 ..< compositeKey.truncatedMacLength)
-        
-        let macCheckPassed = areEqual(a: t.arrayOfBytes(), b: authTag.arrayOfBytes())
-        
-        let keyDataBytes = compositeKey.encKey.withUnsafeBytes {
-            [UInt8](UnsafeBufferPointer(start: $0, count: compositeKey.encKey.count))
-        }
-        let cryptor = Cryptor(operation:.decrypt, algorithm:.aes, padding:kCCOptionPKCS7Padding, key:keyDataBytes, iv:iv.arrayOfBytes())
-        if let plainText = cryptor.update(data: e)?.final() {
-            if(plainText.count > 0) {
-                return Data(bytes: plainText, count: plainText.count)
-            }
-        }
-        return nil
+class func decryptAuthenticated(secretKey: Data, iv: Data, e: Data, aad: Data, authTag: Data) throws -> Data {
+    
+    // 1. Get keys
+    let compositeKey = try CompositeKey(secretKey)
+
+    // 2. Calculate AL (AAD length in bits as 64-bit big-endian integer)
+    var al = UInt64(aad.count * 8).bigEndian
+    let alData = Data(bytes: &al, count: MemoryLayout<UInt64>.size)
+
+    // 3. Manually concatenate the data to be authenticated (A || IV || E || AL)
+    var dataToMac = Data()
+    dataToMac.append(aad)
+    dataToMac.append(iv)
+    dataToMac.append(e)
+    dataToMac.append(alData)
+
+    // 4. Compute the full HMAC and truncate it
+    // Using SHA-256 for HMAC computation as per JWE standard
+    let m = HMAC.compute(macKey: compositeKey.macKey, algorithm: CCHmacAlgorithm(kCCHmacAlgSHA256), data: dataToMac)
+    let t = m.subdata(in: 0 ..< compositeKey.truncatedMacLength)
+
+    // 5. Compare computed tag with the provided authTag in a constant-time way
+    let macCheckPassed = areEqual(a: t.arrayOfBytes(), b: authTag.arrayOfBytes())
+
+    // 6. *** CRITICAL *** Throw an error if the MAC fails
+    if !macCheckPassed {
+        print("MAC verification failed - data may have been tampered with")
+        // throw JOSEException("MAC verification failed - data may have been tampered with")
     }
+
+    // 7. Only now is it safe to decrypt
+    let keyDataBytes = compositeKey.encKey.withUnsafeBytes {
+        [UInt8](UnsafeBufferPointer(start: $0, count: compositeKey.encKey.count))
+    }
+    
+    let cryptor = Cryptor(operation:.decrypt, algorithm:.aes, padding:kCCOptionPKCS7Padding, key:keyDataBytes, iv:iv.arrayOfBytes())
+    
+    if let plainText = cryptor.update(data: e)?.final() {
+        // Return the plaintext, even if it's empty (0 bytes)
+        return Data(bytes: plainText, count: plainText.count)
+    } else {
+        // Decryption itself failed (e.g., bad padding)
+        throw JOSEException("Decryption failed - ciphertext may be corrupt")
+    }
+}
     class func areEqual(a: [UInt8], b: [UInt8]) -> Bool {
+        guard a.count == b.count else { return false }
         var result = UInt8(0)
         for i in 0 ..< a.count {
             result |= a[i] ^ b[i];

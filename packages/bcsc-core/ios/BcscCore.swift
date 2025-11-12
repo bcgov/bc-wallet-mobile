@@ -149,6 +149,28 @@ class BcscCore: NSObject {
     logger.log("Keychain cleared for this app.")
   }
 
+  /// Removes all private keys managed by KeyPairManager by iterating through them
+  /// and calling deleteKey for each one found.
+  private func removeAllPrivateKeys() {
+    let keyPairManager = KeyPairManager()
+    let keys = keyPairManager.findAllPrivateKeys()
+    
+    logger.log("Found \(keys.count) private keys to remove")
+    
+    var removedCount = 0
+    for keyInfo in keys {
+      let success = keyPairManager.deleteKey(withLabel: keyInfo.tag)
+      if success {
+        removedCount += 1
+        logger.log("Successfully removed key with ID: \(keyInfo.tag)")
+      } else {
+        logger.error("Failed to remove key with ID: \(keyInfo.tag)")
+      }
+    }
+    
+    logger.log("Removed \(removedCount) out of \(keys.count) private keys")
+  }
+
   // MARK: - Public Methods
 
   @objc
@@ -240,11 +262,13 @@ class BcscCore: NSObject {
           logger.log(
             "generateKeyPair - Successfully generated new incremented key with ID: \(newKeyId)"
           )
+
           return newKeyId
         } catch {
           logger.error(
             "generateKeyPair - Failed to generate new incremented key with ID \(newKeyId): \(error.localizedDescription)."
           )
+
           return nil  // Failed to generate the specifically requested incremented key.
         }
       } else {
@@ -263,11 +287,13 @@ class BcscCore: NSObject {
           logger.log(
             "generateKeyPair - Successfully generated new key with ID: \(freshGeneratedKeyId) after parsing failure."
           )
+
           return freshGeneratedKeyId
         } catch {
           logger.error(
             "generateKeyPair - Failed to generate new key with ID \(freshGeneratedKeyId) after parsing failure: \(error.localizedDescription)"
           )
+
           return nil
         }
       }
@@ -281,11 +307,13 @@ class BcscCore: NSObject {
         logger.log(
           "generateKeyPair - Successfully generated new key with ID: \(initialKeyId)"
         )
+
         return initialKeyId
       } catch {
         logger.error(
           "generateKeyPair - Failed to generate new key with ID \(initialKeyId): \(error.localizedDescription)"
         )
+
         return nil
       }
     }
@@ -462,6 +490,8 @@ class BcscCore: NSObject {
       file: AccountFiles.accountMetadata,
       pathDirectory: FileManager.SearchPathDirectory.applicationSupportDirectory)
 
+
+    logger.log("getAccount called, retrieved account: \(String(describing: account))")
     if let acc = account {
       let result: [String: Any?] = [
         "id": acc.id,
@@ -476,6 +506,7 @@ class BcscCore: NSObject {
         // penalties is a computed property and might not be directly encodable or needed.
         // If it's needed, it requires specific handling to convert to a plist-compatible format.
       ]
+
       resolve(result)
     } else {
       resolve(nil)
@@ -595,17 +626,19 @@ class BcscCore: NSObject {
     let keyPair: (public: SecKey, private: SecKey)
     let keyId: String
 
-    //    clearKeychain()
+    // clearKeychain()
 
     if let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first {
       // Use existing latest key
       do {
         keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
+        logger.log("Using existing key with ID: \(latestKeyInfo.tag) for dynamic client registration.")
         keyId = latestKeyInfo.tag
       } catch {
         reject(
           "E_GET_KEYPAIR_FAILED", "Failed to retrieve key pair: \(error.localizedDescription)",
           error)
+        
         return
       }
     } else {
@@ -614,9 +647,11 @@ class BcscCore: NSObject {
         reject(
           "E_KEY_GENERATION_FAILED",
           "Failed to generate or retrieve key pair for client registration", nil)
+        
         return
       }
 
+      logger.log("Generated new key with ID: \(newKeyId) for dynamic client registration.")
       do {
         keyPair = try keyPairManager.getKeyPair(with: newKeyId)
         keyId = newKeyId
@@ -748,38 +783,219 @@ class BcscCore: NSObject {
     _ jweString: String, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
+    // Validate JWE string input
+    guard !jweString.isEmpty && !jweString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      reject("E_INVALID_JWE_STRING", "JWE string cannot be empty or contain only whitespace", nil)
+      return
+    }
+
+    // clearKeychain()
+
     let keyPairManager = KeyPairManager()
     let keys = keyPairManager.findAllPrivateKeys()
+
+    logger.log("Found \(keys.count) keys in keychain for JWE decryption")
+    
+    // Print creation date and details of all keys found
+    for (index, keyInfo) in keys.enumerated() {
+      let formatter = DateFormatter()
+      formatter.dateStyle = .medium
+      formatter.timeStyle = .medium
+      let createdDateString = formatter.string(from: keyInfo.created)
+      logger.log("Key \(index + 1): ID=\(keyInfo.tag), Created=\(createdDateString), Type=\(keyInfo.keyType.name), Size=\(keyInfo.keySize)")
+    }
 
     guard let latestKeyInfo = keys.sorted(by: { $0.created > $1.created }).first else {
       reject("E_NO_KEYS_FOUND", "No keys available to sign the JWT.", nil)
       return
     }
 
+    logger.log("using key ID=\(latestKeyInfo.tag), created at = \(latestKeyInfo.created)")
+
     do {
       let keyPair = try keyPairManager.getKeyPair(with: latestKeyInfo.tag)
-      let jwe = try JWE.parse(s: jweString)
-      let decrypter = RSADecrypter(privateKey: keyPair.private)
-      // Decrpyt payload into JWT
-      let payload = try jwe.decrypt(withDecrypter: decrypter)
+      
+      // Extract keys from the tuple
+      let privateKey = keyPair.private
+      let publicKey = keyPair.public
+      
+      // Additional validation for Release builds
+      let privateKeySize = SecKeyGetBlockSize(privateKey)
+      let publicKeySize = SecKeyGetBlockSize(publicKey)
+      
+      logger.log("Key validation - Private key size: \(privateKeySize), Public key size: \(publicKeySize)")
+      
+      guard privateKeySize > 0 && publicKeySize > 0 else {
+        reject("E_INVALID_KEY_SIZES", "Invalid key sizes - Private: \(privateKeySize), Public: \(publicKeySize)", nil)
+        return
+      }
+      
+      // Parse JWE with explicit error handling
+      let jwe: JWE
+      do {
+        logger.log("Parsing JWE string of length: \(jweString.count)")
+        jwe = try JWE.parse(s: jweString)
+        logger.log("Successfully parsed JWE")
+        logger.log("JWE Header: \(jwe.header)")
+        logger.log("JWE Encrypted Key length: \(jwe.encryptedKey.count) bytes")
+        logger.log("JWE Initialization Vector length: \(jwe.iv.count) bytes")
+        logger.log("JWE Ciphertext length: \(jwe.cipherText.count) bytes")
+        logger.log("JWE Authentication Tag length: \(jwe.authTag.count) bytes")
+        
+        // Validate JWE components are not empty
+        guard !jwe.encryptedKey.isEmpty, !jwe.cipherText.isEmpty else {
+          logger.error("CRITICAL: JWE components are empty - EncryptedKey: \(jwe.encryptedKey.count), Ciphertext: \(jwe.cipherText.count)")
+          reject("E_INVALID_JWE_COMPONENTS", "JWE components are empty", nil)
+          return
+        }
+        
+      } catch {
+        reject("E_JWE_PARSE_FAILED", "Failed to parse JWE string: \(error.localizedDescription)", error)
+        return
+      }
+      
+      // Create RSA decrypter with validation
+      logger.log("Creating RSA decrypter with private key")
+      
+      // Validate the private key attributes before creating decrypter
+      let keyAttributes = SecKeyCopyAttributes(privateKey)
+        logger.log("Private key attributes: \(keyAttributes ?? [:] as CFDictionary)")
+      
+      // Test the private key by getting its external representation
+      var keyError: Unmanaged<CFError>?
+      if let keyData = SecKeyCopyExternalRepresentation(privateKey, &keyError) {
+        logger.log("Private key external representation size: \((keyData as Data).count) bytes")
+      } else {
+        let nsError = keyError?.takeRetainedValue() as Error?
+        logger.error("Failed to get private key external representation: \(nsError?.localizedDescription ?? "unknown error")")
+      }
+      
+      let decrypter = RSADecrypter(privateKey: privateKey)
+      logger.log("Successfully created RSA decrypter with key size: \(privateKeySize)")
+      
+      // Decrypt payload into JWT with explicit error handling
+      let payload: String
+      do {
+        logger.log("About to start JWE decryption process")
+        
+        // Store intermediate result to prevent optimization issues
+        var decryptedPayload: String
+        do {
+          // Direct decrypt call
+          decryptedPayload = try jwe.decrypt(withDecrypter: decrypter)
+          
+          logger.log("Raw decrypt call returned: \(decryptedPayload.count) characters")
+          
+          // Force evaluation by accessing the string in multiple ways
+          let charCount = decryptedPayload.utf8.count
+          let utf16Count = decryptedPayload.utf16.count
+          logger.log("Payload UTF8 count: \(charCount), UTF16 count: \(utf16Count)")
+          
+          // Log first few characters if available for debugging
+          if !decryptedPayload.isEmpty {
+            let preview = String(decryptedPayload.prefix(50))
+            logger.log("Decrypted payload preview: '\(preview)'")
+            
+            // Additional validation - check if it looks like a JWT
+            if decryptedPayload.contains(".") {
+              let parts = decryptedPayload.components(separatedBy: ".")
+              logger.log("Payload appears to be JWT with \(parts.count) parts")
+            }
+          } else {
+            logger.error("CRITICAL: Decrypt returned empty string!")
+          }
+        } catch {
+          logger.error("Decrypt threw error: \(error)")
+          throw error
+        }
+        
+        // Multiple validation steps to prevent Release build issues
+        logger.log("Creating retained copy of decrypted payload")
+        
+        // Force the compiler to not optimize away the string by using it
+        let originalLength = decryptedPayload.count
+        let originalHash = decryptedPayload.hashValue
+        logger.log("Original payload - Length: \(originalLength), Hash: \(originalHash)")
+        
+        // Create multiple references to prevent optimization
+        let retainedPayload = String(decryptedPayload)
+        let doubleCheck = String(retainedPayload)
+        
+        logger.log("Retained payload length: \(retainedPayload.count)")
+        logger.log("Double check length: \(doubleCheck.count)")
+        
+        // Verify all copies worked
+        guard retainedPayload.count == originalLength && doubleCheck.count == originalLength else {
+          logger.error("CRITICAL: String copy failed! Original: \(originalLength), Retained: \(retainedPayload.count), DoubleCheck: \(doubleCheck.count)")
+          throw NSError(domain: "DecryptionError", code: -1, userInfo: [NSLocalizedDescriptionKey: "String copy failed"])
+        }
+        
+        // Add memory barriers to prevent reordering
+        withUnsafePointer(to: retainedPayload) { pointer in
+          logger.log("Payload memory address: \(pointer)")
+        }
+        
+        payload = retainedPayload
+        
+        logger.log("Decryption completed - payload length: \(payload.count)")
+        
+        // Additional validation for Release builds
+        guard !payload.isEmpty else {
+          reject("E_EMPTY_DECRYPTED_PAYLOAD", "Decrypted payload is empty", nil)
+          return
+        }
+        
+        logger.log("Final validated payload length: \(payload.count)")
+        logger.log("Final validated payload preview: \(payload.prefix(100))...")
+      } catch {
+        logger.error("Decryption failed with error: \(error)")
+        reject("E_DECRYPTION_FAILED", "Failed to decrypt JWE: \(error.localizedDescription)", error)
+        return
+      }
+
+      // Validate payload is not empty or whitespace-only
+      guard !payload.isEmpty && !payload.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        reject("E_EMPTY_PAYLOAD", "Decrypted payload is empty or contains only whitespace", nil)
+        return
+      }
 
       // Break down and decode JWT
       let segments = payload.components(separatedBy: ".")
+
+      // Ensure we have at least 2 segments for a valid JWT (header.payload)
+      guard segments.count >= 2 else {
+        reject("E_INVALID_JWT_FORMAT", "Decrypted payload is not a valid JWT (expected at least 2 segments, got \(segments.count))", nil)
+        return
+      }
+      
+      logger.log("Decoded JWT segments: \(segments.count) segments")
       var base64String = segments[1]
-      let requiredLength = Int(4 * ceil(Float(base64String.count) / 4.0))
+      logger.log("Processing base64 payload segment")
+      
+      // Fix base64 padding using Double for precision (Release builds optimize 
+      // Float differently)
+      let requiredLength = Int(4 * ceil(Double(base64String.count) / 4.0))
       let nbrPaddings = requiredLength - base64String.count
       if nbrPaddings > 0 {
-        let padding = String().padding(toLength: nbrPaddings, withPad: "=", startingAt: 0)
-        base64String = base64String.appending(padding)
+        let padding = String(repeating: "=", count: nbrPaddings)
+        base64String = base64String + padding
       }
+      
+      // Convert URL-safe base64 to standard base64
       base64String = base64String.replacingOccurrences(of: "-", with: "+")
       base64String = base64String.replacingOccurrences(of: "_", with: "/")
-      let decodedData = Data(
-        base64Encoded: base64String, options: Data.Base64DecodingOptions(rawValue: UInt(0)))
+      
+      // Safely decode base64 with proper error handling
+      guard let decodedData = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
+        reject("E_BASE64_DECODE_FAILED", "Failed to decode base64 string: '\(base64String)'", nil)
+        return
+      }
 
-      let base64Decoded: String = String(
-        data: decodedData! as Data,
-        encoding: String.Encoding(rawValue: String.Encoding.utf8.rawValue))!
+      // Safely convert to UTF-8 string
+      guard let base64Decoded = String(data: decodedData, encoding: .utf8) else {
+        reject("E_UTF8_CONVERSION_FAILED", "Failed to convert decoded data to UTF-8 string", nil)
+        return
+      }
       resolve(base64Decoded)
     } catch {
       reject("E_PAYLOAD_DECODE_ERROR", "Unable to decode payload", nil)

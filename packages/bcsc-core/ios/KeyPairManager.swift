@@ -242,7 +242,7 @@ class KeyPairManager: KeyPairManagerProtocol {
     private func findKey(withLabel label: String) -> CFTypeRef? {
         let attributes: NSDictionary = [kSecClass: kSecClassKey,
                                         kSecAttrLabel: label,
-//                                        kSecAttrApplicationTag: label.data(using: .utf8)!,
+                                        kSecAttrApplicationTag: label.data(using: .utf8)!,
                                         kSecAttrIsPermanent: kCFBooleanTrue,
                                         kSecMatchLimit: kSecMatchLimitOne,
                                         kSecReturnRef: kCFBooleanTrue]
