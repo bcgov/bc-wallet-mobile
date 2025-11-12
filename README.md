@@ -355,12 +355,13 @@ If you're developing on Windows using WSL2, follow these setup steps to set up a
 - Configure your wslconfig (Windows)
    - locate your .wslconfig file
    >HINT: it should be in `%userprofile%\.wslconfig`
-   - include in your config the following lines
+   - Change your wsl2 settings to use Mirrored Networking Mode and hostAddressLoopback. This allows you to connect to Windows from Linux in WSL using the loopback address. Include the following lines in your `.wslconfig`:
    ```
    [wsl2]
    networkingmode=mirrored
    hostAddressLoopback=true
    ```
+   >HINT: Read more about [Mirrored mode networking](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking) and [host address loopback](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#experimental-settings)
 - Install Android Studio Command Line Tools in your WSL2 environment (WSL)
    - Downloads are found near the bottom of the [Android Studio Downloads](https://developer.android.com/studio) page
    - unzip the cmdline tools with `unzip commandlinetools-linux-[VERSION]_latest.zip -d ~/Android/Sdk/tools`
@@ -390,8 +391,6 @@ If you're developing on Windows using WSL2, follow these setup steps to set up a
    - from `bc-wallet-mobile/app` run `yarn android` or `yarn start` and wait until you are prompted to select android
 
 At this point you should see that the app builds in your wsl environment and runs on the emulator on your Windows host.
-
-
 
 **Configure BCWallet in WSL2:**
 
