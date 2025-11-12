@@ -8,9 +8,9 @@ interface MainWebViewScreenProps {
 }
 
 const MainWebViewScreen: React.FC<MainWebViewScreenProps> = ({ route }) => {
-  const { url } = route.params
+  const { url, injectedJavascript } = route.params
 
-  return <WebViewContent url={url} />
+  return <WebViewContent url={url} injectedJavascript={injectedJavascript} />
 }
 
 export { MainWebViewScreen }

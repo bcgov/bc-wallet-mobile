@@ -84,16 +84,15 @@ export enum BCSCScreens {
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
   OnboardingOptInAnalytics = 'BCSCOnboardingOptInAnalytics',
+  OnboardingWebView = 'BCSCOnboardingWebview',
   MainSettings = 'BCSCMainSettings',
   MainWebView = 'BCSCMainWebView',
   MainContactUs = 'BCSCMainContactUs',
-  MainHelpCentre = 'BCSCMainHelpCentre',
   MainPrivacyPolicy = 'BCSCMainPrivacyPolicy',
   MainDeveloper = 'BCSCMainDeveloper',
   VerifySettings = 'BCSCVerifySettings',
   VerifyWebView = 'BCSCVerifyWebView',
   VerifyContactUs = 'BCSCVerifyContactUs',
-  VerifyHelpCentre = 'BCSCVerifyHelpCentre',
   VerifyPrivacyPolicy = 'BCSCVerifyPrivacyPolicy',
   VerifyDeveloper = 'BCSCVerifyDeveloper',
 }
@@ -103,6 +102,7 @@ export type BCSCStartupStackParams = {
 }
 
 export type BCSCOnboardingStackParams = {
+  [BCSCScreens.OnboardingWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.OnboardingIntroCarousel]: undefined
   [BCSCScreens.OnboardingPrivacyPolicy]: undefined
   [BCSCScreens.OnboardingTermsOfUse]: undefined
@@ -115,13 +115,13 @@ export type BCSCOnboardingStackParams = {
 }
 
 export type BCSCVerifyStackParams = {
+  [BCSCScreens.VerifyWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.NewSetup]: undefined
   [BCSCScreens.SetupSteps]: undefined
   [BCSCScreens.SetupTypes]: undefined
   [BCSCScreens.TransferAccountInstructions]: undefined
   [BCSCScreens.TransferAccountQRScan]: undefined
   [BCSCScreens.TransferAccountInformation]: undefined
-  [BCSCScreens.VerifyWebView]: { url: string; title: string }
   [BCSCScreens.IdentitySelection]: undefined
   [BCSCScreens.SerialInstructions]: undefined
   [BCSCScreens.ManualSerial]: undefined
@@ -163,7 +163,6 @@ export type BCSCVerifyStackParams = {
   [BCSCScreens.NicknameAccount]: undefined
   [BCSCScreens.AccountSelector]: undefined
   [BCSCScreens.VerifySettings]: undefined
-  [BCSCScreens.VerifyHelpCentre]: undefined
   [BCSCScreens.VerifyPrivacyPolicy]: undefined
   [BCSCScreens.VerifyContactUs]: undefined
   [BCSCScreens.VerifyDeveloper]: undefined
@@ -180,7 +179,7 @@ export type BCSCTabStackParams = {
 
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
-  [BCSCScreens.MainWebView]: { url: string; title: string }
+  [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }
   [BCSCScreens.RemoveAccountConfirmation]: undefined
@@ -192,7 +191,6 @@ export type BCSCMainStackParams = {
   [BCSCScreens.MainSettings]: undefined
   [BCSCScreens.MainPrivacyPolicy]: undefined
   [BCSCScreens.MainContactUs]: undefined
-  [BCSCScreens.MainHelpCentre]: undefined
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.MainDeveloper]: undefined
