@@ -6,6 +6,9 @@ import { BCDispatchAction } from '@/store'
 const DAY_IN_MS = 24 * 60 * 60 * 1000
 
 describe('AccountExpirySystemCheck', () => {
+  beforeAll(() => {
+    jest.setSystemTime(new Date('1970-01-01'))
+  })
   describe('runCheck', () => {
     it('should return false if the account is expired (yesterday)', () => {
       const expiredDate = new Date(Date.now() - DAY_IN_MS) // Yesterday
