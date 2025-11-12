@@ -1,5 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { createThemedWebViewScript } from '@/bcsc-theme/utils/webview-utils'
+import { createTermsOfUseWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TERMS_OF_USE_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -48,7 +48,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <WebViewContent
         url={TERMS_OF_USE_URL}
-        injectedJavascript={createThemedWebViewScript(ColorPalette)}
+        injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette)}
         onLoaded={() => setWebViewIsLoaded(true)}
       />
 

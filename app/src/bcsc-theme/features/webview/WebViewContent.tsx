@@ -14,6 +14,7 @@ interface WebViewContentProps {
   url: string
   /**
    * Optional callback function that is called when the WebView has finished loading.
+   * Loading test url: 'https://httpbin.org/delay/2'
    *
    * @type {() => void}
    */
@@ -22,7 +23,7 @@ interface WebViewContentProps {
    * Optional JavaScript code to inject into the WebView before content loads.
    * Why? This is used to apply theming or other customizations to the web content.
    *
-   * @see webview-utils.ts -> createThemedWebViewScript for an example.
+   * @see webview-utils.ts -> createTermsOfUseWebViewJavascriptInjection for an example.
    * @type {string | undefined}
    */
   injectedJavascript?: string
@@ -49,7 +50,6 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
       backgroundColor: ColorPalette.brand.primaryBackground,
       justifyContent: 'center',
       alignItems: 'center',
-      zIndex: 9999,
     },
   })
 
@@ -76,6 +76,7 @@ const WebViewContent: React.FC<WebViewContentProps> = ({ url, injectedJavascript
   return (
     <WebView
       source={{
+        // helpful testing url 'https://httpbin.org/delay/2'
         uri: url,
         headers: { Authorization: `Bearer ${client.tokens?.access_token}` },
       }}
