@@ -1,6 +1,8 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { HELP_URL } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { SettingsContent } from './SettingsContent'
 
 type VerifySettingsScreenProps = {
@@ -12,12 +14,17 @@ type VerifySettingsScreenProps = {
  * Wraps SettingsContent with Verify stack-specific navigation callbacks.
  */
 export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navigation }) => {
+  const { t } = useTranslation()
+
   const onContactUs = () => {
     navigation.navigate(BCSCScreens.VerifyContactUs)
   }
 
   const onHelp = () => {
-    navigation.navigate(BCSCScreens.VerifyHelpCentre)
+    navigation.navigate(BCSCScreens.VerifyWebView, {
+      url: HELP_URL,
+      title: t('Unified.Screens.HelpCentre'),
+    })
   }
 
   const onPrivacy = () => {
