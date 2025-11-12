@@ -5,7 +5,7 @@ import BCSCApiClient from '../client'
 import { VerifyAttestationPayload } from './useDeviceAttestationApi'
 import { withAccount } from './withAccountGuard'
 
-interface IdTokenMetadataConfig {
+export interface IdTokenMetadataConfig {
   refreshCache: boolean
 }
 
