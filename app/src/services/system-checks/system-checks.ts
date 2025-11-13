@@ -47,9 +47,18 @@ export interface SystemCheckUtils {
   logger: BifoldLogger
 }
 
+export interface SystemCheckNavigationUtils extends SystemCheckUtils {
+  /**
+   * Navigation object to handle screen transitions.
+   *
+   * @type {SystemCheckNavigation}
+   */
+  navigation: SystemCheckNavigation
+}
+
 // Simple interface to abstract navigation methods needed for system checks
 export type SystemCheckNavigation = {
-  navigate: (screen: BCSCScreens | BCSCModals) => void
+  navigate: (screen: BCSCScreens | BCSCModals, params?: object) => void
   canGoBack: () => boolean
   goBack: () => void
   getState: () => NavigationState | undefined

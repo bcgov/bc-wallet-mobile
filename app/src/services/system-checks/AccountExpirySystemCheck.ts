@@ -1,9 +1,16 @@
 import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
+import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction } from '@/store'
 import moment from 'moment'
-import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
+import { SystemCheckNavigationUtils, SystemCheckStrategy } from './system-checks'
 
 const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
+
+interface Account {
+  firstName: string
+  lastName: string
+  expirationDate: Date
+}
 
 /**
  * Checks if the user's account is expired or close to expiration.
@@ -12,17 +19,17 @@ const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
  * @implements {SystemCheckStrategy}
  */
 export class AccountExpirySystemCheck implements SystemCheckStrategy {
-  private readonly accountExpiration: Date
-  private readonly utils: SystemCheckUtils
+  private readonly account: Account
+  private readonly utils: SystemCheckNavigationUtils
   private daysUntilExpired: number = 0
 
-  constructor(accountExpiration: Date, utils: SystemCheckUtils) {
-    this.accountExpiration = accountExpiration
+  constructor(account: Account, utils: SystemCheckNavigationUtils) {
+    this.account = account
     this.utils = utils
   }
 
   runCheck() {
-    this.daysUntilExpired = moment(this.accountExpiration).diff(moment(), 'days')
+    this.daysUntilExpired = moment(this.account.expirationDate).diff(moment(), 'days')
 
     // Return false if the account is expired or expiring soon
     return this.daysUntilExpired > ACCOUNT_EXPIRATION_WARNING_DAYS
@@ -31,7 +38,10 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
   onFail() {
     // Account is expired
     if (this.daysUntilExpired <= 0) {
-      // TODO (MD): Handle account expired path
+      this.utils.navigation.navigate(BCSCScreens.AccountExpired, {
+        accountName: `${this.account.lastName}, ${this.account.firstName}`,
+        accountExpiration: moment(this.account.expirationDate).format('LL'),
+      })
     }
 
     // Account is expiring soon
@@ -41,7 +51,7 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
         {
           id: BCSCBanner.ACCOUNT_EXPIRING_SOON,
           title: this.utils.translation('Unified.SystemChecks.AccountExpiry.ExpiringBannerTitle', {
-            accountExpiration: moment(this.accountExpiration).format('LL'), // ie: January 1, 1970
+            accountExpiration: moment(this.account.expirationDate).format('LL'), // ie: January 1, 1970
           }),
           type: 'warning',
           varaint: 'summary',

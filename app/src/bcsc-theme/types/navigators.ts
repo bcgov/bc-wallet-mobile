@@ -95,6 +95,10 @@ export enum BCSCScreens {
   VerifyHelpCentre = 'BCSCVerifyHelpCentre',
   VerifyPrivacyPolicy = 'BCSCVerifyPrivacyPolicy',
   VerifyDeveloper = 'BCSCVerifyDeveloper',
+  AccountExpired = 'BCSCAccountExpired',
+  AccountRenewalInformation = 'BCSCAccountRenewalInformation',
+  AccountRenewalFirstWarning = 'BCSCAccountRenewalFirstWarning',
+  AccountRenewalFinalWarning = 'BCSCAccountRenewalFinalWarning',
 }
 
 export type BCSCStartupStackParams = {
@@ -195,6 +199,10 @@ export type BCSCMainStackParams = {
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.MainDeveloper]: undefined
+  [BCSCScreens.AccountExpired]: { accountName: string; accountExpiration: Date }
+  [BCSCScreens.AccountRenewalInformation]: undefined
+  [BCSCScreens.AccountRenewalFirstWarning]: undefined
+  [BCSCScreens.AccountRenewalFinalWarning]: undefined
 
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
