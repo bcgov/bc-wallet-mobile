@@ -169,7 +169,7 @@ const translation = {
       "Goto": "Go to",
       "NotListed": "Services not listed?",
       "NotListedDescription": "Services that are only available to specific people or people in specific professions are not listed above.",
-      "NotListedDescriptionContact": "Contact the service to the the link to their website.",
+      "NotListedDescriptionContact": "Contact the service to the link to their website.",
       "PrivacyPolicy": "Privacy Policy",
       "LoginErrorTitle": "Unable to quick login to service",
       "SavedServices": "Saved Services",
@@ -713,6 +713,7 @@ const translation = {
       "AccountDetails": "All account details",
       "AccountDetailsDescription": "View your account activity, manage your email address and more.",
       "AccountInfo" : {
+        "ManageDevices": "Manage Devices",
         "Description": "This cannot be used as photo ID, a driver's licence, or a health card.",
         "AppExpiryDate": "App expiry date",
         "AccountType": "Account type",

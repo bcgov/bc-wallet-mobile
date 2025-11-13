@@ -85,13 +85,13 @@ const Account: React.FC = () => {
       const fullUrl = `${client.baseURL}/account/embedded/devices`
       navigation.navigate(BCSCScreens.MainWebView, {
         url: fullUrl,
-        title: 'Manage Devices',
+        title: t('BCSC.Account.AccountInfo.ManageDevices'),
       })
       openedWebview.current = true
     } catch (error) {
       logger.error(`Error navigating to My Devices webview: ${error}`)
     }
-  }, [client, navigation, logger])
+  }, [client, navigation, logger, t])
 
   const handleAllAccountDetailsPress = useCallback(async () => {
     try {
