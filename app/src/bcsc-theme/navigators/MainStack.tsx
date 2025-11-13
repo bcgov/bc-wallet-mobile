@@ -21,7 +21,6 @@ import PairingConfirmation from '../features/pairing/PairingConfirmation'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsScreen'
 import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
-import { MainHelpCentreScreen } from '../features/settings/MainHelpCentreScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
@@ -151,15 +150,6 @@ const MainStack: React.FC = () => {
           options={() => ({
             headerShown: true,
             title: t('BCSC.Screens.ContactUs'),
-            headerBackTestID: testIdWithKey('Back'),
-          })}
-        />
-        <Stack.Screen
-          name={BCSCScreens.MainHelpCentre}
-          component={MainHelpCentreScreen}
-          options={() => ({
-            headerShown: true,
-            title: t('BCSC.Screens.HelpCentre'),
             headerBackTestID: testIdWithKey('Back'),
           })}
         />

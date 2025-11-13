@@ -1,6 +1,8 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { HELP_URL } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { SettingsContent } from './SettingsContent'
 
 type MainSettingsScreenProps = {
@@ -12,12 +14,17 @@ type MainSettingsScreenProps = {
  * Wraps SettingsContent with Main stack-specific navigation callbacks.
  */
 export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigation }) => {
+  const { t } = useTranslation()
+
   const onContactUs = () => {
     navigation.navigate(BCSCScreens.MainContactUs)
   }
 
   const onHelp = () => {
-    navigation.navigate(BCSCScreens.MainHelpCentre)
+    navigation.navigate(BCSCScreens.MainWebView, {
+      url: HELP_URL,
+      title: t('Unified.Screens.HelpCentre'),
+    })
   }
 
   const onPrivacy = () => {
