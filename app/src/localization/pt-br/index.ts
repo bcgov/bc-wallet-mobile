@@ -365,7 +365,11 @@ const translation = {
       "SecureAppBiometricsTitle": "TODO: Android title (PT-BR)",
       "SecureAppBiometricsSubtext": "TODO: Android subtext (PT-BR)",
       "SecureAppPINTitle": "Create a PIN (PT-BR)",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)"
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)",
+      "AnalyticsTitle": "Analytic Data Collection (PT-BR)",
+      "AnalyticsContent": "To help us improve the app, you can choose to allow the collection of analytic data about how you use the app. No personal information is collected. (PT-BR)",
+      "AcceptAnalytics": "Agree to collect analytic data (PT-BR)",
+      "DenyAnalytics":  "Do not collect analytic data (PT-BR)",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",

@@ -159,6 +159,7 @@ const translation = {
       "Feedback": "Feedback",
       "Accessibility": "Accessibility",
       "TermsOfUse": "Terms of use",
+      "Analytics": "Analytics",
     },
     "Services": {
       "CatalogueTitle": "Services",
@@ -366,7 +367,11 @@ const translation = {
       "SecureAppBiometricsTitle": "TODO: Android title",
       "SecureAppBiometricsSubtext": "TODO: Android subtext",
       "SecureAppPINTitle": "Create a PIN",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us."
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
+      "AnalyticsTitle": "Analytic Data Collection",
+      "AnalyticsContent": "To help us improve the app, you can choose to allow the collection of analytic data about how you use the app. No personal information is collected.",
+      "AcceptAnalytics": "Agree to collect analytic data",
+      "DenyAnalytics":  "Do not collect analytic data",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",

@@ -20,7 +20,7 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
   const { t } = useTranslation()
 
   const onPress = () => {
-    navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
+    navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
   }
 
   const handleLearnMore = () => {
