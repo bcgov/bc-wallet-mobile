@@ -1,12 +1,12 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
-import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
 import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { Linking, ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface PrivacyPolicyContentProps {
   onPress?: () => void
+  onLearnMore?: () => void
 }
 
 /**
@@ -19,6 +19,7 @@ interface PrivacyPolicyContentProps {
  */
 export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
   onPress,
+  onLearnMore,
 }: PrivacyPolicyContentProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
@@ -46,7 +47,9 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
 
   const handlePressLearnMore = async () => {
     try {
-      await Linking.openURL(SECURE_APP_LEARN_MORE_URL)
+      if (onLearnMore) {
+        onLearnMore()
+      }
     } catch (error) {
       logger.error('Error opening Secure App Help URL', error instanceof Error ? error : new Error(String(error)))
     }
