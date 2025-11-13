@@ -85,7 +85,6 @@ export enum BCSCScreens {
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
   OnboardingOptInAnalytics = 'BCSCOnboardingOptInAnalytics',
   OnboardingWebView = 'BCSCOnboardingWebview',
-  OnboardingOptInAnalytics = 'BCSCOnboardingOptInAnalytics',
   MainSettings = 'BCSCMainSettings',
   MainWebView = 'BCSCMainWebView',
   MainContactUs = 'BCSCMainContactUs',
