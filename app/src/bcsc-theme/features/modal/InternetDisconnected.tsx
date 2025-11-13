@@ -64,15 +64,15 @@ export const InternetDisconnected = (): JSX.Element => {
       <ScrollView contentContainerStyle={styles.scollContainer}>
         <Icon name="wifi-off" size={200} color={ColorPalette.brand.icon} style={styles.icon} />
         <View style={styles.textContainer}>
-          <ThemedText variant="headingThree">{t('Modals.InternetDisconnected.Header')}</ThemedText>
-          <ThemedText style={styles.textContent}>{t('Modals.InternetDisconnected.ContentA')}</ThemedText>
-          <ThemedText style={styles.textContent}>{t('Modals.InternetDisconnected.ContentB')}</ThemedText>
+          <ThemedText variant="headingThree">{t('BCSC.Modals.InternetDisconnected.Header')}</ThemedText>
+          <ThemedText style={styles.textContent}>{t('BCSC.Modals.InternetDisconnected.ContentA')}</ThemedText>
+          <ThemedText style={styles.textContent}>{t('BCSC.Modals.InternetDisconnected.ContentB')}</ThemedText>
         </View>
       </ScrollView>
 
       <View style={styles.buttonContainer}>
         <Button
-          title={t('Modals.InternetDisconnected.RetryButton')}
+          title={t('BCSC.Modals.InternetDisconnected.RetryButton')}
           buttonType={ButtonType.Primary}
           onPress={handleRetry}
         />

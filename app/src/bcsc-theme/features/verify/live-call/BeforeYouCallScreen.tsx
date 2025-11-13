@@ -20,7 +20,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const { formattedHours } = route.params || {}
 
   // Use the passed formatted hours or fallback to default
-  const hoursText = formattedHours || 'Monday to Friday\n7:30am - 5:00pm Pacific Time'
+  const hoursText = formattedHours || t('BCSC.VideoCall.DefaultHours')
   const isCellular = useMemo(() => networkType === 'cellular' && isConnected === true, [networkType, isConnected])
 
   const styles = StyleSheet.create({
@@ -56,28 +56,28 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
     <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.VideoCall.BeforeYouCallTitle')}
+          {t('BCSC.VideoCall.BeforeYouCallTitle')}
         </ThemedText>
-        <ThemedText variant={'headingFour'}>{t('Unified.VideoCall.WiFiRecommended')}</ThemedText>
+        <ThemedText variant={'headingFour'}>{t('BCSC.VideoCall.WiFiRecommended')}</ThemedText>
         <ThemedText>
-          {isCellular ? t('Unified.VideoCall.CellularNetworkWarning') : ''}
-          {t('Unified.VideoCall.StandardDataCharges')}
+          {isCellular ? t('BCSC.VideoCall.CellularNetworkWarning') : ''}
+          {t('BCSC.VideoCall.StandardDataCharges')}
         </ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          {t('Unified.VideoCall.FindPrivatePlace')}
+          {t('BCSC.VideoCall.FindPrivatePlace')}
         </ThemedText>
-        <ThemedText>{t('Unified.VideoCall.MakeSureOnlyYou')}</ThemedText>
+        <ThemedText>{t('BCSC.VideoCall.MakeSureOnlyYou')}</ThemedText>
 
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          {t('Unified.VideoCall.HoursOfService')}
+          {t('BCSC.VideoCall.CallBusyOrClosed.HoursOfService')}
         </ThemedText>
         <ThemedText>{hoursText}</ThemedText>
         <ThemedText variant={'headingFour'} style={{ marginTop: Spacing.md }}>
-          {t('Unified.VideoCall.ContactCentrePrivacy')}
+          {t('BCSC.VideoCall.ContactCentrePrivacy')}
         </ThemedText>
-        <ThemedText>{t(`Unified.VideoCall.PrivacyNotice`)}</ThemedText>
-        <ThemedText style={{ marginTop: Spacing.md }}>{t(`Unified.VideoCall.PrivacyContactInfo`)}</ThemedText>
+        <ThemedText>{t(`BCSC.VideoCall.PrivacyNotice`)}</ThemedText>
+        <ThemedText style={{ marginTop: Spacing.md }}>{t(`BCSC.VideoCall.PrivacyContactInfo`)}</ThemedText>
 
         <View style={styles.controlsContainer}>
           <Button
@@ -90,8 +90,8 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
           <Button
             buttonType={ButtonType.Tertiary}
             testID={testIdWithKey('Assistance')}
-            accessibilityLabel={t('Unified.VideoCall.Assistance')}
-            title={t('Unified.VideoCall.Assistance')}
+            accessibilityLabel={t('BCSC.VideoCall.Assistance')}
+            title={t('BCSC.VideoCall.Assistance')}
             onPress={onPressAssistance}
           />
         </View>

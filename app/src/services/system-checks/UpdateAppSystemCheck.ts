@@ -80,7 +80,7 @@ export class UpdateAppSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.APP_UPDATE_AVAILABLE,
-          title: this.utils.translation('Unified.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'),
+          title: this.utils.translation('BCSC.SystemChecks.UpdateApp.UpdateAvailableBannerTitle'),
           type: 'info',
           variant: 'warning',
           dismissible: true,

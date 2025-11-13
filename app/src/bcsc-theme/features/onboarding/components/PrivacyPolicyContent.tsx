@@ -55,19 +55,19 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ThemedText style={styles.contentText}>{t('Unified.Onboarding.PrivacyPolicyContentA')}</ThemedText>
+        <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentA')}</ThemedText>
 
         <View style={styles.sectionContainer}>
-          <ThemedText variant="headingFour">{t('Unified.Onboarding.PrivacyPolicyHeaderSetup')}</ThemedText>
-          <ThemedText style={styles.contentText}>{t('Unified.Onboarding.PrivacyPolicyContentB')}</ThemedText>
+          <ThemedText variant="headingFour">{t('BCSC.Onboarding.PrivacyPolicyHeaderSetup')}</ThemedText>
+          <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentB')}</ThemedText>
         </View>
 
         <View style={styles.sectionContainer}>
-          <ThemedText variant="headingFour">{t('Unified.Onboarding.PrivacyPolicyHeaderSecuringApp')}</ThemedText>
-          <ThemedText style={styles.contentText}>{t('Unified.Onboarding.PrivacyPolicyContentC')}</ThemedText>
+          <ThemedText variant="headingFour">{t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp')}</ThemedText>
+          <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentC')}</ThemedText>
         </View>
 
-        <CardButton title={t('Unified.Onboarding.LearnMore')} onPress={handlePressLearnMore} endIcon="open-in-new" />
+        <CardButton title={t('BCSC.Onboarding.LearnMore')} onPress={handlePressLearnMore} endIcon="open-in-new" />
       </ScrollView>
 
       {onPress ? (

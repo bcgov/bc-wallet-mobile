@@ -77,7 +77,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   const onContinuePressed = useCallback(() => {
     if (serial.length < 1) {
       setErrorState({
-        description: t('Unified.ManualSerial.EmptySerialError'),
+        description: t('BCSC.ManualSerial.EmptySerialError'),
         visible: true,
       })
       return
@@ -85,7 +85,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
 
     if (serial.length > maxSerialNumberLength) {
       setErrorState({
-        description: t('Unified.ManualSerial.CharCountError'),
+        description: t('BCSC.ManualSerial.CharCountError'),
         visible: true,
       })
       return
@@ -102,10 +102,10 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
           <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
           <LimitedTextInput
             defaultValue={serial}
-            label={t('Unified.ManualSerial.InputLabel')}
+            label={t('BCSC.ManualSerial.InputLabel')}
             limit={maxSerialNumberLength}
             handleChangeText={handleChangeText}
-            accessibilityLabel={t('Unified.ManualSerial.InputLabel')}
+            accessibilityLabel={t('BCSC.ManualSerial.InputLabel')}
             testID={testIdWithKey('SerialInput')}
             autoCapitalize={'characters'}
             autoCorrect={false}
@@ -117,7 +117,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
               {errorState.description}
             </ThemedText>
           ) : null}
-          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.ManualSerial.InputSubText')}</ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
         </View>
         <View style={styles.controlsContainer}>
           <View style={styles.buttonContainer}>

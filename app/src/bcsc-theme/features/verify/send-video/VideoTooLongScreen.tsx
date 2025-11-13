@@ -2,6 +2,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -17,6 +18,7 @@ type VideoTooLongScreenProps = {
 const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { videoLengthSeconds } = route.params
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -36,25 +38,27 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          Sorry, your video is too long.
+          {t('BCSC.SendVideo.VideoTooLong.Heading')}
         </ThemedText>
-        <ThemedText variant={'bold'}>Your video has to be less than 30 seconds.</ThemedText>
-        <ThemedText variant={'bold'}>Your video was {videoLengthSeconds} seconds.</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.SendVideo.VideoTooLong.Description1')}</ThemedText>
+        <ThemedText variant={'bold'}>
+          {t('BCSC.SendVideo.VideoTooLong.Description2', { videoLengthSeconds })}
+        </ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <View style={{ marginBottom: Spacing.md }}>
           <Button
             buttonType={ButtonType.Primary}
-            title={'Retake'}
+            title={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
             onPress={() => {
               navigation.goBack()
             }}
-            accessibilityLabel={'Retake'}
+            accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
           />
         </View>
         <Button
           buttonType={ButtonType.Secondary}
-          title={'Cancel'}
+          title={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
           onPress={() => {
             navigation.dispatch(
               CommonActions.reset({
@@ -64,7 +68,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
             )
           }}
           testID={'Cancel'}
-          accessibilityLabel={'Cancel'}
+          accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
         />
       </View>
     </SafeAreaView>

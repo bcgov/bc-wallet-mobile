@@ -154,16 +154,16 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
     if (evidenceCount === 1 && isNonBCSCCard) {
       // Choose your second ID
-      return [t('Unified.EvidenceTypeList.SecondID'), t('Unified.EvidenceTypeList.NonBCSCDescription')]
+      return [t('BCSC.EvidenceTypeList.SecondID'), t('BCSC.EvidenceTypeList.NonBCSCDescription')]
     }
 
     if (evidenceCount === 1 && !isNonBCSCCard) {
       // Choose photo ID
-      return [t('Unified.EvidenceTypeList.Heading'), t('Unified.EvidenceTypeList.Description')]
+      return [t('BCSC.EvidenceTypeList.Heading'), t('BCSC.EvidenceTypeList.Description')]
     }
 
     // Choose your first ID
-    return [t('Unified.EvidenceTypeList.FirstID'), '']
+    return [t('BCSC.EvidenceTypeList.FirstID'), '']
   }, [store.bcsc.additionalEvidenceData.length, store.bcsc.cardType, t])
 
   if (isLoading) {

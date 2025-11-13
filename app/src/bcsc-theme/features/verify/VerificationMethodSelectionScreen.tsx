@@ -102,8 +102,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
             return (
               <VerifyMethodActionButton
                 key="video_call"
-                title={t('Unified.VerificationMethods.VideoCallTitle')}
-                description={t('Unified.VerificationMethods.VideoCallDescription')}
+                title={t('BCSC.VerificationMethods.VideoCallTitle')}
+                description={t('BCSC.VerificationMethods.VideoCallDescription')}
                 icon={'video'}
                 onPress={handlePressLiveCall}
                 loading={liveCallLoading}
@@ -117,8 +117,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
             return (
               <VerifyMethodActionButton
                 key="send_video"
-                title={t('Unified.VerificationMethods.SendVideoTitle')}
-                description={t('Unified.VerificationMethods.SendVideoDescription')}
+                title={t('BCSC.VerificationMethods.SendVideoTitle')}
+                description={t('BCSC.VerificationMethods.SendVideoDescription')}
                 icon={'send'}
                 onPress={handlePressSendVideo}
                 loading={sendVideoLoading}
@@ -132,8 +132,8 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
             return (
               <VerifyMethodActionButton
                 key="in_person"
-                title={t('Unified.VerificationMethods.InPersonTitle')}
-                description={t('Unified.VerificationMethods.InPersonDescription')}
+                title={t('BCSC.VerificationMethods.InPersonTitle')}
+                description={t('BCSC.VerificationMethods.InPersonDescription')}
                 icon={'account'}
                 onPress={() => navigation.navigate(BCSCScreens.VerifyInPerson)}
                 disabled={liveCallLoading || sendVideoLoading}

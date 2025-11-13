@@ -21,10 +21,10 @@ const VerificationSuccessScreen = () => {
 
   return (
     <StatusDetails
-      title={t('Unified.Verification.Title')}
-      description={t('Unified.Verification.Description')}
-      extraText={t('Unified.Verification.ExtraText')}
-      buttonText={t('Unified.Verification.ButtonText')}
+      title={t('BCSC.Verification.Title')}
+      description={t('BCSC.Verification.Description')}
+      extraText={t('BCSC.Verification.ExtraText')}
+      buttonText={t('BCSC.Verification.ButtonText')}
       onButtonPress={() => {
         dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
         dispatch({ type: BCDispatchAction.CLEAR_USER_METADATA })

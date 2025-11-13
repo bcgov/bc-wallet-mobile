@@ -37,39 +37,37 @@ export const ContactUsContent = (): JSX.Element => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.xl }}>
-          {t('Unified.ContactUs.Title')}
+          {t('BCSC.ContactUs.Title')}
         </ThemedText>
         <ThemedText variant={'bold'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.ContactUs.HoursOfServiceTitle')}
+          {t('BCSC.ContactUs.HoursOfServiceTitle')}
         </ThemedText>
-        <ThemedText>{t('Unified.ContactUs.HoursOfServiceDescription1')}</ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>
-          {t('Unified.ContactUs.HoursOfServiceDescription2')}
-        </ThemedText>
-        <ThemedText>{t('Unified.ContactUs.TollFreeLabel')}</ThemedText>
+        <ThemedText>{t('BCSC.ContactUs.HoursOfServiceDescription1')}</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ContactUs.HoursOfServiceDescription2')}</ThemedText>
+        <ThemedText>{t('BCSC.ContactUs.TollFreeLabel')}</ThemedText>
         <Link
           style={{ marginBottom: Spacing.md }}
-          linkText={t('Unified.ContactUs.TollFreeNumber')}
+          linkText={t('BCSC.ContactUs.TollFreeNumber')}
           onPress={onPressTollFree}
         />
-        <ThemedText>{t('Unified.ContactUs.LowerMainlandLabel')}</ThemedText>
+        <ThemedText>{t('BCSC.ContactUs.LowerMainlandLabel')}</ThemedText>
         <Link
           style={{ marginBottom: Spacing.xl }}
-          linkText={t('Unified.ContactUs.LowerMainlandNumber')}
+          linkText={t('BCSC.ContactUs.LowerMainlandNumber')}
           onPress={onPressLowerMainland}
         />
         <ThemedText variant={'bold'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.ContactUs.OtherContactsTitle')}
+          {t('BCSC.ContactUs.OtherContactsTitle')}
         </ThemedText>
         <ThemedText style={{ marginBottom: Spacing.md }}>
-          {t('Unified.ContactUs.VisitThe')}{' '}
-          <Link linkText={t('Unified.ContactUs.GovernmentWebsiteText')} onPress={onPressGovernmentWebsite} />{' '}
-          {t('Unified.ContactUs.ToFindWhoToContact')}
+          {t('BCSC.ContactUs.VisitThe')}{' '}
+          <Link linkText={t('BCSC.ContactUs.GovernmentWebsiteText')} onPress={onPressGovernmentWebsite} />{' '}
+          {t('BCSC.ContactUs.ToFindWhoToContact')}
         </ThemedText>
-        <BulletPoint pointsText={t('Unified.ContactUs.BulletPoint1')} />
-        <BulletPoint pointsText={t('Unified.ContactUs.BulletPoint2')} />
-        <BulletPoint pointsText={t('Unified.ContactUs.BulletPoint3')} />
-        <BulletPoint pointsText={t('Unified.ContactUs.BulletPoint4')} />
+        <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint1')} />
+        <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint2')} />
+        <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint3')} />
+        <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint4')} />
       </ScrollView>
     </SafeAreaView>
   )

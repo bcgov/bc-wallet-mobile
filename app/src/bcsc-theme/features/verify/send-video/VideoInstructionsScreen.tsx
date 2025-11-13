@@ -4,6 +4,7 @@ import { BCState } from '@/store'
 import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Fragment } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -15,6 +16,7 @@ type VideoInstructionsScreenProps = {
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     pageContainer: {
@@ -50,10 +52,10 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} />
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }}>
-          Record a short video.
+          {t('BCSC.SendVideo.VideoInstructions.Heading1')}
         </ThemedText>
         <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xl, textAlign: 'center' }}>
-          {`You'll be asked to`}
+          {t('BCSC.SendVideo.VideoInstructions.Heading2')}
         </ThemedText>
         {store.bcsc.prompts?.map(({ prompt, id }: VerificationPrompt, index) => (
           <Fragment key={id}>
@@ -65,31 +67,31 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
         ))}
         <View style={styles.lineBreak} />
         <ThemedText variant={'headingFour'} style={{ marginVertical: Spacing.xl }}>
-          A person at Service BC will watch the video. They need to hear and see you clearly.
+          {t('BCSC.SendVideo.VideoInstructions.Heading3')}
         </ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>Keep the video under 30 seconds in length</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet1')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>Be the only person in the video</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet2')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>Be in a quiet place</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet3')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>Hold this device in front of your face</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet4')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>Check your face ccan be seen in the video</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet5')}</ThemedText>
         </View>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>Say your first and last name</ThemedText>
+          <ThemedText>{t('BCSC.SendVideo.VideoInstructions.Bullet6')}</ThemedText>
         </View>
         <Icon
           name={'alert'}
@@ -98,16 +100,16 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
           style={{ marginVertical: Spacing.lg, alignSelf: 'center' }}
         />
         <ThemedText variant={'headingFour'} style={{ marginBottom: Spacing.xxl, textAlign: 'center' }}>
-          Videos with inappropriate, offensive, or harassing behavior will not be accepted.
+          {t('BCSC.SendVideo.VideoInstructions.Heading4')}
         </ThemedText>
         <Button
           buttonType={ButtonType.Primary}
-          title={'Start Recording Video'}
+          title={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
           onPress={() => {
             navigation.navigate(BCSCScreens.TakeVideo)
           }}
           testID={'StartRecordingButton'}
-          accessibilityLabel={'Start Recording Video'}
+          accessibilityLabel={t('BCSC.SendVideo.VideoInstructions.StartRecordingButton')}
         />
       </ScrollView>
     </SafeAreaView>

@@ -1,5 +1,6 @@
 import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -25,6 +26,7 @@ const MaskedCamera = ({
   onPhotoTaken,
 }: MaskedCameraProps) => {
   const device = useCameraDevice(cameraFace)
+  const { t } = useTranslation()
 
   const { Spacing, ColorPalette } = useTheme()
   const { hasPermission, requestPermission } = useCameraPermission()
@@ -85,16 +87,18 @@ const MaskedCamera = ({
       if (!hasPermission) {
         const permission = await requestPermission()
         if (!permission) {
-          Alert.alert('Camera Permission Required', 'Please enable camera permission to take a photo.', [
-            { text: 'OK', onPress: () => navigation.goBack() },
-          ])
+          Alert.alert(
+            t('BCSC.CameraDisclosure.CameraPermissionRequired'),
+            t('BCSC.CameraDisclosure.CameraPermissionRequiredMessage'),
+            [{ text: t('BCSC.CameraDisclosure.OK'), onPress: () => navigation.goBack() }]
+          )
           return
         }
       }
     }
 
     checkPermissions()
-  }, [hasPermission, requestPermission, navigation])
+  }, [hasPermission, requestPermission, navigation, t])
 
   const toggleTorch = () => setTorchOn((prev: boolean) => !prev)
 
@@ -102,7 +106,7 @@ const MaskedCamera = ({
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>Camera permission required</Text>
+          <Text style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</Text>
         </View>
       </SafeAreaView>
     )
@@ -112,7 +116,7 @@ const MaskedCamera = ({
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white' }}>{`No ${device} camera available`}</Text>
+          <Text style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.NoCameraAvailable', { device })}</Text>
         </View>
       </SafeAreaView>
     )
@@ -123,7 +127,7 @@ const MaskedCamera = ({
   }
   const onError = (error: any) => {
     logger.error(`Camera error: ${error}`)
-    Alert.alert('Camera Error', 'An error occurred while using the camera. Please try again.')
+    Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorMessage'))
   }
 
   const takePhoto = async () => {
@@ -138,7 +142,7 @@ const MaskedCamera = ({
       }
     } catch (error) {
       logger.error(`Error taking photo: ${error}`)
-      Alert.alert('Error', 'Failed to take photo. Please try again.')
+      Alert.alert(t('BCSC.CameraDisclosure.Error'), t('BCSC.CameraDisclosure.ErrorTakingPhoto'))
     }
   }
 
@@ -165,7 +169,7 @@ const MaskedCamera = ({
       </View>
       <View style={styles.controlsContainer}>
         <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
-          <ThemedText style={{ color: ColorPalette.grayscale.white }}>Cancel</ThemedText>
+          <ThemedText style={{ color: ColorPalette.grayscale.white }}>{t('Global.Cancel')}</ThemedText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
           <View style={styles.captureButtonInner} />

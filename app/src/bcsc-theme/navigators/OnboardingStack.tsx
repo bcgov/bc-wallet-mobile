@@ -43,7 +43,7 @@ const OnboardingStack = (): JSX.Element => {
         name={BCSCScreens.OnboardingPrivacyPolicy}
         component={OnboardingPrivacyPolicyScreen}
         options={{
-          title: t('Unified.Onboarding.PrivacyPolicyTitle'),
+          title: t('BCSC.Onboarding.PrivacyPolicyTitle'),
           headerShown: true,
         }}
       />
@@ -51,7 +51,7 @@ const OnboardingStack = (): JSX.Element => {
         name={BCSCScreens.OnboardingTermsOfUse}
         component={TermsOfUseScreen}
         options={{
-          title: t('Unified.Onboarding.TermsOfUseTitle'),
+          title: t('BCSC.Onboarding.TermsOfUseTitle'),
           headerShown: true,
         }}
       />
@@ -79,7 +79,7 @@ const OnboardingStack = (): JSX.Element => {
         name={BCSCModals.InternetDisconnected}
         component={InternetDisconnected}
         options={{
-          ...getDefaultModalOptions(t('Unified.BCSC')),
+          ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
@@ -88,7 +88,7 @@ const OnboardingStack = (): JSX.Element => {
         name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
         options={{
-          ...getDefaultModalOptions(t('Unified.BCSC')),
+          ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false, // Disable swipe to dismiss
         }}
       />

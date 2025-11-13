@@ -40,7 +40,7 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.ACCOUNT_EXPIRING_SOON,
-          title: this.utils.translation('Unified.SystemChecks.AccountExpiry.ExpiringBannerTitle', {
+          title: this.utils.translation('BCSC.SystemChecks.AccountExpiry.ExpiringBannerTitle', {
             accountExpiration: moment(this.accountExpiration).format('LL'), // ie: January 1, 1970
           }),
           type: 'warning',

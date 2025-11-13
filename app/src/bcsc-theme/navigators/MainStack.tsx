@@ -44,7 +44,7 @@ const MainStack: React.FC = () => {
   const handleManageDevices = useCallback(() => {
     navigation.navigate(BCSCScreens.MainWebView, {
       url: `${client.baseURL}/account/embedded/devices`,
-      title: t('Unified.Screens.ManageDevices'),
+      title: t('BCSC.Screens.ManageDevices'),
     })
   }, [client.baseURL, navigation, t])
 
@@ -76,7 +76,7 @@ const MainStack: React.FC = () => {
           component={MainSettingsScreen}
           options={{
             headerShown: true,
-            title: t('Screens.Settings'),
+            title: t('BCSC.Screens.Settings'),
             headerBackTestID: testIdWithKey('Back'),
           }}
         />
@@ -120,7 +120,7 @@ const MainStack: React.FC = () => {
           component={TransferQRInformationScreen}
           options={() => ({
             headerShown: true,
-            title: t('Unified.TransferInformation.TransferAccount'),
+            title: t('BCSC.TransferInformation.TransferAccount'),
           })}
         />
         <Stack.Screen
@@ -149,7 +149,7 @@ const MainStack: React.FC = () => {
           component={MainContactUsScreen}
           options={() => ({
             headerShown: true,
-            title: t('Unified.Screens.ContactUs'),
+            title: t('BCSC.Screens.ContactUs'),
             headerBackTestID: testIdWithKey('Back'),
           })}
         />
@@ -158,7 +158,7 @@ const MainStack: React.FC = () => {
           component={SettingsPrivacyPolicyScreen}
           options={() => ({
             headerShown: true,
-            title: t('Unified.Screens.PrivacyInformation'),
+            title: t('BCSC.Screens.PrivacyInformation'),
             headerBackTestID: testIdWithKey('Back'),
           })}
         />
@@ -184,7 +184,7 @@ const MainStack: React.FC = () => {
           name={BCSCModals.InternetDisconnected}
           component={InternetDisconnected}
           options={{
-            ...getDefaultModalOptions(t('Unified.BCSC')),
+            ...getDefaultModalOptions(t('BCSC.Title')),
             gestureEnabled: false, // Disable swipe to dismiss
           }}
         />
@@ -193,7 +193,7 @@ const MainStack: React.FC = () => {
           name={BCSCModals.MandatoryUpdate}
           component={MandatoryUpdate}
           options={{
-            ...getDefaultModalOptions(t('Unified.BCSC')),
+            ...getDefaultModalOptions(t('BCSC.Title')),
             gestureEnabled: false, // Disable swipe to dismiss
           }}
         />

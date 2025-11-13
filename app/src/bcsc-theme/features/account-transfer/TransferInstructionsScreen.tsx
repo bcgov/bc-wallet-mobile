@@ -31,23 +31,23 @@ const TransferInstructionsScreen: React.FC = () => {
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, padding: Spacing.md }} showsVerticalScrollIndicator={false}>
         <View style={styles.contentContainer}>
-          <ThemedText variant={'headingThree'}>{t('Unified.TransferInstructions.Title')}</ThemedText>
+          <ThemedText variant={'headingThree'}>{t('BCSC.TransferInstructions.Title')}</ThemedText>
 
-          <ThemedText>{t('Unified.TransferInstructions.Step1')}</ThemedText>
+          <ThemedText>{t('BCSC.TransferInstructions.Step1')}</ThemedText>
           <Image
             source={TAB_NAVIGATOR}
             style={{ height: 100, aspectRatio: 2, alignSelf: 'center' }}
             resizeMode={'contain'}
           />
 
-          <ThemedText>{t('Unified.TransferInstructions.Step2')}</ThemedText>
+          <ThemedText>{t('BCSC.TransferInstructions.Step2')}</ThemedText>
           <Image
             source={QR_CODE_PHONE}
             style={{ height: 300, aspectRatio: 0.5, alignSelf: 'center' }}
             resizeMode={'contain'}
           />
 
-          <ThemedText>{t('Unified.TransferInstructions.Step3')}</ThemedText>
+          <ThemedText>{t('BCSC.TransferInstructions.Step3')}</ThemedText>
           <Image
             source={QR_SCAN}
             style={{ height: 300, aspectRatio: 0.5, alignSelf: 'center' }}
@@ -56,7 +56,7 @@ const TransferInstructionsScreen: React.FC = () => {
         </View>
         <Button
           buttonType={ButtonType.Primary}
-          title={t('Unified.TransferInstructions.ScanQRCode')}
+          title={t('BCSC.TransferInstructions.ScanQRCode')}
           onPress={() => {
             navigation.navigate(BCSCScreens.TransferAccountQRScan)
           }}

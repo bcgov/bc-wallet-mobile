@@ -35,12 +35,12 @@ const TransferInformationScreen: React.FC = () => {
       <ScrollView style={{ flex: 1, padding: Spacing.md }} contentContainerStyle={styles.scrollViewContentContainer}>
         <View style={styles.contentContainer}>
           <Image source={TWO_PHONES} style={{ height: 300, width: 'auto' }} resizeMode={'contain'} />
-          <ThemedText variant={'headingThree'}>{t('Unified.TransferInformation.Title')}</ThemedText>
-          <ThemedText>{t('Unified.TransferInformation.Instructions')}</ThemedText>
+          <ThemedText variant={'headingThree'}>{t('BCSC.TransferInformation.Title')}</ThemedText>
+          <ThemedText>{t('BCSC.TransferInformation.Instructions')}</ThemedText>
         </View>
         <View style={styles.controlsContainer}>
           <Button
-            title={t('Unified.TransferInformation.TransferAccount')}
+            title={t('BCSC.TransferInformation.TransferAccount')}
             buttonType={ButtonType.Primary}
             onPress={() => {
               navigation.navigate(BCSCScreens.TransferAccountInstructions)

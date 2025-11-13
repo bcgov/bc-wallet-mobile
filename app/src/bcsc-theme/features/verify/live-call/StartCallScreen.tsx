@@ -57,18 +57,18 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
         <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
-          {t('Unified.VideoCall.StartVideoCallDescription')}
+          {t('BCSC.VideoCall.StartVideoCallDescription')}
         </ThemedText>
-        <ThemedText style={{ marginTop: Spacing.lg }}>{t('Unified.VideoCall.YouShould')}</ThemedText>
-        <BulletPointWithText translationKey={'Unified.VideoTips.PrivatePlace'} />
-        <BulletPointWithText translationKey={'Unified.VideoTips.OnlyPerson'} />
-        <BulletPointWithText translationKey={'Unified.VideoTips.RemoveGlasses'} />
+        <ThemedText style={{ marginTop: Spacing.lg }}>{t('BCSC.VideoCall.YouShould')}</ThemedText>
+        <BulletPointWithText translationKey={'BCSC.VideoTips.PrivatePlace'} />
+        <BulletPointWithText translationKey={'BCSC.VideoTips.OnlyPerson'} />
+        <BulletPointWithText translationKey={'BCSC.VideoTips.RemoveGlasses'} />
       </ScrollView>
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
-          title={t('Unified.VideoCall.StartCall')}
-          accessibilityLabel={t('Unified.VideoCall.StartVideoCall')}
+          title={t('BCSC.VideoCall.StartCall')}
+          accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
           onPress={onPressStart}
         />
       </View>

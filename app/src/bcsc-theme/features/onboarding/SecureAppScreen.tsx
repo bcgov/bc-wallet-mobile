@@ -34,12 +34,12 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scollContainer}>
-        <ThemedText variant="headingThree">{t('Unified.Onboarding.SecureAppHeader')}</ThemedText>
-        <ThemedText>{t('Unified.Onboarding.SecureAppContent')}</ThemedText>
+        <ThemedText variant="headingThree">{t('BCSC.Onboarding.SecureAppHeader')}</ThemedText>
+        <ThemedText>{t('BCSC.Onboarding.SecureAppContent')}</ThemedText>
         {Platform.OS === 'ios' ? (
           <CardButton
-            title={t('Unified.Onboarding.SecureAppFaceIDTitle')}
-            subtext={t('Unified.Onboarding.SecureAppFaceIDSubtext')}
+            title={t('BCSC.Onboarding.SecureAppFaceIDTitle')}
+            subtext={t('BCSC.Onboarding.SecureAppFaceIDSubtext')}
             onPress={() => {
               // TODO (MD): Implement Face ID setup (Remove completed onboarding dispatch when implemented)
               dispatch({ type: BCDispatchAction.UPDATE_COMPLETED_ONBOARDING, payload: [true] })
@@ -47,8 +47,8 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
           />
         ) : (
           <CardButton
-            title={'TODO: Android title'}
-            subtext={'TODO: Android subtext'}
+            title={t('BCSC.Onboarding.SecureAppBiometricsTitle')}
+            subtext={t('BCSC.Onboarding.SecureAppBiometricsSubtext')}
             onPress={() => {
               // TODO (MD): Implement Android biometric setup (Remove completed onboarding dispatch when implemented)
               dispatch({ type: BCDispatchAction.UPDATE_COMPLETED_ONBOARDING, payload: [true] })
@@ -57,8 +57,8 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
         )}
 
         <CardButton
-          title={t('Unified.Onboarding.SecureAppPINTitle')}
-          subtext={t('Unified.Onboarding.SecureAppPINSubtext')}
+          title={t('BCSC.Onboarding.SecureAppPINTitle')}
+          subtext={t('BCSC.Onboarding.SecureAppPINSubtext')}
           onPress={() => {
             // TODO (MD): Implement PIN setup (Remove completed onboarding dispatch when implemented)
             dispatch({ type: BCDispatchAction.UPDATE_COMPLETED_ONBOARDING, payload: [true] })
@@ -66,7 +66,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
           }}
         />
 
-        <CardButton title={t('Unified.Onboarding.LearnMore')} endIcon="open-in-new" onPress={() => {}} />
+        <CardButton title={t('BCSC.Onboarding.LearnMore')} endIcon="open-in-new" onPress={() => {}} />
       </ScrollView>
     </SafeAreaView>
   )

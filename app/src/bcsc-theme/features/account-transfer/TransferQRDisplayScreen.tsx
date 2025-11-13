@@ -120,7 +120,7 @@ const TransferQRDisplayScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <ThemedText style={{ marginBottom: Spacing.xxl }} variant={'headingThree'}>
-          {t('Unified.TransferQRDisplay.Instructions')}
+          {t('BCSC.TransferQRDisplay.Instructions')}
         </ThemedText>
         {qrValue && (
           <View style={styles.qrCodeContainer}>
@@ -130,8 +130,8 @@ const TransferQRDisplayScreen: React.FC = () => {
       </ScrollView>
       <Button
         buttonType={ButtonType.Secondary}
-        accessibilityLabel={t('Unified.TransferQRDisplay.GetNewQRCode')}
-        title={t('Unified.TransferQRDisplay.GetNewQRCode')}
+        accessibilityLabel={t('BCSC.TransferQRDisplay.GetNewQRCode')}
+        title={t('BCSC.TransferQRDisplay.GetNewQRCode')}
         testID={testIdWithKey('GetNewQRCode')}
         onPress={refreshToken}
       />

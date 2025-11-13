@@ -31,22 +31,22 @@ const TransferQRInformationScreen: React.FC = () => {
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
         <View style={styles.contentContainer}>
-          <ThemedText variant={'headingThree'}>{t('Unified.TransferQRInformation.Title')}</ThemedText>
-          <ThemedText>{t('Unified.TransferQRInformation.Instructions')}</ThemedText>
-          <ThemedText variant={'bold'}>{t('Unified.TransferQRInformation.Warning')}</ThemedText>
+          <ThemedText variant={'headingThree'}>{t('BCSC.TransferQRInformation.Title')}</ThemedText>
+          <ThemedText>{t('BCSC.TransferQRInformation.Instructions')}</ThemedText>
+          <ThemedText variant={'bold'}>{t('BCSC.TransferQRInformation.Warning')}</ThemedText>
         </View>
 
         <View style={styles.controlsContainer}>
           <Button
             buttonType={ButtonType.Primary}
-            title={t('Unified.TransferQRInformation.GetQRCode')}
+            title={t('BCSC.TransferQRInformation.GetQRCode')}
             onPress={() => {
               navigation.navigate(BCSCScreens.TransferAccountQRDisplay)
             }}
           />
           <Button
             buttonType={ButtonType.Secondary}
-            title={t('Unified.TransferQRInformation.LearnMore')}
+            title={t('BCSC.TransferQRInformation.LearnMore')}
             onPress={() => {
               // TODO: (Alfred) BCSC opens a web page inside the app, it doesn't open the page in the mobile browser
             }}

@@ -18,7 +18,7 @@ const CallErrorView = ({ message, onRetry, onGoBack }: CallErrorViewProps) => {
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Icon name="alert-circle" size={64} color={ColorPalette.semantic.error} />
         <ThemedText variant={'headingTwo'} style={{ marginTop: Spacing.lg, textAlign: 'center' }}>
-          {t('Unified.VideoCall.ConnectionError')}
+          {t('BCSC.VideoCall.Errors.ConnectionError')}
         </ThemedText>
         <ThemedText style={{ marginTop: Spacing.md, textAlign: 'center' }}>{message}</ThemedText>
       </View>
@@ -27,16 +27,16 @@ const CallErrorView = ({ message, onRetry, onGoBack }: CallErrorViewProps) => {
           <Button
             buttonType={ButtonType.Primary}
             onPress={onRetry}
-            title={t('Unified.VideoCall.TryAgain')}
-            accessibilityLabel={t('Unified.VideoCall.TryAgain')}
+            title={t('BCSC.VideoCall.Errors.TryAgain')}
+            accessibilityLabel={t('BCSC.VideoCall.Errors.TryAgain')}
             testID={testIdWithKey('TryAgain')}
           />
         )}
         <Button
           buttonType={ButtonType.Secondary}
           onPress={onGoBack}
-          title={t('Unified.VideoCall.GoBack')}
-          accessibilityLabel={t('Unified.VideoCall.GoBack')}
+          title={t('BCSC.VideoCall.Errors.GoBack')}
+          accessibilityLabel={t('BCSC.VideoCall.Errors.GoBack')}
           testID={testIdWithKey('GoBack')}
         />
       </View>

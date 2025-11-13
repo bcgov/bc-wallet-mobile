@@ -66,17 +66,17 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
     const trimmedAccountNickname = accountNickname.trim()
 
     if (trimmedAccountNickname.length < formStringLengths.minimumLength) {
-      setError(t('Unified.NicknameAccount.EmptyNameTitle'))
+      setError(t('BCSC.NicknameAccount.EmptyNameTitle'))
       return
     }
 
     if (trimmedAccountNickname.length > formStringLengths.maximumLength) {
-      setError(t('Unified.NicknameAccount.CharCountTitle'))
+      setError(t('BCSC.NicknameAccount.CharCountTitle'))
       return
     }
 
     if (hasNickname(store, trimmedAccountNickname)) {
-      setError(t('Unified.NicknameAccount.NameAlreadyExists'))
+      setError(t('BCSC.NicknameAccount.NameAlreadyExists'))
       return
     }
 
@@ -101,7 +101,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
       Toast.show({
         type: 'success',
         text1: t('Global.Success'),
-        text2: t('Unified.NicknameAccount.RenameSuccessToastMessage'),
+        text2: t('BCSC.NicknameAccount.RenameSuccessToastMessage'),
         position: 'bottom',
       })
       navigation.goBack()
@@ -120,35 +120,35 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
       <View style={styles.pageContainer}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('Unified.NicknameAccount.AccountName')}
+            {t('BCSC.NicknameAccount.AccountName')}
           </ThemedText>
 
           <ThemedText style={{ marginBottom: Spacing.md }}>
-            {isRenaming ? t('Unified.NicknameAccount.EditAccountName') : t('Unified.NicknameAccount.CreateAccountName')}
+            {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
           </ThemedText>
 
           <View style={styles.bulletPointContainer}>
-            <BulletPoint pointsText={t('Unified.NicknameAccount.AccountNameDescription1')} />
-            <BulletPoint pointsText={t('Unified.NicknameAccount.AccountNameDescription2')} />
+            <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
+            <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
           </View>
 
           <LimitedTextInput
             showLimitCounter={false}
             defaultValue={accountNickname}
-            label={t('Unified.NicknameAccount.AccountName')}
+            label={t('BCSC.NicknameAccount.AccountName')}
             limit={formStringLengths.maximumLength}
             handleChangeText={handleChangeText}
-            accessibilityLabel={t('Unified.NicknameAccount.AccountName')}
+            accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
             testID={testIdWithKey('NameInput')}
           />
           {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
         </View>
         <View style={styles.controlsContainer}>
           <Button
-            title={isRenaming ? t('Global.Save') : t('Unified.NicknameAccount.SaveAndContinue')}
+            title={isRenaming ? t('Global.Save') : t('BCSC.NicknameAccount.SaveAndContinue')}
             buttonType={ButtonType.Primary}
             testID={isRenaming ? testIdWithKey('Save') : testIdWithKey('SaveAndContinue')}
-            accessibilityLabel={isRenaming ? t('Global.Save') : t('Unified.NicknameAccount.SaveAndContinue')}
+            accessibilityLabel={isRenaming ? t('Global.Save') : t('BCSC.NicknameAccount.SaveAndContinue')}
             onPress={handleContinuePressed}
             disabled={loading}
           >
