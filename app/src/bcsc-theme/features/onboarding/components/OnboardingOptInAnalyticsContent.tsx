@@ -10,10 +10,6 @@ interface OnboardingOptInAnalyticsContentProps {
 }
 /**
  * Analytics Opt In content that informs users about the app's data collection practices.
- *
- * onPress: optional function to be called when the Continue button is pressed,
- * if not provided, the Continue button will not be displayed.
- *
  * @returns {*} {JSX.Element} The OnboardingOptInAnalyticsContent component.
  */
 export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsContentProps> = ({
