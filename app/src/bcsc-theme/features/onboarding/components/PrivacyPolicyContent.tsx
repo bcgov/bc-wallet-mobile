@@ -14,6 +14,7 @@ interface PrivacyPolicyContentProps {
  *
  * onPress: optional function to be called when the Continue button is pressed,
  * if not provided, the Continue button will not be displayed.
+ * onLearnMore: optional function to be called when the Learn More button is pressed.
  *
  * @returns {*} {JSX.Element} The PrivacyPolicyContent component.
  */
