@@ -23,15 +23,9 @@ BC Wallet to hold Verifiable Credentials
 Before you can proceed with building and testing the BC Wallet app, you must install and configure the following products on your development machine:
 
 - [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org) & [npm](https://docs.npmjs.com/cli/) - (version specified in the `engines` field
-  of [./app/package.json](./app/package.json))
-  > **Tip**: use [nvm](https://github.com/nvm-sh/nvm) to install node & npm. It helps to easily switch node & npm
-  > version for each project.
-- [Yarn](https://yarnpkg.com/)
 - A [JDK](https://openjdk.org/) and [Gradle](https://gradle.org) - Make sure you install compatible versions, see [here](https://docs.gradle.org/current/userguide/compatibility.html) for more information.
 - [Ruby](https://www.ruby-lang.org/en/documentation/installation/) version 2.x.x. You may want/need to use [rbenv](https://github.com/rbenv/rbenv) on MacOS.
 - [Bundler](https://bundler.io) version 2 or newer: `sudo gem install bundler:2.1.4`.
-- [Python](https://www.python.org/downloads/) version 3.11.x
 
 ## Cloning and initializing submodule
 
@@ -44,6 +38,15 @@ git clone https://github.com/bcgov/bc-wallet-mobile.git
 # Go to the BC Wallet directory:
 cd bc-wallet-mobile
 ```
+
+## Install Additional Tools
+
+1. Download [mise](https://mise.jdx.dev/getting-started.html)
+> **Linux/WSL/OSX**: `curl https://mise.run | sh`
+2. Configure your .bashrc/.zshrc for mise 
+> **Linux/WSL**: `echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc`  
+> **OSX**: `echo 'eval "$(~/.local/bin/mise activate zsh)"' >> ~/.zshrc` 
+3. Run `mise install` to install all specified tools. This will install the tools listed in `.tool-versions`
 
 ## React Native setup
 
