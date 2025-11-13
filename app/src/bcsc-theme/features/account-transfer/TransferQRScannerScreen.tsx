@@ -186,7 +186,9 @@ const TransferQRScannerScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScanCamera handleCodeScan={handleScan} enableCameraOnError={true} error={scanError} />
-      <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
+      <View pointerEvents="none">
+        <SVGOverlay maskType={MaskType.QR_CODE} strokeColor={ColorPalette.grayscale.white} />
+      </View>
       <View style={styles.messageContainer}>
         <Icon name="qrcode-scan" size={40} style={styles.icon} />
         <ThemedText variant="title">{t('Scan.WillScanAutomatically')}</ThemedText>
