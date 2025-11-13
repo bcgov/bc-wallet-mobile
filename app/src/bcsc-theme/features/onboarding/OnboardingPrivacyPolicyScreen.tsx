@@ -15,7 +15,7 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
   navigation,
 }: OnboardingPrivacyPolicyScreenProps): JSX.Element => {
   const onPress = () => {
-    navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
+    navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
   }
 
   return <PrivacyPolicyContent onPress={onPress} />

@@ -48,6 +48,8 @@ export const HELP_URL = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1'
 export const SECURE_APP_LEARN_MORE_URL = 'https://id.gov.bc.ca/static/help/secure_app.html'
 export const CONTACT_US_GOVERNMENT_WEBSITE_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-services-card/contact-us'
+export const ANALYTICS_URL =
+  'https://www2.gov.bc.ca/gov/content/governments/services-for-government/service-experience-digital-delivery/web-content-development-guides/analytics'
 
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',
