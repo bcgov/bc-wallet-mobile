@@ -189,6 +189,7 @@ const translation = {
     "TermsOfUse": "Terms of use",
     "Version": "Version",
     "ButtonTitle": "Settings Menu",
+    "Analytics": "Analytics",
   },
   "Developer": {
     "Environment": "Environment",
@@ -396,7 +397,11 @@ const translation = {
       "SecureAppFaceIDTitle": "Use Face ID",
       "SecureAppFaceIDSubtext": "It’s already setup on this iPhone or iPad. It never leaves this device or is shared with us.",
       "SecureAppPINTitle": "Create a PIN",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us."
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
+      "AnalyticsTitle": "Analytic Data Collection",
+      "AnalyticsContent": "To help us improve the app, you can choose to allow the collection of analytic data about how you use the app. No personal information is collected.",
+      "AcceptAnalytics": "Agree to collect analytic data",
+      "DenyAnalytics":  "Do not collect analytic data",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",

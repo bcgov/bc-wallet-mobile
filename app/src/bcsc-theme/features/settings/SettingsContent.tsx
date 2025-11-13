@@ -1,4 +1,4 @@
-import { ACCESSIBILITY_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
+import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import {
@@ -103,6 +103,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
   }
 
+  const onPressAnalytics = async () => {
+    try {
+      await Linking.openURL(ANALYTICS_URL)
+    } catch (error) {
+      logger.error('Error opening Analytics URL', error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
+  const onPressOptInAnalytics = () => {
+    dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [!store.bcsc.analyticsOptIn] })
+  }
+
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
@@ -149,6 +161,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               {onForgetAllPairings ? (
                 <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onForgetAllPairings} />
               ) : null}
+              <SettingsActionCard
+                title={'Analytics Opt-In Placeholder'}
+                onPress={onPressOptInAnalytics}
+                endAdornmentText={store.bcsc.analyticsOptIn ? 'ON' : 'OFF'}
+              />
             </View>
           </>
         ) : null}
@@ -163,6 +180,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressFeedback} />
           <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
+          <SettingsActionCard title={t('BCSCSettings.Analytics')} onPress={onPressAnalytics} />
           {store.preferences.developerModeEnabled ? (
             <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperMode} />
           ) : null}

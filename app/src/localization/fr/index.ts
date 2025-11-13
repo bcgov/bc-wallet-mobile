@@ -393,7 +393,11 @@ const translation = {
       "SecureAppFaceIDTitle": "Use Face ID (FR)",
       "SecureAppFaceIDSubtext": "It’s already setup on this iPhone or iPad. It never leaves this device or is shared with us. (FR)",
       "SecureAppPINTitle": "Create a PIN (FR)",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us (FR)."
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us (FR).",
+      "AnalyticsTitle": "Analytic Data Collection (FR)",
+      "AnalyticsContent": "To help us improve the app, you can choose to allow the collection of analytic data about how you use the app. No personal information is collected. (FR)",
+      "AcceptAnalytics": "Agree to collect analytic data (FR)",
+      "DenyAnalytics":  "Do not collect analytic data (FR)",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (FR)",
