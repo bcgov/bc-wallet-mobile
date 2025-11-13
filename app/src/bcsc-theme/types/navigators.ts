@@ -199,7 +199,7 @@ export type BCSCMainStackParams = {
   [BCSCScreens.ForgetAllPairings]: undefined
   [BCSCScreens.EditNickname]: undefined
   [BCSCScreens.MainDeveloper]: undefined
-  [BCSCScreens.AccountExpired]: { accountName: string; accountExpiration: Date }
+  [BCSCScreens.AccountExpired]: { accountName: string; accountExpiration: string }
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
   [BCSCScreens.AccountRenewalFinalWarning]: undefined

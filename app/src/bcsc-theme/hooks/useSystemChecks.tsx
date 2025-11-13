@@ -14,7 +14,7 @@ import { getBundleId } from 'react-native-device-info'
 import BCSCApiClient from '../api/client'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
-import useUserApi from '../api/hooks/useUserApi'
+import useUserApi, { UserInfoResponseData } from '../api/hooks/useUserApi'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -24,17 +24,25 @@ export enum SystemCheckScope {
   MAIN_STACK = 'mainStack',
 }
 
+type MainStackSystemCheckResult = {
+  account: UserInfoResponseData | null
+}
+
 /**
  * Hook to run system checks based on the provided scope.
+ *
+ * Note: Intentionally using function syntax, to overload return types based on scope.
  *
  * Scopes:
  *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: server status, internet connectivity
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
- * @returns {void}
+ * @returns {*} {MainStackSystemCheckResult | void} - Result of main stack checks or void for startup checks
  */
-export const useSystemChecks = (scope: SystemCheckScope) => {
+export function useSystemChecks(scope: SystemCheckScope.STARTUP): void
+export function useSystemChecks(scope: SystemCheckScope.MAIN_STACK): MainStackSystemCheckResult
+export function useSystemChecks(scope: SystemCheckScope): MainStackSystemCheckResult | void {
   const { t } = useTranslation()
   const [, dispatch] = useStore()
   const { client, isClientReady } = useBCSCApiClientState()
@@ -102,6 +110,10 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
     runChecksByScope()
   }, [client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi, userApi])
+
+  if (scope === SystemCheckScope.MAIN_STACK) {
+    return { account: null }
+  }
 }
 
 /**

@@ -6,12 +6,13 @@ import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
-import { createHeaderWithBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
+import { AccountExpiredScreen } from '../features/account/AccountExpiredScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
@@ -186,6 +187,15 @@ const MainStack: React.FC = () => {
           options={() => ({
             title: t('Developer.DeveloperMode'),
             headerShown: true,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.AccountExpired}
+          component={AccountExpiredScreen}
+          options={() => ({
+            title: t('BCSC.Title'),
+            headerShown: true,
+            header: createHeaderWithoutBanner,
           })}
         />
 

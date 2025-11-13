@@ -1,6 +1,5 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { ThemedText } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 
@@ -18,13 +17,6 @@ export const AccountRenewalFinalWarningScreen = ({ navigation }: AccountRenewalF
         // TODO: navigate to setup steps
         // probably remove all state as well
       }}
-    >
-      <ThemedText variant="headingThree">{t('BCSC.AccountRenewal.InformationHeaderA')}</ThemedText>
-      <ThemedText>{t('BCSC.AccountRenewal.InformationContentA')}</ThemedText>
-      <ThemedText>{t('BCSC.AccountRenewal.InformationGetNewCardA')}</ThemedText>
-      <ThemedText>{t('BCSC.AccountRenewal.InformationGetNewCardB')}</ThemedText>
-      <ThemedText>{t('BCSC.AccountRenewal.InformationContentHeaderB')}</ThemedText>
-      <ThemedText variant="headingThree">{t('BCSC.AccountRenewal.InformationHeaderB')}</ThemedText>
-    </ActionScreenLayout>
+    ></ActionScreenLayout>
   )
 }

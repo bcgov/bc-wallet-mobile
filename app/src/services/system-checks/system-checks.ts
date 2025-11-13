@@ -58,7 +58,7 @@ export interface SystemCheckNavigationUtils extends SystemCheckUtils {
 
 // Simple interface to abstract navigation methods needed for system checks
 export type SystemCheckNavigation = {
-  navigate: (screen: BCSCScreens | BCSCModals, params?: object) => void
+  navigate: (screen: BCSCScreens | BCSCModals) => void
   canGoBack: () => boolean
   goBack: () => void
   getState: () => NavigationState | undefined
