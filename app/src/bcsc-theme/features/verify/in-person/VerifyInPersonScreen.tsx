@@ -108,7 +108,11 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
         </ThemedText>
         <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.YouMustCompleteThisBy')}</ThemedText>
         <ThemedText variant={'headingTwo'} style={{ fontWeight: 'normal' }}>
-          {store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' })}
+          {store.bcsc.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })}
         </ThemedText>
       </ScrollView>
       <View style={styles.controlsContainer}>

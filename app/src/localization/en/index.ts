@@ -126,6 +126,7 @@ const translation = {
   },
   "BCSC": {
     "Title": "BC Services Card",
+    "LocaleStringFormat": "en-CA",
     "Screens": {
       "Settings": "Menu",
       "SetupTypes": "BC Services Card",

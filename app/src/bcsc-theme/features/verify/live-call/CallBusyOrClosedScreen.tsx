@@ -70,7 +70,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
         </ThemedText>
         <ThemedText>
           {t('BCSC.VideoCall.CallBusyOrClosed.AddCardAgainReminder', {
-            date: store.bcsc.deviceCodeExpiresAt?.toLocaleString('en-CA', {
+            date: store.bcsc.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
               month: 'long',
               day: 'numeric',
               year: 'numeric',

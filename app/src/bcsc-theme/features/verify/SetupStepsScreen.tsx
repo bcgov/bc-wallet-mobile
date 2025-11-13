@@ -214,7 +214,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
    */
   const getVerificationStep5Subtext = useCallback(() => {
     if (step.verify.focused && store.bcsc.deviceCodeExpiresAt) {
-      const expirationDate = store.bcsc.deviceCodeExpiresAt.toLocaleString('en-CA', {
+      const expirationDate = store.bcsc.deviceCodeExpiresAt.toLocaleString(t('BCSC.LocaleStringFormat'), {
         day: '2-digit',
         month: 'long',
         year: 'numeric',
