@@ -1,3 +1,4 @@
+import moment from 'moment'
 import { useCallback, useMemo } from 'react'
 import { decodePayload } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -16,12 +17,22 @@ export interface UserInfoResponseData {
   address: { formatted: string }
   picture: string
   card_type: any
+  /**
+   * Backend team clarification:
+   * This value represent the "app expiry date" or "app instance expiration date".
+   * This value **is** independent from the physical card expiration date.
+   * Workflows that deal with account expiration or renewal should use this value.
+   *
+   * Note: Backend team might add additional field: `app_expiry`, which would represent the same value.
+   */
   card_expiry: string
 }
 
 const useUserApi = (apiClient: BCSCApiClient) => {
   /**
    * Get user information in a JWE string and decode.
+   *
+   * Question: Should we cache this response to avoid multiple network calls?
    *
    * @returns {*} {Promise<UserInfoResponseData>} A promise that resolves to the user information.
    */
@@ -75,13 +86,25 @@ const useUserApi = (apiClient: BCSCApiClient) => {
     return { user: userMetadata, picture: pictureUri }
   }, [getPicture, getUserInfo])
 
+  /**
+   * Retrieves the account expiration date from user information.
+   *
+   * @return {*} {Promise<Date>} A promise that resolves to the account expiration date.
+   */
+  const getAccountExpirationDate = useCallback(async (): Promise<Date> => {
+    const userInfo = await getUserInfo()
+
+    return moment(userInfo.card_expiry, 'MMMM D, YYYY').toDate()
+  }, [getUserInfo])
+
   return useMemo(
     () => ({
       getUserInfo,
       getPicture,
       getUserMetadata,
+      getAccountExpirationDate,
     }),
-    [getUserInfo, getPicture, getUserMetadata]
+    [getUserInfo, getPicture, getUserMetadata, getAccountExpirationDate]
   )
 }
 
