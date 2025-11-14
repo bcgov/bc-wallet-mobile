@@ -27,8 +27,8 @@ import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
-import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
+import { MainStackSplashScreen } from './components/MainStackSplashScreen'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
@@ -41,7 +41,6 @@ const MainStack: React.FC = () => {
   const Stack = createStackNavigator<BCSCMainStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
-  useSystemChecks(SystemCheckScope.MAIN_STACK)
 
   const handleManageDevices = useCallback(() => {
     navigation.navigate(BCSCScreens.MainWebView, {
@@ -53,7 +52,7 @@ const MainStack: React.FC = () => {
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
-        initialRouteName={BCSCStacks.Tab}
+        initialRouteName={BCSCScreens.MainSplash}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
@@ -63,7 +62,14 @@ const MainStack: React.FC = () => {
           header: createHeaderWithBanner(handleManageDevices),
         }}
       >
-        <Stack.Screen name={BCSCStacks.Tab} component={BCSCTabStack} />
+        <Stack.Screen name={BCSCScreens.MainSplash} component={MainStackSplashScreen} />
+        <Stack.Screen
+          name={BCSCStacks.Tab}
+          component={BCSCTabStack}
+          options={{
+            animationEnabled: false,
+          }}
+        />
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}

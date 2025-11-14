@@ -1,28 +1,31 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import { TOKENS, useServices, useTheme } from '@bifold/core'
-import { StackScreenProps } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import { useTheme } from '@bifold/core'
+import { StackNavigationProp } from '@react-navigation/stack'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import SavedServices from './components/SavedServices'
 
-type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
+type HomeProps = {
+  navigation: StackNavigationProp<BCSCTabStackParams, BCSCScreens.Home>
+  route: {
+    params: {
+      accountName: string
+    }
+  }
+}
 
-const Home: React.FC<HomeProps> = ({ navigation }) => {
+const Home: React.FC<HomeProps> = ({ navigation, route }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const { user } = useApi()
-  const [loading, setLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const apiClient = useBCSCApiClient()
+
+  const { accountName } = route.params
 
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
@@ -30,22 +33,6 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
       title: t('Unified.Screens.ManageDevices'),
     })
   }, [apiClient.baseURL, navigation, t])
-
-  useEffect(() => {
-    const asyncEffect = async () => {
-      try {
-        setLoading(true)
-        const userInfo = await user.getUserInfo()
-        setUserInfo(userInfo)
-      } catch (error) {
-        logger.error(`Error while fetching user info`)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    asyncEffect()
-  }, [user, logger])
 
   const styles = StyleSheet.create({
     buttonsContainer: {
@@ -63,28 +50,22 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
 
   return (
     <TabScreenWrapper>
-      {loading ? (
-        <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-      ) : (
-        <>
-          <NotificationBannerContainer onManageDevices={handleManageDevices} />
-          <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
-          <View style={styles.buttonsContainer}>
-            <SectionButton
-              title={t('Unified.Home.WhereToUseTitle')}
-              description={t('Unified.Home.WhereToUseDescription')}
-              style={{ marginBottom: Spacing.md }}
-              onPress={handleWhereToUsePress}
-            />
-            <SectionButton
-              title={t('Unified.Home.LogInFromComputerTitle')}
-              description={t('Unified.Home.LogInFromComputerDescription')}
-              onPress={handlePairingCodePress}
-            />
-          </View>
-          <SavedServices />
-        </>
-      )}
+      <NotificationBannerContainer onManageDevices={handleManageDevices} />
+      <HomeHeader name={accountName} />
+      <View style={styles.buttonsContainer}>
+        <SectionButton
+          title={t('Unified.Home.WhereToUseTitle')}
+          description={t('Unified.Home.WhereToUseDescription')}
+          style={{ marginBottom: Spacing.md }}
+          onPress={handleWhereToUsePress}
+        />
+        <SectionButton
+          title={t('Unified.Home.LogInFromComputerTitle')}
+          description={t('Unified.Home.LogInFromComputerDescription')}
+          onPress={handlePairingCodePress}
+        />
+      </View>
+      <SavedServices />
     </TabScreenWrapper>
   )
 }

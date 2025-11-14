@@ -41,14 +41,13 @@ export const AccountExpiredScreen = ({ navigation, route }: AccountExpiredScreen
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+      <AppBannerSection
+        id={BCSCBanner.ACCOUNT_EXPIRED}
+        title={t('BCSC.Account.ExpiredBannerTitle', { accountExpiration })}
+        type="warning"
+      />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <AppBannerSection
-          id={BCSCBanner.ACCOUNT_EXPIRED}
-          title={t('BCSC.Account.ExpiredBannerTitle', { accountExpiration })}
-          type="warning"
-        />
-
-        <HomeHeader name={accountName} />
+        <HomeHeader name={accountName} fontSize={20} iconSize={72} />
 
         <CardButton
           title={'BCSC.AccountExpired.RenewButton'}

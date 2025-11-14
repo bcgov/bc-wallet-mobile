@@ -8,7 +8,8 @@ import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCh
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { navigationRef } from 'App'
-import { useEffect, useRef } from 'react'
+import moment from 'moment'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
 import BCSCApiClient from '../api/client'
@@ -31,8 +32,6 @@ type MainStackSystemCheckResult = {
 /**
  * Hook to run system checks based on the provided scope.
  *
- * Note: Intentionally using function syntax, to overload return types based on scope.
- *
  * Scopes:
  *   - STARTUP: Checks that need to run when the app starts, regardless of user authentication ie: server status, internet connectivity
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
@@ -40,6 +39,7 @@ type MainStackSystemCheckResult = {
  * @param {SystemCheckScope} scope - The scope of the system checks to run
  * @returns {*} {MainStackSystemCheckResult | void} - Result of main stack checks or void for startup checks
  */
+// Intentionally using function syntax to overload return types based on scope
 export function useSystemChecks(scope: SystemCheckScope.STARTUP): void
 export function useSystemChecks(scope: SystemCheckScope.MAIN_STACK): MainStackSystemCheckResult
 export function useSystemChecks(scope: SystemCheckScope): MainStackSystemCheckResult | void {
@@ -50,6 +50,7 @@ export function useSystemChecks(scope: SystemCheckScope): MainStackSystemCheckRe
   const tokenApi = useTokenApi(client as BCSCApiClient)
   const userApi = useUserApi(client as BCSCApiClient)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [account, setAccount] = useState<UserInfoResponseData | null>(null)
   const ranSystemChecksRef = useRef(false)
 
   // Internet connectivity event listener
@@ -96,11 +97,14 @@ export function useSystemChecks(scope: SystemCheckScope): MainStackSystemCheckRe
         // Checks to run once on main stack (verified users)
         if (scope === SystemCheckScope.MAIN_STACK) {
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
-          const accountExpiry = await userApi.getAccountExpirationDate()
+          const account = await userApi.getUserInfo()
+          const accountExpiration = moment(account.card_expiry, 'MMMM D, YYYY').toDate() // January 1, 1970 -> Date: 1970-01-01
+
+          setAccount(account)
 
           await runSystemChecks([
             new DeviceCountSystemCheck(getIdToken, utils),
-            new AccountExpirySystemCheck(accountExpiry, utils),
+            new AccountExpirySystemCheck(accountExpiration, utils),
           ])
         }
       } catch (error) {
@@ -112,7 +116,7 @@ export function useSystemChecks(scope: SystemCheckScope): MainStackSystemCheckRe
   }, [client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi, userApi])
 
   if (scope === SystemCheckScope.MAIN_STACK) {
-    return { account: null }
+    return { account }
   }
 }
 

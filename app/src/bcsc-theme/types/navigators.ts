@@ -83,6 +83,7 @@ export enum BCSCScreens {
   OnboardingNotifications = 'BCSCOnboardingNotifications',
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
+  MainSplash = 'BCSCMainSplash',
   MainSettings = 'BCSCMainSettings',
   MainWebView = 'BCSCMainWebView',
   MainContactUs = 'BCSCMainContactUs',
@@ -176,13 +177,14 @@ export type BCSCVerifyStackParams = {
 }
 
 export type BCSCTabStackParams = {
-  [BCSCScreens.Home]: undefined
+  [BCSCScreens.Home]: { accountName: string }
   [BCSCScreens.Services]: undefined
   [BCSCScreens.Account]: undefined
 }
 
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCScreens.MainSplash]: undefined
   [BCSCScreens.MainWebView]: { url: string; title: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }

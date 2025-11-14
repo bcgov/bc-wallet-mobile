@@ -21,25 +21,27 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
   }
 
   /**
-   * Determines if the account is expired, or within the warning buffer period.
+   * Determines if the account is expired, or within the warning period.
    *
    * @example `
-   *   10 days until expiration, 30 day warning buffer => true
-   *   40 days until expiration, 30 day warning buffer => false
-   *   0 days until expiration, 30 day warning buffer => true
+   *   10 days until expiration, 30 day warning period => true
+   *   40 days until expiration, 30 day warning period => false
+   *   0 days until expiration, 30 day warning period => true
    *  `
-   * @param {Date} accountExpiration - The expiration date of the account.
-   * @param {number} warningBufferDays - The number of days before expiration to start warning.
-   * @returns {*} {boolean} - True if the account is expired or within the warning buffer, false otherwise.
+   * @param {Date | string} accountExpiration - The expiration date of the account. ie: 'January 1, 1970' or Date object
+   * @param {number} warningPeriod - The number of days before expiration to start warning.
+   * @returns {*} {boolean} - True if the account is expired or within the warning period, false otherwise.
    */
-  static isAccountExpired(accountExpiration: Date | string, warningBufferDays = 0): boolean {
-    const daysUntilExpired = moment(accountExpiration).diff(moment(), 'days')
-    return daysUntilExpired > warningBufferDays
+  static isAccountExpired(accountExpiration: Date | string, warningPeriod = 0): boolean {
+    const accountExpirationMoment =
+      typeof accountExpiration === 'string' ? moment(accountExpiration, 'MMMM D, YYYY') : moment(accountExpiration)
+    const daysUntilExpired = accountExpirationMoment.diff(moment(), 'days')
+    return daysUntilExpired <= warningPeriod
   }
 
   runCheck() {
     // Return false if the account is expired or expiring soon
-    return AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, ACCOUNT_EXPIRATION_WARNING_DAYS)
+    return !AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, ACCOUNT_EXPIRATION_WARNING_DAYS)
   }
 
   onFail() {
