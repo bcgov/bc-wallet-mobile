@@ -1,5 +1,5 @@
 import { QRScannerTorch, useTheme } from '@bifold/core'
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Animated,
   ColorValue,
@@ -222,12 +222,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     })
   }
 
-  const focus = useCallback((point: { x: number; y: number }) => {
+  const focus = (point: { x: number; y: number }) => {
     const c = camera.current
     if (c) {
       c.focus(point)
     }
-  }, [])
+  }
 
   const handleFocusTap = (e: GestureResponderEvent): void => {
     if (!device?.supportsFocus) {
