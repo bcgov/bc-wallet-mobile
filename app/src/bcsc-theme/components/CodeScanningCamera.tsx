@@ -193,12 +193,12 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       height: 80,
       borderRadius: 40,
       borderWidth: 2,
-      borderColor: '#FFFFFF',
+      borderColor: ColorPalette.grayscale.white,
       backgroundColor: 'transparent',
     },
   })
 
-  const drawFocusTap = async (point: { x: number; y: number }): Promise<void> => {
+  const drawFocusTap = (point: { x: number; y: number }): void => {
     // Draw a focus tap indicator on the camera preview
     setFocusPoint(point)
 
@@ -259,42 +259,40 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
 
   return (
     <View style={[styles.container, style]}>
-      <>
-        <Camera
-          ref={camera}
-          style={styles.camera}
-          device={device}
-          isActive={hasPermission}
-          codeScanner={codeScanner}
-          torch={torchEnabled ? 'on' : 'off'}
+      <Camera
+        ref={camera}
+        style={styles.camera}
+        device={device}
+        isActive={hasPermission}
+        codeScanner={codeScanner}
+        torch={torchEnabled ? 'on' : 'off'}
+      />
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPressIn={(e) => {
+          handleFocusTap(e)
+        }}
+      />
+      {focusPoint && (
+        <Animated.View
+          style={[
+            styles.focusIndicator,
+            {
+              left: focusPoint.x - 40,
+              top: focusPoint.y - 40,
+              opacity: focusOpacity,
+              transform: [{ scale: focusScale }],
+            },
+          ]}
         />
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPressIn={(e) => {
-            handleFocusTap(e)
-          }}
-        />
-        {focusPoint && (
-          <Animated.View
-            style={[
-              styles.focusIndicator,
-              {
-                left: focusPoint.x - 40,
-                top: focusPoint.y - 40,
-                opacity: focusOpacity,
-                transform: [{ scale: focusScale }],
-              },
-            ]}
-          />
-        )}
-      </>
+      )}
       {/* scan area cutout */}
       <View style={styles.overlayContainer} pointerEvents="none">
-        <View style={styles.overlayTop} pointerEvents="none" />
-        <View style={styles.overlayBottom} pointerEvents="none" />
-        <View style={styles.overlayLeft} pointerEvents="none" />
-        <View style={styles.overlayRight} pointerEvents="none" />
-        <View style={styles.overlayOpening} pointerEvents="none" />
+        <View style={styles.overlayTop} />
+        <View style={styles.overlayBottom} />
+        <View style={styles.overlayLeft} />
+        <View style={styles.overlayRight} />
+        <View style={styles.overlayOpening} />
       </View>
       {/* reuse qrscannertorch from bifold */}
       <View style={styles.torchContainer}>
