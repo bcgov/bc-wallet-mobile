@@ -30,7 +30,7 @@ import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
 import { localization } from '@/localization'
 import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
-import BCLogger from '@/utils/logger'
+import { appLogger, createAppLogger } from '@/utils/logger'
 import tours from '@bcwallet-theme/features/tours'
 import WebDisplay from '@screens/WebDisplay'
 import Config from 'react-native-config'
@@ -66,8 +66,10 @@ const App = () => {
     SplashScreen.hide()
   }, [])
 
+  const logger = appLogger ?? createAppLogger()
+
   return (
-    <ErrorBoundaryWrapper logger={BCLogger}>
+    <ErrorBoundaryWrapper logger={logger}>
       <ContainerProvider value={bcwContainer}>
         <StoreProvider initialState={initialState} reducer={reducer}>
           <ThemeProvider
