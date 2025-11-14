@@ -71,7 +71,7 @@ const VerifyStack = () => {
   const handleManageDevices = useCallback(() => {
     navigation.navigate(BCSCScreens.VerifyWebView, {
       url: `${client.baseURL}/account/embedded/devices`,
-      title: t('Unified.Screens.ManageDevices'),
+      title: t('BCSC.Screens.ManageDevices'),
     })
   }, [client.baseURL, navigation, t])
 
@@ -91,7 +91,7 @@ const VerifyStack = () => {
         component={AccountSetupSelectionScreen}
         options={{
           headerLeft: createVerifySettingsHeaderButton(),
-          title: t('Unified.Screens.SetupTypes'),
+          title: t('BCSC.Screens.SetupTypes'),
         }}
       />
       <Stack.Screen name={BCSCScreens.NewSetup} component={NewSetupScreen} />
@@ -99,7 +99,7 @@ const VerifyStack = () => {
         name={BCSCScreens.SetupSteps}
         component={SetupStepsScreen}
         options={{
-          title: t('Unified.Screens.SetupSteps'),
+          title: t('BCSC.Screens.SetupSteps'),
           headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOW_TO_SETUP }),
           headerLeft: createVerifySettingsHeaderButton(),
         }}
@@ -115,7 +115,7 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.TransferAccountInformation}
         component={TransferInformationScreen}
-        options={{ title: t('Unified.TransferInformation.TransferAccount') }}
+        options={{ title: t('BCSC.TransferInformation.TransferAccount') }}
       />
       <Stack.Screen name={BCSCScreens.TransferAccountInstructions} component={TransferInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TransferAccountQRScan} component={TransferQRScannerScreen} />
@@ -123,12 +123,12 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.VerifyPrivacyPolicy}
         component={SettingsPrivacyPolicyScreen}
-        options={{ title: t('Unified.Screens.PrivacyInformation') }}
+        options={{ title: t('BCSC.Screens.PrivacyInformation') }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyContactUs}
         component={VerifyContactUsScreen}
-        options={{ title: t('Unified.Screens.ContactUs') }}
+        options={{ title: t('BCSC.Screens.ContactUs') }}
       />
       <Stack.Screen
         name={BCSCScreens.VerifyDeveloper}
@@ -164,7 +164,7 @@ const VerifyStack = () => {
         name={BCSCScreens.VerificationMethodSelection}
         component={VerificationMethodSelectionScreen}
         options={{
-          title: t('Unified.Screens.VerificationMethodSelection'),
+          title: t('BCSC.Screens.VerificationMethodSelection'),
           headerRight: createVerifyHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.VERIFICATION_METHODS }),
         }}
       />
@@ -178,7 +178,7 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.InformationRequired}
         component={InformationRequiredScreen}
-        options={{ title: t('Unified.Screens.InformationRequired') }}
+        options={{ title: t('BCSC.Screens.InformationRequired') }}
       />
       <Stack.Screen name={BCSCScreens.PhotoInstructions} component={PhotoInstructionsScreen} />
       <Stack.Screen name={BCSCScreens.TakePhoto} component={TakePhotoScreen} options={{ headerShown: false }} />
@@ -277,7 +277,7 @@ const VerifyStack = () => {
         component={VerifySettingsScreen}
         options={{
           headerShown: true,
-          title: t('Screens.Settings'),
+          title: t('BCSC.Screens.Settings'),
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
         }}
@@ -288,7 +288,7 @@ const VerifyStack = () => {
         name={BCSCModals.InternetDisconnected}
         component={InternetDisconnected}
         options={{
-          ...getDefaultModalOptions(t('Unified.BCSC')),
+          ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
@@ -297,7 +297,7 @@ const VerifyStack = () => {
         name={BCSCModals.MandatoryUpdate}
         component={MandatoryUpdate}
         options={{
-          ...getDefaultModalOptions(t('Unified.BCSC')),
+          ...getDefaultModalOptions(t('BCSC.Title')),
           gestureEnabled: false, // Disable swipe to dismiss
         }}
       />

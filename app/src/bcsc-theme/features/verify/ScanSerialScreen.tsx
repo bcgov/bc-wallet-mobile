@@ -84,14 +84,14 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       </View>
       <View style={styles.contentContainer}>
         <View>
-          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.Instructions.Paragraph')}</ThemedText>
+          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Instructions.Paragraph')}</ThemedText>
         </View>
         <View style={styles.buttonContainer}>
           <Button
-            title={t('Unified.Instructions.EnterManually')}
+            title={t('BCSC.Instructions.EnterManually')}
             buttonType={ButtonType.Secondary}
             onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
-            accessibilityLabel={t('Unified.Instructions.EnterManually')}
+            accessibilityLabel={t('BCSC.Instructions.EnterManually')}
             testID={testIdWithKey('EnterManually')}
           />
         </View>

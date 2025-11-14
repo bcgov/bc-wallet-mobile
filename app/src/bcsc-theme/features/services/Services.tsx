@@ -98,14 +98,14 @@ const Services: React.FC = () => {
     <TabScreenWrapper scrollViewProps={{ stickyHeaderIndices: [1], keyboardShouldPersistTaps: 'handled' }}>
       {/* Dismiss keyboard when tapping outside of TextInput */}
       <ThemedText variant={'headingTwo'} style={styles.headerText}>
-        {t('Services.CatalogueTitle')}
+        {t('BCSC.Services.CatalogueTitle')}
       </ThemedText>
 
       <View style={styles.searchInputContainer}>
         <View ref={searchInputRef} style={styles.searchInput}>
           <Icon name="search" size={24} color={ColorPalette.brand.tertiary} />
           <TextInput
-            placeholder={t('Services.CatalogueSearch')}
+            placeholder={t('BCSC.Services.CatalogueSearch')}
             placeholderTextColor={ColorPalette.brand.tertiary}
             value={search}
             // disable autocorrect to prevent completion when clearing search text
@@ -135,7 +135,7 @@ const Services: React.FC = () => {
                 })
               }
             }}
-            accessibilityLabel={t('Services.CatalogueSearch')}
+            accessibilityLabel={t('BCSC.Services.CatalogueSearch')}
             testID={testIdWithKey('search')}
             style={styles.searchText}
           />
@@ -171,10 +171,10 @@ const Services: React.FC = () => {
       </View>
 
       <View style={styles.bottomContainer}>
-        <ThemedText variant={'bold'}>{t('Services.NotListed')}</ThemedText>
-        <ThemedText style={styles.desciptionText}>{t('Services.NotListedDescription')}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.Services.NotListed')}</ThemedText>
+        <ThemedText style={styles.desciptionText}>{t('BCSC.Services.NotListedDescription')}</ThemedText>
         <ThemedText style={[styles.desciptionText, { marginTop: Spacing.xl }]}>
-          {t('Services.NotListedDescriptionContact')}
+          {t('BCSC.Services.NotListedDescriptionContact')}
         </ThemedText>
       </View>
     </TabScreenWrapper>

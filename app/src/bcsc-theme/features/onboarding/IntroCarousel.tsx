@@ -78,9 +78,9 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
   })
 
   const carouselPageData = [
-    { key: 'access', headerKey: 'Unified.Onboarding.CarouselServicesHeader' },
-    { key: 'prove', headerKey: 'Unified.Onboarding.CarouselProveHeader' },
-    { key: 'cannot', headerKey: 'Unified.Onboarding.CarouselCannotUseHeader' },
+    { key: 'access', headerKey: 'BCSC.Onboarding.CarouselServicesHeader' },
+    { key: 'prove', headerKey: 'BCSC.Onboarding.CarouselProveHeader' },
+    { key: 'cannot', headerKey: 'BCSC.Onboarding.CarouselCannotUseHeader' },
   ]
 
   const renderCarouselPage = (pageData: { key: string; headerKey: string }) => (
@@ -167,10 +167,10 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
                 onPress={handleBack}
                 testID={testIdWithKey('CarouselBack')}
                 accessibilityRole="button"
-                accessibilityLabel={t('Unified.Onboarding.CarouselBack')}
+                accessibilityLabel={t('BCSC.Onboarding.CarouselBack')}
                 disabled={carouselIndex === 0}
               >
-                <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselBack')}</ThemedText>
+                <ThemedText style={styles.carouselActionButtonText}>{t('BCSC.Onboarding.CarouselBack')}</ThemedText>
               </TouchableOpacity>
 
               <View style={styles.carouselCirclesContainer}>
@@ -187,9 +187,9 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
                 onPress={handleNext}
                 testID={testIdWithKey('CarouselNext')}
                 accessibilityRole="button"
-                accessibilityLabel={t('Unified.Onboarding.CarouselNext')}
+                accessibilityLabel={t('BCSC.Onboarding.CarouselNext')}
               >
-                <ThemedText style={styles.carouselActionButtonText}>{t('Unified.Onboarding.CarouselNext')}</ThemedText>
+                <ThemedText style={styles.carouselActionButtonText}>{t('BCSC.Onboarding.CarouselNext')}</ThemedText>
               </TouchableOpacity>
             </View>
           </View>

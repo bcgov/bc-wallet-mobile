@@ -53,8 +53,8 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
 
       Toast.show({
         type: 'success',
-        text1: t('Unified.ForgetAllPairings.SuccessTitle'),
-        text2: t('Unified.ForgetAllPairings.SuccessMessage'),
+        text1: t('BCSC.ForgetAllPairings.SuccessTitle'),
+        text2: t('BCSC.ForgetAllPairings.SuccessMessage'),
         position: 'bottom',
       })
 
@@ -63,8 +63,8 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
       logger.error('Error forgetting all pairings', error instanceof Error ? error : new Error(String(error)))
       Toast.show({
         type: 'error',
-        text1: t('Unified.ForgetAllPairings.ErrorTitle'),
-        text2: t('Unified.ForgetAllPairings.ErrorMessage'),
+        text1: t('BCSC.ForgetAllPairings.ErrorTitle'),
+        text2: t('BCSC.ForgetAllPairings.ErrorMessage'),
         position: 'bottom',
       })
     } finally {
@@ -75,19 +75,19 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ThemedText variant={'headingThree'}>{t('Unified.ForgetAllPairings.Title')}</ThemedText>
+        <ThemedText variant={'headingThree'}>{t('BCSC.ForgetAllPairings.Title')}</ThemedText>
 
-        <ThemedText>{t('Unified.ForgetAllPairings.Description1')}</ThemedText>
+        <ThemedText>{t('BCSC.ForgetAllPairings.Description1')}</ThemedText>
 
-        <ThemedText>{t('Unified.ForgetAllPairings.Description2')}</ThemedText>
+        <ThemedText>{t('BCSC.ForgetAllPairings.Description2')}</ThemedText>
       </ScrollView>
 
       <Button
-        title={t('Unified.ForgetAllPairings.ButtonTitle')}
+        title={t('BCSC.ForgetAllPairings.ButtonTitle')}
         buttonType={ButtonType.Primary}
         onPress={handleForgetAllPairings}
         testID={testIdWithKey('ForgetAllPairings')}
-        accessibilityLabel={t('Unified.ForgetAllPairings.ButtonTitle')}
+        accessibilityLabel={t('BCSC.ForgetAllPairings.ButtonTitle')}
         disabled={isLoading}
       >
         {isLoading && <ButtonLoading />}

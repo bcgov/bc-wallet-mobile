@@ -54,13 +54,13 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
 
       <View style={styles.buttonContainer}>
         <Button
-          title={t('Unified.Onboarding.AcceptAndContinueButton')}
+          title={t('BCSC.Onboarding.AcceptAndContinueButton')}
           buttonType={ButtonType.Primary}
           onPress={() => {
             navigation.navigate(BCSCScreens.OnboardingNotifications)
           }}
           testID={testIdWithKey('AcceptAndContinue')}
-          accessibilityLabel={t('Unified.Onboarding.AcceptAndContinueButton')}
+          accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
           // Content must be visible and loaded before user can accept terms
           disabled={!webViewIsLoaded}
         />

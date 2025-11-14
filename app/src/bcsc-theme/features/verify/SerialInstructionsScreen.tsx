@@ -48,22 +48,22 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
       <ScrollView contentContainerStyle={styles.scrollView}>
         <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.Instructions.Heading')}
+          {t('BCSC.Instructions.Heading')}
         </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('Unified.Instructions.Paragraph')}</ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Instructions.Paragraph')}</ThemedText>
       </ScrollView>
       <View style={styles.controlsContainer}>
         <Button
-          title={t('Unified.Instructions.ScanBarcode')}
-          accessibilityLabel={t('Unified.Instructions.ScanBarcode')}
+          title={t('BCSC.Instructions.ScanBarcode')}
+          accessibilityLabel={t('BCSC.Instructions.ScanBarcode')}
           testID={testIdWithKey('ScanBarcode')}
           onPress={() => navigation.navigate(BCSCScreens.ScanSerial)}
           buttonType={ButtonType.Primary}
         />
         <View style={{ marginTop: Spacing.md }}>
           <Button
-            title={t('Unified.Instructions.EnterManually')}
-            accessibilityLabel={t('Unified.Instructions.EnterManually')}
+            title={t('BCSC.Instructions.EnterManually')}
+            accessibilityLabel={t('BCSC.Instructions.EnterManually')}
             testID={testIdWithKey('EnterManually')}
             onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
             buttonType={ButtonType.Tertiary}

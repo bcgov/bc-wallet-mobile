@@ -9,6 +9,7 @@ export enum BCSCBanner {
   DEVICE_LIMIT_EXCEEDED = 'DeviceLimitExceededBanner',
   LIVE_CALL_STATUS = 'LiveCallStatusBanner',
   APP_UPDATE_AVAILABLE = 'AppUpdateAvailableBanner',
+  ACCOUNT_EXPIRING_SOON = 'CardExpiringSoonBanner',
 }
 
 export interface BCSCBannerMessage {

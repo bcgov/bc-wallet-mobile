@@ -47,7 +47,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const leaveCall = useCallback(async () => {
     try {
       if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
-        throw new Error('Missing device or user code')
+        throw new Error(t('BCSC.VideoCall.DeviceCodeError'))
       }
 
       const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
@@ -78,7 +78,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     }
-  }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger])
+  }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger, t])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {
@@ -161,16 +161,16 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   // Determine which banner notice to show in an order of priority
   const banner: { type: 'warning' | 'error'; title: string } | null = useMemo(() => {
     if (isInBackground) {
-      return { type: 'warning', title: t('Unified.VideoCall.Banners.VideoWillResume') }
+      return { type: 'warning', title: t('BCSC.VideoCall.Banners.VideoWillResume') }
     }
     if (videoHidden) {
-      return { type: 'error', title: t('Unified.VideoCall.Banners.AgentCantSeeYou') }
+      return { type: 'error', title: t('BCSC.VideoCall.Banners.AgentCantSeeYou') }
     }
     if (onMute) {
-      return { type: 'error', title: t('Unified.VideoCall.Banners.AgentCantHearYou') }
+      return { type: 'error', title: t('BCSC.VideoCall.Banners.AgentCantHearYou') }
     }
     if (systemVolume < 0.2) {
-      return { type: 'warning', title: t('Unified.VideoCall.Banners.VolumeLow') }
+      return { type: 'warning', title: t('BCSC.VideoCall.Banners.VolumeLow') }
     }
 
     return null
@@ -216,17 +216,17 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   const stateMessage = useMemo(() => {
     switch (flowState) {
       case VideoCallFlowState.CREATING_SESSION:
-        return t('Unified.VideoCall.CreatingSession')
+        return t('BCSC.VideoCall.CallStates.CreatingSession')
       case VideoCallFlowState.CONNECTING_WEBRTC:
-        return t('Unified.VideoCall.ConnectingWebRTC')
+        return t('BCSC.VideoCall.CallStates.ConnectingWebRTC')
       case VideoCallFlowState.WAITING_FOR_AGENT:
-        return t('Unified.VideoCall.WaitingForAgent')
+        return t('BCSC.VideoCall.CallStates.WaitingForAgent')
       case VideoCallFlowState.IN_CALL:
         return null
       case VideoCallFlowState.ERROR:
-        return videoCallError?.message || t('Unified.VideoCall.GenericError')
+        return videoCallError?.message || t('BCSC.VideoCall.Errors.GenericError')
       default:
-        return t('Unified.VideoCall.Initializing')
+        return t('BCSC.VideoCall.CallStates.Initializing')
     }
   }, [flowState, videoCallError, t])
 
@@ -245,7 +245,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   if (flowState === VideoCallFlowState.ERROR) {
     return (
       <CallErrorView
-        message={stateMessage || t('Unified.VideoCall.Errors.GenericError')}
+        message={stateMessage || t('BCSC.VideoCall.Errors.GenericError')}
         onGoBack={() => navigation.goBack()}
         onRetry={videoCallError?.retryable ? retryConnection : undefined}
       />
@@ -253,7 +253,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   }
 
   if (flowState === VideoCallFlowState.CALL_ENDED) {
-    return <CallProcessingView message={t('Unified.VideoCall.CallStates.CallEnded')} />
+    return <CallProcessingView message={t('BCSC.VideoCall.CallStates.CallEnded')} />
   }
 
   if (flowState !== VideoCallFlowState.IN_CALL) {
@@ -308,7 +308,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
       <SafeAreaView edges={['left', 'right']} style={{ flex: 1, justifyContent: 'space-between' }}>
         <View style={styles.upperContainer}>
           <View style={styles.timeAndLabelContainer}>
-            <ThemedText>{t('Unified.VideoCall.ServiceBC')}</ThemedText>
+            <ThemedText>{t('BCSC.VideoCall.ServiceBC')}</ThemedText>
             {callTimer ? <ThemedText>{callTimer}</ThemedText> : null}
           </View>
           {banner ? (

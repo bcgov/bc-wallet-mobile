@@ -72,7 +72,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
     <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scollContainer}>
         <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-        <ThemedText variant="headingThree">{t('Unified.Onboarding.NotificationsHeader')}</ThemedText>
+        <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
         <ThemedText style={styles.contentText}>{mockNotificationsContent}</ThemedText>
       </ScrollView>
 
@@ -89,13 +89,13 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
         />
 
         <Button
-          title={t('Unified.Onboarding.NotificationsContinueButtonSecondary')}
+          title={t('BCSC.Onboarding.NotificationsContinueButtonSecondary')}
           buttonType={ButtonType.Secondary}
           onPress={() => {
             navigation.navigate(BCSCScreens.OnboardingSecureApp)
           }}
           testID={testIdWithKey('Continue')}
-          accessibilityLabel={t('Unified.Onboarding.NotificationsContinueButtonSecondary')}
+          accessibilityLabel={t('BCSC.Onboarding.NotificationsContinueButtonSecondary')}
         />
       </View>
     </SafeAreaView>

@@ -44,14 +44,14 @@ const RemoveAccountConfirmationScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText variant={'headingThree'}>{t('Unified.Account.RemoveAccountTitle')}</ThemedText>
-        <ThemedText>{t('Unified.Account.RemoveAccountParagraph')}</ThemedText>
+        <ThemedText variant={'headingThree'}>{t('BCSC.Account.RemoveAccountTitle')}</ThemedText>
+        <ThemedText>{t('BCSC.Account.RemoveAccountParagraph')}</ThemedText>
       </ScrollView>
       <View style={styles.buttonsContainer}>
         <Button
-          accessibilityLabel={t('Unified.Account.RemoveAccount')}
+          accessibilityLabel={t('BCSC.Account.RemoveAccount')}
           buttonType={ButtonType.Critical}
-          title={t('Unified.Account.RemoveAccount')}
+          title={t('BCSC.Account.RemoveAccount')}
           onPress={async () => {
             const result = await factoryReset()
 

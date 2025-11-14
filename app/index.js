@@ -15,6 +15,8 @@ import '@formatjs/intl-relativetimeformat/polyfill'
 import '@formatjs/intl-relativetimeformat/locale-data/en' // locale-data for en
 import '@formatjs/intl-datetimeformat/polyfill'
 import '@formatjs/intl-datetimeformat/locale-data/en' // locale-data for en
+import '@formatjs/intl-datetimeformat/locale-data/fr' // locale-data for fr
+import '@formatjs/intl-datetimeformat/locale-data/pt' // locale-data for pt-BR
 import '@formatjs/intl-datetimeformat/add-all-tz' // Add ALL tz data
 import 'reflect-metadata'
 

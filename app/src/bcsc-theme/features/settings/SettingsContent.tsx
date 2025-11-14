@@ -110,7 +110,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           <>
             <View style={styles.sectionContainer}>
               <SettingsActionCard
-                title={t('BCSCSettings.SignOut')}
+                title={t('BCSC.Settings.SignOut')}
                 startAdornment={<Icon name="logout" size={24} color={ColorPalette.brand.secondary} />}
                 onPress={() => {
                   auth.lockOutUser(LockoutReason.Logout)
@@ -120,49 +120,49 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             </View>
 
             <ThemedText variant={'bold'} style={styles.sectionHeader}>
-              {t('BCSCSettings.HeaderA')}
+              {t('BCSC.Settings.HeaderA')}
             </ThemedText>
             <View style={styles.sectionContainer}>
               <SettingsActionCard
                 // TODO (MD + BM): Update with like for like device auth screen if that is their chosen auth method
                 // only show one or the other (device auth or change pin)
-                title={t('BCSCSettings.Biometrics')}
+                title={t('BCSC.Settings.Biometrics')}
                 onPress={onPressActionTodo}
                 endAdornmentText={store.preferences.useBiometry ? 'ON' : 'OFF'}
               />
               <SettingsActionCard
                 // TODO (MD + BM): Update with like for like change pin screen if that is their chosen auth method
                 // only show one or the other (device auth or change pin)
-                title={t('BCSCSettings.ChangePIN')}
+                title={t('BCSC.Settings.ChangePIN')}
                 onPress={onPressActionTodo}
               />
               {onEditNickname ? (
-                <SettingsActionCard title={t('BCSCSettings.EditNickname')} onPress={onEditNickname} />
+                <SettingsActionCard title={t('BCSC.Settings.EditNickname')} onPress={onEditNickname} />
               ) : null}
               {/* TODO (MD + BM): Implement actions for these two cards */}
               <SettingsActionCard
-                title={t('BCSCSettings.AutoLockTime')}
+                title={t('BCSC.Settings.AutoLockTime')}
                 onPress={onPressActionTodo}
                 endAdornmentText={`${store.preferences.autoLockTime} min`}
               />
-              <SettingsActionCard title={t('BCSCSettings.Notifications')} onPress={onPressActionTodo} />
+              <SettingsActionCard title={t('BCSC.Settings.Notifications')} onPress={onPressActionTodo} />
               {onForgetAllPairings ? (
-                <SettingsActionCard title={t('BCSCSettings.ForgetPairings')} onPress={onForgetAllPairings} />
+                <SettingsActionCard title={t('BCSC.Settings.ForgetPairings')} onPress={onForgetAllPairings} />
               ) : null}
             </View>
           </>
         ) : null}
 
         <ThemedText variant={'bold'} style={styles.sectionHeader}>
-          {t('BCSCSettings.HeaderB')}
+          {t('BCSC.Settings.HeaderB')}
         </ThemedText>
         <View style={styles.sectionContainer}>
-          <SettingsActionCard title={t('BCSCSettings.Help')} onPress={onHelp} />
-          <SettingsActionCard title={t('BCSCSettings.Privacy')} onPress={onPrivacy} />
-          <SettingsActionCard title={t('BCSCSettings.ContactUs')} onPress={onContactUs} />
-          <SettingsActionCard title={t('BCSCSettings.Feedback')} onPress={onPressFeedback} />
-          <SettingsActionCard title={t('BCSCSettings.Accessibility')} onPress={onPressAccessibility} />
-          <SettingsActionCard title={t('BCSCSettings.TermsOfUse')} onPress={onPressTermsOfUse} />
+          <SettingsActionCard title={t('BCSC.Settings.Help')} onPress={onHelp} />
+          <SettingsActionCard title={t('BCSC.Settings.Privacy')} onPress={onPrivacy} />
+          <SettingsActionCard title={t('BCSC.Settings.ContactUs')} onPress={onContactUs} />
+          <SettingsActionCard title={t('BCSC.Settings.Feedback')} onPress={onPressFeedback} />
+          <SettingsActionCard title={t('BCSC.Settings.Accessibility')} onPress={onPressAccessibility} />
+          <SettingsActionCard title={t('BCSC.Settings.TermsOfUse')} onPress={onPressTermsOfUse} />
           {store.preferences.developerModeEnabled ? (
             <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperMode} />
           ) : null}
@@ -174,7 +174,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             disabled={store.preferences.developerModeEnabled}
           >
             <View>
-              <ThemedText variant="labelSubtitle">{t('Unified.BCSC')}</ThemedText>
+              <ThemedText variant="labelSubtitle">{t('BCSC.Title')}</ThemedText>
               <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
             </View>
           </TouchableWithoutFeedback>

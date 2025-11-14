@@ -51,7 +51,7 @@ export class DeviceCountSystemCheck implements SystemCheckStrategy {
       payload: [
         {
           id: BCSCBanner.DEVICE_LIMIT_EXCEEDED,
-          title: this.utils.translation('Unified.SystemChecks.Devices.DeviceLimitReachedBannerTitle'),
+          title: this.utils.translation('BCSC.SystemChecks.Devices.DeviceLimitReachedBannerTitle'),
           type: 'warning',
           variant: 'summary',
           dismissible: false, // Non-dismissible banner (user must dismiss from screen)

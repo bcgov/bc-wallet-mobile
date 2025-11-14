@@ -1,5 +1,6 @@
 import { Button, ButtonType, testIdWithKey, useAnimatedComponents, useTheme } from '@bifold/core'
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -13,6 +14,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
   const { ColorPalette, Spacing } = useTheme()
   const [loading, setLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -45,8 +47,8 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
           buttonType={ButtonType.Primary}
           onPress={handleAccept}
           testID={testIdWithKey(`UsePhoto`)}
-          title={'Use this photo'}
-          accessibilityLabel={'Use this photo'}
+          title={t('BCSC.PhotoReview.UsePhoto')}
+          accessibilityLabel={t('BCSC.PhotoReview.UsePhoto')}
           disabled={loading}
         >
           {loading && <ButtonLoading />}
@@ -55,8 +57,8 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
           buttonType={ButtonType.Tertiary}
           onPress={onRetake}
           testID={testIdWithKey(`RetakePhoto`)}
-          title={'Retake photo'}
-          accessibilityLabel={'Retake photo'}
+          title={t('BCSC.PhotoReview.RetakePhoto')}
+          accessibilityLabel={t('BCSC.PhotoReview.RetakePhoto')}
         />
       </SafeAreaView>
     </View>

@@ -49,12 +49,12 @@ const AccountSetupSelectionScreen: React.FC = () => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <View style={styles.contentContainer}>
         <GenericCardImage />
-        <ThemedText variant={'headingFour'}>{t('Unified.AccountSetup.Title')}</ThemedText>
+        <ThemedText variant={'headingFour'}>{t('BCSC.AccountSetup.Title')}</ThemedText>
       </View>
 
       {store.bcsc.nicknames.length > 0 ? (
         <View style={{ ...styles.controlsContainer, flexGrow: 1 }}>
-          <ThemedText variant={'headingFour'}>{t('Unified.AccountSelector.ContinueAs')}</ThemedText>
+          <ThemedText variant={'headingFour'}>{t('BCSC.AccountSetup.ContinueAs')}</ThemedText>
 
           <View style={{ gap: Spacing.sm }}>
             {Array.from(store.bcsc.nicknames).map((nickname) => (
@@ -66,7 +66,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
         <View style={styles.controlsContainer}>
           <Button
             buttonType={ButtonType.Primary}
-            title={t('Unified.AccountSetup.AddAccount')}
+            title={t('BCSC.AccountSetup.AddAccount')}
             onPress={() => {
               if (store.bcsc.completedNewSetup) {
                 navigation.navigate(BCSCScreens.SetupSteps)
@@ -77,7 +77,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
           />
           <Button
             buttonType={ButtonType.Secondary}
-            title={t('Unified.AccountSetup.TransferAccount')}
+            title={t('BCSC.AccountSetup.TransferAccount')}
             onPress={() => {
               navigation.navigate(BCSCScreens.TransferAccountInformation)
             }}

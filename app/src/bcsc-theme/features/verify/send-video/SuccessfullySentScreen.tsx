@@ -2,19 +2,21 @@ import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useTranslation } from 'react-i18next'
 
 type SuccessfullySentScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SuccessfullySent>
 }
 
 const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => {
+  const { t } = useTranslation()
   return (
     <StatusDetails
-      title={`We've received your request to verify your identity.`}
-      description={`We review requests:`}
-      bullets={['Monday to Friday, 9am to 5pm', "In the order they're received"]}
-      extraText={`Usually, we review requests within 24 hours.\nYou'll get an email after we review your request. You can also check the status in this app.`}
-      buttonText={'Ok'}
+      title={t('BCSC.SendVideo.SuccessfullySent.Heading')}
+      description={t('BCSC.SendVideo.SuccessfullySent.Description1')}
+      bullets={[t('BCSC.SendVideo.SuccessfullySent.Bullet1'), t('BCSC.SendVideo.SuccessfullySent.Bullet2')]}
+      extraText={t('BCSC.SendVideo.SuccessfullySent.Description3')}
+      buttonText={t('BCSC.SendVideo.SuccessfullySent.ButtonText')}
       onButtonPress={() =>
         navigation.dispatch(
           CommonActions.reset({

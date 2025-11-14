@@ -1,4 +1,5 @@
 import { useEventListener } from '@/hooks/useEventListener'
+import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
@@ -13,6 +14,7 @@ import { getBundleId } from 'react-native-device-info'
 import BCSCApiClient from '../api/client'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
+import useUserApi from '../api/hooks/useUserApi'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -38,6 +40,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
   const tokenApi = useTokenApi(client as BCSCApiClient)
+  const userApi = useUserApi(client as BCSCApiClient)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const ranSystemChecksRef = useRef(false)
 
@@ -85,8 +88,12 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         // Checks to run once on main stack (verified users)
         if (scope === SystemCheckScope.MAIN_STACK) {
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
+          const accountExpiry = await userApi.getAccountExpirationDate()
 
-          await runSystemChecks([new DeviceCountSystemCheck(getIdToken, utils)])
+          await runSystemChecks([
+            new DeviceCountSystemCheck(getIdToken, utils),
+            new AccountExpirySystemCheck(accountExpiry, utils),
+          ])
         }
       } catch (error) {
         logger.error(`System checks failed: ${(error as Error).message}`)
@@ -94,7 +101,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     runChecksByScope()
-  }, [client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi])
+  }, [client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi, userApi])
 }
 
 /**
