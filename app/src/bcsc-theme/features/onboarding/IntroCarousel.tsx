@@ -1,15 +1,14 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import FirstTutorial from '@assets/img/FirstTutorial.jpg'
+import SecondTutorial from '@assets/img/SecondTutorial.jpg'
+import ThirdTutorial from '@assets/img/ThirdTutorial.jpg'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Animated, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import { Animated, Image, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { Directions, FlingGestureHandler, State } from 'react-native-gesture-handler'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
-// TODO (MD): Waiting on final content, replace mock content with real carousel text
-const mockCarouselContent =
-  'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
 
 interface IntroCarouselScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingIntroCarousel>
@@ -75,20 +74,54 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
     carouselPage: {
       width: screenWidth,
     },
+    carouselImgeContainer: {
+      alignItems: 'center',
+    },
+    carouselImage: {
+      width: screenWidth,
+      height: screenWidth,
+      resizeMode: 'contain',
+    },
   })
 
   const carouselPageData = [
-    { key: 'access', headerKey: 'BCSC.Onboarding.CarouselServicesHeader' },
-    { key: 'prove', headerKey: 'BCSC.Onboarding.CarouselProveHeader' },
-    { key: 'cannot', headerKey: 'BCSC.Onboarding.CarouselCannotUseHeader' },
+    {
+      key: 'access',
+      headerKey: 'BCSC.Onboarding.CarouselServicesHeader',
+      contentA: 'BCSC.Onboarding.CarouselServicesContent',
+      contentB: '',
+      image: FirstTutorial,
+    },
+    {
+      key: 'prove',
+      headerKey: 'BCSC.Onboarding.CarouselProveHeader',
+      contentA: 'BCSC.Onboarding.CarouselProveContentA',
+      contentB: 'BCSC.Onboarding.CarouselProveContentB',
+      image: SecondTutorial,
+    },
+    {
+      key: 'cannot',
+      headerKey: 'BCSC.Onboarding.CarouselCannotUseHeader',
+      contentA: 'BCSC.Onboarding.CarouselCannotUseContentA',
+      contentB: 'BCSC.Onboarding.CarouselCannotUseContentB',
+      image: ThirdTutorial,
+    },
   ]
 
-  const renderCarouselPage = (pageData: { key: string; headerKey: string }) => (
+  const renderCarouselPage = (pageData: {
+    key: string
+    headerKey: string
+    contentA: string
+    contentB: string
+    image: any
+  }) => (
     <View key={pageData.key} style={[styles.contentContainer, styles.carouselPage]}>
-      {/* TODO (md): replace with image */}
-      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
+      <View style={styles.carouselImgeContainer}>
+        <Image source={pageData.image} style={styles.carouselImage} />
+      </View>
       <ThemedText variant={'headingThree'}>{t(pageData.headerKey)}</ThemedText>
-      <ThemedText>{mockCarouselContent}</ThemedText>
+      <ThemedText>{t(pageData.contentA)}</ThemedText>
+      {pageData.contentB !== '' && <ThemedText>{t(pageData.contentB)}</ThemedText>}
     </View>
   )
 
