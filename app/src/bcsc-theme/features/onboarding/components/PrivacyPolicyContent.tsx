@@ -1,12 +1,12 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
-import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface PrivacyPolicyContentProps {
   onPress?: () => void
-  onLearnMore?: () => void
+  onLearnMore: () => void
 }
 
 /**
@@ -14,7 +14,7 @@ interface PrivacyPolicyContentProps {
  *
  * onPress: optional function to be called when the Continue button is pressed,
  * if not provided, the Continue button will not be displayed.
- * onLearnMore: optional function to be called when the Learn More button is pressed.
+ * onLearnMore: function to be called when the Learn More button is pressed.
  *
  * @returns {*} {JSX.Element} The PrivacyPolicyContent component.
  */
@@ -24,7 +24,6 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
 }: PrivacyPolicyContentProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     container: {
@@ -46,16 +45,6 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
     },
   })
 
-  const handlePressLearnMore = async () => {
-    try {
-      if (onLearnMore) {
-        onLearnMore()
-      }
-    } catch (error) {
-      logger.error('Error opening Secure App Help URL', error instanceof Error ? error : new Error(String(error)))
-    }
-  }
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -71,7 +60,7 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
           <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentC')}</ThemedText>
         </View>
 
-        <CardButton title={t('BCSC.Onboarding.LearnMore')} onPress={handlePressLearnMore} endIcon="open-in-new" />
+        <CardButton title={t('BCSC.Onboarding.LearnMore')} onPress={onLearnMore} endIcon="open-in-new" />
       </ScrollView>
 
       {onPress ? (
