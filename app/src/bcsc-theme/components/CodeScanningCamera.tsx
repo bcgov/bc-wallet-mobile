@@ -1,6 +1,15 @@
 import { QRScannerTorch, useTheme } from '@bifold/core'
 import React, { useEffect, useRef, useState } from 'react'
-import { ColorValue, StyleSheet, View, ViewStyle, useWindowDimensions } from 'react-native'
+import {
+  Animated,
+  ColorValue,
+  GestureResponderEvent,
+  Pressable,
+  StyleSheet,
+  View,
+  ViewStyle,
+  useWindowDimensions,
+} from 'react-native'
 import {
   Camera,
   Code,
@@ -54,6 +63,10 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const { width } = useWindowDimensions()
 
   const { hasPermission, requestPermission } = useCameraPermission()
+  const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
+  const focusOpacity = useRef(new Animated.Value(0)).current
+
+  const focusScale = useRef(new Animated.Value(1)).current
   const device = useCameraDevice(cameraType)
   useEffect(() => {
     if (!hasPermission) {
@@ -174,7 +187,57 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
       right: 24,
       zIndex: 10,
     },
+    focusIndicator: {
+      position: 'absolute',
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      borderWidth: 2,
+      borderColor: ColorPalette.grayscale.white,
+      backgroundColor: 'transparent',
+    },
   })
+
+  const drawFocusTap = (point: { x: number; y: number }): void => {
+    // Draw a focus tap indicator on the camera preview
+    setFocusPoint(point)
+
+    focusOpacity.setValue(1)
+    focusScale.setValue(1.5)
+
+    Animated.parallel([
+      Animated.timing(focusOpacity, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(focusScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setFocusPoint(null)
+    })
+  }
+
+  const focus = (point: { x: number; y: number }) => {
+    const c = camera.current
+    if (c) {
+      c.focus(point)
+    }
+  }
+
+  const handleFocusTap = (e: GestureResponderEvent): void => {
+    if (!device?.supportsFocus) {
+      return
+    }
+    const { locationX: x, locationY: y } = e.nativeEvent
+    const tapPoint = { x, y }
+    drawFocusTap(tapPoint)
+    focus(tapPoint)
+  }
 
   if (!device || !hasPermission) {
     // return placeholder view
@@ -204,8 +267,27 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         codeScanner={codeScanner}
         torch={torchEnabled ? 'on' : 'off'}
       />
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPressIn={(e) => {
+          handleFocusTap(e)
+        }}
+      />
+      {focusPoint && (
+        <Animated.View
+          style={[
+            styles.focusIndicator,
+            {
+              left: focusPoint.x - 40,
+              top: focusPoint.y - 40,
+              opacity: focusOpacity,
+              transform: [{ scale: focusScale }],
+            },
+          ]}
+        />
+      )}
       {/* scan area cutout */}
-      <View style={styles.overlayContainer}>
+      <View style={styles.overlayContainer} pointerEvents="none">
         <View style={styles.overlayTop} />
         <View style={styles.overlayBottom} />
         <View style={styles.overlayLeft} />
