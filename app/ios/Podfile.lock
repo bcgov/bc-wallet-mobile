@@ -1033,7 +1033,7 @@ PODS:
   - React-Mapbuffer (0.73.11):
     - glog
     - React-debug
-  - react-native-attestation (2.8.0):
+  - react-native-attestation (2.11.2):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1594,7 +1594,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   anoncreds: 4b29b0ef841fc1a96910aab8f047c090ee6acb89
   aries-askar: 6fce8d0405b8c84e654a694be1954649cf7955a3
-  BcscCore: 200b2e282037d5e9d2696573f132f5f2d8822bd6
+  BcscCore: 6c006e44ccba8b96508dd6d521b3b51f64edf51a
   boost: d3f49c53809116a5d38da093a8aa78bf551aed09
   CatCrypto: a477899b6be4954e75be4897e732da098cc0a5a8
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
@@ -1641,7 +1641,7 @@ SPEC CHECKSUMS:
   React-jsinspector: a98428936fb888cc15d857226a26d9ac0a668a0e
   React-logger: 6e4873d1f9c54cca30f6c91a6617f8c91b75ba4c
   React-Mapbuffer: 57bf49a458398d329dad2bf8bc660e3e35b96989
-  react-native-attestation: 4f607819a279a3b60610a4fc8078dcaabc02d740
+  react-native-attestation: 6bd517c96a9bf932be70e56496f650bb8ca92738
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
   react-native-date-picker: 2eca217a8fb09c517f5bb6b23978718c6cec59ec
   react-native-encrypted-storage: 569d114e329b1c2c2d9f8c84bcdbe4478dda2258

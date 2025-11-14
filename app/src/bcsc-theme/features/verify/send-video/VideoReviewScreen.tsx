@@ -6,6 +6,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Buffer } from 'buffer'
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
@@ -35,9 +36,10 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
   const [videoMetadata, setVideoMetadata] = useState<VerificationVideoUploadPayload>()
+  const { t } = useTranslation()
 
   if (!videoPath || !videoThumbnailPath) {
-    throw new Error('Video path and thumbnail path are required')
+    throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
   }
 
   const styles = StyleSheet.create({
@@ -139,7 +141,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       <View style={styles.contentContainer}>
         <View style={styles.videoContainer}>
           <ThemedText variant={'headingFour'} style={styles.heading}>
-            Can you see and hear yourself clearly in the video?
+            {t('BCSC.SendVideo.VideoReview.Heading')}
           </ThemedText>
           <Video
             ref={videoRef}
@@ -165,8 +167,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
             buttonType={ButtonType.Primary}
             onPress={onPressUse}
             testID={testIdWithKey('UseVideo')}
-            title={'Use this video'}
-            accessibilityLabel={'Use this video'}
+            title={t('BCSC.SendVideo.VideoReview.UseVideo')}
+            accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
             disabled={!videoMetadata}
           >
             {!videoMetadata && <ButtonLoading />}
@@ -176,8 +178,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
               buttonType={ButtonType.Tertiary}
               onPress={onPressRetake}
               testID={testIdWithKey('RetakeVideo')}
-              title={'Retake video'}
-              accessibilityLabel={'Retake video'}
+              title={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
+              accessibilityLabel={t('BCSC.SendVideo.VideoReview.RetakeVideo')}
             />
           </View>
         </View>

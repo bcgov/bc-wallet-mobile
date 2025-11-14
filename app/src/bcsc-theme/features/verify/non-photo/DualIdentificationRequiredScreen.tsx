@@ -43,43 +43,43 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
     <SafeAreaView style={styles.pageContainer} edges={['left', 'right', 'bottom']}>
       <ScrollView contentContainerStyle={styles.scrollView} showsVerticalScrollIndicator={false}>
         <GenericCardImage />
-        <ThemedText variant={'headingFour'}>{t('Unified.DualNonBCSCEvidence.Heading')}</ThemedText>
-        <ThemedText>{t('Unified.DualNonBCSCEvidence.Description')}</ThemedText>
+        <ThemedText variant={'headingFour'}>{t('BCSC.DualNonBCSCEvidence.Heading')}</ThemedText>
+        <ThemedText>{t('BCSC.DualNonBCSCEvidence.Description')}</ThemedText>
 
         <View>
-          <ThemedText variant={'headingFour'}>{t('Unified.DualNonBCSCEvidence.CheckYourID')}</ThemedText>
+          <ThemedText variant={'headingFour'}>{t('BCSC.DualNonBCSCEvidence.CheckYourID')}</ThemedText>
           <BulletPointWithText
-            translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet1')}
+            translationKey={t('BCSC.DualNonBCSCEvidence.CheckYourIDBullet1')}
             iconColor={ColorPalette.brand.icon}
           />
           <BulletPointWithText
-            translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet2')}
+            translationKey={t('BCSC.DualNonBCSCEvidence.CheckYourIDBullet2')}
             iconColor={ColorPalette.brand.icon}
             iconSize={Spacing.sm}
           />
           <BulletPointWithText
-            translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet3')}
+            translationKey={t('BCSC.DualNonBCSCEvidence.CheckYourIDBullet3')}
             iconColor={ColorPalette.brand.icon}
           />
           <BulletPointWithText
-            translationKey={t('Unified.DualNonBCSCEvidence.CheckYourIDBullet4')}
+            translationKey={t('BCSC.DualNonBCSCEvidence.CheckYourIDBullet4')}
             iconColor={ColorPalette.brand.icon}
           />
         </View>
         <View>
           <View style={{ flexDirection: 'row', alignContent: 'center', alignItems: 'center' }}>
-            <ThemedText variant={'headingFour'}>{t('Unified.AdditionalEvidence.LimitedAccess')}</ThemedText>
+            <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.LimitedAccess')}</ThemedText>
             <TouchableOpacity style={{ marginLeft: Spacing.sm }} onPress={() => Linking.openURL(ACCOUNT_SERVICES_URL)}>
               <Icon color={ColorPalette.brand.primary} size={Spacing.xl} name={'open-in-new'} />
             </TouchableOpacity>
           </View>
-          <ThemedText>{t('Unified.AdditionalEvidence.LimitedAccessDescription')}</ThemedText>
+          <ThemedText>{t('BCSC.AdditionalEvidence.LimitedAccessDescription')}</ThemedText>
         </View>
         <View style={{ marginTop: 'auto' }}>
           <Button
-            title={t('Unified.AdditionalEvidence.ChooseID')}
-            accessibilityLabel={t('Unified.AdditionalEvidence.ChooseID')}
-            testID={testIdWithKey(t('Unified.AdditionalEvidence.ChooseID'))}
+            title={t('BCSC.AdditionalEvidence.ChooseID')}
+            accessibilityLabel={t('BCSC.AdditionalEvidence.ChooseID')}
+            testID={testIdWithKey(t('BCSC.AdditionalEvidence.ChooseID'))}
             onPress={() => {
               navigation.navigate(BCSCScreens.EvidenceTypeList)
             }}

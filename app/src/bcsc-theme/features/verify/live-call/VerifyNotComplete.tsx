@@ -47,16 +47,16 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.VideoCall.VerifyNotComplete.Title')}
+          {t('BCSC.VideoCall.VerifyNotComplete.Title')}
         </ThemedText>
         <ThemedText style={{ marginBottom: Spacing.md }}>
-          {t('Unified.VideoCall.VerifyNotComplete.NotVerifiedYet')}
+          {t('BCSC.VideoCall.VerifyNotComplete.NotVerifiedYet')}
         </ThemedText>
         <Button
           buttonType={ButtonType.Secondary}
           testID={testIdWithKey('Trouble')}
-          accessibilityLabel={t('Unified.VideoCall.VerifyNotComplete.HavingTrouble')}
-          title={t('Unified.VideoCall.VerifyNotComplete.HavingTrouble')}
+          accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
+          title={t('BCSC.VideoCall.VerifyNotComplete.HavingTrouble')}
           onPress={onPressTrouble}
         >
           <Icon
@@ -67,22 +67,22 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
           />
         </Button>
         <ThemedText style={{ marginTop: Spacing.sm }}>
-          {t('Unified.VideoCall.VerifyNotComplete.TroubleshootingTips')}
+          {t('BCSC.VideoCall.VerifyNotComplete.TroubleshootingTips')}
         </ThemedText>
       </View>
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
           testID={testIdWithKey('SendVideo')}
-          accessibilityLabel={t('Unified.VideoCall.VerifyNotComplete.SendVideoInstead')}
-          title={t('Unified.VideoCall.VerifyNotComplete.SendVideoInstead')}
+          accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.SendVideoInstead')}
+          title={t('BCSC.VideoCall.VerifyNotComplete.SendVideoInstead')}
           onPress={onPressSendVideo}
         />
         <Button
           buttonType={ButtonType.Secondary}
           testID={testIdWithKey('TryAgain')}
-          accessibilityLabel={t('Unified.VideoCall.VerifyNotComplete.TryAgain')}
-          title={t('Unified.VideoCall.VerifyNotComplete.TryAgain')}
+          accessibilityLabel={t('BCSC.VideoCall.VerifyNotComplete.TryAgain')}
+          title={t('BCSC.VideoCall.VerifyNotComplete.TryAgain')}
           onPress={onPressSendVideo}
         />
       </View>

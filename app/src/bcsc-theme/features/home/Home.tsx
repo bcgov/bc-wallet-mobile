@@ -30,7 +30,7 @@ const Home: React.FC<HomeProps> = ({ navigation, route }) => {
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
       url: `${apiClient.baseURL}/account/embedded/devices`,
-      title: t('Unified.Screens.ManageDevices'),
+      title: t('BCSC.Screens.ManageDevices'),
     })
   }, [apiClient.baseURL, navigation, t])
 

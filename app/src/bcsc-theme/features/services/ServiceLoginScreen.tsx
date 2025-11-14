@@ -87,8 +87,8 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
         <ScrollView contentContainerStyle={styles.screenContainer}>
           <View style={styles.contentContainer}>
             <ThemedText variant={'headingThree'}>{serviceClient.client_name}</ThemedText>
-            <ThemedText style={styles.descriptionText}>{t('Services.NoLoginInstructions')}</ThemedText>
-            <ThemedText style={styles.descriptionText}>{t('Services.NoLoginProof')}</ThemedText>
+            <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginInstructions')}</ThemedText>
+            <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginProof')}</ThemedText>
 
             <TouchableOpacity
               onPress={() => {
@@ -97,7 +97,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
             >
               <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
                 <ThemedText style={styles.infoHeader} ellipsizeMode="tail">
-                  {t('Services.Goto')} {serviceClient.client_name}
+                  {t('BCSC.Services.Goto')} {serviceClient.client_name}
                 </ThemedText>
                 <Icon style={styles.infoIcon} name="open-in-new" size={30} color={ColorPalette.brand.primary} />
               </View>
@@ -105,7 +105,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
             {/* TODO (MD): Find out what action should happen when user reports suspicious activity */}
             <ThemedText variant={'bold'}>
-              {t('Services.ReportSuspiciousPrefix')} <ThemedText>{t('Services.ReportSuspicious')}</ThemedText>
+              {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
             </ThemedText>
           </View>
         </ScrollView>
@@ -118,19 +118,19 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       <ScrollView contentContainerStyle={styles.screenContainer}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
-            {`${t('Services.WantToLogin')}\n`}
+            {`${t('BCSC.Services.WantToLogin')}\n`}
             <ThemedText variant={'headingThree'}>{serviceClient.client_name}?</ThemedText>
           </ThemedText>
 
-          <ThemedText style={styles.descriptionText}>{t('Services.RequestedInformation')}</ThemedText>
+          <ThemedText style={styles.descriptionText}>{t('BCSC.Services.RequestedInformation')}</ThemedText>
 
           <View style={styles.cardsContainer}>
             <View style={styles.infoContainer}>
               <ThemedText style={[styles.infoHeader, { marginBottom: Spacing.sm }]}>
-                {t('Services.FromAccountPrefix')}
+                {t('BCSC.Services.FromAccountPrefix')}
                 <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
                   {' '}
-                  {t('Services.FromAccount')}
+                  {t('BCSC.Services.FromAccount')}
                 </ThemedText>
               </ThemedText>
               <ThemedText>{serviceClient.claims_description}</ThemedText>
@@ -142,7 +142,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
                   try {
                     navigation.navigate(BCSCScreens.MainWebView, {
                       url: privacyPolicyUri,
-                      title: t('Services.PrivacyPolicy'),
+                      title: t('BCSC.Services.PrivacyPolicy'),
                     })
                   } catch (error) {
                     logger.error(`Error navigating to the service client privacy policy webview: ${error}`)
@@ -150,7 +150,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
                 }}
               >
                 <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-                  <ThemedText style={styles.infoHeader}>{t('Services.PrivacyNotice')}</ThemedText>
+                  <ThemedText style={styles.infoHeader}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
                   <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
                 </View>
               </TouchableOpacity>
@@ -158,7 +158,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           </View>
 
           <ThemedText variant={'bold'}>
-            {t('Services.ReportSuspiciousPrefix')} <ThemedText>{t('Services.ReportSuspicious')}</ThemedText>
+            {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
           </ThemedText>
         </View>
         <View style={styles.buttonsContainer}>
@@ -176,7 +176,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
                   return
                 }
 
-                Alert.alert(t('Services.LoginErrorTitle'), generateQuickLogin.error)
+                Alert.alert(t('BCSC.Services.LoginErrorTitle'), generateQuickLogin.error)
               }}
             />
           </View>

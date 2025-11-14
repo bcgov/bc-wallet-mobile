@@ -41,9 +41,9 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        <ThemedText variant={'headingThree'}>{t('Unified.ManualPairing.CompletionTitle')}</ThemedText>
+        <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
         <ThemedText style={{ marginVertical: Spacing.md }}>
-          {t('Unified.ManualPairing.CompletionDescription', { serviceName })}
+          {t('BCSC.ManualPairing.CompletionDescription', { serviceName })}
         </ThemedText>
         <ServiceBookmarkButton serviceId={serviceId} serviceName={serviceName} />
       </ScrollView>

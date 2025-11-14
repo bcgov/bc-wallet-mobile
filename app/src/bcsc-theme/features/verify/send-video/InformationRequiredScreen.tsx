@@ -6,6 +6,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Buffer } from 'buffer'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import RNFS from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -26,6 +27,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   )
   const { ButtonLoading } = useAnimatedComponents()
   const { evidence } = useApi()
+  const { t } = useTranslation()
 
   const styles = StyleSheet.create({
     container: {
@@ -135,8 +137,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           onPress={() => {
             navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
           }}
-          title={'Photo of your face'}
-          actionLabel={'Take Photo'}
+          title={t('BCSC.SendVideo.InformationRequired.Heading1')}
+          actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel')}
           thumbnailUri={store.bcsc.photoPath && `file://${store.bcsc.photoPath}`}
           style={{ borderBottomWidth: 0 }}
         />
@@ -144,8 +146,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           onPress={() => {
             navigation.navigate(BCSCScreens.VideoInstructions)
           }}
-          title={'Video of your face'}
-          actionLabel={'Record Video'}
+          title={t('BCSC.SendVideo.InformationRequired.Heading2')}
+          actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel2')}
           thumbnailUri={
             store.bcsc.videoPath && store.bcsc.videoThumbnailPath && `file://${store.bcsc.videoThumbnailPath}`
           }
@@ -154,10 +156,10 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       <View style={styles.controlsContainer}>
         <Button
           buttonType={ButtonType.Primary}
-          title={'Send to Service BC Now'}
+          title={t('BCSC.SendVideo.InformationRequired.ButtonText')}
           onPress={onPressSend}
           testID={'SendToServiceBCNow'}
-          accessibilityLabel={'Send to Service BC Now'}
+          accessibilityLabel={t('BCSC.SendVideo.InformationRequired.ButtonText')}
           disabled={!uploadedBoth || loading}
         >
           {loading && <ButtonLoading />}

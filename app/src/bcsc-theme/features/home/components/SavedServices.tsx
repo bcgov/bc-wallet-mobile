@@ -43,7 +43,7 @@ const SavedServices: React.FC = () => {
       <View style={styles.headerContainer}>
         <Icon name="bookmark" size={24} color={ColorPalette.brand.tertiary} style={styles.bookmarkIcon} />
         <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.tertiary }}>
-          {t('Services.SavedServices')}
+          {t('BCSC.Services.SavedServices')}
         </ThemedText>
       </View>
 
@@ -52,7 +52,7 @@ const SavedServices: React.FC = () => {
           variant={'headingFour'}
           style={{ color: ColorPalette.brand.tertiary, fontWeight: 'normal', paddingHorizontal: Spacing.md }}
         >
-          {t('Services.NoSavedServices')}
+          {t('BCSC.Services.NoSavedServices')}
         </ThemedText>
       ) : (
         serviceClients.map((serviceClient) => (

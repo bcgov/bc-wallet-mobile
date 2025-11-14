@@ -53,17 +53,17 @@ export const MandatoryUpdate = (): JSX.Element => {
       <ScrollView contentContainerStyle={styles.scollContainer}>
         <Icon name="system-update" size={200} color={ColorPalette.brand.icon} style={styles.icon} />
         <View style={styles.textContainer}>
-          <ThemedText variant="headingThree">{t('Unified.Modals.MandatoryUpdate.Header')}</ThemedText>
-          <ThemedText style={styles.textContent}>{t('Unified.Modals.MandatoryUpdate.ContentA')}</ThemedText>
+          <ThemedText variant="headingThree">{t('BCSC.Modals.MandatoryUpdate.Header')}</ThemedText>
+          <ThemedText style={styles.textContent}>{t('BCSC.Modals.MandatoryUpdate.ContentA')}</ThemedText>
           <ThemedText style={styles.textContent}>
-            {t('Unified.Modals.MandatoryUpdate.ContentB', { platformStore })}
+            {t('BCSC.Modals.MandatoryUpdate.ContentB', { platformStore })}
           </ThemedText>
         </View>
       </ScrollView>
 
       <View style={styles.buttonContainer}>
         <Button
-          title={t('Unified.Modals.MandatoryUpdate.UpdateButton', { platformStore })}
+          title={t('BCSC.Modals.MandatoryUpdate.UpdateButton', { platformStore })}
           buttonType={ButtonType.Primary}
           onPress={handleGoToStore}
         />

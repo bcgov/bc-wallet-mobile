@@ -10,10 +10,10 @@ const TransferSuccessScreen: React.FC = () => {
   const { t } = useTranslation()
   return (
     <StatusDetails
-      title={t('Unified.TransferSuccess.Title')}
-      description={t('Unified.TransferSuccess.Description')}
-      extraText={t('Unified.TransferSuccess.ExtraText')}
-      buttonText={t('Unified.TransferSuccess.ButtonText')}
+      title={t('BCSC.TransferSuccess.Title')}
+      description={t('BCSC.TransferSuccess.Description')}
+      extraText={t('BCSC.TransferSuccess.ExtraText')}
+      buttonText={t('BCSC.TransferSuccess.ButtonText')}
       onButtonPress={() => {
         navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
       }}

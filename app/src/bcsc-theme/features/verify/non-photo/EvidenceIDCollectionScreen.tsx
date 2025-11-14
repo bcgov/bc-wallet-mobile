@@ -139,22 +139,22 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     const errors: EvidenceCollectionFormErrors = {}
 
     if (!isDocumentNumberValid(values.documentNumber)) {
-      errors.documentNumber = t('Unified.EvidenceIDCollection.DocumentNumberError')
+      errors.documentNumber = t('BCSC.EvidenceIDCollection.DocumentNumberError')
     }
     if (!additionalEvidenceRequired) {
       return errors
     }
     if (!values.firstName) {
-      errors.firstName = t('Unified.EvidenceIDCollection.FirstNameError')
+      errors.firstName = t('BCSC.EvidenceIDCollection.FirstNameError')
     }
     if (!values.lastName) {
-      errors.lastName = t('Unified.EvidenceIDCollection.LastNameError')
+      errors.lastName = t('BCSC.EvidenceIDCollection.LastNameError')
     }
     if (!isDateValid(values.birthDate)) {
-      errors.birthDate = t('Unified.EvidenceIDCollection.BirthDateError')
+      errors.birthDate = t('BCSC.EvidenceIDCollection.BirthDateError')
     }
     if (values.middleNames && values.middleNames.split(' ').length > 2) {
-      errors.middleNames = t('Unified.EvidenceIDCollection.MiddleNamesError')
+      errors.middleNames = t('BCSC.EvidenceIDCollection.MiddleNamesError')
     }
 
     return errors
@@ -228,7 +228,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       <KeyboardView keyboardAvoiding={false}>
         <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
         <ThemedText style={{ paddingVertical: 16 }}>
-          Enter the information <Text style={{ fontWeight: 'bold' }}>{'exactly as shown'}</Text> on the ID.
+          {t('BCSC.EvidenceIDCollection.Heading1')}{' '}
+          <Text style={{ fontWeight: 'bold' }}>{t('BCSC.EvidenceIDCollection.Heading2')}</Text>{' '}
+          {t('BCSC.EvidenceIDCollection.Heading3')}
         </ThemedText>
         <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
           <InputWithValidation
@@ -237,45 +239,45 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             value={formState.documentNumber}
             onChange={(value) => handleChange('documentNumber', value)}
             error={formErrors.documentNumber}
-            subtext={`${t('Unified.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
+            subtext={`${t('BCSC.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
           />
 
           {additionalEvidenceRequired ? (
             <>
               <InputWithValidation
                 id={'lastName'}
-                label={t('Unified.EvidenceIDCollection.LastNameLabel')}
+                label={t('BCSC.EvidenceIDCollection.LastNameLabel')}
                 value={formState.lastName}
                 onChange={(value) => handleChange('lastName', value)}
                 error={formErrors.lastName}
-                subtext={t('Unified.EvidenceIDCollection.LastNameSubtext')}
+                subtext={t('BCSC.EvidenceIDCollection.LastNameSubtext')}
               />
 
               <InputWithValidation
                 id={'firstName'}
-                label={t('Unified.EvidenceIDCollection.FirstNameLabel')}
+                label={t('BCSC.EvidenceIDCollection.FirstNameLabel')}
                 value={formState.firstName}
                 onChange={(value) => handleChange('firstName', value)}
                 error={formErrors.firstName}
-                subtext={t('Unified.EvidenceIDCollection.FirstNameSubtext')}
+                subtext={t('BCSC.EvidenceIDCollection.FirstNameSubtext')}
               />
 
               <InputWithValidation
                 id={'middleNames'}
-                label={t('Unified.EvidenceIDCollection.MiddleNamesLabel')}
+                label={t('BCSC.EvidenceIDCollection.MiddleNamesLabel')}
                 value={formState.middleNames}
                 onChange={(value) => handleChange('middleNames', value)}
                 error={formErrors.middleNames}
-                subtext={t('Unified.EvidenceIDCollection.MiddleNamesSubtext')}
+                subtext={t('BCSC.EvidenceIDCollection.MiddleNamesSubtext')}
               />
 
               <InputWithValidation
                 id={'birthDate'}
-                label={t('Unified.EvidenceIDCollection.BirthDateLabel')}
+                label={t('BCSC.EvidenceIDCollection.BirthDateLabel')}
                 value={formState.birthDate}
                 onChange={(value) => handleChange('birthDate', value)}
                 error={formErrors.birthDate}
-                subtext={t('Unified.EvidenceIDCollection.BirthDateSubtext')}
+                subtext={t('BCSC.EvidenceIDCollection.BirthDateSubtext')}
               />
             </>
           ) : null}

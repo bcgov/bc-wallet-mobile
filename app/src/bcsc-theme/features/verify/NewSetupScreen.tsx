@@ -81,25 +81,25 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
       <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.NewSetup.Title')}
+          {t('BCSC.NewSetup.Title')}
         </ThemedText>
         <ThemedText variant={'bold'} style={{ marginBottom: Spacing.md }}>
-          {t('Unified.NewSetup.YouWillNeedTo')}
+          {t('BCSC.NewSetup.YouWillNeedTo')}
         </ThemedText>
         <View style={styles.bulletContainer}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.NewSetup.AddPhotoID')}</ThemedText>
+          <ThemedText>{t('BCSC.NewSetup.AddPhotoID')}</ThemedText>
         </View>
         <View style={[styles.bulletContainer, { marginBottom: Spacing.lg }]}>
           <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('Unified.NewSetup.RecordVideoOrVisit')}</ThemedText>
+          <ThemedText>{t('BCSC.NewSetup.RecordVideoOrVisit')}</ThemedText>
         </View>
-        <ThemedText variant={'bold'}>{t('Unified.NewSetup.WhoseIDQuestion')}</ThemedText>
+        <ThemedText variant={'bold'}>{t('BCSC.NewSetup.WhoseIDQuestion')}</ThemedText>
         <RadioGroup<boolean>
           style={{ marginVertical: Spacing.md }}
           options={[
-            { label: t('Unified.NewSetup.MyOwnID'), value: true },
-            { label: t('Unified.NewSetup.SomeoneElsesID'), value: false },
+            { label: t('BCSC.NewSetup.MyOwnID'), value: true },
+            { label: t('BCSC.NewSetup.SomeoneElsesID'), value: false },
           ]}
           selectedValue={myOwnId}
           onValueChange={(value) => {
@@ -113,12 +113,12 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
         />
         {myOwnId === false ? (
           <>
-            <ThemedText variant={'bold'}>{t('Unified.NewSetup.IsOtherPersonWithYou')}</ThemedText>
+            <ThemedText variant={'bold'}>{t('BCSC.NewSetup.IsOtherPersonWithYou')}</ThemedText>
             <RadioGroup<boolean>
               style={{ marginVertical: Spacing.md }}
               options={[
-                { label: t('Unified.NewSetup.Yes'), value: true },
-                { label: t('Unified.NewSetup.No'), value: false },
+                { label: t('BCSC.NewSetup.Yes'), value: true },
+                { label: t('BCSC.NewSetup.No'), value: false },
               ]}
               selectedValue={otherPersonPresent}
               onValueChange={(value) => setOtherPersonPresent(value)}
@@ -128,29 +128,29 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
         ) : null}
         {otherPersonPresent === false ? (
           <InfoTextBox type={InfoBoxType.Error} style={{ marginBottom: Spacing.lg }}>
-            {t('Unified.NewSetup.CannotFinishWithoutOtherPerson')}
+            {t('BCSC.NewSetup.CannotFinishWithoutOtherPerson')}
           </InfoTextBox>
         ) : null}
         {typeof otherPersonPresent === 'boolean' ? (
           <>
-            <ThemedText variant={'bold'}>{t('Unified.NewSetup.OKToGiveHelp')}</ThemedText>
+            <ThemedText variant={'bold'}>{t('BCSC.NewSetup.OKToGiveHelp')}</ThemedText>
             <View style={styles.helpSection}>
               <Icon name={'check'} size={iconSize} color={ColorPalette.brand.primary} />
               <View style={styles.helpSectionTextContainer}>
                 <ThemedText variant={'bold'} style={styles.helpSectionTitle}>
-                  {t('Unified.NewSetup.YouCan')}
+                  {t('BCSC.NewSetup.YouCan')}
                 </ThemedText>
                 <View style={styles.bulletContainer}>
                   <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-                  <ThemedText style={styles.bulletText}>{t('Unified.NewSetup.YouCanReadInstructions')}</ThemedText>
+                  <ThemedText style={styles.bulletText}>{t('BCSC.NewSetup.YouCanReadInstructions')}</ThemedText>
                 </View>
                 <View style={styles.bulletContainer}>
                   <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-                  <ThemedText style={styles.bulletText}>{t('Unified.NewSetup.YouCanNavigateApp')}</ThemedText>
+                  <ThemedText style={styles.bulletText}>{t('BCSC.NewSetup.YouCanNavigateApp')}</ThemedText>
                 </View>
                 <View style={styles.bulletContainer}>
                   <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-                  <ThemedText style={styles.bulletText}>{t('Unified.NewSetup.YouCanTypeOrScan')}</ThemedText>
+                  <ThemedText style={styles.bulletText}>{t('BCSC.NewSetup.YouCanTypeOrScan')}</ThemedText>
                 </View>
               </View>
             </View>
@@ -158,11 +158,11 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
               <Icon name={'cancel'} size={iconSize} color={ColorPalette.brand.primary} />
               <View style={styles.helpSectionTextContainer}>
                 <ThemedText variant={'bold'} style={styles.helpSectionTitle}>
-                  {t('Unified.NewSetup.YouCannot')}
+                  {t('BCSC.NewSetup.YouCannot')}
                 </ThemedText>
                 <View style={styles.bulletContainer}>
                   <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-                  <ThemedText style={styles.bulletText}>{t('Unified.NewSetup.YouCannotBeInVideo')}</ThemedText>
+                  <ThemedText style={styles.bulletText}>{t('BCSC.NewSetup.YouCannotBeInVideo')}</ThemedText>
                 </View>
               </View>
             </View>

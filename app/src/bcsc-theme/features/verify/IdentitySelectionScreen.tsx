@@ -96,27 +96,27 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
         {
           onPress: onPressCombinedCard,
           testIDKey: 'CombinedCard',
-          accessibilityLabel: t('Unified.ChooseYourID.CombinedCard'),
-          actionText: t('Unified.ChooseYourID.CombinedCardActionText'),
-          description: t('Unified.ChooseYourID.CombinedCardDescription'),
+          accessibilityLabel: t('BCSC.ChooseYourID.CombinedCard'),
+          actionText: t('BCSC.ChooseYourID.CombinedCardActionText'),
+          description: t('BCSC.ChooseYourID.CombinedCardDescription'),
           imgSrc: { uri: COMBO_CARD },
           style: { marginBottom: Spacing.md },
         },
         {
           onPress: onPressPhotoCard,
           testIDKey: 'PhotoCard',
-          accessibilityLabel: t('Unified.ChooseYourID.PhotoCard'),
-          actionText: t('Unified.ChooseYourID.PhotoCardActionText'),
-          description: t('Unified.ChooseYourID.PhotoCardDescription'),
+          accessibilityLabel: t('BCSC.ChooseYourID.PhotoCard'),
+          actionText: t('BCSC.ChooseYourID.PhotoCardActionText'),
+          description: t('BCSC.ChooseYourID.PhotoCardDescription'),
           imgSrc: { uri: PHOTO_CARD },
           style: { marginBottom: Spacing.md },
         },
         {
           onPress: onPressNoPhotoCard,
           testIDKey: 'NoPhotoCard',
-          accessibilityLabel: t('Unified.ChooseYourID.NoPhotoCard'),
-          actionText: t('Unified.ChooseYourID.NoPhotoCardActionText'),
-          description: t('Unified.ChooseYourID.NoPhotoCardDescription'),
+          accessibilityLabel: t('BCSC.ChooseYourID.NoPhotoCard'),
+          actionText: t('BCSC.ChooseYourID.NoPhotoCardActionText'),
+          description: t('BCSC.ChooseYourID.NoPhotoCardDescription'),
           imgSrc: { uri: NO_PHOTO_CARD },
           style: { marginBottom: Spacing.md },
         },
@@ -128,34 +128,34 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
       <ScrollView style={styles.scrollView}>
         <ThemedText variant={'headingThree'} style={styles.heading}>
-          {t('Unified.ChooseYourID.WhatCardDoYou')}
+          {t('BCSC.ChooseYourID.WhatCardDoYou')}
         </ThemedText>
-        <ThemedText style={styles.description}>{t('Unified.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
+        <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
         {cardButtons}
         <View style={styles.pageBreakSlot}>
           <View style={styles.pageBreak} />
         </View>
         <ThemedText variant={'headingThree'} style={styles.heading}>
-          {t('Unified.ChooseYourID.DontHaveOne')}
+          {t('BCSC.ChooseYourID.DontHaveOne')}
         </ThemedText>
-        <ThemedText style={styles.description}>{t('Unified.ChooseYourID.CheckBefore')}</ThemedText>
+        <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
         <Pressable
           onPress={onCheckForServicesCard}
           testID={'CheckForServicesCard'}
-          accessibilityLabel={t('Unified.ChooseYourID.CheckForServicesCard')}
+          accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
           style={styles.checkButton}
         >
           <ThemedText variant={'bold'} style={styles.checkButtonText}>
-            {t('Unified.ChooseYourID.CheckIfIHave') + ' '}
+            {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
             <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
           </ThemedText>
         </Pressable>
         <TileButton
           onPress={onPressOtherID}
           testIDKey={'OtherID'}
-          accessibilityLabel={t('Unified.ChooseYourID.OtherID')}
-          actionText={t('Unified.ChooseYourID.OtherIDActionText')}
-          description={t('Unified.ChooseYourID.OtherIDDescription')}
+          accessibilityLabel={t('BCSC.ChooseYourID.OtherID')}
+          actionText={t('BCSC.ChooseYourID.OtherIDActionText')}
+          description={t('BCSC.ChooseYourID.OtherIDDescription')}
           style={{ marginBottom: Spacing.md }}
         />
       </ScrollView>
