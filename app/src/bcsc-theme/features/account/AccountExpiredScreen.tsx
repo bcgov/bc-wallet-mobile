@@ -4,7 +4,7 @@ import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import HomeHeader from '../home/components/HomeHeader'
 
@@ -37,30 +37,36 @@ export const AccountExpiredScreen = ({ navigation, route }: AccountExpiredScreen
       padding: Spacing.md,
       gap: Spacing.lg,
     },
+    actionsContainer: {
+      gap: Spacing.md,
+    },
   })
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <AppBannerSection
         id={BCSCBanner.ACCOUNT_EXPIRED}
-        title={t('BCSC.Account.ExpiredBannerTitle', { accountExpiration })}
+        title={t('BCSC.AccountExpired.StaticBannerTitle')}
+        description={t('BCSC.AccountExpired.StaticBannerDescription', { accountExpiration })}
         type="warning"
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <HomeHeader name={accountName} fontSize={20} iconSize={72} />
 
-        <CardButton
-          title={'BCSC.AccountExpired.RenewButton'}
-          onPress={() => {
-            navigation.navigate(BCSCScreens.AccountRenewalInformation)
-          }}
-        />
-        <CardButton
-          title={'BCSC.AccountExpired.RemoveButton'}
-          onPress={() => {
-            // TODO (MD): Where should this go?
-          }}
-        />
+        <View style={styles.actionsContainer}>
+          <CardButton
+            title={t('BCSC.AccountExpired.RenewButton')}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.AccountRenewalInformation)
+            }}
+          />
+          <CardButton
+            title={t('BCSC.AccountExpired.RemoveButton')}
+            onPress={() => {
+              // TODO (MD): Where should this go?
+            }}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   )

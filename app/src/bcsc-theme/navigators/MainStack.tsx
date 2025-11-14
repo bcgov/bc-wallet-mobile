@@ -189,6 +189,7 @@ const MainStack: React.FC = () => {
           name={BCSCScreens.AccountExpired}
           component={AccountExpiredScreen}
           options={() => ({
+            animationEnabled: false,
             title: t('BCSC.Title'),
             headerShown: true,
             header: createHeaderWithoutBanner,

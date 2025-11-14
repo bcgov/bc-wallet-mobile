@@ -22,6 +22,7 @@ export interface BCSCBannerMessage {
 
 export interface AppBannerSectionProps extends BCSCBannerMessage {
   onPress?: (id: string) => void
+  description?: string // TODO (MD): Add this property to BCSCBannerMessage if needed
 }
 
 interface AppBannerProps {
@@ -49,18 +50,27 @@ export const AppBanner: React.FC<AppBannerProps> = ({ messages }: AppBannerProps
   )
 }
 
-export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ id, title, type, onPress, dismissible = true }) => {
+export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
+  id,
+  title,
+  type,
+  onPress,
+  description,
+  dismissible = true,
+}) => {
   const { Spacing, ColorPalette } = useTheme()
   const [showBanner, setShowBanner] = useState(true)
 
   const styles = StyleSheet.create({
     container: {
       backgroundColor: ColorPalette.brand.primary,
+      // display: 'flex',
       flexDirection: 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
       padding: Spacing.md,
-      flexShrink: 1,
+    },
+    textContainer: {
+      flex: 1,
+      gap: Spacing.sm,
     },
     icon: {
       marginRight: Spacing.md,
@@ -116,16 +126,28 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({ id, title, t
         style={styles.icon}
         testID={testIdWithKey(`icon-${type}`)}
       />
-      <ThemedText
-        variant={'bold'}
-        style={{
-          flex: 1,
-          color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
-        }}
-        testID={testIdWithKey(`text-${type}`)}
-      >
-        {title}
-      </ThemedText>
+      <View style={styles.textContainer}>
+        <ThemedText
+          variant={'bold'}
+          style={{
+            color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
+          }}
+          testID={testIdWithKey(`text-${type}`)}
+        >
+          {title}
+        </ThemedText>
+        {description ? (
+          <ThemedText
+            style={{
+              lineHeight: 24,
+              color: type === 'warning' ? ColorPalette.brand.secondaryBackground : ColorPalette.grayscale.white,
+            }}
+            testID={testIdWithKey(`description-${type}`)}
+          >
+            {description}
+          </ThemedText>
+        ) : null}
+      </View>
     </TouchableOpacity>
   )
 }
