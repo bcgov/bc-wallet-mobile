@@ -37,7 +37,7 @@ import filePersistedLedgers from '@/configs/ledgers/indy/ledgers'
 import useBCAgentSetup from '@/hooks/useBCAgentSetup'
 import { activate, deactivate, setup, status } from '@utils/PushNotificationsHelper'
 import { expirationOverrideInMinutes } from '@utils/expiration'
-import BCLogger from '@utils/logger'
+import { appLogger, createAppLogger } from '@utils/logger'
 import AddCredentialButton from './src/bcwallet-theme/components/AddCredentialButton'
 import AddCredentialSlider from './src/bcwallet-theme/components/AddCredentialSlider'
 import EmptyList from './src/bcwallet-theme/components/EmptyList'
@@ -93,7 +93,10 @@ export class AppContainer implements Container {
     this.t = t
     this.navigate = navigate
     this.setSurveyVisible = setSurveyVisible
-    this.storage = new PersistentStorage(BCLogger)
+    // Using factory for testability; appLogger is a legacy
+    // singleton fallback.
+    const loggerInstance = appLogger ?? createAppLogger()
+    this.storage = new PersistentStorage(loggerInstance)
   }
 
   public get container(): DependencyContainer {
@@ -101,7 +104,7 @@ export class AppContainer implements Container {
   }
 
   public init(): Container {
-    const logger = BCLogger
+    const logger = appLogger ?? createAppLogger()
     logger.startEventListeners()
 
     const options = {
