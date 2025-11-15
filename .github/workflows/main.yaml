@@ -361,7 +361,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "zulu"
           java-version: 17
