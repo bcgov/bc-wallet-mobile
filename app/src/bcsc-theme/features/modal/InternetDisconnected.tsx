@@ -1,7 +1,7 @@
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
@@ -42,6 +42,20 @@ export const InternetDisconnected = (): JSX.Element => {
       gap: Spacing.lg,
     },
   })
+
+  /**
+   * Prevents the user from navigating back to the previous screen.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      const beforeRemove = navigation.addListener('beforeRemove', (event) => {
+        event.preventDefault()
+      })
+      return () => {
+        beforeRemove()
+      }
+    }, [navigation])
+  )
 
   /**
    * Handler for the retry button press to re-check internet connectivity.

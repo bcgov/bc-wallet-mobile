@@ -80,7 +80,6 @@ const OnboardingStack = (): JSX.Element => {
         component={InternetDisconnected}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
 
@@ -89,7 +88,6 @@ const OnboardingStack = (): JSX.Element => {
         component={MandatoryUpdate}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
     </Stack.Navigator>

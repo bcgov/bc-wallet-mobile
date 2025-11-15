@@ -1,5 +1,7 @@
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Linking, Platform, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -14,6 +16,7 @@ export const MandatoryUpdate = (): JSX.Element => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation()
 
   const platformStore = Platform.OS === 'ios' ? 'App Store' : 'Google Play'
 
@@ -39,6 +42,20 @@ export const MandatoryUpdate = (): JSX.Element => {
       gap: Spacing.lg,
     },
   })
+
+  /**
+   * Prevents the user from navigating back to the previous screen.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      const beforeRemove = navigation.addListener('beforeRemove', (event) => {
+        event.preventDefault()
+      })
+      return () => {
+        beforeRemove()
+      }
+    }, [navigation])
+  )
 
   const handleGoToStore = () => {
     try {

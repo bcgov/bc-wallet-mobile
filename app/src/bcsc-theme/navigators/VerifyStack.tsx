@@ -289,7 +289,6 @@ const VerifyStack = () => {
         component={InternetDisconnected}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
 
@@ -298,7 +297,6 @@ const VerifyStack = () => {
         component={MandatoryUpdate}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
-          gestureEnabled: false, // Disable swipe to dismiss
         }}
       />
     </Stack.Navigator>
