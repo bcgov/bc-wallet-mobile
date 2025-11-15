@@ -1,6 +1,6 @@
 import { SystemCheckScope, useSystemChecks } from '@/bcsc-theme/hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { ThemedText } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useEffect } from 'react'
@@ -41,47 +41,59 @@ export const MainStackSplashScreen = ({ navigation }: MainStackSplashScreenProps
       })
     )
 
-    // If the account is expired, navigate to the Account Expired screen
-    if (AccountExpirySystemCheck.isAccountExpired(account.card_expiry)) {
-      return navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [
-            {
-              name: BCSCScreens.AccountExpired,
-              params: {
-                accountExpiration: account.card_expiry,
-                accountName: accountName,
-              },
-            },
-          ],
-        })
-      )
-    }
-
-    // Otherwise, navigate to the Home screen
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [
-          {
-            name: BCSCStacks.Tab,
-            params: {
-              screen: BCSCScreens.Home,
-              params: {
-                accountName: accountName,
-              },
-            },
-          },
-        ],
-      })
-    )
+    // // If the account is expired, navigate to the Account Expired screen
+    // if (AccountExpirySystemCheck.isAccountExpired(account.card_expiry)) {
+    //   return navigation.dispatch(
+    //     CommonActions.reset({
+    //       index: 0,
+    //       routes: [
+    //         {
+    //           name: BCSCScreens.AccountExpired,
+    //           params: {
+    //             accountExpiration: account.card_expiry,
+    //             accountName: accountName,
+    //           },
+    //         },
+    //       ],
+    //     })
+    //   )
+    // }
+    //
+    // // Otherwise, navigate to the Home screen
+    // navigation.dispatch(
+    //   CommonActions.reset({
+    //     index: 0,
+    //     routes: [
+    //       {
+    //         name: BCSCStacks.Tab,
+    //         params: {
+    //           screen: BCSCScreens.Home,
+    //           params: {
+    //             accountName: accountName,
+    //           },
+    //         },
+    //       },
+    //     ],
+    //   })
+    // )
   }, [account, navigation])
 
   return (
     <View style={{ flex: 1 }}>
       {/** TODO (MD): Align this with the actual BCSC splash screen see issue: #2777 for ref **/}
       <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
+      {__DEV__ ? <ThemedText style={{ marginBottom: 50 }}>DEV: MainStackSplashScreen</ThemedText> : null}
     </View>
   )
 }
+
+// TODO (MD): remove
+// const api = useApi()
+// const [logger] = useServices([TOKENS.UTIL_LOGGER])
+//
+// const { data: account, load: loadAccount } = useDataLoader(api.user.getUserInfo, {
+//   onError: (error) => {
+//     logger.error('MainStackSplashScreen: Failed to load user account info', { error })
+//   },
+// })
+//

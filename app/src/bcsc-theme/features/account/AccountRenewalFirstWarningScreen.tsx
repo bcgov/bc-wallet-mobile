@@ -1,5 +1,6 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { ThemedText } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 
@@ -12,10 +13,15 @@ export const AccountRenewalFirstWarningScreen = ({ navigation }: AccountRenewalF
 
   return (
     <ActionScreenLayout
-      primaryActionText={t('BCSC.AccountRenewal.InformationPrimaryAction')}
+      primaryActionText={t('Global.Continue')}
       onPressPrimaryAction={() => {
         navigation.navigate(BCSCScreens.AccountRenewalFinalWarning)
       }}
-    ></ActionScreenLayout>
+    >
+      <ThemedText variant="headingThree">{t('BCSC.AccountRenewal.RenewalTimeHeader')}</ThemedText>
+      <ThemedText>{t('BCSC.AccountRenewal.RenewalTimeContentA')}</ThemedText>
+      <ThemedText variant="bold">{t('BCSC.AccountRenewal.RenewalTimeContentB')}</ThemedText>
+      <ThemedText>{t('BCSC.AccountRenewal.RenewalTimeContentC')}</ThemedText>
+    </ActionScreenLayout>
   )
 }

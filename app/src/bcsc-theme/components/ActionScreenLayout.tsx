@@ -46,28 +46,27 @@ export const ActionScreenLayout = (props: ActionScreenLayoutProps): JSX.Element 
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {children}
-        <View style={styles.buttonContainer}>
-          <Button
-            title={primaryActionText}
-            buttonType={ButtonType.Primary}
-            onPress={onPressPrimaryAction}
-            testID={testIdWithKey(primaryActionText)}
-            accessibilityLabel={primaryActionText}
-          />
+      <ScrollView contentContainerStyle={styles.scrollContainer}>{children}</ScrollView>
 
-          {onPressSecondaryAction ? (
-            <Button
-              title={secondaryActionText}
-              buttonType={ButtonType.Secondary}
-              onPress={onPressSecondaryAction}
-              testID={testIdWithKey(secondaryActionText)}
-              accessibilityLabel={secondaryActionText}
-            />
-          ) : null}
-        </View>
-      </ScrollView>
+      <View style={styles.buttonContainer}>
+        <Button
+          title={primaryActionText}
+          buttonType={ButtonType.Primary}
+          onPress={onPressPrimaryAction}
+          testID={testIdWithKey(primaryActionText)}
+          accessibilityLabel={primaryActionText}
+        />
+
+        {onPressSecondaryAction ? (
+          <Button
+            title={secondaryActionText}
+            buttonType={ButtonType.Secondary}
+            onPress={onPressSecondaryAction}
+            testID={testIdWithKey(secondaryActionText)}
+            accessibilityLabel={secondaryActionText}
+          />
+        ) : null}
+      </View>
     </SafeAreaView>
   )
 }
