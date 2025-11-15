@@ -138,7 +138,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
 
     Linking.openURL(url).catch(() => {
       Alert.alert(t('BCSC.EmailConfirmation.UnableToOpenEmail'), t('BCSC.EmailConfirmation.UnableToOpenEmailMessage'), [
-        { text: t('Global.OK') },
+        { text: t('BCSC.EmailConfirmation.OKButton') },
       ])
     })
   }
