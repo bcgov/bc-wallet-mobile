@@ -6,14 +6,19 @@ import { useTranslation } from 'react-i18next'
 
 export const AccountRenewalFinalWarningScreen = (): JSX.Element => {
   const { t } = useTranslation()
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const factoryReset = useFactoryReset()
 
   return (
     <ActionScreenLayout
       primaryActionText={t('BCSC.AccountRenewal.WarningRenewButton')}
       onPressPrimaryAction={async () => {
-        await factoryReset()
+        await factoryReset({
+          completedNewSetup: true,
+          completedOnboarding: true,
+          nicknames: store.bcsc.nicknames,
+          selectedNickname: store.bcsc.selectedNickname,
+        })
         dispatch({ type: BCDispatchAction.UPDATE_COMPLETED_ONBOARDING, payload: [true] })
       }}
     >

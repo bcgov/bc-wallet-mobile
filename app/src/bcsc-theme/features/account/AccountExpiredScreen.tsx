@@ -1,3 +1,4 @@
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { AppBannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
@@ -26,6 +27,7 @@ interface AccountExpiredScreenProps {
 export const AccountExpiredScreen = ({ navigation, route }: AccountExpiredScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
+  const factoryReset = useFactoryReset()
 
   const { accountName, accountExpiration } = route.params
 
@@ -62,8 +64,11 @@ export const AccountExpiredScreen = ({ navigation, route }: AccountExpiredScreen
           />
           <CardButton
             title={t('BCSC.AccountExpired.RemoveButton')}
-            onPress={() => {
-              // TODO (MD): Where should this go?
+            onPress={async () => {
+              await factoryReset({
+                completedNewSetup: true,
+                completedOnboarding: true,
+              })
             }}
           />
         </View>

@@ -1,4 +1,4 @@
-import { BCDispatchAction, BCState } from '@/store'
+import { BCDispatchAction, BCSCState, BCState } from '@/store'
 import { DispatchAction, TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
@@ -40,46 +40,49 @@ export const useFactoryReset = () => {
    *
    *  @returns {Promise<FactoryResetResult>} A promise that resolves to the result of the factory reset operation.
    */
-  const factoryReset = useCallback(async (): Promise<FactoryResetResult> => {
-    try {
-      const account = await BcscCore.getAccount()
+  const factoryReset = useCallback(
+    async (state?: Partial<BCSCState>): Promise<FactoryResetResult> => {
+      try {
+        const account = await BcscCore.getAccount()
 
-      if (!account) {
-        throw new Error('Local account not found for factory reset')
+        if (!account) {
+          throw new Error('Local account not found for factory reset')
+        }
+
+        // Delete IAS account
+        logger.info('FactoryReset: Deleting IAS account from server...')
+        const deleteIASAccount = await registration.deleteRegistration(account.clientID)
+
+        if (!deleteIASAccount.success) {
+          throw new Error('IAS server account deletion failed')
+        }
+
+        // Remove local account file
+        logger.info('FactoryReset: Removing local account file...')
+        await BcscCore.removeAccount()
+
+        // Reset BCSC state to initial state
+        logger.info('FactoryReset: Clearing BCSC state...')
+        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [state] })
+
+        logger.info('FactoryReset: Registering new account...')
+        await registration.register()
+
+        logger.info('FactoryReset: Logging out user...')
+        dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
+
+        // Factory reset complete
+        logger.info('FactoryReset: BCSC factory reset completed successfully')
+        return { success: true }
+      } catch (error) {
+        const factoryResetError = _formatFactoryResetError(error)
+        logger.error(`FactoryReset: ${factoryResetError.message}`, factoryResetError)
+
+        return { success: false, error: factoryResetError }
       }
-
-      // Delete IAS account
-      logger.info('FactoryReset: Deleting IAS account from server...')
-      const deleteIASAccount = await registration.deleteRegistration(account.clientID)
-
-      if (!deleteIASAccount.success) {
-        throw new Error('IAS server account deletion failed')
-      }
-
-      // Remove local account file
-      logger.info('FactoryReset: Removing local account file...')
-      await BcscCore.removeAccount()
-
-      // Reset BCSC state to initial state
-      logger.info('FactoryReset: Clearing BCSC state...')
-      dispatch({ type: BCDispatchAction.CLEAR_BCSC })
-
-      logger.info('FactoryReset: Registering new account...')
-      await registration.register()
-
-      logger.info('FactoryReset: Logging out user...')
-      dispatch({ type: DispatchAction.DID_AUTHENTICATE, payload: [false] })
-
-      // Factory reset complete
-      logger.info('FactoryReset: BCSC factory reset completed successfully')
-      return { success: true }
-    } catch (error) {
-      const factoryResetError = _formatFactoryResetError(error)
-      logger.error(`FactoryReset: ${factoryResetError.message}`, factoryResetError)
-
-      return { success: false, error: factoryResetError }
-    }
-  }, [logger, registration, dispatch])
+    },
+    [logger, registration, dispatch]
+  )
 
   return factoryReset
 }
