@@ -1,6 +1,7 @@
 import { useEventListener } from '@/hooks/useEventListener'
 import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
+import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { runSystemChecks, SystemCheckNavigation, SystemCheckStrategy } from '@/services/system-checks/system-checks'
@@ -91,6 +92,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
           const accountExpiry = await userApi.getAccountExpirationDate()
 
           await runSystemChecks([
+            new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
             new DeviceCountSystemCheck(getIdToken, utils),
             new AccountExpirySystemCheck(accountExpiry, utils),
           ])

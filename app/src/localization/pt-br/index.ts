@@ -19,6 +19,7 @@ const translation = {
     "Title2033": "Failed to load services (PT-BR)",
     "Message2033": "There was a problem while loading the services. Please try again later. (PT-BR)",
     "NoMessage": "No Message (PT-BR)",
+    "OK": "OK (PT-BR)",
   },
   "Credentials": {
     "AddCredential": "Add Credential (PT-BR)",
@@ -188,7 +189,13 @@ const translation = {
         "ContentA": "You must update this app to continue. (PT-BR)",
         "ContentB": "Please update to the latest version from the {{platformStore}}. (PT-BR)",
         "UpdateButton": "Go to {{platformStore}} (PT-BR)",
-      }    
+      },
+      "DeviceInvalidated": {
+        "Header": "Device removed (PT-BR)",
+        "ContentA": "This device was removed after you registered another one. You can only be signed in on three devices at a time. (PT-BR)",
+        "ContentB": "Tap OK to clear local data and restart setup on this device. (PT-BR)",
+        "OKButton": "OK (PT-BR)",
+      }  
     },
     "Home": {
       "WhereToUseTitle": "Where to use (PT-BR)",
@@ -439,6 +446,7 @@ const translation = {
       "EnterTheSixDigitCode": "Enter the six digit code sent to your email (PT-BR)",
       "ResendCode": "Resend code (PT-BR)",
       "GoToEmail": "Go to my email (PT-BR)",
+      "OKButton": "OK (PT-BR)",
     },
     "VerifyIdentity": {
       "DeviceCodeError": "Device code or user code is missing in the store. (PT-BR)",
