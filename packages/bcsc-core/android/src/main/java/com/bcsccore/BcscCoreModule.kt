@@ -2,6 +2,7 @@ package com.bcsccore
 
 // Android imports
 import android.os.Build
+import android.provider.Settings
 import android.security.keystore.KeyProperties
 import android.util.Log
 
@@ -636,6 +637,27 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
     return accountJson
   }
 
+  /**
+   * Synchronously gets the device ID for use in JWT claims.
+   * Uses the same method as the async getDeviceId but returns directly.
+   */
+  private fun getDeviceIdSync(): String {
+    return try {
+      val deviceId = Settings.Secure.getString(
+        reactApplicationContext.contentResolver,
+        Settings.Secure.ANDROID_ID
+      )
+      
+      if (deviceId.isNullOrEmpty()) {
+        UUID.randomUUID().toString()
+      } else {
+        deviceId
+      }
+    } catch (e: Exception) {
+      UUID.randomUUID().toString()
+    }
+  }
+
     private fun dynamicToAny(dynamic: Dynamic): Any? {
         return when (dynamic.type) {
             ReadableType.Null -> null
@@ -666,6 +688,32 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
             }
         }
     }
+
+  @ReactMethod
+  override fun getDeviceId(promise: Promise) {
+    try {
+      // Use the same device ID method as ias-android
+      val deviceId = Settings.Secure.getString(
+        reactApplicationContext.contentResolver,
+        Settings.Secure.ANDROID_ID
+      )
+      
+      if (deviceId.isNullOrEmpty()) {
+        // Fallback to a generated UUID if ANDROID_ID is not available
+        val fallbackId = UUID.randomUUID().toString()
+        Log.w(NAME, "ANDROID_ID not available, using fallback UUID: $fallbackId")
+        promise.resolve(fallbackId)
+      } else {
+        Log.d(NAME, "Retrieved device ID from ANDROID_ID")
+        promise.resolve(deviceId)
+      }
+    } catch (e: Exception) {
+      Log.e(NAME, "Error getting device ID: ${e.message}", e)
+      // Fallback to UUID on any error
+      val fallbackId = UUID.randomUUID().toString()
+      promise.resolve(fallbackId)
+    }
+  }
 
   @ReactMethod
   override fun getRefreshTokenRequestBody(issuer: String, clientID: String, refreshToken: String, promise: Promise) {
@@ -736,7 +784,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
         .claim("system_name", "Android")
         .claim("system_version", Build.VERSION.RELEASE)
         .claim("device_model", Build.MODEL)
-        .claim("device_id", UUID.randomUUID().toString()) // Generate unique device ID
+        .claim("device_id", getDeviceIdSync()) // Use proper device ID
         .claim("device_token", actualDeviceToken)
         .claim("mobile_id_version", getAppVersion())
         .claim("mobile_id_build", getAppBuildNumber())
@@ -759,7 +807,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  override fun getDynamicClientRegistrationBody(fcmDeviceToken: String, deviceToken: String?, promise: Promise) {
+  override fun getDynamicClientRegistrationBody(fcmDeviceToken: String, deviceToken: String?, attestation: String?, promise: Promise) {
     try {
       // Use empty string if deviceToken is not provided
       val actualDeviceToken = deviceToken ?: ""
@@ -771,20 +819,25 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       val publicKeyJWK = keyPairSource.convertBcscKeyPairToJWK(currentKeyPair)
 
       // Create device info JWT claims
-      val deviceInfoClaims = JWTClaimsSet.Builder()
+      val deviceInfoClaimsBuilder = JWTClaimsSet.Builder()
         .claim("app_set_id", getAppSetId())
         .claim("system_name", "Android")
         .claim("system_version", Build.VERSION.RELEASE)
         .claim("device_model", Build.MODEL)
-        .claim("device_id", UUID.randomUUID().toString())
+        .claim("device_id", getDeviceIdSync())
         .claim("device_token", actualDeviceToken)
         .claim("device_name", getDeviceName())
         .claim("fcm_device_token", fcmDeviceToken)
         .claim("mobile_id_version", getAppVersion())
         .claim("mobile_id_build", getAppBuildNumber())
         .claim("has_other_accounts", false)
-        // .issueTime(Date())
-        .build()
+        
+      // Add attestation if provided
+      if (attestation != null && attestation.isNotEmpty()) {
+        deviceInfoClaimsBuilder.claim("attestation", attestation)
+      }
+        
+      val deviceInfoClaims = deviceInfoClaimsBuilder.build()
 
       // Create unsigned device info JWT with "none" algorithm (similar to iOS implementation)
       val deviceInfoJWTAsString = createUnsignedJWT(deviceInfoClaims)
