@@ -5,54 +5,58 @@ import { Platform } from 'react-native'
 // Define a structured return type for clarity
 export interface NotificationTokens {
   fcmDeviceToken: string
-  apnsToken: string | null // Null if iOS fails or if on Android
-  success: boolean
-  error?: string // Only present if the overall process failed
+  deviceToken?: string // Optional device token (APNS token on iOS, undefined on Android)
 }
 
-export const getNotificationTokens = async (logger?: BifoldLogger): Promise<NotificationTokens> => {
-  let fcmToken: string | null = null
-  let apnsToken: string | null = null
-  const errors: string[] = []
-
-  // Fetch FCM Token
-  try {
-    fcmToken = await messaging().getToken()
-    if (!fcmToken) {
-      errors.push('FCM token fetch failed (returned null/undefined)')
-    }
-  } catch (e) {
-    errors.push(`FCM token fetch failed: ${e instanceof Error ? e.message : String(e)}`)
-  }
-
-  // Fetch APNs Token (iOS only)
-  if (Platform.OS === 'ios') {
+/**
+ * Retrieves the tokens associated with push notifications. fcmDeviceToken is required,
+ * deviceToken (APNS) is optional and iOS only.
+ * @param logger
+ * @returns
+ * @throws with the failure message if no fcmDeviceToken is not retrieved
+ */
+export const getNotificationTokens = async (logger: BifoldLogger): Promise<NotificationTokens> => {
+  const fetchFcmToken = async (): Promise<string> => {
     try {
-      // The getAPNSToken() call should resolve to a string or null/undefined
-      apnsToken = (await messaging().getAPNSToken()) ?? null
-      if (!apnsToken) {
-        errors.push('APNS token fetch failed (returned null/undefined on iOS)')
+      const token = await messaging().getToken()
+      if (!token) {
+        throw new Error('FCM token is null or undefined')
       }
-    } catch (e) {
-      errors.push(`APNS token fetch failed: ${e instanceof Error ? e.message : String(e)}`)
+      return token
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      throw new Error(`FCM token fetch failed: ${message}`)
     }
   }
 
-  // 3. Evaluate Results and Log
-  if (fcmToken && (Platform.OS !== 'ios' || apnsToken)) {
-    // SUCCESS: We have the required token(s)
-    logger?.info('Retrieved all required notification tokens for registration.')
+  const fetchDeviceToken = async (): Promise<string | undefined> => {
+    if (Platform.OS !== 'ios') {
+      return undefined // Android doesn't need APNS token
+    }
+
+    try {
+      const token = await messaging().getAPNSToken()
+      // treat all falsey values including empty strings as undefined
+      return token || undefined
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.warn(`APNS token fetch failed: ${message}`)
+      return undefined // APNS token is optional, don't fail the entire process
+    }
+  }
+
+  try {
+    const [fcmToken, deviceToken] = await Promise.all([fetchFcmToken(), fetchDeviceToken()])
+
+    logger.info('Successfully retrieved notification tokens for registration')
+
     return {
       fcmDeviceToken: fcmToken,
-      apnsToken: apnsToken,
-      success: true,
+      deviceToken,
     }
-  } else {
-    // FAILURE: Log all gathered errors
-    const errorMessage = `Failed to retrieve required tokens. Errors: ${errors.join('; ')}`
-    logger?.error(errorMessage)
-
-    // Fail Fast: Throw an error specific to the token registration requirements
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error(`Failed to retrieve notification tokens: ${errorMessage}`)
     throw new Error(errorMessage)
   }
 }
