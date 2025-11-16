@@ -1,5 +1,13 @@
+import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
 import { useCallback, useMemo } from 'react'
-import { AccountSecurityMethod, getAccount, getDynamicClientRegistrationBody, setAccount } from 'react-native-bcsc-core'
+import { Platform } from 'react-native'
+import {
+  AccountSecurityMethod,
+  getAccount,
+  getDeviceId,
+  getDynamicClientRegistrationBody,
+  setAccount,
+} from 'react-native-bcsc-core'
 
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
 import { BCDispatchAction, BCState } from '@/store'
@@ -40,11 +48,50 @@ export interface RegistrationResponseData {
   default_acr_values: string[]
 }
 
+export interface NonceResponseData {
+  nonce: string
+}
+
 // The registration API is a bit of a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
+  const getAttestation = useCallback(async (): Promise<string | undefined> => {
+    if (!isClientReady || !apiClient) {
+      throw new Error('BCSC client not ready for attestation')
+    }
+
+    logger.info(`Attempting attestation for registration on ${Platform.OS}`)
+    let attestation: string | undefined = undefined
+    try {
+      if (Platform.OS === 'ios') {
+        attestation = await getAppStoreReceipt()
+        logger.info(`Obtained iOS app store receipt for attestation ${attestation}`)
+      } else if (Platform.OS === 'android') {
+        const deviceId = await getDeviceId()
+        const {
+          data: { nonce },
+        } = await apiClient.post<NonceResponseData>(
+          `${apiClient.baseURL}/device/nonces/${Platform.OS}`,
+          {
+            device_id: deviceId,
+          },
+          {
+            skipBearerAuth: true,
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          }
+        )
+        // Play Integrity attestation
+        attestation = await googleAttestation(nonce)
+        logger.info(`Obtained Android Play Integrity attestation ${attestation}`)
+      }
+    } catch (error) {
+      logger.warn(`Attestation failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+    return attestation
+  }, [apiClient, isClientReady, logger])
 
   const register = useCallback(async () => {
     if (!isClientReady || !apiClient) {
@@ -60,35 +107,13 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
     logger.info('No account found, proceeding with registration')
 
-    // TODO:(jl) Using test tokens for now until we can reliably get
-    // real ones during setup. Need to debug why they fail from Testflight.
-    let fcmDeviceToken = 'test_fcmDeviceToken'
-    let apnsToken: string | null = 'test_apnsToken'
+    // In parallel to reduce wait time
+    const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
+      getAttestation(),
+      getNotificationTokens(logger),
+    ])
 
-    // Try to get real notification tokens, fall back to test tokens if it fails
-    try {
-      logger.debug('Fetching notification tokens for registration')
-      const tokens = await getNotificationTokens(logger)
-
-      fcmDeviceToken = tokens.fcmDeviceToken || fcmDeviceToken
-      apnsToken = tokens.apnsToken || apnsToken
-
-      logger.info('Successfully retrieved notification tokens for registration')
-    } catch (error) {
-      logger.warn(
-        `Failed to retrieve notification tokens, using fallback tokens: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      )
-    }
-
-    logger.debug(
-      `Final tokens for registration - FCM: ${fcmDeviceToken ? 'present' : 'missing'}, APNS: ${
-        apnsToken ? 'present' : 'missing'
-      }`
-    )
-
-    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken || '')
+    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
     logger.info('Generated dynamic client registration body')
 
     const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
@@ -111,7 +136,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     })
 
     return data
-  }, [isClientReady, apiClient, logger, dispatch])
+  }, [isClientReady, apiClient, logger, dispatch, getAttestation])
 
   const updateRegistration = useCallback(
     async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
@@ -128,27 +153,13 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           throw new Error('No client name found for registration update')
         }
 
-        let fcmDeviceToken = null
-        let apnsToken = null
+        // In parallel to reduce wait time
+        const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
+          getAttestation(),
+          getNotificationTokens(logger),
+        ])
 
-        try {
-          const tokens = await getNotificationTokens(logger)
-          fcmDeviceToken = tokens.fcmDeviceToken ?? fcmDeviceToken
-          apnsToken = tokens.apnsToken ?? apnsToken
-        } catch (error) {
-          // Log warning but continue with fallback tokens
-          logger.warn(
-            `Failed to retrieve tokens for registration update: ${
-              error instanceof Error ? error.message : String(error)
-            }`
-          )
-        }
-
-        if (!fcmDeviceToken) {
-          throw new Error('No FCM device token found for registration update')
-        }
-
-        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, apnsToken)
+        const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
 
         let updatedRegistrationData: RegistrationResponseData | null = null
 
@@ -195,7 +206,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, dispatch]
+    [isClientReady, apiClient, logger, dispatch, getAttestation]
   )
 
   const deleteRegistration = useCallback(

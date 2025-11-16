@@ -45,6 +45,18 @@ class BcscCore: NSObject {
   }
 
   // MARK: - Private Helper Methods
+  
+  /**
+   * Gets the device ID synchronously for use in JWT claims.
+   * Uses the same method as the async getDeviceId but returns directly.
+   */
+  private func getDeviceIdSync() -> String {
+    let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? ""
+    if deviceId.isEmpty {
+      return UUID().uuidString
+    }
+    return deviceId
+  }
 
   /**
    * Creates a signed JWT client assertion for OAuth requests
@@ -513,6 +525,22 @@ class BcscCore: NSObject {
   }
 
   @objc
+  func getDeviceId(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) {
+    // Use the same device ID method as ias-ios
+    let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? ""
+    
+    if deviceId.isEmpty {
+      // Fallback to a generated UUID if identifierForVendor is not available
+      let fallbackId = UUID().uuidString
+      logger.warning("identifierForVendor not available, using fallback UUID: \(fallbackId)")
+      resolve(fallbackId)
+    } else {
+      logger.info("Retrieved device ID from identifierForVendor")
+      resolve(deviceId)
+    }
+  }
+
+  @objc
   func getRefreshTokenRequestBody(
     _ issuer: String, clientID: String, refreshToken: String,
     resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock
@@ -585,7 +613,7 @@ class BcscCore: NSObject {
 
   @objc
   func getDynamicClientRegistrationBody(
-    _ fcmDeviceToken: NSString, deviceToken: NSString?, resolve: @escaping RCTPromiseResolveBlock,
+    _ fcmDeviceToken: NSString, deviceToken: NSString?, attestation: NSString?, resolve: @escaping RCTPromiseResolveBlock,
     reject: @escaping RCTPromiseRejectBlock
   ) {
     let keyPairManager = KeyPairManager()
@@ -651,6 +679,11 @@ class BcscCore: NSObject {
 
     if let securityMethod = accountSecurityMethod {
       builder.claim(name: DeviceInfoKeys.appSecurityOption, value: securityMethod.rawValue)
+    }
+    
+    // Add attestation if provided
+    if let attestation = attestation, !(attestation as String).isEmpty {
+      builder.claim(name: "attestation", value: attestation as String)
     }
 
     let deviceInfoClaims = builder.build()
@@ -987,7 +1020,7 @@ class BcscCore: NSObject {
       .claim(name: DeviceInfoKeys.systemVersion, value: UIDevice.current.systemVersion)
       .claim(name: DeviceInfoKeys.deviceName, value: UIDevice.current.name)
       .claim(
-        name: DeviceInfoKeys.deviceID, value: UIDevice.current.identifierForVendor?.uuidString ?? ""
+        name: DeviceInfoKeys.deviceID, value: getDeviceIdSync()
       )
       .claim(name: DeviceInfoKeys.deviceModel, value: UIDevice.current.model)
       .claim(name: DeviceInfoKeys.deviceToken, value: actualDeviceToken)
