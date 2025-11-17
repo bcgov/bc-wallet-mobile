@@ -1,12 +1,9 @@
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
-import { Button, ButtonType, ThemedText, TOKENS, useServices, useTheme } from '@bifold/core'
+import { TOKENS, useServices } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
-import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import Icon from 'react-native-vector-icons/MaterialIcons'
+import { SystemModal } from './components/SystemModal'
 
 /**
  * Component displayed when the device is disconnected from the internet.
@@ -14,48 +11,9 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
  * @returns {*} {JSX.Element} The InternetDisconnected component.
  */
 export const InternetDisconnected = (): JSX.Element => {
-  const { t } = useTranslation()
-  const { Spacing, ColorPalette } = useTheme()
   const navigation = useNavigation()
   const netInfo = useNetInfo()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.modalPrimaryBackground,
-    },
-    scollContainer: {
-      alignItems: 'center',
-    },
-    icon: {
-      paddingVertical: Spacing.lg,
-    },
-    buttonContainer: {
-      padding: Spacing.md,
-    },
-    textContent: {
-      lineHeight: 30,
-    },
-    textContainer: {
-      padding: Spacing.md,
-      gap: Spacing.lg,
-    },
-  })
-
-  /**
-   * Prevents the user from navigating back to the previous screen.
-   */
-  useFocusEffect(
-    useCallback(() => {
-      const beforeRemove = navigation.addListener('beforeRemove', (event) => {
-        event.preventDefault()
-      })
-      return () => {
-        beforeRemove()
-      }
-    }, [navigation])
-  )
 
   /**
    * Handler for the retry button press to re-check internet connectivity.
@@ -74,23 +32,12 @@ export const InternetDisconnected = (): JSX.Element => {
   }, [logger, navigation, netInfo])
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scollContainer}>
-        <Icon name="wifi-off" size={200} color={ColorPalette.brand.icon} style={styles.icon} />
-        <View style={styles.textContainer}>
-          <ThemedText variant="headingThree">{t('BCSC.Modals.InternetDisconnected.Header')}</ThemedText>
-          <ThemedText style={styles.textContent}>{t('BCSC.Modals.InternetDisconnected.ContentA')}</ThemedText>
-          <ThemedText style={styles.textContent}>{t('BCSC.Modals.InternetDisconnected.ContentB')}</ThemedText>
-        </View>
-      </ScrollView>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title={t('BCSC.Modals.InternetDisconnected.RetryButton')}
-          buttonType={ButtonType.Primary}
-          onPress={handleRetry}
-        />
-      </View>
-    </SafeAreaView>
+    <SystemModal
+      iconName="wifi-off"
+      headerKey="BCSC.Modals.InternetDisconnected.Header"
+      contentKeys={['BCSC.Modals.InternetDisconnected.ContentA', 'BCSC.Modals.InternetDisconnected.ContentB']}
+      buttonTitleKey="BCSC.Modals.InternetDisconnected.RetryButton"
+      onButtonPress={handleRetry}
+    />
   )
 }
