@@ -30,7 +30,6 @@ import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivac
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
-import { MainStackSplashScreen } from './components/MainStackSplashScreen'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
@@ -54,7 +53,7 @@ const MainStack: React.FC = () => {
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
-        initialRouteName={BCSCScreens.MainSplash}
+        initialRouteName={BCSCStacks.Tab}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
@@ -64,14 +63,7 @@ const MainStack: React.FC = () => {
           header: createHeaderWithBanner(handleManageDevices),
         }}
       >
-        <Stack.Screen name={BCSCScreens.MainSplash} component={MainStackSplashScreen} />
-        <Stack.Screen
-          name={BCSCStacks.Tab}
-          component={BCSCTabStack}
-          options={{
-            animationEnabled: false,
-          }}
-        />
+        <Stack.Screen name={BCSCStacks.Tab} component={BCSCTabStack} />
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}
