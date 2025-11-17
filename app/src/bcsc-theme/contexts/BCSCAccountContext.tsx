@@ -6,7 +6,7 @@ import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
 
 export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
-  picture_uri: string | null
+  picture: string | null // URI to the user's profile picture
   fullname_formatted: string // Brule, Steve
   account_expiration_date: Date // equivalent to card_expiry but as Date
 }
@@ -39,20 +39,24 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
     load()
   }, [load])
 
-  const accountContextValue = useMemo(
-    () => ({
-      account: data
-        ? {
-            ...data.user,
-            picture_uri: data.picture ?? null,
-            fullname_formatted: `${data.user.family_name}, ${data?.user.given_name}`,
-            account_expiration_date: moment(data.user.card_expiry, 'MMMM D, YYYY').toDate(),
-          }
-        : null,
-      isLoadingAccount: isLoading && !data,
-    }),
-    [data, isLoading]
-  )
+  const accountContextValue = useMemo(() => {
+    if (!data) {
+      return {
+        account: null,
+        isLoadingAccount: isLoading,
+      }
+    }
+
+    return {
+      account: {
+        ...data.user,
+        picture: data.picture ?? null, // TODO (MD): Fallback uri for missing picture
+        fullname_formatted: `${data.user.family_name}, ${data?.user.given_name}`,
+        account_expiration_date: moment(data.user.card_expiry, 'MMMM D, YYYY').toDate(),
+      },
+      isLoadingAccount: false,
+    }
+  }, [data, isLoading])
 
   return <BCSCAccountContext.Provider value={accountContextValue}>{children}</BCSCAccountContext.Provider>
 }
