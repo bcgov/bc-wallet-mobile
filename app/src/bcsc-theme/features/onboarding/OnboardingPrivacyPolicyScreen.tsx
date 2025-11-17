@@ -24,7 +24,7 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
 
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
-      title: t('Unified.Onboarding.LearnMore'),
+      title: t('BCSC.Onboarding.LearnMore'),
       url: SECURE_APP_LEARN_MORE_URL,
     })
   }

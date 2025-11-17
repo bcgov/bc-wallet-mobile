@@ -23,7 +23,7 @@ export const MainSettingsScreen: React.FC<MainSettingsScreenProps> = ({ navigati
   const onHelp = () => {
     navigation.navigate(BCSCScreens.MainWebView, {
       url: HELP_URL,
-      title: t('Unified.Screens.HelpCentre'),
+      title: t('BCSC.Screens.HelpCentre'),
     })
   }
 

@@ -57,7 +57,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.sectionContainer}>
-          <ThemedText variant="headingFour">{t('Unified.Onboarding.AnalyticsContent')}</ThemedText>
+          <ThemedText variant="headingFour">{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
           <ThemedText style={styles.contentText}>
             {
               'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et'
@@ -65,8 +65,8 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
           </ThemedText>
         </View>
 
-        <CardButton title={t('Unified.Onboarding.AcceptAnalytics')} onPress={handleAcceptPressed} />
-        <CardButton title={t('Unified.Onboarding.DenyAnalytics')} onPress={handleDeniedPressed} />
+        <CardButton title={t('BCSC.Onboarding.AcceptAnalytics')} onPress={handleAcceptPressed} />
+        <CardButton title={t('BCSC.Onboarding.DenyAnalytics')} onPress={handleDeniedPressed} />
       </ScrollView>
     </SafeAreaView>
   )
