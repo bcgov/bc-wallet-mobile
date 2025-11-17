@@ -58,6 +58,16 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
+  /**
+   * Retrieves platform-specific attestation for device verification.
+   *
+   * On iOS, fetches App Store receipt. On Android, obtains nonce from server
+   * and generates Play Integrity attestation. Attestation failures are logged
+   * but non-blocking as per BCSC v3/v4 phase 1 specifications.
+   *
+   * @returns Promise resolving to attestation string or null if failed
+   * @throws Error if BCSC client is not ready
+   */
   const getAttestation = useCallback(async (): Promise<string | null> => {
     if (!isClientReady || !apiClient) {
       throw new Error('BCSC client not ready for attestation')
@@ -93,6 +103,16 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     return attestation
   }, [apiClient, isClientReady, logger])
 
+  /**
+   * Registers a new BCSC client with dynamic client registration.
+   *
+   * Checks for existing account first. If none exists, generates attestation,
+   * fetches notification tokens, creates registration body, and submits to BCSC.
+   * Stores returned client credentials and updates local account storage.
+   *
+   * @returns Promise resolving to registration response data or void if account exists
+   * @throws Error if BCSC client is not ready or registration fails
+   */
   const register = useCallback(async () => {
     if (!isClientReady || !apiClient) {
       throw new Error('BCSC client not ready for registration')
@@ -137,6 +157,18 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     return data
   }, [isClientReady, apiClient, logger, dispatch, getAttestation])
 
+  /**
+   * Updates an existing BCSC client registration with new nickname and attestation.
+   *
+   * Requires valid registration access token and nickname. Generates fresh attestation
+   * and notification tokens, then submits PUT request to update client registration.
+   * Updates local account storage with new credentials.
+   *
+   * @param registrationAccessToken - Bearer token for registration endpoint access
+   * @param selectedNickname - New client name/nickname to set
+   * @returns Promise resolving to updated registration response data
+   * @throws Error if client not ready, missing parameters, or update fails
+   */
   const updateRegistration = useCallback(
     async (registrationAccessToken: string | undefined, selectedNickname: string | undefined) => {
       return withAccount(async (account) => {
@@ -207,6 +239,16 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
     [isClientReady, apiClient, logger, dispatch, getAttestation]
   )
 
+  /**
+   * Deletes a BCSC client registration from the server.
+   *
+   * Sends DELETE request to registration endpoint using stored registration
+   * access token. Returns success status based on HTTP response code.
+   *
+   * @param clientId - The client ID to delete from BCSC server
+   * @returns Promise resolving to object with success boolean (true for 2xx status)
+   * @throws Error if BCSC client is not ready
+   */
   const deleteRegistration = useCallback(
     async (clientId: string) => {
       if (!isClientReady || !apiClient) {
