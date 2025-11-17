@@ -5,14 +5,14 @@ import { Platform } from 'react-native'
 // Define a structured return type for clarity
 export interface NotificationTokens {
   fcmDeviceToken: string
-  deviceToken?: string // Optional device token (APNS token on iOS, undefined on Android)
+  deviceToken: string | null // Device token (APNS token on iOS, null on Android)
 }
 
 /**
  * Retrieves the tokens associated with push notifications. fcmDeviceToken is required,
  * deviceToken (APNS) is optional and iOS only.
  * @param logger
- * @returns
+ * @returns NotificationTokens object containing fcmDeviceToken and deviceToken
  * @throws with the failure message if no fcmDeviceToken is not retrieved
  */
 export const getNotificationTokens = async (logger: BifoldLogger): Promise<NotificationTokens> => {
@@ -29,19 +29,19 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
     }
   }
 
-  const fetchDeviceToken = async (): Promise<string | undefined> => {
+  const fetchDeviceToken = async (): Promise<string | null> => {
     if (Platform.OS !== 'ios') {
-      return undefined // Android doesn't need APNS token
+      return null // Android doesn't need APNS token
     }
 
     try {
       const token = await messaging().getAPNSToken()
-      // treat all falsey values including empty strings as undefined
-      return token || undefined
+      // treat all falsey values including empty strings as null
+      return token || null
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       logger.warn(`APNS token fetch failed: ${message}`)
-      return undefined // APNS token is optional, don't fail the entire process
+      return null // APNS token is optional, don't fail the entire process
     }
   }
 

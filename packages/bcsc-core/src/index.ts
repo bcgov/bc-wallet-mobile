@@ -182,7 +182,7 @@ export const signPairingCode = async (
   issuer: string,
   clientID: string,
   fcmDeviceToken: string,
-  deviceToken?: string
+  deviceToken: string | null
 ): Promise<string | null> => {
   return BcscCore.signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken);
 };
@@ -196,8 +196,8 @@ export const signPairingCode = async (
  */
 export const getDynamicClientRegistrationBody = async (
   fcmDeviceToken: string,
-  deviceToken?: string,
-  attestation?: string
+  deviceToken: string | null,
+  attestation: string | null
 ): Promise<string | null> => {
   return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation);
 };
@@ -268,7 +268,7 @@ export const createQuickLoginJWT = async (
   clientRefId: string,
   key: JWK,
   fcmDeviceToken: string,
-  deviceToken?: string
+  deviceToken: string | null
 ): Promise<string> => {
   return BcscCore.createQuickLoginJWT(accessToken, clientId, issuer, clientRefId, key, fcmDeviceToken, deviceToken);
 };

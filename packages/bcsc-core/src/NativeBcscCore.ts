@@ -76,13 +76,13 @@ export interface Spec extends TurboModule {
     issuer: string,
     clientID: string,
     fcmDeviceToken: string,
-    deviceToken?: string
+    deviceToken: string | null
   ): Promise<string | null>;
   getDeviceId(): Promise<string>;
   getDynamicClientRegistrationBody(
     fcmDeviceToken: string,
-    deviceToken?: string,
-    attestation?: string
+    deviceToken: string | null,
+    attestation: string | null
   ): Promise<string | null>;
   getDeviceCodeRequestBody(
     deviceCode: string,
@@ -99,7 +99,7 @@ export interface Spec extends TurboModule {
     clientRefId: string,
     key: JWK,
     fcmDeviceToken: string,
-    deviceToken?: string
+    deviceToken: string | null
   ): Promise<string>;
   hashBase64(base64: string): Promise<string>;
   removeAccount(): Promise<void>;

@@ -81,7 +81,7 @@ describe('getNotificationTokens', () => {
 
       expect(result).toEqual({
         fcmDeviceToken: mockFCMToken,
-        deviceToken: undefined,
+        deviceToken: null,
       })
       expect(mockGetAPNSToken).not.toHaveBeenCalled()
       expect(mockLogger.info).toHaveBeenCalledWith('Successfully retrieved notification tokens for registration')
@@ -121,7 +121,7 @@ describe('getNotificationTokens', () => {
       await expect(getNotificationTokens(mockLogger)).rejects.toThrow('FCM token fetch failed: FCM service unavailable')
     })
 
-    it('succeeds with undefined deviceToken when APNS token is null on iOS', async () => {
+    it('succeeds with null deviceToken when APNS token is null on iOS', async () => {
       setPlatformOS('ios')
       mockGetToken.mockResolvedValue('mock_fcm_token')
       mockGetAPNSToken.mockResolvedValue(null)
@@ -130,11 +130,11 @@ describe('getNotificationTokens', () => {
 
       expect(result).toEqual({
         fcmDeviceToken: 'mock_fcm_token',
-        deviceToken: undefined,
+        deviceToken: null,
       })
     })
 
-    it('succeeds with undefined deviceToken when APNS token fetch throws exception on iOS', async () => {
+    it('succeeds with null deviceToken when APNS token fetch throws exception on iOS', async () => {
       setPlatformOS('ios')
       const mockError = new Error('APNS service unavailable')
       mockGetToken.mockResolvedValue('mock_fcm_token')
@@ -144,7 +144,7 @@ describe('getNotificationTokens', () => {
 
       expect(result).toEqual({
         fcmDeviceToken: 'mock_fcm_token',
-        deviceToken: undefined,
+        deviceToken: null,
       })
       expect(mockLogger.warn).toHaveBeenCalledWith('APNS token fetch failed: APNS service unavailable')
     })
@@ -194,7 +194,7 @@ describe('getNotificationTokens', () => {
 
       const result = await getNotificationTokens(mockLogger)
 
-      expect(result.deviceToken).toBe(undefined)
+      expect(result.deviceToken).toBe(null)
       expect(mockGetAPNSToken).not.toHaveBeenCalled()
     })
   })
@@ -210,7 +210,7 @@ describe('getNotificationTokens', () => {
       )
     })
 
-    it('succeeds with undefined deviceToken when APNS token is empty string on iOS', async () => {
+    it('succeeds with null deviceToken when APNS token is empty string on iOS', async () => {
       setPlatformOS('ios')
       mockGetToken.mockResolvedValue('mock_fcm_token')
       mockGetAPNSToken.mockResolvedValue('')
@@ -219,7 +219,7 @@ describe('getNotificationTokens', () => {
 
       expect(result).toEqual({
         fcmDeviceToken: 'mock_fcm_token',
-        deviceToken: undefined,
+        deviceToken: null,
       })
     })
   })

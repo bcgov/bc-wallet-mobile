@@ -52,23 +52,23 @@ export interface NonceResponseData {
   nonce: string
 }
 
-// The registration API is a bit of a special case because it gets called during initialization,
+// The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const getAttestation = useCallback(async (): Promise<string | undefined> => {
+  const getAttestation = useCallback(async (): Promise<string | null> => {
     if (!isClientReady || !apiClient) {
       throw new Error('BCSC client not ready for attestation')
     }
 
     logger.info(`Attempting attestation for registration on ${Platform.OS}`)
-    let attestation: string | undefined = undefined
+    let attestation: string | null = null
     try {
       if (Platform.OS === 'ios') {
         attestation = await getAppStoreReceipt()
-        logger.info(`Obtained iOS app store receipt for attestation ${attestation}`)
+        logger.info('Obtained iOS App Store Receipt attestation')
       } else if (Platform.OS === 'android') {
         const deviceId = await getDeviceId()
         const {
@@ -83,11 +83,11 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           }
         )
-        // Play Integrity attestation
         attestation = await googleAttestation(nonce)
-        logger.info(`Obtained Android Play Integrity attestation ${attestation}`)
+        logger.info('Obtained Android Play Integrity attestation')
       }
     } catch (error) {
+      // attestation in BCSC v3 (and v4 phase 1) is non-blocking, so we log and continue
       logger.warn(`Attestation failed: ${error instanceof Error ? error.message : String(error)}`)
     }
     return attestation
@@ -107,7 +107,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
     logger.info('No account found, proceeding with registration')
 
-    // In parallel to reduce wait time
     const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
       getAttestation(),
       getNotificationTokens(logger),
@@ -153,7 +152,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
           throw new Error('No client name found for registration update')
         }
 
-        // In parallel to reduce wait time
         const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
           getAttestation(),
           getNotificationTokens(logger),

@@ -5,6 +5,7 @@ import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStat
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { runSystemChecks, SystemCheckStrategy } from '@/services/system-checks/system-checks'
 import { BCDispatchAction } from '@/store'
+import { MockLogger } from '@bifold/core'
 
 describe('System Checks', () => {
   beforeEach(() => {
@@ -358,7 +359,7 @@ describe('System Checks', () => {
       it('should return true when internet is reachable', async () => {
         const mockNetInfo = { isConnected: true, isInternetReachable: true } as any
         const mockNavigation = {} as any
-        const mockLogger = {} as any
+        const mockLogger = new MockLogger()
 
         const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
 
@@ -368,9 +369,9 @@ describe('System Checks', () => {
       })
 
       it('should return false when internet is not reachable', async () => {
-        const mockNetInfo = { isConnected: false, isInternetReachable: false } as any
+        const mockNetInfo = { isConnected: false, isInternetReachable: null } as any
         const mockNavigation = {} as any
-        const mockLogger = {} as any
+        const mockLogger = new MockLogger()
 
         const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
 
@@ -382,7 +383,7 @@ describe('System Checks', () => {
       it('should return false when internet is partially reachable', async () => {
         const mockNetInfo = { isConnected: true, isInternetReachable: false } as any
         const mockNavigation = {} as any
-        const mockLogger = {} as any
+        const mockLogger = new MockLogger()
 
         const internetStatusCheck = new InternetStatusSystemCheck(mockNetInfo, mockNavigation, mockLogger)
 
