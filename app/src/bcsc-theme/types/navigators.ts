@@ -84,6 +84,7 @@ export enum BCSCScreens {
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
   OnboardingWebView = 'BCSCOnboardingWebview',
+  MainSplash = 'BCSCMainSplash',
   MainSettings = 'BCSCMainSettings',
   MainWebView = 'BCSCMainWebView',
   MainContactUs = 'BCSCMainContactUs',
@@ -178,6 +179,7 @@ export type BCSCTabStackParams = {
 
 export type BCSCMainStackParams = {
   [BCSCStacks.Tab]: NavigatorScreenParams<BCSCTabStackParams>
+  [BCSCScreens.MainSplash]: undefined
   [BCSCScreens.MainWebView]: { url: string; title: string; injectedJavascript?: string }
   [BCSCScreens.ManualPairingCode]: undefined
   [BCSCScreens.PairingConfirmation]: { serviceName: string; serviceId: string }

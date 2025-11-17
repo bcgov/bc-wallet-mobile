@@ -7,7 +7,7 @@ import { useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import SavedServices from './components/SavedServices'
@@ -18,7 +18,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const apiClient = useBCSCApiClient()
-  const { account, isLoadingAccount } = useAccount()
+  const account = useAccount()
 
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
@@ -43,28 +43,22 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
 
   return (
     <TabScreenWrapper>
-      {isLoadingAccount ? (
-        <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-      ) : (
-        <>
-          <NotificationBannerContainer onManageDevices={handleManageDevices} />
-          <HomeHeader name={account.fullname_formatted} />
-          <View style={styles.buttonsContainer}>
-            <SectionButton
-              title={t('BCSC.Home.WhereToUseTitle')}
-              description={t('BCSC.Home.WhereToUseDescription')}
-              style={{ marginBottom: Spacing.md }}
-              onPress={handleWhereToUsePress}
-            />
-            <SectionButton
-              title={t('BCSC.Home.LogInFromComputerTitle')}
-              description={t('BCSC.Home.LogInFromComputerDescription')}
-              onPress={handlePairingCodePress}
-            />
-          </View>
-          <SavedServices />
-        </>
-      )}
+      <NotificationBannerContainer onManageDevices={handleManageDevices} />
+      <HomeHeader name={account.fullname_formatted} />
+      <View style={styles.buttonsContainer}>
+        <SectionButton
+          title={t('BCSC.Home.WhereToUseTitle')}
+          description={t('BCSC.Home.WhereToUseDescription')}
+          style={{ marginBottom: Spacing.md }}
+          onPress={handleWhereToUsePress}
+        />
+        <SectionButton
+          title={t('BCSC.Home.LogInFromComputerTitle')}
+          description={t('BCSC.Home.LogInFromComputerDescription')}
+          onPress={handlePairingCodePress}
+        />
+      </View>
+      <SavedServices />
     </TabScreenWrapper>
   )
 }

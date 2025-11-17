@@ -6,7 +6,7 @@ import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
-import { createHeaderWithBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
@@ -23,6 +23,7 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
+import { MainSplashScreen } from '../features/splash/MainSplashScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -51,7 +52,7 @@ const MainStack: React.FC = () => {
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
-        initialRouteName={BCSCStacks.Tab}
+        initialRouteName={BCSCScreens.MainSplash}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
@@ -61,7 +62,20 @@ const MainStack: React.FC = () => {
           header: createHeaderWithBanner(handleManageDevices),
         }}
       >
-        <Stack.Screen name={BCSCStacks.Tab} component={BCSCTabStack} />
+        <Stack.Screen
+          name={BCSCScreens.MainSplash}
+          component={MainSplashScreen}
+          options={{
+            header: createHeaderWithoutBanner,
+          }}
+        />
+        <Stack.Screen
+          name={BCSCStacks.Tab}
+          component={BCSCTabStack}
+          options={{
+            animationEnabled: false,
+          }}
+        />
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}

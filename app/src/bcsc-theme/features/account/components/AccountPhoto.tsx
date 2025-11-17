@@ -3,7 +3,7 @@ import React from 'react'
 import { Image, StyleSheet, View } from 'react-native'
 
 // Placholder for now
-const AccountPhoto: React.FC<{ photoUri?: string }> = ({ photoUri }) => {
+const AccountPhoto: React.FC<{ photoUri: string | null }> = ({ photoUri }) => {
   const { Spacing, ColorPalette } = useTheme()
 
   const styles = StyleSheet.create({
