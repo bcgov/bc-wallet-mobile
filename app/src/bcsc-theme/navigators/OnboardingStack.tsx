@@ -54,7 +54,7 @@ const OnboardingStack = (): JSX.Element => {
         name={BCSCScreens.OnboardingOptInAnalytics}
         component={OnboardingOptInAnalyticsScreen}
         options={{
-          title: t('Unified.Onboarding.AnalyticsTitle'),
+          title: t('BCSC.Onboarding.AnalyticsTitle'),
           headerShown: true,
         }}
       />
