@@ -1,16 +1,18 @@
 import { TOKENS, useServices } from '@bifold/core'
+import moment from 'moment'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
 import useApi from '../api/hooks/useApi'
 import { UserInfoResponseData } from '../api/hooks/useUserApi'
 import useDataLoader from '../hooks/useDataLoader'
 
-export interface BCSCAccount extends UserInfoResponseData {
-  fullname_formatted: string
+export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
+  picture_uri: string | null
+  fullname_formatted: string // Brule, Steve
+  account_expiration_date: Date // equivalent to card_expiry but as Date
 }
 
 export interface BCSCAccountContextType {
-  account: UserInfoResponseData | null
-  picture: string | null
+  account: BCSCAccount | null
   isLoadingAccount: boolean
   // TODO (MD): should we include idToken?
 }
@@ -39,8 +41,14 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
 
   const accountContextValue = useMemo(
     () => ({
-      account: data?.user ?? null,
-      picture: data?.picture ?? null,
+      account: data
+        ? {
+            ...data.user,
+            picture_uri: data.picture ?? null,
+            fullname_formatted: `${data.user.family_name}, ${data?.user.given_name}`,
+            account_expiration_date: moment(data.user.card_expiry, 'MMMM D, YYYY').toDate(),
+          }
+        : null,
       isLoadingAccount: isLoading && !data,
     }),
     [data, isLoading]
@@ -61,13 +69,28 @@ export const useAccount = () => {
     throw new Error('useAccount must be used within a BCSCAccountProvider')
   }
 
-  if (!context.account || context.isLoadingAccount) {
-    throw new Error('account is still loading')
+  if (context.isLoadingAccount) {
+    throw new Error('userAccount: account is still loading')
   }
 
-  return {
-    ...context.account,
-    fullname_formatted: `${context.account.family_name}, ${context.account.given_name}`,
-    picture: context.picture,
+  if (!context.account) {
+    throw new Error('useAccount: account is null')
   }
+
+  return context.account
+}
+
+/**
+ * Hook to access the BCSC account context, including loading state.
+ *
+ * @returns {{ account: BCSCAccount | null, isLoadingAccount: boolean }} The account data and loading state.
+ */
+export const useAccountState = () => {
+  const context = useContext(BCSCAccountContext)
+
+  if (!context) {
+    throw new Error('useAccountState must be used within a BCSCAccountProvider')
+  }
+
+  return context
 }

@@ -131,7 +131,7 @@ const Account: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.photoAndNameContainer}>
           {/*TODO (MD): fallback for when this is undefined (silhouette) */}
-          <AccountPhoto photoUri={account.picture} />
+          <AccountPhoto photoUri={account.picture_uri} />
           <ThemedText variant={'headingTwo'} style={styles.name}>
             {account.family_name}, {account.given_name}
           </ThemedText>
