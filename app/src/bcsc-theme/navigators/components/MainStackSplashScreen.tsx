@@ -33,6 +33,7 @@ export const MainStackSplashScreen = ({ navigation }: MainStackSplashScreenProps
           {
             name: BCSCScreens.AccountExpired,
             params: {
+              // TODO (MD): Add account context
               accountExpiration: account.card_expiry,
               accountName: accountName,
             },
@@ -86,14 +87,3 @@ export const MainStackSplashScreen = ({ navigation }: MainStackSplashScreenProps
     </View>
   )
 }
-
-// TODO (MD): remove
-// const api = useApi()
-// const [logger] = useServices([TOKENS.UTIL_LOGGER])
-//
-// const { data: account, load: loadAccount } = useDataLoader(api.user.getUserInfo, {
-//   onError: (error) => {
-//     logger.error('MainStackSplashScreen: Failed to load user account info', { error })
-//   },
-// })
-//

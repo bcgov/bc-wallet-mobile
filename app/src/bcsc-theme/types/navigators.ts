@@ -176,7 +176,7 @@ export type BCSCVerifyStackParams = {
 }
 
 export type BCSCTabStackParams = {
-  [BCSCScreens.Home]: { accountName: string }
+  [BCSCScreens.Home]: undefined
   [BCSCScreens.Services]: undefined
   [BCSCScreens.Account]: undefined
 }

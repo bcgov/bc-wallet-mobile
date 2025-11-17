@@ -32,9 +32,8 @@ const useUserApi = (apiClient: BCSCApiClient) => {
   /**
    * Get user information in a JWE string and decode.
    *
-   * Question: Should we cache this response to avoid multiple network calls?
-   *
-   * Question: Should we cache this response to avoid multiple network calls?
+   * TODO (MD): Implement some caching mechanism to avoid multiple network calls for user info. ( ie: useQuery, store, context, etc)
+   * Allow components to pull from cache to prevent duplicate requests. (ie: services, home, account)
    *
    * @returns {*} {Promise<UserInfoResponseData>} A promise that resolves to the user information.
    */
