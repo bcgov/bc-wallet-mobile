@@ -64,7 +64,6 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
   const styles = StyleSheet.create({
     container: {
       backgroundColor: ColorPalette.brand.primary,
-      // display: 'flex',
       flexDirection: 'row',
       padding: Spacing.md,
     },

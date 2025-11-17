@@ -38,7 +38,7 @@ export const BCSCColorPalette: IColorPalette = {
     modalSecondaryBackground: '#013366',
     modalTertiaryBackground: '#013366',
     modalIcon: '#FCBA19',
-    link: '#FCBA19', // '#FEF0D8',
+    link: '#FCBA19',
     unorderedList: GrayscaleColors.white,
     unorderedListModal: GrayscaleColors.white,
     text: '#01264C',
