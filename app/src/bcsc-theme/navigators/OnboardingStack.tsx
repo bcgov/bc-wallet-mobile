@@ -80,6 +80,7 @@ const OnboardingStack = (): JSX.Element => {
         component={InternetDisconnected}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
         }}
       />
 
@@ -88,6 +89,7 @@ const OnboardingStack = (): JSX.Element => {
         component={MandatoryUpdate}
         options={{
           ...getDefaultModalOptions(t('BCSC.Title')),
+          gestureEnabled: false,
         }}
       />
     </Stack.Navigator>

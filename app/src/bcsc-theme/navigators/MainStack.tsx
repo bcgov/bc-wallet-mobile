@@ -186,6 +186,7 @@ const MainStack: React.FC = () => {
           component={InternetDisconnected}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
+            gestureEnabled: false,
           }}
         />
 
@@ -194,6 +195,7 @@ const MainStack: React.FC = () => {
           component={MandatoryUpdate}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
+            gestureEnabled: false,
           }}
         />
 
@@ -202,6 +204,7 @@ const MainStack: React.FC = () => {
           component={DeviceInvalidated}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
+            gestureEnabled: false,
           }}
         />
       </Stack.Navigator>
