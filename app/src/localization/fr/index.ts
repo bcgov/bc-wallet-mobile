@@ -191,8 +191,8 @@ const translation = {
         "UpdateButton": "Go to {{platformStore}} (FR)",
       } ,
       "DeviceInvalidated": {
-        "Header": "Device removed (FR)",
-        "ContentA": "This device was removed after you registered another one. You can only be signed in on three devices at a time. (FR)",
+        "Header": "Device invalidated (FR)",
+        "ContentA": "This device has been invalidated. You must re-authorize the device to continue. (FR)",
         "ContentB": "Tap OK to clear local data and restart setup on this device. (FR)",
         "OKButton": "OK (FR)",
       }  

@@ -36,8 +36,8 @@ export enum BCSCReason {
   ExpiredBySystem = 'Expired by System',
   CanceledByAgent = 'Canceled by Agent',
   CanceledByUser = 'Canceled by User',
-  CanceledByAdditionalCardNew = 'Canceled by Additional Card New for R2.6',
-  CanceledByCardTypeChangeNew = 'Canceled by Card Type Change New for R2.6',
+  CanceledByAdditionalCard = 'Canceled by Additional Card',
+  CanceledByCardTypeChange = 'Canceled by Card Type Change',
   CanceledDueToInactivity = 'Canceled due to Inactivity',
 }
 
