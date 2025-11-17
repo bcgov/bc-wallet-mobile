@@ -9,7 +9,7 @@ import { IColorPalette } from '@bifold/core'
  * @param {IColorPalette} colorPalette - The color palette object containing brand colors
  * @returns {*} {string} JavaScript string to be injected into the WebView
  */
-export const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorPalette): string => {
+const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorPalette): string => {
   return `
     document.addEventListener('DOMContentLoaded', function() {
       const style = document.createElement('style');
@@ -29,3 +29,20 @@ export const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorP
     });
   `
 }
+
+/**
+ * The "Securing this App" webview javascript injection to modify the HTML content.
+ *
+ * This is to remove the navigation sections from the page.
+ *
+ * @returns {*} {string} JavaScript string to be injected into the WebView
+ */
+const createSecuringAppWebViewJavascriptInjection = (): string => {
+  return `
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
+    });
+  `
+}
+
+export { createSecuringAppWebViewJavascriptInjection, createTermsOfUseWebViewJavascriptInjection }

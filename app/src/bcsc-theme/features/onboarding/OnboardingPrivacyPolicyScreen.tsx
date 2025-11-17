@@ -1,4 +1,5 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -24,7 +25,8 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
 
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
-      title: t('BCSC.Onboarding.LearnMore'),
+      title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
+      injectedJavascript: createSecuringAppWebViewJavascriptInjection(),
       url: SECURE_APP_LEARN_MORE_URL,
     })
   }
