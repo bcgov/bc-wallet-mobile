@@ -1,3 +1,4 @@
+import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import { TOKENS, useServices } from '@bifold/core'
 import moment from 'moment'
 import { createContext, PropsWithChildren, useContext, useEffect, useMemo } from 'react'
@@ -50,9 +51,9 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
     return {
       account: {
         ...data.user,
-        picture: data.picture ?? null, // TODO (MD): Fallback uri for missing picture
+        picture: data.picture ?? null,
         fullname_formatted: `${data.user.family_name}, ${data?.user.given_name}`,
-        account_expiration_date: moment(data.user.card_expiry, 'MMMM D, YYYY').toDate(),
+        account_expiration_date: moment(data.user.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate(),
       },
       isLoadingAccount: false,
     }

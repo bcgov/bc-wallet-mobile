@@ -1,6 +1,5 @@
 import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { ThemedText } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useContext, useEffect } from 'react'
@@ -44,7 +43,6 @@ export const MainSplashScreen = ({ navigation }: MainStackSplashScreenProps) => 
     <View style={{ flex: 1 }}>
       {/** TODO (MD): Align this with the actual BCSC splash screen see issue: #2777 for ref **/}
       <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-      {__DEV__ ? <ThemedText style={{ marginBottom: 50 }}>DEV: MainSplashScreen</ThemedText> : null}
     </View>
   )
 }
