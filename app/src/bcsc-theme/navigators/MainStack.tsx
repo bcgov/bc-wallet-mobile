@@ -29,6 +29,7 @@ import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
+import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
@@ -42,6 +43,7 @@ const MainStack: React.FC = () => {
   const Stack = createStackNavigator<BCSCMainStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
+  useSystemChecks(SystemCheckScope.MAIN_STACK)
 
   const handleManageDevices = useCallback(() => {
     navigation.navigate(BCSCScreens.MainWebView, {
