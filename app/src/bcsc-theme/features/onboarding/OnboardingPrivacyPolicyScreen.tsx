@@ -1,5 +1,7 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useTranslation } from 'react-i18next'
 import { PrivacyPolicyContent } from './components/PrivacyPolicyContent'
 
 interface OnboardingPrivacyPolicyScreenProps {
@@ -14,9 +16,18 @@ interface OnboardingPrivacyPolicyScreenProps {
 export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScreenProps> = ({
   navigation,
 }: OnboardingPrivacyPolicyScreenProps): JSX.Element => {
+  const { t } = useTranslation()
+
   const onPress = () => {
     navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
   }
 
-  return <PrivacyPolicyContent onPress={onPress} />
+  const handleLearnMore = () => {
+    navigation.navigate(BCSCScreens.OnboardingWebView, {
+      title: t('Unified.Onboarding.LearnMore'),
+      url: SECURE_APP_LEARN_MORE_URL,
+    })
+  }
+
+  return <PrivacyPolicyContent onPress={onPress} onLearnMore={handleLearnMore} />
 }
