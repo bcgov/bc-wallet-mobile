@@ -79,18 +79,3 @@ export const useAccount = () => {
 
   return context.account
 }
-
-/**
- * Hook to access the BCSC account context, including loading state.
- *
- * @returns {{ account: BCSCAccount | null, isLoadingAccount: boolean }} The account data and loading state.
- */
-export const useAccountState = () => {
-  const context = useContext(BCSCAccountContext)
-
-  if (!context) {
-    throw new Error('useAccountState must be used within a BCSCAccountProvider')
-  }
-
-  return context
-}
