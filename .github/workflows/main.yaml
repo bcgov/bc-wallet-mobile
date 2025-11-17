@@ -195,6 +195,17 @@ jobs:
           yarn install --immutable && \
           git status
 
+      - name: Check disk usage after dependencies
+        run: |
+          echo "=== Disk Usage Summary ==="
+          df -h
+          echo ""
+          echo "=== Top 20 Largest Directories ==="
+          du -h -d 3 . 2>/dev/null | sort -hr | head -20
+          echo ""
+          echo "=== Workspace Size ==="
+          du -sh .
+
       - name: Create .xcode.env.local file
         working-directory: app/ios
         run: |
@@ -289,6 +300,19 @@ jobs:
           -sdk iphoneos \
           -verbose \
           archive
+
+      - name: Check disk usage after iOS build
+        if: always()
+        run: |
+          echo "=== Disk Usage Summary ==="
+          df -h
+          echo ""
+          echo "=== Top 20 Largest Directories ==="
+          du -h -d 3 . 2>/dev/null | sort -hr | head -20
+          echo ""
+          echo "=== Build Artifacts Size ==="
+          du -sh app/ios/xbuild 2>/dev/null || echo "xbuild not found"
+          du -sh AriesBifold.xcarchive 2>/dev/null || echo "xcarchive not found"
 
       - name: Export production archive
         if: github.ref_name == 'main'
@@ -434,6 +458,20 @@ jobs:
         run: |
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
           ./gradlew bundleRelease assembleRelease --no-parallel
+
+      - name: Check disk usage after Android build
+        if: always()
+        run: |
+          echo "=== Disk Usage Summary ==="
+          df -h
+          echo ""
+          echo "=== Top 20 Largest Directories ==="
+          du -h -d 3 . 2>/dev/null | sort -hr | head -20
+          echo ""
+          echo "=== Android Build Artifacts Size ==="
+          du -sh app/android/app/build 2>/dev/null || echo "build not found"
+          du -sh app/android/build 2>/dev/null || echo "android/build not found"
+          du -sh ~/.gradle 2>/dev/null || echo ".gradle not found"
 
       - name: List Artifacts
         run: |
