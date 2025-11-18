@@ -157,7 +157,7 @@ describe('useQuickLoginURL', () => {
 
     const getFirstJwkMock = jest.fn().mockResolvedValue('jwk')
     bcscCoreMock.getAccount = jest.fn().mockResolvedValue({ clientID: 'client-id', issuer: 'issuer' } as any)
-    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue({ fcmDeviceToken: 'fcm', apnsToken: 'apns' })
+    tokensMock.getNotificationTokens = jest.fn().mockResolvedValue({ fcmDeviceToken: 'fcm', deviceToken: 'apns' })
     bcscCoreMock.createQuickLoginJWT = jest.fn().mockResolvedValue('test-jwt')
 
     useApiMock.default.mockReturnValue({ jwks: { getFirstJwk: getFirstJwkMock } } as any)
