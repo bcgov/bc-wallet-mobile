@@ -34,7 +34,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
 
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
-      title: t('Unified.Onboarding.LearnMore'),
+      title: t('BCSC.Onboarding.LearnMore'),
       url: SECURE_APP_LEARN_MORE_URL,
     })
   }
@@ -74,7 +74,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
           }}
         />
 
-        <CardButton title={t('Unified.Onboarding.LearnMore')} endIcon="open-in-new" onPress={handleLearnMore} />
+        <CardButton title={t('BCSC.Onboarding.LearnMore')} endIcon="open-in-new" onPress={handleLearnMore} />
       </ScrollView>
     </SafeAreaView>
   )
