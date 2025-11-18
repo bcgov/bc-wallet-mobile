@@ -1,5 +1,7 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
+import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -30,6 +32,14 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
       gap: Spacing.lg,
     },
   })
+
+  const handleLearnMore = () => {
+    navigation.navigate(BCSCScreens.OnboardingWebView, {
+      title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
+      injectedJavascript: createSecuringAppWebViewJavascriptInjection(),
+      url: SECURE_APP_LEARN_MORE_URL,
+    })
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
@@ -66,7 +76,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
           }}
         />
 
-        <CardButton title={t('BCSC.Onboarding.LearnMore')} endIcon="open-in-new" onPress={() => {}} />
+        <CardButton title={t('BCSC.Onboarding.LearnMore')} endIcon="open-in-new" onPress={handleLearnMore} />
       </ScrollView>
     </SafeAreaView>
   )
