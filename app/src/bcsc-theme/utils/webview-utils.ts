@@ -29,3 +29,18 @@ export const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorP
     });
   `
 }
+
+/**
+ * The "Securing this App" webview javascript injection to modify the HTML content.
+ *
+ * This is to remove the navigation sections from the page.
+ *
+ * @returns {*} {string} JavaScript string to be injected into the WebView
+ */
+export const createSecuringAppWebViewJavascriptInjection = (): string => {
+  return `
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
+    });
+  `
+}
