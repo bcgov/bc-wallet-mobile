@@ -18,6 +18,7 @@ const translation = {
     "Message2032": "There was a problem while opening the app-to-app URL. (FR)",
     "Title2033": "Failed to load services (FR)",
     "Message2033": "There was a problem while loading the services. Please try again later. (FR)",
+    "OK": "OK (FR)",
     "NoMessage": "Aucun message",
   },
   "Credentials": {
@@ -188,7 +189,13 @@ const translation = {
         "ContentA": "You must update this app to continue. (FR)",
         "ContentB": "Please update to the latest version from the {{platformStore}}. (FR)",
         "UpdateButton": "Go to {{platformStore}} (FR)",
-      }    
+      } ,
+      "DeviceInvalidated": {
+        "Header": "Device invalidated (FR)",
+        "ContentA": "This device has been invalidated. You must re-authorize the device to continue. (FR)",
+        "ContentB": "Tap OK to clear local data and restart setup on this device. (FR)",
+        "OKButton": "OK (FR)",
+      }  
     },
     "Home": {
       "WhereToUseTitle": "Where to use (FR)",
@@ -439,6 +446,7 @@ const translation = {
       "EnterTheSixDigitCode": "Enter the six digit code sent to your email (FR)",
       "ResendCode": "Resend code (FR)",
       "GoToEmail": "Go to my email (FR)",
+      "OKButton": "OK (FR)",
     },
     "VerifyIdentity": {
       "DeviceCodeError": "Device code or user code is missing in the store. (FR)",

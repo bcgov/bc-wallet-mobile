@@ -86,7 +86,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
   if (!serviceClients && isReady) {
     Alert.alert(t('Error.Title2033'), t('Error.Message2033'), [
       {
-        text: t('Global.OK'),
+        text: t('Error.OK'),
         onPress: () => {
           navigation.goBack()
         },
