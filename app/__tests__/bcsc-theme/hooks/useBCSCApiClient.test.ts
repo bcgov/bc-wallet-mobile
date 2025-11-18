@@ -1,12 +1,13 @@
 import { useBCSCApiClient, useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { renderHook } from '@testing-library/react-native'
 import React from 'react'
+import { BasicAppContext } from '../../../__mocks__/helpers/app'
 
 describe('BCSC API Client Hooks', () => {
   describe('useBCSCApiClient', () => {
     it('should throw if used outside of BCSCApiClientProvider', () => {
       try {
-        renderHook(() => useBCSCApiClient())
+        renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
       } catch (error: any) {
         expect(error.message).toContain('within a BCSCApiClientProvider')
       }
@@ -18,7 +19,7 @@ describe('BCSC API Client Hooks', () => {
       jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
 
       try {
-        renderHook(() => useBCSCApiClient())
+        renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
       } catch (error: any) {
         expect(error.message).toBe('BCSC client error: Test error')
       }
@@ -30,7 +31,7 @@ describe('BCSC API Client Hooks', () => {
       jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
 
       try {
-        renderHook(() => useBCSCApiClient())
+        renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
       } catch (error: any) {
         expect(error.message).toContain('client not ready')
       }
@@ -42,7 +43,7 @@ describe('BCSC API Client Hooks', () => {
       jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
 
       try {
-        renderHook(() => useBCSCApiClient())
+        renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
       } catch (error: any) {
         expect(error.message).toContain('client not ready')
       }
@@ -54,7 +55,7 @@ describe('BCSC API Client Hooks', () => {
 
       jest.spyOn(React, 'useContext').mockReturnValue(mockContext)
 
-      const { result } = renderHook(() => useBCSCApiClient())
+      const { result } = renderHook(() => useBCSCApiClient(), { wrapper: BasicAppContext })
       expect(result.current).toBe(mockClient)
     })
   })
@@ -62,7 +63,7 @@ describe('BCSC API Client Hooks', () => {
   describe('useBCSCApiClientState', () => {
     it('should throw if used outside of BCSCApiClientProvider', () => {
       try {
-        renderHook(() => useBCSCApiClientState())
+        renderHook(() => useBCSCApiClientState(), { wrapper: BasicAppContext })
       } catch (error: any) {
         expect(error.message).toContain('within a BCSCApiClientProvider')
       }

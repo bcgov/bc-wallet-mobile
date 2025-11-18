@@ -47,7 +47,11 @@ export const useQuickLoginURL = () => {
           return { success: false, error: 'No access token available' }
         }
 
-        const [tokens, account, jwk] = await Promise.all([getNotificationTokens(), getAccount(), jwks.getFirstJwk()])
+        const [tokens, account, jwk] = await Promise.all([
+          getNotificationTokens(logger),
+          getAccount(),
+          jwks.getFirstJwk(),
+        ])
 
         if (!tokens) {
           return { success: false, error: 'No notification tokens received' }
@@ -68,7 +72,7 @@ export const useQuickLoginURL = () => {
           serviceClient.client_ref_id,
           jwk,
           tokens.fcmDeviceToken,
-          tokens.apnsToken
+          tokens.deviceToken
         )
 
         const encodedTokenHint = encodeURIComponent(loginHint)

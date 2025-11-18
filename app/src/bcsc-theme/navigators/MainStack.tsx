@@ -14,6 +14,7 @@ import TransferQRInformationScreen from '../features/account-transfer/TransferQR
 import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import ManualPairingCode from '../features/pairing/ManualPairing'
@@ -185,7 +186,7 @@ const MainStack: React.FC = () => {
           component={InternetDisconnected}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
-            gestureEnabled: false, // Disable swipe to dismiss
+            gestureEnabled: false,
           }}
         />
 
@@ -194,7 +195,16 @@ const MainStack: React.FC = () => {
           component={MandatoryUpdate}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
-            gestureEnabled: false, // Disable swipe to dismiss
+            gestureEnabled: false,
+          }}
+        />
+
+        <Stack.Screen
+          name={BCSCModals.DeviceInvalidated}
+          component={DeviceInvalidated}
+          options={{
+            ...getDefaultModalOptions(t('BCSC.Title')),
+            gestureEnabled: false,
           }}
         />
       </Stack.Navigator>
