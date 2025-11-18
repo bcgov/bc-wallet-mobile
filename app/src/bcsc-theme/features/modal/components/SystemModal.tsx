@@ -1,7 +1,6 @@
 import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
-import { useCallback, useRef } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useCallback } from 'react'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
@@ -16,17 +15,17 @@ export interface SystemModalProps {
    */
   iconSize?: number
   /**
-   * Translation key for the header text
+   * Header text
    */
-  headerKey: string
+  headerText: string
   /**
-   * Array of translation keys for content paragraphs
+   * Content text
    */
-  contentKeys: string[]
+  contentText: string[]
   /**
-   * Translation key for the button title
+   * Button text
    */
-  buttonTitleKey: string
+  buttonText: string
   /**
    * Callback function when the button is pressed
    */
@@ -46,16 +45,13 @@ export interface SystemModalProps {
 export const SystemModal = ({
   iconName,
   iconSize = 200,
-  headerKey,
-  contentKeys,
-  buttonTitleKey,
+  headerText,
+  contentText,
+  buttonText,
   onButtonPress,
-  translationParams,
 }: SystemModalProps): JSX.Element => {
-  const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const navigation = useNavigation()
-  const allowNavigationRef = useRef(false)
 
   const styles = StyleSheet.create({
     container: {
@@ -88,11 +84,10 @@ export const SystemModal = ({
   useFocusEffect(
     useCallback(() => {
       const beforeRemove = navigation.addListener('beforeRemove', (event) => {
-        if (allowNavigationRef.current) {
-          allowNavigationRef.current = false
-          return
+        if (!event.data.action.source) {
+          // gesture navigation has no action source so we prevent it
+          event.preventDefault()
         }
-        event.preventDefault()
       })
       return () => {
         beforeRemove()
@@ -100,34 +95,22 @@ export const SystemModal = ({
     }, [navigation])
   )
 
-  /**
-   * Wraps the onButtonPress handler to allow programmatic navigation.
-   */
-  const handleButtonPress = useCallback(async () => {
-    allowNavigationRef.current = true
-    await onButtonPress()
-  }, [onButtonPress])
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scollContainer}>
         <Icon name={iconName} size={iconSize} color={ColorPalette.brand.icon} style={styles.icon} />
         <View style={styles.textContainer}>
-          <ThemedText variant="headingThree">{t(headerKey, translationParams)}</ThemedText>
-          {contentKeys.map((key) => (
-            <ThemedText key={key} style={styles.textContent}>
-              {t(key, translationParams)}
+          <ThemedText variant="headingThree">{headerText}</ThemedText>
+          {contentText.map((text) => (
+            <ThemedText key={text} style={styles.textContent}>
+              {text}
             </ThemedText>
           ))}
         </View>
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        <Button
-          title={t(buttonTitleKey, translationParams)}
-          buttonType={ButtonType.Primary}
-          onPress={handleButtonPress}
-        />
+        <Button title={buttonText} buttonType={ButtonType.Primary} onPress={onButtonPress} />
       </View>
     </SafeAreaView>
   )

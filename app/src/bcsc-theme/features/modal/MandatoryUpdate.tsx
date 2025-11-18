@@ -1,5 +1,6 @@
 import { getBCSCAppStoreUrl } from '@/utils/links'
 import { TOKENS, useServices } from '@bifold/core'
+import { useTranslation } from 'react-i18next'
 import { Linking, Platform } from 'react-native'
 import { SystemModal } from './components/SystemModal'
 
@@ -9,6 +10,7 @@ import { SystemModal } from './components/SystemModal'
  * @returns {*} {JSX.Element} The MandatoryUpdate component.
  */
 export const MandatoryUpdate = (): JSX.Element => {
+  const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const platformStore = Platform.OS === 'ios' ? 'App Store' : 'Google Play'
@@ -24,11 +26,13 @@ export const MandatoryUpdate = (): JSX.Element => {
   return (
     <SystemModal
       iconName="system-update"
-      headerKey="BCSC.Modals.MandatoryUpdate.Header"
-      contentKeys={['BCSC.Modals.MandatoryUpdate.ContentA', 'BCSC.Modals.MandatoryUpdate.ContentB']}
-      buttonTitleKey="BCSC.Modals.MandatoryUpdate.UpdateButton"
+      headerText={t('BCSC.Modals.MandatoryUpdate.Header')}
+      contentText={[
+        t('BCSC.Modals.MandatoryUpdate.ContentA'),
+        t('BCSC.Modals.MandatoryUpdate.ContentB', { platformStore }),
+      ]}
+      buttonText={t('BCSC.Modals.MandatoryUpdate.UpdateButton', { platformStore })}
       onButtonPress={handleGoToStore}
-      translationParams={{ platformStore }}
     />
   )
 }

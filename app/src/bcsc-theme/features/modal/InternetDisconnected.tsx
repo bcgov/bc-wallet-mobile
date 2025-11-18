@@ -3,6 +3,7 @@ import { TOKENS, useServices } from '@bifold/core'
 import { useNetInfo } from '@react-native-community/netinfo'
 import { useNavigation } from '@react-navigation/native'
 import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { SystemModal } from './components/SystemModal'
 
 /**
@@ -11,6 +12,7 @@ import { SystemModal } from './components/SystemModal'
  * @returns {*} {JSX.Element} The InternetDisconnected component.
  */
 export const InternetDisconnected = (): JSX.Element => {
+  const { t } = useTranslation()
   const navigation = useNavigation()
   const netInfo = useNetInfo()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -34,9 +36,9 @@ export const InternetDisconnected = (): JSX.Element => {
   return (
     <SystemModal
       iconName="wifi-off"
-      headerKey="BCSC.Modals.InternetDisconnected.Header"
-      contentKeys={['BCSC.Modals.InternetDisconnected.ContentA', 'BCSC.Modals.InternetDisconnected.ContentB']}
-      buttonTitleKey="BCSC.Modals.InternetDisconnected.RetryButton"
+      headerText={t('BCSC.Modals.InternetDisconnected.Header')}
+      contentText={[t('BCSC.Modals.InternetDisconnected.ContentA'), t('BCSC.Modals.InternetDisconnected.ContentB')]}
+      buttonText={t('BCSC.Modals.InternetDisconnected.RetryButton')}
       onButtonPress={handleRetry}
     />
   )
