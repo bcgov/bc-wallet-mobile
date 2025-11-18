@@ -45,10 +45,10 @@ const MainStack: React.FC = () => {
 
   const handleManageDevices = useCallback(() => {
     navigation.navigate(BCSCScreens.MainWebView, {
-      url: `${client.baseURL}/account/embedded/devices`,
+      url: client.endpoints.accountDevices,
       title: t('BCSC.Screens.ManageDevices'),
     })
-  }, [client.baseURL, navigation, t])
+  }, [client.endpoints.accountDevices, navigation, t])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>

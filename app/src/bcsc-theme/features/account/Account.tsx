@@ -74,9 +74,8 @@ const Account: React.FC = () => {
 
   const handleMyDevicesPress = useCallback(async () => {
     try {
-      const fullUrl = `${client.baseURL}/account/embedded/devices`
       navigation.navigate(BCSCScreens.MainWebView, {
-        url: fullUrl,
+        url: client.endpoints.accountDevices,
         title: t('BCSC.Account.AccountInfo.ManageDevices'),
       })
       openedWebview.current = true

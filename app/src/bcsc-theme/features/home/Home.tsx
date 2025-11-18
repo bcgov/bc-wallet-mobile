@@ -22,10 +22,10 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
 
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
-      url: `${apiClient.baseURL}/account/embedded/devices`,
+      url: apiClient.endpoints.accountDevices,
       title: t('BCSC.Screens.ManageDevices'),
     })
-  }, [apiClient.baseURL, navigation, t])
+  }, [apiClient.endpoints.accountDevices, navigation, t])
 
   const styles = StyleSheet.create({
     buttonsContainer: {
