@@ -11,12 +11,6 @@ import HomeHeader from '../home/components/HomeHeader'
 
 interface AccountExpiredScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.AccountExpired>
-  route: {
-    params: {
-      accountName: string // "Brule, Steve"
-      accountExpiration: string // UserInfoResponseData.card_expiry
-    }
-  }
 }
 
 /**
@@ -24,12 +18,16 @@ interface AccountExpiredScreenProps {
  *
  * @returns {*} {JSX.Element} The AccountExpiredScreen component.
  */
-export const AccountExpiredScreen = ({ navigation, route }: AccountExpiredScreenProps): JSX.Element => {
+export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps): JSX.Element => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const factoryReset = useFactoryReset()
 
-  const { accountName, accountExpiration } = route.params
+  // TODO (MD): Replace with useAccount hook when merged in
+  const account = {
+    fullname_formatted: 'TODO: MD',
+    card_expiry: 'January 1, 2025',
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -49,11 +47,13 @@ export const AccountExpiredScreen = ({ navigation, route }: AccountExpiredScreen
       <AppBannerSection
         id={BCSCBanner.ACCOUNT_EXPIRED}
         title={t('BCSC.AccountExpired.StaticBannerTitle')}
-        description={t('BCSC.AccountExpired.StaticBannerDescription', { accountExpiration })}
+        description={t('BCSC.AccountExpired.StaticBannerDescription', {
+          accountExpiration: account.card_expiry,
+        })}
         type="warning"
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <HomeHeader name={accountName} fontSize={20} iconSize={72} />
+        <HomeHeader name={account.fullname_formatted} fontSize={20} iconSize={72} />
 
         <View style={styles.actionsContainer}>
           <CardButton

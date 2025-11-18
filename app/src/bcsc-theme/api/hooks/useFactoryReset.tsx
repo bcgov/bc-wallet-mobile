@@ -63,7 +63,7 @@ export const useFactoryReset = () => {
 
         // Reset BCSC state to initial state
         logger.info('FactoryReset: Clearing BCSC state...')
-        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: [state] })
+        dispatch({ type: BCDispatchAction.CLEAR_BCSC, payload: state ? [state] : undefined })
 
         logger.info('FactoryReset: Registering new account...')
         await registration.register()
