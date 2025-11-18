@@ -458,6 +458,15 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+      - name: Clean up build artifacts
+        if: always()
+        run: |
+          echo "Cleaning up to free space for next matrix build..."
+          rm -rf app/android/app/build
+          rm -rf app/android/build
+          rm -rf ~/.gradle/caches
+          rm -rf app/.metro-cache
+
       - name: Ship to Google Play
         if: github.ref_name == 'main'
         # working-directory: app/android
