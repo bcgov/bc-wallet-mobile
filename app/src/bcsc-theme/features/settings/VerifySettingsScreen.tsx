@@ -23,7 +23,7 @@ export const VerifySettingsScreen: React.FC<VerifySettingsScreenProps> = ({ navi
   const onHelp = () => {
     navigation.navigate(BCSCScreens.VerifyWebView, {
       url: HELP_URL,
-      title: t('Unified.Screens.HelpCentre'),
+      title: t('BCSC.Screens.HelpCentre'),
     })
   }
 

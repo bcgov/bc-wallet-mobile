@@ -9,6 +9,39 @@ export enum BCSCAccountType {
 }
 
 /**
+ * BCSC event types
+ * Added from https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#ID-Token
+ * @export
+ * @enum {number}
+ */
+export enum BCSCEvent {
+  Authorization = 'Authorization',
+  Renewal = 'Renewal',
+  Replace = 'Replace',
+  Cancel = 'Cancel',
+  Expire = 'Expire',
+}
+
+/**
+ * BCSC reason types
+ *
+ * @export
+ * @enum {number}
+ */
+export enum BCSCReason {
+  ApprovedByAgent = 'Approved by Agent',
+  Renew = 'Renewed by Card Renew',
+  Replace = 'Replaced by Card Replace',
+  Cancel = 'Canceled by Card Cancel',
+  ExpiredBySystem = 'Expired by System',
+  CanceledByAgent = 'Canceled by Agent',
+  CanceledByUser = 'Canceled by User',
+  CanceledByAdditionalCard = 'Canceled by Additional Card',
+  CanceledByCardTypeChange = 'Canceled by Card Type Change',
+  CanceledDueToInactivity = 'Canceled due to Inactivity',
+}
+
+/**
  * IAS BCSC ID token
  *
  * @see https://citz-cdt.atlassian.net/wiki/spaces/BMS/pages/301574688/5.1+System+Interfaces#ID-Token
@@ -25,8 +58,8 @@ export interface IdToken {
   middle_name?: string
   // note: this value is undefined for non-bcsc cards, transform to 'Other' in that case
   bcsc_card_type: BCSCCardType.Combined | BCSCCardType.Photo | BCSCCardType.NonPhoto | BCSCCardType.Other
-  bcsc_event: string
-  bcsc_reason: string
+  bcsc_event: BCSCEvent
+  bcsc_reason: BCSCReason
   bcsc_status_date: number // epoch
   acr: number // Defined since R2.6.x
   bcsc_devices_count: number // Defined since R2.10.2
