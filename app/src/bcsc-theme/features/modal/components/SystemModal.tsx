@@ -30,10 +30,6 @@ export interface SystemModalProps {
    * Callback function when the button is pressed
    */
   onButtonPress: () => void | Promise<void>
-  /**
-   * Optional parameters for translation interpolation
-   */
-  translationParams?: Record<string, string | number>
 }
 
 /**
