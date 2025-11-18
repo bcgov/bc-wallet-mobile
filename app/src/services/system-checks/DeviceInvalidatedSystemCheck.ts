@@ -1,4 +1,5 @@
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
+import { isNetworkError } from '@/bcsc-theme/utils/error-utils'
 import { BCSCEvent, BCSCReason, IdToken } from '@/bcsc-theme/utils/id-token'
 import { SystemCheckNavigation, SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
@@ -48,7 +49,7 @@ export class DeviceInvalidatedSystemCheck implements SystemCheckStrategy {
       return true
     } catch (error) {
       this.utils.logger.error('DeviceInvalidatedSystemCheck: Id token request failed', error as Error)
-      return false
+      return isNetworkError(error)
     }
   }
 
