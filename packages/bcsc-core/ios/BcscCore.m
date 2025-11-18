@@ -20,6 +20,9 @@ RCT_EXTERN_METHOD(setAccount:(NSDictionary *)account
 RCT_EXTERN_METHOD(getAccount:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(getDeviceId:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(removeAccount:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
@@ -38,7 +41,8 @@ RCT_EXTERN_METHOD(signPairingCode:(NSString *)code
                   reject:(RCTPromiseRejectBlock)reject)
 
 RCT_EXTERN_METHOD(getDynamicClientRegistrationBody:(NSString *)fcmDeviceToken
-                  deviceToken:(NSString *)deviceToken
+                  deviceToken:(NSString * _Nullable)deviceToken
+                  attestation:(NSString * _Nullable)attestation
                   resolve:(RCTPromiseResolveBlock)resolve
                   reject:(RCTPromiseRejectBlock)reject)
 
