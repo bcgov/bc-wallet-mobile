@@ -8,7 +8,6 @@ import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCh
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { navigationRef } from 'App'
-import moment from 'moment'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
@@ -33,7 +32,7 @@ export enum SystemCheckScope {
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
- * @returns {*} {MainStackSystemCheckResult | void} - Result of main stack checks or void for startup checks
+ * @returns {*} {void}
  */
 export const useSystemChecks = (scope: SystemCheckScope) => {
   const { t } = useTranslation()
@@ -89,12 +88,11 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         // Checks to run once on main stack (verified users)
         if (scope === SystemCheckScope.MAIN_STACK) {
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
-          const account = await userApi.getUserInfo()
-          const accountExpiration = moment(account.card_expiry, 'MMMM D, YYYY').toDate() // January 1, 1970 -> Date: 1970-01-01
+          const accountExpiry = await userApi.getAccountExpirationDate()
 
           await runSystemChecks([
             new DeviceCountSystemCheck(getIdToken, utils),
-            new AccountExpirySystemCheck(accountExpiration, utils),
+            new AccountExpirySystemCheck(accountExpiry, utils),
           ])
         }
       } catch (error) {
