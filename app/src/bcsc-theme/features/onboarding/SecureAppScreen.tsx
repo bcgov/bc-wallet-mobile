@@ -1,5 +1,6 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
 import { BCDispatchAction } from '@/store'
 import { ThemedText, useStore, useTheme } from '@bifold/core'
@@ -34,7 +35,8 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
 
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.OnboardingWebView, {
-      title: t('BCSC.Onboarding.LearnMore'),
+      title: t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp'),
+      injectedJavascript: createSecuringAppWebViewJavascriptInjection(),
       url: SECURE_APP_LEARN_MORE_URL,
     })
   }
