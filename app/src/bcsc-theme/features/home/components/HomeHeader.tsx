@@ -26,7 +26,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ name, iconSize, fontSize }) => 
     <View style={styles.container}>
       <View style={styles.idContainer}>
         <Icon name={'card-account-details'} size={iconSize ?? 40} color={TextTheme.normal.color} />
-        <ThemedText variant={'headingThree'} style={{ fontSize: fontSize }}>
+        <ThemedText variant={'headingThree'} style={[fontSize ? { fontSize: fontSize } : {}]}>
           {name}
         </ThemedText>
       </View>
