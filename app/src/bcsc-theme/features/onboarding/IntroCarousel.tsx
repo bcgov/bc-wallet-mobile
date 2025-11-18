@@ -131,7 +131,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
       </View>
       <ThemedText variant={'headingThree'}>{t(pageData.headerContent)}</ThemedText>
       <ThemedText>{t(pageData.bodyContentA)}</ThemedText>
-      {pageData.bodyContentB !== undefined && <ThemedText>{t(pageData.bodyContentB)}</ThemedText>}
+      {pageData.bodyContentB ? <ThemedText>{t(pageData.bodyContentB)}</ThemedText> : null}
     </View>
   )
 
