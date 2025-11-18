@@ -9,7 +9,7 @@ import { IColorPalette } from '@bifold/core'
  * @param {IColorPalette} colorPalette - The color palette object containing brand colors
  * @returns {*} {string} JavaScript string to be injected into the WebView
  */
-const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorPalette): string => {
+export const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorPalette): string => {
   return `
     document.addEventListener('DOMContentLoaded', function() {
       const style = document.createElement('style');
@@ -37,12 +37,10 @@ const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorPalette)
  *
  * @returns {*} {string} JavaScript string to be injected into the WebView
  */
-const createSecuringAppWebViewJavascriptInjection = (): string => {
+export const createSecuringAppWebViewJavascriptInjection = (): string => {
   return `
     document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
     });
   `
 }
-
-export { createSecuringAppWebViewJavascriptInjection, createTermsOfUseWebViewJavascriptInjection }
