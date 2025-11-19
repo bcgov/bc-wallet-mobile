@@ -266,7 +266,7 @@ const translation = {
       "InformationBCServicesCardContent": "It must be valid. Check the expiry date printed on the front of your card. (FR)",
       "InformationGetNewCardA": "Get a new card (FR)",
       "InformationGetNewCardB": "if it is expired. (FR)",
-      "InformationPhotoIdSubHeader": "2. Photo ID (FR)", 
+      "InformationPhotoIdSubHeader": "2. Photo ID (FR)",
       "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs. (FR)",
       "InformationTypesOfAcceptedId": "Types of accepted ID (FR)",
       "RenewalTimeHeader": "Time to renew (FR)",
