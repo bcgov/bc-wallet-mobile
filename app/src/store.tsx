@@ -31,6 +31,7 @@ export type RemoteDebuggingState = {
 
 export interface Developer {
   environment: IASEnvironment
+  iasApiBaseUrl: string
   remoteDebugging: RemoteDebuggingState
   enableProxy: boolean
   enableAppToAppPersonFlow: boolean
@@ -114,8 +115,9 @@ export interface BCState extends BifoldState {
   mode: Mode
 }
 
-enum DeveloperDispatchAction {
+export enum DeveloperDispatchAction {
   UPDATE_ENVIRONMENT = 'developer/updateEnvironment',
+  UPDATE_IAS_API_BASE_URL = 'developer/updateIasApiBaseUrl',
   TOGGLE_PROXY = 'developer/toggleProxy',
   TOGGLE_APP_TO_APP_PERSON_FLOW = 'developer/toggleAppToAppPersonFlow',
 }
@@ -215,6 +217,16 @@ export const iasEnvironments: Array<IASEnvironment> = [
   },
 ]
 
+export const iasBaseApiUrls: Array<string> = [
+  'https://id.gov.bc.ca',
+  'https://iddev.gov.bc.ca',
+  'https://iddev2.gov.bc.ca',
+  'https://idsit.gov.bc.ca',
+  'https://idqa.gov.bc.ca',
+  'https://idpreprod.gov.bc.ca',
+  'https://idtest.gov.bc.ca',
+]
+
 const remoteDebuggingState: RemoteDebuggingState = {
   enabledAt: undefined,
   sessionId: undefined,
@@ -223,6 +235,7 @@ const remoteDebuggingState: RemoteDebuggingState = {
 const developerState: Developer = {
   enableProxy: false,
   environment: __DEV__ ? iasEnvironments[2] : iasEnvironments[0],
+  iasApiBaseUrl: __DEV__ ? 'https://idsit.gov.bc.ca' : 'https://id.gov.bc.ca',
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
 }
@@ -259,6 +272,7 @@ const bcscState: BCSCState = {
 export enum BCLocalStorageKeys {
   PersonCredentialOfferDismissed = 'PersonCredentialOfferDismissed',
   Environment = 'Environment',
+  IASApiBaseUrl = 'IASApiBaseUrl',
   GenesisTransactions = 'GenesisTransactions',
   RemoteDebugging = 'RemoteDebugging',
   EnableProxy = 'EnableProxy',
@@ -310,6 +324,15 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
 
       // Persist IAS environment between app restarts
       PersistentStorage.storeValueForKey<IASEnvironment>(BCLocalStorageKeys.Environment, developer.environment)
+
+      return { ...state, developer }
+    }
+    case DeveloperDispatchAction.UPDATE_IAS_API_BASE_URL: {
+      const iasApiBaseUrl: string = (action?.payload || []).pop() || ''
+      const developer = { ...state.developer, iasApiBaseUrl }
+
+      // Persist IAS API Base URL between app restarts
+      PersistentStorage.storeValueForKey<string>(BCLocalStorageKeys.IASApiBaseUrl, developer.iasApiBaseUrl)
 
       return { ...state, developer }
     }

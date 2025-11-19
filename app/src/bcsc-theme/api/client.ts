@@ -238,6 +238,12 @@ class BCSCApiClient {
     try {
       this.tokensPromise = this.fetchTokens(refreshToken)
       this.tokens = await this.tokensPromise
+    } catch (error) {
+      this.logger.error('Error fetching tokens', {
+        error,
+        errorMessage: (error as Error)?.message,
+      })
+      throw error
     } finally {
       // Clear the promise cache regardless of success or failure
       this.tokensPromise = null
