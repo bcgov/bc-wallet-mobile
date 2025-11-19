@@ -1,5 +1,6 @@
 import { ActionScreenLayout } from '@/bcsc-theme/components/ActionScreenLayout'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { GET_BCSC_CARD_URL, HelpCentreUrl } from '@/constants'
 import { Link, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -44,7 +45,10 @@ export const AccountRenewalInformationScreen = ({ navigation }: AccountRenewalIn
           testID={t('BCSC.AccountRenewal.InformationGetNewCardA')}
           linkText={t('BCSC.AccountRenewal.InformationGetNewCardA')}
           onPress={() => {
-            // TODO (MD): Open link to get a new BC Services Card
+            navigation.navigate(BCSCScreens.MainWebView, {
+              title: t('BCSC.Screens.HelpCentre'),
+              url: GET_BCSC_CARD_URL,
+            })
           }}
         />
         <ThemedText> {t('BCSC.AccountRenewal.InformationGetNewCardB')}</ThemedText>
@@ -56,7 +60,10 @@ export const AccountRenewalInformationScreen = ({ navigation }: AccountRenewalIn
         testID={t('BCSC.AccountRenewal.InformationTypesOfAcceptedId')}
         linkText={t('BCSC.AccountRenewal.InformationTypesOfAcceptedId')}
         onPress={() => {
-          // TODO (MD): Open link to accepted ID types
+          navigation.navigate(BCSCScreens.MainWebView, {
+            title: t('BCSC.Screens.HelpCentre'),
+            url: HelpCentreUrl.ACCEPTED_IDENTITY_DOCUMENTS,
+          })
         }}
       />
     </ActionScreenLayout>

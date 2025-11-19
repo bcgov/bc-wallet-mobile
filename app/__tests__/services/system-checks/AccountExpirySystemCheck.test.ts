@@ -11,20 +11,20 @@ describe('AccountExpirySystemCheck', () => {
     jest.setSystemTime(new Date('1970-01-01'))
   })
   describe('runCheck', () => {
-    it('should return false if the account is expired (yesterday)', () => {
+    it('should return true if the account is expired (yesterday)', () => {
       const expiredDate = new Date(Date.now() - DAY_IN_MS) // Yesterday
 
       const check = new AccountExpirySystemCheck(expiredDate, {} as SystemCheckUtils)
 
-      expect(check.runCheck()).toBe(false)
+      expect(check.runCheck()).toBe(true)
     })
 
-    it('should return false if the account is expired (today)', () => {
+    it('should return true if the account is expired (today)', () => {
       const expiredDate = new Date() // Today
 
       const check = new AccountExpirySystemCheck(expiredDate, {} as SystemCheckUtils)
 
-      expect(check.runCheck()).toBe(false)
+      expect(check.runCheck()).toBe(true)
     })
 
     it('should return false if the account is expiring within the warning period (30 days)', () => {
