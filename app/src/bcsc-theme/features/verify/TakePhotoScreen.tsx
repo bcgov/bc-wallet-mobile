@@ -36,7 +36,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"
-        cameraLabel={t('BCSC.TakePhoto.CameraInstructions')}
+        cameraLabel={t('BCSC.SendVideo.TakePhoto.CameraInstructions')}
         maskType={MaskType.OVAL}
         onPhotoTaken={handlePhotoTaken}
       />

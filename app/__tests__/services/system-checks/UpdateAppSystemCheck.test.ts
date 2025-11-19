@@ -2,6 +2,7 @@ import { BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { BCSCModals } from '@/bcsc-theme/types/navigators'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { BCDispatchAction } from '@/store'
+import { MockLogger } from '@bifold/core'
 import deviceInfo from 'react-native-device-info'
 
 describe('UpdateAppSystemCheck', () => {
@@ -15,7 +16,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockUtils = {
         dispatch: jest.fn(),
         translation: jest.fn(),
-        logger: { info: jest.fn() } as any,
+        logger: new MockLogger(),
       }
 
       const mockGetVersion = jest.spyOn(deviceInfo, 'getBuildNumber').mockReturnValue('100')
@@ -37,7 +38,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockUtils = {
         dispatch: jest.fn(),
         translation: jest.fn(),
-        logger: { info: jest.fn() } as any,
+        logger: new MockLogger(),
       }
 
       const mockGetVersion = jest.spyOn(deviceInfo, 'getBuildNumber').mockReturnValue('101')
@@ -59,7 +60,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockUtils = {
         dispatch: jest.fn(),
         translation: jest.fn(),
-        logger: { info: jest.fn() } as any,
+        logger: new MockLogger(),
       }
 
       const mockGetVersion = jest.spyOn(deviceInfo, 'getBuildNumber').mockReturnValue('99')
@@ -83,7 +84,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockUtils = {
         dispatch: jest.fn(),
         translation: jest.fn(),
-        logger: {} as any,
+        logger: new MockLogger(),
       }
 
       const mockGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.2.0')
@@ -105,7 +106,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockUtils = {
         dispatch: jest.fn(),
         translation: jest.fn().mockReturnValue('Update available'),
-        logger: {} as any,
+        logger: new MockLogger(),
       }
 
       const mockGetVersion = jest.spyOn(deviceInfo, 'getVersion').mockReturnValue('1.0.0')
@@ -137,7 +138,7 @@ describe('UpdateAppSystemCheck', () => {
       const mockUtils = {
         dispatch: jest.fn(),
         translation: jest.fn(),
-        logger: {} as any,
+        logger: new MockLogger(),
       }
 
       const updateAppCheck = new UpdateAppSystemCheck(mockServerStatus, mockNavigation, mockUtils)

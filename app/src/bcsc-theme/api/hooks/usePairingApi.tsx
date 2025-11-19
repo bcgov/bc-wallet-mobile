@@ -1,4 +1,5 @@
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
+import { TOKENS, useServices } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { signPairingCode } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
@@ -16,6 +17,8 @@ export interface PairingCodeLoginClientMetadata {
 }
 
 const usePairingApi = (apiClient: BCSCApiClient) => {
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+
   /**
    * Logs in a user using a pairing code and returns the client metadata.
    *
@@ -26,11 +29,10 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
     async (code: string) => {
       return withAccount<PairingCodeLoginClientMetadata>(async (account) => {
         const { issuer, clientID } = account
-        const { fcmDeviceToken, apnsToken } = await getNotificationTokens()
-        const signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, apnsToken)
+        const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
+        const signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken)
         const response = await apiClient.post<PairingCodeLoginClientMetadata>(
-          // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
-          `${apiClient.baseURL}/cardtap/v3/mobile/assertion`,
+          `${apiClient.endpoints.cardTap}/v3/mobile/assertion`,
           { assertion: signedCode },
           { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         )
@@ -38,7 +40,7 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
         return response.data
       })
     },
-    [apiClient]
+    [apiClient, logger]
   )
 
   /**
@@ -49,8 +51,7 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
   const forgetAllPairings = useCallback(async () => {
     return withAccount<void>(async (account) => {
       const { clientID } = account
-      // this endpoint is not yet available through the .well-known/openid-configuration so it needs to be hardcoded
-      await apiClient.delete(`${apiClient.baseURL}/cardtap/v3/devices/${clientID}/pairings`)
+      await apiClient.delete(`${apiClient.endpoints.cardTap}/v3/devices/${clientID}/pairings`)
     })
   }, [apiClient])
 

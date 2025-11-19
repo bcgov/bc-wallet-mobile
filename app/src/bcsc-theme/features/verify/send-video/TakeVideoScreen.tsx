@@ -192,11 +192,12 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
             return
           }
         }
-
-        startRecording()
       }
 
       checkPermissions()
+      if (isActive) {
+        startRecording()
+      }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       startRecording,
@@ -205,6 +206,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       hasMicrophonePermission,
       requestMicrophonePermission,
       navigation,
+      isActive,
     ])
   )
 

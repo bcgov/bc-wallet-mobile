@@ -1,5 +1,6 @@
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCAccountType, getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
+import { MockLogger } from '@bifold/core'
 import * as BcscCore from 'react-native-bcsc-core'
 
 describe('ID Token Utils', () => {
@@ -11,7 +12,7 @@ describe('ID Token Utils', () => {
       const bcscCoreMock = jest.mocked(BcscCore)
 
       const mockIdToken = {}
-      const mockLogger: any = { error: jest.fn() }
+      const mockLogger = new MockLogger()
 
       bcscCoreMock.decodePayload = jest.fn().mockResolvedValue(JSON.stringify(mockIdToken))
 
@@ -25,7 +26,7 @@ describe('ID Token Utils', () => {
     it('should throw an error when unable to decode the ID token', async () => {
       const bcscCoreMock = jest.mocked(BcscCore)
 
-      const mockLogger: any = { error: jest.fn() }
+      const mockLogger = new MockLogger()
 
       bcscCoreMock.decodePayload = jest.fn().mockRejectedValue(new Error('Decoding error'))
 

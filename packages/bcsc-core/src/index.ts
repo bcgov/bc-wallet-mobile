@@ -133,6 +133,17 @@ export const getAccount = async (): Promise<NativeAccount | null> => {
 };
 
 /**
+ * Gets the device ID using the platform-specific stable identifier.
+ * On Android: Uses Settings.Secure.ANDROID_ID
+ * On iOS: Uses UIDevice.current.identifierForVendor
+ * Falls back to a generated UUID if platform-specific ID is not available.
+ * @returns A promise that resolves to the device ID string.
+ */
+export const getDeviceId = async (): Promise<string> => {
+  return BcscCore.getDeviceId();
+};
+
+/**
  * Constructs the body for a refresh token request.
  * This involves creating a JWT, signing it with the latest private key,
  * and then formatting it along with the provided refresh token and other
@@ -177,19 +188,18 @@ export const signPairingCode = async (
 };
 
 /**
- * Retrieves the body for a dynamic client registration request.
- * This method generates a JSON structure containing client information,
- * device info JWT, public key JWKS, and OAuth2 configuration for
- * dynamic client registration with the BC Services Card authentication server.
- * @param fcmDeviceToken The FCM device token to include in the device info.
- * @param deviceToken The APNS device token (iOS only - not used by Android implementation).
- * @returns A promise that resolves to a JSON string containing the DCR body, or null if an error occurs.
+ * Creates the dynamic client registration body for OAuth client registration.
+ * @param fcmDeviceToken The FCM device token for push notifications.
+ * @param deviceToken Optional device token (APNS token for iOS).
+ * @param attestation Optional attestation data (Play Integrity token for Android, App Store receipt for iOS).
+ * @returns A promise that resolves to the registration body string or null if an error occurs.
  */
 export const getDynamicClientRegistrationBody = async (
   fcmDeviceToken: string,
-  deviceToken: string | null
+  deviceToken: string | null,
+  attestation: string | null
 ): Promise<string | null> => {
-  return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken);
+  return BcscCore.getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation);
 };
 
 /**

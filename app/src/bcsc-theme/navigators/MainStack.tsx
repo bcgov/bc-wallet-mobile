@@ -6,7 +6,7 @@ import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
-import { createHeaderWithBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
@@ -14,6 +14,7 @@ import TransferQRInformationScreen from '../features/account-transfer/TransferQR
 import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import ManualPairingCode from '../features/pairing/ManualPairing'
@@ -23,6 +24,7 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
+import { MainSplashScreen } from '../features/splash/MainSplashScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -43,15 +45,15 @@ const MainStack: React.FC = () => {
 
   const handleManageDevices = useCallback(() => {
     navigation.navigate(BCSCScreens.MainWebView, {
-      url: `${client.baseURL}/account/embedded/devices`,
+      url: client.endpoints.accountDevices,
       title: t('BCSC.Screens.ManageDevices'),
     })
-  }, [client.baseURL, navigation, t])
+  }, [client.endpoints.accountDevices, navigation, t])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
-        initialRouteName={BCSCStacks.Tab}
+        initialRouteName={BCSCScreens.MainSplash}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
@@ -61,7 +63,20 @@ const MainStack: React.FC = () => {
           header: createHeaderWithBanner(handleManageDevices),
         }}
       >
-        <Stack.Screen name={BCSCStacks.Tab} component={BCSCTabStack} />
+        <Stack.Screen
+          name={BCSCScreens.MainSplash}
+          component={MainSplashScreen}
+          options={{
+            header: createHeaderWithoutBanner,
+          }}
+        />
+        <Stack.Screen
+          name={BCSCStacks.Tab}
+          component={BCSCTabStack}
+          options={{
+            animationEnabled: false,
+          }}
+        />
         <Stack.Screen
           name={BCSCScreens.EditNickname}
           component={EditNicknameScreen}
@@ -185,7 +200,7 @@ const MainStack: React.FC = () => {
           component={InternetDisconnected}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
-            gestureEnabled: false, // Disable swipe to dismiss
+            gestureEnabled: false,
           }}
         />
 
@@ -194,7 +209,16 @@ const MainStack: React.FC = () => {
           component={MandatoryUpdate}
           options={{
             ...getDefaultModalOptions(t('BCSC.Title')),
-            gestureEnabled: false, // Disable swipe to dismiss
+            gestureEnabled: false,
+          }}
+        />
+
+        <Stack.Screen
+          name={BCSCModals.DeviceInvalidated}
+          component={DeviceInvalidated}
+          options={{
+            ...getDefaultModalOptions(t('BCSC.Title')),
+            gestureEnabled: false,
           }}
         />
       </Stack.Navigator>

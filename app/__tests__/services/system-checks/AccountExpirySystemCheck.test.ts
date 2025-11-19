@@ -7,6 +7,7 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000
 
 describe('AccountExpirySystemCheck', () => {
   beforeAll(() => {
+    jest.useFakeTimers()
     jest.setSystemTime(new Date('1970-01-01'))
   })
   describe('runCheck', () => {
