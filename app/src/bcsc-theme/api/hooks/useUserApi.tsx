@@ -1,3 +1,4 @@
+import { ACCOUNT_EXPIRATION_DATE_FORMAT } from '@/constants'
 import moment from 'moment'
 import { useCallback, useMemo } from 'react'
 import { decodePayload } from 'react-native-bcsc-core'
@@ -92,7 +93,7 @@ const useUserApi = (apiClient: BCSCApiClient) => {
   const getAccountExpirationDate = useCallback(async (): Promise<Date> => {
     const userInfo = await getUserInfo()
 
-    return moment(userInfo.card_expiry, 'MMMM D, YYYY').toDate()
+    return moment(userInfo.card_expiry, ACCOUNT_EXPIRATION_DATE_FORMAT).toDate()
   }, [getUserInfo])
 
   return useMemo(
