@@ -1,7 +1,8 @@
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
+import { getAccount, removeAccount } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
 import { isNetworkError } from '../utils/error-utils'
 
@@ -35,36 +36,78 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const handleNewClient = (client: BCSCApiClient | null, errorMessage?: string) => {
+  const handleNewClient = useCallback((client: BCSCApiClient | null, errorMessage?: string) => {
     BCSC_API_CLIENT_SINGLETON = client
     setIsClientReady(Boolean(client))
     setError(errorMessage ?? null)
-  }
+  }, [])
 
   useEffect(() => {
     // Only attempt to configure the client if the store is loaded and the IAS API base URL is available
-    if (!store.stateLoaded || !store.developer.environment.iasApiBaseUrl) {
+    if (!store.stateLoaded || !store.developer.iasApiBaseUrl) {
       return
     }
 
     const configureClient = async () => {
-      setIsClientReady(false)
-      setError(null)
-
       let newClient = BCSC_API_CLIENT_SINGLETON
 
       try {
         // If the singleton doesn't exist or the base URL has changed, create a new instance
-        if (
-          !BCSC_API_CLIENT_SINGLETON ||
-          BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
-        ) {
-          newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
+        if (!BCSC_API_CLIENT_SINGLETON || BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.iasApiBaseUrl) {
+          // Only set isClientReady to false when we're actually changing clients
+          setIsClientReady(false)
+          setError(null)
+
+          // Clear old tokens and authentication state when switching environments
+          if (BCSC_API_CLIENT_SINGLETON) {
+            BCSC_API_CLIENT_SINGLETON.tokens = undefined
+            BCSC_API_CLIENT_SINGLETON.tokensPromise = null
+
+            // Check if existing account is from a different environment
+            try {
+              const existingAccount = await getAccount()
+              if (existingAccount) {
+                logger.info('Checking existing account issuer', {
+                  existingIssuer: existingAccount.issuer,
+                  newIssuer: store.developer.iasApiBaseUrl + '/device/',
+                })
+
+                // If the issuer doesn't match the new environment, remove the old account
+                const newIssuer = `${store.developer.iasApiBaseUrl}/device/`
+                if (existingAccount.issuer !== newIssuer) {
+                  logger.info('Account from different environment detected, removing old account', {
+                    oldIssuer: existingAccount.issuer,
+                    newIssuer: newIssuer,
+                  })
+                  await removeAccount()
+                  logger.info('Old account removed successfully')
+                }
+              }
+            } catch (error) {
+              logger.error('Error checking/removing old account', { error })
+              // Continue even if account removal fails
+            }
+
+            // Clear refresh token from store and force re-authentication
+            dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [undefined] })
+            dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [false] })
+          }
+
+          newClient = new BCSCApiClient(store.developer.iasApiBaseUrl, logger as RemoteLogger)
+
           await newClient.fetchEndpointsAndConfig()
 
           handleNewClient(newClient)
+        } else {
+          // Ensure isClientReady is set even when reusing existing client
+          handleNewClient(BCSC_API_CLIENT_SINGLETON)
         }
       } catch (err) {
+        logger.error('Error during client configuration', {
+          error: err,
+          isNetworkError: isNetworkError(err),
+        })
+
         /**
          * Special case:
          * If it's a network error, we still want to set the client.
@@ -76,7 +119,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           return
         }
 
-        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
+        const errorMessage = `Failed to configure BCSC client for ${store.developer.iasApiBaseUrl}: ${
           (err as Error)?.message
         }`
         handleNewClient(null, errorMessage)
@@ -84,7 +127,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     configureClient()
-  }, [store.stateLoaded, store.developer.environment.name, store.developer.environment.iasApiBaseUrl, logger, dispatch])
+  }, [store.stateLoaded, store.developer.iasApiBaseUrl, logger, dispatch, handleNewClient])
 
   const contextValue = useMemo(
     () => ({
