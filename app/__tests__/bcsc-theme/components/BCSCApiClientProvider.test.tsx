@@ -26,12 +26,13 @@ describe('BCSCApiClientProvider', () => {
     const mockStore: any = {
       stateLoaded: true,
       developer: {
-        environment: {
-          iasApiBaseUrl: 'https://example.com',
-        },
+        iasApiBaseUrl: 'https://example.com',
       },
     }
-    const mockLogger: any = {}
+    const mockLogger: any = {
+      info: jest.fn(),
+      error: jest.fn(),
+    }
     const dispatchMock = jest.fn()
 
     bifoldMock.useServices.mockReturnValue([mockLogger])
@@ -60,10 +61,14 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: false,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { iasApiBaseUrl: 'https://example.com' },
+    }
+    const mockLogger: any = {
+      info: jest.fn(),
+      error: jest.fn(),
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
@@ -87,10 +92,14 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: '' } },
+      developer: { iasApiBaseUrl: '' },
+    }
+    const mockLogger: any = {
+      info: jest.fn(),
+      error: jest.fn(),
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
@@ -113,10 +122,14 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { iasApiBaseUrl: 'https://example.com' },
+    }
+    const mockLogger: any = {
+      info: jest.fn(),
+      error: jest.fn(),
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest.fn().mockResolvedValue(true)
@@ -153,10 +166,14 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { iasApiBaseUrl: 'https://example.com' },
+    }
+    const mockLogger: any = {
+      info: jest.fn(),
+      error: jest.fn(),
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
     bcscApiClientMock.prototype.fetchEndpointsAndConfig = jest
@@ -184,10 +201,14 @@ describe('BCSCApiClientProvider', () => {
 
     const mockStore: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { iasApiBaseUrl: 'https://example.com' },
+    }
+    const mockLogger: any = {
+      info: jest.fn(),
+      error: jest.fn(),
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockReturnValue([mockStore, dispatchMock])
 
     const mockError: any = new AxiosError()
@@ -216,17 +237,21 @@ describe('BCSCApiClientProvider', () => {
 
     let store: any = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://example.com' } },
+      developer: { iasApiBaseUrl: 'https://example.com' },
+    }
+    const mockLogger: any = {
+      info: jest.fn(),
+      error: jest.fn(),
     }
     const dispatchMock = jest.fn()
-    bifoldMock.useServices.mockReturnValue([{}])
+    bifoldMock.useServices.mockReturnValue([mockLogger])
     bifoldMock.useStore.mockImplementation(() => [store, dispatchMock])
 
     bcscApiClientMock.mockImplementation(
       () =>
         ({
           fetchEndpointsAndConfig: fetchMock,
-          baseURL: store.developer.environment.iasApiBaseUrl,
+          baseURL: store.developer.iasApiBaseUrl,
         } as any)
     )
 
@@ -244,7 +269,7 @@ describe('BCSCApiClientProvider', () => {
     // replace store with new object before rerender
     store = {
       stateLoaded: true,
-      developer: { environment: { iasApiBaseUrl: 'https://new.com' } },
+      developer: { iasApiBaseUrl: 'https://new.com' },
     }
 
     rerender({})
