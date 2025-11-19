@@ -36,6 +36,13 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
     },
     buttonContainer: {
       padding: Spacing.md,
+      elevation: 6,
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowRadius: 8,
+      shadowOpacity: 0.12,
+      shadowOffset: { width: 0, height: 0 },
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
     activityIndicator: {
       flex: 1,
