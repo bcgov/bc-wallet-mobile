@@ -20,6 +20,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
+import IASApiBaseUrl from './IASApiBaseUrl'
 import IASEnvironment from './IASEnvironment'
 import RemoteLogWarning from './RemoteLogWarning'
 
@@ -30,6 +31,7 @@ const Developer: React.FC = () => {
   const { SettingsTheme, TextTheme, ColorPalette, setTheme, themeName } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER]) as [RemoteLogger]
   const [environmentModalVisible, setEnvironmentModalVisible] = useState<boolean>(false)
+  const [apiBaseUrlModalVisible, setApiBaseUrlModalVisible] = useState<boolean>(false)
   const [devMode, setDevMode] = useState<boolean>(true)
   const [useVerifierCapability, setUseVerifierCapability] = useState<boolean>(!!store.preferences.useVerifierCapability)
   const [acceptDevCredentials, setAcceptDevCredentials] = useState<boolean>(!!store.preferences.acceptDevCredentials)
@@ -94,6 +96,10 @@ const Developer: React.FC = () => {
 
   const shouldDismissModal = () => {
     setEnvironmentModalVisible(false)
+  }
+
+  const shouldDismissApiBaseUrlModal = () => {
+    setApiBaseUrlModalVisible(false)
   }
 
   const SectionHeader = ({ icon, title }: { icon: string; title: string }): JSX.Element => (
@@ -328,6 +334,16 @@ const Developer: React.FC = () => {
       >
         <IASEnvironment shouldDismissModal={shouldDismissModal} />
       </SafeAreaModal>
+      <SafeAreaModal
+        visible={apiBaseUrlModalVisible}
+        transparent={false}
+        animationType={'slide'}
+        onRequestClose={() => {
+          return
+        }}
+      >
+        <IASApiBaseUrl shouldDismissModal={shouldDismissApiBaseUrlModal} />
+      </SafeAreaModal>
       <ScrollView style={styles.container}>
         <SectionRow
           title={t('Developer.DeveloperMode')}
@@ -344,18 +360,33 @@ const Developer: React.FC = () => {
         </SectionRow>
         <View style={styles.sectionSeparator}></View>
         <SectionHeader icon={'apartment'} title={'IAS'} />
-        <SectionRow
-          title={t('Developer.Environment')}
-          accessibilityLabel={t('Developer.Environment')}
-          testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
-          onPress={() => {
-            setEnvironmentModalVisible(true)
-          }}
-        >
-          <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPalette.brand.link }]}>
-            {store.developer.environment.name}
-          </Text>
-        </SectionRow>
+        {store.mode === Mode.BCSC ? (
+          <SectionRow
+            title={'API Base URL'}
+            accessibilityLabel={'IAS API Base URL'}
+            testID={testIdWithKey('ias-api-base-url')}
+            onPress={() => {
+              setApiBaseUrlModalVisible(true)
+            }}
+          >
+            <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPalette.brand.link }]}>
+              {store.developer.iasApiBaseUrl || 'Not set'}
+            </Text>
+          </SectionRow>
+        ) : (
+          <SectionRow
+            title={t('Developer.Environment')}
+            accessibilityLabel={t('Developer.Environment')}
+            testID={testIdWithKey(t('Developer.Environment').toLowerCase())}
+            onPress={() => {
+              setEnvironmentModalVisible(true)
+            }}
+          >
+            <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPalette.brand.link }]}>
+              {store.developer.environment.name}
+            </Text>
+          </SectionRow>
+        )}
         <View style={styles.sectionSeparator}></View>
 
         {store.mode === Mode.BCSC ? null : (
