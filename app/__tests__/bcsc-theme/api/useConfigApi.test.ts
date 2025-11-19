@@ -4,6 +4,9 @@ import { Platform } from 'react-native'
 
 const mockApiClient = {
   baseURL: 'https://mock-api-base-url.com',
+  endpoints: {
+    cardTap: 'https://mock-api-base-url.com/cardtap',
+  },
   get: jest.fn().mockImplementation(() => Promise.resolve({ data: {} })),
 }
 
@@ -24,10 +27,13 @@ describe('useConfigApi', () => {
       // Call the method we're testing
       const response = await config.getServerStatus()
 
-      // Verify correct endpoint called with the mocked baseURL
-      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.baseURL}/cardtap/v3/status/android/mobile_card`, {
-        skipBearerAuth: true,
-      })
+      // Verify correct endpoint called with the mocked endpoints
+      expect(mockApiClient.get).toHaveBeenCalledWith(
+        `${mockApiClient.endpoints.cardTap}/v3/status/android/mobile_card`,
+        {
+          skipBearerAuth: true,
+        }
+      )
       expect(response).toEqual({ status: 'ok' })
     })
 
@@ -36,7 +42,7 @@ describe('useConfigApi', () => {
       ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { status: 'ok' } })
       const response = await config.getServerStatus()
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.baseURL}/cardtap/v3/status/ios/mobile_card`, {
+      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/status/ios/mobile_card`, {
         skipBearerAuth: true,
       })
       expect(response).toEqual({ status: 'ok' })
@@ -55,7 +61,7 @@ describe('useConfigApi', () => {
       ;(mockApiClient.get as jest.Mock).mockResolvedValueOnce({ data: { terms: 'Sample terms' } })
       const response = await config.getTermsOfUse()
 
-      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.baseURL}/cardtap/v3/terms`)
+      expect(mockApiClient.get).toHaveBeenCalledWith(`${mockApiClient.endpoints.cardTap}/v3/terms`)
       expect(response).toEqual({ terms: 'Sample terms' })
     })
 
