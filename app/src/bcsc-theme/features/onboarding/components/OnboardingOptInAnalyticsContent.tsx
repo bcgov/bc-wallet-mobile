@@ -17,7 +17,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
 }: OnboardingOptInAnalyticsContentProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
@@ -45,7 +45,6 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     logger.info('User accepted analytics opt-in')
     dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
     onPress()
-    logger.info(store.bcsc.analyticsOptIn ? 'Analytics opt-in is true' : 'Analytics opt-in is false')
   }
   const handleDeniedPressed = () => {
     logger.info('User denied analytics opt-in')
