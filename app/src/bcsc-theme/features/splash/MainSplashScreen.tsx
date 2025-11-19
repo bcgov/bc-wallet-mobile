@@ -1,5 +1,6 @@
 import { BCSCAccountContext } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useContext, useEffect } from 'react'
@@ -18,10 +19,25 @@ export const MainSplashScreen = ({ navigation }: MainStackSplashScreenProps) => 
   const context = useContext(BCSCAccountContext)
 
   useEffect(() => {
-    if (!context || context.isLoadingAccount) {
+    if (!context || context.isLoadingAccount || !context.account) {
       return
     }
 
+    // Navigate to Account Expired screen when account is expired
+    if (AccountExpirySystemCheck.isAccountExpired(context.account.account_expiration_date)) {
+      return navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: BCSCScreens.AccountExpired,
+            },
+          ],
+        })
+      )
+    }
+
+    // Navigate to Home screen when account is valid
     navigation.dispatch(
       CommonActions.reset({
         index: 0,

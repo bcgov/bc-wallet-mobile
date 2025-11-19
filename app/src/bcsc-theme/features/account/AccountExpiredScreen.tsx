@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { AppBannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
+import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -22,12 +23,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   const { t } = useTranslation()
   const { Spacing } = useTheme()
   const factoryReset = useFactoryReset()
-
-  // TODO (MD): Replace with useAccount hook when merged in
-  const account = {
-    fullname_formatted: 'TODO: MD',
-    card_expiry: 'January 1, 2025',
-  }
+  const account = useAccount()
 
   const styles = StyleSheet.create({
     container: {

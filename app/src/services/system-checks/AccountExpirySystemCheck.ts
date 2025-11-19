@@ -38,8 +38,12 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
   }
 
   runCheck() {
-    // Return false if the account is expired or expiring soon
-    return !AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, ACCOUNT_EXPIRATION_WARNING_DAYS)
+    // Return false if the account is expiring soon but not yet expired
+    return (
+      !AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, ACCOUNT_EXPIRATION_WARNING_DAYS) ||
+      // Return false if the account is already expired - handled by a different workflow
+      AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, 0)
+    )
   }
 
   onFail() {

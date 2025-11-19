@@ -48,6 +48,9 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       }
     }
 
+    // TODO (MD): Remove after completed manual testing
+    data.user.card_expiry = 'November 18, 2025'
+
     return {
       account: {
         ...data.user,
