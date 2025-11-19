@@ -250,6 +250,10 @@ const translation = {
       "UpdateApp": {
         "UpdateAvailableBannerTitle": "App update available (PT-BR)",
       },
+      "AccountExpiry": {
+        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}."
+      },
+    },
     "AccountExpired": {
       "StaticBannerTitle": "Account expired (PT-BR)",
       "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (PT-BR)",
