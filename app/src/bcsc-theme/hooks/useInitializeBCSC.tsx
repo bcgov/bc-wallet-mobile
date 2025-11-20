@@ -33,7 +33,11 @@ const useInitializeBCSC = () => {
       setLoading(true)
 
       try {
+        logger.info('Attempting BCSC registration')
+
         await register()
+
+        logger.info('BCSC registration successful')
 
         const refreshToken = store.bcsc.refreshToken ?? (await getToken(TokenType.Refresh))?.token
 
