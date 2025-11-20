@@ -40,12 +40,14 @@ export class AccountExpirySystemCheck implements SystemCheckStrategy {
   }
 
   runCheck() {
-    // Return false if the account is expiring soon but not yet expired
-    return (
-      !AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, ACCOUNT_EXPIRATION_WARNING_DAYS) ||
-      // Return false if the account is already expired
-      AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, 0)
+    const isExpiringSoon = AccountExpirySystemCheck.isAccountExpired(
+      this.accountExpiration,
+      ACCOUNT_EXPIRATION_WARNING_DAYS
     )
+    const isExpired = AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, 0)
+
+    // Only fail if expiring soon but not yet expired
+    return !isExpiringSoon || isExpired
   }
 
   onFail() {
