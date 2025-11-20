@@ -162,7 +162,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 <SettingsActionCard title={t('BCSC.Settings.ForgetPairings')} onPress={onForgetAllPairings} />
               ) : null}
               <SettingsActionCard
-                title={'Analytics Opt-In Placeholder'}
+                title={t('BCSC.Settings.AnalyticsOptIn')}
                 onPress={onPressOptInAnalytics}
                 endAdornmentText={store.bcsc.analyticsOptIn ? 'ON' : 'OFF'}
               />
@@ -191,7 +191,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             onPress={incrementDeveloperMenuCounter}
             disabled={store.preferences.developerModeEnabled}
           >
-            <View>
+            <View style={{ alignItems: 'center' }}>
               <ThemedText variant="labelSubtitle">{t('BCSC.Title')}</ThemedText>
               <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
             </View>
