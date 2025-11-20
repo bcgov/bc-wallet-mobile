@@ -36,13 +36,13 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
     },
     buttonContainer: {
       padding: Spacing.md,
+      // android shadow
       elevation: 6,
-      borderRadius: 12,
-      shadowColor: '#000',
-      shadowRadius: 8,
-      shadowOpacity: 0.12,
-      shadowOffset: { width: 0, height: 0 },
       backgroundColor: ColorPalette.brand.primaryBackground,
+      // iOS shadow
+      shadowRadius: 8,
+      shadowOpacity: 0.2,
+      shadowOffset: { width: 0, height: 4 },
     },
     activityIndicator: {
       flex: 1,
