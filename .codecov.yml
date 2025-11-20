@@ -10,6 +10,17 @@ coverage:
   round: down # round down fractional coverage ie: 70.7532 -> 70.75
   precision: 2 # number of digits after the decimal point
   status:
+    project:
+      default:
+        target: auto # target coverage is set to the current coverage
+        threshold: 5%
+        base: auto
+        branches:
+          - main
+        paths:
+          - app/src
+        only_pulls: true
+        informational: true # always pass, even if threshold is not met
     patch:
       default:
         target: auto # target coverage is set to the current coverage
@@ -19,3 +30,4 @@ coverage:
           - main
         paths:
           - app/src
+      only_pulls: true
