@@ -15,7 +15,7 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
 
-  const uniqueUrls = iasBaseApiUrls
+  const uniqueUrls = Object.values(iasBaseApiUrls)
 
   const [selectedUrl, setSelectedUrl] = useState(store.developer.iasApiBaseUrl)
   const [hasChanges, setHasChanges] = useState(false)

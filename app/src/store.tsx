@@ -213,15 +213,15 @@ export const iasEnvironments: Array<IASEnvironment> = [
   },
 ]
 
-export const iasBaseApiUrls: Array<string> = [
-  'https://id.gov.bc.ca',
-  'https://iddev.gov.bc.ca',
-  'https://iddev2.gov.bc.ca',
-  'https://idsit.gov.bc.ca',
-  'https://idqa.gov.bc.ca',
-  'https://idpreprod.gov.bc.ca',
-  'https://idtest.gov.bc.ca',
-]
+export enum iasBaseApiUrls {
+  PROD = 'https://id.gov.bc.ca',
+  DEV = 'https://iddev.gov.bc.ca',
+  DEV2 = 'https://iddev2.gov.bc.ca',
+  SIT = 'https://idsit.gov.bc.ca',
+  QA = 'https://idqa.gov.bc.ca',
+  PREPROD = 'https://idpreprod.gov.bc.ca',
+  TEST = 'https://idtest.gov.bc.ca',
+}
 
 const remoteDebuggingState: RemoteDebuggingState = {
   enabledAt: undefined,
@@ -231,7 +231,7 @@ const remoteDebuggingState: RemoteDebuggingState = {
 const developerState: Developer = {
   enableProxy: false,
   environment: __DEV__ ? iasEnvironments[2] : iasEnvironments[0],
-  iasApiBaseUrl: __DEV__ ? 'https://idsit.gov.bc.ca' : 'https://id.gov.bc.ca',
+  iasApiBaseUrl: __DEV__ ? iasBaseApiUrls.SIT : iasBaseApiUrls.PROD,
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
 }
