@@ -158,6 +158,7 @@ const translation = {
       "ContactUs": "Contact us",
       "Feedback": "Feedback",
       "Accessibility": "Accessibility",
+      "AnalyticsOptIn": "Analytics Opt-In Placeholder (FR)",
       "TermsOfUse": "Terms of use",
       "Analytics": "Analytics",
     },

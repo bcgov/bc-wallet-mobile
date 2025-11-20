@@ -157,7 +157,9 @@ const translation = {
       "ContactUs": "Contact us (FR)",
       "Feedback": "Feedback (FR)",
       "Accessibility": "Accessibility (FR)",
+      "AnalyticsOptIn": "Analytics Opt-In Placeholder (FR)",
       "TermsOfUse": "Terms of use (FR)",
+      "Analytics": "Analytics (FR)",
     },
     "Services": {
       "CatalogueTitle": "Services (FR)",
