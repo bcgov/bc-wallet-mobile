@@ -314,14 +314,15 @@ jobs:
           path: app/ios/xbuild/Build
           key: ${{ steps.cache-dd-restore.outputs.cache-primary-key }}
 
-      - name: Send notification for iOS failure
-        if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
-        uses: ./.github/workflows/actions/send-rocketchat-notification
-        with:
-          job_title: "BC Wallet iOS Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
-          job_status: ${{ job.status }}
-          webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      # TODO: Change this to a Teams integration
+      # - name: Send notification for iOS failure
+      #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
+      #   uses: ./.github/workflows/actions/send-rocketchat-notification
+      #   with:
+      #     job_title: "BC Wallet iOS Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
+      #     job_status: ${{ job.status }}
+      #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-android:
     needs: [check-secrets, check-vars, early-exit-check]
@@ -483,14 +484,15 @@ jobs:
           rm -rf ~/.gradle/caches
           rm -rf app/.metro-cache
 
-      - name: Send notification for Android failure
-        if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
-        uses: ./.github/workflows/actions/send-rocketchat-notification
-        with:
-          job_title: "BC Wallet Android Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
-          job_status: ${{ job.status }}
-          webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      # TODO: Change this to a Teams integration
+      # - name: Send notification for Android failure
+      #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
+      #   uses: ./.github/workflows/actions/send-rocketchat-notification
+      #   with:
+      #     job_title: "BC Wallet Android Build (${{ matrix.build_type }}) - Run number ${{ github.run_number }}"
+      #     job_status: ${{ job.status }}
+      #     webhook_url: ${{ secrets.ROCKETCHAT_WEBHOOK }}
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-summary:
     runs-on: ubuntu-latest
