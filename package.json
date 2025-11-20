@@ -31,7 +31,7 @@
     "prettier:app": "cd app && yarn prettier",
     "prettier": "yarn prettier:app",
     "prettier:fix": "cd app && yarn prettier:fix",
-    "test": "cd app && yarn test",
+    "test": "cd app && yarn test:coverage",
     "pre-commit-lint:app": "cd app && yarn pre-commit-lint",
     "pre-commit-lint": "yarn pre-commit-lint:app",
     "typecheck": "cd app && yarn typecheck"
