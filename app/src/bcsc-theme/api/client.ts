@@ -38,6 +38,10 @@ interface BCSCEndpoints {
   credential: string
   evidence: string
   video: string
+  cardTap: string
+  barcodes: string
+  accountDevices: string
+  account: string
 }
 
 class BCSCApiClient {
@@ -95,6 +99,10 @@ class BCSCApiClient {
       credential: `${this.baseURL}/credentials/v1/person`,
       evidence: `${this.baseURL}/evidence`,
       video: `${this.baseURL}/video`,
+      cardTap: `${this.baseURL}/cardtap`,
+      barcodes: `${this.baseURL}/device/barcodes`,
+      accountDevices: `${this.baseURL}/account/embedded/devices`,
+      account: `${this.baseURL}/account`,
     }
 
     // Add interceptors
@@ -145,9 +153,12 @@ class BCSCApiClient {
       savedServices: response.data['saved_services_endpoint'],
       token: response.data['token_endpoint'],
       credential: response.data['credential_endpoint'],
-      // TODO(bm): request backend team to add evidence and video endpoints to the response
-      evidence: `${this.baseURL}/evidence`,
-      video: `${this.baseURL}/video`,
+      evidence: response.data['evidence_endpoint'],
+      video: response.data['video_call_endpoint'],
+      cardTap: response.data['cardtap_endpoint'],
+      barcodes: response.data['barcodes_endpoint'],
+      accountDevices: response.data['account_devices_endpoint'],
+      account: response.data['account_endpoint'],
     }
   }
 

@@ -1,14 +1,13 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { UserInfoResponseData } from '@/bcsc-theme/api/hooks/useUserApi'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
+import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCTabStackParams } from '@/bcsc-theme/types/navigators'
-import { TOKENS, useServices, useTheme } from '@bifold/core'
+import { useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import SectionButton from '../../components/SectionButton'
 import HomeHeader from './components/HomeHeader'
 import SavedServices from './components/SavedServices'
@@ -18,34 +17,15 @@ type HomeProps = StackScreenProps<BCSCTabStackParams, BCSCScreens.Home>
 const Home: React.FC<HomeProps> = ({ navigation }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
-  const { user } = useApi()
-  const [loading, setLoading] = useState(true)
-  const [userInfo, setUserInfo] = useState<Partial<UserInfoResponseData>>({})
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const apiClient = useBCSCApiClient()
+  const account = useAccount()
 
   const handleManageDevices = useCallback(() => {
     navigation.getParent()?.navigate(BCSCScreens.MainWebView, {
-      url: `${apiClient.baseURL}/account/embedded/devices`,
+      url: apiClient.endpoints.accountDevices,
       title: t('BCSC.Screens.ManageDevices'),
     })
-  }, [apiClient.baseURL, navigation, t])
-
-  useEffect(() => {
-    const asyncEffect = async () => {
-      try {
-        setLoading(true)
-        const userInfo = await user.getUserInfo()
-        setUserInfo(userInfo)
-      } catch (error) {
-        logger.error(`Error while fetching user info`)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    asyncEffect()
-  }, [user, logger])
+  }, [apiClient.endpoints.accountDevices, navigation, t])
 
   const styles = StyleSheet.create({
     buttonsContainer: {
@@ -63,28 +43,22 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
 
   return (
     <TabScreenWrapper>
-      {loading ? (
-        <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-      ) : (
-        <>
-          <NotificationBannerContainer onManageDevices={handleManageDevices} />
-          <HomeHeader name={`${userInfo.family_name}, ${userInfo.given_name}`} />
-          <View style={styles.buttonsContainer}>
-            <SectionButton
-              title={t('BCSC.Home.WhereToUseTitle')}
-              description={t('BCSC.Home.WhereToUseDescription')}
-              style={{ marginBottom: Spacing.md }}
-              onPress={handleWhereToUsePress}
-            />
-            <SectionButton
-              title={t('BCSC.Home.LogInFromComputerTitle')}
-              description={t('BCSC.Home.LogInFromComputerDescription')}
-              onPress={handlePairingCodePress}
-            />
-          </View>
-          <SavedServices />
-        </>
-      )}
+      <NotificationBannerContainer onManageDevices={handleManageDevices} />
+      <HomeHeader name={account.fullname_formatted} />
+      <View style={styles.buttonsContainer}>
+        <SectionButton
+          title={t('BCSC.Home.WhereToUseTitle')}
+          description={t('BCSC.Home.WhereToUseDescription')}
+          style={{ marginBottom: Spacing.md }}
+          onPress={handleWhereToUsePress}
+        />
+        <SectionButton
+          title={t('BCSC.Home.LogInFromComputerTitle')}
+          description={t('BCSC.Home.LogInFromComputerDescription')}
+          onPress={handlePairingCodePress}
+        />
+      </View>
+      <SavedServices />
     </TabScreenWrapper>
   )
 }

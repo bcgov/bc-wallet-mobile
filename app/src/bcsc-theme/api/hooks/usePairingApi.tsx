@@ -32,8 +32,7 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
         const { fcmDeviceToken, deviceToken } = await getNotificationTokens(logger)
         const signedCode = await signPairingCode(code, issuer, clientID, fcmDeviceToken, deviceToken)
         const response = await apiClient.post<PairingCodeLoginClientMetadata>(
-          // this endpoint is not available through the .well-known/openid-configuration so it needs to be hardcoded
-          `${apiClient.baseURL}/cardtap/v3/mobile/assertion`,
+          `${apiClient.endpoints.cardTap}/v3/mobile/assertion`,
           { assertion: signedCode },
           { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         )
@@ -52,8 +51,7 @@ const usePairingApi = (apiClient: BCSCApiClient) => {
   const forgetAllPairings = useCallback(async () => {
     return withAccount<void>(async (account) => {
       const { clientID } = account
-      // this endpoint is not yet available through the .well-known/openid-configuration so it needs to be hardcoded
-      await apiClient.delete(`${apiClient.baseURL}/cardtap/v3/devices/${clientID}/pairings`)
+      await apiClient.delete(`${apiClient.endpoints.cardTap}/v3/devices/${clientID}/pairings`)
     })
   }, [apiClient])
 

@@ -70,10 +70,10 @@ const VerifyStack = () => {
 
   const handleManageDevices = useCallback(() => {
     navigation.navigate(BCSCScreens.VerifyWebView, {
-      url: `${client.baseURL}/account/embedded/devices`,
+      url: client.endpoints.accountDevices,
       title: t('BCSC.Screens.ManageDevices'),
     })
-  }, [client.baseURL, navigation, t])
+  }, [client.endpoints.accountDevices, navigation, t])
 
   return (
     <Stack.Navigator
