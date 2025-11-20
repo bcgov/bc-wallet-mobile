@@ -90,7 +90,7 @@ jobs:
       - name: Automated testing
         run: yarn coverage # runs tests and generates coverage report
 
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 #V5 (v5.5.1) pinning for SonarQube
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
         if: always()
