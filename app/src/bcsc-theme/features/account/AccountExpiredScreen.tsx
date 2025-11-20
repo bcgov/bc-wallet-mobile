@@ -1,6 +1,7 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import { AppBannerSection, BCSCBanner } from '@/bcsc-theme/components/AppBanner'
 import { CardButton } from '@/bcsc-theme/components/CardButton'
+import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { useTheme } from '@bifold/core'
@@ -43,13 +44,14 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
       <AppBannerSection
         id={BCSCBanner.ACCOUNT_EXPIRED}
         title={t('BCSC.AccountExpired.StaticBannerTitle')}
+        dismissible={false}
         description={t('BCSC.AccountExpired.StaticBannerDescription', {
           accountExpiration: account.card_expiry,
         })}
         type="warning"
       />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <HomeHeader name={account.fullname_formatted} fontSize={20} iconSize={72} />
+        <HomeHeader name={account.fullname_formatted} fontSize={20} cardSize={GENERIC_CARD_SIZE_SMALL} />
 
         <View style={styles.actionsContainer}>
           <CardButton
