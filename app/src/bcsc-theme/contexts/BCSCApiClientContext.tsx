@@ -81,9 +81,15 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
                   })
                   await removeAccount()
                   logger.info('Old account removed successfully')
+                  // Remove metadata as well
+                  dispatch({ type: BCDispatchAction.CLEAR_BCSC })
                 }
               }
             } catch (error) {
+              // Rethrow network errors to be handled by outer catch block
+              if (isNetworkError(error)) {
+                throw error
+              }
               logger.error('Error checking/removing old account', { error })
               // Continue even if account removal fails
             }
@@ -116,6 +122,31 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
          */
         if (isNetworkError(err)) {
           handleNewClient(newClient)
+          return
+        }
+
+        /**
+         * Handle 404 errors (endpoint not found):
+         * Set the client anyway to prevent endless loading, but show an error banner
+         * to guide users to check their environment settings.
+         */
+        const is404Error = (err as any)?.response?.status === 404
+        if (is404Error) {
+          logger.warn('OpenID configuration endpoint not found (404). App will continue but authentication may fail.')
+          handleNewClient(newClient)
+
+          // Show error banner to user
+          dispatch({
+            type: BCDispatchAction.ADD_BANNER_MESSAGE,
+            payload: [
+              {
+                id: 'ias-endpoint-404',
+                type: 'error',
+                title: 'IAS Endpoint Not Found',
+                message: 'The selected IAS environment endpoint was not found. Please check your environment settings.',
+              },
+            ],
+          })
           return
         }
 
