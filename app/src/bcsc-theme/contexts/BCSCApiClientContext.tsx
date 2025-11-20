@@ -135,7 +135,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           logger.warn('OpenID configuration endpoint not found (404). App will continue but authentication may fail.')
           handleNewClient(newClient)
 
-          // Show error banner to user
           dispatch({
             type: BCDispatchAction.ADD_BANNER_MESSAGE,
             payload: [
