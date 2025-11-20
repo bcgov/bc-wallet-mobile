@@ -88,7 +88,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Automated testing
-        run: yarn test # includes coverage collection
+        run: yarn coverage # runs tests and generates coverage report
 
       - uses: codecov/codecov-action@v5
         with:
