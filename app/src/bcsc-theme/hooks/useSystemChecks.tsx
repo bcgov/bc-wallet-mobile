@@ -9,13 +9,13 @@ import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCh
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { navigationRef } from 'App'
-import { useEffect, useRef } from 'react'
+import { useContext, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
 import BCSCApiClient from '../api/client'
 import useConfigApi from '../api/hooks/useConfigApi'
 import useTokenApi from '../api/hooks/useTokens'
-import useUserApi from '../api/hooks/useUserApi'
+import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
 import { useBCSCApiClientState } from './useBCSCApiClient'
 
 const BCSC_BUILD_SUFFIX = '.servicescard'
@@ -41,9 +41,11 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
   const tokenApi = useTokenApi(client as BCSCApiClient)
-  const userApi = useUserApi(client as BCSCApiClient)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const ranSystemChecksRef = useRef(false)
+  const accountContext = useContext(BCSCAccountContext)
+
+  const accountExpirationDate = accountContext?.account?.account_expiration_date
 
   // Internet connectivity event listener
   useEventListener(() => {
@@ -65,13 +67,13 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         return
       }
 
-      ranSystemChecksRef.current = true
-
       const utils = { dispatch, translation: t, logger }
 
       try {
         // Checks to run once on app startup (root stack)
         if (scope === SystemCheckScope.STARTUP) {
+          ranSystemChecksRef.current = true
+
           const serverStatus = await configApi.getServerStatus()
 
           const startupChecks: SystemCheckStrategy[] = [new ServerStatusSystemCheck(serverStatus, utils)]
@@ -87,14 +89,15 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
         }
 
         // Checks to run once on main stack (verified users)
-        if (scope === SystemCheckScope.MAIN_STACK) {
+        if (scope === SystemCheckScope.MAIN_STACK && accountExpirationDate) {
+          ranSystemChecksRef.current = true
+
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
-          const accountExpiry = await userApi.getAccountExpirationDate()
 
           await runSystemChecks([
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
             new DeviceCountSystemCheck(getIdToken, utils),
-            new AccountExpirySystemCheck(accountExpiry, utils),
+            new AccountExpirySystemCheck(accountExpirationDate, utils),
           ])
         }
       } catch (error) {
@@ -103,7 +106,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     runChecksByScope()
-  }, [client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi, userApi])
+  }, [accountExpirationDate, client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi])
 }
 
 /**
