@@ -24,7 +24,7 @@ import { ForgetAllPairingsScreen } from '../features/settings/ForgetAllPairingsS
 import { MainContactUsScreen } from '../features/settings/MainContactUsScreen'
 import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
-import { MainSplashScreen } from '../features/splash/MainSplashScreen'
+import { MainLoadingScreen } from '../features/splash-loading/MainLoadingScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
@@ -53,7 +53,7 @@ const MainStack: React.FC = () => {
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
-        initialRouteName={BCSCScreens.MainSplash}
+        initialRouteName={BCSCScreens.MainLoading}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
@@ -64,8 +64,8 @@ const MainStack: React.FC = () => {
         }}
       >
         <Stack.Screen
-          name={BCSCScreens.MainSplash}
-          component={MainSplashScreen}
+          name={BCSCScreens.MainLoading}
+          component={MainLoadingScreen}
           options={{
             header: createHeaderWithoutBanner,
           }}

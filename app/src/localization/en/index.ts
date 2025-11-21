@@ -139,6 +139,9 @@ const translation = {
       "PrivacyInformation": "Privacy Information",
       "ManageDevices": "Manage Devices",
     },
+    "Loading": {
+      "DefaultMessage": "A secure way to prove who you are online",
+    },
     "Settings": {
       "HeaderA": "App Settings",
       "HeaderB": "Information",
