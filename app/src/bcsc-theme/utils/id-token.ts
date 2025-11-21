@@ -76,6 +76,7 @@ export interface IdToken {
  * @returns {*} {Promise<BCSCAccountToken>} Parsed ID token payload as a IdToken object.
  */
 export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger): Promise<IdToken> {
+  // coverage test
   try {
     const payloadString = await decodePayload(idToken)
     const payload: IdToken = JSON.parse(payloadString)
@@ -91,3 +92,5 @@ export async function getIdTokenMetadata(idToken: string, logger: BifoldLogger):
     throw error
   }
 }
+
+const tempCoverageTest = () => null
