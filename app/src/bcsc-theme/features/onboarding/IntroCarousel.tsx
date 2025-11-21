@@ -1,3 +1,4 @@
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -5,7 +6,6 @@ import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Animated, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
 import { Directions, FlingGestureHandler, State } from 'react-native-gesture-handler'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 // TODO (MD): Waiting on final content, replace mock content with real carousel text
 const mockCarouselContent =
@@ -126,7 +126,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenWrapper scrollable={false}>
       <FlingGestureHandler
         direction={Directions.LEFT}
         onHandlerStateChange={(event) => {
@@ -177,7 +177,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
                 {carouselPages.map((page, index) => (
                   <View
                     key={`carousel-circle-${page.key}`}
-                    style={[styles.carouselCircle, carouselIndex === index && styles.carouselCircleHighlighted]}
+                    style={[styles.carouselCircle, carouselIndex >= index && styles.carouselCircleHighlighted]}
                   />
                 ))}
               </View>
@@ -195,6 +195,6 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
           </View>
         </FlingGestureHandler>
       </FlingGestureHandler>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }

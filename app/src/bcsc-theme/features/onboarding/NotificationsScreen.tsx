@@ -1,3 +1,4 @@
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   Button,
@@ -12,8 +13,7 @@ import {
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StyleSheet, View } from 'react-native'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 
 // TODO: Replace with real content when available
@@ -36,9 +36,6 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
     scollContainer: {
       padding: Spacing.md,
       gap: Spacing.lg,
@@ -68,36 +65,39 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
     dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [status === 'granted'] })
   }
 
+  const controls = (
+    <>
+      <Button
+        title={t('Global.Continue')}
+        buttonType={ButtonType.Primary}
+        onPress={async () => {
+          await activatePushNotifications()
+          navigation.navigate(BCSCScreens.OnboardingSecureApp)
+        }}
+        testID={testIdWithKey('Continue')}
+        accessibilityLabel={t('Global.Continue')}
+      />
+      <Button
+        title={t('BCSC.Onboarding.NotificationsContinueButtonSecondary')}
+        buttonType={ButtonType.Secondary}
+        onPress={() => navigation.navigate(BCSCScreens.OnboardingSecureApp)}
+        testID={testIdWithKey('Continue')}
+        accessibilityLabel={t('BCSC.Onboarding.NotificationsContinueButtonSecondary')}
+      />
+    </>
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scollContainer}>
-        <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-        <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
-        <ThemedText style={styles.contentText}>{mockNotificationsContent}</ThemedText>
-      </ScrollView>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title={t('Global.Continue')}
-          buttonType={ButtonType.Primary}
-          onPress={async () => {
-            await activatePushNotifications()
-            navigation.navigate(BCSCScreens.OnboardingSecureApp)
-          }}
-          testID={testIdWithKey('Continue')}
-          accessibilityLabel={t('Global.Continue')}
-        />
-
-        <Button
-          title={t('BCSC.Onboarding.NotificationsContinueButtonSecondary')}
-          buttonType={ButtonType.Secondary}
-          onPress={() => {
-            navigation.navigate(BCSCScreens.OnboardingSecureApp)
-          }}
-          testID={testIdWithKey('Continue')}
-          accessibilityLabel={t('BCSC.Onboarding.NotificationsContinueButtonSecondary')}
-        />
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper
+      controls={controls}
+      controlsContainerStyle={styles.buttonContainer}
+      scrollViewProps={{
+        contentContainerStyle: styles.scollContainer,
+      }}
+    >
+      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
+      <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
+      <ThemedText style={styles.contentText}>{mockNotificationsContent}</ThemedText>
+    </ScreenWrapper>
   )
 }

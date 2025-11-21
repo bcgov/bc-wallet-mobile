@@ -1,6 +1,8 @@
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createSecuringAppWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { PrivacyPolicyContent } from './components/PrivacyPolicyContent'
@@ -18,6 +20,7 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
   navigation,
 }: OnboardingPrivacyPolicyScreenProps): JSX.Element => {
   const { t } = useTranslation()
+  const theme = useTheme()
 
   const onPress = () => {
     navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
@@ -31,5 +34,29 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
     })
   }
 
-  return <PrivacyPolicyContent onPress={onPress} onLearnMore={handleLearnMore} />
+  const controls = (
+    <Button
+      title={t('Global.Continue')}
+      buttonType={ButtonType.Primary}
+      onPress={onPress}
+      testID={testIdWithKey('Continue')}
+      accessibilityLabel={t('Global.Continue')}
+    />
+  )
+
+  const scrollContentStyle = {
+    padding: theme.Spacing.md,
+    gap: theme.Spacing.lg,
+  }
+
+  return (
+    <ScreenWrapper
+      edges={['bottom', 'left', 'right']}
+      controls={controls}
+      controlsContainerStyle={{ padding: theme.Spacing.md }}
+      scrollViewProps={{ contentContainerStyle: scrollContentStyle }}
+    >
+      <PrivacyPolicyContent onLearnMore={handleLearnMore} />
+    </ScreenWrapper>
+  )
 }
