@@ -29,10 +29,7 @@ describe('BCSCApiClientProvider', () => {
         iasApiBaseUrl: 'https://example.com',
       },
     }
-    const mockLogger: any = {
-      info: jest.fn(),
-      error: jest.fn(),
-    }
+    const mockLogger: any = {}
     const dispatchMock = jest.fn()
 
     bifoldMock.useServices.mockReturnValue([mockLogger])
@@ -169,8 +166,8 @@ describe('BCSCApiClientProvider', () => {
       developer: { iasApiBaseUrl: 'https://example.com' },
     }
     const mockLogger: any = {
-      info: jest.fn(),
       error: jest.fn(),
+      warn: jest.fn(),
     }
     const dispatchMock = jest.fn()
     bifoldMock.useServices.mockReturnValue([mockLogger])
@@ -204,8 +201,8 @@ describe('BCSCApiClientProvider', () => {
       developer: { iasApiBaseUrl: 'https://example.com' },
     }
     const mockLogger: any = {
-      info: jest.fn(),
       error: jest.fn(),
+      warn: jest.fn(),
     }
     const dispatchMock = jest.fn()
     bifoldMock.useServices.mockReturnValue([mockLogger])
