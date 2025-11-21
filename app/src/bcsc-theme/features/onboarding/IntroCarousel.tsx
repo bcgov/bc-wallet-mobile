@@ -96,7 +96,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
     },
     carouselImage: {
       width: screenWidth,
-      height: screenWidth,
+      height: 300,
       resizeMode: 'contain',
     },
   })
