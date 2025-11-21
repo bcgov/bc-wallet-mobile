@@ -12,6 +12,10 @@ import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButt
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
 import TransferQRInformationScreen from '../features/account-transfer/TransferQRInformationScreen'
 import TransferSuccessScreen from '../features/account-transfer/TransferSuccessScreen'
+import { AccountExpiredScreen } from '../features/account/AccountExpiredScreen'
+import { AccountRenewalFinalWarningScreen } from '../features/account/AccountRenewalFinalWarningScreen'
+import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRenewalFirstWarningScreen'
+import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
@@ -190,6 +194,38 @@ const MainStack: React.FC = () => {
           component={Developer}
           options={() => ({
             title: t('Developer.DeveloperMode'),
+            headerShown: true,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.AccountExpired}
+          component={AccountExpiredScreen}
+          options={() => ({
+            animationEnabled: false,
+            title: t('BCSC.Title'),
+            headerShown: true,
+            // This screen has its own banner inside the screen component
+            header: createHeaderWithoutBanner,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.AccountRenewalInformation}
+          component={AccountRenewalInformationScreen}
+          options={() => ({
+            headerShown: true,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.AccountRenewalFirstWarning}
+          component={AccountRenewalFirstWarningScreen}
+          options={() => ({
+            headerShown: true,
+          })}
+        />
+        <Stack.Screen
+          name={BCSCScreens.AccountRenewalFinalWarning}
+          component={AccountRenewalFinalWarningScreen}
+          options={() => ({
             headerShown: true,
           })}
         />

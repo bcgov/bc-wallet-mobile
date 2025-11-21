@@ -1,5 +1,6 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { TOKENS, useServices } from '@bifold/core'
+import { BCState } from '@/store'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SystemModal } from './components/SystemModal'
@@ -13,16 +14,23 @@ export const DeviceInvalidated = (): JSX.Element => {
   const { t } = useTranslation()
   const factoryReset = useFactoryReset()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [store] = useStore<BCState>()
+
   /**
    * Handles the factory reset operation.
    */
   const handleFactoryReset = useCallback(async () => {
-    const result = await factoryReset()
+    const result = await factoryReset({
+      completedNewSetup: true,
+      completedOnboarding: true,
+      nicknames: store.bcsc.nicknames,
+      selectedNickname: store.bcsc.selectedNickname,
+    })
 
     if (!result.success) {
       logger.error('Factory reset failed', result.error)
     }
-  }, [factoryReset, logger])
+  }, [factoryReset, logger, store.bcsc.nicknames, store.bcsc.selectedNickname])
 
   return (
     <SystemModal

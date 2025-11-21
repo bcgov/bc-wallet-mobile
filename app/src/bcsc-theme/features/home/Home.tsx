@@ -1,3 +1,4 @@
+import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
 import { NotificationBannerContainer } from '@/bcsc-theme/components/NotificationBannerContainer'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
@@ -44,7 +45,7 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   return (
     <TabScreenWrapper>
       <NotificationBannerContainer onManageDevices={handleManageDevices} />
-      <HomeHeader name={account.fullname_formatted} />
+      <HomeHeader name={account.fullname_formatted} cardSize={GENERIC_CARD_SIZE_SMALL} />
       <View style={styles.buttonsContainer}>
         <SectionButton
           title={t('BCSC.Home.WhereToUseTitle')}
