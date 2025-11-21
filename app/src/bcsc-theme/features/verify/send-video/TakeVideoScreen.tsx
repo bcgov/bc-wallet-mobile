@@ -8,7 +8,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
+import {
+  Camera,
+  CameraRuntimeError,
+  useCameraDevice,
+  useCameraPermission,
+  useMicrophonePermission,
+} from 'react-native-vision-camera'
 
 const maxVideoDurationSeconds = 30
 
@@ -54,49 +60,53 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prompt])
 
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-    },
-    camera: {
-      flex: 1,
-    },
-    promptContainer: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-      paddingVertical: Spacing.lg,
-      paddingHorizontal: Spacing.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    controlsContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-      paddingBottom: Spacing.md,
-      paddingHorizontal: Spacing.md,
-      flexDirection: 'column',
-    },
-    cancelContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingTop: Spacing.md,
-      paddingBottom: Spacing.xl,
-    },
-    recordingLengthContainer: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      flex: 1,
-    },
-  })
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        pageContainer: {
+          flex: 1,
+        },
+        camera: {
+          flex: 1,
+        },
+        promptContainer: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: ColorPalette.notification.popupOverlay,
+          paddingVertical: Spacing.lg,
+          paddingHorizontal: Spacing.md,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        controlsContainer: {
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: ColorPalette.notification.popupOverlay,
+          paddingBottom: Spacing.md,
+          paddingHorizontal: Spacing.md,
+          flexDirection: 'column',
+        },
+        cancelContainer: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingTop: Spacing.md,
+          paddingBottom: Spacing.xl,
+        },
+        recordingLengthContainer: {
+          flexDirection: 'row',
+          gap: Spacing.sm,
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          flex: 1,
+        },
+      }),
+    [ColorPalette.notification.popupOverlay, Spacing]
+  )
 
   const handleCancel = () => {
     navigation.goBack()
@@ -245,7 +255,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     setIsActive(true)
   }
 
-  const onError = (error: any) => {
+  const onError = (error: CameraRuntimeError) => {
     logger.error('Camera error:', error)
     Alert.alert(t('BCSC.SendVideo.TakeVideo.CameraError'), t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'))
   }
@@ -306,7 +316,12 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         {recordingInProgress ? (
           <View style={styles.controlsContainer}>
             <View style={styles.cancelContainer}>
-              <TouchableOpacity onPress={handleCancel} hitSlop={hitSlop}>
+              <TouchableOpacity
+                onPress={handleCancel}
+                hitSlop={hitSlop}
+                accessibilityLabel={t('Global.Cancel')}
+                accessibilityRole="button"
+              >
                 <ThemedText style={{ color: 'white' }}>{t('Global.Cancel')}</ThemedText>
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
