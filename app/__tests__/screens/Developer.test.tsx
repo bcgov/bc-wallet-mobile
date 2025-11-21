@@ -5,14 +5,6 @@ import React from 'react'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import Developer from '../../src/screens/Developer'
 
-const mockNavigation = jest.fn()
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => {
-    return mockNavigation
-  },
-}))
-
 describe('Developer Screen', () => {
   beforeEach(() => {
     // Silence console.error because it will print a warning about Switch
