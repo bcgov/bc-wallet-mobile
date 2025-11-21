@@ -29,13 +29,13 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
-  const [over30Seconds, setOver30Seconds] = useState(false)
+  const [exceedsMaxDuration, setExceedsMaxDuration] = useState(false)
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const over30SecondsRef = useRef(false)
+  const exceedsMaxDurationRef = useRef(false)
   const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -106,18 +106,18 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const startTimer = useCallback(() => {
     const startTime = Date.now()
     setElapsedTime(0)
-    setOver30Seconds(false)
+    setExceedsMaxDuration(false)
     elapsedTimeRef.current = 0
-    over30SecondsRef.current = false
+    exceedsMaxDurationRef.current = false
 
     timerRef.current = setInterval(() => {
       const currentTime = Date.now()
       const elapsed = Math.floor((currentTime - startTime) / 1000)
 
       // Check if we've exceeded the max duration, but only trigger once
-      if (elapsed > maxVideoDurationSeconds && !over30SecondsRef.current) {
-        over30SecondsRef.current = true
-        setOver30Seconds(true) // Trigger re-render for UI
+      if (elapsed > maxVideoDurationSeconds && !exceedsMaxDurationRef.current) {
+        exceedsMaxDurationRef.current = true
+        setExceedsMaxDuration(true) // Trigger re-render for UI
       }
 
       elapsedTimeRef.current = elapsed
@@ -159,7 +159,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         stopTimer() // Stop timer when manually stopping recording
         setPrompt('')
         const snapshot = await cameraRef.current!.takeSnapshot()
-        if (over30SecondsRef.current) {
+        if (exceedsMaxDurationRef.current) {
           navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
         } else {
           navigation.navigate(BCSCScreens.VideoReview, {
@@ -305,7 +305,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
                 <ThemedText style={{ color: ColorPalette.semantic.error }}>{'\u2B24'}</ThemedText>
                 <ThemedText
                   style={{
-                    color: over30Seconds ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
+                    color: exceedsMaxDuration ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
                   }}
                 >
                   {formatTime(elapsedTime)}
