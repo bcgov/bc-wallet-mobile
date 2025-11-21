@@ -130,8 +130,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             <Button
               buttonType={ButtonType.Secondary}
               onPress={handleSkip}
-              title={t('BCSC.EnterEmail.Skip')}
-              accessibilityLabel={t('BCSC.EnterEmail.Skip')}
+              title={t('BCSC.EnterEmail.EmailSkip')}
+              accessibilityLabel={t('BCSC.EnterEmail.EmailSkip')}
               testID={'SkipButton'}
             />
           ) : null}

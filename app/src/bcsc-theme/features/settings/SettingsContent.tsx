@@ -145,7 +145,8 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
                 onPress={onPressActionTodo}
                 endAdornmentText={`${store.preferences.autoLockTime} min`}
               />
-              <SettingsActionCard title={t('BCSC.Settings.Notifications')} onPress={onPressActionTodo} />
+              {/* TODO: (AR) Keeping this hidden for phase 1 */}
+              {/* <SettingsActionCard title={t('BCSC.Settings.Notifications')} onPress={onPressActionTodo} /> */}
               {onForgetAllPairings ? (
                 <SettingsActionCard title={t('BCSC.Settings.ForgetPairings')} onPress={onForgetAllPairings} />
               ) : null}
