@@ -37,4 +37,4 @@ const CommonActions = {
   goBack: jest.fn(),
 }
 
-export { useNavigation, useIsFocused, CommonActions }
+export { CommonActions, useIsFocused, useNavigation }

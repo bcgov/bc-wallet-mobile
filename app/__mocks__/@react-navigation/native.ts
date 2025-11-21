@@ -42,4 +42,4 @@ const CommonActions = {
 const useFocusEffect = jest.fn()
 const createNavigatorFactory = jest.fn()
 
-export { useNavigation, useIsFocused, useRoute, useFocusEffect, createNavigatorFactory, CommonActions }
+export { CommonActions, createNavigatorFactory, useFocusEffect, useIsFocused, useNavigation, useRoute }
