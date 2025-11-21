@@ -20,8 +20,10 @@ const baseOptions: RemoteLoggerOptions = {
   autoDisableRemoteLoggingIntervalInMinutes,
 }
 
-/** Map string (from env) to LogLevel enum; unknown values
- * fallback to debug */
+/**
+ * Maps string (from env) to LogLevel enum.
+ * Unknown values fallback to debug.
+ */
 const parseEnvLogLevel = (value?: string): LogLevel => {
   if (!value) return LogLevel.debug
   switch (value.toLowerCase()) {
@@ -43,8 +45,8 @@ const parseEnvLogLevel = (value?: string): LogLevel => {
   }
 }
 
-/** Factory for creating a new app-specific RemoteLogger instance
- * If logLevel param omitted, use Config.LOG_LEVEL env mapping.
+/** Factory for creating a new app-specific RemoteLogger instance.
+ * If the logLevel parameter is omitted, the Config.LOG_LEVEL env mapping is used.
  */
 export const createAppLogger = (extraLabels: Record<string, string> = {}, logLevel?: LogLevel): RemoteLogger => {
   const effectiveLevel = logLevel ?? parseEnvLogLevel(Config.LOG_LEVEL)
