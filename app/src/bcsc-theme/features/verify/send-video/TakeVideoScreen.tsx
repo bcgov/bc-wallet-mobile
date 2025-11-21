@@ -10,6 +10,8 @@ import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
 
+const maxVideoDurationSeconds = 30
+
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
 }
@@ -27,9 +29,9 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
-  const [over30Seconds, setOver30Seconds] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const over30SecondsRef = useRef(false)
   const promptOpacity = useRef(new Animated.Value(1)).current
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
@@ -102,13 +104,18 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const startTimer = useCallback(() => {
     const startTime = Date.now()
     setElapsedTime(0)
+    over30SecondsRef.current = false
 
     timerRef.current = setInterval(() => {
       const currentTime = Date.now()
       const elapsed = Math.floor((currentTime - startTime) / 1000)
-      if (elapsed >= 30 && !over30Seconds) {
-        setOver30Seconds(true)
+
+      // Check if we've exceeded the max duration, but only trigger once
+      if (elapsed > maxVideoDurationSeconds && !over30SecondsRef.current) {
+        console.log('over 30 seconds')
+        over30SecondsRef.current = true
       }
+
       setElapsedTime(elapsed)
     }, 1000)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -147,9 +154,11 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         stopTimer() // Stop timer when manually stopping recording
         setPrompt('')
         const snapshot = await cameraRef.current!.takeSnapshot()
-        if (over30Seconds) {
+        if (over30SecondsRef.current) {
+          console.log('over 30 seconds 2')
           navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTime })
         } else {
+          console.log('under 30 seconds 2')
           navigation.navigate(BCSCScreens.VideoReview, {
             videoPath: video.path,
             videoThumbnailPath: snapshot.path,
@@ -291,7 +300,9 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
               <View style={styles.recordingLengthContainer}>
                 <ThemedText style={{ color: ColorPalette.semantic.error }}>{'\u2B24'}</ThemedText>
                 <ThemedText
-                  style={{ color: over30Seconds ? ColorPalette.semantic.error : ColorPalette.grayscale.white }}
+                  style={{
+                    color: over30SecondsRef.current ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
+                  }}
                 >
                   {formatTime(elapsedTime)}
                 </ThemedText>
