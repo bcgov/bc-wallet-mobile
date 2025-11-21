@@ -251,9 +251,32 @@ const translation = {
         "UpdateAvailableBannerTitle": "App update available",
       },
       "AccountExpiry": {
-        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}.",
-        "ExpiredBannerTitle": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in.",
+        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}."
       }
+    },
+    "AccountExpired": {
+      "StaticBannerTitle": "Account expired",
+      "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in.",
+      "RenewButton": "Renew account",
+      "RemoveButton": "Remove account",
+    },
+    "AccountRenewal": {
+      "InformationHeader": "What you need to renew",
+      "InformationBCServicesCardSubHeader": "1. BC Services Card",
+      "InformationBCServicesCardContent": "It must be valid. Check the expiry date printed on the front of your card.",
+      "InformationGetNewCardA": "Get a new card",
+      "InformationGetNewCardB": "if it is expired.",
+      "InformationPhotoIdSubHeader": "2. Photo ID", 
+      "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs.",
+      "InformationTypesOfAcceptedId": "Types of accepted ID",
+      "RenewalTimeHeader": "Time to renew",
+      "RenewalTimeContentA": "You’ll need to verify your identity again and provide your ID.",
+      "RenewalTimeContentB": "It may take about 1-2 business days.",
+      "RenewalTimeContentC": "The time to complete depends on how you choose to verify your identity - in person, with a video call, or by sending in a video.",
+      "WarningHeader": "Warning",
+      "WarningContentA": "You will not be able to use this app to log in until you complete renewal.",
+      "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA).",
+      "WarningRenewButton": "Renew"
     },
     "ForgetAllPairings": {
       "Title": "Forget all pairings?",

@@ -251,9 +251,32 @@ const translation = {
         "UpdateAvailableBannerTitle": "App update available (PT-BR)",
       },
       "AccountExpiry": {
-        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}. (PT-BR)",
-        "ExpiredBannerTitle": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (PT-BR)",
-      }
+        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}."
+      },
+    },
+    "AccountExpired": {
+      "StaticBannerTitle": "Account expired (PT-BR)",
+      "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (PT-BR)",
+      "RenewButton": "Renew account (PT-BR)",
+      "RemoveButton": "Remove account (PT-BR)",
+    },
+    "AccountRenewal": {
+      "InformationHeader": "What you need to renew (PT-BR)",
+      "InformationBCServicesCardSubHeader": "1. BC Services Card (PT-BR)",
+      "InformationBCServicesCardContent": "It must be valid. Check the expiry date printed on the front of your card. (PT-BR)",
+      "InformationGetNewCardA": "Get a new card (PT-BR)",
+      "InformationGetNewCardB": "if it is expired. (PT-BR)",
+      "InformationPhotoIdSubHeader": "2. Photo ID (PT-BR)", 
+      "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs. (PT-BR)",
+      "InformationTypesOfAcceptedId": "Types of accepted ID (PT-BR)",
+      "RenewalTimeHeader": "Time to renew (PT-BR)",
+      "RenewalTimeContentA": "You’ll need to verify your identity again and provide your ID. (PT-BR)",
+      "RenewalTimeContentB": "It may take about 1-2 business days. (PT-BR)",
+      "RenewalTimeContentC": "The time to complete depends on how you choose to verify your identity - in person, with a video call, or by sending in a video. (PT-BR)",
+      "WarningHeader": "Warning (PT-BR)",
+      "WarningContentA": "You will not be able to use this app to log in until you complete renewal. (PT-BR)",
+      "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA). (PT-BR)",
+      "WarningRenewButton": "Renew (PT-BR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all pairings? (PT-BR)",

@@ -6,7 +6,9 @@ import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 
 /**
- * Checks if the user's account is expired or close to expiration.
+ * Checks if the user's account is expiring soon (warning period), but not yet expired.
+ *
+ * TODO (MD): Techdebt - Rename this to AccountExpiryWarningSystemCheck to better reflect its purpose.
  *
  * @class AccountExpirySystemCheck
  * @implements {SystemCheckStrategy}
@@ -14,26 +16,41 @@ const ACCOUNT_EXPIRATION_WARNING_DAYS = 30
 export class AccountExpirySystemCheck implements SystemCheckStrategy {
   private readonly accountExpiration: Date
   private readonly utils: SystemCheckUtils
-  private daysUntilExpired: number = 0
 
   constructor(accountExpiration: Date, utils: SystemCheckUtils) {
     this.accountExpiration = accountExpiration
     this.utils = utils
   }
 
-  runCheck() {
-    this.daysUntilExpired = moment(this.accountExpiration).diff(moment(), 'days')
+  /**
+   * Determines if the account is expired, or within the warning period.
+   *
+   * @example `
+   *   10 days until expiration, 30 day warning period => true
+   *   40 days until expiration, 30 day warning period => false
+   *   0 days until expiration, 30 day warning period => true
+   *  `
+   * @param {Date | string} accountExpiration - The expiration date of the account. ie: 'January 1, 1970' or Date object
+   * @param {number} warningPeriod - The number of days before expiration to start warning.
+   * @returns {*} {boolean} - True if the account is expired or within the warning period, false otherwise.
+   */
+  static isAccountExpired(accountExpiration: Date | string, warningPeriod = 0): boolean {
+    const format = typeof accountExpiration === 'string' ? 'MMMM D, YYYY' : undefined
+    return moment(accountExpiration, format).diff(moment(), 'days') <= warningPeriod
+  }
 
-    // Return false if the account is expired or expiring soon
-    return this.daysUntilExpired > ACCOUNT_EXPIRATION_WARNING_DAYS
+  runCheck() {
+    const isExpiringSoon = AccountExpirySystemCheck.isAccountExpired(
+      this.accountExpiration,
+      ACCOUNT_EXPIRATION_WARNING_DAYS
+    )
+    const isExpired = AccountExpirySystemCheck.isAccountExpired(this.accountExpiration, 0)
+
+    // Only fail if expiring soon but not yet expired
+    return !isExpiringSoon || isExpired
   }
 
   onFail() {
-    // Account is expired
-    if (this.daysUntilExpired <= 0) {
-      // TODO (MD): Handle account expired path
-    }
-
     // Account is expiring soon
     this.utils.dispatch({
       type: BCDispatchAction.ADD_BANNER_MESSAGE,
