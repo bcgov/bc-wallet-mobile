@@ -83,6 +83,7 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         bold: {
           color: theme.ColorPalette.grayscale.white,
+          lineHeight: 30,
         },
         label: {
           color: theme.ColorPalette.grayscale.white,
