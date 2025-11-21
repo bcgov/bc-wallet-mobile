@@ -38,6 +38,12 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const promptOpacity = useRef(new Animated.Value(1)).current
   const { t } = useTranslation()
 
+  const isLastPrompt = useMemo(() => {
+    if (prompt === '') return true // Recording finished, treat as last prompt
+    const currentIndex = prompts.indexOf(prompt)
+    return currentIndex >= prompts.length - 1
+  }, [prompts, prompt])
+
   useEffect(() => {
     promptOpacity.setValue(0)
     Animated.timing(promptOpacity, {
@@ -316,11 +322,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
             </View>
             <Button
               buttonType={ButtonType.Primary}
-              title={
-                prompts.indexOf(prompt) < prompts.length - 1
-                  ? t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')
-                  : t('BCSC.SendVideo.TakeVideo.Done')
-              }
+              title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
               onPress={onPressNextPrompt}
               testID={'StartRecordingButton'}
               accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
