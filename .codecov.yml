@@ -1,0 +1,38 @@
+# Codecov configuration documentation
+# https://docs.codecov.com/docs/coverage-configuration
+#
+# Validate your configuration
+# https://api.codecov.io/validate
+# curl -X POST --data-binary @.codecov.yml https://codecov.io/validate
+
+coverage:
+  range: 60..80 # less than 60% fails, 80% and above passes
+  round: down # round down fractional coverage ie: 70.7532 -> 70.75
+  precision: 2 # number of digits after the decimal point
+  status:
+    project:
+      default:
+        target: auto # target coverage is set to the current coverage
+        threshold: 5%
+        base: auto
+        branches:
+          - main
+        paths:
+          - app/src
+        only_pulls: true
+        informational: true # always pass, even if threshold is not met
+    patch:
+      default:
+        target: auto # target coverage is set to the current coverage
+        threshold: 1% # allowed decrease in coverage before failing
+        base: auto # base coverage is set to the current coverage
+        branches:
+          - main
+        paths:
+          - app/src
+      only_pulls: true
+
+comment:
+  layout: "header, files, footer"
+  require_changes: false        
+  hide_project_coverage: false

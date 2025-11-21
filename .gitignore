@@ -71,3 +71,5 @@ credo-ts/
 app/vendor/
 
 .metro-cache/
+
+coverage/

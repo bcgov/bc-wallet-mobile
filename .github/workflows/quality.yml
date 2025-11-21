@@ -1,6 +1,8 @@
 name: Code Quality
 
 on:
+  push:
+    branches: [main] # needed so codecov gets BASE coverage for comparison
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, labeled]
@@ -63,7 +65,7 @@ jobs:
 
   test:
     runs-on: ubuntu-22.04
-    name: Testing
+    name: Testing + Coverage
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
@@ -88,4 +90,9 @@ jobs:
         run: yarn install --immutable
 
       - name: Automated testing
-        run: yarn test
+        run: yarn coverage # runs tests and generates coverage report
+
+      - uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 #V5 (v5.5.1) pinning for SonarQube
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+        if: always()

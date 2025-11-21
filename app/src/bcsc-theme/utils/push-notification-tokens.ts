@@ -16,6 +16,21 @@ export interface NotificationTokens {
  * @throws with the failure message if no fcmDeviceToken is not retrieved
  */
 export const getNotificationTokens = async (logger: BifoldLogger): Promise<NotificationTokens> => {
+  if (!messaging().isDeviceRegisteredForRemoteMessages) {
+    try {
+      await messaging().registerDeviceForRemoteMessages()
+    } catch (error) {
+      // This is the extremely rare case react-native-firebase fails to register
+      // We log the error but continue with a dummy string as registration will still work
+      // it will just mean push notifications won't be received until the next registration update
+      logger.error('Failed to register device for remote messages', error as Error)
+      return {
+        fcmDeviceToken: 'missing_token_due_to_rnf_registration_failure',
+        deviceToken: null,
+      }
+    }
+  }
+
   const fetchFcmToken = async (): Promise<string> => {
     try {
       const token = await messaging().getToken()
