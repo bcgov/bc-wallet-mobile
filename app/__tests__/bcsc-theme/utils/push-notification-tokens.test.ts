@@ -4,11 +4,17 @@ import { Platform } from 'react-native'
 // Mock the messaging module
 const mockGetToken = jest.fn()
 const mockGetAPNSToken = jest.fn()
+const mockRegisterDeviceForRemoteMessages = jest.fn()
+const mockIsDeviceRegisteredForRemoteMessages = jest.fn()
 
 jest.mock('@react-native-firebase/messaging', () => {
   return jest.fn(() => ({
     getToken: mockGetToken,
     getAPNSToken: mockGetAPNSToken,
+    registerDeviceForRemoteMessages: mockRegisterDeviceForRemoteMessages,
+    get isDeviceRegisteredForRemoteMessages() {
+      return mockIsDeviceRegisteredForRemoteMessages()
+    },
   }))
 })
 
@@ -50,6 +56,8 @@ describe('getNotificationTokens', () => {
     jest.clearAllMocks()
     // Reset Platform.OS to iOS for most tests
     setPlatformOS('ios')
+    // Default to device already registered (most common case)
+    mockIsDeviceRegisteredForRemoteMessages.mockReturnValue(true)
   })
 
   describe('when successful', () => {
@@ -221,6 +229,68 @@ describe('getNotificationTokens', () => {
         fcmDeviceToken: 'mock_fcm_token',
         deviceToken: null,
       })
+    })
+  })
+
+  describe('device registration for remote messages', () => {
+    it('does not register when device is already registered', async () => {
+      setPlatformOS('ios')
+      mockIsDeviceRegisteredForRemoteMessages.mockReturnValue(true)
+      mockGetToken.mockResolvedValue('mock_fcm_token')
+      mockGetAPNSToken.mockResolvedValue('mock_apns_token')
+
+      await getNotificationTokens(mockLogger)
+
+      expect(mockRegisterDeviceForRemoteMessages).not.toHaveBeenCalled()
+    })
+
+    it('registers device when not registered and succeeds', async () => {
+      setPlatformOS('ios')
+      mockIsDeviceRegisteredForRemoteMessages.mockReturnValue(false)
+      mockRegisterDeviceForRemoteMessages.mockResolvedValue(undefined)
+      mockGetToken.mockResolvedValue('mock_fcm_token')
+      mockGetAPNSToken.mockResolvedValue('mock_apns_token')
+
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(mockRegisterDeviceForRemoteMessages).toHaveBeenCalledTimes(1)
+      expect(result).toEqual({
+        fcmDeviceToken: 'mock_fcm_token',
+        deviceToken: 'mock_apns_token',
+      })
+    })
+
+    it('continues with token fetch even if registration fails', async () => {
+      setPlatformOS('ios')
+      mockIsDeviceRegisteredForRemoteMessages.mockReturnValue(false)
+      mockRegisterDeviceForRemoteMessages.mockRejectedValue(new Error('Registration failed'))
+      mockGetToken.mockResolvedValue('mock_fcm_token')
+      mockGetAPNSToken.mockResolvedValue('mock_apns_token')
+
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(mockRegisterDeviceForRemoteMessages).toHaveBeenCalledTimes(1)
+      expect(mockLogger.error).toHaveBeenCalledWith('Failed to register device for remote messages', expect.any(Error))
+      expect(result).toEqual({
+        fcmDeviceToken: 'missing_token_due_to_rnf_registration_failure',
+        deviceToken: null,
+      })
+    })
+
+    it('works on Android when device is not registered', async () => {
+      setPlatformOS('android')
+      mockIsDeviceRegisteredForRemoteMessages.mockReturnValue(false)
+      mockRegisterDeviceForRemoteMessages.mockResolvedValue(undefined)
+      mockGetToken.mockResolvedValue('mock_fcm_token_android')
+
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(mockRegisterDeviceForRemoteMessages).toHaveBeenCalledTimes(1)
+      expect(result).toEqual({
+        fcmDeviceToken: 'mock_fcm_token_android',
+        deviceToken: null,
+      })
+      expect(mockGetAPNSToken).not.toHaveBeenCalled()
     })
   })
 })
