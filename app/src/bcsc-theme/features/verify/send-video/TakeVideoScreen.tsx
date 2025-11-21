@@ -90,7 +90,6 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       alignItems: 'center',
       flex: 1,
     },
-    cancelButton: {},
   })
 
   const handleCancel = () => {
@@ -152,7 +151,10 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       onRecordingError: (error) => {
         logger.error(`Recording error: ${error.message}`)
         stopTimer() // Stop timer on error
-        Alert.alert(t('SendVideo.TakeVideo.RecordingError'), t('SendVideo.TakeVideo.RecordingErrorDescription'))
+        Alert.alert(
+          t('BCSC.SendVideo.TakeVideo.RecordingError'),
+          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
+        )
       },
       onRecordingFinished: async (video) => {
         logger.info(`Recording finished, duration: ${video.duration}`)
@@ -188,8 +190,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           const permission = await requestCameraPermission()
           if (!permission) {
             Alert.alert(
-              t('SendVideo.TakeVideo.CameraPermissionRequired'),
-              t('SendVideo.TakeVideo.CameraPermissionRequiredDescription'),
+              t('BCSC.SendVideo.TakeVideo.CameraPermissionRequired'),
+              t('BCSC.SendVideo.TakeVideo.CameraPermissionRequiredDescription'),
               [{ text: 'OK', onPress: () => navigation.goBack() }]
             )
             return
@@ -199,8 +201,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           const permission = await requestMicrophonePermission()
           if (!permission) {
             Alert.alert(
-              t('SendVideo.TakeVideo.MicrophonePermissionRequired'),
-              t('SendVideo.TakeVideo.MicrophonePermissionRequiredDescription'),
+              t('BCSC.SendVideo.TakeVideo.MicrophonePermissionRequired'),
+              t('BCSC.SendVideo.TakeVideo.MicrophonePermissionRequiredDescription'),
               [{ text: 'OK', onPress: () => navigation.goBack() }]
             )
             return
@@ -298,7 +300,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         {recordingInProgress ? (
           <View style={styles.controlsContainer}>
             <View style={styles.cancelContainer}>
-              <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} hitSlop={hitSlop}>
+              <TouchableOpacity onPress={handleCancel} hitSlop={hitSlop}>
                 <ThemedText style={{ color: 'white' }}>{t('Global.Cancel')}</ThemedText>
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
