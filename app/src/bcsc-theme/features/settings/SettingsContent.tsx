@@ -1,4 +1,4 @@
-import { ACCESSIBILITY_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
+import { ACCESSIBILITY_URL, ANALYTICS_URL, FEEDBACK_URL, TERMS_OF_USE_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import TabScreenWrapper from '@bcsc-theme/components/TabScreenWrapper'
 import {
@@ -103,6 +103,18 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
   }
 
+  const onPressAnalytics = async () => {
+    try {
+      await Linking.openURL(ANALYTICS_URL)
+    } catch (error) {
+      logger.error('Error opening Analytics URL', error instanceof Error ? error : new Error(String(error)))
+    }
+  }
+
+  const onPressOptInAnalytics = () => {
+    dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [!store.bcsc.analyticsOptIn] })
+  }
+
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
@@ -150,6 +162,11 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
               {onForgetAllPairings ? (
                 <SettingsActionCard title={t('BCSC.Settings.ForgetPairings')} onPress={onForgetAllPairings} />
               ) : null}
+              <SettingsActionCard
+                title={t('BCSC.Settings.AnalyticsOptIn')}
+                onPress={onPressOptInAnalytics}
+                endAdornmentText={store.bcsc.analyticsOptIn ? 'ON' : 'OFF'}
+              />
             </View>
           </>
         ) : null}
@@ -164,6 +181,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
           <SettingsActionCard title={t('BCSC.Settings.Feedback')} onPress={onPressFeedback} />
           <SettingsActionCard title={t('BCSC.Settings.Accessibility')} onPress={onPressAccessibility} />
           <SettingsActionCard title={t('BCSC.Settings.TermsOfUse')} onPress={onPressTermsOfUse} />
+          <SettingsActionCard title={t('BCSC.Settings.Analytics')} onPress={onPressAnalytics} />
           {store.preferences.developerModeEnabled ? (
             <SettingsActionCard title={t('Developer.DeveloperMode')} onPress={onPressDeveloperMode} />
           ) : null}
@@ -174,7 +192,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
             onPress={incrementDeveloperMenuCounter}
             disabled={store.preferences.developerModeEnabled}
           >
-            <View>
+            <View style={{ alignItems: 'center' }}>
               <ThemedText variant="labelSubtitle">{t('BCSC.Title')}</ThemedText>
               <ThemedText variant="labelSubtitle">{`Version ${getVersion()} (${getBuildNumber()})`}</ThemedText>
             </View>

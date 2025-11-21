@@ -7,6 +7,7 @@ import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
+import { OnboardingOptInAnalyticsScreen } from '../features/onboarding/OnboardingOptInAnalyticsScreen'
 import { OnboardingPrivacyPolicyScreen } from '../features/onboarding/OnboardingPrivacyPolicyScreen'
 import { SecureAppScreen } from '../features/onboarding/SecureAppScreen'
 import { TermsOfUseScreen } from '../features/onboarding/TermsOfUseScreen'
@@ -44,6 +45,14 @@ const OnboardingStack = (): JSX.Element => {
         component={OnboardingPrivacyPolicyScreen}
         options={{
           title: t('BCSC.Onboarding.PrivacyPolicyTitle'),
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.OnboardingOptInAnalytics}
+        component={OnboardingOptInAnalyticsScreen}
+        options={{
+          title: t('BCSC.Onboarding.AnalyticsTitle'),
           headerShown: true,
         }}
       />

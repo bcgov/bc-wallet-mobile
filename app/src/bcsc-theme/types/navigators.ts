@@ -78,6 +78,7 @@ export enum BCSCScreens {
   OnboardingNotifications = 'BCSCOnboardingNotifications',
   OnboardingSecureApp = 'BCSCOnboardingSecureApp',
   OnboardingCreatePIN = 'BCSCOnboardingCreatePIN',
+  OnboardingOptInAnalytics = 'BCSCOnboardingOptInAnalytics',
   OnboardingWebView = 'BCSCOnboardingWebview',
   MainSplash = 'BCSCMainSplash',
   MainSettings = 'BCSCMainSettings',
@@ -104,7 +105,7 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
-
+  [BCSCScreens.OnboardingOptInAnalytics]: undefined
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
 }
