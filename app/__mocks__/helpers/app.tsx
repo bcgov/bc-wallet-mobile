@@ -13,6 +13,7 @@ export const BasicAppContext: React.FC<PropsWithChildren> = ({ children }) => {
     const childContainer = container.createChildContainer()
     childContainer.registerInstance(TOKENS.UTIL_LOGGER, new MockLogger())
     const c = new MainContainer(childContainer).init()
+
     return c
   }, [])
 
