@@ -93,7 +93,10 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           }
         )
-        attestation = await googleAttestation(nonce)
+        // Decode base64 nonce before passing to Play Integrity API
+        const decodedNonce = Buffer.from(nonce, 'base64').toString('utf8')
+        logger.debug(`Decoded nonce from ${nonce} to ${decodedNonce}`)
+        attestation = await googleAttestation(decodedNonce)
         logger.info('Obtained Android Play Integrity attestation')
       }
     } catch (error) {
@@ -134,6 +137,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
     logger.info('Generated dynamic client registration body')
+    logger.debug(`body: ${body}`)
 
     const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
       headers: { 'Content-Type': 'application/json' },
