@@ -63,7 +63,7 @@ jobs:
 
   test:
     runs-on: ubuntu-22.04
-    name: Testing
+    name: Testing + Coverage
     steps:
       - name: Checkout bc-wallet-mobile
         uses: actions/checkout@v4
