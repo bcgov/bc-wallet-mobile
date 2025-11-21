@@ -32,6 +32,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const over30SecondsRef = useRef(false)
+  const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
@@ -104,6 +105,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const startTimer = useCallback(() => {
     const startTime = Date.now()
     setElapsedTime(0)
+    elapsedTimeRef.current = 0
     over30SecondsRef.current = false
 
     timerRef.current = setInterval(() => {
@@ -112,10 +114,10 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
 
       // Check if we've exceeded the max duration, but only trigger once
       if (elapsed > maxVideoDurationSeconds && !over30SecondsRef.current) {
-        console.log('over 30 seconds')
         over30SecondsRef.current = true
       }
 
+      elapsedTimeRef.current = elapsed
       setElapsedTime(elapsed)
     }, 1000)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,10 +157,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         setPrompt('')
         const snapshot = await cameraRef.current!.takeSnapshot()
         if (over30SecondsRef.current) {
-          console.log('over 30 seconds 2')
-          navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTime })
+          navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
         } else {
-          console.log('under 30 seconds 2')
           navigation.navigate(BCSCScreens.VideoReview, {
             videoPath: video.path,
             videoThumbnailPath: snapshot.path,
@@ -233,8 +233,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   }
 
   const onError = (error: any) => {
-    // eslint-disable-next-line no-console
-    console.error('Camera error:', error)
+    logger.error('Camera error:', error)
     Alert.alert(t('BCSC.SendVideo.TakeVideo.CameraError'), t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'))
   }
 
