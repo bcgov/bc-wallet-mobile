@@ -38,7 +38,7 @@ export const BCSCColorPalette: IColorPalette = {
     modalSecondaryBackground: '#013366',
     modalTertiaryBackground: '#013366',
     modalIcon: '#FCBA19',
-    link: '#FEF0D8',
+    link: '#FCBA19',
     unorderedList: GrayscaleColors.white,
     unorderedListModal: GrayscaleColors.white,
     text: '#01264C',
@@ -79,9 +79,11 @@ export const BCSCTheme = new ThemeBuilder(BCWalletTheme)
         },
         normal: {
           color: theme.ColorPalette.grayscale.white,
+          lineHeight: 30,
         },
         bold: {
           color: theme.ColorPalette.grayscale.white,
+          lineHeight: 30,
         },
         label: {
           color: theme.ColorPalette.grayscale.white,

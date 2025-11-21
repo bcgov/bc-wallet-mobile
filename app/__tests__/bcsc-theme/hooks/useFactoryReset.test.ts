@@ -46,10 +46,12 @@ describe('useFactoryReset', () => {
     expect(bcscCoreMock.getAccount).toHaveBeenCalledWith()
     expect(deleteRegistrationMock).toHaveBeenCalledWith('test-client-id')
     expect(bcscCoreMock.removeAccount).toHaveBeenCalledWith()
-    expect(dispatchMock.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC }])
+    expect(dispatchMock.mock.calls[0]).toStrictEqual([{ type: BCDispatchAction.CLEAR_BCSC, payload: undefined }])
     expect(registerMock).toHaveBeenCalledWith()
     expect(dispatchMock.mock.calls[1]).toStrictEqual([{ type: DispatchAction.DID_AUTHENTICATE, payload: [false] }])
   })
+
+  it.todo('should factory reset with custom state when provided')
 
   it('should return an error if account is null', async () => {
     const bcscCoreMock = jest.mocked(BcscCore)

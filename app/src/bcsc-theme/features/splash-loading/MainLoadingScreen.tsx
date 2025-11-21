@@ -16,9 +16,24 @@ interface MainStackSplashScreenProps {
 export const MainLoadingScreen = ({ navigation }: MainStackSplashScreenProps) => {
   const context = useContext(BCSCAccountContext)
 
-  const loadingAccount = !context || context.isLoadingAccount
+  const loadingAccount = !context || context.isLoadingAccount || !context.account
 
   const onLoaded = () => {
+    // // Navigate to Account Expired screen when account is expired
+    // if (AccountExpirySystemCheck.isAccountExpired(context.account.account_expiration_date)) {
+    //   return navigation.dispatch(
+    //     CommonActions.reset({
+    //       index: 0,
+    //       routes: [
+    //         {
+    //           name: BCSCScreens.AccountExpired,
+    //         },
+    //       ],
+    //     })
+    //   )
+    // }
+    //
+    // // Navigate to Home screen when account is valid
     // navigation.dispatch(
     //   CommonActions.reset({
     //     index: 0,

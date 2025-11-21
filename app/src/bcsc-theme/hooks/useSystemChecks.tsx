@@ -33,7 +33,7 @@ export enum SystemCheckScope {
  *   - MAIN_STACK: Checks that run when the user is authenticated and in the main part of the app ie: current device count
  *
  * @param {SystemCheckScope} scope - The scope of the system checks to run
- * @returns {void}
+ * @returns {*} {void}
  */
 export const useSystemChecks = (scope: SystemCheckScope) => {
   const { t } = useTranslation()

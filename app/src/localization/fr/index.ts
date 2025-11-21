@@ -251,9 +251,32 @@ const translation = {
         "UpdateAvailableBannerTitle": "App update available (FR)",
       },
       "AccountExpiry": {
-        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}. (FR)",
-        "ExpiredBannerTitle": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (FR)",
+        "ExpiringBannerTitle": "Renew your account on this device before it expires on {{accountExpiration}}. (FR)"
       }
+    },
+    "AccountExpired": {
+      "StaticBannerTitle": "Account expired (FR)",
+      "StaticBannerDescription": "Your account on this device expired on {{accountExpiration}}. You need to renew it before you can use it to log in. (FR)",
+      "RenewButton": "Renew account (FR)",
+      "RemoveButton": "Remove account (FR)",
+    },
+    "AccountRenewal": {
+      "InformationHeader": "What you need to renew (FR)",
+      "InformationBCServicesCardSubHeader": "1. BC Services Card (FR)",
+      "InformationBCServicesCardContent": "It must be valid. Check the expiry date printed on the front of your card. (FR)",
+      "InformationGetNewCardA": "Get a new card (FR)",
+      "InformationGetNewCardB": "if it is expired. (FR)",
+      "InformationPhotoIdSubHeader": "2. Photo ID (FR)",
+      "InformationPhotoIdContent": "Only if your BC Services Card does not have a photo on it. You will be asked to provide one or two government-issued IDs. (FR)",
+      "InformationTypesOfAcceptedId": "Types of accepted ID (FR)",
+      "RenewalTimeHeader": "Time to renew (FR)",
+      "RenewalTimeContentA": "You’ll need to verify your identity again and provide your ID. (FR)",
+      "RenewalTimeContentB": "It may take about 1-2 business days. (FR)",
+      "RenewalTimeContentC": "The time to complete depends on how you choose to verify your identity - in person, with a video call, or by sending in a video. (FR)",
+      "WarningHeader": "Warning (FR)",
+      "WarningContentA": "You will not be able to use this app to log in until you complete renewal. (FR)",
+      "WarningContentB": "This includes logging into services like Health Gateway or Canada Revenue Agency (CRA). (FR)",
+      "WarningRenewButton": "Renew (FR)"
     },
     "ForgetAllPairings": {
       "Title": "Forget all pairings? (FR)",
