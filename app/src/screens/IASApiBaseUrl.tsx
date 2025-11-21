@@ -1,9 +1,10 @@
-import { Button, ButtonType, testIdWithKey, useStore, useTheme } from '@bifold/core'
+import { prepareEnvironmentSwitch } from '@/bcsc-theme/utils/environment-utils'
+import { Button, ButtonType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { RemoteLogger } from '@bifold/remote-logs'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-
 import { BCDispatchAction, BCState, iasBaseApiUrls } from '../store'
 
 interface IASApiBaseUrlProps {
@@ -14,6 +15,7 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
   const { t } = useTranslation()
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
   const [store, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const uniqueUrls = Object.values(iasBaseApiUrls)
 
@@ -71,15 +73,18 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
     setHasChanges(url !== store.developer.iasApiBaseUrl)
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedUrl) {
       return
     }
+    await prepareEnvironmentSwitch(selectedUrl, store, dispatch, logger as RemoteLogger)
 
+    // Update the API base URL in the store
     dispatch({
       type: BCDispatchAction.UPDATE_IAS_API_BASE_URL,
       payload: [selectedUrl],
     })
+
     shouldDismissModal()
   }
 
