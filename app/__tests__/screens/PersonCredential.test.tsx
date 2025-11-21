@@ -5,14 +5,6 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import PersonCredential from '../../src/bcwallet-theme/features/person-flow/screens/PersonCredential'
 
-const mockNavigation = jest.fn()
-jest.mock('@react-navigation/native', () => ({
-  ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => {
-    return mockNavigation
-  },
-}))
-
 describe('Person Credential Screen', () => {
   beforeEach(() => {
     // Silence console.error because it will print a warning about Switch

@@ -8,86 +8,96 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
+import {
+  Camera,
+  CameraRuntimeError,
+  useCameraDevice,
+  useCameraPermission,
+  useMicrophonePermission,
+} from 'react-native-vision-camera'
 
-type PhotoInstructionsScreenProps = {
+const maxVideoDurationSeconds = 30
+
+type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
 }
 
-const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
+const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
+  const { t } = useTranslation()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
-  const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
-
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const device = useCameraDevice('front')
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
-  const device = useCameraDevice('front')
   const [isActive, setIsActive] = useState(false)
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
-  const [over30Seconds, setOver30Seconds] = useState(false)
+  const [exceedsMaxDuration, setExceedsMaxDuration] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const exceedsMaxDurationRef = useRef(false)
+  const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
-  const { t } = useTranslation()
+  const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
 
-  useEffect(() => {
-    promptOpacity.setValue(0)
-    Animated.timing(promptOpacity, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prompt])
+  const isLastPrompt = useMemo(() => {
+    if (prompt === '') {
+      return true // Recording finished, treat as last prompt
+    }
+    const currentIndex = prompts.indexOf(prompt)
+    return currentIndex >= prompts.length - 1
+  }, [prompts, prompt])
 
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-    },
-    camera: {
-      flex: 1,
-    },
-    promptContainer: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-      paddingVertical: Spacing.lg,
-      paddingHorizontal: Spacing.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    controlsContainer: {
-      position: 'absolute',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: ColorPalette.notification.popupOverlay,
-      paddingBottom: Spacing.md,
-      paddingHorizontal: Spacing.md,
-      flexDirection: 'column',
-    },
-    cancelContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingTop: Spacing.md,
-      paddingBottom: Spacing.xl,
-    },
-    recordingLengthContainer: {
-      flexDirection: 'row',
-      gap: Spacing.sm,
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      flex: 1,
-    },
-    cancelButton: {},
-  })
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        pageContainer: {
+          flex: 1,
+        },
+        camera: {
+          flex: 1,
+        },
+        promptContainer: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: ColorPalette.notification.popupOverlay,
+          paddingVertical: Spacing.lg,
+          paddingHorizontal: Spacing.md,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        controlsContainer: {
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          backgroundColor: ColorPalette.notification.popupOverlay,
+          paddingBottom: Spacing.md,
+          paddingHorizontal: Spacing.md,
+          flexDirection: 'column',
+        },
+        cancelContainer: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingTop: Spacing.md,
+          paddingBottom: Spacing.xl,
+        },
+        recordingLengthContainer: {
+          flexDirection: 'row',
+          gap: Spacing.sm,
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          flex: 1,
+        },
+      }),
+    [ColorPalette.notification.popupOverlay, Spacing]
+  )
 
   const handleCancel = () => {
     navigation.goBack()
@@ -102,16 +112,23 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const startTimer = useCallback(() => {
     const startTime = Date.now()
     setElapsedTime(0)
+    setExceedsMaxDuration(false)
+    elapsedTimeRef.current = 0
+    exceedsMaxDurationRef.current = false
 
     timerRef.current = setInterval(() => {
       const currentTime = Date.now()
       const elapsed = Math.floor((currentTime - startTime) / 1000)
-      if (elapsed >= 30 && !over30Seconds) {
-        setOver30Seconds(true)
+
+      // Check if we've exceeded the max duration, but only trigger once
+      if (elapsed > maxVideoDurationSeconds && !exceedsMaxDurationRef.current) {
+        exceedsMaxDurationRef.current = true
+        setExceedsMaxDuration(true) // Trigger re-render for UI
       }
+
+      elapsedTimeRef.current = elapsed
       setElapsedTime(elapsed)
     }, 1000)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const stopTimer = useCallback(() => {
@@ -138,17 +155,20 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     cameraRef.current?.startRecording({
       fileType: 'mp4',
       onRecordingError: (error) => {
-        logger.error(`Recording error: ${error.message}`)
+        logger.debug(`Recording error: ${error.message}`)
         stopTimer() // Stop timer on error
-        Alert.alert(t('SendVideo.TakeVideo.RecordingError'), t('SendVideo.TakeVideo.RecordingErrorDescription'))
+        Alert.alert(
+          t('BCSC.SendVideo.TakeVideo.RecordingError'),
+          t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
+        )
       },
       onRecordingFinished: async (video) => {
         logger.info(`Recording finished, duration: ${video.duration}`)
         stopTimer() // Stop timer when manually stopping recording
         setPrompt('')
         const snapshot = await cameraRef.current!.takeSnapshot()
-        if (over30Seconds) {
-          navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTime })
+        if (exceedsMaxDurationRef.current) {
+          navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
         } else {
           navigation.navigate(BCSCScreens.VideoReview, {
             videoPath: video.path,
@@ -157,15 +177,34 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         }
       },
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logger, startTimer, stopTimer, navigation, prompts])
+  }, [logger, startTimer, stopTimer, navigation, prompts, t])
 
   const onPressNextPrompt = async () => {
-    if (prompts.indexOf(prompt) === prompts.length - 1) {
+    const currentIndex = prompts.indexOf(prompt)
+    if (currentIndex === prompts.length - 1) {
       await cameraRef.current?.stopRecording()
+    } else {
+      setPrompt(prompts[currentIndex + 1])
     }
-    setPrompt((prevPrompt) => prompts[prompts.indexOf(prevPrompt) + 1])
   }
+
+  const onInitialized = () => {
+    setIsActive(true)
+  }
+
+  const onError = (error: CameraRuntimeError) => {
+    logger.error('Camera error:', error)
+    Alert.alert(t('BCSC.SendVideo.TakeVideo.CameraError'), t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'))
+  }
+
+  useEffect(() => {
+    promptOpacity.setValue(0)
+    Animated.timing(promptOpacity, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start()
+  }, [prompt, promptOpacity])
 
   useFocusEffect(
     useCallback(() => {
@@ -174,8 +213,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           const permission = await requestCameraPermission()
           if (!permission) {
             Alert.alert(
-              t('SendVideo.TakeVideo.CameraPermissionRequired'),
-              t('SendVideo.TakeVideo.CameraPermissionRequiredDescription'),
+              t('BCSC.SendVideo.TakeVideo.CameraPermissionRequired'),
+              t('BCSC.SendVideo.TakeVideo.CameraPermissionRequiredDescription'),
               [{ text: 'OK', onPress: () => navigation.goBack() }]
             )
             return
@@ -185,8 +224,8 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           const permission = await requestMicrophonePermission()
           if (!permission) {
             Alert.alert(
-              t('SendVideo.TakeVideo.MicrophonePermissionRequired'),
-              t('SendVideo.TakeVideo.MicrophonePermissionRequiredDescription'),
+              t('BCSC.SendVideo.TakeVideo.MicrophonePermissionRequired'),
+              t('BCSC.SendVideo.TakeVideo.MicrophonePermissionRequiredDescription'),
               [{ text: 'OK', onPress: () => navigation.goBack() }]
             )
             return
@@ -198,7 +237,6 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       if (isActive) {
         startRecording()
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       startRecording,
       hasCameraPermission,
@@ -207,6 +245,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       requestMicrophonePermission,
       navigation,
       isActive,
+      t,
     ])
   )
 
@@ -218,16 +257,6 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       }
     }
   }, [])
-
-  const onInitialized = () => {
-    setIsActive(true)
-  }
-
-  const onError = (error: any) => {
-    // eslint-disable-next-line no-console
-    console.error('Camera error:', error)
-    Alert.alert(t('BCSC.SendVideo.TakeVideo.CameraError'), t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'))
-  }
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
     return (
@@ -285,13 +314,20 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         {recordingInProgress ? (
           <View style={styles.controlsContainer}>
             <View style={styles.cancelContainer}>
-              <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} hitSlop={hitSlop}>
+              <TouchableOpacity
+                onPress={handleCancel}
+                hitSlop={hitSlop}
+                accessibilityLabel={t('Global.Cancel')}
+                accessibilityRole="button"
+              >
                 <ThemedText style={{ color: 'white' }}>{t('Global.Cancel')}</ThemedText>
               </TouchableOpacity>
               <View style={styles.recordingLengthContainer}>
                 <ThemedText style={{ color: ColorPalette.semantic.error }}>{'\u2B24'}</ThemedText>
                 <ThemedText
-                  style={{ color: over30Seconds ? ColorPalette.semantic.error : ColorPalette.grayscale.white }}
+                  style={{
+                    color: exceedsMaxDuration ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
+                  }}
                 >
                   {formatTime(elapsedTime)}
                 </ThemedText>
@@ -299,11 +335,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
             </View>
             <Button
               buttonType={ButtonType.Primary}
-              title={
-                prompts.indexOf(prompt) < prompts.length - 1
-                  ? t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')
-                  : t('BCSC.SendVideo.TakeVideo.Done')
-              }
+              title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
               onPress={onPressNextPrompt}
               testID={'StartRecordingButton'}
               accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}

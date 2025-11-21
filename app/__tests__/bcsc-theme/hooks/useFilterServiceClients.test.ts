@@ -3,7 +3,7 @@ import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import { useFilterServiceClients } from '@/bcsc-theme/features/services/hooks/useFilterServiceClients'
 import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import * as Bifold from '@bifold/core'
-import * as navigation from '@react-navigation/native'
+// import * as navigation from '@react-navigation/native'
 import { renderHook, waitFor } from '@testing-library/react-native'
 
 jest.mock('@bifold/core')
@@ -58,14 +58,12 @@ describe('useFilterServiceClients', () => {
     it('should return all service clients when no filters are applied', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientB, mockServiceClientA, mockServiceClientC]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({}))
@@ -83,14 +81,12 @@ describe('useFilterServiceClients', () => {
     it('should sort by sort order then name', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({}))
@@ -109,14 +105,12 @@ describe('useFilterServiceClients', () => {
     it('should filter out service clients by card process', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({ cardProcessFilter: BCSCCardProcess.BCSC }))
@@ -134,14 +128,12 @@ describe('useFilterServiceClients', () => {
     it('should filter out non BC service clients', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({ requireBCAddressFilter: true }))
@@ -159,14 +151,12 @@ describe('useFilterServiceClients', () => {
     it('should filter service clients by partial name match', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'ALPHA' }))
@@ -182,14 +172,12 @@ describe('useFilterServiceClients', () => {
     it('should filter service clients by partial name match (case insensitive)', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'Alpha' }))
@@ -205,14 +193,12 @@ describe('useFilterServiceClients', () => {
     it('should filter service clients by partial name match multiple words', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'client alpha' }))
@@ -228,14 +214,12 @@ describe('useFilterServiceClients', () => {
     it('should return no service clients when no match', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'badbadbad' }))
@@ -250,14 +234,12 @@ describe('useFilterServiceClients', () => {
     it('should return no service clients when partial name words are not contiguous', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() => useFilterServiceClients({ partialNameFilter: 'TEST ALPHA' }))
@@ -274,14 +256,12 @@ describe('useFilterServiceClients', () => {
     it('should filter service clients by multiple criteria', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() =>
@@ -303,14 +283,12 @@ describe('useFilterServiceClients', () => {
     it('should filter service clients by multiple criteria and return zero when one filter misses', async () => {
       const bifoldMock = jest.mocked(Bifold)
       const useApiMock = jest.mocked(useApi)
-      const navigationMock = jest.mocked(navigation)
 
       useApiMock.default.mockReturnValue({
         metadata: {
           getClientMetadata: jest.fn().mockResolvedValue([mockServiceClientA, mockServiceClientB]),
         },
       } as any)
-      navigationMock.useNavigation.mockReturnValue({ navigation: jest.fn() })
       bifoldMock.useServices.mockReturnValue([{ error: jest.fn() }] as any)
 
       const hook = renderHook(() =>
