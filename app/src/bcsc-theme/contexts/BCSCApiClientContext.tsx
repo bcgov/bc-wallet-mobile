@@ -1,10 +1,9 @@
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
 import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
-import { getAccount, removeAccount } from 'react-native-bcsc-core'
 import BCSCApiClient from '../api/client'
-import { isNetworkError } from '../utils/error-utils'
+import { is404Error, isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
@@ -30,7 +29,7 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  * @returns {*} {JSX.Element} The BCSCApiClientProvider component wrapping its children.
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [isClientReady, setIsClientReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,45 +57,10 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           setIsClientReady(false)
           setError(null)
 
-          // Clear old tokens and authentication state when switching environments
+          // Clear old tokens when switching environments
           if (BCSC_API_CLIENT_SINGLETON) {
             BCSC_API_CLIENT_SINGLETON.tokens = undefined
             BCSC_API_CLIENT_SINGLETON.tokensPromise = null
-
-            // Check if existing account is from a different environment
-            try {
-              const existingAccount = await getAccount()
-              if (existingAccount) {
-                logger.info('Checking existing account issuer', {
-                  existingIssuer: existingAccount.issuer,
-                  newIssuer: store.developer.iasApiBaseUrl + '/device/',
-                })
-
-                // If the issuer doesn't match the new environment, remove the old account
-                const newIssuer = `${store.developer.iasApiBaseUrl}/device/`
-                if (existingAccount.issuer !== newIssuer) {
-                  logger.info('Account from different environment detected, removing old account', {
-                    oldIssuer: existingAccount.issuer,
-                    newIssuer: newIssuer,
-                  })
-                  await removeAccount()
-                  logger.info('Old account removed successfully')
-                  // Remove metadata as well
-                  dispatch({ type: BCDispatchAction.CLEAR_BCSC })
-                }
-              }
-            } catch (error) {
-              // Rethrow network errors to be handled by outer catch block
-              if (isNetworkError(error)) {
-                throw error
-              }
-              logger.error('Error checking/removing old account', { error })
-              // Continue even if account removal fails
-            }
-
-            // Clear refresh token from store and force re-authentication
-            dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [undefined] })
-            dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [false] })
           }
 
           newClient = new BCSCApiClient(store.developer.iasApiBaseUrl, logger as RemoteLogger)
@@ -127,25 +91,11 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
 
         /**
          * Handle 404 errors (endpoint not found):
-         * Set the client anyway to prevent endless loading, but show an error banner
-         * to guide users to check their environment settings.
+         * Set the client anyway to prevent endless loading.
          */
-        const is404Error = (err as any)?.response?.status === 404
-        if (is404Error) {
+        if (is404Error(err)) {
           logger.warn('OpenID configuration endpoint not found (404). App will continue but authentication may fail.')
           handleNewClient(newClient)
-
-          dispatch({
-            type: BCDispatchAction.ADD_BANNER_MESSAGE,
-            payload: [
-              {
-                id: 'ias-endpoint-404',
-                type: 'error',
-                title: 'IAS Endpoint Not Found',
-                message: 'The selected IAS environment endpoint was not found. Please check your environment settings.',
-              },
-            ],
-          })
           return
         }
 
@@ -157,7 +107,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     configureClient()
-  }, [store.stateLoaded, store.developer.iasApiBaseUrl, logger, dispatch, handleNewClient])
+  }, [store.stateLoaded, store.developer.iasApiBaseUrl, logger, handleNewClient])
 
   const contextValue = useMemo(
     () => ({
