@@ -39,7 +39,7 @@ const CommonActions = {
   goBack: jest.fn(),
 }
 
-const useFocusEffect = jest.fn()
+const useFocusEffect = jest.fn((callback) => callback())
 const createNavigatorFactory = jest.fn()
 
 export { CommonActions, createNavigatorFactory, useFocusEffect, useIsFocused, useNavigation, useRoute }
