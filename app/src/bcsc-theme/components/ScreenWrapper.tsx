@@ -1,5 +1,6 @@
 import React, { ComponentProps } from 'react'
 import { ScrollView, ScrollViewProps, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 import { KeyboardView } from '@bifold/core'
 import { Edges, SafeAreaView } from 'react-native-safe-area-context'
@@ -75,23 +76,41 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   })
 
   const renderScrollableContent = () => {
-    if (!scrollable) {
+    if (!scrollable || keyboardActive) {
       return children
     }
 
     return <ScrollView {...scrollViewProps}>{children}</ScrollView>
   }
 
-  const renderContent = () => (
-    <View style={[styles.container, containerStyle]}>
-      {renderScrollableContent()}
-      {controls && <View style={controlsContainerStyle}>{controls}</View>}
-    </View>
-  )
+  // Render the content for the screen (scrollable content and controls)
+  const renderContent = () => {
+    return (
+      <>
+        {renderScrollableContent()}
+        {controls && <View style={controlsContainerStyle}>{controls}</View>}
+      </>
+    )
+  }
+
+  // KeyboardView has its own SafeAreaView, so we don't need to double-wrap
+  if (keyboardActive) {
+    return (
+      <KeyboardView>
+        <KeyboardAwareScrollView
+          keyboardShouldPersistTaps={'handled'}
+          keyboardOpeningTime={150}
+          contentContainerStyle={[styles.container, containerStyle]}
+        >
+          {renderContent()}
+        </KeyboardAwareScrollView>
+      </KeyboardView>
+    )
+  }
 
   return (
     <SafeAreaView style={[styles.container, safeAreaViewStyle]} edges={edges}>
-      {keyboardActive ? <KeyboardView>{renderContent()}</KeyboardView> : renderContent()}
+      <View style={[styles.container, containerStyle]}>{renderContent()}</View>
     </SafeAreaView>
   )
 }
