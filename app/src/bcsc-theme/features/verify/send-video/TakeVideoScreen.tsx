@@ -29,6 +29,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [over30Seconds, setOver30Seconds] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const over30SecondsRef = useRef(false)
@@ -105,6 +106,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const startTimer = useCallback(() => {
     const startTime = Date.now()
     setElapsedTime(0)
+    setOver30Seconds(false)
     elapsedTimeRef.current = 0
     over30SecondsRef.current = false
 
@@ -115,6 +117,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       // Check if we've exceeded the max duration, but only trigger once
       if (elapsed > maxVideoDurationSeconds && !over30SecondsRef.current) {
         over30SecondsRef.current = true
+        setOver30Seconds(true) // Trigger re-render for UI
       }
 
       elapsedTimeRef.current = elapsed
@@ -170,10 +173,12 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   }, [logger, startTimer, stopTimer, navigation, prompts])
 
   const onPressNextPrompt = async () => {
-    if (prompts.indexOf(prompt) === prompts.length - 1) {
+    const currentIndex = prompts.indexOf(prompt)
+    if (currentIndex === prompts.length - 1) {
       await cameraRef.current?.stopRecording()
+    } else {
+      setPrompt(prompts[currentIndex + 1])
     }
-    setPrompt((prevPrompt) => prompts[prompts.indexOf(prevPrompt) + 1])
   }
 
   useFocusEffect(
@@ -300,7 +305,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
                 <ThemedText style={{ color: ColorPalette.semantic.error }}>{'\u2B24'}</ThemedText>
                 <ThemedText
                   style={{
-                    color: over30SecondsRef.current ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
+                    color: over30Seconds ? ColorPalette.semantic.error : ColorPalette.grayscale.white,
                   }}
                 >
                   {formatTime(elapsedTime)}
