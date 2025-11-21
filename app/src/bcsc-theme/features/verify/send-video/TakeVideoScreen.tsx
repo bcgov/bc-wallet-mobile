@@ -18,47 +18,38 @@ import {
 
 const maxVideoDurationSeconds = 30
 
-type PhotoInstructionsScreenProps = {
+type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
 }
 
-const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
+const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
+  const { t } = useTranslation()
   const { ColorPalette, Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
-  const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
-
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const device = useCameraDevice('front')
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
-  const device = useCameraDevice('front')
   const [isActive, setIsActive] = useState(false)
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
   const [exceedsMaxDuration, setExceedsMaxDuration] = useState(false)
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const exceedsMaxDurationRef = useRef(false)
   const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current
-  const { t } = useTranslation()
+  const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
 
   const isLastPrompt = useMemo(() => {
-    if (prompt === '') return true // Recording finished, treat as last prompt
+    if (prompt === '') {
+      return true // Recording finished, treat as last prompt
+    }
     const currentIndex = prompts.indexOf(prompt)
     return currentIndex >= prompts.length - 1
   }, [prompts, prompt])
-
-  useEffect(() => {
-    promptOpacity.setValue(0)
-    Animated.timing(promptOpacity, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: true,
-    }).start()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prompt])
 
   const styles = useMemo(
     () =>
@@ -138,7 +129,6 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       elapsedTimeRef.current = elapsed
       setElapsedTime(elapsed)
     }, 1000)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const stopTimer = useCallback(() => {
@@ -165,7 +155,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
     cameraRef.current?.startRecording({
       fileType: 'mp4',
       onRecordingError: (error) => {
-        logger.error(`Recording error: ${error.message}`)
+        logger.debug(`Recording error: ${error.message}`)
         stopTimer() // Stop timer on error
         Alert.alert(
           t('BCSC.SendVideo.TakeVideo.RecordingError'),
@@ -187,8 +177,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
         }
       },
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logger, startTimer, stopTimer, navigation, prompts])
+  }, [logger, startTimer, stopTimer, navigation, prompts, t])
 
   const onPressNextPrompt = async () => {
     const currentIndex = prompts.indexOf(prompt)
@@ -198,6 +187,24 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       setPrompt(prompts[currentIndex + 1])
     }
   }
+
+  const onInitialized = () => {
+    setIsActive(true)
+  }
+
+  const onError = (error: CameraRuntimeError) => {
+    logger.error('Camera error:', error)
+    Alert.alert(t('BCSC.SendVideo.TakeVideo.CameraError'), t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'))
+  }
+
+  useEffect(() => {
+    promptOpacity.setValue(0)
+    Animated.timing(promptOpacity, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start()
+  }, [prompt, promptOpacity])
 
   useFocusEffect(
     useCallback(() => {
@@ -230,7 +237,6 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       if (isActive) {
         startRecording()
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
       startRecording,
       hasCameraPermission,
@@ -239,6 +245,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       requestMicrophonePermission,
       navigation,
       isActive,
+      t,
     ])
   )
 
@@ -250,15 +257,6 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
       }
     }
   }, [])
-
-  const onInitialized = () => {
-    setIsActive(true)
-  }
-
-  const onError = (error: CameraRuntimeError) => {
-    logger.error('Camera error:', error)
-    Alert.alert(t('BCSC.SendVideo.TakeVideo.CameraError'), t('BCSC.SendVideo.TakeVideo.CameraErrorMessage'))
-  }
 
   if (!hasCameraPermission || !hasMicrophonePermission) {
     return (
