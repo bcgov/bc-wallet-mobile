@@ -35,6 +35,4 @@ coverage:
 comment:
   layout: "header, files, footer"
   require_changes: false        
-  require_base: false # TODO (MD): Set to true when done testing
-  require_head: false # TODO (MD): Set to true when done testing
   hide_project_coverage: false
