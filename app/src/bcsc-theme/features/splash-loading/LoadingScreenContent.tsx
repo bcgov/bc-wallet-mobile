@@ -1,7 +1,9 @@
-import { ThemedText, useTheme } from '@bifold/core'
+import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, Image, StyleSheet, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import HomeHeader from '../home/components/HomeHeader'
 
 interface LoadingScreenContentDefaultProps {
   message?: string
@@ -11,22 +13,24 @@ interface LoadingScreenContentDefaultProps {
 
 interface LoadingScreenContentActionProps {
   /**
-   * The optional message to display on the loading screen.
-   * Defaults to a localized loading message if not provided.
-   * ie: "A secure way to prove who you are online"
+   * The optional message to override the default loading message.
+   * default: "A secure way to prove who you are online"
+   *
+   * QUESTION (MD): Does this need to cycle through different messages?
    *
    * @type {string | undefined}
    */
   message?: string
   /**
    * Indicates whether the loading process is ongoing.
+   * Pairs with `onLoaded` callback
    *
    * @type {boolean}
    */
   loading: boolean
   /**
-   * Callback function to be called when loading is complete.
-   * Usually used to navigate to the next screen.
+   * Callback function to be called when loading is complete. ie: navigation
+   * Pairs with `loading` prop
    *
    * @type {() => void}
    */
@@ -44,23 +48,36 @@ type LoadingScreenContentProps = LoadingScreenContentDefaultProps | LoadingScree
  */
 export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScreenContentProps) => {
   const { t } = useTranslation()
-  const { Spacing, ColorPalette } = useTheme()
+  const { Spacing, ColorPalette, Assets } = useTheme()
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      padding: Spacing.xl,
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: Spacing.lg,
+      paddingHorizontal: Spacing.xxl,
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
+    topContainer: {
+      flex: 4,
+      justifyContent: 'flex-end',
+      marginBottom: Spacing.xs,
+    },
+    bottomContainer: {
+      flex: 6,
+      justifyContent: 'space-between',
+      marginTop: Spacing.xl,
+    },
     divider: {
-      height: 2,
-      backgroundColor: ColorPalette.brand.primaryLight,
+      height: 1,
+      width: '100%',
+      backgroundColor: ColorPalette.brand.primary,
     },
     message: {
       fontSize: 26,
+      textAlign: 'center',
+    },
+    logoContainer: {
+      alignSelf: 'center',
+      marginBottom: 30,
     },
   })
 
@@ -73,12 +90,28 @@ export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScre
   }, [loading, onLoaded])
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topContainer}>
+        <HomeHeader name={t('BCSC.FullTitle')} fontSize={18} />
+      </View>
+
       <View style={styles.divider} />
-      <ThemedText variant="bold" style={styles.message}>
-        {message ?? t('BCSC.Loading.DefaultMessage')}
-      </ThemedText>
-      <ActivityIndicator size={'large'} />
-    </View>
+
+      <View style={styles.bottomContainer}>
+        <ThemedText variant="bold" style={styles.message}>
+          {message ?? t('BCSC.Loading.DefaultMessage')}
+        </ThemedText>
+
+        <ActivityIndicator size={50} color={ColorPalette.brand.primaryLight} />
+
+        <View style={styles.logoContainer}>
+          <Image
+            source={Assets.img.logoPrimary.src}
+            style={{ width: 150, height: 150 }}
+            testID={testIdWithKey('BCGovLogo')}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
   )
 }
