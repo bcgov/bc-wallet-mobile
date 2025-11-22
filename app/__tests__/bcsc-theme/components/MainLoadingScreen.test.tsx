@@ -6,6 +6,11 @@ import { CommonActions } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 
 describe('MainLoadingScreen Component', () => {
+  beforeAll(() => {
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('1970-01-01'))
+  })
+
   it('should render loading screen when account is loading', () => {
     const navigationMock: any = {
       navigate: jest.fn(),
