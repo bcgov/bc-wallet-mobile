@@ -1,10 +1,10 @@
 import { ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'
@@ -125,41 +125,39 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedText variant={'headingThree'} style={styles.heading}>
-          {t('BCSC.ChooseYourID.WhatCardDoYou')}
+    <ScreenWrapper edges={['bottom', 'left', 'right']} scrollViewProps={{ style: styles.scrollView }}>
+      <ThemedText variant={'headingThree'} style={styles.heading}>
+        {t('BCSC.ChooseYourID.WhatCardDoYou')}
+      </ThemedText>
+      <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
+      {cardButtons}
+      <View style={styles.pageBreakSlot}>
+        <View style={styles.pageBreak} />
+      </View>
+      <ThemedText variant={'headingThree'} style={styles.heading}>
+        {t('BCSC.ChooseYourID.DontHaveOne')}
+      </ThemedText>
+      <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
+      <Pressable
+        onPress={onCheckForServicesCard}
+        testID={'CheckForServicesCard'}
+        accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
+        style={styles.checkButton}
+      >
+        <ThemedText variant={'bold'} style={styles.checkButtonText}>
+          {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
+          <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
         </ThemedText>
-        <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
-        {cardButtons}
-        <View style={styles.pageBreakSlot}>
-          <View style={styles.pageBreak} />
-        </View>
-        <ThemedText variant={'headingThree'} style={styles.heading}>
-          {t('BCSC.ChooseYourID.DontHaveOne')}
-        </ThemedText>
-        <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
-        <Pressable
-          onPress={onCheckForServicesCard}
-          testID={'CheckForServicesCard'}
-          accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
-          style={styles.checkButton}
-        >
-          <ThemedText variant={'bold'} style={styles.checkButtonText}>
-            {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
-            <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
-          </ThemedText>
-        </Pressable>
-        <TileButton
-          onPress={onPressOtherID}
-          testIDKey={'OtherID'}
-          accessibilityLabel={t('BCSC.ChooseYourID.OtherID')}
-          actionText={t('BCSC.ChooseYourID.OtherIDActionText')}
-          description={t('BCSC.ChooseYourID.OtherIDDescription')}
-          style={{ marginBottom: Spacing.md }}
-        />
-      </ScrollView>
-    </SafeAreaView>
+      </Pressable>
+      <TileButton
+        onPress={onPressOtherID}
+        testIDKey={'OtherID'}
+        accessibilityLabel={t('BCSC.ChooseYourID.OtherID')}
+        actionText={t('BCSC.ChooseYourID.OtherIDActionText')}
+        description={t('BCSC.ChooseYourID.OtherIDDescription')}
+        style={{ marginBottom: Spacing.md }}
+      />
+    </ScreenWrapper>
   )
 }
 

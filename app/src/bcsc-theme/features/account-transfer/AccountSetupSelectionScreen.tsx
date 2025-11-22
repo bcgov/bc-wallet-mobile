@@ -1,5 +1,6 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
@@ -9,7 +10,6 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 const AccountSetupSelectionScreen: React.FC = () => {
   const [store, dispatch] = useStore<BCState>()
@@ -46,7 +46,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
   )
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+    <ScreenWrapper scrollable={false} edges={['bottom', 'left', 'right']} containerStyle={styles.container}>
       <View style={styles.contentContainer}>
         <GenericCardImage />
         <ThemedText variant={'headingFour'}>{t('BCSC.AccountSetup.Title')}</ThemedText>
@@ -84,7 +84,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
           />
         </View>
       )}
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

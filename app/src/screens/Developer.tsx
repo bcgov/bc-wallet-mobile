@@ -15,9 +15,9 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
 import IASEnvironment from './IASEnvironment'
@@ -307,7 +307,7 @@ const Developer: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper scrollable={false} safeAreaViewStyle={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
       <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
@@ -541,7 +541,7 @@ const Developer: React.FC = () => {
           />
         </SectionRow>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

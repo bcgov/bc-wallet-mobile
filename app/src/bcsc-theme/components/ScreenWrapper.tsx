@@ -3,7 +3,16 @@ import { ScrollView, ScrollViewProps, StyleProp, StyleSheet, View, ViewStyle } f
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 import { KeyboardView } from '@bifold/core'
+import { useHeaderHeight } from '@react-navigation/elements'
 import { Edges, SafeAreaView } from 'react-native-safe-area-context'
+
+const useSafeHeaderHeight = (): number => {
+  try {
+    return useHeaderHeight()
+  } catch {
+    return 100
+  }
+}
 
 interface ScreenWrapperProps {
   children: React.ReactNode
@@ -69,6 +78,7 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   controlsContainerStyle,
   containerStyle,
 }) => {
+  const headerHeight = useSafeHeaderHeight()
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -99,7 +109,8 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       <KeyboardView>
         <KeyboardAwareScrollView
           keyboardShouldPersistTaps={'handled'}
-          keyboardOpeningTime={150}
+          keyboardOpeningTime={100}
+          extraScrollHeight={headerHeight}
           contentContainerStyle={[styles.container, containerStyle]}
         >
           {renderContent()}
