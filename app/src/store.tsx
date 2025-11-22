@@ -211,7 +211,7 @@ export const iasEnvironments: Array<IASEnvironment> = [
   },
 ]
 
-export enum iasBaseApiUrls {
+export enum IasBaseApiUrl {
   PROD = 'https://id.gov.bc.ca',
   DEV = 'https://iddev.gov.bc.ca',
   DEV2 = 'https://iddev2.gov.bc.ca',
@@ -229,7 +229,7 @@ const remoteDebuggingState: RemoteDebuggingState = {
 const developerState: Developer = {
   enableProxy: false,
   environment: __DEV__ ? iasEnvironments[2] : iasEnvironments[0],
-  iasApiBaseUrl: __DEV__ ? iasBaseApiUrls.SIT : iasBaseApiUrls.PROD,
+  iasApiBaseUrl: __DEV__ ? IasBaseApiUrl.SIT : IasBaseApiUrl.PROD,
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
 }

@@ -57,12 +57,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           setIsClientReady(false)
           setError(null)
 
-          // Clear old tokens when switching environments
-          if (BCSC_API_CLIENT_SINGLETON) {
-            BCSC_API_CLIENT_SINGLETON.tokens = undefined
-            BCSC_API_CLIENT_SINGLETON.tokensPromise = null
-          }
-
           newClient = new BCSCApiClient(store.developer.iasApiBaseUrl, logger as RemoteLogger)
 
           await newClient.fetchEndpointsAndConfig()
