@@ -90,7 +90,7 @@ export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScre
   }, [loading, onLoaded])
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID={testIdWithKey('LoadingScreenContent')}>
       <View style={styles.topContainer}>
         <HomeHeader name={t('BCSC.FullTitle')} fontSize={18} />
       </View>
