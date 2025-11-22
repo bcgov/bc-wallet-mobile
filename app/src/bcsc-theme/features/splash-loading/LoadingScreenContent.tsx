@@ -5,22 +5,7 @@ import { ActivityIndicator, Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import HomeHeader from '../home/components/HomeHeader'
 
-interface LoadingScreenContentDefaultProps {
-  message?: string
-  loading?: never
-  onLoaded?: never
-}
-
-interface LoadingScreenContentActionProps {
-  /**
-   * The optional message to override the default loading message.
-   * default: "A secure way to prove who you are online"
-   *
-   * QUESTION (MD): Does this need to cycle through different messages?
-   *
-   * @type {string | undefined}
-   */
-  message?: string
+interface LoadingScreenContentPropsA {
   /**
    * Indicates whether the loading process is ongoing.
    * Pairs with `onLoaded` callback
@@ -35,9 +20,24 @@ interface LoadingScreenContentActionProps {
    * @type {() => void}
    */
   onLoaded: () => void
+  /**
+   * The optional message to override the default loading message.
+   * default: "A secure way to prove who you are online"
+   *
+   * QUESTION (MD): Does this need to cycle through different messages?
+   *
+   * @type {string | undefined}
+   */
+  message?: string
 }
 
-type LoadingScreenContentProps = LoadingScreenContentDefaultProps | LoadingScreenContentActionProps
+interface LoadingScreenContentPropsB {
+  loading?: never
+  onLoaded?: never
+  message?: string
+}
+
+type LoadingScreenContentProps = LoadingScreenContentPropsA | LoadingScreenContentPropsB
 
 /**
  * Renders the LoadingScreenContent component with a message and an activity indicator.
