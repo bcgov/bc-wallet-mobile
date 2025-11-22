@@ -127,6 +127,7 @@ const translation = {
   },
   "BCSC": {
     "Title": "BC Services Card",
+    "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
     "Screens": {
       "Settings": "Menu",
@@ -138,6 +139,9 @@ const translation = {
       "HelpCentre": "Help Centre",
       "PrivacyInformation": "Privacy Information",
       "ManageDevices": "Manage Devices",
+    },
+    "Loading": {
+      "DefaultMessage": "A secure way to prove who you are online",
     },
     "Settings": {
       "HeaderA": "App Settings",

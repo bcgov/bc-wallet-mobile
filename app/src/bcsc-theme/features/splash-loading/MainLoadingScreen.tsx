@@ -3,11 +3,11 @@ import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types
 import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useContext, useEffect } from 'react'
-import { ActivityIndicator, View } from 'react-native'
+import { useContext } from 'react'
+import { LoadingScreenContent } from './LoadingScreenContent'
 
 interface MainStackSplashScreenProps {
-  navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainSplash | BCSCStacks.Tab>
+  navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainLoading | BCSCStacks.Tab>
 }
 
 /**
@@ -15,12 +15,14 @@ interface MainStackSplashScreenProps {
  *
  * @returns {*} {JSX.Element} The MainStackSplashScreen component.
  */
-export const MainSplashScreen = ({ navigation }: MainStackSplashScreenProps) => {
+export const MainLoadingScreen = ({ navigation }: MainStackSplashScreenProps) => {
   const context = useContext(BCSCAccountContext)
 
-  useEffect(() => {
-    if (!context || context.isLoadingAccount || !context.account) {
-      return
+  const loadingAccount = !context || context.isLoadingAccount || !context.account
+
+  const onLoaded = () => {
+    if (!context?.account) {
+      throw new Error('MainLoadingScreen: Account context is unavailable on load complete')
     }
 
     // Navigate to Account Expired screen when account is expired
@@ -51,14 +53,7 @@ export const MainSplashScreen = ({ navigation }: MainStackSplashScreenProps) => 
         ],
       })
     )
+  }
 
-    // TODO (MD): handle navigation when account is expired
-  }, [context, navigation])
-
-  return (
-    <View style={{ flex: 1 }}>
-      {/** TODO (MD): Align this with the actual BCSC splash screen see issue: #2777 for ref **/}
-      <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
-    </View>
-  )
+  return <LoadingScreenContent loading={loadingAccount} onLoaded={onLoaded} />
 }
