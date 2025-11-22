@@ -1,9 +1,9 @@
 import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import React, { createContext, useEffect, useMemo, useState } from 'react'
+import React, { createContext, useCallback, useEffect, useMemo, useState } from 'react'
 import BCSCApiClient from '../api/client'
-import { isNetworkError } from '../utils/error-utils'
+import { is404Error, isNetworkError } from '../utils/error-utils'
 
 // Singleton instance of BCSCApiClient
 let BCSC_API_CLIENT_SINGLETON: BCSCApiClient | null = null
@@ -29,42 +29,49 @@ export const BCSCApiClientContext = createContext<BCSCApiClientContextType | nul
  * @returns {*} {JSX.Element} The BCSCApiClientProvider component wrapping its children.
  */
 export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [isClientReady, setIsClientReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const handleNewClient = (client: BCSCApiClient | null, errorMessage?: string) => {
+  const handleNewClient = useCallback((client: BCSCApiClient | null, errorMessage?: string) => {
     BCSC_API_CLIENT_SINGLETON = client
     setIsClientReady(Boolean(client))
     setError(errorMessage ?? null)
-  }
+  }, [])
 
   useEffect(() => {
     // Only attempt to configure the client if the store is loaded and the IAS API base URL is available
-    if (!store.stateLoaded || !store.developer.environment.iasApiBaseUrl) {
+    if (!store.stateLoaded || !store.developer.iasApiBaseUrl) {
       return
     }
 
     const configureClient = async () => {
-      setIsClientReady(false)
-      setError(null)
-
       let newClient = BCSC_API_CLIENT_SINGLETON
 
       try {
         // If the singleton doesn't exist or the base URL has changed, create a new instance
-        if (
-          !BCSC_API_CLIENT_SINGLETON ||
-          BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.environment.iasApiBaseUrl
-        ) {
-          newClient = new BCSCApiClient(store.developer.environment.iasApiBaseUrl, logger as RemoteLogger)
+        if (!BCSC_API_CLIENT_SINGLETON || BCSC_API_CLIENT_SINGLETON.baseURL !== store.developer.iasApiBaseUrl) {
+          // Only set isClientReady to false when we're actually changing clients
+          setIsClientReady(false)
+          setError(null)
+
+          newClient = new BCSCApiClient(store.developer.iasApiBaseUrl, logger as RemoteLogger)
+
           await newClient.fetchEndpointsAndConfig()
 
           handleNewClient(newClient)
+        } else {
+          // Ensure isClientReady is set even when reusing existing client
+          handleNewClient(BCSC_API_CLIENT_SINGLETON)
         }
       } catch (err) {
+        logger.error('Error during client configuration', {
+          error: err,
+          isNetworkError: isNetworkError(err),
+        })
+
         /**
          * Special case:
          * If it's a network error, we still want to set the client.
@@ -76,7 +83,17 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           return
         }
 
-        const errorMessage = `Failed to configure BCSC client for ${store.developer.environment.name}: ${
+        /**
+         * Handle 404 errors (endpoint not found):
+         * Set the client anyway to prevent endless loading.
+         */
+        if (is404Error(err)) {
+          logger.warn('OpenID configuration endpoint not found (404). App will continue but authentication may fail.')
+          handleNewClient(newClient)
+          return
+        }
+
+        const errorMessage = `Failed to configure BCSC client for ${store.developer.iasApiBaseUrl}: ${
           (err as Error)?.message
         }`
         handleNewClient(null, errorMessage)
@@ -84,7 +101,7 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     configureClient()
-  }, [store.stateLoaded, store.developer.environment.name, store.developer.environment.iasApiBaseUrl, logger, dispatch])
+  }, [store.stateLoaded, store.developer.iasApiBaseUrl, logger, handleNewClient])
 
   const contextValue = useMemo(
     () => ({
