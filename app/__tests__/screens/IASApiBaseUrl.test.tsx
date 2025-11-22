@@ -6,7 +6,7 @@ import { act } from 'react-test-renderer'
 import * as environmentUtils from '@/bcsc-theme/utils/environment-utils'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import IASApiBaseUrlScreen from '../../src/screens/IASApiBaseUrl'
-import { iasBaseApiUrls } from '../../src/store'
+import { IasBaseApiUrl } from '../../src/store'
 
 jest.mock('@/bcsc-theme/utils/environment-utils', () => ({
   prepareEnvironmentSwitch: jest.fn().mockResolvedValue(undefined),
@@ -43,7 +43,7 @@ describe('IASApiBaseUrl Screen', () => {
     )
 
     // Select a different URL first to enable the Save button
-    const urlButton = getByTestId(testIdWithKey(`IASApiBaseUrl-${iasBaseApiUrls.DEV}`))
+    const urlButton = getByTestId(testIdWithKey(`IASApiBaseUrl-${IasBaseApiUrl.DEV}`))
     act(() => {
       fireEvent.press(urlButton)
     })
@@ -81,7 +81,7 @@ describe('IASApiBaseUrl Screen', () => {
       </BasicAppContext>
     )
 
-    const urlButton = getByTestId(testIdWithKey(`IASApiBaseUrl-${iasBaseApiUrls.DEV}`))
+    const urlButton = getByTestId(testIdWithKey(`IASApiBaseUrl-${IasBaseApiUrl.DEV}`))
     act(() => {
       fireEvent.press(urlButton)
     })

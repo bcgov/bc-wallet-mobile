@@ -5,7 +5,7 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { BCDispatchAction, BCState, iasBaseApiUrls } from '../store'
+import { BCDispatchAction, BCState, IasBaseApiUrl } from '../store'
 
 interface IASApiBaseUrlProps {
   shouldDismissModal: () => void
@@ -17,7 +17,7 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
-  const uniqueUrls = Object.values(iasBaseApiUrls)
+  const uniqueUrls = Object.values(IasBaseApiUrl)
 
   const [selectedUrl, setSelectedUrl] = useState(store.developer.iasApiBaseUrl)
   const [hasChanges, setHasChanges] = useState(false)
