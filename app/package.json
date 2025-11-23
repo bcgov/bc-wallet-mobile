@@ -32,7 +32,6 @@
     "lint": "eslint --color .",
     "prettier": "prettier --loglevel=warn --check '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'",
     "prettier:fix": "prettier --loglevel=warn --write '**/*.+(js|jsx|json|ts|tsx|md|yml|yaml)'",
-    "pre-commit-lint": "yarn lint-staged",
     "typecheck": "tsc --noEmit",
     "storybook": "start-storybook -p 7007",
     "build-storybook": "build-storybook",
