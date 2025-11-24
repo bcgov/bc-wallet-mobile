@@ -1,4 +1,5 @@
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
+import { Buffer } from 'buffer'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
