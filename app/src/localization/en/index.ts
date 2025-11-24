@@ -106,6 +106,8 @@ const translation = {
     "EnableAppToAppPersonFlow": "App-to-app Person flow",
     "SwitchMode": "Switch mode",
     "SwitchTheme": "Switch theme",
+    "IASApiBaseUrl": "IAS API Base URL",
+    "NotSet": "Not set",
   },
   "Tips": {
     "Header": "Tips",
