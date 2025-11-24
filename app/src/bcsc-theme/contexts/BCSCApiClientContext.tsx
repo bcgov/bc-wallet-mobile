@@ -62,9 +62,6 @@ export const BCSCApiClientProvider: React.FC<{ children: React.ReactNode }> = ({
           await newClient.fetchEndpointsAndConfig()
 
           handleNewClient(newClient)
-        } else {
-          // Ensure isClientReady is set even when reusing existing client
-          handleNewClient(BCSC_API_CLIENT_SINGLETON)
         }
       } catch (err) {
         logger.error('Error during client configuration', {
