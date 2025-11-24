@@ -25,22 +25,16 @@
   },
   "homepage": "https://github.com/bcgov/bc-wallet-mobile#readme",
   "scripts": {
-    "preinstall": "npx husky install .husky",
     "lint:app": "cd app && yarn lint",
     "lint": "yarn lint:app",
     "prettier:app": "cd app && yarn prettier",
     "prettier": "yarn prettier:app",
     "prettier:fix": "cd app && yarn prettier:fix",
     "test": "cd app && yarn test",
-    "coverage" : "cd app && yarn test:coverage",
-    "pre-commit-lint:app": "cd app && yarn pre-commit-lint",
-    "pre-commit-lint": "yarn pre-commit-lint:app",
-    "typecheck": "cd app && yarn typecheck"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "~19.8.1",
-    "commitlint": "~19.8.1",
-    "husky": "~9.1.7"
+    "coverage": "cd app && yarn test:coverage",
+    "typecheck": "cd app && yarn typecheck",
+    "setup": "cd packages/bcsc-core && yarn build && cd ../../app && yarn setup",
+    "clean": "echo '🧹 Cleaning project directories...' && rm -rf .yarn/cache node_modules app/node_modules app/.jest app/.metro-cache app/android/.gradle app/android/.idea app/android/app/build app/ios/build app/ios/Pods packages/bcsc-core/node_modules packages/bcsc-core/lib && echo '✅ Clean complete'"
   },
   "resolutions": {
     "tsyringe": "4.8.0",

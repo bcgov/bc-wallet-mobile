@@ -1,7 +1,9 @@
+import { HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -55,7 +57,17 @@ const OnboardingStack = (): JSX.Element => {
           headerShown: true,
         }}
       />
-      <Stack.Screen name={BCSCScreens.OnboardingNotifications} component={NotificationsScreen} />
+      <Stack.Screen
+        name={BCSCScreens.OnboardingNotifications}
+        component={NotificationsScreen}
+        options={{
+          title: t('BCSC.Onboarding.NotificationsHeader'),
+          headerShown: true,
+          headerBackTestID: testIdWithKey('Back'),
+          headerBackAccessibilityLabel: t('Global.Back'),
+          headerRight: createOnboardingHelpHeaderButton({ helpCentreUrl: HelpCentreUrl.HOME }),
+        }}
+      />
       <Stack.Screen
         name={BCSCScreens.OnboardingSecureApp}
         component={SecureAppScreen}

@@ -1,5 +1,6 @@
 import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import notifications from '@assets/img/notifications.png'
 import {
   Button,
   ButtonType,
@@ -13,13 +14,9 @@ import {
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Image, StyleSheet, View } from 'react-native'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
-
-// TODO: Replace with real content when available
-const mockNotificationsContent =
-  'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
-
+import BulletPoint from '../../components/BulletPoint'
 interface NotificationsScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingNotifications>
 }
@@ -36,19 +33,37 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    scollContainer: {
+    container: {
+      flex: 1,
+    },
+    scrollContainer: {
       padding: Spacing.md,
-      gap: Spacing.lg,
+      gap: Spacing.md,
     },
     contentText: {
       lineHeight: 30,
       fontSize: 18,
     },
+    bulletContainer: {
+      gap: Spacing.sm,
+      paddingLeft: Spacing.sm,
+    },
     buttonContainer: {
       padding: Spacing.md,
       gap: Spacing.md,
     },
+    imageContainer: {
+      alignItems: 'center',
+      marginBottom: 10,
+    },
   })
+
+  const bulletItems = [
+    t('BCSC.Onboarding.NotificationsBullet1'),
+    t('BCSC.Onboarding.NotificationsBullet2'),
+    t('BCSC.Onboarding.NotificationsBullet3'),
+    t('BCSC.Onboarding.NotificationsBullet4'),
+  ]
 
   /**
    * Prompts the user to enable push notifications and updates the global state based on their response.
@@ -66,38 +81,37 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
   }
 
   const controls = (
-    <>
-      <Button
-        title={t('Global.Continue')}
-        buttonType={ButtonType.Primary}
-        onPress={async () => {
-          await activatePushNotifications()
-          navigation.navigate(BCSCScreens.OnboardingSecureApp)
-        }}
-        testID={testIdWithKey('Continue')}
-        accessibilityLabel={t('Global.Continue')}
-      />
-      <Button
-        title={t('BCSC.Onboarding.NotificationsContinueButtonSecondary')}
-        buttonType={ButtonType.Secondary}
-        onPress={() => navigation.navigate(BCSCScreens.OnboardingSecureApp)}
-        testID={testIdWithKey('Continue')}
-        accessibilityLabel={t('BCSC.Onboarding.NotificationsContinueButtonSecondary')}
-      />
-    </>
+    <Button
+      title={t('Global.Continue')}
+      buttonType={ButtonType.Primary}
+      onPress={async () => {
+        await activatePushNotifications()
+        navigation.navigate(BCSCScreens.OnboardingSecureApp)
+      }}
+      testID={testIdWithKey('Continue')}
+      accessibilityLabel={t('Global.Continue')}
+    />
   )
 
   return (
     <ScreenWrapper
+      safeAreaViewStyle={styles.container}
+      scrollViewProps={{ contentContainerStyle: styles.scrollContainer }}
       controls={controls}
       controlsContainerStyle={styles.buttonContainer}
-      scrollViewProps={{
-        contentContainerStyle: styles.scollContainer,
-      }}
     >
-      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
+      <View style={styles.imageContainer}>
+        <Image source={notifications} />
+      </View>
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
-      <ThemedText style={styles.contentText}>{mockNotificationsContent}</ThemedText>
+      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
+      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
+
+      <View style={styles.bulletContainer}>
+        {bulletItems.map((item) => (
+          <BulletPoint key={item} pointsText={item} />
+        ))}
+      </View>
     </ScreenWrapper>
   )
 }
