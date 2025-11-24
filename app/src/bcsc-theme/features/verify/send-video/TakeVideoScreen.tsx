@@ -8,7 +8,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Camera, useCameraDevice, useCameraPermission, useMicrophonePermission } from 'react-native-vision-camera'
+import {
+  Camera,
+  useCameraDevice,
+  useCameraFormat,
+  useCameraPermission,
+  useMicrophonePermission,
+} from 'react-native-vision-camera'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -23,6 +29,10 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
   const device = useCameraDevice('front')
+
+  // Video format for 480p at 24fps to reduce file size
+  const format = useCameraFormat(device, [{ videoResolution: { width: 854, height: 480 } }, { fps: 24 }])
+
   const [isActive, setIsActive] = useState(false)
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
@@ -256,6 +266,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           ref={cameraRef}
           style={styles.camera}
           device={device}
+          format={format}
           isActive={isActive}
           video={true}
           onInitialized={onInitialized}
