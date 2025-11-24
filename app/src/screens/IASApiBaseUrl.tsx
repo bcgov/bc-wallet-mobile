@@ -77,7 +77,7 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
     if (!selectedUrl) {
       return
     }
-    await prepareEnvironmentSwitch(selectedUrl, store, dispatch, logger as RemoteLogger)
+    await prepareEnvironmentSwitch(selectedUrl, store, dispatch as any, logger as RemoteLogger)
 
     // Update the API base URL in the store
     dispatch({
