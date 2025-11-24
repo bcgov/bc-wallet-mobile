@@ -1,5 +1,5 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -49,6 +49,7 @@ type LoadingScreenContentProps = LoadingScreenContentPropsA | LoadingScreenConte
 export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScreenContentProps) => {
   const { t } = useTranslation()
   const { Spacing, ColorPalette, Assets } = useTheme()
+  const callOnLoadedOnceRef = useRef(false)
 
   const styles = StyleSheet.create({
     container: {
@@ -86,10 +87,11 @@ export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScre
   })
 
   useEffect(() => {
-    if (loading || !onLoaded) {
+    if (loading || !onLoaded || callOnLoadedOnceRef.current) {
       return
     }
 
+    callOnLoadedOnceRef.current = true
     onLoaded()
   }, [loading, onLoaded])
 
