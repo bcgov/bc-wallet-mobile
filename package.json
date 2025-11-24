@@ -34,7 +34,7 @@
     "coverage": "cd app && yarn test:coverage",
     "typecheck": "cd app && yarn typecheck",
     "setup": "cd packages/bcsc-core && yarn build && cd ../../app && yarn setup",
-    "clean": "echo '🧹 Cleaning project directories...' rm -rf .yarn/cache node_modules app/node_modules app/.jest app/.metro-cache app/android/.gradle app/android/.idea app/android/app/build app/ios/build app/ios/Pods packages/bcsc-core/node_modules packages/bcsc-core/lib && echo '✅ Clean complete'"
+    "clean": "echo '🧹 Cleaning project directories...' && rm -rf .yarn/cache node_modules app/node_modules app/.jest app/.metro-cache app/android/.gradle app/android/.idea app/android/app/build app/ios/build app/ios/Pods packages/bcsc-core/node_modules packages/bcsc-core/lib && echo '✅ Clean complete'"
   },
   "resolutions": {
     "tsyringe": "4.8.0",

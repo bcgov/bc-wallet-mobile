@@ -13,6 +13,8 @@ about: Create a report to help us improve
 
 ### Screenshots and/or log output
 
+### Environment
+
 Build #:
 
 Android Device Model:
