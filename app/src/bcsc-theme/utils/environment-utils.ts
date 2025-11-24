@@ -39,7 +39,7 @@ export const prepareEnvironmentSwitch = async (
 
   const newIssuer = getIssuerUrl(newApiBaseUrl)
 
-  // No account exists reset auth state
+  // No account exists, reset auth state
   if (!existingAccount) {
     resetAuthenticationState(dispatch)
     logger.info('Environment switch preparation complete')
