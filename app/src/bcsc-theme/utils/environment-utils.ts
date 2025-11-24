@@ -47,7 +47,7 @@ export const prepareEnvironmentSwitch = async (
   }
 
   // Account already matches new environment, nothing to do
-  if (existingAccount?.issuer === newIssuer) {
+  if (existingAccount.issuer === newIssuer) {
     logger.info('Environment switch preparation complete')
     return
   }
