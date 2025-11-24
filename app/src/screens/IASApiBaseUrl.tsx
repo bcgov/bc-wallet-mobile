@@ -66,6 +66,12 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
       marginHorizontal: 20,
       marginBottom: 20,
     },
+    buttonSpacer: {
+      marginTop: 10,
+    },
+    itemSeparatorContainer: {
+      backgroundColor: SettingsTheme.groupBackground,
+    },
   })
 
   const handleUrlSelect = (url: string) => {
@@ -94,11 +100,11 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
 
   const renderItemSeparator = useCallback(
     () => (
-      <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
+      <View style={styles.itemSeparatorContainer}>
         <View style={styles.itemSeparator}></View>
       </View>
     ),
-    [SettingsTheme.groupBackground, styles.itemSeparator]
+    [styles.itemSeparatorContainer, styles.itemSeparator]
   )
 
   return (
@@ -130,7 +136,7 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
           buttonType={ButtonType.Primary}
           disabled={!hasChanges}
         />
-        <View style={{ marginTop: 10 }}>
+        <View style={styles.buttonSpacer}>
           <Button
             title={t('Global.Cancel')}
             accessibilityLabel={t('Global.Cancel')}
