@@ -1,7 +1,7 @@
 import { prepareEnvironmentSwitch } from '@/bcsc-theme/utils/environment-utils'
 import { Button, ButtonType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import React, { useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -10,17 +10,6 @@ import { BCDispatchAction, BCState, IasBaseApiUrl } from '../store'
 interface IASApiBaseUrlProps {
   shouldDismissModal: () => void
 }
-
-interface ItemSeparatorProps {
-  backgroundColor: string
-  separatorStyle: any
-}
-
-const ItemSeparator: React.FC<ItemSeparatorProps> = ({ backgroundColor, separatorStyle }) => (
-  <View style={{ backgroundColor }}>
-    <View style={separatorStyle}></View>
-  </View>
-)
 
 const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal }) => {
   const { t } = useTranslation()
@@ -103,6 +92,15 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
     shouldDismissModal()
   }
 
+  const renderItemSeparator = useCallback(
+    () => (
+      <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
+        <View style={styles.itemSeparator}></View>
+      </View>
+    ),
+    [SettingsTheme.groupBackground, styles.itemSeparator]
+  )
+
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
@@ -121,9 +119,7 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
             </TouchableOpacity>
           )
         }}
-        ItemSeparatorComponent={() => (
-          <ItemSeparator backgroundColor={SettingsTheme.groupBackground} separatorStyle={styles.itemSeparator} />
-        )}
+        ItemSeparatorComponent={renderItemSeparator}
       />
       <View style={styles.buttonContainer}>
         <Button
