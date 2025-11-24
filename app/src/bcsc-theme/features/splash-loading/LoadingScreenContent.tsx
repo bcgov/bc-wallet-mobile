@@ -79,6 +79,10 @@ export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScre
       alignSelf: 'center',
       marginBottom: 30,
     },
+    bcgovLogo: {
+      width: 150,
+      height: 150,
+    },
   })
 
   useEffect(() => {
@@ -102,14 +106,10 @@ export const LoadingScreenContent = ({ message, loading, onLoaded }: LoadingScre
           {message ?? t('BCSC.Loading.DefaultMessage')}
         </ThemedText>
 
-        <ActivityIndicator size={50} color={ColorPalette.brand.primaryLight} />
+        <ActivityIndicator size={'large'} color={ColorPalette.brand.primaryLight} />
 
         <View style={styles.logoContainer}>
-          <Image
-            source={Assets.img.logoPrimary.src}
-            style={{ width: 150, height: 150 }}
-            testID={testIdWithKey('BCGovLogo')}
-          />
+          <Image source={Assets.img.logoPrimary.src} style={styles.bcgovLogo} testID={testIdWithKey('BCGovLogo')} />
         </View>
       </View>
     </SafeAreaView>
