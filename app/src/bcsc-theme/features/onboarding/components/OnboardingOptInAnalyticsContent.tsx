@@ -1,8 +1,8 @@
-import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { BCDispatchAction, BCState } from '@/store'
-import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import analytics from '@assets/img/analytics.png'
+import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { Image, ScrollView, StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface OnboardingOptInAnalyticsContentProps {
@@ -30,14 +30,18 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     },
     buttonContainer: {
       padding: theme.Spacing.md,
+      gap: theme.Spacing.sm,
     },
     sectionContainer: {
-      gap: theme.Spacing.sm,
-      marginTop: theme.Spacing.lg,
+      gap: theme.Spacing.md,
     },
     contentText: {
       lineHeight: 30,
       fontSize: 18,
+    },
+    imageContainer: {
+      alignItems: 'center',
+      marginBottom: 10,
     },
   })
 
@@ -56,17 +60,25 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.sectionContainer}>
-          <ThemedText variant="headingFour">{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
-          <ThemedText style={styles.contentText}>
-            {
-              'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et'
-            }
-          </ThemedText>
+          <View style={styles.imageContainer}>
+            <Image source={analytics} />
+          </View>
+          <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
+          <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
         </View>
-
-        <CardButton title={t('BCSC.Onboarding.AcceptAnalytics')} onPress={handleAcceptPressed} />
-        <CardButton title={t('BCSC.Onboarding.DenyAnalytics')} onPress={handleDeniedPressed} />
       </ScrollView>
+      <View style={styles.buttonContainer}>
+        <Button
+          title={t('BCSC.Onboarding.AcceptAnalytics')}
+          buttonType={ButtonType.Primary}
+          onPress={handleAcceptPressed}
+        />
+        <Button
+          title={t('BCSC.Onboarding.DenyAnalytics')}
+          buttonType={ButtonType.Secondary}
+          onPress={handleDeniedPressed}
+        />
+      </View>
     </SafeAreaView>
   )
 }
