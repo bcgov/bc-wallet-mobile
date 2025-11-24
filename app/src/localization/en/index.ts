@@ -345,7 +345,7 @@ const translation = {
       "TermsOfUseTitle": "Terms of Use",
       "NotificationsHeader": "Notifications",
       "NotificationsContentA": "It's recommended you allow this app to receive push notifications.",
-      "NotificationsContentB": "Notification will be sent to you when:",
+      "NotificationsContentB": "Notifications will be sent to you when:",
       "NotificationsBullet1": "The app is setup and ready to use",
       "NotificationsBullet2": "You choose to log in",
       "NotificationsBullet3": "You need to renew and verify your identity again",

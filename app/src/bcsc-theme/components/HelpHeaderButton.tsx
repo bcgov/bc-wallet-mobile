@@ -94,6 +94,9 @@ export const createVerifyHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonPr
   return VerifyHeaderRight
 }
 
+/**
+ * Creates a Help Header Button for the Onboarding Stack that navigates to OnboardingWebView or executes a custom action.
+ */
 export const createOnboardingHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonProps) => {
   const OnboardingHeaderRight = () => {
     const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
