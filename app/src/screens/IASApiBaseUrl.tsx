@@ -1,9 +1,9 @@
 import { prepareEnvironmentSwitch } from '@/bcsc-theme/utils/environment-utils'
-import { Button, ButtonType, testIdWithKey, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { RemoteLogger } from '@bifold/remote-logs'
-import React, { useCallback, useState } from 'react'
+import React, { Dispatch, useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BCDispatchAction, BCState, IasBaseApiUrl } from '../store'
 
@@ -69,6 +69,9 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
     buttonSpacer: {
       marginTop: 10,
     },
+    separatorContainer: {
+      backgroundColor: SettingsTheme.groupBackground,
+    },
   })
 
   const handleUrlSelect = (url: string) => {
@@ -80,7 +83,12 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
     if (!selectedUrl) {
       return
     }
-    await prepareEnvironmentSwitch(selectedUrl, store, dispatch as any, logger as RemoteLogger)
+    await prepareEnvironmentSwitch(
+      selectedUrl,
+      store,
+      dispatch as unknown as Dispatch<BCDispatchAction>,
+      logger as RemoteLogger
+    )
 
     // Update the API base URL in the store
     dispatch({
@@ -97,11 +105,11 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
 
   const renderItemSeparator = useCallback(
     () => (
-      <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-        <View style={styles.itemSeparator}></View>
+      <View style={styles.separatorContainer}>
+        <View style={styles.itemSeparator} />
       </View>
     ),
-    [SettingsTheme.groupBackground, styles.itemSeparator]
+    [styles.separatorContainer, styles.itemSeparator]
   )
 
   return (
@@ -115,7 +123,7 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
               onPress={() => handleUrlSelect(url)}
               testID={testIdWithKey(`IASApiBaseUrl-${url}`)}
             >
-              <Text style={TextTheme.title}>{url}</Text>
+              <ThemedText style={TextTheme.title}>{url}</ThemedText>
               <View style={[styles.radioButton, selectedUrl === url && styles.radioButtonSelected]}>
                 {selectedUrl === url ? <View style={styles.radioButtonInner} /> : null}
               </View>
