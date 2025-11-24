@@ -11,6 +11,17 @@ interface IASApiBaseUrlProps {
   shouldDismissModal: () => void
 }
 
+interface ItemSeparatorProps {
+  backgroundColor: string
+  separatorStyle: any
+}
+
+const ItemSeparator: React.FC<ItemSeparatorProps> = ({ backgroundColor, separatorStyle }) => (
+  <View style={{ backgroundColor }}>
+    <View style={separatorStyle}></View>
+  </View>
+)
+
 const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal }) => {
   const { t } = useTranslation()
   const { ColorPalette, TextTheme, SettingsTheme } = useTheme()
@@ -111,9 +122,7 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
           )
         }}
         ItemSeparatorComponent={() => (
-          <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
-            <View style={styles.itemSeparator}></View>
-          </View>
+          <ItemSeparator backgroundColor={SettingsTheme.groupBackground} separatorStyle={styles.itemSeparator} />
         )}
       />
       <View style={styles.buttonContainer}>
