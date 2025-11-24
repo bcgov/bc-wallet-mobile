@@ -91,8 +91,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
         <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
 
         <View style={styles.bulletContainer}>
-          {bulletItems.map((item, index) => (
-            <BulletPoint key={index} pointsText={item} />
+          {bulletItems.map((item) => (
+            <BulletPoint key={item} pointsText={item} />
           ))}
         </View>
       </ScrollView>
