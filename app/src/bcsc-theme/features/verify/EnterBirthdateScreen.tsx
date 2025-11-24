@@ -11,11 +11,11 @@ import {
 } from '@bifold/core'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
@@ -46,7 +46,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       backgroundColor: ColorPalette.brand.primaryBackground,
     },
     scrollView: {
-      flex: 1,
       padding: Spacing.md,
     },
     controlsContainer: {
@@ -114,46 +113,50 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     }
   }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger, store.bcsc.cardType])
 
+  const controls = (
+    <Button
+      title={t('Global.Done')}
+      accessibilityLabel={t('Global.Done')}
+      testID={testIdWithKey('Done')}
+      onPress={() => {
+        if (pickerState === 'spinning') {
+          return
+        }
+        onSubmit()
+      }}
+      buttonType={ButtonType.Primary}
+      disabled={loading}
+    >
+      {loading && <ButtonLoading />}
+    </Button>
+  )
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText style={{ marginBottom: Spacing.sm }}>
-          {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
-        </ThemedText>
-        <View style={styles.lineBreak} />
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.Birthdate.Heading')}
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <DatePicker
-            theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
-            locale={t('BCSC.LocaleStringFormat')}
-            mode={'date'}
-            date={date}
-            onDateChange={onDateChange}
-            onStateChange={setPickerState}
-          />
-        </View>
-      </ScrollView>
-      <View style={styles.controlsContainer}>
-        <Button
-          title={t('Global.Done')}
-          accessibilityLabel={t('Global.Done')}
-          testID={testIdWithKey('Done')}
-          onPress={() => {
-            if (pickerState === 'spinning') {
-              return
-            }
-            onSubmit()
-          }}
-          buttonType={ButtonType.Primary}
-          disabled={loading}
-        >
-          {loading && <ButtonLoading />}
-        </Button>
+    <ScreenWrapper
+      safeAreaViewStyle={styles.pageContainer}
+      edges={['bottom', 'left', 'right']}
+      scrollViewProps={{ contentContainerStyle: styles.scrollView }}
+      controls={controls}
+      controlsContainerStyle={styles.controlsContainer}
+    >
+      <ThemedText style={{ marginBottom: Spacing.sm }}>
+        {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
+      </ThemedText>
+      <View style={styles.lineBreak} />
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.Birthdate.Heading')}
+      </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
+      <View style={{ flex: 1, alignItems: 'center' }}>
+        <DatePicker
+          theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
+          locale={t('BCSC.LocaleStringFormat')}
+          mode={'date'}
+          date={date}
+          onDateChange={onDateChange}
+          onStateChange={setPickerState}
+        />
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

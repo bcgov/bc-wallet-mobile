@@ -1,4 +1,5 @@
 import PhotoReview from '@/bcsc-theme/components/PhotoReview'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@bcsc-theme/utils/file-info'
@@ -7,7 +8,6 @@ import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PhotoReview>
@@ -74,9 +74,9 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   }
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['top', 'left', 'right']}>
+    <ScreenWrapper scrollable={false} safeAreaViewStyle={styles.pageContainer} edges={['top', 'left', 'right']}>
       <PhotoReview photoPath={photoPath} onAccept={onPressUse} onRetake={onPressRetake} />
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

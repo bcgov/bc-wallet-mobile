@@ -58,17 +58,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       paddingHorizontal: 24,
       backgroundColor: ColorPalette.brand.secondaryBackground,
     },
-    contentContainer: {
-      marginTop: 16,
-      flex: 1,
-    },
     titleRow: {
       flexDirection: 'row',
       alignItems: 'center',
-    },
-    contentText: {
-      flex: 1,
-      flexWrap: 'wrap',
     },
     contentEmailContainer: {
       flexDirection: 'row',
@@ -76,7 +68,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     },
     contentEmail: {
       flex: 1,
-      flexWrap: 'wrap',
     },
     contentEmailButton: {
       alignSelf: 'flex-end',
@@ -315,7 +306,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         {
           <View style={styles.contentEmailContainer}>
             {step.email.completed ? (
-              <>
+              <View style={styles.contentEmail}>
                 <ThemedText style={{ color: TextTheme.normal.color }}>
                   {t('BCSC.Steps.StoredEmail', { email: store.bcsc.email })}
                 </ThemedText>
@@ -330,7 +321,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
                     {t('BCSC.Steps.EditEmail')}
                   </ThemedText>
                 </TouchableOpacity>
-              </>
+              </View>
             ) : (
               <ThemedText
                 style={{

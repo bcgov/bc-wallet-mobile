@@ -67,7 +67,6 @@ const NicknameAccountScreen: React.FC = () => {
   return (
     <ScreenWrapper
       keyboardActive
-      edges={['bottom', 'left', 'right']}
       controls={controls}
       containerStyle={styles.pageContainer}
       controlsContainerStyle={styles.controlsContainer}

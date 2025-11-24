@@ -7,7 +7,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { BCDispatchAction, BCState } from '@/store'
 import { StackNavigationProp } from '@react-navigation/stack'
 
-import { SafeAreaView } from 'react-native-safe-area-context'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 
 const maxSerialNumberLength = 15
@@ -37,9 +37,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       flexDirection: 'column',
       justifyContent: 'space-between',
     },
-
-    // below used as helpful label for view, no properties needed atp
-    controlsContainer: {},
 
     buttonContainer: {
       width: '100%',
@@ -78,7 +75,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   }
 
   return (
-    <SafeAreaView style={styles.screenContainer} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper safeAreaViewStyle={styles.screenContainer} edges={['bottom', 'left', 'right']} scrollable={false}>
       <View style={styles.cameraContainer}>
         <CodeScanningCamera codeTypes={['code-128']} onCodeScanned={onCodeScanned} cameraType={'back'} />
       </View>
@@ -96,7 +93,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           />
         </View>
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

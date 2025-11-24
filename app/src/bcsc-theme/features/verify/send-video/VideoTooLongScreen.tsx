@@ -1,10 +1,10 @@
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 type VideoTooLongScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VideoTooLong>
@@ -25,17 +25,51 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
       flex: 1,
       justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
     },
     contentContainer: {
-      flex: 1,
+      padding: Spacing.md,
     },
     controlsContainer: {
       marginTop: 'auto',
+      padding: Spacing.md,
     },
   })
+
+  const controls = (
+    <>
+      <View style={{ marginBottom: Spacing.md }}>
+        <Button
+          buttonType={ButtonType.Primary}
+          title={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
+          onPress={() => {
+            navigation.goBack()
+          }}
+          accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
+        />
+      </View>
+      <Button
+        buttonType={ButtonType.Secondary}
+        title={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
+        onPress={() => {
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: BCSCScreens.SetupSteps }],
+            })
+          )
+        }}
+        testID={'Cancel'}
+        accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
+      />
+    </>
+  )
+
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
+    <ScreenWrapper
+      safeAreaViewStyle={styles.pageContainer}
+      controls={controls}
+      controlsContainerStyle={styles.controlsContainer}
+    >
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
           {t('BCSC.SendVideo.VideoTooLong.Heading')}
@@ -45,33 +79,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
           {t('BCSC.SendVideo.VideoTooLong.Description2', { videoLengthSeconds })}
         </ThemedText>
       </View>
-      <View style={styles.controlsContainer}>
-        <View style={{ marginBottom: Spacing.md }}>
-          <Button
-            buttonType={ButtonType.Primary}
-            title={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
-            onPress={() => {
-              navigation.goBack()
-            }}
-            accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.ButtonText')}
-          />
-        </View>
-        <Button
-          buttonType={ButtonType.Secondary}
-          title={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
-          onPress={() => {
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: BCSCScreens.SetupSteps }],
-              })
-            )
-          }}
-          testID={'Cancel'}
-          accessibilityLabel={t('BCSC.SendVideo.VideoTooLong.CancelButtonText')}
-        />
-      </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

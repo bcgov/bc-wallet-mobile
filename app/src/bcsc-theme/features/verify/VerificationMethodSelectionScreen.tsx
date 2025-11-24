@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -8,7 +9,6 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
 
 type VerificationMethodSelectionScreenProps = {
@@ -93,7 +93,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   }, [videoCallApi, logger, navigation])
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper safeAreaViewStyle={styles.pageContainer} edges={['bottom', 'left', 'right']}>
       {store.bcsc.verificationOptions
         .map((option, index) => {
           const borderBottomWidth = store.bcsc.verificationOptions.length === index + 1 ? 1 : undefined
@@ -144,7 +144,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           return null
         })
         .filter(Boolean)}
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 export default VerificationMethodSelectionScreen

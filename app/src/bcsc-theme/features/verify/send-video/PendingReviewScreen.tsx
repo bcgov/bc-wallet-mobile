@@ -1,9 +1,9 @@
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PendingReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PendingReview>
@@ -18,10 +18,9 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
       flex: 1,
       justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
     },
     contentContainer: {
-      flex: 1,
+      padding: Spacing.md,
     },
     bulletContainer: {
       flexDirection: 'row',
@@ -32,11 +31,27 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
     },
     controlsContainer: {
       marginTop: 'auto',
+      padding: Spacing.md,
     },
   })
 
+  const controls = (
+    <Button
+      testID={testIdWithKey('Ok')}
+      accessibilityLabel={t('BCSC.SendVideo.PendingReview.ButtonText')}
+      title={t('BCSC.SendVideo.PendingReview.ButtonText')}
+      buttonType={ButtonType.Primary}
+      onPress={() => navigation.goBack()}
+    />
+  )
+
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper
+      safeAreaViewStyle={styles.pageContainer}
+      edges={['bottom', 'left', 'right']}
+      controls={controls}
+      controlsContainerStyle={styles.controlsContainer}
+    >
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingThree'}>{t('BCSC.SendVideo.PendingReview.Heading')}</ThemedText>
         <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description1')}</ThemedText>
@@ -52,16 +67,7 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
         <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description3')}</ThemedText>
         <ThemedText>{t('BCSC.SendVideo.PendingReview.Description4')}</ThemedText>
       </View>
-      <View style={styles.controlsContainer}>
-        <Button
-          testID={testIdWithKey('Ok')}
-          accessibilityLabel={t('BCSC.SendVideo.PendingReview.ButtonText')}
-          title={t('BCSC.SendVideo.PendingReview.ButtonText')}
-          buttonType={ButtonType.Primary}
-          onPress={() => navigation.goBack()}
-        />
-      </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 export default PendingReviewScreen

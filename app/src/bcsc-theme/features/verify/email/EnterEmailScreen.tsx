@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -6,7 +7,6 @@ import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
-  KeyboardView,
   ThemedText,
   TOKENS,
   useAnimatedComponents,
@@ -17,7 +17,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet, View } from 'react-native'
+import { Alert, StyleSheet } from 'react-native'
 import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {
@@ -47,9 +47,6 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
       justifyContent: 'space-between',
       backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
-    },
-    contentContainer: {
-      flex: 1,
     },
     controlsContainer: {
       marginTop: 'auto',
@@ -102,42 +99,46 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
     ])
   }
 
+  const controls = (
+    <>
+      <Button
+        buttonType={ButtonType.Primary}
+        onPress={handleSubmit}
+        title={t('Global.Continue')}
+        accessibilityLabel={t('Global.Continue')}
+        testID={'ContinueButton'}
+      >
+        {loading && <ButtonLoading />}
+      </Button>
+      {cardType !== BCSCCardType.Other ? (
+        <Button
+          buttonType={ButtonType.Secondary}
+          onPress={handleSkip}
+          title={t('BCSC.EnterEmail.EmailSkip')}
+          accessibilityLabel={t('BCSC.EnterEmail.EmailSkip')}
+          testID={'SkipButton'}
+        />
+      ) : null}
+    </>
+  )
+
   return (
-    <KeyboardView>
-      <View style={styles.pageContainer}>
-        <View style={styles.contentContainer}>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('BCSC.EnterEmail.EnterEmailAddress')}
-          </ThemedText>
-          {cardType !== BCSCCardType.Other ? (
-            <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
-          ) : null}
-          <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
-          <EmailTextInput handleChangeEmail={handleChangeEmail} />
-          {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
-        </View>
-        <View style={styles.controlsContainer}>
-          <Button
-            buttonType={ButtonType.Primary}
-            onPress={handleSubmit}
-            title={t('Global.Continue')}
-            accessibilityLabel={t('Global.Continue')}
-            testID={'ContinueButton'}
-          >
-            {loading && <ButtonLoading />}
-          </Button>
-          {cardType !== BCSCCardType.Other ? (
-            <Button
-              buttonType={ButtonType.Secondary}
-              onPress={handleSkip}
-              title={t('BCSC.EnterEmail.EmailSkip')}
-              accessibilityLabel={t('BCSC.EnterEmail.EmailSkip')}
-              testID={'SkipButton'}
-            />
-          ) : null}
-        </View>
-      </View>
-    </KeyboardView>
+    <ScreenWrapper
+      keyboardActive={true}
+      containerStyle={styles.pageContainer}
+      controls={controls}
+      controlsContainerStyle={styles.controlsContainer}
+    >
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.EnterEmail.EnterEmailAddress')}
+      </ThemedText>
+      {cardType !== BCSCCardType.Other ? (
+        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
+      ) : null}
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
+      <EmailTextInput handleChangeEmail={handleChangeEmail} />
+      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
+    </ScreenWrapper>
   )
 }
 

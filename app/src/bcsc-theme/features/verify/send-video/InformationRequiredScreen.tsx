@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
@@ -7,9 +8,8 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { Buffer } from 'buffer'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 import RNFS from 'react-native-fs'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
 
 type InformationRequiredScreenProps = {
@@ -130,42 +130,46 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
     }
   }
 
+  const controls = (
+    <Button
+      buttonType={ButtonType.Primary}
+      title={t('BCSC.SendVideo.InformationRequired.ButtonText')}
+      onPress={onPressSend}
+      testID={'SendToServiceBCNow'}
+      accessibilityLabel={t('BCSC.SendVideo.InformationRequired.ButtonText')}
+      disabled={!uploadedBoth || loading}
+    >
+      {loading && <ButtonLoading />}
+    </Button>
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View>
-        <TakeMediaButton
-          onPress={() => {
-            navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
-          }}
-          title={t('BCSC.SendVideo.InformationRequired.Heading1')}
-          actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel')}
-          thumbnailUri={store.bcsc.photoPath && `file://${store.bcsc.photoPath}`}
-          style={{ borderBottomWidth: 0 }}
-        />
-        <TakeMediaButton
-          onPress={() => {
-            navigation.navigate(BCSCScreens.VideoInstructions)
-          }}
-          title={t('BCSC.SendVideo.InformationRequired.Heading2')}
-          actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel2')}
-          thumbnailUri={
-            store.bcsc.videoPath && store.bcsc.videoThumbnailPath && `file://${store.bcsc.videoThumbnailPath}`
-          }
-        />
-      </View>
-      <View style={styles.controlsContainer}>
-        <Button
-          buttonType={ButtonType.Primary}
-          title={t('BCSC.SendVideo.InformationRequired.ButtonText')}
-          onPress={onPressSend}
-          testID={'SendToServiceBCNow'}
-          accessibilityLabel={t('BCSC.SendVideo.InformationRequired.ButtonText')}
-          disabled={!uploadedBoth || loading}
-        >
-          {loading && <ButtonLoading />}
-        </Button>
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper
+      safeAreaViewStyle={styles.container}
+      edges={['bottom']}
+      controls={controls}
+      controlsContainerStyle={styles.controlsContainer}
+    >
+      <TakeMediaButton
+        onPress={() => {
+          navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
+        }}
+        title={t('BCSC.SendVideo.InformationRequired.Heading1')}
+        actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel')}
+        thumbnailUri={store.bcsc.photoPath && `file://${store.bcsc.photoPath}`}
+        style={{ borderBottomWidth: 0 }}
+      />
+      <TakeMediaButton
+        onPress={() => {
+          navigation.navigate(BCSCScreens.VideoInstructions)
+        }}
+        title={t('BCSC.SendVideo.InformationRequired.Heading2')}
+        actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel2')}
+        thumbnailUri={
+          store.bcsc.videoPath && store.bcsc.videoThumbnailPath && `file://${store.bcsc.videoThumbnailPath}`
+        }
+      />
+    </ScreenWrapper>
   )
 }
 

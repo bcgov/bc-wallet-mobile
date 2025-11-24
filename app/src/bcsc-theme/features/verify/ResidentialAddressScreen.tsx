@@ -1,12 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getProvinceCode, isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
-  KeyboardView,
   testIdWithKey,
   ThemedText,
   ToastType,
@@ -18,8 +18,7 @@ import {
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StyleSheet, View } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 type ResidentialAddressFormState = {
@@ -39,7 +38,7 @@ type ResidentialAddressFormErrors = Partial<ResidentialAddressFormState>
 export const ResidentialAddressScreen = () => {
   const [store, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const navigation = useNavigation()
   const { authorization } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -54,11 +53,6 @@ export const ResidentialAddressScreen = () => {
 
   const styles = StyleSheet.create({
     pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    scrollView: {
       flex: 1,
       padding: Spacing.md,
       gap: 32,
@@ -198,64 +192,60 @@ export const ResidentialAddressScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <KeyboardView>
-        <ScrollView contentContainerStyle={styles.scrollView}>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('BCSC.Address.Heading')}
-          </ThemedText>
+    <ScreenWrapper keyboardActive={true} containerStyle={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.Address.Heading')}
+      </ThemedText>
 
-          <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Address.Paragraph')}</ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Address.Paragraph')}</ThemedText>
 
-          <InputWithValidation
-            id={'streetAddress1'}
-            label={t('BCSC.Address.StreetAddressLabel')}
-            value={formState.streetAddress}
-            onChange={(value) => handleChange('streetAddress', value)}
-            error={formErrors.streetAddress}
-            subtext={t('BCSC.Address.StreetAddressSubtext')}
+      <InputWithValidation
+        id={'streetAddress1'}
+        label={t('BCSC.Address.StreetAddressLabel')}
+        value={formState.streetAddress}
+        onChange={(value) => handleChange('streetAddress', value)}
+        error={formErrors.streetAddress}
+        subtext={t('BCSC.Address.StreetAddressSubtext')}
+      />
+
+      <InputWithValidation
+        id={'city'}
+        label={t('BCSC.Address.CityLabel')}
+        value={formState.city}
+        onChange={(value) => handleChange('city', value)}
+        error={formErrors.city}
+        subtext={t('BCSC.Address.CitySubtext')}
+      />
+
+      <InputWithValidation
+        id={'province'}
+        label={t('BCSC.Address.ProvinceLabel')}
+        value={formState.province}
+        onChange={(value) => handleChange('province', value)}
+        error={formErrors.province}
+        subtext={t('BCSC.Address.ProvinceSubtext')}
+      />
+
+      <InputWithValidation
+        id={'postalCode'}
+        label={t('BCSC.Address.PostalCodeLabel')}
+        value={formState.postalCode}
+        onChange={(value) => handleChange('postalCode', value)}
+        error={formErrors.postalCode}
+        subtext={t('BCSC.Address.PostalCodeSubtext')}
+      />
+
+      <View style={{ marginTop: 48, width: '100%' }}>
+        <View style={{ marginBottom: 20 }}>
+          <Button
+            title={t('Global.Continue')}
+            accessibilityLabel={t('Global.Continue')}
+            testID={testIdWithKey('ResidentialAddressContinue')}
+            buttonType={ButtonType.Primary}
+            onPress={handleSubmit}
           />
-
-          <InputWithValidation
-            id={'city'}
-            label={t('BCSC.Address.CityLabel')}
-            value={formState.city}
-            onChange={(value) => handleChange('city', value)}
-            error={formErrors.city}
-            subtext={t('BCSC.Address.CitySubtext')}
-          />
-
-          <InputWithValidation
-            id={'province'}
-            label={t('BCSC.Address.ProvinceLabel')}
-            value={formState.province}
-            onChange={(value) => handleChange('province', value)}
-            error={formErrors.province}
-            subtext={t('BCSC.Address.ProvinceSubtext')}
-          />
-
-          <InputWithValidation
-            id={'postalCode'}
-            label={t('BCSC.Address.PostalCodeLabel')}
-            value={formState.postalCode}
-            onChange={(value) => handleChange('postalCode', value)}
-            error={formErrors.postalCode}
-            subtext={t('BCSC.Address.PostalCodeSubtext')}
-          />
-
-          <View style={{ marginTop: 48, width: '100%' }}>
-            <View style={{ marginBottom: 20 }}>
-              <Button
-                title={t('Global.Continue')}
-                accessibilityLabel={t('Global.Continue')}
-                testID={testIdWithKey('ResidentialAddressContinue')}
-                buttonType={ButtonType.Primary}
-                onPress={handleSubmit}
-              />
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardView>
-    </SafeAreaView>
+        </View>
+      </View>
+    </ScreenWrapper>
   )
 }

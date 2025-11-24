@@ -1,3 +1,4 @@
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { hitSlop } from '@/constants'
 import { BCState } from '@/store'
@@ -250,7 +251,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <ScreenWrapper scrollable={false} safeAreaViewStyle={{ flex: 1 }}>
       <View style={styles.pageContainer}>
         <Camera
           ref={cameraRef}
@@ -311,7 +312,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
           </View>
         ) : null}
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

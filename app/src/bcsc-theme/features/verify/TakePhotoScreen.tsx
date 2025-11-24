@@ -3,11 +3,11 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { StackNavigationProp } from '@react-navigation/stack'
 
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { MaskType } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
@@ -32,7 +32,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
   }
 
   return (
-    <SafeAreaView style={styles.pageContainer}>
+    <ScreenWrapper scrollable={false} safeAreaViewStyle={styles.pageContainer}>
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"
@@ -40,7 +40,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
         maskType={MaskType.OVAL}
         onPhotoTaken={handlePhotoTaken}
       />
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 
