@@ -95,13 +95,22 @@ exports[`IASApiBaseUrl Screen screen renders correctly 1`] = `
           testID="com.ariesbifold:id/IASApiBaseUrl-https://id.gov.bc.ca"
         >
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 20,
-                "fontWeight": "bold",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+              ]
             }
           >
             https://id.gov.bc.ca
@@ -188,13 +197,22 @@ exports[`IASApiBaseUrl Screen screen renders correctly 1`] = `
           testID="com.ariesbifold:id/IASApiBaseUrl-https://iddev.gov.bc.ca"
         >
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 20,
-                "fontWeight": "bold",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+              ]
             }
           >
             https://iddev.gov.bc.ca
@@ -281,13 +299,22 @@ exports[`IASApiBaseUrl Screen screen renders correctly 1`] = `
           testID="com.ariesbifold:id/IASApiBaseUrl-https://iddev2.gov.bc.ca"
         >
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 20,
-                "fontWeight": "bold",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+              ]
             }
           >
             https://iddev2.gov.bc.ca
@@ -374,13 +401,22 @@ exports[`IASApiBaseUrl Screen screen renders correctly 1`] = `
           testID="com.ariesbifold:id/IASApiBaseUrl-https://idsit.gov.bc.ca"
         >
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 20,
-                "fontWeight": "bold",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+              ]
             }
           >
             https://idsit.gov.bc.ca
@@ -480,13 +516,22 @@ exports[`IASApiBaseUrl Screen screen renders correctly 1`] = `
           testID="com.ariesbifold:id/IASApiBaseUrl-https://idqa.gov.bc.ca"
         >
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 20,
-                "fontWeight": "bold",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+              ]
             }
           >
             https://idqa.gov.bc.ca
@@ -573,13 +618,22 @@ exports[`IASApiBaseUrl Screen screen renders correctly 1`] = `
           testID="com.ariesbifold:id/IASApiBaseUrl-https://idpreprod.gov.bc.ca"
         >
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 20,
-                "fontWeight": "bold",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+              ]
             }
           >
             https://idpreprod.gov.bc.ca
@@ -666,13 +720,22 @@ exports[`IASApiBaseUrl Screen screen renders correctly 1`] = `
           testID="com.ariesbifold:id/IASApiBaseUrl-https://idtest.gov.bc.ca"
         >
           <Text
+            maxFontSizeMultiplier={2}
             style={
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 20,
-                "fontWeight": "bold",
-              }
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 20,
+                  "fontWeight": "bold",
+                },
+              ]
             }
           >
             https://idtest.gov.bc.ca
