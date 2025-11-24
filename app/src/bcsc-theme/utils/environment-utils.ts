@@ -1,7 +1,7 @@
 import { BCDispatchAction, BCState } from '@/store'
 import { RemoteLogger } from '@bifold/remote-logs'
 import { Dispatch } from 'react'
-import { getAccount, removeAccount } from 'react-native-bcsc-core'
+import { getAccount, NativeAccount, removeAccount } from 'react-native-bcsc-core'
 
 /**
  * Prepares for switching to a new IAS API environment by cleaning up state from the old environment.
@@ -15,11 +15,10 @@ import { getAccount, removeAccount } from 'react-native-bcsc-core'
 export const prepareEnvironmentSwitch = async (
   newApiBaseUrl: string,
   currentState: BCState,
-  dispatch: Dispatch<any>,
+  dispatch: Dispatch<BCDispatchAction>,
   logger: RemoteLogger
 ): Promise<void> => {
   const currentApiBaseUrl = currentState.developer.iasApiBaseUrl
-
   if (!newApiBaseUrl || newApiBaseUrl === currentApiBaseUrl) {
     return
   }
@@ -29,39 +28,60 @@ export const prepareEnvironmentSwitch = async (
     to: newApiBaseUrl,
   })
 
+  let existingAccount: NativeAccount | null = null
+
   try {
-    // Check if existing account is from a different environment
-    const existingAccount = await getAccount()
-    if (existingAccount) {
-      logger.info('Checking existing account issuer', {
-        existingIssuer: existingAccount.issuer,
-        newIssuer: newApiBaseUrl + '/device/',
-      })
+    existingAccount = await getAccount()
+  } catch (error) {
+    logger.error('Error checking/removing old account', { error })
+    // Continue with environment switch even if we can't fetch the account
+  }
 
-      // If the issuer doesn't match the new environment remove the old account
-      const newIssuer = `${newApiBaseUrl}/device/`
-      if (existingAccount.issuer !== newIssuer) {
-        logger.info('Account from different environment detected, removing old account', {
-          oldIssuer: existingAccount.issuer,
-          newIssuer: newIssuer,
-        })
-        await removeAccount()
-        logger.info('Old account removed successfully')
+  const newIssuer = getIssuerUrl(newApiBaseUrl)
 
-        // Reset verification progress
-        dispatch({ type: BCDispatchAction.CLEAR_BCSC })
-      } else {
-        return
-      }
-    }
+  // No account exists reset auth state
+  if (!existingAccount) {
+    resetAuthenticationState(dispatch)
+    logger.info('Environment switch preparation complete')
+    return
+  }
+
+  // Account already matches new environment, nothing to do
+  if (existingAccount && existingAccount.issuer === newIssuer) {
+    logger.info('Environment switch preparation complete')
+    return
+  }
+
+  logger.info('Account from different environment detected, removing old account', {
+    oldIssuer: existingAccount.issuer,
+    newIssuer,
+  })
+  await cleanupOldAccountIfNeeded(newApiBaseUrl, dispatch, logger)
+  resetAuthenticationState(dispatch)
+
+  logger.info('Environment switch preparation complete')
+}
+
+const cleanupOldAccountIfNeeded = async (
+  newApiBaseUrl: string,
+  dispatch: Dispatch<BCDispatchAction>,
+  logger: RemoteLogger
+): Promise<void> => {
+  try {
+    // Remove account from old environment
+    await removeAccount()
+    logger.info('Old account removed successfully')
+
+    dispatch(BCDispatchAction.CLEAR_BCSC)
   } catch (error) {
     logger.error('Error checking/removing old account', { error })
     // Continue even if account removal fails so users don't get stuck
   }
-
-  // Clear refresh token from store and force re-authentication
-  dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [undefined] })
-  dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [false] })
-
-  logger.info('Environment switch preparation complete')
 }
+
+const resetAuthenticationState = (dispatch: Dispatch<BCDispatchAction>): void => {
+  dispatch(BCDispatchAction.UPDATE_REFRESH_TOKEN)
+  dispatch(BCDispatchAction.UPDATE_VERIFIED)
+}
+
+const getIssuerUrl = (apiBaseUrl: string): string => `${apiBaseUrl}/device/`
