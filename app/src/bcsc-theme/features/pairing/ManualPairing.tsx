@@ -1,7 +1,6 @@
 import {
   Button,
   ButtonType,
-  KeyboardView,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -15,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
 
@@ -39,7 +39,6 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
     contentContainer: {
       flex: 1,
     },
-    controlsContainer: {},
   })
 
   const handleChangeCode = (text: string) => {
@@ -73,33 +72,35 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
     }
   }
 
+  const controls = (
+    <Button
+      title={t('Global.Submit')}
+      buttonType={ButtonType.Primary}
+      testID={testIdWithKey('Submit')}
+      accessibilityLabel={t('Global.Submit')}
+      onPress={onSubmit}
+      disabled={loading}
+    >
+      {loading && <ButtonLoading />}
+    </Button>
+  )
+
   return (
-    <KeyboardView keyboardAvoiding={false}>
-      <View style={styles.container}>
-        <View style={styles.contentContainer}>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
-          </ThemedText>
-          <ThemedText style={{ marginBottom: Spacing.md }}>
-            {t('BCSC.ManualPairing.EnterPairingCodeMessage')}
-          </ThemedText>
-          <PairingCodeTextInput handleChangeCode={handleChangeCode} />
-          <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
-        </View>
-        <View style={styles.controlsContainer}>
-          <Button
-            title={t('Global.Submit')}
-            buttonType={ButtonType.Primary}
-            testID={testIdWithKey('Submit')}
-            accessibilityLabel={t('Global.Submit')}
-            onPress={onSubmit}
-            disabled={loading}
-          >
-            {loading && <ButtonLoading />}
-          </Button>
-        </View>
+    <ScreenWrapper
+      keyboardActive
+      edges={['bottom', 'left', 'right']}
+      controls={controls}
+      containerStyle={styles.container}
+    >
+      <View style={styles.contentContainer}>
+        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+          {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
+        </ThemedText>
+        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
+        <PairingCodeTextInput handleChangeCode={handleChangeCode} />
+        <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
       </View>
-    </KeyboardView>
+    </ScreenWrapper>
   )
 }
 

@@ -20,7 +20,6 @@ export const MainContactUsScreen: React.FC<MainContactUsScreenProps> = () => {
     container: {
       flex: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
     },
   })
 
@@ -28,7 +27,7 @@ export const MainContactUsScreen: React.FC<MainContactUsScreenProps> = () => {
     <ScreenWrapper
       safeAreaViewStyle={styles.container}
       edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: { flexGrow: 1 } }}
+      scrollViewProps={{ contentContainerStyle: { flexGrow: 1, padding: Spacing.md } }}
     >
       <ContactUsContent />
     </ScreenWrapper>
