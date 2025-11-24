@@ -69,9 +69,6 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
     buttonSpacer: {
       marginTop: 10,
     },
-    itemSeparatorContainer: {
-      backgroundColor: SettingsTheme.groupBackground,
-    },
   })
 
   const handleUrlSelect = (url: string) => {
@@ -100,11 +97,11 @@ const IASApiBaseUrlScreen: React.FC<IASApiBaseUrlProps> = ({ shouldDismissModal 
 
   const renderItemSeparator = useCallback(
     () => (
-      <View style={styles.itemSeparatorContainer}>
+      <View style={{ backgroundColor: SettingsTheme.groupBackground }}>
         <View style={styles.itemSeparator}></View>
       </View>
     ),
-    [styles.itemSeparatorContainer, styles.itemSeparator]
+    [SettingsTheme.groupBackground, styles.itemSeparator]
   )
 
   return (
