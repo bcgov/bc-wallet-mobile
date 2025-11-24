@@ -79,7 +79,7 @@ const attestationCredDefIds = allCredDefIds(AttestationRestrictions)
 
 export class AppContainer implements Container {
   private _container: DependencyContainer
-  private logger: RemoteLogger
+  private readonly logger: RemoteLogger
   private t: TFunction<'translation', undefined>
   private navigate: (stack: never, params: never) => void
   private storage: PersistentStorage<PersistentState>
