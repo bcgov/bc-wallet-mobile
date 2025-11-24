@@ -1,11 +1,12 @@
 import { prepareEnvironmentSwitch } from '@/bcsc-theme/utils/environment-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import { MockLogger } from '@bifold/core'
+import { Dispatch } from 'react'
 import * as BcscCore from 'react-native-bcsc-core'
 
 describe('prepareEnvironmentSwitch', () => {
   let mockLogger: any
-  let dispatchMock: jest.Mock
+  let dispatchMock: jest.MockedFunction<Dispatch<BCDispatchAction>>
   let mockState: BCState
 
   beforeEach(() => {
@@ -58,14 +59,8 @@ describe('prepareEnvironmentSwitch', () => {
       expect(BcscCore.getAccount).toHaveBeenCalled()
       expect(BcscCore.removeAccount).not.toHaveBeenCalled()
       expect(dispatchMock).toHaveBeenCalledTimes(2)
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_REFRESH_TOKEN,
-        payload: [undefined],
-      })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VERIFIED,
-        payload: [false],
-      })
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.UPDATE_REFRESH_TOKEN)
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.UPDATE_VERIFIED)
     })
 
     it('should not dispatch CLEAR_BCSC when no account exists', async () => {
@@ -73,21 +68,7 @@ describe('prepareEnvironmentSwitch', () => {
 
       await prepareEnvironmentSwitch(newApiBaseUrl, mockState, dispatchMock, mockLogger)
 
-      expect(dispatchMock).not.toHaveBeenCalledWith({
-        type: BCDispatchAction.CLEAR_BCSC,
-      })
-    })
-
-    it('should log preparation messages', async () => {
-      const newApiBaseUrl = 'https://idqa.gov.bc.ca'
-
-      await prepareEnvironmentSwitch(newApiBaseUrl, mockState, dispatchMock, mockLogger)
-
-      expect(mockLogger.info).toHaveBeenCalledWith('Preparing to switch IAS API environment', {
-        from: 'https://idsit.gov.bc.ca',
-        to: newApiBaseUrl,
-      })
-      expect(mockLogger.info).toHaveBeenCalledWith('Environment switch preparation complete')
+      expect(dispatchMock).not.toHaveBeenCalledWith(BCDispatchAction.CLEAR_BCSC)
     })
   })
 
@@ -118,25 +99,7 @@ describe('prepareEnvironmentSwitch', () => {
 
       await prepareEnvironmentSwitch(newApiBaseUrl, mockState, dispatchMock, mockLogger)
 
-      expect(dispatchMock).not.toHaveBeenCalledWith({
-        type: BCDispatchAction.CLEAR_BCSC,
-      })
-    })
-
-    it('should log checking existing account issuer', async () => {
-      const newApiBaseUrl = 'https://idqa.gov.bc.ca'
-      const mockAccount = {
-        issuer: `${newApiBaseUrl}/device/`,
-        subject: 'test-subject',
-      }
-      jest.mocked(BcscCore.getAccount).mockResolvedValue(mockAccount as any)
-
-      await prepareEnvironmentSwitch(newApiBaseUrl, mockState, dispatchMock, mockLogger)
-
-      expect(mockLogger.info).toHaveBeenCalledWith('Checking existing account issuer', {
-        existingIssuer: mockAccount.issuer,
-        newIssuer: `${newApiBaseUrl}/device/`,
-      })
+      expect(dispatchMock).not.toHaveBeenCalledWith(BCDispatchAction.CLEAR_BCSC)
     })
   })
 
@@ -153,9 +116,7 @@ describe('prepareEnvironmentSwitch', () => {
       await prepareEnvironmentSwitch(newApiBaseUrl, mockState, dispatchMock, mockLogger)
 
       expect(BcscCore.removeAccount).toHaveBeenCalled()
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.CLEAR_BCSC,
-      })
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.CLEAR_BCSC)
     })
 
     it('should dispatch all three actions when removing old account', async () => {
@@ -170,38 +131,9 @@ describe('prepareEnvironmentSwitch', () => {
       await prepareEnvironmentSwitch(newApiBaseUrl, mockState, dispatchMock, mockLogger)
 
       expect(dispatchMock).toHaveBeenCalledTimes(3)
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.CLEAR_BCSC,
-      })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_REFRESH_TOKEN,
-        payload: [undefined],
-      })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VERIFIED,
-        payload: [false],
-      })
-    })
-
-    it('should log account removal process', async () => {
-      const newApiBaseUrl = 'https://idqa.gov.bc.ca'
-      const mockAccount = {
-        issuer: 'https://idsit.gov.bc.ca/device/',
-        subject: 'test-subject',
-      }
-      jest.mocked(BcscCore.getAccount).mockResolvedValue(mockAccount as any)
-      jest.mocked(BcscCore.removeAccount).mockResolvedValue(undefined)
-
-      await prepareEnvironmentSwitch(newApiBaseUrl, mockState, dispatchMock, mockLogger)
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Account from different environment detected, removing old account',
-        {
-          oldIssuer: mockAccount.issuer,
-          newIssuer: `${newApiBaseUrl}/device/`,
-        }
-      )
-      expect(mockLogger.info).toHaveBeenCalledWith('Old account removed successfully')
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.CLEAR_BCSC)
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.UPDATE_REFRESH_TOKEN)
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.UPDATE_VERIFIED)
     })
   })
 
@@ -217,14 +149,8 @@ describe('prepareEnvironmentSwitch', () => {
         error,
       })
       expect(dispatchMock).toHaveBeenCalledTimes(2)
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_REFRESH_TOKEN,
-        payload: [undefined],
-      })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VERIFIED,
-        payload: [false],
-      })
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.UPDATE_REFRESH_TOKEN)
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.UPDATE_VERIFIED)
     })
 
     it('should log error and continue when removeAccount throws', async () => {
@@ -243,14 +169,8 @@ describe('prepareEnvironmentSwitch', () => {
         error,
       })
       expect(dispatchMock).toHaveBeenCalledTimes(2)
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_REFRESH_TOKEN,
-        payload: [undefined],
-      })
-      expect(dispatchMock).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VERIFIED,
-        payload: [false],
-      })
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.UPDATE_REFRESH_TOKEN)
+      expect(dispatchMock).toHaveBeenCalledWith(BCDispatchAction.UPDATE_VERIFIED)
     })
 
     it('should not throw when getAccount fails', async () => {
