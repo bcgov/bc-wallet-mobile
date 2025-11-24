@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BCSCMainStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
+import { BCSCMainStackParams, BCSCOnboardingStackParams, BCSCScreens, BCSCVerifyStackParams } from '../types/navigators'
 
 type HelpHeaderButtonUrlProps = {
   helpCentreUrl: HelpCentreUrl
@@ -92,4 +92,20 @@ export const createVerifyHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonPr
     return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />
   }
   return VerifyHeaderRight
+}
+
+export const createOnboardingHelpHeaderButton = (helpHeaderProps: HelpHeaderButtonProps) => {
+  const OnboardingHeaderRight = () => {
+    const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
+
+    const navigateToWebView = useCallback(
+      (url: string, title: string) => {
+        navigation.navigate(BCSCScreens.OnboardingWebView, { url, title })
+      },
+      [navigation]
+    )
+
+    return <HelpHeaderButton helpHeaderProps={helpHeaderProps} navigateToWebView={navigateToWebView} />
+  }
+  return OnboardingHeaderRight
 }
