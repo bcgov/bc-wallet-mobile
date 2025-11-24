@@ -362,15 +362,15 @@ const Developer: React.FC = () => {
         <SectionHeader icon={'apartment'} title={'IAS'} />
         {store.mode === Mode.BCSC ? (
           <SectionRow
-            title={'API Base URL'}
-            accessibilityLabel={'IAS API Base URL'}
+            title={t('Developer.IASApiBaseUrl')}
+            accessibilityLabel={t('Developer.IASApiBaseUrl')}
             testID={testIdWithKey('ias-api-base-url')}
             onPress={() => {
               setApiBaseUrlModalVisible(true)
             }}
           >
             <Text style={[TextTheme.headingFour, { fontWeight: 'normal', color: ColorPalette.brand.link }]}>
-              {store.developer.iasApiBaseUrl || 'Not set'}
+              {store.developer.iasApiBaseUrl || t('Developer.NotSet')}
             </Text>
           </SectionRow>
         ) : (
