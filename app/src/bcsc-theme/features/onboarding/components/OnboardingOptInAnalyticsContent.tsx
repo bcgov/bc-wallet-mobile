@@ -43,6 +43,11 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
       alignItems: 'center',
       marginBottom: 10,
     },
+    titleContainer: {
+      alignItems: 'center',
+      marginBottom: theme.Spacing.md,
+      gap: theme.Spacing.md,
+    },
   })
 
   const handleAcceptPressed = () => {
@@ -63,7 +68,10 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
           <View style={styles.imageContainer}>
             <Image source={analytics} />
           </View>
-          <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
+          <View style={styles.titleContainer}>
+            <ThemedText variant="headingOne">{t('BCSC.Onboarding.AnalyticsTitle')}</ThemedText>
+          </View>
+            <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
           <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
         </View>
       </ScrollView>

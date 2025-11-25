@@ -368,6 +368,7 @@ const translation = {
       "SecureAppBiometricsSubtext": "TODO: Android subtext (FR)",
       "SecureAppPINTitle": "Create a PIN (FR)",
       "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (FR)",
+      "AnalyticsTitle": "Enable Analytics? (FR)",
       "AnalyticsHeader": "Help us improve your BC Services Card experience (FR)",
       "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (FR)",
       "AcceptAnalytics": "Enable Analytics (FR)",
