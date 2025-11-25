@@ -1033,7 +1033,7 @@ PODS:
   - React-Mapbuffer (0.73.11):
     - glog
     - React-debug
-  - react-native-attestation (2.11.3):
+  - react-native-attestation (2.11.4):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1063,12 +1063,12 @@ PODS:
   - react-native-tcp-socket (6.0.6):
     - CocoaAsyncSocket
     - React-Core
-  - react-native-video (6.16.1):
+  - react-native-video (6.18.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
-    - react-native-video/Video (= 6.16.1)
-  - react-native-video/Video (6.16.1):
+    - react-native-video/Video (= 6.18.0)
+  - react-native-video/Video (6.18.0):
     - glog
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
@@ -1296,11 +1296,11 @@ PODS:
     - SDWebImage/Core (= 5.21.1)
   - SDWebImage/Core (5.21.1)
   - SocketRocket (0.6.1)
-  - VisionCamera (4.3.2):
-    - VisionCamera/Core (= 4.3.2)
-    - VisionCamera/React (= 4.3.2)
-  - VisionCamera/Core (4.3.2)
-  - VisionCamera/React (4.3.2):
+  - VisionCamera (4.7.3):
+    - VisionCamera/Core (= 4.7.3)
+    - VisionCamera/React (= 4.7.3)
+  - VisionCamera/Core (4.7.3)
+  - VisionCamera/React (4.7.3):
     - React-Core
   - Yoga (1.14.0)
 
@@ -1641,7 +1641,7 @@ SPEC CHECKSUMS:
   React-jsinspector: a98428936fb888cc15d857226a26d9ac0a668a0e
   React-logger: 6e4873d1f9c54cca30f6c91a6617f8c91b75ba4c
   React-Mapbuffer: 57bf49a458398d329dad2bf8bc660e3e35b96989
-  react-native-attestation: 7fe5086199227b32fd4d78203de67ab699a5abb8
+  react-native-attestation: 7ca728a015eca1c305034eee4c4e8cc2bf05b224
   react-native-config: 644074ab88db883fcfaa584f03520ec29589d7df
   react-native-date-picker: 2eca217a8fb09c517f5bb6b23978718c6cec59ec
   react-native-encrypted-storage: 569d114e329b1c2c2d9f8c84bcdbe4478dda2258
@@ -1652,7 +1652,7 @@ SPEC CHECKSUMS:
   react-native-screenguard: 38cf6d55781c6225f33be32afeb13cb2a0e154ee
   react-native-splash-screen: 95994222cc95c236bd3cdc59fe45ed5f27969594
   react-native-tcp-socket: ae8abcfebc071216302a09d9ed1e375d4e877484
-  react-native-video: d74d94fbaeee3c0d8f6570173289f43fe210066f
+  react-native-video: 51567cc58c1560ed1d3262a2af805b0cfee805c1
   react-native-volume-manager: d9d2863a2374420af89c89662333ea6adf506988
   react-native-webrtc: 96fdff9e3a942ed88cafe01898da1c93fd628957
   react-native-webview: f802f655c8446404bb0c134da9335a8cf667e8cb
@@ -1694,7 +1694,7 @@ SPEC CHECKSUMS:
   RNVectorIcons: 102cd20472bf0d7cd15443d43cd87f9c97228ac3
   SDWebImage: f29024626962457f3470184232766516dee8dfea
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
-  VisionCamera: 6ad4b86176f6fea45e90e380d3d530bc5e1abff9
+  VisionCamera: 7187b3dac1ff3071234ead959ce311875748e14f
   Yoga: 1f93d5925ea12fb0880b21efe3566677337cf2ed
 
 PODFILE CHECKSUM: 7143c901b4221bb5cd19672e06910ed9b96d7c96

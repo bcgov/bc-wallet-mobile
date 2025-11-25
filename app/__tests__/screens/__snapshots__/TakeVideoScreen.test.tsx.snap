@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TakeVideoScreen renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "additive",
+    }
+  }
+  style={
+    {
+      "flex": 1,
+    }
+  }
+>
+  <View
+    style={
+      {
+        "flex": 1,
+      }
+    }
+  >
+    <Camera
+      audio={true}
+      device={
+        {
+          "id": "mock-device",
+        }
+      }
+      isActive={false}
+      onError={[Function]}
+      onInitialized={[Function]}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      video={true}
+    />
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "rgba(0, 0, 0, 0.5)",
+          "justifyContent": "center",
+          "left": 0,
+          "paddingHorizontal": 16,
+          "paddingVertical": 24,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        }
+      }
+    >
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 32,
+              "fontWeight": "bold",
+            },
+            {
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        BCSC.SendVideo.TakeVideo.RecordingWillStartIn
+      </Text>
+      <Text
+        collapsable={false}
+        style={
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 32,
+            "fontWeight": "bold",
+            "opacity": 0,
+            "textAlign": "center",
+          }
+        }
+      >
+        3
+      </Text>
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;
