@@ -48,7 +48,6 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   return (
     <ScreenWrapper
       safeAreaViewStyle={styles.pageContainer}
-      edges={['bottom', 'left', 'right']}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
     >

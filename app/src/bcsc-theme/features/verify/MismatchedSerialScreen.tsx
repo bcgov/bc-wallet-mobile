@@ -31,11 +31,7 @@ const MismatchedSerialScreen = () => {
   })
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: styles.scrollView }}
-    >
+    <ScreenWrapper safeAreaViewStyle={styles.pageContainer} scrollViewContainerStyle={styles.scrollView}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
         {t('BCSC.MismatchedSerial.Heading')}
       </ThemedText>

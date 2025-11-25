@@ -215,7 +215,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   }
 
   return (
-    <ScreenWrapper keyboardActive={true} containerStyle={{ padding: Spacing.md }}>
+    <ScreenWrapper keyboardActive={true} style={{ padding: Spacing.md }}>
       <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
       <ThemedText style={{ paddingVertical: 16 }}>
         {t('BCSC.EvidenceIDCollection.Heading1')}{' '}

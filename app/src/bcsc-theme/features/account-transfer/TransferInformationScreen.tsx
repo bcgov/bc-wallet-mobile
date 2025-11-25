@@ -21,6 +21,7 @@ const TransferInformationScreen: React.FC = () => {
       flexGrow: 1,
       justifyContent: 'space-between',
       flexDirection: 'column',
+      padding: Spacing.md,
     },
     contentContainer: {
       gap: Spacing.md,
@@ -31,13 +32,8 @@ const TransferInformationScreen: React.FC = () => {
   })
   return (
     <ScreenWrapper
-      edges={['bottom', 'left', 'right']}
       safeAreaViewStyle={{ flex: 1, paddingBottom: Spacing.md }}
-      scrollViewProps={{
-        style: { flex: 1, padding: Spacing.md },
-        contentContainerStyle: styles.scrollViewContentContainer,
-        showsVerticalScrollIndicator: false,
-      }}
+      scrollViewContainerStyle={styles.scrollViewContentContainer}
     >
       <View style={styles.contentContainer}>
         <Image source={TWO_PHONES} style={{ height: 300, width: 'auto' }} resizeMode={'contain'} />

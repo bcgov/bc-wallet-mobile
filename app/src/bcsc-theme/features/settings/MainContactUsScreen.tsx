@@ -24,11 +24,7 @@ export const MainContactUsScreen: React.FC<MainContactUsScreenProps> = () => {
   })
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.container}
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: { flexGrow: 1, padding: Spacing.md } }}
-    >
+    <ScreenWrapper safeAreaViewStyle={styles.container} scrollViewContainerStyle={{ flexGrow: 1, padding: Spacing.md }}>
       <ContactUsContent />
     </ScreenWrapper>
   )

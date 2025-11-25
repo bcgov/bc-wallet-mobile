@@ -133,8 +133,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   return (
     <ScreenWrapper
       safeAreaViewStyle={styles.pageContainer}
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: styles.scrollView }}
+      scrollViewContainerStyle={styles.scrollView}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
     >

@@ -48,11 +48,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   })
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: styles.scrollView }}
-    >
+    <ScreenWrapper safeAreaViewStyle={styles.pageContainer} scrollViewContainerStyle={styles.scrollView}>
       <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} />
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading1')}

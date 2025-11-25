@@ -53,11 +53,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   }
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: styles.contentContainer, showsVerticalScrollIndicator: false }}
-    >
+    <ScreenWrapper safeAreaViewStyle={styles.pageContainer} scrollViewContainerStyle={styles.contentContainer}>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.VideoCall.BeforeYouCallTitle')}
       </ThemedText>

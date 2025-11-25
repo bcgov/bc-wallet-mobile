@@ -1,5 +1,5 @@
 import React, { ComponentProps } from 'react'
-import { ScrollView, ScrollViewProps, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
+import { ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 import { KeyboardView } from '@bifold/core'
@@ -24,59 +24,40 @@ interface ScreenWrapperProps {
   keyboardActive?: boolean
   /**
    * Safe area edges to respect
-   * @default ['top', 'bottom', 'left', 'right']
+   * @default ['bottom', 'left', 'right']
    */
   edges?: Edges
   /**
-   * Style for the SafeAreaView container
+   * Style for the SafeAreaView container (or KeyboardAwareScrollView content when keyboardActive)
    */
-  safeAreaViewStyle?: ComponentProps<typeof SafeAreaView>['style']
+  style?: StyleProp<ViewStyle>
   /**
    * Whether to wrap children in a ScrollView
    * @default true
    */
   scrollable?: boolean
   /**
-   * Props to pass to the ScrollView component
-   * Includes style, contentContainerStyle, and all other ScrollView props
+   * Style for the ScrollView content container
    */
-  scrollViewProps?: ScrollViewProps
+  scrollViewContainerStyle?: ComponentProps<typeof ScrollView>['contentContainerStyle']
   /**
    * Style for the controls container at the bottom
    */
   controlsContainerStyle?: StyleProp<ViewStyle>
-  /**
-   * Style for the container View that wraps content and controls
-   */
-  containerStyle?: StyleProp<ViewStyle>
 }
 
 /**
  * Wraps content in a SafeAreaView and optionally a KeyboardView, and provides a container for controls.
- *
- * @param {*} {
- *   children,
- *   controls,
- *   keyboardActive = false,
- *   edges = ['bottom', 'left', 'right'],
- *   safeAreaViewStyle,
- *   scrollable = true,
- *   scrollViewProps,
- *   controlsContainerStyle,
- *   containerStyle,
- * }
- * @return {*}
  */
 const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   children,
   controls,
   keyboardActive = false,
-  edges = ['top', 'bottom', 'left', 'right'],
-  safeAreaViewStyle,
+  edges = ['bottom', 'left', 'right'],
+  style,
   scrollable = true,
-  scrollViewProps,
+  scrollViewContainerStyle,
   controlsContainerStyle,
-  containerStyle,
 }) => {
   const headerHeight = useSafeHeaderHeight()
   const styles = StyleSheet.create({
@@ -90,16 +71,10 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
       return children
     }
 
-    return <ScrollView {...scrollViewProps}>{children}</ScrollView>
-  }
-
-  // Render the content for the screen (scrollable content and controls)
-  const renderContent = () => {
     return (
-      <>
-        {renderScrollableContent()}
-        {controls && <View style={controlsContainerStyle}>{controls}</View>}
-      </>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={scrollViewContainerStyle}>
+        {children}
+      </ScrollView>
     )
   }
 
@@ -111,17 +86,19 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
           keyboardShouldPersistTaps={'handled'}
           keyboardOpeningTime={100}
           extraScrollHeight={headerHeight}
-          contentContainerStyle={[styles.container, containerStyle]}
+          contentContainerStyle={[styles.container, style]}
         >
-          {renderContent()}
+          {renderScrollableContent()}
+          {controls && <View style={controlsContainerStyle}>{controls}</View>}
         </KeyboardAwareScrollView>
       </KeyboardView>
     )
   }
 
   return (
-    <SafeAreaView style={[styles.container, safeAreaViewStyle]} edges={edges}>
-      <View style={[styles.container, containerStyle]}>{renderContent()}</View>
+    <SafeAreaView style={[styles.container, style]} edges={edges}>
+      {renderScrollableContent()}
+      {controls && <View style={controlsContainerStyle}>{controls}</View>}
     </SafeAreaView>
   )
 }

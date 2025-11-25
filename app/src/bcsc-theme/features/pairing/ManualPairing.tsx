@@ -86,12 +86,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   )
 
   return (
-    <ScreenWrapper
-      keyboardActive
-      edges={['bottom', 'left', 'right']}
-      controls={controls}
-      containerStyle={styles.container}
-    >
+    <ScreenWrapper keyboardActive controls={controls} style={styles.container}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
           {t('BCSC.ManualPairing.EnterPairingCodeTitle')}

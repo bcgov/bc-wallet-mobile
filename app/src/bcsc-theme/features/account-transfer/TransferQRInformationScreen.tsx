@@ -48,8 +48,7 @@ const TransferQRInformationScreen: React.FC = () => {
   return (
     <ScreenWrapper
       safeAreaViewStyle={{ flex: 1 }}
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: styles.scrollView }}
+      scrollViewContainerStyle={styles.scrollView}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
     >

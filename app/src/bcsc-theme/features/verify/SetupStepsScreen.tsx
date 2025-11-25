@@ -221,7 +221,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }, [step.verify.focused, step.id.nonPhotoBcscNeedsAdditionalCard, store.bcsc.deviceCodeExpiresAt, t])
 
   return (
-    <ScreenWrapper safeAreaViewStyle={styles.container} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper safeAreaViewStyle={styles.container}>
       {/* SETUP STEP 1: Nickname Account */}
 
       <SetupStep

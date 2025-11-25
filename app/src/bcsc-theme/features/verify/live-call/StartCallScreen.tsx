@@ -64,8 +64,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   return (
     <ScreenWrapper
       safeAreaViewStyle={styles.pageContainer}
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: styles.contentContainer }}
+      scrollViewContainerStyle={styles.contentContainer}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
     >

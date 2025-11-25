@@ -28,10 +28,9 @@ const TransferInstructionsScreen: React.FC = () => {
 
   return (
     <ScreenWrapper
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{
-        contentContainerStyle: { flexGrow: 1, padding: Spacing.md },
-        showsVerticalScrollIndicator: false,
+      scrollViewContainerStyle={{
+        flexGrow: 1,
+        padding: Spacing.md,
       }}
     >
       <View style={styles.contentContainer}>

@@ -46,12 +46,9 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
 
   return (
     <ScreenWrapper
-      edges={['bottom', 'left', 'right']}
       controls={controls}
       controlsContainerStyle={styles.buttonContainer}
-      scrollViewProps={{
-        contentContainerStyle: styles.scrollContainer,
-      }}
+      scrollViewContainerStyle={styles.scrollContainer}
     >
       <WebViewContent
         url={TERMS_OF_USE_URL}

@@ -31,7 +31,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
     <ScreenWrapper
       safeAreaViewStyle={styles.pageContainer}
       edges={['left', 'right']}
-      scrollViewProps={{ contentContainerStyle: styles.scrollView }}
+      scrollViewContainerStyle={styles.scrollView}
     >
       <GenericCardImage />
       <View style={{ marginBottom: Spacing.lg }}>

@@ -34,8 +34,6 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     container: {
       flex: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
       paddingHorizontal: Spacing.md,
     },
     heading: {
@@ -127,12 +125,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
 
   return (
-    <ScreenWrapper
-      edges={['bottom', 'left', 'right']}
-      safeAreaViewStyle={styles.container}
-      containerStyle={styles.contentContainer}
-      scrollViewProps={{ showsVerticalScrollIndicator: false }}
-    >
+    <ScreenWrapper style={styles.container}>
       <ThemedText variant={'headingThree'} style={styles.heading}>
         {t('BCSC.ChooseYourID.WhatCardDoYou')}
       </ThemedText>

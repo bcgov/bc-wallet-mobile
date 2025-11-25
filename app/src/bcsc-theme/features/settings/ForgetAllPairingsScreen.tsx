@@ -90,8 +90,7 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
 
   return (
     <ScreenWrapper
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: styles.scrollContainer }}
+      scrollViewContainerStyle={styles.scrollContainer}
       safeAreaViewStyle={styles.container}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}

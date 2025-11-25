@@ -33,9 +33,6 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
     scrollContainer: {
       padding: Spacing.md,
       gap: Spacing.md,
@@ -95,9 +92,8 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
 
   return (
     <ScreenWrapper
-      safeAreaViewStyle={styles.container}
-      scrollViewProps={{ contentContainerStyle: styles.scrollContainer }}
       controls={controls}
+      scrollViewContainerStyle={styles.scrollContainer}
       controlsContainerStyle={styles.buttonContainer}
     >
       <View style={styles.imageContainer}>

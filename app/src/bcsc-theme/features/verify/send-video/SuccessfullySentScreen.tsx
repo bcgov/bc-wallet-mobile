@@ -53,7 +53,7 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
       safeAreaViewStyle={styles.pageContainer}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
-      scrollViewProps={{ contentContainerStyle: styles.contentContainer }}
+      scrollViewContainerStyle={styles.contentContainer}
     >
       <StatusDetails
         title={t('BCSC.SendVideo.SuccessfullySent.Heading')}

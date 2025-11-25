@@ -47,9 +47,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
       position: 'relative',
       flexGrow: 1,
       backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
-      flexGrow: 1,
       marginTop: Spacing.xl,
     },
     videoContainer: {
@@ -157,12 +154,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-      containerStyle={styles.contentContainer}
-    >
+    <ScreenWrapper style={styles.pageContainer} controls={controls} controlsContainerStyle={styles.controlsContainer}>
       <View style={styles.videoContainer}>
         <ThemedText variant={'headingFour'} style={styles.heading}>
           {t('BCSC.SendVideo.VideoReview.Heading')}

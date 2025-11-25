@@ -54,10 +54,9 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   return (
     <ScreenWrapper
       safeAreaViewStyle={styles.pageContainer}
-      edges={['left', 'right', 'bottom']}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
-      scrollViewProps={{ contentContainerStyle: styles.scrollView, showsVerticalScrollIndicator: false }}
+      scrollViewContainerStyle={styles.scrollView}
     >
       <Image source={SCAN_ID_IMAGE} style={styles.image} />
       <View style={{ marginBottom: Spacing.md }}>

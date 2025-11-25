@@ -65,10 +65,9 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
 
   return (
     <ScreenWrapper
-      edges={['bottom', 'left', 'right']}
       safeAreaViewStyle={styles.pageContainer}
       controlsContainerStyle={styles.controlsContainer}
-      scrollViewProps={{ contentContainerStyle: styles.scrollView }}
+      scrollViewContainerStyle={styles.scrollView}
       controls={controls}
     >
       <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />

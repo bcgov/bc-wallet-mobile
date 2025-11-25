@@ -68,7 +68,7 @@ const NicknameAccountScreen: React.FC = () => {
     <ScreenWrapper
       keyboardActive
       controls={controls}
-      containerStyle={styles.pageContainer}
+      style={styles.pageContainer}
       controlsContainerStyle={styles.controlsContainer}
     >
       <NicknameForm accountNickname={accountNickname} onChangeText={handleChangeText} error={error} />

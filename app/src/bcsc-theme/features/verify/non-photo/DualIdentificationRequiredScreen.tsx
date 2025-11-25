@@ -41,7 +41,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
   return (
     <ScreenWrapper
       safeAreaViewStyle={styles.pageContainer}
-      scrollViewProps={{ contentContainerStyle: styles.scrollView, showsVerticalScrollIndicator: false }}
+      scrollViewContainerStyle={styles.scrollView}
     >
       <GenericCardImage />
       <ThemedText variant={'headingFour'}>{t('BCSC.DualNonBCSCEvidence.Heading')}</ThemedText>

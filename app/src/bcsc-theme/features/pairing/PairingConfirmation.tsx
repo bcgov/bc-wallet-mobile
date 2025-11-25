@@ -51,10 +51,9 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   return (
     <ScreenWrapper
       safeAreaViewStyle={styles.container}
-      edges={['bottom', 'left', 'right']}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
-      scrollViewProps={{ contentContainerStyle: styles.contentContainer }}
+      scrollViewContainerStyle={styles.contentContainer}
     >
       <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
       <ThemedText style={{ marginVertical: Spacing.md }}>

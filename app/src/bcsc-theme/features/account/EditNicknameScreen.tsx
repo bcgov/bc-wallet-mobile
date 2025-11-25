@@ -103,9 +103,8 @@ const EditNicknameScreen: React.FC = () => {
   return (
     <ScreenWrapper
       keyboardActive
-      edges={['bottom', 'left', 'right']}
       controls={controls}
-      containerStyle={styles.pageContainer}
+      style={styles.pageContainer}
       controlsContainerStyle={styles.controlsContainer}
     >
       <NicknameForm accountNickname={accountNickname} onChangeText={handleChangeText} error={error} isRenaming />

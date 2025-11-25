@@ -40,7 +40,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   })
 
   return (
-    <ScreenWrapper scrollable={false} edges={['bottom', 'left', 'right']} safeAreaViewStyle={styles.container}>
+    <ScreenWrapper scrollable={false} safeAreaViewStyle={styles.container}>
       <AppBannerSection
         id={BCSCBanner.ACCOUNT_EXPIRED}
         title={t('BCSC.AccountExpired.StaticBannerTitle')}

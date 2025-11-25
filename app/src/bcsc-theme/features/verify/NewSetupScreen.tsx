@@ -42,9 +42,6 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
       backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
     },
-    contentContainer: {
-      flexGrow: 1,
-    },
     controlsContainer: {
       marginTop: 'auto',
       gap: Spacing.md,
@@ -78,11 +75,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
   })
 
   return (
-    <ScreenWrapper
-      edges={['bottom', 'left', 'right']}
-      containerStyle={styles.pageContainer}
-      scrollViewProps={{ contentContainerStyle: styles.contentContainer, showsVerticalScrollIndicator: false }}
-    >
+    <ScreenWrapper style={styles.pageContainer}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.NewSetup.Title')}
       </ThemedText>

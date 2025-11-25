@@ -172,7 +172,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   return (
     <ScreenWrapper
       keyboardActive={true}
-      containerStyle={styles.pageContainer}
+      style={styles.pageContainer}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
     >

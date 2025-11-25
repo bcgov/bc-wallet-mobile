@@ -27,8 +27,7 @@ export const VerifyContactUsScreen: React.FC<VerifyContactUsScreenProps> = () =>
   return (
     <ScreenWrapper
       safeAreaViewStyle={styles.container}
-      edges={['bottom', 'left', 'right']}
-      scrollViewProps={{ contentContainerStyle: { flexGrow: 1 } }}
+      scrollViewContainerStyle={{ flexGrow: 1 }}
     >
       <ContactUsContent />
     </ScreenWrapper>

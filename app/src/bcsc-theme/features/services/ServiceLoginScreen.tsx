@@ -85,7 +85,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     return (
       <ScreenWrapper
         edges={['bottom']}
-        scrollViewProps={{ contentContainerStyle: styles.screenContainer }}
+        scrollViewContainerStyle={styles.screenContainer}
         safeAreaViewStyle={{ flex: 1 }}
       >
         <View style={styles.contentContainer}>
@@ -116,11 +116,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   }
 
   return (
-    <ScreenWrapper
-      edges={['bottom']}
-      scrollViewProps={{ contentContainerStyle: styles.screenContainer }}
-      safeAreaViewStyle={{ flex: 1 }}
-    >
+    <ScreenWrapper edges={['bottom']} scrollViewContainerStyle={styles.screenContainer} safeAreaViewStyle={{ flex: 1 }}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
           {`${t('BCSC.Services.WantToLogin')}\n`}

@@ -125,7 +125,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   return (
     <ScreenWrapper
       keyboardActive={true}
-      containerStyle={styles.pageContainer}
+      style={styles.pageContainer}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
     >

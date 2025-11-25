@@ -51,10 +51,9 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
 
   return (
     <ScreenWrapper
-      edges={['bottom', 'left', 'right']}
       controls={controls}
       controlsContainerStyle={{ padding: theme.Spacing.md }}
-      scrollViewProps={{ contentContainerStyle: scrollContentStyle }}
+      scrollViewContainerStyle={scrollContentStyle}
     >
       <PrivacyPolicyContent onLearnMore={handleLearnMore} />
     </ScreenWrapper>

@@ -131,7 +131,6 @@ const TransferQRDisplayScreen: React.FC = () => {
   return (
     <ScreenWrapper
       safeAreaViewStyle={styles.container}
-      edges={['bottom', 'left', 'right']}
       controls={controls}
       controlsContainerStyle={styles.controlsContainer}
     >
