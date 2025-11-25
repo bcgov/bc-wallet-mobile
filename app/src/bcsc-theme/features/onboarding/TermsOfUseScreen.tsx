@@ -46,18 +46,20 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
   })
 
   // JavaScript to adjust font scaling on iOS devices
-  const iosFontScaling = 
-    Platform.OS === 'ios' ? `
+  const iosFontScaling =
+    Platform.OS === 'ios'
+      ? `
     const fontScale = ${fontScale};
     document.documentElement.style.fontSize = (16 * fontScale) + 'px';
     document.body.style.fontSize = (16 * fontScale) + 'px';
-  ` : '';
+  `
+      : ''
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <WebViewContent
         url={TERMS_OF_USE_URL}
-        injectedJavascript={ createTermsOfUseWebViewJavascriptInjection(ColorPalette) + iosFontScaling}
+        injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette) + iosFontScaling}
         onLoaded={() => setWebViewIsLoaded(true)}
       />
 
