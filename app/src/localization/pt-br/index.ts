@@ -157,7 +157,9 @@ const translation = {
       "ContactUs": "Contact us (PT-BR)",
       "Feedback": "Feedback (PT-BR)",
       "Accessibility": "Accessibility (PT-BR)",
+      "AnalyticsOptIn": "Analytics Opt-In Placeholder (PT-BR)",
       "TermsOfUse": "Terms of use (PT-BR)",
+      "Analytics": "Analytics (PR-BR)",
     },
     "Services": {
       "CatalogueTitle": "Services (PT-BR)",
@@ -365,7 +367,12 @@ const translation = {
       "SecureAppBiometricsTitle": "TODO: Android title (PT-BR)",
       "SecureAppBiometricsSubtext": "TODO: Android subtext (PT-BR)",
       "SecureAppPINTitle": "Create a PIN (PT-BR)",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)"
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)",
+      "AnalyticsTitle": "Enable Analytics? (PT-BR)",
+      "AnalyticsHeader": "Help us improve your BC Services Card experience (PT-BR)",
+      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (PR-BR)",
+      "AcceptAnalytics": "Enable Analytics (PT-BR)",
+      "DenyAnalytics":  "Skip (PT-BR)",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",
