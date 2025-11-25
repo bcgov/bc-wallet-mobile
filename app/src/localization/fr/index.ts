@@ -469,7 +469,7 @@ const translation = {
     },
     "EnterEmail": {
       "ErrorTitle": "Error submitting email (FR)",
-      "EmailError": "Please enter a valid email address (FR)",
+      "EmailError": "Please enter a valid email address (name@host.com). (FR)",
       "EmailSkip": "Are you sure you don't want to provide it? (FR)",
       "EmailSkipMessage": "It is less secure without it as we can't notify you of logins or changes to your account. (FR)",
       "EmailSkipButton": "Provide email address (FR)",

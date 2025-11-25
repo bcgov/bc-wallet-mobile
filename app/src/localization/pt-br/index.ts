@@ -480,6 +480,7 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code (PT-BR)",
+      "EmailError": "Please enter a valid email address (name@host.com). (PT-BR)",
       "CodeError": "Please enter a six digit verification code (PT-BR)",
       "ErrorResendingCode": "Error resending code (PT-BR)",
       "CodeResent": "Code resent (PT-BR)",
