@@ -6,7 +6,7 @@ import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { Platform, StyleSheet, useWindowDimensions } from 'react-native'
 import { WebViewContent } from '../webview/WebViewContent'
 
 interface TermsOfUseScreenProps {
@@ -22,6 +22,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [webViewIsLoaded, setWebViewIsLoaded] = useState(false)
+  const { fontScale } = useWindowDimensions()
 
   const styles = StyleSheet.create({
     scrollContainer: {
@@ -40,12 +41,21 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
       disabled={!webViewIsLoaded}
     />
   )
+  // JavaScript to adjust font scaling on iOS devices
+  const iosFontScaling =
+    Platform.OS === 'ios'
+      ? `
+    const fontScale = ${fontScale};
+    document.documentElement.style.fontSize = (16 * fontScale) + 'px';
+    document.body.style.fontSize = (16 * fontScale) + 'px';
+  `
+      : ''
 
   return (
     <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <WebViewContent
         url={TERMS_OF_USE_URL}
-        injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette)}
+        injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette) + iosFontScaling}
         onLoaded={() => setWebViewIsLoaded(true)}
       />
     </ScreenWrapper>
