@@ -1,14 +1,13 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
+import readFileInChunks from '@/utils/read-file'
 import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Buffer } from 'buffer'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import RNFS from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
 
@@ -43,13 +42,11 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
     try {
       setLoading(true)
       // Fetch photo and convert into bytes
-      const jpegBytes = await RNFS.readFile(store.bcsc.photoPath!, 'base64')
-      const photoBytes = new Uint8Array(Buffer.from(jpegBytes, 'base64'))
+      const photoBytes = await readFileInChunks(store.bcsc.photoPath!, logger)
       logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
 
       // Fetch video and convert into bytes
-      const videoBase64 = await RNFS.readFile(store.bcsc.videoPath!, 'base64')
-      const videoBytes = new Uint8Array(Buffer.from(videoBase64, 'base64'))
+      const videoBytes = await readFileInChunks(store.bcsc.videoPath!, logger)
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
 
       // Process additional evidence data
@@ -77,9 +74,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           )
 
           if (matchingResponse) {
-            // Read the image file and convert to bytes
-            const imageBase64 = await RNFS.readFile(metadataItem.file_path, 'base64')
-            const imageBytes = new Uint8Array(Buffer.from(imageBase64, 'base64'))
+            // Read the image file
+            const imageBytes = await readFileInChunks(metadataItem.file_path, logger)
             logger.debug(`Evidence metadata ${metadataItem.label}: ${imageBytes.length}`)
 
             // Add upload promise

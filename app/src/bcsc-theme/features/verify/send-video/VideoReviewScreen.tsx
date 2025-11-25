@@ -1,10 +1,20 @@
 import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, testIdWithKey, ThemedText, useAnimatedComponents, useStore, useTheme } from '@bifold/core'
+import readFileInChunks from '@/utils/read-file'
+import {
+  Button,
+  ButtonType,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useAnimatedComponents,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Buffer } from 'buffer'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
@@ -30,6 +40,7 @@ type VideoReviewScreenProps = {
 const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width } = useWindowDimensions()
   const { ButtonLoading } = useAnimatedComponents()
   const [paused, setPaused] = useState(false)
@@ -117,9 +128,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     const { mtime } = await RNFS.stat(videoPath)
     const filename = 'selfieVideo.mp4'
     const date = Math.floor(mtime / 1000)
-    const base64Video = await RNFS.readFile(videoPath, 'base64')
-    const videoSHA = await hashBase64(base64Video)
-    const videoBytes = new Uint8Array(Buffer.from(base64Video, 'base64'))
+
+    const videoBytes = await readFileInChunks(videoPath, logger)
+    const videoSHA = await hashBase64(videoBytes.toString('base64'))
     const prompts = store.bcsc.prompts!.map(({ id }, i) => ({
       id,
       prompted_at: i,
