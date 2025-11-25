@@ -52,8 +52,6 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
     },
     checkButton: {
       marginVertical: Spacing.md,
-      flexWrap: 'wrap',
-      flex: 1,
     },
     checkButtonText: {
       color: ColorPalette.brand.primary,
@@ -76,7 +74,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [dispatch, navigation])
 
   const onCheckForServicesCard = useCallback(() => {
-    // TODO: Implement
+    // TODO: Implement (KE)
   }, [])
 
   const onPressOtherID = useCallback(() => {
