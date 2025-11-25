@@ -65,21 +65,12 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
     }
   }
 
-  try {
-    const [fcmDeviceToken, deviceToken] = await Promise.all([fetchFcmToken(), fetchDeviceToken()])
+  const [fcmDeviceToken, deviceToken] = await Promise.all([fetchFcmToken(), fetchDeviceToken()])
 
-    logger.info('Successfully retrieved notification tokens for registration')
+  logger.info('Successfully retrieved notification tokens for registration')
 
-    return {
-      fcmDeviceToken,
-      deviceToken,
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    logger.error(`Failed to retrieve notification tokens: ${errorMessage}`)
-    return {
-      fcmDeviceToken: 'missing_token_due_to_fetch_failure',
-      deviceToken: null,
-    }
+  return {
+    fcmDeviceToken,
+    deviceToken,
   }
 }
