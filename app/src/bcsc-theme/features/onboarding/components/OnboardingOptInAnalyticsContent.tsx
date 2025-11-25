@@ -70,7 +70,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
           <View style={styles.titleContainer}>
             <ThemedText variant="headingOne">{t('BCSC.Onboarding.AnalyticsTitle')}</ThemedText>
           </View>
-            <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
+          <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
           <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
         </View>
       </ScrollView>
