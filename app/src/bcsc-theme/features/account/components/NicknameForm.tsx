@@ -1,23 +1,44 @@
-import React from 'react'
+import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { formStringLengths } from '@/constants'
-import { LimitedTextInput, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { BCState } from '@/store'
+import {
+  Button,
+  ButtonType,
+  LimitedTextInput,
+  testIdWithKey,
+  ThemedText,
+  useAnimatedComponents,
+  useStore,
+  useTheme,
+} from '@bifold/core'
+import { getNicknameValidationErrorKey } from '../../../utils/account-utils'
 
 interface NicknameFormProps {
-  accountNickname: string
-  onChangeText: (text: string) => void
-  error?: string | null
+  onSubmit: (trimmedNickname: string) => Promise<void> | void
   isRenaming?: boolean
 }
 
-const NicknameForm: React.FC<NicknameFormProps> = ({ accountNickname, onChangeText, error, isRenaming }) => {
+const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
+  const { ButtonLoading } = useAnimatedComponents()
+  const [store] = useStore<BCState>()
+  const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const styles = StyleSheet.create({
+    pageContainer: {
+      paddingHorizontal: Spacing.md,
+    },
+    controlsContainer: {
+      paddingBottom: Spacing.md,
+    },
     contentContainer: {
       flexGrow: 1,
       paddingBottom: Spacing.sm,
@@ -27,32 +48,75 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ accountNickname, onChangeTe
     },
   })
 
+  const handleChangeText = useCallback((text: string) => {
+    setAccountNickname(text)
+  }, [])
+
+  const handleButtonPress = useCallback(async () => {
+    const trimmedAccountNickname = accountNickname.trim()
+    const validationErrorKey = getNicknameValidationErrorKey(store, trimmedAccountNickname)
+
+    if (validationErrorKey) {
+      setError(t(validationErrorKey))
+      return
+    }
+
+    setError(null)
+    setLoading(true)
+
+    try {
+      await onSubmit(trimmedAccountNickname)
+    } finally {
+      setLoading(false)
+    }
+  }, [accountNickname, onSubmit, store, t])
+
+  const controls = (
+    <Button
+      title={t('BCSC.NicknameAccount.SaveAndContinue')}
+      buttonType={ButtonType.Primary}
+      testID={testIdWithKey('SaveAndContinue')}
+      accessibilityLabel={t('BCSC.NicknameAccount.SaveAndContinue')}
+      onPress={handleButtonPress}
+      disabled={loading}
+    >
+      {loading && <ButtonLoading />}
+    </Button>
+  )
+
   return (
-    <View style={styles.contentContainer}>
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.NicknameAccount.AccountName')}
-      </ThemedText>
+    <ScreenWrapper
+      keyboardActive
+      controls={controls}
+      style={styles.pageContainer}
+      controlsContainerStyle={styles.controlsContainer}
+    >
+      <View style={styles.contentContainer}>
+        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+          {t('BCSC.NicknameAccount.AccountName')}
+        </ThemedText>
 
-      <ThemedText>
-        {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
-      </ThemedText>
+        <ThemedText>
+          {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
+        </ThemedText>
 
-      <View style={styles.bulletPointContainer}>
-        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
-        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
+        <View style={styles.bulletPointContainer}>
+          <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
+          <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
+        </View>
+
+        <LimitedTextInput
+          showLimitCounter={false}
+          value={accountNickname}
+          label={t('BCSC.NicknameAccount.AccountName')}
+          limit={formStringLengths.maximumLength}
+          handleChangeText={handleChangeText}
+          accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
+          testID={testIdWithKey('NameInput')}
+        />
+        {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
       </View>
-
-      <LimitedTextInput
-        showLimitCounter={false}
-        value={accountNickname}
-        label={t('BCSC.NicknameAccount.AccountName')}
-        limit={formStringLengths.maximumLength}
-        handleChangeText={onChangeText}
-        accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
-        testID={testIdWithKey('NameInput')}
-      />
-      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
-    </View>
+    </ScreenWrapper>
   )
 }
 
