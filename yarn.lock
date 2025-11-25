@@ -10961,8 +10961,8 @@ __metadata:
     react-native-toast-message: "npm:~2.1.10"
     react-native-uuid: "npm:~2.0.3"
     react-native-vector-icons: "npm:~10.0.3"
-    react-native-video: "npm:~6.16.1"
-    react-native-vision-camera: "npm:4.3.2"
+    react-native-video: "npm:~6.18.0"
+    react-native-vision-camera: "npm:4.7.3"
     react-native-volume-manager: "npm:~1.10.0"
     react-native-webrtc: "npm:~124.0.6"
     react-native-webview: "npm:~13.10.7"
@@ -25097,19 +25097,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-video@npm:~6.16.1":
-  version: 6.16.1
-  resolution: "react-native-video@npm:6.16.1"
+"react-native-video@npm:~6.18.0":
+  version: 6.18.0
+  resolution: "react-native-video@npm:6.18.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10c0/f30ba6bcf1e9350d5efb8d08cb73f8ddb096393936939b6134f8d1ca03987c5534c18817784584b83d3450ab68a03273c758c1b5288f302cc1af376282443eb7
+  checksum: 10c0/4810181cb99753a78db2081da0b3d5a73c5eab60cd59f72cac7b7eb026378c353cea749ee8ab9ebcd5b12a0ad01818155b7cbba1c2674818034a353ab581a03c
   languageName: node
   linkType: hard
 
-"react-native-vision-camera@npm:4.3.2":
-  version: 4.3.2
-  resolution: "react-native-vision-camera@npm:4.3.2"
+"react-native-vision-camera@npm:4.7.3":
+  version: 4.7.3
+  resolution: "react-native-vision-camera@npm:4.7.3"
   peerDependencies:
     "@shopify/react-native-skia": "*"
     react: "*"
@@ -25123,7 +25123,7 @@ __metadata:
       optional: true
     react-native-worklets-core:
       optional: true
-  checksum: 10c0/a388fa15586cb11425b76cbdaf3f49dff4d8d8a45d4c9a1c5504b89d792b6afbc5a01d9f680b4554b965d2d7cbd217b69f5a32a8f81956e27dd30536be27f341
+  checksum: 10c0/46001037f4f9a85e75c023e5082b137c179fd520741e088009d217f0a6eaf3a819b9784ae68aced95fa70c3345346c79dd2ee70bc04cfd811c7eefeda675cab2
   languageName: node
   linkType: hard
 
