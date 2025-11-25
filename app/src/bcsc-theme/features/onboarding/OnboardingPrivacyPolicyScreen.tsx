@@ -23,7 +23,7 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
   const theme = useTheme()
 
   const onPress = () => {
-    navigation.navigate(BCSCScreens.OnboardingTermsOfUse)
+    navigation.navigate(BCSCScreens.OnboardingOptInAnalytics)
   }
 
   const handleLearnMore = () => {
