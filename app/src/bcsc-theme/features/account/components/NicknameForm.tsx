@@ -107,7 +107,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
 
         <LimitedTextInput
           showLimitCounter={false}
-          value={accountNickname}
+          defaultValue={accountNickname}
           label={t('BCSC.NicknameAccount.AccountName')}
           limit={formStringLengths.maximumLength}
           handleChangeText={handleChangeText}
