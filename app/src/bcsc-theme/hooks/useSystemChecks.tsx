@@ -6,6 +6,8 @@ import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStat
 import { ServerStatusSystemCheck } from '@/services/system-checks/ServerStatusSystemCheck'
 import { runSystemChecks, SystemCheckNavigation, SystemCheckStrategy } from '@/services/system-checks/system-checks'
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
+import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { navigationRef } from 'App'
@@ -14,6 +16,7 @@ import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
 import BCSCApiClient from '../api/client'
 import useConfigApi from '../api/hooks/useConfigApi'
+import useRegistrationApi from '../api/hooks/useRegistrationApi'
 import useTokenApi from '../api/hooks/useTokens'
 import { BCSCAccountContext } from '../contexts/BCSCAccountContext'
 import { useBCSCApiClientState } from './useBCSCApiClient'
@@ -37,10 +40,11 @@ export enum SystemCheckScope {
  */
 export const useSystemChecks = (scope: SystemCheckScope) => {
   const { t } = useTranslation()
-  const [, dispatch] = useStore()
+  const [store, dispatch] = useStore<BCState>()
   const { client, isClientReady } = useBCSCApiClientState()
   const configApi = useConfigApi(client as BCSCApiClient)
   const tokenApi = useTokenApi(client as BCSCApiClient)
+  const registrationApi = useRegistrationApi(client, isClientReady)
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const ranSystemChecksRef = useRef(false)
   const accountContext = useContext(BCSCAccountContext)
@@ -68,6 +72,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
       }
 
       const utils = { dispatch, translation: t, logger }
+      const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
 
       try {
         // Checks to run once on app startup (root stack)
@@ -77,8 +82,6 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
           const serverStatus = await configApi.getServerStatus()
 
           const startupChecks: SystemCheckStrategy[] = [new ServerStatusSystemCheck(serverStatus, utils)]
-
-          const isBCServicesCardBundle = getBundleId().includes(BCSC_BUILD_SUFFIX)
 
           // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
@@ -94,11 +97,20 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
           const getIdToken = () => tokenApi.getCachedIdTokenMetadata({ refreshCache: false })
 
-          await runSystemChecks([
+          const startupChecks: SystemCheckStrategy[] = [
             new DeviceInvalidatedSystemCheck(getIdToken, navigation, utils),
             new DeviceCountSystemCheck(getIdToken, utils),
             new AccountExpirySystemCheck(accountExpirationDate, utils),
-          ])
+          ]
+
+          // Only run device registration update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
+          if (isBCServicesCardBundle) {
+            startupChecks.push(
+              new UpdateDeviceRegistrationSystemCheck(store.bcsc, registrationApi.updateRegistration, utils)
+            )
+          }
+
+          await runSystemChecks(startupChecks)
         }
       } catch (error) {
         logger.error(`System checks failed: ${(error as Error).message}`)
@@ -106,7 +118,19 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
     }
 
     runChecksByScope()
-  }, [accountExpirationDate, client, configApi, dispatch, isClientReady, logger, scope, t, tokenApi])
+  }, [
+    accountExpirationDate,
+    client,
+    configApi,
+    dispatch,
+    isClientReady,
+    logger,
+    registrationApi.updateRegistration,
+    scope,
+    store.bcsc,
+    t,
+    tokenApi,
+  ])
 }
 
 /**
