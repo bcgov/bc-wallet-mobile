@@ -46,7 +46,6 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     titleContainer: {
       alignItems: 'center',
       marginBottom: theme.Spacing.md,
-      gap: theme.Spacing.md,
     },
   })
 
