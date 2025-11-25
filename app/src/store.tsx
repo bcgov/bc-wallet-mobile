@@ -18,7 +18,7 @@ import {
 } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
-import { PhotoMetadata } from './bcsc-theme/utils/file-info'
+import { PhotoMetadata, removeFileSafely } from './bcsc-theme/utils/file-info'
 
 export interface IASEnvironment {
   name: string
@@ -165,6 +165,7 @@ enum BCSCDispatchAction {
   UPDATE_COMPLETED_ONBOARDING = 'bcsc/updateOnboardingCompleted',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
+  CLEAR_PHOTO_AND_VIDEO_CACHE = 'bcsc/clearPhotoAndVideo',
 }
 
 enum ModeDispatchAction {
@@ -469,6 +470,22 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.SAVE_VIDEO_THUMBNAIL: {
       const videoThumbnailPath = (action.payload ?? []).pop()
       const bcsc = { ...state.bcsc, videoThumbnailPath }
+      const newState = { ...state, bcsc }
+      return newState
+    }
+    case BCSCDispatchAction.CLEAR_PHOTO_AND_VIDEO_CACHE: {
+      removeFileSafely(state.bcsc.photoPath)
+      removeFileSafely(state.bcsc.videoPath)
+      removeFileSafely(state.bcsc.videoThumbnailPath)
+
+      const bcsc = {
+        ...state.bcsc,
+        photoPath: undefined,
+        photoMetadata: undefined,
+        videoPath: undefined,
+        videoMetadata: undefined,
+        videoThumbnailPath: undefined,
+      }
       const newState = { ...state, bcsc }
       return newState
     }

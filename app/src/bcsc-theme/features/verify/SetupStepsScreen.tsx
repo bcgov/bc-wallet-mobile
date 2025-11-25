@@ -23,11 +23,10 @@ type SetupStepsScreenProps = {
  * The SetupStepsScreen component displays the steps required for setting up identity verification for BCSC.
  *
  * Currently this supports several flows:
- *    1. Nickname account
- *    2. BCSC card with photo
- *    3. BCSC combo card with photo
- *    4. BCSC card without photo (requires second ID)
- *    5. Non-BCSC cards (requires two IDs)
+ *    1. BCSC card with photo
+ *    2. BCSC combo card with photo
+ *    3. BCSC card without photo (requires second ID)
+ *    4. Non-BCSC cards (requires two IDs)
  *
  * @param {SetupStepsScreenProps} props - The props for the component, including navigation.
  * @returns {*} {JSX.Element} The rendered SetupStepsScreen component.
@@ -124,6 +123,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         text: t('BCSC.Steps.DeleteVerifyRequest'),
         onPress: async () => {
           try {
+            dispatch({
+              type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST,
+              payload: [{ id: undefined, sha256: undefined }],
+            })
             await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId!)
           } catch (error) {
             logger.error(`Error cancelling verification request: ${error}`)

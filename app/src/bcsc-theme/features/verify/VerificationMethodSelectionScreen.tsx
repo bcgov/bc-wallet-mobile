@@ -34,17 +34,18 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const handlePressSendVideo = useCallback(async () => {
     try {
       setSendVideoLoading(true)
+      dispatch({ type: BCDispatchAction.CLEAR_PHOTO_AND_VIDEO_CACHE })
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
       navigation.navigate(BCSCScreens.InformationRequired)
     } catch (error) {
-      // TODO: Handle error, e.g., show an alert or log the error
+      logger.error('Error sending video:', error as Error)
       return
     } finally {
       setSendVideoLoading(false)
     }
-  }, [dispatch, evidence, navigation])
+  }, [dispatch, evidence, logger, navigation])
 
   const handlePressLiveCall = useCallback(async () => {
     try {

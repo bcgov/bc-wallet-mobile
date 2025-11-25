@@ -39,3 +39,23 @@ export const getPhotoMetadata = async (filePath: string): Promise<PhotoMetadata>
   }
   return photoMetadata
 }
+
+/**
+ * Removes a file at the specified path if it exists.
+ *
+ * @param {string} [path] - The file path to remove.
+ * @returns {*} {Promise<void>}
+ */
+export const removeFileSafely = async (path?: string): Promise<void> => {
+  if (!path) {
+    return
+  }
+
+  const fileExists = await RNFS.exists(path)
+
+  if (!fileExists) {
+    return
+  }
+
+  return RNFS.unlink(path)
+}
