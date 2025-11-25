@@ -3,16 +3,7 @@ import { BCDispatchAction } from '@/store'
 import { getVersion } from 'react-native-device-info'
 import { SystemCheckUtils } from './system-checks'
 
-interface BCSCStateStub {
-  appVersion: string
-  selectedNickname?: string
-  registrationAccessToken?: string
-}
-
-type UpdateRegistrationFunction = (
-  registrationAccessToken?: string,
-  selectedNickname?: string
-) => Promise<RegistrationResponseData>
+type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
 
 /**
  * Checks conditions to determine if the device registration needs to be updated.
@@ -24,22 +15,39 @@ type UpdateRegistrationFunction = (
  * @implements {SystemCheckStrategy}
  */
 export class UpdateDeviceRegistrationSystemCheck {
-  private readonly bcscState: BCSCStateStub
+  private readonly lastAppVersion: string
   private readonly updateRegistration: UpdateRegistrationFunction
   private readonly utils: SystemCheckUtils
 
-  constructor(bcscState: BCSCStateStub, updateRegistration: UpdateRegistrationFunction, utils: SystemCheckUtils) {
-    this.bcscState = bcscState
+  constructor(lastAppVersion: string, updateRegistration: UpdateRegistrationFunction, utils: SystemCheckUtils) {
+    this.lastAppVersion = lastAppVersion
     this.utils = utils
     this.updateRegistration = updateRegistration
   }
 
+  /**
+   * Runs the device registration update check to verify if the device registration needs to be updated.
+   *
+   * @returns {*} {boolean} - A boolean indicating if the device registration is up to date.
+   */
   runCheck() {
-    return this.bcscState.appVersion === getVersion()
+    return this.lastAppVersion === getVersion()
   }
 
+  /**
+   * Handles the failure case where the device registration needs to be updated.
+   *
+   * @returns {*} {Promise<void>} - A promise that resolves when the device registration update process is complete.
+   */
   async onFail() {
-    this.utils.dispatch({ type: BCDispatchAction.UPDATE_APP_VERSION })
-    await this.updateRegistration(this.bcscState.registrationAccessToken, this.bcscState.selectedNickname)
+    try {
+      this.utils.dispatch({ type: BCDispatchAction.UPDATE_APP_VERSION })
+      await this.updateRegistration()
+    } catch (error) {
+      this.utils.logger.error(
+        'UpdateDeviceRegistrationSystemCheck: Failed to update device registration',
+        error as Error
+      )
+    }
   }
 }
