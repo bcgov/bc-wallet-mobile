@@ -30,10 +30,6 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'space-between',
-    },
     controlsContainer: {
       padding: Spacing.md,
     },
@@ -144,12 +140,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.container}
-      edges={['bottom']}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper edges={['bottom']} controls={controls} controlsContainerStyle={styles.controlsContainer}>
       <TakeMediaButton
         onPress={() => {
           navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })

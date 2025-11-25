@@ -5,7 +5,6 @@ import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } fro
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
 
 type CallBusyOrClosedScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.CallBusyOrClosed>
@@ -13,30 +12,11 @@ type CallBusyOrClosedScreenProps = {
 }
 
 const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { busy, formattedHours } = route.params
   const serviceHours = formattedHours || t('BCSC.VideoCall.DefaultHours')
-
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      padding: Spacing.md,
-      gap: Spacing.md,
-      marginTop: Spacing.md,
-    },
-    iconContainer: {
-      marginBottom: Spacing.lg,
-    },
-  })
 
   const onPressSendVideo = () => {
     navigation.dispatch(
@@ -58,12 +38,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      scrollViewContainerStyle={styles.contentContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg }}>
         {busy ? t('BCSC.VideoCall.CallBusyOrClosed.AllAgentsBusy') : t('BCSC.VideoCall.CallBusyOrClosed.CallUsLater')}
       </ThemedText>

@@ -27,9 +27,6 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   const account = useAccount()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
     scrollContainer: {
       padding: Spacing.md,
       gap: Spacing.lg,
@@ -40,7 +37,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   })
 
   return (
-    <ScreenWrapper scrollable={false} safeAreaViewStyle={styles.container}>
+    <ScreenWrapper scrollable={false}>
       <AppBannerSection
         id={BCSCBanner.ACCOUNT_EXPIRED}
         title={t('BCSC.AccountExpired.StaticBannerTitle')}

@@ -159,7 +159,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
   }
 
   return (
-    <ScreenWrapper scrollable={false} safeAreaViewStyle={styles.pageContainer}>
+    <ScreenWrapper scrollable={false} style={styles.pageContainer}>
       <View style={{ marginBottom: Spacing.lg }}>
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
           {getEvidenceHeadingAndDescription()[0]}

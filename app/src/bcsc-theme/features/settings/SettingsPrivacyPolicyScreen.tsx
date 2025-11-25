@@ -29,12 +29,11 @@ export const SettingsPrivacyPolicyScreen: React.FC<SettingsPrivacyPolicyScreenPr
   }
 
   const scrollContentStyle = {
-    padding: theme.Spacing.md,
     gap: theme.Spacing.lg,
   }
 
   return (
-    <ScreenWrapper scrollViewContainerStyle={scrollContentStyle}>
+    <ScreenWrapper padded scrollViewContainerStyle={scrollContentStyle}>
       <PrivacyPolicyContent onLearnMore={handleLearnMore} />
     </ScreenWrapper>
   )

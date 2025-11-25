@@ -32,8 +32,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   const styles = StyleSheet.create({
     screenContainer: {
       flexGrow: 1,
-      padding: Spacing.md,
-      justifyContent: 'space-between',
     },
     cardsContainer: {
       gap: Spacing.md,
@@ -83,11 +81,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   // render an alternative screen if the serviceClient does not support OIDC login
   if (!serviceClient.initiate_login_uri) {
     return (
-      <ScreenWrapper
-        edges={['bottom']}
-        scrollViewContainerStyle={styles.screenContainer}
-        safeAreaViewStyle={{ flex: 1 }}
-      >
+      <ScreenWrapper padded edges={['bottom']} scrollViewContainerStyle={styles.screenContainer}>
         <View style={styles.contentContainer}>
           <ThemedText variant={'headingThree'}>{serviceClient.client_name}</ThemedText>
           <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginInstructions')}</ThemedText>
@@ -116,7 +110,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   }
 
   return (
-    <ScreenWrapper edges={['bottom']} scrollViewContainerStyle={styles.screenContainer} safeAreaViewStyle={{ flex: 1 }}>
+    <ScreenWrapper padded edges={['bottom']} scrollViewContainerStyle={styles.screenContainer}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
           {`${t('BCSC.Services.WantToLogin')}\n`}

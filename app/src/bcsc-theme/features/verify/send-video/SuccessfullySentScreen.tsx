@@ -1,7 +1,7 @@
 import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -13,22 +13,11 @@ type SuccessfullySentScreenProps = {
 
 const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
     contentContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      padding: Spacing.md,
     },
   })
 
@@ -50,9 +39,9 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
   )
   return (
     <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
+      padded
       controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
+      edges={['top', 'bottom', 'left', 'right']}
       scrollViewContainerStyle={styles.contentContainer}
     >
       <StatusDetails

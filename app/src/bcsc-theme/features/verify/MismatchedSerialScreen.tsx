@@ -10,19 +10,12 @@ const CARD_NOT_FOUND_IMAGE = Image.resolveAssetSource(CardNotFoundImage).uri
 const twoThirds = 0.67
 
 const MismatchedSerialScreen = () => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    scrollView: {
-      padding: Spacing.md,
-    },
     image: {
       width: width - Spacing.md * 2,
       height: (width - Spacing.md * 2) * twoThirds,
@@ -31,7 +24,7 @@ const MismatchedSerialScreen = () => {
   })
 
   return (
-    <ScreenWrapper safeAreaViewStyle={styles.pageContainer} scrollViewContainerStyle={styles.scrollView}>
+    <ScreenWrapper padded>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
         {t('BCSC.MismatchedSerial.Heading')}
       </ThemedText>

@@ -4,7 +4,6 @@ import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type VerifyNotCompleteScreenProps = {
@@ -14,21 +13,6 @@ type VerifyNotCompleteScreenProps = {
 const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      gap: Spacing.md,
-      padding: Spacing.md,
-    },
-  })
 
   const onPressTrouble = () => {
     // TODO (bm): Help webview here, not sure which url
@@ -63,12 +47,7 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      scrollViewContainerStyle={styles.contentContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.VideoCall.VerifyNotComplete.Title')}
       </ThemedText>

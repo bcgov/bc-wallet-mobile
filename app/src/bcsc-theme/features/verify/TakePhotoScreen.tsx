@@ -7,7 +7,6 @@ import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { MaskType } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
 
 type PhotoInstructionsScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakePhoto>
@@ -16,12 +15,6 @@ type PhotoInstructionsScreenProps = {
 
 const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {
   const { t } = useTranslation()
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      position: 'relative',
-    },
-  })
 
   const handlePhotoTaken = async (path: string) => {
     // Navigate to photo review screen with the photo data
@@ -32,7 +25,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
   }
 
   return (
-    <ScreenWrapper scrollable={false} safeAreaViewStyle={styles.pageContainer}>
+    <ScreenWrapper scrollable={false} edges={['top', 'bottom', 'left', 'right']}>
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"

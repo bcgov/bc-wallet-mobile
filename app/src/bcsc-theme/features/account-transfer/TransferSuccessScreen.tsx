@@ -1,7 +1,7 @@
 import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
@@ -11,22 +11,11 @@ import { StyleSheet } from 'react-native'
 const TransferSuccessScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
     contentContainer: {
       justifyContent: 'center',
       alignItems: 'center',
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      padding: Spacing.md,
     },
   })
 
@@ -41,12 +30,7 @@ const TransferSuccessScreen: React.FC = () => {
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-      scrollViewContainerStyle={styles.contentContainer}
-    >
+    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.contentContainer}>
       <StatusDetails
         title={t('BCSC.TransferSuccess.Title')}
         description={t('BCSC.TransferSuccess.Description')}

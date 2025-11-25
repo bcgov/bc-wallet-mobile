@@ -22,11 +22,10 @@ const NicknameAccountScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     pageContainer: {
-      flex: 1,
       paddingHorizontal: Spacing.md,
     },
     controlsContainer: {
-      paddingVertical: Spacing.md,
+      paddingBottom: Spacing.md,
     },
   })
 

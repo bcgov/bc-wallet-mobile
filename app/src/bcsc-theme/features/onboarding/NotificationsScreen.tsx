@@ -34,7 +34,6 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
 
   const styles = StyleSheet.create({
     scrollContainer: {
-      padding: Spacing.md,
       gap: Spacing.md,
     },
     contentText: {
@@ -45,10 +44,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
       gap: Spacing.sm,
       paddingLeft: Spacing.sm,
     },
-    buttonContainer: {
-      padding: Spacing.md,
-      gap: Spacing.md,
-    },
+
     imageContainer: {
       alignItems: 'center',
       marginBottom: 10,
@@ -91,11 +87,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
   )
 
   return (
-    <ScreenWrapper
-      controls={controls}
-      scrollViewContainerStyle={styles.scrollContainer}
-      controlsContainerStyle={styles.buttonContainer}
-    >
+    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <View style={styles.imageContainer}>
         <Image source={notifications} />
       </View>

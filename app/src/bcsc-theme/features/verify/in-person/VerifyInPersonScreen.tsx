@@ -24,7 +24,7 @@ type VerifyInPersonScreenProps = {
 }
 
 const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -34,18 +34,6 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      padding: Spacing.md,
-    },
     bulletContainer: {
       flexDirection: 'row',
     },
@@ -82,23 +70,21 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
 
   const controls = (
     <>
-      <View style={{ marginBottom: Spacing.md }}>
-        {error && (
-          <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
-            {t('BCSC.VerifyIdentity.YouHaveNotBeenVerified')}
-          </ThemedText>
-        )}
-        <Button
-          buttonType={ButtonType.Primary}
-          testID={testIdWithKey('Complete')}
-          accessibilityLabel={t('BCSC.VerifyIdentity.Complete')}
-          title={t('BCSC.VerifyIdentity.Complete')}
-          onPress={onPressComplete}
-          disabled={loading}
-        >
-          {loading && <ButtonLoading />}
-        </Button>
-      </View>
+      {error && (
+        <ThemedText variant={'inlineErrorText'} style={{ marginBottom: Spacing.sm }}>
+          {t('BCSC.VerifyIdentity.YouHaveNotBeenVerified')}
+        </ThemedText>
+      )}
+      <Button
+        buttonType={ButtonType.Primary}
+        testID={testIdWithKey('Complete')}
+        accessibilityLabel={t('BCSC.VerifyIdentity.Complete')}
+        title={t('BCSC.VerifyIdentity.Complete')}
+        onPress={onPressComplete}
+        disabled={loading}
+      >
+        {loading && <ButtonLoading />}
+      </Button>
       <ThemedText variant={'labelSubtitle'} style={{ textAlign: 'center' }}>
         {t('BCSC.VerifyIdentity.CardSerialNumber', {
           serial: store.bcsc.serial ?? store.bcsc.additionalEvidenceData[0]?.documentNumber ?? 'N/A',
@@ -108,12 +94,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      scrollViewContainerStyle={styles.contentContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.VerifyIdentity.VerifyInPersonTitle')}
       </ThemedText>

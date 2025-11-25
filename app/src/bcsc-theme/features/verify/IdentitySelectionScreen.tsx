@@ -31,13 +31,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const { width } = useWindowDimensions()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      paddingHorizontal: Spacing.md,
-    },
     heading: {
-      marginTop: Spacing.md,
       marginBottom: Spacing.sm,
     },
     description: {
@@ -125,7 +119,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
 
   return (
-    <ScreenWrapper style={styles.container}>
+    <ScreenWrapper padded>
       <ThemedText variant={'headingThree'} style={styles.heading}>
         {t('BCSC.ChooseYourID.WhatCardDoYou')}
       </ThemedText>

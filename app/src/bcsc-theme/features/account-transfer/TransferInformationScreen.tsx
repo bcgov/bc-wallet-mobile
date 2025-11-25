@@ -17,12 +17,6 @@ const TransferInformationScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
 
   const styles = StyleSheet.create({
-    scrollViewContentContainer: {
-      flexGrow: 1,
-      justifyContent: 'space-between',
-      flexDirection: 'column',
-      padding: Spacing.md,
-    },
     contentContainer: {
       gap: Spacing.md,
     },
@@ -31,10 +25,7 @@ const TransferInformationScreen: React.FC = () => {
     },
   })
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={{ flex: 1, paddingBottom: Spacing.md }}
-      scrollViewContainerStyle={styles.scrollViewContentContainer}
-    >
+    <ScreenWrapper padded>
       <View style={styles.contentContainer}>
         <Image source={TWO_PHONES} style={{ height: 300, width: 'auto' }} resizeMode={'contain'} />
         <ThemedText variant={'headingThree'}>{t('BCSC.TransferInformation.Title')}</ThemedText>

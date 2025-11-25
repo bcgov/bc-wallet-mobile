@@ -18,18 +18,6 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    scrollView: {
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      padding: Spacing.md,
-    },
     image: {
       width: '100%',
       height: 250,
@@ -52,12 +40,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-      scrollViewContainerStyle={styles.scrollView}
-    >
+    <ScreenWrapper padded controls={controls}>
       <Image source={SCAN_ID_IMAGE} style={styles.image} />
       <View style={{ marginBottom: Spacing.md }}>
         <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>

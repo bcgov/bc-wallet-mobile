@@ -2,7 +2,7 @@ import React, { ComponentProps } from 'react'
 import { ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
-import { KeyboardView } from '@bifold/core'
+import { KeyboardView, useTheme } from '@bifold/core'
 import { useHeaderHeight } from '@react-navigation/elements'
 import { Edges, SafeAreaView } from 'react-native-safe-area-context'
 
@@ -28,7 +28,7 @@ interface ScreenWrapperProps {
    */
   edges?: Edges
   /**
-   * Style for the SafeAreaView container (or KeyboardAwareScrollView content when keyboardActive)
+   * Additional style for the container
    */
   style?: StyleProp<ViewStyle>
   /**
@@ -44,6 +44,11 @@ interface ScreenWrapperProps {
    * Style for the controls container at the bottom
    */
   controlsContainerStyle?: StyleProp<ViewStyle>
+  /**
+   * Apply standard padding (Spacing.md) to content and controls
+   * @default false
+   */
+  padded?: boolean
 }
 
 /**
@@ -58,13 +63,27 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   scrollable = true,
   scrollViewContainerStyle,
   controlsContainerStyle,
+  padded = false,
 }) => {
   const headerHeight = useSafeHeaderHeight()
+  const { Spacing, ColorPalette } = useTheme()
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: ColorPalette.brand.primaryBackground,
     },
   })
+
+  // Build scroll content style
+  const scrollStyle: StyleProp<ViewStyle> = [padded && { padding: Spacing.md }, scrollViewContainerStyle]
+
+  // Build controls style with automatic gap between buttons
+  const controlsStyle: StyleProp<ViewStyle> = [
+    { gap: Spacing.md },
+    padded && { paddingHorizontal: Spacing.md, paddingBottom: Spacing.md },
+    controlsContainerStyle,
+  ]
 
   const renderScrollableContent = () => {
     if (!scrollable || keyboardActive) {
@@ -72,7 +91,7 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
     }
 
     return (
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={scrollViewContainerStyle}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={scrollStyle}>
         {children}
       </ScrollView>
     )
@@ -86,10 +105,10 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
           keyboardShouldPersistTaps={'handled'}
           keyboardOpeningTime={100}
           extraScrollHeight={headerHeight}
-          contentContainerStyle={[styles.container, style]}
+          contentContainerStyle={[styles.container, padded && { padding: Spacing.md }, style]}
         >
-          {renderScrollableContent()}
-          {controls && <View style={controlsContainerStyle}>{controls}</View>}
+          {children}
+          {controls && <View style={controlsStyle}>{controls}</View>}
         </KeyboardAwareScrollView>
       </KeyboardView>
     )
@@ -98,7 +117,7 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   return (
     <SafeAreaView style={[styles.container, style]} edges={edges}>
       {renderScrollableContent()}
-      {controls && <View style={controlsContainerStyle}>{controls}</View>}
+      {controls && <View style={controlsStyle}>{controls}</View>}
     </SafeAreaView>
   )
 }

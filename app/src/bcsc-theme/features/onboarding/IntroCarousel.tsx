@@ -126,7 +126,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
   }
 
   return (
-    <ScreenWrapper scrollable={false}>
+    <ScreenWrapper scrollable={false} edges={['top', 'bottom', 'left', 'right']}>
       <FlingGestureHandler
         direction={Directions.LEFT}
         onHandlerStateChange={(event) => {

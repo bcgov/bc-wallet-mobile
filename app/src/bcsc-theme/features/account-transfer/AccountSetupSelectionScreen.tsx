@@ -19,7 +19,6 @@ const AccountSetupSelectionScreen: React.FC = () => {
 
   const styles = StyleSheet.create({
     container: {
-      flex: 1,
       alignItems: 'center',
       padding: Spacing.md,
       justifyContent: 'space-between',

@@ -23,14 +23,6 @@ const TransferQRDisplayScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'space-between',
-      padding: Spacing.md,
-    },
-    scrollView: {
-      flex: 1,
-    },
     qrCodeContainer: {
       backgroundColor: ColorPalette.grayscale.white,
       flexShrink: 1,
@@ -38,9 +30,6 @@ const TransferQRDisplayScreen: React.FC = () => {
       alignItems: 'center',
       padding: Spacing.sm,
       borderRadius: Spacing.sm,
-    },
-    controlsContainer: {
-      paddingTop: Spacing.md,
     },
   })
 
@@ -129,11 +118,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.container}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <ThemedText style={{ marginBottom: Spacing.xxl }} variant={'headingThree'}>
         {t('BCSC.TransferQRDisplay.Instructions')}
       </ThemedText>

@@ -5,7 +5,6 @@ import { CommonActions } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
 import ServiceBookmarkButton from './components/ServiceBookmarkButton'
 
 type ManualPairingProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.PairingConfirmation>
@@ -14,20 +13,6 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   const { Spacing } = useTheme()
   const { t } = useTranslation()
   const { serviceName, serviceId } = route.params
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: Spacing.md,
-      justifyContent: 'space-between',
-    },
-    contentContainer: {
-      flex: 1,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-    },
-  })
 
   const onClose = () => {
     navigation.dispatch(
@@ -49,12 +34,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.container}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-      scrollViewContainerStyle={styles.contentContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
       <ThemedText style={{ marginVertical: Spacing.md }}>
         {t('BCSC.ManualPairing.CompletionDescription', { serviceName })}

@@ -26,12 +26,6 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
     scrollView: {
       flexGrow: 1,
       gap: Spacing.lg,
@@ -39,10 +33,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
   })
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      scrollViewContainerStyle={styles.scrollView}
-    >
+    <ScreenWrapper padded scrollViewContainerStyle={styles.scrollView}>
       <GenericCardImage />
       <ThemedText variant={'headingFour'}>{t('BCSC.DualNonBCSCEvidence.Heading')}</ThemedText>
       <ThemedText>{t('BCSC.DualNonBCSCEvidence.Description')}</ThemedText>

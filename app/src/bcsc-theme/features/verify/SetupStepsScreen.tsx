@@ -44,10 +44,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const step = useSetupSteps(store)
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
     itemSeparator: {
       width: '100%',
       height: 8,
@@ -221,7 +217,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   }, [step.verify.focused, step.id.nonPhotoBcscNeedsAdditionalCard, store.bcsc.deviceCodeExpiresAt, t])
 
   return (
-    <ScreenWrapper safeAreaViewStyle={styles.container}>
+    <ScreenWrapper edges={['bottom', 'left', 'right']}>
       {/* SETUP STEP 1: Nickname Account */}
 
       <SetupStep

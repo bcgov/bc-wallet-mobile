@@ -16,26 +16,14 @@ type PhotoInstructionsScreenProps = {
 
 const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {
   const { forLiveCall } = route.params
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
-      padding: Spacing.md,
-    },
     image: {
       width: '100%',
       height: 200,
       marginBottom: Spacing.md,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      padding: Spacing.md,
     },
     bulletContainer: {
       flexDirection: 'row',
@@ -64,12 +52,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      scrollViewContainerStyle={styles.contentContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <Image source={{ uri: SELFIE_IMAGE }} style={styles.image} />
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.PhotoInstructions.Heading')}

@@ -3,11 +3,10 @@ import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@bcsc-theme/utils/file-info'
-import { TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
 
 type PhotoReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PhotoReview>
@@ -15,7 +14,6 @@ type PhotoReviewScreenProps = {
 }
 
 const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
-  const { ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { photoPath, forLiveCall } = route.params
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -24,14 +22,6 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   if (!photoPath) {
     throw new Error(t('BCSC.PhotoReview.PathRequired'))
   }
-
-  const styles = StyleSheet.create({
-    pageContainer: {
-      position: 'relative',
-      flexGrow: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-  })
 
   const onPressUse = async () => {
     try {
@@ -74,7 +64,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   }
 
   return (
-    <ScreenWrapper scrollable={false} safeAreaViewStyle={styles.pageContainer} edges={['top', 'left', 'right']}>
+    <ScreenWrapper scrollable={false} edges={['top', 'left', 'right']}>
       <PhotoReview photoPath={photoPath} onAccept={onPressUse} onRetake={onPressRetake} />
     </ScreenWrapper>
   )

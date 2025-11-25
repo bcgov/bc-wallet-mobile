@@ -10,28 +10,16 @@ type PendingReviewScreenProps = {
 }
 
 const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
-      padding: Spacing.md,
-    },
     bulletContainer: {
       flexDirection: 'row',
       marginBottom: Spacing.md,
     },
     bullet: {
       marginRight: Spacing.xs,
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      padding: Spacing.md,
     },
   })
 
@@ -46,26 +34,20 @@ const PendingReviewScreen = ({ navigation }: PendingReviewScreenProps) => {
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
-      <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'}>{t('BCSC.SendVideo.PendingReview.Heading')}</ThemedText>
-        <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description1')}</ThemedText>
-        <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('BCSC.SendVideo.PendingReview.Bullet1')}</ThemedText>
-        </View>
-        <View style={styles.bulletContainer}>
-          <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
-          <ThemedText>{t('BCSC.SendVideo.PendingReview.Bullet2')}</ThemedText>
-        </View>
-        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description2')}</ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description3')}</ThemedText>
-        <ThemedText>{t('BCSC.SendVideo.PendingReview.Description4')}</ThemedText>
+    <ScreenWrapper padded controls={controls}>
+      <ThemedText variant={'headingThree'}>{t('BCSC.SendVideo.PendingReview.Heading')}</ThemedText>
+      <ThemedText style={{ marginVertical: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description1')}</ThemedText>
+      <View style={styles.bulletContainer}>
+        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+        <ThemedText>{t('BCSC.SendVideo.PendingReview.Bullet1')}</ThemedText>
       </View>
+      <View style={styles.bulletContainer}>
+        <ThemedText style={styles.bullet}>{'\u2022'}</ThemedText>
+        <ThemedText>{t('BCSC.SendVideo.PendingReview.Bullet2')}</ThemedText>
+      </View>
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description2')}</ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.SendVideo.PendingReview.Description3')}</ThemedText>
+      <ThemedText>{t('BCSC.SendVideo.PendingReview.Description4')}</ThemedText>
     </ScreenWrapper>
   )
 }

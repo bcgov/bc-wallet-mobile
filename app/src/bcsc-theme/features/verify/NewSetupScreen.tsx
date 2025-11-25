@@ -36,12 +36,6 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
   )
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
     controlsContainer: {
       marginTop: 'auto',
       gap: Spacing.md,
@@ -75,7 +69,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
   })
 
   return (
-    <ScreenWrapper style={styles.pageContainer}>
+    <ScreenWrapper padded>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.NewSetup.Title')}
       </ThemedText>

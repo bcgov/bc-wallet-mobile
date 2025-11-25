@@ -5,7 +5,7 @@ import BulletPointWithText from '@/components/BulletPointWithText'
 import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { Linking, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 type AdditionalIdentificationRequiredScreenProps = {
@@ -17,22 +17,9 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
 }: AdditionalIdentificationRequiredScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const { t } = useTranslation()
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    scrollView: {
-      padding: Spacing.md,
-    },
-  })
+
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      edges={['left', 'right']}
-      scrollViewContainerStyle={styles.scrollView}
-    >
+    <ScreenWrapper padded>
       <GenericCardImage />
       <View style={{ marginBottom: Spacing.lg }}>
         <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.PhotoRequired')}</ThemedText>

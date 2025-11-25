@@ -35,16 +35,8 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'space-between',
-    },
     scrollContainer: {
       gap: Spacing.lg,
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      padding: Spacing.md,
     },
   })
 
@@ -89,12 +81,7 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
   )
 
   return (
-    <ScreenWrapper
-      scrollViewContainerStyle={styles.scrollContainer}
-      safeAreaViewStyle={styles.container}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <ThemedText variant={'headingThree'}>{t('BCSC.ForgetAllPairings.Title')}</ThemedText>
 
       <ThemedText>{t('BCSC.ForgetAllPairings.Description1')}</ThemedText>

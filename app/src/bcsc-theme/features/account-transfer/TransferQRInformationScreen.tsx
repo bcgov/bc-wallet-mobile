@@ -14,16 +14,8 @@ const TransferQRInformationScreen: React.FC = () => {
 
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const styles = StyleSheet.create({
-    scrollView: {
-      justifyContent: 'space-between',
-      padding: Spacing.md,
-    },
     contentContainer: {
       gap: Spacing.md,
-    },
-    controlsContainer: {
-      gap: Spacing.md,
-      padding: Spacing.md,
     },
   })
 
@@ -46,12 +38,7 @@ const TransferQRInformationScreen: React.FC = () => {
     </>
   )
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={{ flex: 1 }}
-      scrollViewContainerStyle={styles.scrollView}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingThree'}>{t('BCSC.TransferQRInformation.Title')}</ThemedText>
         <ThemedText>{t('BCSC.TransferQRInformation.Instructions')}</ThemedText>

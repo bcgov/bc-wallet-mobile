@@ -28,9 +28,6 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
       paddingHorizontal: Spacing.sm,
       flex: 1,
     },
-    buttonContainer: {
-      padding: Spacing.md,
-    },
   })
 
   const controls = (
@@ -45,11 +42,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
   )
 
   return (
-    <ScreenWrapper
-      controls={controls}
-      controlsContainerStyle={styles.buttonContainer}
-      scrollViewContainerStyle={styles.scrollContainer}
-    >
+    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <WebViewContent
         url={TERMS_OF_USE_URL}
         injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette)}

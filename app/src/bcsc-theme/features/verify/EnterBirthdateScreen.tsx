@@ -30,7 +30,7 @@ type EnterBirthdateScreenProps = {
 const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation }: EnterBirthdateScreenProps) => {
   const today = new Date()
   const { t } = useTranslation()
-  const { ColorPalette, themeName, Spacing } = useTheme()
+  const { themeName, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [date, setDate] = useState(store.bcsc.birthdate ?? today)
   const [loading, setLoading] = useState(false)
@@ -40,19 +40,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    scrollView: {
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      margin: Spacing.md,
-      marginTop: 'auto',
-      position: 'relative',
-    },
     lineBreak: {
       height: 8,
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -131,12 +118,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     </Button>
   )
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      scrollViewContainerStyle={styles.scrollView}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <ThemedText style={{ marginBottom: Spacing.sm }}>
         {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
       </ThemedText>

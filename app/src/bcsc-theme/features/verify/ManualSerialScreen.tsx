@@ -36,8 +36,6 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
 
   const styles = StyleSheet.create({
     screenContainer: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
       padding: Spacing.md,
       justifyContent: 'space-between',
     },

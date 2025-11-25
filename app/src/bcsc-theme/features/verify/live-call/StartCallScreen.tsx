@@ -12,19 +12,11 @@ type StartCallScreenProps = {
 }
 
 const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    contentContainer: {
-      padding: Spacing.md,
-    },
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
     // (along with other metadata.) Image is rendered at a larger size to pick up the
     // exif data, then scaled down and given negative margin to fit in the button
@@ -35,10 +27,6 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       overflow: 'hidden',
       transform: [{ scale: 0.333 }], // scale to match thumbnailHeight
       margin: -100, // -height * scale
-    },
-    controlsContainer: {
-      marginTop: 'auto',
-      padding: Spacing.md,
     },
     bulletContainer: {
       flexDirection: 'row',
@@ -62,12 +50,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   )
 
   return (
-    <ScreenWrapper
-      safeAreaViewStyle={styles.pageContainer}
-      scrollViewContainerStyle={styles.contentContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded controls={controls}>
       <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
       <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
         {t('BCSC.VideoCall.StartVideoCallDescription')}

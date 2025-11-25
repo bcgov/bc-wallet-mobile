@@ -14,7 +14,7 @@ type BeforeYouCallScreenProps = {
 }
 
 const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { type: networkType, isConnected } = useNetInfo()
   const { t } = useTranslation()
   const { formattedHours } = route.params || {}
@@ -24,15 +24,6 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   const isCellular = useMemo(() => networkType === 'cellular' && isConnected === true, [networkType, isConnected])
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
-    contentContainer: {
-      flexGrow: 1,
-    },
     controlsContainer: {
       gap: Spacing.md,
       marginTop: Spacing.md,
@@ -53,7 +44,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   }
 
   return (
-    <ScreenWrapper safeAreaViewStyle={styles.pageContainer} scrollViewContainerStyle={styles.contentContainer}>
+    <ScreenWrapper padded>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.VideoCall.BeforeYouCallTitle')}
       </ThemedText>

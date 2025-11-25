@@ -1,9 +1,7 @@
 import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
-import { StyleSheet } from 'react-native'
 import { ContactUsContent } from './ContactUsContent'
 
 type MainContactUsScreenProps = {
@@ -15,16 +13,8 @@ type MainContactUsScreenProps = {
  * Wraps ContactUsContent with proper navigation typing.
  */
 export const MainContactUsScreen: React.FC<MainContactUsScreenProps> = () => {
-  const { ColorPalette, Spacing } = useTheme()
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-  })
-
   return (
-    <ScreenWrapper safeAreaViewStyle={styles.container} scrollViewContainerStyle={{ flexGrow: 1, padding: Spacing.md }}>
+    <ScreenWrapper padded>
       <ContactUsContent />
     </ScreenWrapper>
   )

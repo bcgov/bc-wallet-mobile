@@ -14,20 +14,11 @@ type VideoInstructionsScreenProps = {
 }
 
 const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) => {
-  const { ColorPalette, Spacing, TextTheme } = useTheme()
+  const { Spacing, TextTheme } = useTheme()
   const [store] = useStore<BCState>()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    scrollView: {
-      flexGrow: 1,
-      padding: Spacing.md,
-    },
     mainIcon: {
       marginTop: Spacing.md,
       marginBottom: Spacing.xxl,
@@ -48,7 +39,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   })
 
   return (
-    <ScreenWrapper safeAreaViewStyle={styles.pageContainer} scrollViewContainerStyle={styles.scrollView}>
+    <ScreenWrapper padded>
       <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} />
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading1')}

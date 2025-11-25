@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, View } from 'react-native'
+import { Image, View } from 'react-native'
 
 const TAB_NAVIGATOR = Image.resolveAssetSource(TabNavigator)
 const QR_CODE_PHONE = Image.resolveAssetSource(QRCodePhone)
@@ -19,21 +19,10 @@ const TransferInstructionsScreen: React.FC = () => {
   const { t } = useTranslation()
 
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
-  const styles = StyleSheet.create({
-    contentContainer: {
-      flex: 1,
-      gap: Spacing.md,
-    },
-  })
 
   return (
-    <ScreenWrapper
-      scrollViewContainerStyle={{
-        flexGrow: 1,
-        padding: Spacing.md,
-      }}
-    >
-      <View style={styles.contentContainer}>
+    <ScreenWrapper padded>
+      <View style={{ gap: Spacing.md }}>
         <ThemedText variant={'headingThree'}>{t('BCSC.TransferInstructions.Title')}</ThemedText>
 
         <ThemedText>{t('BCSC.TransferInstructions.Step1')}</ThemedText>

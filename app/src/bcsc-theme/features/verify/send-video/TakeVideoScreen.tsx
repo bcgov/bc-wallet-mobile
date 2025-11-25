@@ -251,7 +251,7 @@ const TakeVideoScreen = ({ navigation }: PhotoInstructionsScreenProps) => {
   }
 
   return (
-    <ScreenWrapper scrollable={false} safeAreaViewStyle={{ flex: 1 }}>
+    <ScreenWrapper scrollable={false} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.pageContainer}>
         <Camera
           ref={cameraRef}

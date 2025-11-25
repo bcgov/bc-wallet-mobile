@@ -37,10 +37,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       flexDirection: 'column',
       justifyContent: 'space-between',
     },
-
-    buttonContainer: {
-      width: '100%',
-    },
   })
 
   const validateSerial = useCallback(() => {
@@ -75,7 +71,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   }
 
   return (
-    <ScreenWrapper safeAreaViewStyle={styles.screenContainer} scrollable={false}>
+    <ScreenWrapper scrollable={false} style={styles.screenContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.cameraContainer}>
         <CodeScanningCamera codeTypes={['code-128']} onCodeScanned={onCodeScanned} cameraType={'back'} />
       </View>
@@ -83,7 +79,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <View>
           <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Instructions.Paragraph')}</ThemedText>
         </View>
-        <View style={styles.buttonContainer}>
+        <View>
           <Button
             title={t('BCSC.Instructions.EnterManually')}
             buttonType={ButtonType.Secondary}
