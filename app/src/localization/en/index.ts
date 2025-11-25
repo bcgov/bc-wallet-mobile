@@ -127,6 +127,7 @@ const translation = {
   },
   "BCSC": {
     "Title": "BC Services Card",
+    "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
     "Screens": {
       "Settings": "Menu",
@@ -138,6 +139,9 @@ const translation = {
       "HelpCentre": "Help Centre",
       "PrivacyInformation": "Privacy Information",
       "ManageDevices": "Manage Devices",
+    },
+    "Loading": {
+      "DefaultMessage": "A secure way to prove who you are online",
     },
     "Settings": {
       "HeaderA": "App Settings",
@@ -154,7 +158,9 @@ const translation = {
       "ContactUs": "Contact us",
       "Feedback": "Feedback",
       "Accessibility": "Accessibility",
+      "AnalyticsOptIn": "Analytics Opt-In Placeholder (FR)",
       "TermsOfUse": "Terms of use",
+      "Analytics": "Analytics",
     },
     "Services": {
       "CatalogueTitle": "Services",
@@ -336,6 +342,11 @@ const translation = {
       "CarouselServicesHeader": "Access services online",
       "CarouselProveHeader": "Prove who you are online",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license",
+      "CarouselServicesContent": "It's accepted by many government services.",
+      "CarouselProveBodyContentA": "Log in using just this app. No username or password needed.",
+      "CarouselProveBodyContentB": "Access services from any device by approving login in this app.",
+      "CarouselCannotUseBodyContentA": "It's not a place to store a digital copy of your BC Services Card.",
+      "CarouselCannotUseBodyContentB": "It's your account to access services online only.",
       "PrivacyPolicyTitle": "Privacy",
       "PrivacyPolicyHeaderSetup": "App Setup",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
@@ -357,7 +368,12 @@ const translation = {
       "SecureAppBiometricsTitle": "TODO: Android title",
       "SecureAppBiometricsSubtext": "TODO: Android subtext",
       "SecureAppPINTitle": "Create a PIN",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us."
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
+      "AnalyticsTitle": "Enable Analytics?",
+      "AnalyticsHeader": "Help us improve your BC Services Card experience",
+      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings.",
+      "AcceptAnalytics": "Enable Analytics",
+      "DenyAnalytics":  "Skip",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",

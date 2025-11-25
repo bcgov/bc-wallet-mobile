@@ -5,20 +5,37 @@ import 'reflect-metadata'
 import { container } from 'tsyringe'
 
 import { BCThemeNames } from '@/constants'
-import { initialState, reducer } from '@/store'
+import { BCState, initialState, reducer } from '@/store'
 import { themes } from '@/theme'
 
-export const BasicAppContext: React.FC<PropsWithChildren> = ({ children }) => {
+interface BasicAppContextProps extends PropsWithChildren {
+  initialStateOverride?: Partial<BCState>
+}
+
+export const BasicAppContext: React.FC<BasicAppContextProps> = ({ children, initialStateOverride }) => {
   const context = useMemo(() => {
     const childContainer = container.createChildContainer()
     childContainer.registerInstance(TOKENS.UTIL_LOGGER, new MockLogger())
     const c = new MainContainer(childContainer).init()
+
     return c
   }, [])
 
+  const testInitialState = useMemo(
+    () => ({
+      ...initialState,
+      ...initialStateOverride,
+      bcsc: {
+        ...initialState.bcsc,
+        ...initialStateOverride?.bcsc,
+      },
+    }),
+    [initialStateOverride]
+  )
+
   return (
     <ContainerProvider value={context}>
-      <StoreProvider initialState={initialState} reducer={reducer}>
+      <StoreProvider initialState={testInitialState} reducer={reducer}>
         <ThemeProvider themes={themes} defaultThemeName={BCThemeNames.BCWallet}>
           {children}
         </ThemeProvider>

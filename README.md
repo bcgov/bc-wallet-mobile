@@ -42,10 +42,10 @@ cd bc-wallet-mobile
 ## Install Additional Tools
 
 1. Download [mise](https://mise.jdx.dev/getting-started.html)
-> **Linux/WSL/OSX**: `curl https://mise.run | sh`
-2. Configure your .bashrc/.zshrc for mise 
-> **Linux/WSL**: `echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc`  
-> **OSX**: `echo 'eval "$(~/.local/bin/mise activate zsh)"' >> ~/.zshrc` 
+   > **Linux/WSL/OSX**: `curl https://mise.run | sh`
+2. Configure your .bashrc/.zshrc for mise
+   > **Linux/WSL**: `echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc`  
+   > **OSX**: `echo 'eval "$(~/.local/bin/mise activate zsh)"' >> ~/.zshrc`
 3. Run `mise install` to install all specified tools. This will install the tools listed in `.tool-versions`
 
 ## React Native setup
@@ -119,6 +119,7 @@ MEDIATOR_URL=<url>
 MEDIATOR_USE_PUSH_NOTIFICATIONS=false
 PROOF_TEMPLATE_URL=<url>
 REMOTE_LOGGING_URL=<url>
+LOG_LEVEL=<debug | info | warn | error | fatal | trace | test>
 INDY_VDR_PROXY_URL=<url>
 ```
 
@@ -342,6 +343,7 @@ Ensure you have your emulator's front and back camera set to use different sourc
 **Clear Caches**
 
 If issues are arising for the emulator, you may need to clear the caches.
+
 - run above commands for gradlew clean
 - delete `app/android/.gradle`
 - delete `app/.metro-cache`
@@ -354,44 +356,44 @@ If you're developing on Windows using WSL2, follow these setup steps to set up a
 **Configure your Android Emulator**
 
 - Install Android Studio on your Windows host (Windows)
-   - Download [Android Studio for Windows](https://developer.android.com/studio) and go through the installer, setting up an emulator / virtual device
+  - Download [Android Studio for Windows](https://developer.android.com/studio) and go through the installer, setting up an emulator / virtual device
 - Configure your wslconfig (Windows)
-   - locate your .wslconfig file
-   >HINT: it should be in `%userprofile%\.wslconfig`
-   - Change your wsl2 settings to use Mirrored Networking Mode and hostAddressLoopback. This allows you to connect to Windows from Linux in WSL using the loopback address. Include the following lines in your `.wslconfig`:
-   ```
-   [wsl2]
-   networkingmode=mirrored
-   hostAddressLoopback=true
-   ```
-   >HINT: Read more about [Mirrored mode networking](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking) and [host address loopback](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#experimental-settings)
+  - locate your .wslconfig file
+    > HINT: it should be in `%userprofile%\.wslconfig`
+  - Change your wsl2 settings to use Mirrored Networking Mode and hostAddressLoopback. This allows you to connect to Windows from Linux in WSL using the loopback address. Include the following lines in your `.wslconfig`:
+  ```
+  [wsl2]
+  networkingmode=mirrored
+  hostAddressLoopback=true
+  ```
+  > HINT: Read more about [Mirrored mode networking](https://learn.microsoft.com/en-us/windows/wsl/networking#mirrored-mode-networking) and [host address loopback](https://learn.microsoft.com/en-us/windows/wsl/wsl-config#experimental-settings)
 - Install Android Studio Command Line Tools in your WSL2 environment (WSL)
-   - Downloads are found near the bottom of the [Android Studio Downloads](https://developer.android.com/studio) page
-   - unzip the cmdline tools with `unzip commandlinetools-linux-[VERSION]_latest.zip -d ~/Android/Sdk/tools`
-   - in your .bashrc file, define the following paths
-   ```
-   export ANDROID_HOME=/home/[your-name]/Android/Sdk
-   export PATH=$PATH:$ANDROID_HOME/platform-tools
-   export PATH=$PATH:$ANDROID_HOME/tools/bin
-   ```
-   - restart your shell (i.e. `exit` and `wsl` again)
-   - run `sdkmanager "platform-tools"` to install adb
+  - Downloads are found near the bottom of the [Android Studio Downloads](https://developer.android.com/studio) page
+  - unzip the cmdline tools with `unzip commandlinetools-linux-[VERSION]_latest.zip -d ~/Android/Sdk/tools`
+  - in your .bashrc file, define the following paths
+  ```
+  export ANDROID_HOME=/home/[your-name]/Android/Sdk
+  export PATH=$PATH:$ANDROID_HOME/platform-tools
+  export PATH=$PATH:$ANDROID_HOME/tools/bin
+  ```
+  - restart your shell (i.e. `exit` and `wsl` again)
+  - run `sdkmanager "platform-tools"` to install adb
 - (Optional) add the emulator to Windows PATH (Windows)
-   - open `sysdm.cpl`
-   - go to the `Advanced` tab
-   - Click `Environment Variables...`
-   - Select `Path`
-   - Click `Edit...`
-   - Click `New`
-   - Enter the Android emulator directory installed in a previous step
-   > HINT: By default, it is `C:\Users\\[YOUR_USERNAME]AppData\Local\Android\Sdk\emulator`
-   - Click OK on all the control panel dialogs opened
+  - open `sysdm.cpl`
+  - go to the `Advanced` tab
+  - Click `Environment Variables...`
+  - Select `Path`
+  - Click `Edit...`
+  - Click `New`
+  - Enter the Android emulator directory installed in a previous step
+    > HINT: By default, it is `C:\Users\\[YOUR_USERNAME]AppData\Local\Android\Sdk\emulator`
+  - Click OK on all the control panel dialogs opened
 - Run the emulator (Windows)
-   - Open Powershell
-   >Shortcut: Windows + X, A
-   - run `emulator -avd DEVICE_NAME` where DEVICE_NAME is the name of an android virtual device you have configured in Android Studio for Windows
+  - Open Powershell
+    > Shortcut: Windows + X, A
+  - run `emulator -avd DEVICE_NAME` where DEVICE_NAME is the name of an android virtual device you have configured in Android Studio for Windows
 - Run React-Native (WSL)
-   - from `bc-wallet-mobile/app` run `yarn android` or `yarn start` and wait until you are prompted to select android
+  - from `bc-wallet-mobile/app` run `yarn android` or `yarn start` and wait until you are prompted to select android
 
 At this point you should see that the app builds in your wsl environment and runs on the emulator on your Windows host.
 
