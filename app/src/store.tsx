@@ -96,6 +96,7 @@ export interface BCSCState {
   registrationAccessToken?: string
   completedOnboarding: boolean
   bannerMessages: BCSCBannerMessage[]
+  analyticsOptIn: boolean
 }
 
 export interface AdditionalEvidenceData {
@@ -166,6 +167,7 @@ enum BCSCDispatchAction {
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
+  UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
 }
 
 enum ModeDispatchAction {
@@ -251,6 +253,7 @@ const bcscState: BCSCState = {
   additionalEvidenceData: [],
   completedOnboarding: false,
   bannerMessages: [],
+  analyticsOptIn: false,
 }
 
 export enum BCLocalStorageKeys {
@@ -647,6 +650,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = { ...state.bcsc, bannerMessages }
       const newState = { ...state, bcsc }
 
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_ANALYTICS_OPT_IN: {
+      const analyticsOptIn = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, analyticsOptIn }
+      const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }

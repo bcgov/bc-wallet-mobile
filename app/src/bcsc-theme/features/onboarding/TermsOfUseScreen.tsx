@@ -5,7 +5,7 @@ import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { WebViewContent } from '../webview/WebViewContent'
 
@@ -22,6 +22,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
   const { t } = useTranslation()
   const { Spacing, ColorPalette } = useTheme()
   const [webViewIsLoaded, setWebViewIsLoaded] = useState(false)
+  const { fontScale } = useWindowDimensions()
 
   const styles = StyleSheet.create({
     container: {
@@ -44,11 +45,21 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
     },
   })
 
+  // JavaScript to adjust font scaling on iOS devices
+  const iosFontScaling =
+    Platform.OS === 'ios'
+      ? `
+    const fontScale = ${fontScale};
+    document.documentElement.style.fontSize = (16 * fontScale) + 'px';
+    document.body.style.fontSize = (16 * fontScale) + 'px';
+  `
+      : ''
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
       <WebViewContent
         url={TERMS_OF_USE_URL}
-        injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette)}
+        injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette) + iosFontScaling}
         onLoaded={() => setWebViewIsLoaded(true)}
       />
 

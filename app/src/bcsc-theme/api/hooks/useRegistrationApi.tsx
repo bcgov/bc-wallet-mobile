@@ -1,5 +1,4 @@
 import { getAppStoreReceipt, googleAttestation } from '@bifold/react-native-attestation'
-import { Buffer } from 'buffer'
 import { useCallback, useMemo } from 'react'
 import { Platform } from 'react-native'
 import {
@@ -80,6 +79,8 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       if (Platform.OS === 'ios') {
         attestation = await getAppStoreReceipt()
         logger.info('Obtained iOS App Store Receipt attestation')
+        // TODO (BM): remove this debug log once confirmed working in app store build
+        logger.debug(`Obtained iOS App Store Receipt attestation: ${attestation}`)
       } else if (Platform.OS === 'android') {
         const deviceId = await getDeviceId()
         const {
@@ -94,11 +95,11 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           }
         )
-        // Decode base64 nonce before passing to Play Integrity API
-        const decodedNonce = Buffer.from(nonce, 'base64').toString('utf8')
-        logger.debug(`Decoded nonce from ${nonce} to ${decodedNonce}`)
-        attestation = await googleAttestation(decodedNonce)
+        // TODO (BM): remove these debug logs once confirmed working in play store build
+        logger.debug(`Received nonce for Android Play Integrity attestation: ${nonce}`)
+        attestation = await googleAttestation(nonce)
         logger.info('Obtained Android Play Integrity attestation')
+        logger.debug(`Obtained Android Play Integrity attestation: ${attestation}`)
       }
     } catch (error) {
       // attestation in BCSC v3 (and v4 phase 1) is non-blocking, so we log and continue
@@ -138,7 +139,6 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
     const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
     logger.info('Generated dynamic client registration body')
-    logger.debug(`body: ${body}`)
 
     const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
       headers: { 'Content-Type': 'application/json' },

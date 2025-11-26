@@ -139,6 +139,9 @@ const translation = {
       "PrivacyInformation": "Privacy Information (FR)",
       "ManageDevices": "Manage Devices (FR)",
     },
+    "Loading": {
+      "DefaultMessage": "A secure way to prove who you are online (FR)",
+    },
     "Settings": {
       "HeaderA": "App Settings (FR)",
       "HeaderB": "Information (FR)",
@@ -154,7 +157,9 @@ const translation = {
       "ContactUs": "Contact us (FR)",
       "Feedback": "Feedback (FR)",
       "Accessibility": "Accessibility (FR)",
+      "AnalyticsOptIn": "Analytics Opt-In Placeholder (FR)",
       "TermsOfUse": "Terms of use (FR)",
+      "Analytics": "Analytics (FR)",
     },
     "Services": {
       "CatalogueTitle": "Services (FR)",
@@ -336,6 +341,11 @@ const translation = {
       "CarouselServicesHeader": "Access services online (FR)",
       "CarouselProveHeader": "Prove who you are online (FR)",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license (FR)",
+      "CarouselServicesContent": "It's accepted by many government services. (FR)",
+      "CarouselProveBodyContentA": "Log in using just this app. No username or password needed. (FR)",
+      "CarouselProveBodyContentB": "Access services from any device by approving login in this app. (FR)",
+      "CarouselCannotUseBodyContentA": "It's not a place to store a digital copy of your BC Services Card. (FR)",
+      "CarouselCannotUseBodyContentB": "It's your account to access services online only. (FR)",
       "PrivacyPolicyTitle": "Privacy (FR)",
       "PrivacyPolicyHeaderSetup": "App Setup (FR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (FR)",
@@ -357,7 +367,12 @@ const translation = {
       "SecureAppBiometricsTitle": "TODO: Android title (FR)",
       "SecureAppBiometricsSubtext": "TODO: Android subtext (FR)",
       "SecureAppPINTitle": "Create a PIN (FR)",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (FR)"
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (FR)",
+      "AnalyticsTitle": "Enable Analytics? (FR)",
+      "AnalyticsHeader": "Help us improve your BC Services Card experience (FR)",
+      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (FR)",
+      "AcceptAnalytics": "Enable Analytics (FR)",
+      "DenyAnalytics":  "Skip (FR)",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (FR)",
