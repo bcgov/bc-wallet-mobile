@@ -41,12 +41,17 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   const onPressSend = async () => {
     try {
       setLoading(true)
+
+      if (!store.bcsc.photoPath || !store.bcsc.videoPath) {
+        throw new Error('Error - missing photo or video data')
+      }
+
       // Fetch photo and convert into bytes
-      const photoBytes = await readFileInChunks(store.bcsc.photoPath!, logger)
+      const photoBytes = await readFileInChunks(store.bcsc.photoPath, logger)
       logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
 
       // Fetch video and convert into bytes
-      const videoBytes = await readFileInChunks(store.bcsc.videoPath!, logger)
+      const videoBytes = await readFileInChunks(store.bcsc.videoPath, logger)
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
 
       // Process additional evidence data
