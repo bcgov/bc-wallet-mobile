@@ -124,7 +124,7 @@ describe('readFileInChunks', () => {
       })
       ;(RNFS.read as jest.Mock).mockResolvedValue(testBuffer.toString('base64'))
 
-      const result = await readFileInChunks(mockFilePath)
+      const result = await readFileInChunks(mockFilePath, mockLogger as any)
 
       expect(result.toString('utf8')).toBe(testData)
     })
@@ -197,7 +197,7 @@ describe('readFileInChunks', () => {
       const error = new Error('Test error')
       ;(RNFS.stat as jest.Mock).mockRejectedValue(error)
 
-      await expect(readFileInChunks(mockFilePath)).rejects.toThrow('Test error')
+      await expect(readFileInChunks(mockFilePathm, mockLogger as any)).rejects.toThrow('Test error')
     })
 
     it('should handle error in onChunk callback', async () => {
