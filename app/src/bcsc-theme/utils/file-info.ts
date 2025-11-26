@@ -26,9 +26,8 @@ export const getPhotoMetadata = async (filePath: string): Promise<PhotoMetadata>
   const fileInfo = await getFileInfo(filePath)
   const jpegBytes = await readFileInChunks(filePath)
   const jpegBase64 = jpegBytes.toString('base64')
-  
   const photoSHA = await hashBase64(jpegBase64)
-  
+
   const photoMetadata: PhotoMetadata = {
     content_length: jpegBytes.byteLength,
     content_type: 'image/jpeg',

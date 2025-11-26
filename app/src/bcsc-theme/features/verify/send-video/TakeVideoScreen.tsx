@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { hitSlop } from '@/constants'
+import { hitSlop, SD_VIDEO, SELFIE_FRAME_RATE } from '@/constants'
 import { BCState } from '@/store'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -34,7 +34,10 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     useMicrophonePermission()
 
   // Video format for 480p at 24fps to reduce file size
-  const format = useCameraFormat(device, [{ videoResolution: { width: 854, height: 480 } }, { fps: 24 }])
+  const format = useCameraFormat(device, [
+    { videoResolution: SD_VIDEO, videoAspectRatio: SD_VIDEO.width / SD_VIDEO.height },
+    { fps: SELFIE_FRAME_RATE },
+  ])
 
   const [isActive, setIsActive] = useState(false)
   const [prompt, setPrompt] = useState('3')

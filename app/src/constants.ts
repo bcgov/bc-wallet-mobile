@@ -72,3 +72,7 @@ export const CROP_DELAY_MS = 11000
 
 // Date time constants
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
+
+// BCSC Vidoe Resolution
+export const SD_VIDEO = { width: 640, height: 480 } // standard definition video resolution
+export const SELFIE_FRAME_RATE = 24

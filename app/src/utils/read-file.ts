@@ -7,14 +7,14 @@ import RNFS from 'react-native-fs'
  * @param logger - Optional logger for debugging
  * @param chunkSize - Size of each chunk in bytes (default: 1MB)
  * @param onChunk - Optional function that runs after each chunk is read (receives binary Buffer)
- * @returns Promise<string> - Base64 encoded file content
+ * @returns Promise<Buffer> - Buffer containing the complete file data
  */
 const readFileInChunks = async (
   filePath: string,
   logger?: any,
   chunkSize: number = 1024 * 1024,
   onChunk?: (chunkBuffer: Buffer, progress: number) => void | Promise<void>
-): Promise<Buffer<ArrayBuffer>> => {
+): Promise<Buffer> => {
   try {
     const stat = await RNFS.stat(filePath)
     const fileSize = stat.size
