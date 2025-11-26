@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { hitSlop } from '@/constants'
+import { hitSlop, MAX_SELFIE_VIDEO_DURATION_SECONDS, SELFIE_VIDEO_FRAME_RATE, VIDEO_RESOLUTION_480P } from '@/constants'
 import { BCState } from '@/store'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -12,11 +12,10 @@ import {
   Camera,
   CameraRuntimeError,
   useCameraDevice,
+  useCameraFormat,
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
-
-const maxVideoDurationSeconds = 30
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -31,6 +30,16 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
+
+  // Video format for 480p at 24fps to reduce file size
+  const format = useCameraFormat(device, [
+    {
+      videoResolution: VIDEO_RESOLUTION_480P,
+      videoAspectRatio: VIDEO_RESOLUTION_480P.width / VIDEO_RESOLUTION_480P.height,
+    },
+    { fps: SELFIE_VIDEO_FRAME_RATE },
+  ])
+
   const [isActive, setIsActive] = useState(false)
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
@@ -121,7 +130,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       const elapsed = Math.floor((currentTime - startTime) / 1000)
 
       // Check if we've exceeded the max duration, but only trigger once
-      if (elapsed > maxVideoDurationSeconds && !exceedsMaxDurationRef.current) {
+      if (elapsed > MAX_SELFIE_VIDEO_DURATION_SECONDS && !exceedsMaxDurationRef.current) {
         exceedsMaxDurationRef.current = true
         setExceedsMaxDuration(true) // Trigger re-render for UI
       }
@@ -285,6 +294,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           ref={cameraRef}
           style={styles.camera}
           device={device}
+          format={format}
           isActive={isActive}
           video={true}
           onInitialized={onInitialized}
