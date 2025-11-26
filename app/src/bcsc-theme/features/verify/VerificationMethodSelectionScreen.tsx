@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
+import { VerificationVideoCache } from './send-video/VideoReviewScreen'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>
@@ -39,10 +40,11 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
 
       await Promise.all([
+        VerificationVideoCache.removeMediaAndClearCache(store.bcsc.videoPath, logger),
         removeFileSafely(store.bcsc.photoPath, logger),
-        removeFileSafely(store.bcsc.videoPath, logger),
         removeFileSafely(store.bcsc.videoThumbnailPath, logger),
       ])
+
       dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
