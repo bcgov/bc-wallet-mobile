@@ -1,4 +1,5 @@
 import { DEFAULT_CHUNK_SIZE } from '@/constants'
+import { BifoldLogger } from '@bifold/core'
 import { Buffer } from 'buffer'
 import RNFS from 'react-native-fs'
 
@@ -12,7 +13,7 @@ import RNFS from 'react-native-fs'
  */
 const readFileInChunks = async (
   filePath: string,
-  logger?: any,
+  logger: BifoldLogger,
   chunkSize: number = DEFAULT_CHUNK_SIZE,
   onChunk?: (chunkBuffer: Buffer, progress: number) => void | Promise<void>
 ): Promise<Buffer> => {
@@ -21,12 +22,11 @@ const readFileInChunks = async (
     const fileSize = stat.size
 
     if (fileSize === 0) {
-      logger?.warn?.(`File is empty: ${filePath}`)
+      logger.warn(`File is empty: ${filePath}`)
       return Buffer.alloc(0)
     }
 
-    logger?.debug?.(`Starting reading file at: ${filePath}`)
-
+    logger.debug(`Starting reading file at: ${filePath}`)
     const chunks: Buffer[] = []
     let offset = 0
 
@@ -45,17 +45,17 @@ const readFileInChunks = async (
 
       chunks.push(chunkBuffer)
       offset += length
-      logger?.debug?.(`Read chunk: ${offset}/${fileSize} bytes`)
+      logger.debug(`Read chunk: ${offset}/${fileSize} bytes`)
     } while (offset < fileSize)
 
     // Combine all chunks
     const fullBuffer = Buffer.concat(chunks)
 
-    logger?.debug?.(`File has been read into memory`)
+    logger.debug(`File has been read into memory`)
 
     return fullBuffer
   } catch (error: any) {
-    logger?.error?.('Error reading file', {
+    logger.error('Error reading file', {
       filePath,
       chunkSize,
       errorMessage: error?.message || String(error),
