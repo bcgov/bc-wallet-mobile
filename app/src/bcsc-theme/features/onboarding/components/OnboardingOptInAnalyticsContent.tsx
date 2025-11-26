@@ -1,9 +1,9 @@
+import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCDispatchAction, BCState } from '@/store'
 import analytics from '@assets/img/analytics.png'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { Image, ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image, StyleSheet, View } from 'react-native'
 
 interface OnboardingOptInAnalyticsContentProps {
   onPress: () => void
@@ -21,17 +21,6 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    scrollContainer: {
-      padding: theme.Spacing.md,
-      gap: theme.Spacing.lg,
-    },
-    buttonContainer: {
-      padding: theme.Spacing.md,
-      gap: theme.Spacing.sm,
-    },
     sectionContainer: {
       gap: theme.Spacing.md,
     },
@@ -41,7 +30,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     },
     imageContainer: {
       alignItems: 'center',
-      marginBottom: 10,
+      marginBottom: theme.Spacing.sm,
     },
     titleContainer: {
       alignItems: 'center',
@@ -60,32 +49,29 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     onPress()
   }
 
+  const controls = (
+    <>
+      <Button
+        title={t('BCSC.Onboarding.AcceptAnalytics')}
+        buttonType={ButtonType.Primary}
+        onPress={handleAcceptPressed}
+      />
+      <Button
+        title={t('BCSC.Onboarding.DenyAnalytics')}
+        buttonType={ButtonType.Secondary}
+        onPress={handleDeniedPressed}
+      />
+    </>
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.sectionContainer}>
-          <View style={styles.imageContainer}>
-            <Image source={analytics} />
-          </View>
-          <View style={styles.titleContainer}>
-            <ThemedText variant="headingOne">{t('BCSC.Onboarding.AnalyticsTitle')}</ThemedText>
-          </View>
-          <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
-          <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
-        </View>
-      </ScrollView>
-      <View style={styles.buttonContainer}>
-        <Button
-          title={t('BCSC.Onboarding.AcceptAnalytics')}
-          buttonType={ButtonType.Primary}
-          onPress={handleAcceptPressed}
-        />
-        <Button
-          title={t('BCSC.Onboarding.DenyAnalytics')}
-          buttonType={ButtonType.Secondary}
-          onPress={handleDeniedPressed}
-        />
+    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.sectionContainer}>
+      <Image source={analytics} style={styles.imageContainer} />
+      <View style={styles.titleContainer}>
+        <ThemedText variant="headingOne">{t('BCSC.Onboarding.AnalyticsTitle')}</ThemedText>
       </View>
-    </SafeAreaView>
+      <ThemedText variant="headingThree">{t('BCSC.Onboarding.AnalyticsHeader')}</ThemedText>
+      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.AnalyticsContent')}</ThemedText>
+    </ScreenWrapper>
   )
 }

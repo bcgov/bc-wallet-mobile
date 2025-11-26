@@ -38,13 +38,6 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      paddingTop: Spacing.lg,
-      gap: Spacing.sm,
-    },
     codeFieldRoot: {
       marginTop: Spacing.lg,
       marginBottom: Spacing.md,
@@ -158,12 +151,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   )
 
   return (
-    <ScreenWrapper
-      keyboardActive={true}
-      style={styles.pageContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded keyboardActive={true} controls={controls}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.EmailConfirmation.VerifyYourEmail')}
       </ThemedText>

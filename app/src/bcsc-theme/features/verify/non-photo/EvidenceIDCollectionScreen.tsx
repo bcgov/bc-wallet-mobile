@@ -3,14 +3,13 @@ import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation
 import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { Spacing } from '@/bcwallet-theme/theme'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, testIdWithKey, Text, ThemedText, TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { View } from 'react-native'
 
 type EvidenceCollectionFormState = {
   documentNumber: string
@@ -52,13 +51,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
   const additionalEvidenceRequired =
     store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1
-
-  const styles = StyleSheet.create({
-    controlsContainer: {
-      gap: Spacing.md,
-      marginTop: 'auto',
-    },
-  })
 
   /**
    * Handles changes to the form fields.
@@ -214,8 +206,27 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     )
   }
 
+  const controls = (
+    <>
+      <Button
+        title="Continue"
+        accessibilityLabel={'Continue'}
+        testID={testIdWithKey('EvidenceIDCollectionContinue')}
+        buttonType={ButtonType.Primary}
+        onPress={handleOnContinue}
+      />
+      <Button
+        title="Cancel"
+        accessibilityLabel={'Cancel'}
+        testID={testIdWithKey('EvidenceIDCollectionCancel')}
+        buttonType={ButtonType.Tertiary}
+        onPress={() => navigation.goBack()}
+      />
+    </>
+  )
+
   return (
-    <ScreenWrapper keyboardActive={true} style={{ padding: Spacing.md }}>
+    <ScreenWrapper padded keyboardActive={true} controls={controls}>
       <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
       <ThemedText style={{ paddingVertical: 16 }}>
         {t('BCSC.EvidenceIDCollection.Heading1')}{' '}
@@ -271,22 +282,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
             />
           </>
         ) : null}
-      </View>
-      <View style={styles.controlsContainer}>
-        <Button
-          title="Continue"
-          accessibilityLabel={'Continue'}
-          testID={testIdWithKey('EvidenceIDCollectionContinue')}
-          buttonType={ButtonType.Primary}
-          onPress={handleOnContinue}
-        />
-        <Button
-          title="Cancel"
-          accessibilityLabel={'Cancel'}
-          testID={testIdWithKey('EvidenceIDCollectionCancel')}
-          buttonType={ButtonType.Tertiary}
-          onPress={() => navigation.goBack()}
-        />
       </View>
     </ScreenWrapper>
   )

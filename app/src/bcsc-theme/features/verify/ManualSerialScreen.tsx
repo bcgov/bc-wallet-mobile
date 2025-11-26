@@ -1,7 +1,7 @@
 import { Button, ButtonType, LimitedTextInput, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
+import { Image, StyleSheet, useWindowDimensions } from 'react-native'
 
 import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -35,13 +35,6 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   })
 
   const styles = StyleSheet.create({
-    screenContainer: {
-      padding: Spacing.md,
-      justifyContent: 'space-between',
-    },
-    contentContainer: {
-      flexDirection: 'column',
-    },
     image: {
       width: width - Spacing.md * 2,
       height: (width - Spacing.md * 2) * twoThirds,
@@ -50,10 +43,6 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
     error: {
       color: ColorPalette.semantic.error,
       marginBottom: Spacing.sm,
-    },
-
-    buttonContainer: {
-      width: '100%',
     },
   })
 
@@ -93,28 +82,26 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   )
 
   return (
-    <ScreenWrapper keyboardActive controls={controls} style={styles.screenContainer}>
-      <View style={styles.contentContainer}>
-        <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
-        <LimitedTextInput
-          defaultValue={serial}
-          label={t('BCSC.ManualSerial.InputLabel')}
-          limit={maxSerialNumberLength}
-          handleChangeText={handleChangeText}
-          accessibilityLabel={t('BCSC.ManualSerial.InputLabel')}
-          testID={testIdWithKey('SerialInput')}
-          autoCapitalize={'characters'}
-          autoCorrect={false}
-          autoComplete={'off'}
-          showLimitCounter={false}
-        />
-        {errorState.visible ? (
-          <ThemedText variant={'labelSubtitle'} style={styles.error}>
-            {errorState.description}
-          </ThemedText>
-        ) : null}
-        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
-      </View>
+    <ScreenWrapper padded keyboardActive controls={controls}>
+      <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
+      <LimitedTextInput
+        defaultValue={serial}
+        label={t('BCSC.ManualSerial.InputLabel')}
+        limit={maxSerialNumberLength}
+        handleChangeText={handleChangeText}
+        accessibilityLabel={t('BCSC.ManualSerial.InputLabel')}
+        testID={testIdWithKey('SerialInput')}
+        autoCapitalize={'characters'}
+        autoCorrect={false}
+        autoComplete={'off'}
+        showLimitCounter={false}
+      />
+      {errorState.visible ? (
+        <ThemedText variant={'labelSubtitle'} style={styles.error}>
+          {errorState.description}
+        </ThemedText>
+      ) : null}
+      <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
     </ScreenWrapper>
   )
 }

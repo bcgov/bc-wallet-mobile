@@ -1,18 +1,16 @@
 import React, { ComponentProps } from 'react'
 import { ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 import { KeyboardView, useTheme } from '@bifold/core'
-import { useHeaderHeight } from '@react-navigation/elements'
 import { Edges, SafeAreaView } from 'react-native-safe-area-context'
 
-const useSafeHeaderHeight = (): number => {
-  try {
-    return useHeaderHeight()
-  } catch {
-    return 100
-  }
-}
+// const useSafeHeaderHeight = (): number => {
+//   try {
+//     return useHeaderHeight()
+//   } catch {
+//     return 100
+//   }
+// }
 
 interface ScreenWrapperProps {
   children: React.ReactNode
@@ -65,7 +63,6 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   controlsContainerStyle,
   padded = false,
 }) => {
-  const headerHeight = useSafeHeaderHeight()
   const { Spacing, ColorPalette } = useTheme()
 
   const styles = StyleSheet.create({
@@ -86,7 +83,7 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   ]
 
   const renderScrollableContent = () => {
-    if (!scrollable || keyboardActive) {
+    if (!scrollable) {
       return children
     }
 
@@ -100,16 +97,9 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   // KeyboardView has its own SafeAreaView, so we don't need to double-wrap
   if (keyboardActive) {
     return (
-      <KeyboardView>
-        <KeyboardAwareScrollView
-          keyboardShouldPersistTaps={'handled'}
-          keyboardOpeningTime={100}
-          extraScrollHeight={headerHeight}
-          contentContainerStyle={[styles.container, padded && { padding: Spacing.md }, style]}
-        >
-          {children}
-          {controls && <View style={controlsStyle}>{controls}</View>}
-        </KeyboardAwareScrollView>
+      <KeyboardView style={[styles.container, style]} edges={edges}>
+        <View style={scrollStyle}>{children}</View>
+        {controls && <View style={[controlsStyle, { marginTop: 'auto' }]}>{controls}</View>}
       </KeyboardView>
     )
   }

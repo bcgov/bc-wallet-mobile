@@ -33,12 +33,6 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
   const [loading, setLoading] = useState(false)
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      paddingHorizontal: Spacing.md,
-    },
-    controlsContainer: {
-      paddingBottom: Spacing.md,
-    },
     contentContainer: {
       flexGrow: 1,
       paddingBottom: Spacing.sm,
@@ -85,37 +79,30 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
   )
 
   return (
-    <ScreenWrapper
-      keyboardActive
-      controls={controls}
-      style={styles.pageContainer}
-      controlsContainerStyle={styles.controlsContainer}
-    >
-      <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.NicknameAccount.AccountName')}
-        </ThemedText>
+    <ScreenWrapper padded keyboardActive controls={controls}>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.NicknameAccount.AccountName')}
+      </ThemedText>
 
-        <ThemedText>
-          {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
-        </ThemedText>
+      <ThemedText>
+        {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
+      </ThemedText>
 
-        <View style={styles.bulletPointContainer}>
-          <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
-          <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
-        </View>
-
-        <LimitedTextInput
-          showLimitCounter={false}
-          defaultValue={accountNickname}
-          label={t('BCSC.NicknameAccount.AccountName')}
-          limit={formStringLengths.maximumLength}
-          handleChangeText={handleChangeText}
-          accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
-          testID={testIdWithKey('NameInput')}
-        />
-        {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
+      <View style={styles.bulletPointContainer}>
+        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
+        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
       </View>
+
+      <LimitedTextInput
+        showLimitCounter={false}
+        defaultValue={accountNickname}
+        label={t('BCSC.NicknameAccount.AccountName')}
+        limit={formStringLengths.maximumLength}
+        handleChangeText={handleChangeText}
+        accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
+        testID={testIdWithKey('NameInput')}
+      />
+      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
     </ScreenWrapper>
   )
 }

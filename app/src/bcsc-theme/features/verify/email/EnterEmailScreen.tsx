@@ -17,7 +17,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, StyleSheet } from 'react-native'
+import { Alert } from 'react-native'
 import EmailTextInput from './EmailTextInput'
 
 type EnterEmailScreenProps = {
@@ -40,16 +40,6 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   const { ButtonLoading } = useAnimatedComponents()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
-
-  const styles = StyleSheet.create({
-    pageContainer: {
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      paddingTop: Spacing.lg,
-      gap: Spacing.md,
-    },
-  })
 
   const handleChangeEmail = (em: string) => {
     setEmail(em)
@@ -120,12 +110,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   )
 
   return (
-    <ScreenWrapper
-      keyboardActive={true}
-      style={styles.pageContainer}
-      controls={controls}
-      controlsContainerStyle={styles.controlsContainer}
-    >
+    <ScreenWrapper padded keyboardActive={true} controls={controls}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.EnterEmail.EnterEmailAddress')}
       </ThemedText>

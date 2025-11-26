@@ -18,7 +18,7 @@ import {
 import { CommonActions, useNavigation } from '@react-navigation/native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { View } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 type ResidentialAddressFormState = {
@@ -50,14 +50,6 @@ export const ResidentialAddressScreen = () => {
     postalCode: store.bcsc.userMetadata?.address?.postalCode ?? '',
   })
   const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
-
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      padding: Spacing.md,
-      gap: 32,
-    },
-  })
 
   /**
    * Handles changes to the form fields.
@@ -192,7 +184,7 @@ export const ResidentialAddressScreen = () => {
   }
 
   return (
-    <ScreenWrapper keyboardActive={true} style={styles.pageContainer}>
+    <ScreenWrapper padded keyboardActive={true} scrollViewContainerStyle={{ gap: Spacing.xl }}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.Address.Heading')}
       </ThemedText>

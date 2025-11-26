@@ -11,7 +11,6 @@ import {
 import { StackScreenProps } from '@react-navigation/stack'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
@@ -29,17 +28,6 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { ButtonLoading } = useAnimatedComponents()
   const { pairing } = useApi()
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: Spacing.md,
-      justifyContent: 'space-between',
-    },
-    contentContainer: {
-      flex: 1,
-    },
-  })
 
   const handleChangeCode = (text: string) => {
     setCode(text)
@@ -86,15 +74,13 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation }) => {
   )
 
   return (
-    <ScreenWrapper keyboardActive controls={controls} style={styles.container}>
-      <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
-        <PairingCodeTextInput handleChangeCode={handleChangeCode} />
-        <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
-      </View>
+    <ScreenWrapper padded keyboardActive controls={controls}>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.ManualPairing.EnterPairingCodeTitle')}
+      </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ManualPairing.EnterPairingCodeMessage')}</ThemedText>
+      <PairingCodeTextInput handleChangeCode={handleChangeCode} />
+      <ThemedText variant={'inlineErrorText'}>{message}</ThemedText>
     </ScreenWrapper>
   )
 }
