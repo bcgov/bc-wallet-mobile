@@ -21,7 +21,7 @@ describe('File Info Utils', () => {
       RNFSMock.exists.mockResolvedValue(true)
       RNFSMock.unlink.mockResolvedValue(undefined)
 
-      await removeFileSafely(mockLogger, mockFilePath)
+      await removeFileSafely(mockFilePath, mockLogger)
 
       expect(RNFSMock.exists).toHaveBeenCalledWith(mockFilePath)
       expect(RNFSMock.unlink).toHaveBeenCalledWith(mockFilePath)
@@ -34,7 +34,7 @@ describe('File Info Utils', () => {
 
       RNFSMock.exists.mockResolvedValue(false)
 
-      await removeFileSafely(mockLogger, mockFilePath)
+      await removeFileSafely(mockFilePath, mockLogger)
 
       expect(RNFSMock.exists).toHaveBeenCalledWith(mockFilePath)
       expect(RNFSMock.unlink).not.toHaveBeenCalled()
@@ -44,7 +44,7 @@ describe('File Info Utils', () => {
       const mockLogger = new MockLogger()
       const RNFSMock = jest.mocked(RNFS)
 
-      await removeFileSafely(mockLogger, undefined)
+      await removeFileSafely(undefined, mockLogger)
 
       expect(RNFSMock.exists).not.toHaveBeenCalled()
       expect(RNFSMock.unlink).not.toHaveBeenCalled()
@@ -58,7 +58,7 @@ describe('File Info Utils', () => {
 
       RNFSMock.exists.mockResolvedValue(false)
 
-      await removeFileSafely(mockLogger, mockFilePath)
+      await removeFileSafely(mockFilePath, mockLogger)
 
       expect(RNFSMock.exists).toHaveBeenCalledWith(mockFilePath)
       expect(RNFSMock.unlink).not.toHaveBeenCalled()
@@ -68,17 +68,17 @@ describe('File Info Utils', () => {
     it('should log error if unlink fails', async () => {
       const mockFilePath = '/path/to/selfie.png'
       const mockLogger = new MockLogger()
-      const RNFSMock = jest.mocked(RNFS)
       const mockError = new Error('Failed to delete file')
+      const RNFSMock = jest.mocked(RNFS)
 
       RNFSMock.exists.mockResolvedValue(true)
       RNFSMock.unlink.mockRejectedValue(mockError)
 
-      await removeFileSafely(mockLogger, mockFilePath)
+      await removeFileSafely(mockFilePath, mockLogger)
 
       expect(RNFSMock.exists).toHaveBeenCalledWith(mockFilePath)
       expect(RNFSMock.unlink).toHaveBeenCalledWith(mockFilePath)
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error removing file'))
+      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining('Error removing file safely'), mockError)
     })
   })
 })

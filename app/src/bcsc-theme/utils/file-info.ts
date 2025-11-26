@@ -44,11 +44,11 @@ export const getPhotoMetadata = async (filePath: string): Promise<PhotoMetadata>
 /**
  * Removes a file at the specified path if it exists.
  *
- * @param {BifoldLogger} logger - The logger instance for logging messages.
  * @param {string} [path] - The file path to remove.
+ * @param {BifoldLogger} logger - The logger instance for logging messages.
  * @returns {*} {Promise<void>}
  */
-export const removeFileSafely = async (logger: BifoldLogger, path?: string): Promise<void> => {
+export const removeFileSafely = async (path: string | undefined, logger: BifoldLogger): Promise<void> => {
   try {
     if (!path) {
       logger.debug('Unable to remove file with undefined path')
@@ -62,7 +62,7 @@ export const removeFileSafely = async (logger: BifoldLogger, path?: string): Pro
       return
     }
 
-    return RNFS.unlink(path)
+    await RNFS.unlink(path)
   } catch (error) {
     logger.error('Error removing file safely', error as Error)
   }
