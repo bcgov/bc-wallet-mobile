@@ -43,6 +43,7 @@ const TransferQRInformationScreen: React.FC = () => {
             onPress={() => {
               navigation.navigate(BCSCScreens.TransferAccountQRDisplay)
             }}
+            testID="GetQRCodeButton"
           />
           <Button
             buttonType={ButtonType.Secondary}
@@ -53,6 +54,7 @@ const TransferQRInformationScreen: React.FC = () => {
                 title: t('HelpCentre.Title'),
               })
             }}
+            testID="LearnMoreButton"
           />
         </View>
       </ScrollView>
