@@ -1,3 +1,4 @@
+import { BifoldLogger } from '@bifold/core'
 import { Buffer } from 'buffer'
 import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
@@ -43,19 +44,26 @@ export const getPhotoMetadata = async (filePath: string): Promise<PhotoMetadata>
 /**
  * Removes a file at the specified path if it exists.
  *
+ * @param {BifoldLogger} logger - The logger instance for logging messages.
  * @param {string} [path] - The file path to remove.
  * @returns {*} {Promise<void>}
  */
-export const removeFileSafely = async (path?: string): Promise<void> => {
-  if (!path) {
-    return
+export const removeFileSafely = async (logger: BifoldLogger, path?: string): Promise<void> => {
+  try {
+    if (!path) {
+      logger.debug('Unable to remove file with undefined path')
+      return
+    }
+
+    const fileExists = await RNFS.exists(path)
+
+    if (!fileExists) {
+      logger.debug(`File at path '${path}' does not exist, skipping removal`)
+      return
+    }
+
+    return RNFS.unlink(path)
+  } catch (error) {
+    logger.error('Error removing file safely', error as Error)
   }
-
-  const fileExists = await RNFS.exists(path)
-
-  if (!fileExists) {
-    return
-  }
-
-  return RNFS.unlink(path)
 }

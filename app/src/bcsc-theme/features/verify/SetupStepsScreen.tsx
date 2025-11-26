@@ -123,11 +123,11 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         text: t('BCSC.Steps.DeleteVerifyRequest'),
         onPress: async () => {
           try {
+            await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId!)
             dispatch({
               type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST,
               payload: [{ id: undefined, sha256: undefined }],
             })
-            await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId!)
           } catch (error) {
             logger.error(`Error cancelling verification request: ${error}`)
           } finally {

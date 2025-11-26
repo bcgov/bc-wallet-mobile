@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -34,10 +35,18 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const handlePressSendVideo = useCallback(async () => {
     try {
       setSendVideoLoading(true)
-      dispatch({ type: BCDispatchAction.CLEAR_PHOTO_AND_VIDEO_CACHE })
+
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
+
+      await Promise.all([
+        removeFileSafely(store.bcsc.photoPath),
+        removeFileSafely(store.bcsc.videoPath),
+        removeFileSafely(store.bcsc.videoThumbnailPath),
+      ])
+      dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
+
       navigation.navigate(BCSCScreens.InformationRequired)
     } catch (error) {
       logger.error('Error sending video:', error as Error)
@@ -45,7 +54,15 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
     } finally {
       setSendVideoLoading(false)
     }
-  }, [dispatch, evidence, logger, navigation])
+  }, [
+    dispatch,
+    evidence,
+    logger,
+    navigation,
+    store.bcsc.photoPath,
+    store.bcsc.videoPath,
+    store.bcsc.videoThumbnailPath,
+  ])
 
   const handlePressLiveCall = useCallback(async () => {
     try {
