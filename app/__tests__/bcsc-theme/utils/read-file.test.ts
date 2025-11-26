@@ -197,7 +197,7 @@ describe('readFileInChunks', () => {
       const error = new Error('Test error')
       ;(RNFS.stat as jest.Mock).mockRejectedValue(error)
 
-      await expect(readFileInChunks(mockFilePathm, mockLogger as any)).rejects.toThrow('Test error')
+      await expect(readFileInChunks(mockFilePath, mockLogger as any)).rejects.toThrow('Test error')
     })
 
     it('should handle error in onChunk callback', async () => {
