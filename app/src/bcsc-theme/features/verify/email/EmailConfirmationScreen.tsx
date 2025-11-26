@@ -1,7 +1,16 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, ThemedText, ToastType, useAnimatedComponents, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  ThemedText,
+  ToastType,
+  useAnimatedComponents,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'

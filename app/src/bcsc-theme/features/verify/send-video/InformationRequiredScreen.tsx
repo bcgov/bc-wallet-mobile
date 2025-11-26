@@ -2,7 +2,16 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
-import { Button, ButtonType, ScreenWrapper, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  TOKENS,
+  useAnimatedComponents,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useMemo, useState } from 'react'
