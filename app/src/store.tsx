@@ -166,6 +166,7 @@ enum BCSCDispatchAction {
   UPDATE_COMPLETED_ONBOARDING = 'bcsc/updateOnboardingCompleted',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
+  RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
 }
 
@@ -472,6 +473,19 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.SAVE_VIDEO_THUMBNAIL: {
       const videoThumbnailPath = (action.payload ?? []).pop()
       const bcsc = { ...state.bcsc, videoThumbnailPath }
+      const newState = { ...state, bcsc }
+      return newState
+    }
+    case BCSCDispatchAction.RESET_SEND_VIDEO: {
+      const bcsc = {
+        ...state.bcsc,
+        photoPath: undefined,
+        photoMetadata: undefined,
+        videoPath: undefined,
+        videoMetadata: undefined,
+        videoThumbnailPath: undefined,
+        prompts: undefined,
+      }
       const newState = { ...state, bcsc }
       return newState
     }

@@ -1,5 +1,6 @@
 import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { MediaCache } from '@/bcsc-theme/utils/media-cache'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import {
@@ -24,6 +25,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
 import { Video, VideoRef } from 'react-native-video'
+
+export const VerificationVideoCache = new MediaCache()
 
 const pauseButtonSize = 60
 
@@ -130,6 +133,10 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     const date = Math.floor(mtime / 1000)
 
     const videoBytes = await readFileInChunks(videoPath, logger)
+
+    // Cache the video for later use
+    VerificationVideoCache.setCachedMedia(videoBytes)
+
     const videoSHA = await hashBase64(videoBytes.toString('base64'))
     const prompts = store.bcsc.prompts!.map(({ id }, i) => ({
       id,

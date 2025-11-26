@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
+import { VerificationVideoCache } from './VideoReviewScreen'
 
 type InformationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.InformationRequired>
@@ -46,12 +47,13 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         throw new Error('Error - missing photo or video data')
       }
 
-      // Fetch photo and convert into bytes
-      const photoBytes = await readFileInChunks(store.bcsc.photoPath, logger)
-      logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
+      // Fetch photo and video then convert into bytes
+      const [photoBytes, videoBytes] = await Promise.all([
+        readFileInChunks(store.bcsc.photoPath, logger),
+        VerificationVideoCache.getCachedMedia(store.bcsc.videoPath, logger),
+      ])
 
-      // Fetch video and convert into bytes
-      const videoBytes = await readFileInChunks(store.bcsc.videoPath, logger)
+      logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
 
       // Process additional evidence data

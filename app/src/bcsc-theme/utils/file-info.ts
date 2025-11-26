@@ -40,3 +40,30 @@ export const getPhotoMetadata = async (filePath: string, logger: BifoldLogger): 
   }
   return photoMetadata
 }
+
+/**
+ * Removes a file at the specified path if it exists.
+ *
+ * @param {string} [path] - The file path to remove.
+ * @param {BifoldLogger} logger - The logger instance for logging messages.
+ * @returns {*} {Promise<void>}
+ */
+export const removeFileSafely = async (path: string | undefined, logger: BifoldLogger): Promise<void> => {
+  try {
+    if (!path) {
+      logger.debug('Unable to remove file with undefined path')
+      return
+    }
+
+    const fileExists = await RNFS.exists(path)
+
+    if (!fileExists) {
+      logger.debug(`File at path '${path}' does not exist, skipping removal`)
+      return
+    }
+
+    await RNFS.unlink(path)
+  } catch (error) {
+    logger.error('Error removing file safely', error as Error)
+  }
+}
