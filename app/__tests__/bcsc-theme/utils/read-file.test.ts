@@ -102,6 +102,7 @@ describe('readFileInChunks', () => {
 
   describe('edge cases', () => {
     it('should handle empty file', async () => {
+      // eslint-disable-next-line no-extra-semi
       ;(RNFS.stat as jest.Mock).mockResolvedValue({
         size: 0,
         mtime: new Date(),
@@ -161,6 +162,7 @@ describe('readFileInChunks', () => {
     })
 
     it('should throw error when read fails', async () => {
+      // eslint-disable-next-line no-extra-semi
       ;(RNFS.stat as jest.Mock).mockResolvedValue({
         size: 100,
         mtime: new Date(),

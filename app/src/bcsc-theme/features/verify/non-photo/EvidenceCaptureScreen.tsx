@@ -4,7 +4,7 @@ import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getPhotoMetadata, PhotoMetadata } from '@/bcsc-theme/utils/file-info'
 import { BCDispatchAction, BCState } from '@/store'
-import { MaskType, useStore, useTheme } from '@bifold/core'
+import { MaskType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
@@ -29,6 +29,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const [capturedPhotos, setCapturedPhotos] = useState<PhotoMetadata[]>([])
   const { width } = useWindowDimensions()
   const { ColorPalette } = useTheme()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
     container: {
@@ -76,7 +77,7 @@ const EvidenceCaptureScreen = ({ navigation, route }: EvidenceCaptureScreenProps
   const handleAcceptPhoto = async () => {
     if (!currentPhotoPath || !currentSide) return
 
-    const photoMetadata = await getPhotoMetadata(currentPhotoPath)
+    const photoMetadata = await getPhotoMetadata(currentPhotoPath, logger)
     photoMetadata.label = currentSide.image_side_name
     const newPhotos = [...capturedPhotos, photoMetadata]
     setCapturedPhotos(newPhotos)

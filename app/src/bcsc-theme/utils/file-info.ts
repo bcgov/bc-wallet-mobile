@@ -1,4 +1,5 @@
 import readFileInChunks from '@/utils/read-file'
+import { BifoldLogger } from '@bifold/core'
 import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 
@@ -22,9 +23,9 @@ export const getFileInfo = async (filePath: string) => {
   }
 }
 
-export const getPhotoMetadata = async (filePath: string): Promise<PhotoMetadata> => {
+export const getPhotoMetadata = async (filePath: string, logger: BifoldLogger): Promise<PhotoMetadata> => {
   const fileInfo = await getFileInfo(filePath)
-  const jpegBytes = await readFileInChunks(filePath)
+  const jpegBytes = await readFileInChunks(filePath, logger)
   const jpegBase64 = jpegBytes.toString('base64')
   const photoSHA = await hashBase64(jpegBase64)
 
