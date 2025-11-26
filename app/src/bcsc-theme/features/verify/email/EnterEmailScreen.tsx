@@ -113,7 +113,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
           ) : null}
           <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
-          <EmailTextInput handleChangeEmail={handleChangeEmail} />
+          <EmailTextInput handleChangeEmail={handleChangeEmail} testID={'EmailInput'} />
           {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
         </View>
         <View style={styles.controlsContainer}>
@@ -124,7 +124,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             accessibilityLabel={t('Global.Continue')}
             testID={'ContinueButton'}
           >
-            {loading && <ButtonLoading />}
+            {loading && <ButtonLoading/>}
           </Button>
           {cardType !== BCSCCardType.Other ? (
             <Button
