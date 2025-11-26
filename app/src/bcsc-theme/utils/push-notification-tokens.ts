@@ -13,12 +13,14 @@ export interface NotificationTokens {
  * deviceToken (APNS) is optional and iOS only.
  * @param logger
  * @returns NotificationTokens object containing fcmDeviceToken and deviceToken
- * @throws with the failure message if no fcmDeviceToken is not retrieved
+ * unless it fails in which case it returns a dummy fcmDeviceToken and null deviceToken
  */
 export const getNotificationTokens = async (logger: BifoldLogger): Promise<NotificationTokens> => {
   if (!messaging().isDeviceRegisteredForRemoteMessages) {
     try {
+      logger.debug('Attempting to register device for remote messages...')
       await messaging().registerDeviceForRemoteMessages()
+      logger.debug('Device successfully registered for remote messages')
     } catch (error) {
       // This is the extremely rare case react-native-firebase fails to register
       // We log the error but continue with a dummy string as registration will still work
@@ -29,6 +31,8 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
         deviceToken: null,
       }
     }
+  } else {
+    logger.debug('Device already registered for remote messages')
   }
 
   const fetchFcmToken = async (): Promise<string> => {
@@ -40,7 +44,8 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
       return token
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      throw new Error(`FCM token fetch failed: ${message}`)
+      logger.error(`FCM token fetch failed: ${message}`)
+      return 'missing_token_due_to_fetch_failure' // Return dummy token on failure
     }
   }
 
@@ -60,18 +65,12 @@ export const getNotificationTokens = async (logger: BifoldLogger): Promise<Notif
     }
   }
 
-  try {
-    const [fcmToken, deviceToken] = await Promise.all([fetchFcmToken(), fetchDeviceToken()])
+  const [fcmDeviceToken, deviceToken] = await Promise.all([fetchFcmToken(), fetchDeviceToken()])
 
-    logger.info('Successfully retrieved notification tokens for registration')
+  logger.info('Successfully retrieved notification tokens for registration')
 
-    return {
-      fcmDeviceToken: fcmToken,
-      deviceToken,
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    logger.error(`Failed to retrieve notification tokens: ${errorMessage}`)
-    throw new Error(errorMessage)
+  return {
+    fcmDeviceToken,
+    deviceToken,
   }
 }
