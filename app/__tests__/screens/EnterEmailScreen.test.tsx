@@ -4,9 +4,9 @@ import { Alert } from 'react-native'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
+import EnterEmailScreen from '../../src/bcsc-theme/features/verify/email/EnterEmailScreen'
 import { BCSCCardType } from '../../src/bcsc-theme/types/cards'
 import { BCSCScreens } from '../../src/bcsc-theme/types/navigators'
-import EnterEmailScreen from '../../src/bcsc-theme/features/verify/email/EnterEmailScreen'
 
 const mockCreateEmailVerification = jest.fn()
 jest.mock('@/bcsc-theme/api/hooks/useApi', () => {
@@ -38,10 +38,7 @@ describe('EnterEmailScreen', () => {
     it('should render correctly', () => {
       const { getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -52,10 +49,7 @@ describe('EnterEmailScreen', () => {
     it('should display description for non-Other card types i.e combined', () => {
       const { getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -75,10 +69,7 @@ describe('EnterEmailScreen', () => {
     it('should display Skip button for non-Other card types i.e combined', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -100,10 +91,7 @@ describe('EnterEmailScreen', () => {
     it('should show error when submitting empty email', async () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -120,10 +108,7 @@ describe('EnterEmailScreen', () => {
     it('should show error when submitting invalid email format', async () => {
       const { getByTestId, getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -147,10 +132,7 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId, getByText, queryByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -187,10 +169,7 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -217,10 +196,7 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -251,10 +227,7 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId, getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -278,10 +251,7 @@ describe('EnterEmailScreen', () => {
 
       const { getByTestId, getByText } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -307,10 +277,7 @@ describe('EnterEmailScreen', () => {
     it('should show alert when Skip button is pressed', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -332,10 +299,7 @@ describe('EnterEmailScreen', () => {
     it('should not navigate when alert is cancelled', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 
@@ -356,10 +320,7 @@ describe('EnterEmailScreen', () => {
     it('should navigate back when skip is confirmed', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <EnterEmailScreen
-            navigation={mockNavigation}
-            route={{ params: { cardType: BCSCCardType.Combined } }}
-          />
+          <EnterEmailScreen navigation={mockNavigation} route={{ params: { cardType: BCSCCardType.Combined } }} />
         </BasicAppContext>
       )
 

@@ -4,8 +4,8 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import { BCSCScreens } from '../../src/bcsc-theme/types/navigators'
 import NewSetupScreen from '../../src/bcsc-theme/features/verify/NewSetupScreen'
+import { BCSCScreens } from '../../src/bcsc-theme/types/navigators'
 
 describe('NewSetupScreen', () => {
   let mockNavigation: any
@@ -41,8 +41,8 @@ describe('NewSetupScreen', () => {
     })
   })
 
-  describe('Someone else\'s ID flow', () => {
-    it('should have Yes selected by default when Someone else\'s ID is clicked', () => {
+  describe("Someone else's ID flow", () => {
+    it("should have Yes selected by default when Someone else's ID is clicked", () => {
       const { getByText, getByTestId } = render(
         <BasicAppContext>
           <NewSetupScreen navigation={mockNavigation} />
@@ -60,7 +60,7 @@ describe('NewSetupScreen', () => {
       expect(noOption.props.accessibilityState.selected).toBe(false)
     })
 
-    it('should display help information when Someone else\'s ID is selected and Yes is chosen', () => {
+    it("should display help information when Someone else's ID is selected and Yes is chosen", () => {
       const { getByText, queryByText } = render(
         <BasicAppContext>
           <NewSetupScreen navigation={mockNavigation} />
@@ -89,7 +89,7 @@ describe('NewSetupScreen', () => {
       expect(getByText('BCSC.NewSetup.YouCannotBeInVideo')).toBeTruthy()
     })
 
-    it('should display error when Someone else\'s ID is selected and No is chosen', () => {
+    it("should display error when Someone else's ID is selected and No is chosen", () => {
       const { getByText, queryByText } = render(
         <BasicAppContext>
           <NewSetupScreen navigation={mockNavigation} />
@@ -145,7 +145,7 @@ describe('NewSetupScreen', () => {
       expect(continueButton.props.accessibilityState.disabled).toBe(false)
     })
 
-    it.todo('should disable continue button when Someone else\'s ID is selected and No is chosen')
+    it.todo("should disable continue button when Someone else's ID is selected and No is chosen")
   })
 
   describe('Navigation', () => {

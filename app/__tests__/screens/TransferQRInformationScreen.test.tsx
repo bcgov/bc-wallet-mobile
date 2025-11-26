@@ -1,12 +1,12 @@
 import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 
+import { act } from 'react-test-renderer'
 import { useNavigation } from '../../__mocks__/@react-navigation/native'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
+import TransferQRInformationScreen from '../../src/bcsc-theme/features/account-transfer/TransferQRInformationScreen'
 import { BCSCScreens } from '../../src/bcsc-theme/types/navigators'
 import { HelpCentreUrl } from '../../src/constants'
-import TransferQRInformationScreen from '../../src/bcsc-theme/features/account-transfer/TransferQRInformationScreen'
-import { act } from 'react-test-renderer'
 
 describe('TransferQRInformationScreen', () => {
   let mockNavigation: any
@@ -17,7 +17,6 @@ describe('TransferQRInformationScreen', () => {
   })
 
   describe('Render tests', () => {
-
     it('render matches snapshot', () => {
       const tree = render(
         <BasicAppContext>
@@ -29,7 +28,6 @@ describe('TransferQRInformationScreen', () => {
   })
 
   describe('Navigation tests', () => {
-
     it('Get QR Code navigates', () => {
       const { getByTestId } = render(
         <BasicAppContext>

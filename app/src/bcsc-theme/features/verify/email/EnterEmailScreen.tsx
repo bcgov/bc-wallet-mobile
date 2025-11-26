@@ -124,7 +124,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             accessibilityLabel={t('Global.Continue')}
             testID={'ContinueButton'}
           >
-            {loading && <ButtonLoading/>}
+            {loading && <ButtonLoading />}
           </Button>
           {cardType !== BCSCCardType.Other ? (
             <Button
