@@ -114,21 +114,6 @@ describe('readFileInChunks', () => {
       expect(RNFS.read).not.toHaveBeenCalled()
     })
 
-    it('should work without logger', async () => {
-      const testData = 'test'
-      const testBuffer = Buffer.from(testData, 'utf8')
-
-      ;(RNFS.stat as jest.Mock).mockResolvedValue({
-        size: testBuffer.length,
-        mtime: new Date(),
-      })
-      ;(RNFS.read as jest.Mock).mockResolvedValue(testBuffer.toString('base64'))
-
-      const result = await readFileInChunks(mockFilePath, mockLogger as any)
-
-      expect(result.toString('utf8')).toBe(testData)
-    })
-
     it('should work without onChunk callback', async () => {
       const testData = 'test'
       const testBuffer = Buffer.from(testData, 'utf8')
@@ -191,13 +176,6 @@ describe('readFileInChunks', () => {
         chunkSize: 1024 * 1024,
         errorMessage: 'Permission denied',
       })
-    })
-
-    it('should handle error without logger', async () => {
-      const error = new Error('Test error')
-      ;(RNFS.stat as jest.Mock).mockRejectedValue(error)
-
-      await expect(readFileInChunks(mockFilePath, mockLogger as any)).rejects.toThrow('Test error')
     })
 
     it('should handle error in onChunk callback', async () => {
