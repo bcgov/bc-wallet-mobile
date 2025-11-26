@@ -39,7 +39,6 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
   )
   return (
     <ScreenWrapper
-      padded
       controls={controls}
       edges={['top', 'bottom', 'left', 'right']}
       scrollViewContainerStyle={styles.contentContainer}

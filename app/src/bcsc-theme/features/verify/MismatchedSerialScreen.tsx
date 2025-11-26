@@ -24,7 +24,7 @@ const MismatchedSerialScreen = () => {
   })
 
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
         {t('BCSC.MismatchedSerial.Heading')}
       </ThemedText>

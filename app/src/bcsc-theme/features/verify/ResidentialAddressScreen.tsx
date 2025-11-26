@@ -184,7 +184,7 @@ export const ResidentialAddressScreen = () => {
   }
 
   return (
-    <ScreenWrapper padded keyboardActive={true} scrollViewContainerStyle={{ gap: Spacing.xl }}>
+    <ScreenWrapper keyboardActive={true} scrollViewContainerStyle={{ gap: Spacing.xl }}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.Address.Heading')}
       </ThemedText>

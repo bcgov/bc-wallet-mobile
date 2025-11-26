@@ -38,7 +38,7 @@ const TransferQRInformationScreen: React.FC = () => {
     </>
   )
   return (
-    <ScreenWrapper padded controls={controls}>
+    <ScreenWrapper controls={controls}>
       <View style={styles.contentContainer}>
         <ThemedText variant={'headingThree'}>{t('BCSC.TransferQRInformation.Title')}</ThemedText>
         <ThemedText>{t('BCSC.TransferQRInformation.Instructions')}</ThemedText>

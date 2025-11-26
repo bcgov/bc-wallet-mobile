@@ -4,14 +4,6 @@ import { ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native
 import { KeyboardView, useTheme } from '@bifold/core'
 import { Edges, SafeAreaView } from 'react-native-safe-area-context'
 
-// const useSafeHeaderHeight = (): number => {
-//   try {
-//     return useHeaderHeight()
-//   } catch {
-//     return 100
-//   }
-// }
-
 interface ScreenWrapperProps {
   children: React.ReactNode
   controls?: React.ReactNode
@@ -61,7 +53,7 @@ const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
   scrollable = true,
   scrollViewContainerStyle,
   controlsContainerStyle,
-  padded = false,
+  padded = true,
 }) => {
   const { Spacing, ColorPalette } = useTheme()
 

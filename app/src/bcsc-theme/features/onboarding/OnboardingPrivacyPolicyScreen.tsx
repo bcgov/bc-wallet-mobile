@@ -49,7 +49,7 @@ export const OnboardingPrivacyPolicyScreen: React.FC<OnboardingPrivacyPolicyScre
   }
 
   return (
-    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={scrollContentStyle}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={scrollContentStyle}>
       <PrivacyPolicyContent onLearnMore={handleLearnMore} />
     </ScreenWrapper>
   )

@@ -81,7 +81,7 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
   )
 
   return (
-    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <ThemedText variant={'headingThree'}>{t('BCSC.ForgetAllPairings.Title')}</ThemedText>
 
       <ThemedText>{t('BCSC.ForgetAllPairings.Description1')}</ThemedText>

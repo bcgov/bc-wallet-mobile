@@ -87,7 +87,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
   )
 
   return (
-    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <View style={styles.imageContainer}>
         <Image source={notifications} />
       </View>

@@ -94,7 +94,7 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
   )
 
   return (
-    <ScreenWrapper padded controls={controls}>
+    <ScreenWrapper controls={controls}>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.VerifyIdentity.VerifyInPersonTitle')}
       </ThemedText>

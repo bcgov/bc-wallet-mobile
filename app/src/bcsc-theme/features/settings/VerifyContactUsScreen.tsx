@@ -14,7 +14,7 @@ type VerifyContactUsScreenProps = {
  */
 export const VerifyContactUsScreen: React.FC<VerifyContactUsScreenProps> = () => {
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <ContactUsContent />
     </ScreenWrapper>
   )

@@ -45,7 +45,7 @@ const AccountSetupSelectionScreen: React.FC = () => {
   )
 
   return (
-    <ScreenWrapper scrollable={false} style={styles.container}>
+    <ScreenWrapper padded={false} scrollable={false} style={styles.container}>
       <View style={styles.contentContainer}>
         <GenericCardImage />
         <ThemedText variant={'headingFour'}>{t('BCSC.AccountSetup.Title')}</ThemedText>

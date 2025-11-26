@@ -30,7 +30,7 @@ const TransferSuccessScreen: React.FC = () => {
   )
 
   return (
-    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.contentContainer}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.contentContainer}>
       <StatusDetails
         title={t('BCSC.TransferSuccess.Title')}
         description={t('BCSC.TransferSuccess.Description')}

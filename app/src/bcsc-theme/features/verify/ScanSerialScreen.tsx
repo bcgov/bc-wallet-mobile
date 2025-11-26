@@ -71,7 +71,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   }
 
   return (
-    <ScreenWrapper scrollable={false} style={styles.screenContainer} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false} style={styles.screenContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.cameraContainer}>
         <CodeScanningCamera codeTypes={['code-128']} onCodeScanned={onCodeScanned} cameraType={'back'} />
       </View>

@@ -64,7 +64,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   }
 
   return (
-    <ScreenWrapper scrollable={false} edges={['top', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'left', 'right']}>
       <PhotoReview photoPath={photoPath} onAccept={onPressUse} onRetake={onPressRetake} />
     </ScreenWrapper>
   )

@@ -47,7 +47,7 @@ const VerifyNotCompleteScreen = ({ navigation }: VerifyNotCompleteScreenProps) =
   )
 
   return (
-    <ScreenWrapper padded controls={controls}>
+    <ScreenWrapper controls={controls}>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.VideoCall.VerifyNotComplete.Title')}
       </ThemedText>

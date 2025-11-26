@@ -19,7 +19,7 @@ const AdditionalIdentificationRequiredScreen: React.FC<AdditionalIdentificationR
   const { t } = useTranslation()
 
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <GenericCardImage />
       <View style={{ marginBottom: Spacing.lg }}>
         <ThemedText variant={'headingFour'}>{t('BCSC.AdditionalEvidence.PhotoRequired')}</ThemedText>

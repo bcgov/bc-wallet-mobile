@@ -33,7 +33,7 @@ export const SettingsPrivacyPolicyScreen: React.FC<SettingsPrivacyPolicyScreenPr
   }
 
   return (
-    <ScreenWrapper padded scrollViewContainerStyle={scrollContentStyle}>
+    <ScreenWrapper scrollViewContainerStyle={scrollContentStyle}>
       <PrivacyPolicyContent onLearnMore={handleLearnMore} />
     </ScreenWrapper>
   )

@@ -38,7 +38,7 @@ export const SecureAppScreen = ({ navigation }: SecureAppScreenProps): JSX.Eleme
   }
 
   return (
-    <ScreenWrapper padded scrollViewContainerStyle={styles.scollContainer}>
+    <ScreenWrapper scrollViewContainerStyle={styles.scollContainer}>
       <ThemedText variant="headingThree">{t('BCSC.Onboarding.SecureAppHeader')}</ThemedText>
       <ThemedText>{t('BCSC.Onboarding.SecureAppContent')}</ThemedText>
       {Platform.OS === 'ios' ? (

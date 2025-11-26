@@ -34,7 +34,7 @@ const ManualPairing: React.FC<ManualPairingProps> = ({ navigation, route }) => {
   )
 
   return (
-    <ScreenWrapper padded controls={controls}>
+    <ScreenWrapper controls={controls}>
       <ThemedText variant={'headingThree'}>{t('BCSC.ManualPairing.CompletionTitle')}</ThemedText>
       <ThemedText style={{ marginVertical: Spacing.md }}>
         {t('BCSC.ManualPairing.CompletionDescription', { serviceName })}

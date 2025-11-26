@@ -154,7 +154,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   )
 
   return (
-    <ScreenWrapper style={styles.pageContainer} controls={controls} controlsContainerStyle={styles.controlsContainer}>
+    <ScreenWrapper padded={false} style={styles.pageContainer} controls={controls} controlsContainerStyle={styles.controlsContainer}>
       <View style={styles.videoContainer}>
         <ThemedText variant={'headingFour'} style={styles.heading}>
           {t('BCSC.SendVideo.VideoReview.Heading')}

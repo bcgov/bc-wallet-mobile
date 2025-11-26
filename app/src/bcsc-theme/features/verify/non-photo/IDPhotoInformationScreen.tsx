@@ -40,7 +40,7 @@ const IDPhotoInformationScreen = ({ navigation, route }: IDPhotoInformationScree
   )
 
   return (
-    <ScreenWrapper padded controls={controls}>
+    <ScreenWrapper controls={controls}>
       <Image source={SCAN_ID_IMAGE} style={styles.image} />
       <View style={{ marginBottom: Spacing.md }}>
         <ThemedText style={{ marginBottom: Spacing.md }} variant={'headingThree'}>

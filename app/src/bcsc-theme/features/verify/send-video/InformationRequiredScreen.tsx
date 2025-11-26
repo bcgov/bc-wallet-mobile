@@ -140,7 +140,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   )
 
   return (
-    <ScreenWrapper edges={['bottom']} controls={controls} controlsContainerStyle={styles.controlsContainer}>
+    <ScreenWrapper padded={false} edges={['bottom']} controls={controls} controlsContainerStyle={styles.controlsContainer}>
       <TakeMediaButton
         onPress={() => {
           navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })

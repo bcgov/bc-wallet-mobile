@@ -21,7 +21,7 @@ const TransferInstructionsScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
 
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <View style={{ gap: Spacing.md }}>
         <ThemedText variant={'headingThree'}>{t('BCSC.TransferInstructions.Title')}</ThemedText>
 

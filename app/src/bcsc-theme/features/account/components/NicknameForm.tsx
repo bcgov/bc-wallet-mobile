@@ -79,7 +79,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
   )
 
   return (
-    <ScreenWrapper padded keyboardActive controls={controls}>
+    <ScreenWrapper keyboardActive controls={controls}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.NicknameAccount.AccountName')}
       </ThemedText>

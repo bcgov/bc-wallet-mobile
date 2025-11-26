@@ -117,7 +117,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
 
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <ThemedText variant={'headingThree'} style={styles.heading}>
         {t('BCSC.ChooseYourID.WhatCardDoYou')}
       </ThemedText>

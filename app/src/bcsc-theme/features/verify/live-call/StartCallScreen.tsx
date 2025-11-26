@@ -50,7 +50,7 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
   )
 
   return (
-    <ScreenWrapper padded controls={controls}>
+    <ScreenWrapper controls={controls}>
       <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
       <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
         {t('BCSC.VideoCall.StartVideoCallDescription')}

@@ -47,7 +47,7 @@ const VideoTooLongScreen = ({ navigation, route }: VideoTooLongScreenProps) => {
   )
 
   return (
-    <ScreenWrapper padded controls={controls} edges={['top', 'bottom', 'left', 'right']}>
+    <ScreenWrapper controls={controls} edges={['top', 'bottom', 'left', 'right']}>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.SendVideo.VideoTooLong.Heading')}
       </ThemedText>

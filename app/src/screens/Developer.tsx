@@ -307,7 +307,7 @@ const Developer: React.FC = () => {
   }
 
   return (
-    <ScreenWrapper scrollable={false}>
+    <ScreenWrapper padded={false} scrollable={false}>
       <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}

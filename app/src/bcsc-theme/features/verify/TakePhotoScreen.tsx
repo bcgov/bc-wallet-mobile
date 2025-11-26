@@ -25,7 +25,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
   }
 
   return (
-    <ScreenWrapper scrollable={false} edges={['top', 'bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'bottom', 'left', 'right']}>
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"

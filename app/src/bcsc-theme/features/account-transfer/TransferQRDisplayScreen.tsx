@@ -118,7 +118,7 @@ const TransferQRDisplayScreen: React.FC = () => {
   )
 
   return (
-    <ScreenWrapper padded controls={controls}>
+    <ScreenWrapper controls={controls}>
       <ThemedText style={{ marginBottom: Spacing.xxl }} variant={'headingThree'}>
         {t('BCSC.TransferQRDisplay.Instructions')}
       </ThemedText>

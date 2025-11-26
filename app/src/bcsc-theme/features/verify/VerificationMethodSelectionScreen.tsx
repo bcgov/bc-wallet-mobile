@@ -84,7 +84,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   }, [videoCallApi, logger, navigation])
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper padded={false}>
       {store.bcsc.verificationOptions
         .map((option, index) => {
           const borderBottomWidth = store.bcsc.verificationOptions.length === index + 1 ? 1 : undefined

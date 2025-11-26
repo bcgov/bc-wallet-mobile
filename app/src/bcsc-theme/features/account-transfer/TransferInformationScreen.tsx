@@ -25,7 +25,7 @@ const TransferInformationScreen: React.FC = () => {
     },
   })
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <View style={styles.contentContainer}>
         <Image source={TWO_PHONES} style={{ height: 300, width: 'auto' }} resizeMode={'contain'} />
         <ThemedText variant={'headingThree'}>{t('BCSC.TransferInformation.Title')}</ThemedText>

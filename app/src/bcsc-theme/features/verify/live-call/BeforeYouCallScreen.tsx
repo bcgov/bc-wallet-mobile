@@ -44,7 +44,7 @@ const BeforeYouCallScreen = ({ navigation, route }: BeforeYouCallScreenProps) =>
   }
 
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.VideoCall.BeforeYouCallTitle')}
       </ThemedText>

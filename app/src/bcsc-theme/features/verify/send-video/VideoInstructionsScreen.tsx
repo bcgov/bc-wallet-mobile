@@ -39,7 +39,7 @@ const VideoInstructionsScreen = ({ navigation }: VideoInstructionsScreenProps) =
   })
 
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <Icon name={'video'} size={112} color={TextTheme.normal.color} style={styles.mainIcon} />
       <ThemedText variant={'headingTwo'} style={{ marginBottom: Spacing.lg, textAlign: 'center' }}>
         {t('BCSC.SendVideo.VideoInstructions.Heading1')}

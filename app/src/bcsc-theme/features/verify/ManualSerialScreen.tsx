@@ -82,7 +82,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   )
 
   return (
-    <ScreenWrapper padded keyboardActive controls={controls}>
+    <ScreenWrapper keyboardActive controls={controls}>
       <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
       <LimitedTextInput
         defaultValue={serial}

@@ -33,7 +33,7 @@ const DualIdentificationRequiredScreen: React.FC<DualIdentificationRequiredScree
   })
 
   return (
-    <ScreenWrapper padded scrollViewContainerStyle={styles.scrollView}>
+    <ScreenWrapper scrollViewContainerStyle={styles.scrollView}>
       <GenericCardImage />
       <ThemedText variant={'headingFour'}>{t('BCSC.DualNonBCSCEvidence.Heading')}</ThemedText>
       <ThemedText>{t('BCSC.DualNonBCSCEvidence.Description')}</ThemedText>

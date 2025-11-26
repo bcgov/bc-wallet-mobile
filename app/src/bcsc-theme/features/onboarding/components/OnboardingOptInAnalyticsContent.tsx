@@ -65,7 +65,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
   )
 
   return (
-    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.sectionContainer}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.sectionContainer}>
       <Image source={analytics} style={styles.imageContainer} />
       <View style={styles.titleContainer}>
         <ThemedText variant="headingOne">{t('BCSC.Onboarding.AnalyticsTitle')}</ThemedText>

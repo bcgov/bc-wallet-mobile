@@ -52,7 +52,7 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
       : ''
 
   return (
-    <ScreenWrapper padded controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <WebViewContent
         url={TERMS_OF_USE_URL}
         injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette) + iosFontScaling}

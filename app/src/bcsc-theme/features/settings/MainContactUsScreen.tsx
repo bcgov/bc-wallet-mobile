@@ -14,7 +14,7 @@ type MainContactUsScreenProps = {
  */
 export const MainContactUsScreen: React.FC<MainContactUsScreenProps> = () => {
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <ContactUsContent />
     </ScreenWrapper>
   )

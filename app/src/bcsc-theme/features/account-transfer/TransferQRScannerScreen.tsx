@@ -170,7 +170,7 @@ const TransferQRScannerScreen: React.FC = () => {
 
   if (!hasPermission) {
     return (
-      <ScreenWrapper scrollable={false}>
+      <ScreenWrapper padded={false} scrollable={false}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ThemedText style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</ThemedText>
         </View>

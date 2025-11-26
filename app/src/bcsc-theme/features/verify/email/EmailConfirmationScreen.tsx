@@ -151,7 +151,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
   )
 
   return (
-    <ScreenWrapper padded keyboardActive={true} controls={controls}>
+    <ScreenWrapper keyboardActive={true} controls={controls}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.EmailConfirmation.VerifyYourEmail')}
       </ThemedText>

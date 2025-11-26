@@ -110,7 +110,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
   )
 
   return (
-    <ScreenWrapper padded keyboardActive={true} controls={controls}>
+    <ScreenWrapper keyboardActive={true} controls={controls}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.EnterEmail.EnterEmailAddress')}
       </ThemedText>

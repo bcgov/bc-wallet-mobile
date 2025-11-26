@@ -52,7 +52,7 @@ const PhotoInstructionsScreen = ({ navigation, route }: PhotoInstructionsScreenP
   )
 
   return (
-    <ScreenWrapper padded controls={controls}>
+    <ScreenWrapper controls={controls}>
       <Image source={{ uri: SELFIE_IMAGE }} style={styles.image} />
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.PhotoInstructions.Heading')}

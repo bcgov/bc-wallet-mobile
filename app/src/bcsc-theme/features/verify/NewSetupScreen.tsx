@@ -69,7 +69,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
   })
 
   return (
-    <ScreenWrapper padded>
+    <ScreenWrapper>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.NewSetup.Title')}
       </ThemedText>
