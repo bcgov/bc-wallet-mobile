@@ -39,7 +39,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
 
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
 
-      await Promise.all([
+      await Promise.allSettled([
         VerificationVideoCache.removeMediaAndClearCache(store.bcsc.videoPath, logger),
         removeFileSafely(store.bcsc.photoPath, logger),
         removeFileSafely(store.bcsc.videoThumbnailPath, logger),
