@@ -1,7 +1,6 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'

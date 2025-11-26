@@ -3,6 +3,7 @@ import {
   LockoutReason,
   SafeAreaModal,
   Screens,
+  ScreenWrapper,
   testIdWithKey,
   TOKENS,
   useAuth,
@@ -17,7 +18,6 @@ import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState, Mode } from '@/store'
 import IASEnvironment from './IASEnvironment'

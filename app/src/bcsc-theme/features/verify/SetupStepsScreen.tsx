@@ -1,13 +1,22 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 import { hitSlop } from '@/constants'
 import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'

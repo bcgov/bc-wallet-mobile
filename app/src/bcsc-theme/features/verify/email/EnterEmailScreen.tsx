@@ -1,5 +1,4 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -7,6 +6,7 @@ import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
+  ScreenWrapper,
   ThemedText,
   TOKENS,
   useAnimatedComponents,

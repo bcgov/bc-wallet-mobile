@@ -1,5 +1,4 @@
 import { RadioGroup } from '@/bcsc-theme/components/RadioGroup'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import {
@@ -7,6 +6,7 @@ import {
   ButtonType,
   InfoBoxType,
   InfoTextBox,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   useStore,

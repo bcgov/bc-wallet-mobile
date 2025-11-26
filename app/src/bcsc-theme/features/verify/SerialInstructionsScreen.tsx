@@ -1,7 +1,6 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'

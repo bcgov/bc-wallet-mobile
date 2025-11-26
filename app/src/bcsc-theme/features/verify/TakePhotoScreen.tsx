@@ -3,8 +3,7 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { StackNavigationProp } from '@react-navigation/stack'
 
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
-import { MaskType } from '@bifold/core'
+import { MaskType, ScreenWrapper } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
 

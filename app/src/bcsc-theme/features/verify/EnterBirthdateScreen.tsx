@@ -1,6 +1,7 @@
 import {
   Button,
   ButtonType,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -15,7 +16,6 @@ import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'

@@ -1,8 +1,16 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
-import { Button, ButtonType, QRRenderer, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  QRRenderer,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'

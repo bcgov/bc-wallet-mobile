@@ -1,8 +1,16 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  TOKENS,
+  useAnimatedComponents,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Buffer } from 'buffer'
@@ -140,7 +148,12 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   )
 
   return (
-    <ScreenWrapper padded={false} edges={['bottom']} controls={controls} controlsContainerStyle={styles.controlsContainer}>
+    <ScreenWrapper
+      padded={false}
+      edges={['bottom']}
+      controls={controls}
+      controlsContainerStyle={styles.controlsContainer}
+    >
       <TakeMediaButton
         onPress={() => {
           navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })

@@ -1,4 +1,4 @@
-import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -7,7 +7,6 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { BCDispatchAction, BCState } from '@/store'
 import { StackNavigationProp } from '@react-navigation/stack'
 
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 
 const maxSerialNumberLength = 15

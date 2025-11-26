@@ -1,5 +1,4 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
@@ -9,6 +8,7 @@ import {
   MaskType,
   QrCodeScanError,
   ScanCamera,
+  ScreenWrapper,
   SVGOverlay,
   ThemedText,
   useStore,

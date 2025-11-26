@@ -1,9 +1,17 @@
-import { Button, ButtonType, LimitedTextInput, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  LimitedTextInput,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'
 
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'

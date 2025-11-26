@@ -1,6 +1,5 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackScreenProps } from '@react-navigation/stack'
 import React from 'react'

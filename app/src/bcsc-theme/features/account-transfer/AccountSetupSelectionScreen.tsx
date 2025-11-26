@@ -1,9 +1,8 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
 import GenericCardImage from '@/bcsc-theme/components/GenericCardImage'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 

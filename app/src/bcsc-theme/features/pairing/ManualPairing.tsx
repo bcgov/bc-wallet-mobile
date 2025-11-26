@@ -1,6 +1,7 @@
 import {
   Button,
   ButtonType,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -13,7 +14,6 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCMainStackParams, BCSCScreens } from '@bcsc-theme/types/navigators'
 import PairingCodeTextInput from './components/PairingCodeTextInput'
 

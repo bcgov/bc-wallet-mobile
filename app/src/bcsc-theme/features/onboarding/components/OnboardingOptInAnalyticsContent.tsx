@@ -1,7 +1,6 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCDispatchAction, BCState } from '@/store'
 import analytics from '@assets/img/analytics.png'
-import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, View } from 'react-native'
 

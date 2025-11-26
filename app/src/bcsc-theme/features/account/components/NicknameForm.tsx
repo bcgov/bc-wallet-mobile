@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { formStringLengths } from '@/constants'
 import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
   LimitedTextInput,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   useAnimatedComponents,

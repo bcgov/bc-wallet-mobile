@@ -1,10 +1,19 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, testIdWithKey, Text, ThemedText, TOKENS, useServices, useStore } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  Text,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+} from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'

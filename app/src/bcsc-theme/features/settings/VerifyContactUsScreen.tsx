@@ -1,5 +1,5 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { ScreenWrapper } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { ContactUsContent } from './ContactUsContent'

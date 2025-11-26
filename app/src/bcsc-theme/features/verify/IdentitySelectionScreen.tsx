@@ -1,10 +1,9 @@
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Image, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'

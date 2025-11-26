@@ -1,11 +1,11 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
   Link,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,

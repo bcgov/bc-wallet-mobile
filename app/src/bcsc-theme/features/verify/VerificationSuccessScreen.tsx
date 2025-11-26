@@ -1,8 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, testIdWithKey, TOKENS, useServices, useStore } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useStore } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 

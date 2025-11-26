@@ -1,8 +1,17 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState, Mode } from '@/store'
-import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { Alert, Linking, StyleSheet, TouchableOpacity, View } from 'react-native'

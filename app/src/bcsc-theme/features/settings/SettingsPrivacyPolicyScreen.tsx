@@ -1,7 +1,6 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
-import { useTheme } from '@bifold/core'
+import { ScreenWrapper, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { PrivacyPolicyContent } from '../onboarding/components/PrivacyPolicyContent'

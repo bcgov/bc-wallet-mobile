@@ -1,12 +1,12 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { getProvinceCode, isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   ToastType,

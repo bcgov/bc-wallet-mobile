@@ -1,10 +1,10 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import notifications from '@assets/img/notifications.png'
 import {
   Button,
   ButtonType,
   DispatchAction,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,

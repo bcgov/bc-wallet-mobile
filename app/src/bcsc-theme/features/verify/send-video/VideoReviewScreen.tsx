@@ -1,8 +1,16 @@
 import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, testIdWithKey, ThemedText, useAnimatedComponents, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  useAnimatedComponents,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { Buffer } from 'buffer'
@@ -154,7 +162,12 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   )
 
   return (
-    <ScreenWrapper padded={false} style={styles.pageContainer} controls={controls} controlsContainerStyle={styles.controlsContainer}>
+    <ScreenWrapper
+      padded={false}
+      style={styles.pageContainer}
+      controls={controls}
+      controlsContainerStyle={styles.controlsContainer}
+    >
       <View style={styles.videoContainer}>
         <ThemedText variant={'headingFour'} style={styles.heading}>
           {t('BCSC.SendVideo.VideoReview.Heading')}

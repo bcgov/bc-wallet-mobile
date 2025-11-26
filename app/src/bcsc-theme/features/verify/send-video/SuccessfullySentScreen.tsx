@@ -1,7 +1,6 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { Button, ButtonType, testIdWithKey } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'

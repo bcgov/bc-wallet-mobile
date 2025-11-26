@@ -1,7 +1,6 @@
-import ScreenWrapper from '@/bcsc-theme/components/ScreenWrapper'
 import { BCState } from '@/store'
 import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'
 
