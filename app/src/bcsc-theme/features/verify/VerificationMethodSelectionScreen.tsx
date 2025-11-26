@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -10,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
+import { VerificationVideoCache } from './send-video/VideoReviewScreen'
 
 type VerificationMethodSelectionScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.VerificationMethodSelection>
@@ -34,17 +36,35 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   const handlePressSendVideo = useCallback(async () => {
     try {
       setSendVideoLoading(true)
+
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
+
+      await Promise.allSettled([
+        VerificationVideoCache.removeMediaAndClearCache(store.bcsc.videoPath, logger),
+        removeFileSafely(store.bcsc.photoPath, logger),
+        removeFileSafely(store.bcsc.videoThumbnailPath, logger),
+      ])
+
+      dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
       dispatch({ type: BCDispatchAction.UPDATE_VIDEO_PROMPTS, payload: [prompts] })
+
       navigation.navigate(BCSCScreens.InformationRequired)
     } catch (error) {
-      // TODO: Handle error, e.g., show an alert or log the error
+      logger.error('Error sending video:', error as Error)
       return
     } finally {
       setSendVideoLoading(false)
     }
-  }, [dispatch, evidence, navigation])
+  }, [
+    dispatch,
+    evidence,
+    logger,
+    navigation,
+    store.bcsc.photoPath,
+    store.bcsc.videoPath,
+    store.bcsc.videoThumbnailPath,
+  ])
 
   const handlePressLiveCall = useCallback(async () => {
     try {
