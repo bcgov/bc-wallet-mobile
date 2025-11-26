@@ -1,3 +1,4 @@
+import { DEFAULT_CHUNK_SIZE } from '@/constants'
 import { Buffer } from 'buffer'
 import RNFS from 'react-native-fs'
 
@@ -12,7 +13,7 @@ import RNFS from 'react-native-fs'
 const readFileInChunks = async (
   filePath: string,
   logger?: any,
-  chunkSize: number = 1024 * 1024,
+  chunkSize: number = DEFAULT_CHUNK_SIZE,
   onChunk?: (chunkBuffer: Buffer, progress: number) => void | Promise<void>
 ): Promise<Buffer> => {
   try {

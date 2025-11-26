@@ -30,6 +30,13 @@ exports[`TakeVideoScreen renders correctly 1`] = `
           "id": "mock-device",
         }
       }
+      format={
+        {
+          "fps": 24,
+          "videoHeight": 480,
+          "videoWidth": 640,
+        }
+      }
       isActive={false}
       onError={[Function]}
       onInitialized={[Function]}

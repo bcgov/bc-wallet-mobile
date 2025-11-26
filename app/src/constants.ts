@@ -76,3 +76,7 @@ export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 // BCSC Vidoe Resolution
 export const SD_VIDEO = { width: 640, height: 480 } // standard definition video resolution
 export const SELFIE_FRAME_RATE = 24
+export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
+
+// File chunking constants
+export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB

@@ -1,5 +1,5 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { hitSlop, SD_VIDEO, SELFIE_FRAME_RATE } from '@/constants'
+import { hitSlop, MAX_SELFIE_VIDEO_DURATION_SECONDS, SD_VIDEO, SELFIE_FRAME_RATE } from '@/constants'
 import { BCState } from '@/store'
 import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -16,8 +16,6 @@ import {
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
-
-const maxVideoDurationSeconds = 30
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -129,7 +127,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       const elapsed = Math.floor((currentTime - startTime) / 1000)
 
       // Check if we've exceeded the max duration, but only trigger once
-      if (elapsed > maxVideoDurationSeconds && !exceedsMaxDurationRef.current) {
+      if (elapsed > MAX_SELFIE_VIDEO_DURATION_SECONDS && !exceedsMaxDurationRef.current) {
         exceedsMaxDurationRef.current = true
         setExceedsMaxDuration(true) // Trigger re-render for UI
       }
