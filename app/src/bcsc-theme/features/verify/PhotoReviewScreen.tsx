@@ -24,7 +24,7 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
 
   const onPressUse = async () => {
     try {
-      const photoMetadata = await getPhotoMetadata(photoPath)
+      const photoMetadata = await getPhotoMetadata(photoPath, logger)
 
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
 
