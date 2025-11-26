@@ -7,7 +7,9 @@ import { removeFileSafely } from './file-info'
  *
  */
 export class MediaCache {
-  private cachedMedia: Buffer | null = null
+  cachedMedia: Buffer | null = null
+  private removeFileSafely = removeFileSafely
+  private readFileInChunks = readFileInChunks
 
   /**
    * Caches the provided media buffer in memory.
@@ -27,7 +29,7 @@ export class MediaCache {
    * @returns {*} {Promise<void>}
    */
   async removeMediaAndClearCache(path: string | undefined, logger: BifoldLogger): Promise<void> {
-    await removeFileSafely(path, logger)
+    await this.removeFileSafely(path, logger)
     this.cachedMedia = null
   }
 
@@ -45,7 +47,7 @@ export class MediaCache {
     }
 
     logger.debug('MediaCache: Reading media from disk')
-    const mediaBuffer = await readFileInChunks(path, logger)
+    const mediaBuffer = await this.readFileInChunks(path, logger)
 
     return mediaBuffer
   }
