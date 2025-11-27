@@ -26,3 +26,9 @@ jest.mock('@bifold/react-native-attestation', () => ({}))
 jest.mock('@hyperledger/anoncreds-react-native', () => ({}))
 jest.mock('@hyperledger/aries-askar-react-native', () => ({}))
 jest.mock('@hyperledger/indy-vdr-react-native', () => ({}))
+jest.mock('react-native-keyboard-aware-scroll-view', () => {
+  const { ScrollView } = jest.requireActual('react-native')
+  return {
+    KeyboardAwareScrollView: ScrollView,
+  }
+})
