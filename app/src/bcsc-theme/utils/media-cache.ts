@@ -8,16 +8,39 @@ import { removeFileSafely } from './file-info'
  */
 export class MediaCache {
   cachedMedia: Buffer | null = null
+  private cachedMediaPromise: Promise<Buffer> | null = null
   private removeFileSafely = removeFileSafely
   private readFileInChunks = readFileInChunks
+
+  private async getCache(logger: BifoldLogger): Promise<Buffer | null> {
+    if (this.cachedMediaPromise) {
+      logger.debug('MediaCache: Awaiting cached media promise')
+
+      this.cachedMedia = await this.cachedMediaPromise
+      this.cachedMediaPromise = null
+    }
+
+    return this.cachedMedia
+  }
 
   /**
    * Caches the provided media buffer in memory.
    *
-   * @param {Buffer} buffer - The media buffer to cache.
+   * @param {Buffer | null} buffer - The media buffer to cache.
    * @returns {*} {void}
    */
-  setCachedMedia(buffer: Buffer) {
+  setCachedMedia(buffer: Buffer | Promise<Buffer> | null): void {
+    if (buffer === null) {
+      this.cachedMedia = null
+      this.cachedMediaPromise = null
+      return
+    }
+
+    if (buffer instanceof Promise) {
+      this.cachedMediaPromise = buffer
+      return
+    }
+
     this.cachedMedia = buffer
   }
 
@@ -30,7 +53,7 @@ export class MediaCache {
    */
   async removeMediaAndClearCache(path: string | undefined, logger: BifoldLogger): Promise<void> {
     await this.removeFileSafely(path, logger)
-    this.cachedMedia = null
+    this.setCachedMedia(null)
   }
 
   /**
@@ -41,9 +64,11 @@ export class MediaCache {
    * @returns {*} {Promise<Buffer>} - The media buffer.
    */
   async getCachedMedia(path: string, logger: BifoldLogger): Promise<Buffer> {
-    if (this.cachedMedia) {
-      logger.debug(`MediaCache: Returning cached media (${this.cachedMedia.length} bytes)`)
-      return this.cachedMedia
+    const cachedMedia = await this.getCache(logger)
+
+    if (cachedMedia) {
+      logger.debug('MediaCache: Returning media from cache')
+      return cachedMedia
     }
 
     logger.debug('MediaCache: Reading media from disk')

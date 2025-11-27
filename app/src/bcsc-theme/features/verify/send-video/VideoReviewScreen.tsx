@@ -1,27 +1,13 @@
-import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
-import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
-import {
-  Button,
-  ButtonType,
-  testIdWithKey,
-  ThemedText,
-  TOKENS,
-  useAnimatedComponents,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
-import { hashBase64 } from 'react-native-bcsc-core'
-import RNFS from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import type { OnLoadData } from 'react-native-video'
@@ -46,11 +32,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width } = useWindowDimensions()
-  const { ButtonLoading } = useAnimatedComponents()
   const [paused, setPaused] = useState(false)
   const videoRef = useRef<VideoRef>(null)
   const { videoPath, videoThumbnailPath } = route.params
-  const [videoMetadata, setVideoMetadata] = useState<VerificationVideoUploadPayload>()
   const { t } = useTranslation()
 
   const prompts = store.bcsc.prompts
@@ -111,7 +95,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   })
 
   const onPressUse = () => {
-    dispatch({ type: BCDispatchAction.SAVE_VIDEO, payload: [{ videoPath, videoMetadata }] })
     dispatch({ type: BCDispatchAction.SAVE_VIDEO_THUMBNAIL, payload: [videoThumbnailPath] })
     navigation.dispatch(
       CommonActions.reset({
@@ -134,23 +117,29 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     navigation.goBack()
   }
 
+  /**
+   * Optimistically caches the video and extracts its metadata in the background,
+   * allowing the user to upload videos with minimal waiting time.
+   *
+   * Note: If the user is quick going through the flow, the InformationRequiredScreen will just wait
+   * for the disk fetching promise to resolve.
+   *
+   * @param {OnLoadData} data The data object containing video load information.
+   * @returns {*} {Promise<void>} A promise that resolves when the video metadata is processed and cached.
+   */
   const onVideoLoad = async (data: OnLoadData) => {
-    const [{ mtime }, videoBytes] = await Promise.all([RNFS.stat(videoPath), readFileInChunks(videoPath, logger)])
+    // Clear the previously cached video
+    VerificationVideoCache.setCachedMedia(null)
 
-    // Cache the video for later use
-    VerificationVideoCache.setCachedMedia(videoBytes)
+    const videoBufferPromise = readFileInChunks(videoPath, logger)
 
-    const videoSHA = await hashBase64(videoBytes.toString('base64'))
-    const metadataPrompts = prompts.map(({ id }, i) => ({ id, prompted_at: i }))
+    // Set cache to a promise to be resolved by whoever needs it first
+    VerificationVideoCache.setCachedMedia(videoBufferPromise)
 
-    setVideoMetadata({
-      content_type: VIDEO_MP4_MIME_TYPE,
-      content_length: videoBytes.byteLength,
-      date: Math.floor(mtime / 1000),
-      sha256: videoSHA,
-      duration: Math.ceil(data.duration),
-      filename: DEFAULT_SELFIE_VIDEO_FILENAME,
-      prompts: metadataPrompts,
+    // Optimistically save the video path and duration
+    dispatch({
+      type: BCDispatchAction.SAVE_VIDEO,
+      payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],
     })
   }
 
@@ -187,9 +176,9 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
             testID={testIdWithKey('UseVideo')}
             title={t('BCSC.SendVideo.VideoReview.UseVideo')}
             accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
-            disabled={!videoMetadata}
+            // disabled={!videoMetadata}
           >
-            {!videoMetadata && <ButtonLoading />}
+            {/* {!videoMetadata && <ButtonLoading />} */}
           </Button>
           <View style={styles.secondButton}>
             <Button

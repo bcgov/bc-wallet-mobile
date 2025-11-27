@@ -1,13 +1,16 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
+import { hashBase64 } from 'react-native-bcsc-core'
+import RNFS from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
 import { VerificationVideoCache } from './VideoReviewScreen'
@@ -21,13 +24,12 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
   const [loading, setLoading] = useState(false)
-  const uploadedBoth = useMemo(
-    () => store.bcsc.photoPath && store.bcsc.videoPath && store.bcsc.videoThumbnailPath,
-    [store.bcsc.photoPath, store.bcsc.videoPath, store.bcsc.videoThumbnailPath]
-  )
   const { ButtonLoading } = useAnimatedComponents()
   const { evidence } = useApi()
   const { t } = useTranslation()
+
+  const uploadedMediaDependencies = store.bcsc.photoPath && store.bcsc.videoPath && store.bcsc.videoThumbnailPath
+  const prompts = store.bcsc.prompts
 
   const styles = StyleSheet.create({
     container: {
@@ -47,10 +49,15 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         throw new Error('Error - missing photo or video data')
       }
 
+      if (!prompts || prompts.length === 0) {
+        throw new Error('Error - missing video prompts data')
+      }
+
       // Fetch photo and video then convert into bytes
-      const [photoBytes, videoBytes] = await Promise.all([
+      const [photoBytes, videoBytes, videoStats] = await Promise.all([
         readFileInChunks(store.bcsc.photoPath, logger),
         VerificationVideoCache.getCachedMedia(store.bcsc.videoPath, logger),
+        RNFS.stat(store.bcsc.videoPath),
       ])
 
       logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
@@ -97,8 +104,17 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       // Send photo and video metadata to API
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
         evidence.uploadPhotoEvidenceMetadata(store.bcsc.photoMetadata!),
-        evidence.uploadVideoEvidenceMetadata(store.bcsc.videoMetadata!),
+        evidence.uploadVideoEvidenceMetadata({
+          content_type: VIDEO_MP4_MIME_TYPE,
+          content_length: videoBytes.byteLength,
+          date: Math.floor(videoStats.mtime / 1000),
+          sha256: await hashBase64(videoBytes.toString('base64')),
+          duration: store.bcsc.videoDuration,
+          filename: DEFAULT_SELFIE_VIDEO_FILENAME,
+          prompts: prompts.map(({ id }, i) => ({ id, prompted_at: i })),
+        }),
       ])
+
       logger.debug(`Photo/ Video metadata responded`)
 
       // Upload all binaries in parallel (photo, video, and additional evidence)
@@ -163,7 +179,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           onPress={onPressSend}
           testID={'SendToServiceBCNow'}
           accessibilityLabel={t('BCSC.SendVideo.InformationRequired.ButtonText')}
-          disabled={!uploadedBoth || loading}
+          disabled={!uploadedMediaDependencies || loading}
         >
           {loading && <ButtonLoading />}
         </Button>
