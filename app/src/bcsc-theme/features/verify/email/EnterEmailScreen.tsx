@@ -113,7 +113,7 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription1')}</ThemedText>
           ) : null}
           <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.EnterEmail.EmailDescription2')}</ThemedText>
-          <EmailTextInput handleChangeEmail={handleChangeEmail} />
+          <EmailTextInput handleChangeEmail={handleChangeEmail} testID={'EmailInput'} />
           {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
         </View>
         <View style={styles.controlsContainer}>
@@ -130,8 +130,8 @@ const EnterEmailScreen = ({ navigation, route }: EnterEmailScreenProps) => {
             <Button
               buttonType={ButtonType.Secondary}
               onPress={handleSkip}
-              title={t('BCSC.EnterEmail.EmailSkip')}
-              accessibilityLabel={t('BCSC.EnterEmail.EmailSkip')}
+              title={t('BCSC.EnterEmail.EmailSkipButton2')}
+              accessibilityLabel={t('BCSC.EnterEmail.EmailSkipButton2')}
               testID={'SkipButton'}
             />
           ) : null}
