@@ -11,19 +11,23 @@ exports[`NewSetupScreen Rendering should render correctly 1`] = `
     }
   }
   style={
-    {
-      "backgroundColor": "#F2F2F2",
-      "flex": 1,
-      "justifyContent": "space-between",
-      "padding": 16,
-    }
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
   }
 >
   <RCTScrollView
     contentContainerStyle={
-      {
-        "flexGrow": 1,
-      }
+      [
+        {
+          "padding": 16,
+        },
+        undefined,
+      ]
     }
     showsVerticalScrollIndicator={false}
   >

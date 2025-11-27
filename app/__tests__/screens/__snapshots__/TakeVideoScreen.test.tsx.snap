@@ -11,9 +11,13 @@ exports[`TakeVideoScreen renders correctly 1`] = `
     }
   }
   style={
-    {
-      "flex": 1,
-    }
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
   }
 >
   <View

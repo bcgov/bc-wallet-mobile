@@ -4,11 +4,10 @@ import { CardButton } from '@/bcsc-theme/components/CardButton'
 import { GENERIC_CARD_SIZE_SMALL } from '@/bcsc-theme/components/GenericCardImage'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { useTheme } from '@bifold/core'
+import { ScreenWrapper, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import HomeHeader from '../home/components/HomeHeader'
 
 interface AccountExpiredScreenProps {
@@ -27,9 +26,6 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   const account = useAccount()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
     scrollContainer: {
       padding: Spacing.md,
       gap: Spacing.lg,
@@ -40,7 +36,7 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
   })
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+    <ScreenWrapper padded={false} scrollable={false}>
       <AppBannerSection
         id={BCSCBanner.ACCOUNT_EXPIRED}
         title={t('BCSC.AccountExpired.StaticBannerTitle')}
@@ -71,6 +67,6 @@ export const AccountExpiredScreen = ({ navigation }: AccountExpiredScreenProps):
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }

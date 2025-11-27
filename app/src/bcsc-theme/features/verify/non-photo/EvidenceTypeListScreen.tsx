@@ -5,12 +5,11 @@ import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { BCDispatchAction, BCState } from '@/store'
-import { testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Pressable, SectionList, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 type EvidenceTypeListScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.AdditionalIdentificationRequired>
@@ -58,22 +57,10 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
       justifyContent: 'space-between',
       padding: Spacing.md,
     },
-    scrollView: {
-      flex: 1,
-      padding: Spacing.md,
-    },
-    container: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
     cardSection: {
       paddingVertical: 24,
       paddingHorizontal: 24,
       backgroundColor: ColorPalette.brand.secondaryBackground,
-    },
-    contentContainer: {
-      marginTop: 16,
-      flex: 1,
     },
   })
 
@@ -171,7 +158,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
   }
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false} style={styles.pageContainer}>
       <View style={{ marginBottom: Spacing.lg }}>
         <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
           {getEvidenceHeadingAndDescription()[0]}
@@ -213,7 +200,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
           </Pressable>
         )}
       />
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

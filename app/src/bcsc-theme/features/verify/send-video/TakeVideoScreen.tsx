@@ -1,7 +1,7 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { hitSlop, MAX_SELFIE_VIDEO_DURATION_SECONDS, SELFIE_VIDEO_FRAME_RATE, VIDEO_RESOLUTION_480P } from '@/constants'
 import { BCState } from '@/store'
-import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -288,7 +288,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'bottom', 'left', 'right']}>
       <View style={styles.pageContainer}>
         <Camera
           ref={cameraRef}
@@ -353,7 +353,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           </View>
         ) : null}
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

@@ -1,26 +1,20 @@
 import { BCState } from '@/store'
 import CardNotFoundImage from '@assets/img/card_not_found_highlight.png'
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
 import { Image, StyleSheet, useWindowDimensions } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 const CARD_NOT_FOUND_IMAGE = Image.resolveAssetSource(CardNotFoundImage).uri
 
 const twoThirds = 0.67
 
 const MismatchedSerialScreen = () => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
   const { width } = useWindowDimensions()
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
     image: {
       width: width - Spacing.md * 2,
       height: (width - Spacing.md * 2) * twoThirds,
@@ -29,7 +23,7 @@ const MismatchedSerialScreen = () => {
   })
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.sm }}>
         {t('BCSC.MismatchedSerial.Heading')}
       </ThemedText>
@@ -46,7 +40,7 @@ const MismatchedSerialScreen = () => {
       </ThemedText>
       <ThemedText style={{ marginBottom: Spacing.lg }}>{t('BCSC.MismatchedSerial.Description2')}</ThemedText>
       <Image style={styles.image} source={{ uri: CARD_NOT_FOUND_IMAGE }} resizeMode={'contain'} />
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 export default MismatchedSerialScreen
