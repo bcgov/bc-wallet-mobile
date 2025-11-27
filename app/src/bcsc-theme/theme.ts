@@ -9,9 +9,9 @@ export const BCSCNotificationColors: INotificationColors = {
   infoBorder: GrayscaleColors.lightGrey,
   infoIcon: '#FCBA19',
   infoText: GrayscaleColors.lightGrey,
-  error: '#CE3E39',
+  error: '#A2312D',
   errorText: GrayscaleColors.white,
-  errorBorder: '#CE3E39',
+  errorBorder: '#A2312D',
   errorIcon: GrayscaleColors.white,
 }
 
