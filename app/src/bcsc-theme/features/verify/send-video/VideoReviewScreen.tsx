@@ -1,6 +1,7 @@
 import { VerificationVideoUploadPayload } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MediaCache } from '@/bcsc-theme/utils/media-cache'
+import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import {
@@ -52,8 +53,15 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const [videoMetadata, setVideoMetadata] = useState<VerificationVideoUploadPayload>()
   const { t } = useTranslation()
 
+  const prompts = store.bcsc.prompts
+
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
+  }
+
+  if (!prompts || prompts.length === 0) {
+    // TODO (MD): Add translation
+    throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPrompts'))
   }
 
   const styles = StyleSheet.create({
@@ -64,7 +72,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     },
     contentContainer: {
       flexGrow: 1,
-      marginTop: Spacing.xl,
+      // marginTop: Spacing.xl,
     },
     videoContainer: {
       flexGrow: 1,
@@ -127,30 +135,22 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   }
 
   const onVideoLoad = async (data: OnLoadData) => {
-    const duration = Math.ceil(data.duration)
-    const { mtime } = await RNFS.stat(videoPath)
-    const filename = 'selfieVideo.mp4'
-    const date = Math.floor(mtime / 1000)
-
-    const videoBytes = await readFileInChunks(videoPath, logger)
+    const [{ mtime }, videoBytes] = await Promise.all([RNFS.stat(videoPath), readFileInChunks(videoPath, logger)])
 
     // Cache the video for later use
     VerificationVideoCache.setCachedMedia(videoBytes)
 
     const videoSHA = await hashBase64(videoBytes.toString('base64'))
-    const prompts = store.bcsc.prompts!.map(({ id }, i) => ({
-      id,
-      prompted_at: i,
-    }))
+    const metadataPrompts = prompts.map(({ id }, i) => ({ id, prompted_at: i }))
 
     setVideoMetadata({
-      content_type: 'video/mp4',
+      content_type: VIDEO_MP4_MIME_TYPE,
       content_length: videoBytes.byteLength,
-      date,
+      date: Math.floor(mtime / 1000),
       sha256: videoSHA,
-      duration,
-      filename,
-      prompts,
+      duration: Math.ceil(data.duration),
+      filename: DEFAULT_SELFIE_VIDEO_FILENAME,
+      prompts: metadataPrompts,
     })
   }
 

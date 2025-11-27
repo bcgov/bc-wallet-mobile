@@ -7,7 +7,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   Camera,
   CameraRuntimeError,
@@ -51,6 +51,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
+  const safeAreaInsets = useSafeAreaInsets()
 
   const isLastPrompt = useMemo(() => {
     if (prompt === '') {
@@ -79,6 +80,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           paddingHorizontal: Spacing.md,
           alignItems: 'center',
           justifyContent: 'center',
+          marginTop: safeAreaInsets.top,
         },
         controlsContainer: {
           position: 'absolute',
@@ -104,11 +106,26 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           alignItems: 'center',
           flex: 1,
         },
+        buttonContainer: {
+          marginBottom: safeAreaInsets.bottom,
+        },
       }),
-    [ColorPalette.notification.popupOverlay, Spacing]
+    [
+      ColorPalette.notification.popupOverlay,
+      Spacing.lg,
+      Spacing.md,
+      Spacing.sm,
+      Spacing.xl,
+      safeAreaInsets.bottom,
+      safeAreaInsets.top,
+    ]
   )
 
   const handleCancel = () => {
+    if (cameraRef.current) {
+      cameraRef.current.cancelRecording()
+    }
+
     navigation.goBack()
   }
 
@@ -161,11 +178,24 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     setPrompt(prompts[0])
     startTimer() // Start the timer when recording begins
 
-    cameraRef.current?.startRecording({
+    if (!cameraRef.current) {
+      logger.error('Camera reference is null, cannot start recording')
+      return
+    }
+
+    cameraRef.current.startRecording({
       fileType: 'mp4',
+      videoCodec: 'h265',
       onRecordingError: (error) => {
-        logger.debug(`Recording error: ${error.message}`)
         stopTimer() // Stop timer on error
+
+        // If recording was canceled, do not show an alert
+        if (error.code === 'capture/recording-canceled') {
+          logger.debug('Video recording canceled')
+          return
+        }
+
+        logger.debug(`Recording error (${error.code}): ${error.message}`)
         Alert.alert(
           t('BCSC.SendVideo.TakeVideo.RecordingError'),
           t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
@@ -175,18 +205,17 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         logger.info(`Recording finished, duration: ${video.duration}`)
         stopTimer() // Stop timer when manually stopping recording
         setPrompt('')
-        const snapshot = await cameraRef.current!.takeSnapshot()
         if (exceedsMaxDurationRef.current) {
           navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
-        } else {
-          navigation.navigate(BCSCScreens.VideoReview, {
-            videoPath: video.path,
-            videoThumbnailPath: snapshot.path,
-          })
+          return
         }
+
+        navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
       },
     })
-  }, [logger, startTimer, stopTimer, navigation, prompts, t])
+
+    const snapshot = await cameraRef.current.takeSnapshot()
+  }, [prompts, startTimer, logger, stopTimer, t, navigation])
 
   const onPressNextPrompt = async () => {
     const currentIndex = prompts.indexOf(prompt)
@@ -288,7 +317,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }} edges={[]}>
       <View style={styles.pageContainer}>
         <Camera
           ref={cameraRef}
@@ -343,13 +372,15 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 </ThemedText>
               </View>
             </View>
-            <Button
-              buttonType={ButtonType.Primary}
-              title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
-              onPress={onPressNextPrompt}
-              testID={'StartRecordingButton'}
-              accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
-            />
+            <View style={styles.buttonContainer}>
+              <Button
+                buttonType={ButtonType.Primary}
+                title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
+                onPress={onPressNextPrompt}
+                testID={'StartRecordingButton'}
+                accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
+              />
+            </View>
           </View>
         ) : null}
       </View>
