@@ -469,7 +469,6 @@ const translation = {
     },
     "EnterEmail": {
       "ErrorTitle": "Error submitting email (PT-BR)",
-      "EmailError": "Please enter a valid email address (PT-BR)",
       "EmailSkip": "Are you sure you don't want to provide it? (PT-BR)",
       "EmailSkipMessage": "It is less secure without it as we can't notify you of logins or changes to your account. (PT-BR)",
       "EmailSkipButton": "Provide email address (PT-BR)",
@@ -480,6 +479,7 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code (PT-BR)",
+      "EmailError": "Please enter a valid email address (name@host.com). (PT-BR)",
       "CodeError": "Please enter a six digit verification code (PT-BR)",
       "ErrorResendingCode": "Error resending code (PT-BR)",
       "CodeResent": "Code resent (PT-BR)",

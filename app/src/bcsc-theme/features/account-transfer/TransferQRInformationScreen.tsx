@@ -1,5 +1,6 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 
+import { HelpCentreUrl } from '@/constants'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -26,13 +27,18 @@ const TransferQRInformationScreen: React.FC = () => {
         onPress={() => {
           navigation.navigate(BCSCScreens.TransferAccountQRDisplay)
         }}
+        testID="GetQRCodeButton"
       />
       <Button
         buttonType={ButtonType.Secondary}
         title={t('BCSC.TransferQRInformation.LearnMore')}
         onPress={() => {
-          // TODO: (Alfred) BCSC opens a web page inside the app, it doesn't open the page in the mobile browser
+          navigation.navigate(BCSCScreens.MainWebView, {
+            url: HelpCentreUrl.QUICK_SETUP_OF_ADDITIONAL_DEVICES,
+            title: t('HelpCentre.Title'),
+          })
         }}
+        testID="LearnMoreButton"
       />
     </>
   )

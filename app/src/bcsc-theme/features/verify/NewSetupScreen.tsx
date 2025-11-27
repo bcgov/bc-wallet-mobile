@@ -28,7 +28,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
-  const [myOwnId, setMyOwnId] = useState<boolean>()
+  const [myOwnId, setMyOwnId] = useState<boolean>(true)
   const [otherPersonPresent, setOtherPersonPresent] = useState<boolean>()
   const canContinue = useMemo(
     () => myOwnId !== undefined && (myOwnId === true || otherPersonPresent !== undefined),
@@ -95,6 +95,8 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
         onValueChange={(value) => {
           if (value) {
             setOtherPersonPresent(undefined)
+          } else {
+            setOtherPersonPresent(true)
           }
 
           setMyOwnId(value)

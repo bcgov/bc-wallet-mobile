@@ -470,7 +470,6 @@ const translation = {
     },
     "EnterEmail": {
       "ErrorTitle": "Error submitting email",
-      "EmailError": "Please enter a valid email address",
       "EmailSkip": "Are you sure you don't want to provide it?",
       "EmailSkipMessage": "It is less secure without it as we can't notify you of logins or changes to your account.",
       "EmailSkipButton": "Provide email address",
@@ -481,6 +480,7 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code",
+      "EmailError": "Please enter a valid email address (name@host.com).",
       "CodeError": "Please enter a six digit verification code",
       "ErrorResendingCode": "Error resending code",
       "CodeResent": "Code resent",
