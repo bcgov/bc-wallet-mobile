@@ -58,10 +58,10 @@ const TransferQRDisplayScreen: React.FC = () => {
       jti: jti,
     })
 
-    const url = `${store.developer.environment.iasApiBaseUrl}/device/static/selfsetup.html?${jwt}`
+    const url = `${store.developer.iasApiBaseUrl}/device/static/selfsetup.html?${jwt}`
     setQRValue(url)
     setIsLoading(false)
-  }, [store.developer.environment.iasApiBaseUrl, jti])
+  }, [store.developer.iasApiBaseUrl, jti])
 
   const checkAttestation = useCallback(
     async (id: string) => {
