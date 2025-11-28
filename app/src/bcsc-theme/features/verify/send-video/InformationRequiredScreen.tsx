@@ -1,17 +1,16 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
-import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import RNFS from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
 import TakeMediaButton from './components/TakeMediaButton'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
@@ -23,10 +22,9 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
-  const [loading, setLoading] = useState(false)
-  const { ButtonLoading } = useAnimatedComponents()
   const { evidence } = useApi()
   const { t } = useTranslation()
+  const loadingScreen = useLoadingScreen()
 
   const uploadedMediaDependencies = store.bcsc.photoPath && store.bcsc.videoPath && store.bcsc.videoThumbnailPath
   const prompts = store.bcsc.prompts
@@ -44,7 +42,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   // TODO (MD): Split this into smaller functions for better readability and testability (MVC pattern?)
   const onPressSend = async () => {
     try {
-      setLoading(true)
+      loadingScreen.startLoading(t('BCSC.SendVideo.LoadingMessageA'))
 
       if (!store.bcsc.photoPath || !store.bcsc.videoPath || !store.bcsc.videoDuration) {
         throw new Error('Error - missing photo or video data')
@@ -141,18 +139,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       // TODO (MD): Handle this error properly (show user feedback etc...)
       logger.error('Error during sending information to Service BC', error as Error)
     } finally {
-      setLoading(false)
+      loadingScreen.stopLoading()
     }
-  }
-
-  if (!loading) {
-    return (
-      <LoadingScreenContent
-        message={'Please standby while we upload your verification...'}
-        loading={loading}
-        onLoaded={() => {}}
-      />
-    )
   }
 
   return (
@@ -185,10 +173,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           onPress={onPressSend}
           testID={'SendToServiceBCNow'}
           accessibilityLabel={t('BCSC.SendVideo.InformationRequired.ButtonText')}
-          disabled={!uploadedMediaDependencies || loading}
-        >
-          {loading && <ButtonLoading />}
-        </Button>
+          disabled={!uploadedMediaDependencies || loadingScreen.isLoading}
+        ></Button>
       </View>
     </SafeAreaView>
   )
