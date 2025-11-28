@@ -138,14 +138,21 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         })
       )
     } catch (error) {
+      // TODO (MD): Handle this error properly (show user feedback etc...)
       logger.error('Error during sending information to Service BC', error as Error)
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading) {
-    return <LoadingScreenContent message={'Please standby while we upload your verification...'} />
+  if (!loading) {
+    return (
+      <LoadingScreenContent
+        message={'Please standby while we upload your verification...'}
+        loading={loading}
+        onLoaded={() => {}}
+      />
+    )
   }
 
   return (
