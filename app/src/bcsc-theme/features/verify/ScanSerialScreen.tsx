@@ -1,4 +1,4 @@
-import { Button, ButtonType, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -7,7 +7,6 @@ import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigator
 import { BCDispatchAction, BCState } from '@/store'
 import { StackNavigationProp } from '@react-navigation/stack'
 
-import { SafeAreaView } from 'react-native-safe-area-context'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 
 const maxSerialNumberLength = 15
@@ -36,13 +35,6 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
       flex: 1,
       flexDirection: 'column',
       justifyContent: 'space-between',
-    },
-
-    // below used as helpful label for view, no properties needed atp
-    controlsContainer: {},
-
-    buttonContainer: {
-      width: '100%',
     },
   })
 
@@ -78,7 +70,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   }
 
   return (
-    <SafeAreaView style={styles.screenContainer} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false} style={styles.screenContainer} edges={['bottom', 'left', 'right']}>
       <View style={styles.cameraContainer}>
         <CodeScanningCamera codeTypes={['code-128']} onCodeScanned={onCodeScanned} cameraType={'back'} />
       </View>
@@ -86,7 +78,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         <View>
           <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Instructions.Paragraph')}</ThemedText>
         </View>
-        <View style={styles.buttonContainer}>
+        <View>
           <Button
             title={t('BCSC.Instructions.EnterManually')}
             buttonType={ButtonType.Secondary}
@@ -96,7 +88,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
           />
         </View>
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

@@ -1,12 +1,11 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { createTermsOfUseWebViewJavascriptInjection } from '@/bcsc-theme/utils/webview-utils'
 import { TERMS_OF_USE_URL } from '@/constants'
-import { Button, ButtonType, testIdWithKey, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Platform, StyleSheet, useWindowDimensions } from 'react-native'
 import { WebViewContent } from '../webview/WebViewContent'
 
 interface TermsOfUseScreenProps {
@@ -25,26 +24,22 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
   const { fontScale } = useWindowDimensions()
 
   const styles = StyleSheet.create({
-    container: {
+    scrollContainer: {
+      paddingHorizontal: Spacing.sm,
       flex: 1,
-    },
-    webViewContainerLoading: {
-      display: 'none',
-    },
-    webViewContainerLoaded: {
-      flex: 1,
-      marginHorizontal: Spacing.sm,
-    },
-    buttonContainer: {
-      padding: Spacing.md,
-    },
-    activityIndicator: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
     },
   })
 
+  const controls = (
+    <Button
+      title={t('BCSC.Onboarding.AcceptAndContinueButton')}
+      buttonType={ButtonType.Primary}
+      onPress={() => navigation.navigate(BCSCScreens.OnboardingNotifications)}
+      testID={testIdWithKey('AcceptAndContinue')}
+      accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
+      disabled={!webViewIsLoaded}
+    />
+  )
   // JavaScript to adjust font scaling on iOS devices
   const iosFontScaling =
     Platform.OS === 'ios'
@@ -56,26 +51,12 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
       : ''
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
       <WebViewContent
         url={TERMS_OF_USE_URL}
         injectedJavascript={createTermsOfUseWebViewJavascriptInjection(ColorPalette) + iosFontScaling}
         onLoaded={() => setWebViewIsLoaded(true)}
       />
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title={t('BCSC.Onboarding.AcceptAndContinueButton')}
-          buttonType={ButtonType.Primary}
-          onPress={() => {
-            navigation.navigate(BCSCScreens.OnboardingNotifications)
-          }}
-          testID={testIdWithKey('AcceptAndContinue')}
-          accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
-          // Content must be visible and loaded before user can accept terms
-          disabled={!webViewIsLoaded}
-        />
-      </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }

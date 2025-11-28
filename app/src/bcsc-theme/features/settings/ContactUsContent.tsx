@@ -2,24 +2,15 @@ import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { CONTACT_US_GOVERNMENT_WEBSITE_URL } from '@/constants'
 import { Link, ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { Linking, ScrollView, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Linking } from 'react-native'
 
 /**
  * Shared contact us content component that can be used across different navigation stacks.
  * Pure content component with no navigation dependencies.
  */
 export const ContactUsContent = (): JSX.Element => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
-  })
 
   const onPressTollFree = () => {
     Linking.openURL('tel:1-888-356-2741')
@@ -34,41 +25,39 @@ export const ContactUsContent = (): JSX.Element => {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.xl }}>
-          {t('BCSC.ContactUs.Title')}
-        </ThemedText>
-        <ThemedText variant={'bold'} style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.ContactUs.HoursOfServiceTitle')}
-        </ThemedText>
-        <ThemedText>{t('BCSC.ContactUs.HoursOfServiceDescription1')}</ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ContactUs.HoursOfServiceDescription2')}</ThemedText>
-        <ThemedText>{t('BCSC.ContactUs.TollFreeLabel')}</ThemedText>
-        <Link
-          style={{ marginBottom: Spacing.md }}
-          linkText={t('BCSC.ContactUs.TollFreeNumber')}
-          onPress={onPressTollFree}
-        />
-        <ThemedText>{t('BCSC.ContactUs.LowerMainlandLabel')}</ThemedText>
-        <Link
-          style={{ marginBottom: Spacing.xl }}
-          linkText={t('BCSC.ContactUs.LowerMainlandNumber')}
-          onPress={onPressLowerMainland}
-        />
-        <ThemedText variant={'bold'} style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.ContactUs.OtherContactsTitle')}
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.ContactUs.VisitThe')}{' '}
-          <Link linkText={t('BCSC.ContactUs.GovernmentWebsiteText')} onPress={onPressGovernmentWebsite} />{' '}
-          {t('BCSC.ContactUs.ToFindWhoToContact')}
-        </ThemedText>
-        <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint1')} />
-        <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint2')} />
-        <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint3')} />
-        <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint4')} />
-      </ScrollView>
-    </SafeAreaView>
+    <>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.xl }}>
+        {t('BCSC.ContactUs.Title')}
+      </ThemedText>
+      <ThemedText variant={'bold'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.ContactUs.HoursOfServiceTitle')}
+      </ThemedText>
+      <ThemedText>{t('BCSC.ContactUs.HoursOfServiceDescription1')}</ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md }}>{t('BCSC.ContactUs.HoursOfServiceDescription2')}</ThemedText>
+      <ThemedText>{t('BCSC.ContactUs.TollFreeLabel')}</ThemedText>
+      <Link
+        style={{ marginBottom: Spacing.md }}
+        linkText={t('BCSC.ContactUs.TollFreeNumber')}
+        onPress={onPressTollFree}
+      />
+      <ThemedText>{t('BCSC.ContactUs.LowerMainlandLabel')}</ThemedText>
+      <Link
+        style={{ marginBottom: Spacing.xl }}
+        linkText={t('BCSC.ContactUs.LowerMainlandNumber')}
+        onPress={onPressLowerMainland}
+      />
+      <ThemedText variant={'bold'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.ContactUs.OtherContactsTitle')}
+      </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.ContactUs.VisitThe')}{' '}
+        <Link linkText={t('BCSC.ContactUs.GovernmentWebsiteText')} onPress={onPressGovernmentWebsite} />{' '}
+        {t('BCSC.ContactUs.ToFindWhoToContact')}
+      </ThemedText>
+      <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint1')} />
+      <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint2')} />
+      <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint3')} />
+      <BulletPoint pointsText={t('BCSC.ContactUs.BulletPoint4')} />
+    </>
   )
 }

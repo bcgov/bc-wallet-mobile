@@ -1,4 +1,5 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { ScreenWrapper } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { ContactUsContent } from './ContactUsContent'
@@ -12,5 +13,9 @@ type MainContactUsScreenProps = {
  * Wraps ContactUsContent with proper navigation typing.
  */
 export const MainContactUsScreen: React.FC<MainContactUsScreenProps> = () => {
-  return <ContactUsContent />
+  return (
+    <ScreenWrapper>
+      <ContactUsContent />
+    </ScreenWrapper>
+  )
 }

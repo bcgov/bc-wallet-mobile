@@ -4,6 +4,7 @@ import {
   Button,
   ButtonType,
   DispatchAction,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -13,8 +14,7 @@ import {
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Image, ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image, StyleSheet, View } from 'react-native'
 import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import BulletPoint from '../../components/BulletPoint'
 interface NotificationsScreenProps {
@@ -33,11 +33,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
     scrollContainer: {
-      padding: Spacing.md,
       gap: Spacing.md,
     },
     contentText: {
@@ -48,10 +44,7 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
       gap: Spacing.sm,
       paddingLeft: Spacing.sm,
     },
-    buttonContainer: {
-      padding: Spacing.md,
-      gap: Spacing.md,
-    },
+
     imageContainer: {
       alignItems: 'center',
       marginBottom: 10,
@@ -80,35 +73,33 @@ export const NotificationsScreen = ({ navigation }: NotificationsScreenProps): J
     dispatch({ type: DispatchAction.USE_PUSH_NOTIFICATIONS, payload: [status === 'granted'] })
   }
 
+  const controls = (
+    <Button
+      title={t('Global.Continue')}
+      buttonType={ButtonType.Primary}
+      onPress={async () => {
+        await activatePushNotifications()
+        navigation.navigate(BCSCScreens.OnboardingSecureApp)
+      }}
+      testID={testIdWithKey('Continue')}
+      accessibilityLabel={t('Global.Continue')}
+    />
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.imageContainer}>
-          <Image source={notifications} />
-        </View>
-        <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
-        <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
-        <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
-
-        <View style={styles.bulletContainer}>
-          {bulletItems.map((item) => (
-            <BulletPoint key={item} pointsText={item} />
-          ))}
-        </View>
-      </ScrollView>
-
-      <View style={styles.buttonContainer}>
-        <Button
-          title={t('Global.Continue')}
-          buttonType={ButtonType.Primary}
-          onPress={async () => {
-            await activatePushNotifications()
-            navigation.navigate(BCSCScreens.OnboardingSecureApp)
-          }}
-          testID={testIdWithKey('Continue')}
-          accessibilityLabel={t('Global.Continue')}
-        />
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+      <View style={styles.imageContainer}>
+        <Image source={notifications} />
       </View>
-    </SafeAreaView>
+      <ThemedText variant="headingThree">{t('BCSC.Onboarding.NotificationsHeader')}</ThemedText>
+      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentA')}</ThemedText>
+      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.NotificationsContentB')}</ThemedText>
+
+      <View style={styles.bulletContainer}>
+        {bulletItems.map((item) => (
+          <BulletPoint key={item} pointsText={item} />
+        ))}
+      </View>
+    </ScreenWrapper>
   )
 }

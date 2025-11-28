@@ -3,6 +3,7 @@ import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -13,8 +14,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StyleSheet } from 'react-native'
 import Toast from 'react-native-toast-message'
 
 interface ForgetAllPairingsScreenProps {
@@ -35,11 +35,6 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      padding: Spacing.md,
-      justifyContent: 'space-between',
-    },
     scrollContainer: {
       gap: Spacing.lg,
     },
@@ -72,26 +67,26 @@ export const ForgetAllPairingsScreen = ({ navigation }: ForgetAllPairingsScreenP
     }
   }, [navigation, pairing, t, logger])
 
+  const controls = (
+    <Button
+      title={t('BCSC.ForgetAllPairings.ButtonTitle')}
+      buttonType={ButtonType.Primary}
+      onPress={handleForgetAllPairings}
+      testID={testIdWithKey('ForgetAllPairings')}
+      accessibilityLabel={t('BCSC.ForgetAllPairings.ButtonTitle')}
+      disabled={isLoading}
+    >
+      {isLoading && <ButtonLoading />}
+    </Button>
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ThemedText variant={'headingThree'}>{t('BCSC.ForgetAllPairings.Title')}</ThemedText>
+    <ScreenWrapper controls={controls} scrollViewContainerStyle={styles.scrollContainer}>
+      <ThemedText variant={'headingThree'}>{t('BCSC.ForgetAllPairings.Title')}</ThemedText>
 
-        <ThemedText>{t('BCSC.ForgetAllPairings.Description1')}</ThemedText>
+      <ThemedText>{t('BCSC.ForgetAllPairings.Description1')}</ThemedText>
 
-        <ThemedText>{t('BCSC.ForgetAllPairings.Description2')}</ThemedText>
-      </ScrollView>
-
-      <Button
-        title={t('BCSC.ForgetAllPairings.ButtonTitle')}
-        buttonType={ButtonType.Primary}
-        onPress={handleForgetAllPairings}
-        testID={testIdWithKey('ForgetAllPairings')}
-        accessibilityLabel={t('BCSC.ForgetAllPairings.ButtonTitle')}
-        disabled={isLoading}
-      >
-        {isLoading && <ButtonLoading />}
-      </Button>
-    </SafeAreaView>
+      <ThemedText>{t('BCSC.ForgetAllPairings.Description2')}</ThemedText>
+    </ScreenWrapper>
   )
 }

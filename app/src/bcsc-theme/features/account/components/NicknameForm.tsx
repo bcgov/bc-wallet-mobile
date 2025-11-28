@@ -2,58 +2,43 @@ import React, { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
-import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { hasNickname } from '@/bcsc-theme/utils/account-utils'
 import { formStringLengths } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import {
   Button,
   ButtonType,
-  KeyboardView,
   LimitedTextInput,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
-  TOKENS,
   useAnimatedComponents,
-  useServices,
   useStore,
   useTheme,
 } from '@bifold/core'
-import { CommonActions, useNavigation } from '@react-navigation/native'
-import Toast from 'react-native-toast-message'
+import { getNicknameValidationErrorKey } from '../../../utils/account-utils'
 
 interface NicknameFormProps {
+  onSubmit: (trimmedNickname: string) => Promise<void> | void
   isRenaming?: boolean
 }
 
-const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
+const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
-  const navigation = useNavigation()
-  const [store, dispatch] = useStore<BCState>()
+  const { Spacing } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
-  const [loading, setLoading] = useState(false)
+  const [store] = useStore<BCState>()
   const [accountNickname, setAccountNickname] = useState(store.bcsc.selectedNickname ?? '')
   const [error, setError] = useState<string | null>(null)
-  const { registration } = useApi()
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [loading, setLoading] = useState(false)
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
     contentContainer: {
-      flex: 1,
+      flexGrow: 1,
+      paddingBottom: Spacing.sm,
     },
-    controlsContainer: {},
     bulletPointContainer: {
-      marginBottom: Spacing.md,
-      marginLeft: Spacing.sm,
+      margin: Spacing.sm,
     },
   })
 
@@ -61,102 +46,64 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ isRenaming }) => {
     setAccountNickname(text)
   }, [])
 
-  const handleContinuePressed = useCallback(async () => {
-    //trim the account nickname
+  const handleButtonPress = useCallback(async () => {
     const trimmedAccountNickname = accountNickname.trim()
+    const validationErrorKey = getNicknameValidationErrorKey(store, trimmedAccountNickname)
 
-    if (trimmedAccountNickname.length < formStringLengths.minimumLength) {
-      setError(t('BCSC.NicknameAccount.EmptyNameTitle'))
-      return
-    }
-
-    if (trimmedAccountNickname.length > formStringLengths.maximumLength) {
-      setError(t('BCSC.NicknameAccount.CharCountTitle'))
-      return
-    }
-
-    if (hasNickname(store, trimmedAccountNickname)) {
-      setError(t('BCSC.NicknameAccount.NameAlreadyExists'))
+    if (validationErrorKey) {
+      setError(t(validationErrorKey))
       return
     }
 
     setError(null)
     setLoading(true)
 
-    if (isRenaming) {
-      dispatch({
-        type: BCDispatchAction.UPDATE_NICKNAME,
-        payload: [{ nickname: store.bcsc.selectedNickname, newNickname: trimmedAccountNickname }],
-      })
-      dispatch({
-        type: BCDispatchAction.SELECT_ACCOUNT,
-        payload: [trimmedAccountNickname],
-      })
-      try {
-        await registration.updateRegistration(store.bcsc.registrationAccessToken, trimmedAccountNickname)
-      } catch (error) {
-        logger.error('Failed to update registration', { error })
-        return
-      }
-      Toast.show({
-        type: 'success',
-        text1: t('Global.Success'),
-        text2: t('BCSC.NicknameAccount.RenameSuccessToastMessage'),
-        position: 'bottom',
-      })
-      navigation.goBack()
-    } else {
-      dispatch({ type: BCDispatchAction.ADD_NICKNAME, payload: [trimmedAccountNickname] })
-
-      // Select the newly added nickname
-      dispatch({ type: BCDispatchAction.SELECT_ACCOUNT, payload: [trimmedAccountNickname] })
-
-      navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
+    try {
+      await onSubmit(trimmedAccountNickname)
+    } finally {
+      setLoading(false)
     }
-  }, [accountNickname, t, isRenaming, dispatch, navigation, store, registration, logger])
+  }, [accountNickname, onSubmit, store, t])
+
+  const controls = (
+    <Button
+      title={t('BCSC.NicknameAccount.SaveAndContinue')}
+      buttonType={ButtonType.Primary}
+      testID={testIdWithKey('SaveAndContinue')}
+      accessibilityLabel={t('BCSC.NicknameAccount.SaveAndContinue')}
+      onPress={handleButtonPress}
+      disabled={loading}
+    >
+      {loading && <ButtonLoading />}
+    </Button>
+  )
 
   return (
-    <KeyboardView keyboardAvoiding={false}>
-      <View style={styles.pageContainer}>
-        <View style={styles.contentContainer}>
-          <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-            {t('BCSC.NicknameAccount.AccountName')}
-          </ThemedText>
+    <ScreenWrapper keyboardActive controls={controls}>
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.NicknameAccount.AccountName')}
+      </ThemedText>
 
-          <ThemedText style={{ marginBottom: Spacing.md }}>
-            {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
-          </ThemedText>
+      <ThemedText>
+        {isRenaming ? t('BCSC.NicknameAccount.EditAccountName') : t('BCSC.NicknameAccount.CreateAccountName')}
+      </ThemedText>
 
-          <View style={styles.bulletPointContainer}>
-            <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
-            <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
-          </View>
-
-          <LimitedTextInput
-            showLimitCounter={false}
-            defaultValue={accountNickname}
-            label={t('BCSC.NicknameAccount.AccountName')}
-            limit={formStringLengths.maximumLength}
-            handleChangeText={handleChangeText}
-            accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
-            testID={testIdWithKey('NameInput')}
-          />
-          {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
-        </View>
-        <View style={styles.controlsContainer}>
-          <Button
-            title={isRenaming ? t('Global.Save') : t('BCSC.NicknameAccount.SaveAndContinue')}
-            buttonType={ButtonType.Primary}
-            testID={isRenaming ? testIdWithKey('Save') : testIdWithKey('SaveAndContinue')}
-            accessibilityLabel={isRenaming ? t('Global.Save') : t('BCSC.NicknameAccount.SaveAndContinue')}
-            onPress={handleContinuePressed}
-            disabled={loading}
-          >
-            {loading && <ButtonLoading />}
-          </Button>
-        </View>
+      <View style={styles.bulletPointContainer}>
+        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription1')} />
+        <BulletPoint pointsText={t('BCSC.NicknameAccount.AccountNameDescription2')} />
       </View>
-    </KeyboardView>
+
+      <LimitedTextInput
+        showLimitCounter={false}
+        defaultValue={accountNickname}
+        label={t('BCSC.NicknameAccount.AccountName')}
+        limit={formStringLengths.maximumLength}
+        handleChangeText={handleChangeText}
+        accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
+        testID={testIdWithKey('NameInput')}
+      />
+      {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
+    </ScreenWrapper>
   )
 }
 

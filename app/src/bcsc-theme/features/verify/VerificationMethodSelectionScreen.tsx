@@ -4,12 +4,10 @@ import { removeFileSafely } from '@/bcsc-theme/utils/file-info'
 import { checkIfWithinServiceHours, formatServiceHours } from '@/bcsc-theme/utils/serviceHoursFormatter'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
-import { TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, TOKENS, useServices, useStore } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import VerifyMethodActionButton from './components/VerifyMethodActionButton'
 import { VerificationVideoCache } from './send-video/VideoReviewScreen'
 
@@ -19,19 +17,11 @@ type VerificationMethodSelectionScreenProps = {
 
 const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSelectionScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPalette } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [sendVideoLoading, setSendVideoLoading] = useState(false)
   const [liveCallLoading, setLiveCallLoading] = useState(false)
   const { evidence, video: videoCallApi } = useApi()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
-  const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-  })
 
   const handlePressSendVideo = useCallback(async () => {
     try {
@@ -115,7 +105,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
   }, [videoCallApi, logger, navigation])
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false}>
       {store.bcsc.verificationOptions
         .map((option, index) => {
           const borderBottomWidth = store.bcsc.verificationOptions.length === index + 1 ? 1 : undefined
@@ -166,7 +156,7 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
           return null
         })
         .filter(Boolean)}
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 export default VerificationMethodSelectionScreen

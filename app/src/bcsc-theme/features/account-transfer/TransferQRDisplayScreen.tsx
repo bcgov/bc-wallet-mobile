@@ -1,14 +1,22 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
-import { Button, ButtonType, QRRenderer, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  QRRenderer,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import uuid from 'react-native-uuid'
 
 const TransferQRDisplayScreen: React.FC = () => {
@@ -23,14 +31,6 @@ const TransferQRDisplayScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'space-between',
-      padding: Spacing.md,
-    },
-    scrollView: {
-      flex: 1,
-    },
     qrCodeContainer: {
       backgroundColor: ColorPalette.grayscale.white,
       flexShrink: 1,
@@ -39,7 +39,6 @@ const TransferQRDisplayScreen: React.FC = () => {
       padding: Spacing.sm,
       borderRadius: Spacing.sm,
     },
-    controlsContainer: {},
   })
 
   const createToken = useCallback(async () => {
@@ -116,26 +115,27 @@ const TransferQRDisplayScreen: React.FC = () => {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />
   }
 
+  const controls = (
+    <Button
+      buttonType={ButtonType.Secondary}
+      accessibilityLabel={t('BCSC.TransferQRDisplay.GetNewQRCode')}
+      title={t('BCSC.TransferQRDisplay.GetNewQRCode')}
+      testID={testIdWithKey('GetNewQRCode')}
+      onPress={refreshToken}
+    />
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText style={{ marginBottom: Spacing.xxl }} variant={'headingThree'}>
-          {t('BCSC.TransferQRDisplay.Instructions')}
-        </ThemedText>
-        {qrValue && (
-          <View style={styles.qrCodeContainer}>
-            <QRRenderer value={qrValue} />
-          </View>
-        )}
-      </ScrollView>
-      <Button
-        buttonType={ButtonType.Secondary}
-        accessibilityLabel={t('BCSC.TransferQRDisplay.GetNewQRCode')}
-        title={t('BCSC.TransferQRDisplay.GetNewQRCode')}
-        testID={testIdWithKey('GetNewQRCode')}
-        onPress={refreshToken}
-      />
-    </SafeAreaView>
+    <ScreenWrapper controls={controls}>
+      <ThemedText style={{ marginBottom: Spacing.xxl }} variant={'headingThree'}>
+        {t('BCSC.TransferQRDisplay.Instructions')}
+      </ThemedText>
+      {qrValue && (
+        <View style={styles.qrCodeContainer}>
+          <QRRenderer value={qrValue} />
+        </View>
+      )}
+    </ScreenWrapper>
   )
 }
 

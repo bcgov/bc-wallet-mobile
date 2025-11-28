@@ -2,12 +2,11 @@ import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { Spacing } from '@/bcwallet-theme/theme'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
   ButtonType,
-  KeyboardView,
+  ScreenWrapper,
   testIdWithKey,
   Text,
   ThemedText,
@@ -19,7 +18,7 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { View } from 'react-native'
 
 type EvidenceCollectionFormState = {
   documentNumber: string
@@ -61,13 +60,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
   const additionalEvidenceRequired =
     store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1
-
-  const styles = StyleSheet.create({
-    controlsContainer: {
-      gap: Spacing.md,
-      marginTop: 'auto',
-    },
-  })
 
   /**
    * Handles changes to the form fields.
@@ -223,83 +215,84 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
     )
   }
 
+  const controls = (
+    <>
+      <Button
+        title="Continue"
+        accessibilityLabel={'Continue'}
+        testID={testIdWithKey('EvidenceIDCollectionContinue')}
+        buttonType={ButtonType.Primary}
+        onPress={handleOnContinue}
+      />
+      <Button
+        title="Cancel"
+        accessibilityLabel={'Cancel'}
+        testID={testIdWithKey('EvidenceIDCollectionCancel')}
+        buttonType={ButtonType.Tertiary}
+        onPress={() => navigation.goBack()}
+      />
+    </>
+  )
+
   return (
-    <View style={{ flex: 1, padding: Spacing.md }}>
-      <KeyboardView keyboardAvoiding={false}>
-        <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
-        <ThemedText style={{ paddingVertical: 16 }}>
-          {t('BCSC.EvidenceIDCollection.Heading1')}{' '}
-          <Text style={{ fontWeight: 'bold' }}>{t('BCSC.EvidenceIDCollection.Heading2')}</Text>{' '}
-          {t('BCSC.EvidenceIDCollection.Heading3')}
-        </ThemedText>
-        <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
-          <InputWithValidation
-            id={'documentNumber'}
-            label={cardType.document_reference_label}
-            value={formState.documentNumber}
-            onChange={(value) => handleChange('documentNumber', value)}
-            error={formErrors.documentNumber}
-            subtext={`${t('BCSC.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
-          />
+    <ScreenWrapper keyboardActive={true} controls={controls}>
+      <ThemedText variant={'headingThree'}>{cardType.evidence_type_label}</ThemedText>
+      <ThemedText style={{ paddingVertical: 16 }}>
+        {t('BCSC.EvidenceIDCollection.Heading1')}{' '}
+        <Text style={{ fontWeight: 'bold' }}>{t('BCSC.EvidenceIDCollection.Heading2')}</Text>{' '}
+        {t('BCSC.EvidenceIDCollection.Heading3')}
+      </ThemedText>
+      <View style={{ marginVertical: 10, width: '100%', gap: 18 }}>
+        <InputWithValidation
+          id={'documentNumber'}
+          label={cardType.document_reference_label}
+          value={formState.documentNumber}
+          onChange={(value) => handleChange('documentNumber', value)}
+          error={formErrors.documentNumber}
+          subtext={`${t('BCSC.EvidenceIDCollection.DocumentNumberSubtext')} ${cardType.document_reference_sample}`}
+        />
 
-          {additionalEvidenceRequired ? (
-            <>
-              <InputWithValidation
-                id={'lastName'}
-                label={t('BCSC.EvidenceIDCollection.LastNameLabel')}
-                value={formState.lastName}
-                onChange={(value) => handleChange('lastName', value)}
-                error={formErrors.lastName}
-                subtext={t('BCSC.EvidenceIDCollection.LastNameSubtext')}
-              />
+        {additionalEvidenceRequired ? (
+          <>
+            <InputWithValidation
+              id={'lastName'}
+              label={t('BCSC.EvidenceIDCollection.LastNameLabel')}
+              value={formState.lastName}
+              onChange={(value) => handleChange('lastName', value)}
+              error={formErrors.lastName}
+              subtext={t('BCSC.EvidenceIDCollection.LastNameSubtext')}
+            />
 
-              <InputWithValidation
-                id={'firstName'}
-                label={t('BCSC.EvidenceIDCollection.FirstNameLabel')}
-                value={formState.firstName}
-                onChange={(value) => handleChange('firstName', value)}
-                error={formErrors.firstName}
-                subtext={t('BCSC.EvidenceIDCollection.FirstNameSubtext')}
-              />
+            <InputWithValidation
+              id={'firstName'}
+              label={t('BCSC.EvidenceIDCollection.FirstNameLabel')}
+              value={formState.firstName}
+              onChange={(value) => handleChange('firstName', value)}
+              error={formErrors.firstName}
+              subtext={t('BCSC.EvidenceIDCollection.FirstNameSubtext')}
+            />
 
-              <InputWithValidation
-                id={'middleNames'}
-                label={t('BCSC.EvidenceIDCollection.MiddleNamesLabel')}
-                value={formState.middleNames}
-                onChange={(value) => handleChange('middleNames', value)}
-                error={formErrors.middleNames}
-                subtext={t('BCSC.EvidenceIDCollection.MiddleNamesSubtext')}
-              />
+            <InputWithValidation
+              id={'middleNames'}
+              label={t('BCSC.EvidenceIDCollection.MiddleNamesLabel')}
+              value={formState.middleNames}
+              onChange={(value) => handleChange('middleNames', value)}
+              error={formErrors.middleNames}
+              subtext={t('BCSC.EvidenceIDCollection.MiddleNamesSubtext')}
+            />
 
-              <InputWithValidation
-                id={'birthDate'}
-                label={t('BCSC.EvidenceIDCollection.BirthDateLabel')}
-                value={formState.birthDate}
-                onChange={(value) => handleChange('birthDate', value)}
-                error={formErrors.birthDate}
-                subtext={t('BCSC.EvidenceIDCollection.BirthDateSubtext')}
-              />
-            </>
-          ) : null}
-        </View>
-        <View style={styles.controlsContainer}>
-          <Button
-            title="Continue"
-            accessibilityLabel={'Continue'}
-            testID={testIdWithKey('EvidenceIDCollectionContinue')}
-            buttonType={ButtonType.Primary}
-            onPress={handleOnContinue}
-          />
-          <Button
-            title="Cancel"
-            accessibilityLabel={'Cancel'}
-            testID={testIdWithKey('EvidenceIDCollectionCancel')}
-            buttonType={ButtonType.Tertiary}
-            onPress={() => navigation.goBack()}
-          />
-        </View>
-      </KeyboardView>
-    </View>
+            <InputWithValidation
+              id={'birthDate'}
+              label={t('BCSC.EvidenceIDCollection.BirthDateLabel')}
+              value={formState.birthDate}
+              onChange={(value) => handleChange('birthDate', value)}
+              error={formErrors.birthDate}
+              subtext={t('BCSC.EvidenceIDCollection.BirthDateSubtext')}
+            />
+          </>
+        ) : null}
+      </View>
+    </ScreenWrapper>
   )
 }
 
