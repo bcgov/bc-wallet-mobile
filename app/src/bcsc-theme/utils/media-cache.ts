@@ -48,9 +48,9 @@ export class MediaCache {
    * Clears the cache.
    *
    * @memberof MediaCache
-   * @returns {*} {Promise<void>}
+   * @returns {*} {void}
    */
-  async clearCache(): Promise<void> {
+  clearCache(): void {
     this.setCache(null)
   }
 

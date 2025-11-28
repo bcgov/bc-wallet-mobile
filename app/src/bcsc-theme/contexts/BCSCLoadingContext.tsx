@@ -14,7 +14,7 @@ export const BCSCLoadingContext = createContext<BCSCLoadingContextType | null>(n
 /**
  * Provides the BCSCLoadingContext to child components.
  *
- * This provides a convienient API to show and hide a loading screen overlay.
+ * This provides a convenient API to show and hide a loading screen overlay.
  *
  * @example
  *   const loadingScreen = useLoadingScreen();
@@ -42,7 +42,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
 
   const startLoading = (message?: string) => {
     setIsLoading(true)
-    setLoadingMessage(message ? message : null)
+    setLoadingMessage(message ?? null)
   }
 
   const stopLoading = () => {
@@ -65,7 +65,7 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
       {/** When loading make children invisible (still mounted) **/}
       <View style={isLoading ? styles.hidden : styles.visible}>{children}</View>
 
-      {/** When loading, mount loading component (will unmount)  **/}
+      {/** Mount LoadingScreenContent component when loading **/}
       {isLoading ? <LoadingScreenContent message={loadingMessage ?? undefined} /> : null}
     </BCSCLoadingContext.Provider>
   )

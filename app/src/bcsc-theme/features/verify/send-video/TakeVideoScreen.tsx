@@ -174,6 +174,8 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       return
     }
 
+    const snapshot = await cameraRef.current.takeSnapshot()
+
     cameraRef.current.startRecording({
       fileType: 'mp4',
       videoCodec: 'h265',
@@ -204,8 +206,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
       },
     })
-
-    const snapshot = await cameraRef.current.takeSnapshot()
   }, [prompts, startTimer, logger, stopTimer, t, navigation])
 
   const onPressNextPrompt = async () => {
