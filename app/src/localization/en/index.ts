@@ -130,7 +130,7 @@ const translation = {
     "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
     "Screens": {
-      "Settings": "Menu",
+      "Settings": "Settings",
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",

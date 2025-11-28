@@ -129,7 +129,7 @@ const translation = {
     "Title": "BC Services Card (PT-BR)",
     "LocaleStringFormat": "pt-BR",
     "Screens": {
-      "Settings": "Menu (PT-BR)",
+      "Settings": "Settings (PT-BR)",
       "SetupTypes": "BC Services Card (PT-BR)",
       "SetupSteps": "Setup Steps (PT-BR)",
       "VerificationMethodSelection": "Choose How to Verify (PT-BR)",
