@@ -14,6 +14,15 @@ export const BCSCLoadingContext = createContext<BCSCLoadingContextType | null>(n
 /**
  * Provides the BCSCLoadingContext to child components.
  *
+ * This provides a convienient API to show and hide a loading screen overlay.
+ *
+ * @example
+ *   const loadingScreen = useLoadingScreen();
+ *
+ *   loadingScreen.startLoading("Loading data...");
+ *   loadingScreen.updateLoadingMessage("Still loading, please wait...");
+ *   loadingScreen.stopLoading();
+ *
  * @param {PropsWithChildren} props - The props containing child components.
  * @returns {*} {JSX.Element} The BCSCLoadingProvider component wrapping its children.
  */
@@ -53,11 +62,13 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
 
   return (
     <BCSCLoadingContext.Provider value={loadingContext}>
-      {/** Keep the children mounted but make the content invisible **/}
+      {/** When loading make children invisible (still mounted) **/}
       <View style={isLoading ? styles.hidden : styles.visible}>{children}</View>
 
-      {/** Render the loading screen content **/}
-      {isLoading ? <LoadingScreenContent message={loadingMessage ?? undefined} /> : null}
+      {/** When loading make loading component visible  **/}
+      <View style={isLoading ? styles.visible : styles.hidden}>
+        <LoadingScreenContent message={loadingMessage ?? undefined} />
+      </View>
     </BCSCLoadingContext.Provider>
   )
 }
@@ -65,13 +76,20 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
 /**
  * Hook to access the BCSC loading screen context.
  *
+ * @example
+ *   const loadingScreen = useLoadingScreen();
+ *
+ *   loadingScreen.startLoading("Loading data...");
+ *   loadingScreen.updateLoadingMessage("Still loading, please wait...");
+ *   loadingScreen.stopLoading();
+ *
  * @returns {*} {BCSCLoadingContextType} The loading screen context.
  */
 export const useLoadingScreen = () => {
   const context = useContext(BCSCLoadingContext)
 
   if (!context) {
-    throw new Error('useLoading must be used within a BCSCLoadingContextProvider')
+    throw new Error('useLoadingScreen must be used within a BCSCLoadingContextProvider')
   }
 
   return context

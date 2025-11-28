@@ -114,25 +114,29 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * allowing the user to upload videos with minimal waiting time.
    *
    * Note: If the user navigates quickly through the flow, the InformationRequiredScreen will just wait
-   * for the current file promise to resolve.
+   * for the video disk read to complete before proceeding.
    *
    * @param {OnLoadData} data The data object containing video load information.
    * @returns {*} {Promise<void>} A promise that resolves when the video metadata is processed and cached.
    */
   const onVideoLoad = async (data: OnLoadData) => {
-    // Clear the previously cached video
-    VerificationVideoCache.setCachedMedia(null)
+    try {
+      // Clear the previously cached video
+      VerificationVideoCache.clearCache()
 
-    const videoFilePromise = readFileInChunks(videoPath, logger)
+      const videoFilePromise = readFileInChunks(videoPath, logger)
 
-    // Set cache to a promise to be resolved by whoever needs it first
-    VerificationVideoCache.setCachedMedia(videoFilePromise)
-
-    // Optimistically save the video path and duration
-    dispatch({
-      type: BCDispatchAction.SAVE_VIDEO,
-      payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],
-    })
+      // Set cache to a promise to be resolved by whoever needs it first
+      VerificationVideoCache.setCache(videoFilePromise)
+    } catch (error) {
+      logger.error('Error caching video file:', error as Error)
+    } finally {
+      // Optimistically save the video path and duration
+      dispatch({
+        type: BCDispatchAction.SAVE_VIDEO,
+        payload: [{ videoPath: videoPath, videoDuration: Math.floor(data.duration) }],
+      })
+    }
   }
 
   return (

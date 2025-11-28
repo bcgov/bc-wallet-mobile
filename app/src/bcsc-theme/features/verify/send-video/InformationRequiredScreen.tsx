@@ -55,9 +55,13 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       // Fetch photo and video then convert into bytes
       const [photoBytes, videoBytes, videoStats] = await Promise.all([
         readFileInChunks(store.bcsc.photoPath, logger),
-        VerificationVideoCache.getCachedMedia(store.bcsc.videoPath, logger),
+        VerificationVideoCache.getCache(logger),
         RNFS.stat(store.bcsc.videoPath),
       ])
+
+      if (!videoBytes) {
+        throw new Error('Error - cache missing video data')
+      }
 
       const videoMetadata = await getVideoMetadata(videoBytes, store.bcsc.videoDuration, prompts, videoStats.mtime)
 
