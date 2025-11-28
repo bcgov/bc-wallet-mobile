@@ -80,7 +80,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           paddingHorizontal: Spacing.md,
           alignItems: 'center',
           justifyContent: 'center',
-          marginTop: safeAreaInsets.top,
         },
         controlsContainer: {
           position: 'absolute',
@@ -110,15 +109,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           marginBottom: safeAreaInsets.bottom,
         },
       }),
-    [
-      ColorPalette.notification.popupOverlay,
-      Spacing.lg,
-      Spacing.md,
-      Spacing.sm,
-      Spacing.xl,
-      safeAreaInsets.bottom,
-      safeAreaInsets.top,
-    ]
+    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, Spacing.xl, safeAreaInsets.bottom]
   )
 
   const handleCancel = () => {
@@ -317,7 +308,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={[]}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top']}>
       <View style={styles.pageContainer}>
         <Camera
           ref={cameraRef}

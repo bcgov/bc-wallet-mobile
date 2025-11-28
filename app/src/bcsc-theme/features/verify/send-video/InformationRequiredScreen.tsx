@@ -42,7 +42,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   // TODO (MD): Split this into smaller functions for better readability and testability (MVC pattern?)
   const onPressSend = async () => {
     try {
-      loadingScreen.startLoading(t('BCSC.SendVideo.LoadingMessageA'))
+      loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
 
       if (!store.bcsc.photoPath || !store.bcsc.videoPath || !store.bcsc.videoDuration) {
         throw new Error('Error - missing photo or video data')
@@ -72,6 +72,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       const additionalEvidence = store.bcsc.additionalEvidenceData
       const evidenceUploadPromises: Promise<any>[] = []
       const evidenceUploadUris: string[] = []
+
+      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
 
       // Process each piece of additional evidence
       for (const evidenceItem of additionalEvidence) {
@@ -106,6 +108,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         }
       }
 
+      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.SendVideo.UploadingInformation'))
+
       // Send photo and video metadata to API
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
         evidence.uploadPhotoEvidenceMetadata(store.bcsc.photoMetadata!),
@@ -124,6 +128,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
 
       // Combine all upload URIs for final verification request
       const allUploadUris = [photoMetadataResponse.upload_uri, videoMetadataResponse.upload_uri, ...evidenceUploadUris]
+
+      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
 
       // Send final verification request
       await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {

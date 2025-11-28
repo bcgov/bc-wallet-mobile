@@ -16,6 +16,7 @@ type PhotoInstructionsScreenProps = {
 
 const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) => {
   const { t } = useTranslation()
+
   const styles = StyleSheet.create({
     pageContainer: {
       flex: 1,
@@ -32,7 +33,7 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
   }
 
   return (
-    <SafeAreaView style={styles.pageContainer}>
+    <SafeAreaView style={styles.pageContainer} edges={['top']}>
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"

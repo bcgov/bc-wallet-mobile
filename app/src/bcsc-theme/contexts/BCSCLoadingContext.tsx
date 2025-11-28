@@ -65,10 +65,8 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
       {/** When loading make children invisible (still mounted) **/}
       <View style={isLoading ? styles.hidden : styles.visible}>{children}</View>
 
-      {/** When loading make loading component visible  **/}
-      <View style={isLoading ? styles.visible : styles.hidden}>
-        <LoadingScreenContent message={loadingMessage ?? undefined} />
-      </View>
+      {/** When loading, mount loading component (will unmount)  **/}
+      {isLoading ? <LoadingScreenContent message={loadingMessage ?? undefined} /> : null}
     </BCSCLoadingContext.Provider>
   )
 }
