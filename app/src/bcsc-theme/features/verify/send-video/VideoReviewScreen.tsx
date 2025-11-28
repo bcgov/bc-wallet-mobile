@@ -172,10 +172,7 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
             testID={testIdWithKey('UseVideo')}
             title={t('BCSC.SendVideo.VideoReview.UseVideo')}
             accessibilityLabel={t('BCSC.SendVideo.VideoReview.UseVideo')}
-            // disabled={!videoMetadata}
-          >
-            {/* {!videoMetadata && <ButtonLoading />} */}
-          </Button>
+          />
           <View style={styles.secondButton}>
             <Button
               buttonType={ButtonType.Tertiary}

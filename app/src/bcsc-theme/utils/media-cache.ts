@@ -31,7 +31,7 @@ export class MediaCache {
    * Caches the provided media buffer in memory.
    *
    * @memberof MediaCache
-   * @param {Buffer | null} buffer - The media buffer to cache.
+   * @param {Buffer | Promise<Buffer> | null} buffer - The media buffer to cache.
    * @returns {*} {void}
    */
   setCache(buffer: Buffer | Promise<Buffer> | null): void {
@@ -59,7 +59,7 @@ export class MediaCache {
    *
    * @memberof MediaCache
    * @param {BifoldLogger} logger - The logger instance for logging messages.
-   * @returns {*} {Promise<Buffer>} - The media buffer.
+   * @returns {*} {Promise<Buffer | null>} - The media buffer.
    */
   async getCache(logger: BifoldLogger): Promise<Buffer | null> {
     const cachedMedia = await this._getCache(logger)
