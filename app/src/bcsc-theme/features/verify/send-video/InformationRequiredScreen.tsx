@@ -103,7 +103,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         }
       }
 
-      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.SendVideo.UploadingInformation'))
+      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
 
       // Send photo and video metadata to API
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
