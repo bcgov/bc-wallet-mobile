@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
+import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
 import { BCDispatchAction, BCState } from '@/store'
 import readFileInChunks from '@/utils/read-file'
 import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
@@ -9,9 +9,9 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
-import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { LoadingScreenContent } from '../../splash-loading/LoadingScreenContent'
 import TakeMediaButton from './components/TakeMediaButton'
 import { VerificationVideoCache } from './VideoReviewScreen'
 
@@ -41,11 +41,12 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
     },
   })
 
+  // TODO (MD): Split this into smaller functions for better readability and testability (MVC pattern?)
   const onPressSend = async () => {
     try {
       setLoading(true)
 
-      if (!store.bcsc.photoPath || !store.bcsc.videoPath) {
+      if (!store.bcsc.photoPath || !store.bcsc.videoPath || !store.bcsc.videoDuration) {
         throw new Error('Error - missing photo or video data')
       }
 
@@ -59,6 +60,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         VerificationVideoCache.getCachedMedia(store.bcsc.videoPath, logger),
         RNFS.stat(store.bcsc.videoPath),
       ])
+
+      const videoMetadata = await getVideoMetadata(videoBytes, store.bcsc.videoDuration, prompts, videoStats.mtime)
 
       logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
@@ -104,15 +107,7 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
       // Send photo and video metadata to API
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
         evidence.uploadPhotoEvidenceMetadata(store.bcsc.photoMetadata!),
-        evidence.uploadVideoEvidenceMetadata({
-          content_type: VIDEO_MP4_MIME_TYPE,
-          content_length: videoBytes.byteLength,
-          date: Math.floor(videoStats.mtime / 1000),
-          sha256: await hashBase64(videoBytes.toString('base64')),
-          duration: store.bcsc.videoDuration,
-          filename: DEFAULT_SELFIE_VIDEO_FILENAME,
-          prompts: prompts.map(({ id }, i) => ({ id, prompted_at: i })),
-        }),
+        evidence.uploadVideoEvidenceMetadata(videoMetadata),
       ])
 
       logger.debug(`Photo/ Video metadata responded`)
@@ -147,6 +142,10 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
     } finally {
       setLoading(false)
     }
+  }
+
+  if (loading) {
+    return <LoadingScreenContent message={'Please standby while we upload your verification...'} />
   }
 
   return (

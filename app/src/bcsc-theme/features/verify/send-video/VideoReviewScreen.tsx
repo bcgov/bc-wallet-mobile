@@ -29,7 +29,7 @@ type VideoReviewScreenProps = {
 
 const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { width } = useWindowDimensions()
   const [paused, setPaused] = useState(false)
@@ -37,15 +37,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
   const { videoPath, videoThumbnailPath } = route.params
   const { t } = useTranslation()
 
-  const prompts = store.bcsc.prompts
-
   if (!videoPath || !videoThumbnailPath) {
     throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPath'))
-  }
-
-  if (!prompts || prompts.length === 0) {
-    // TODO (MD): Add translation
-    throw new Error(t('BCSC.SendVideo.VideoReview.VideoErrorPrompts'))
   }
 
   const styles = StyleSheet.create({
@@ -56,7 +49,6 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     },
     contentContainer: {
       flexGrow: 1,
-      // marginTop: Spacing.xl,
     },
     videoContainer: {
       flexGrow: 1,
@@ -121,8 +113,8 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
    * Optimistically caches the video and extracts its metadata in the background,
    * allowing the user to upload videos with minimal waiting time.
    *
-   * Note: If the user is quick going through the flow, the InformationRequiredScreen will just wait
-   * for the disk fetching promise to resolve.
+   * Note: If the user navigates quickly through the flow, the InformationRequiredScreen will just wait
+   * for the current file promise to resolve.
    *
    * @param {OnLoadData} data The data object containing video load information.
    * @returns {*} {Promise<void>} A promise that resolves when the video metadata is processed and cached.
@@ -131,10 +123,10 @@ const VideoReviewScreen = ({ navigation, route }: VideoReviewScreenProps) => {
     // Clear the previously cached video
     VerificationVideoCache.setCachedMedia(null)
 
-    const videoBufferPromise = readFileInChunks(videoPath, logger)
+    const videoFilePromise = readFileInChunks(videoPath, logger)
 
     // Set cache to a promise to be resolved by whoever needs it first
-    VerificationVideoCache.setCachedMedia(videoBufferPromise)
+    VerificationVideoCache.setCachedMedia(videoFilePromise)
 
     // Optimistically save the video path and duration
     dispatch({

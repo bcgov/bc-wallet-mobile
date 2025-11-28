@@ -12,6 +12,12 @@ export class MediaCache {
   private removeFileSafely = removeFileSafely
   private readFileInChunks = readFileInChunks
 
+  /**
+   * Retrieves the cached media buffer if available.
+   *
+   * @param {BifoldLogger} logger - The logger instance for logging messages.
+   * @returns {*} {Promise<Buffer | null>} - The cached media buffer or null if not cached.
+   */
   private async getCache(logger: BifoldLogger): Promise<Buffer | null> {
     if (this.cachedMediaPromise) {
       logger.debug('MediaCache: Awaiting cached media promise')
