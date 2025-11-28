@@ -57,7 +57,7 @@ const MaskedCamera = ({
       backgroundColor: 'transparent',
       position: 'absolute',
       fontWeight: 'normal',
-      top: Spacing.lg,
+      top: Spacing.md,
       left: 0,
       right: 0,
       zIndex: 5,
@@ -160,12 +160,16 @@ const MaskedCamera = ({
       />
       <SVGOverlay maskType={maskType} strokeColor={maskLineColor ?? ColorPalette.brand.tertiary} />
       <View style={styles.instructionText}>
-        <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
-          {cameraLabel}
-        </ThemedText>
-        <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
-          {cameraInstructions}
-        </ThemedText>
+        {cameraLabel && (
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingThree'}>
+            {cameraLabel}
+          </ThemedText>
+        )}
+        {cameraInstructions && (
+          <ThemedText style={{ color: 'white', textAlign: 'center' }} variant={'headingFour'}>
+            {cameraInstructions}
+          </ThemedText>
+        )}
       </View>
       <View style={styles.controlsContainer}>
         <TouchableOpacity style={{ flex: 1 }} onPress={handleCancel}>
