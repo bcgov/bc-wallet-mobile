@@ -1,3 +1,4 @@
+import { VIDEO_MP4_MIME_TYPE } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
@@ -322,8 +323,8 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
         const { data } = await apiClient.put<any>(url, binaryData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'video/mp4',
-            Accept: 'video/mp4',
+            'Content-Type': VIDEO_MP4_MIME_TYPE,
+            Accept: VIDEO_MP4_MIME_TYPE,
           },
           skipBearerAuth: true,
         })

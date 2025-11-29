@@ -2,7 +2,7 @@ import { MaskType, SVGOverlay, ThemedText, TOKENS, useServices, useTheme } from 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { Camera, useCameraDevice, useCameraPermission } from 'react-native-vision-camera'
 
@@ -27,7 +27,7 @@ const MaskedCamera = ({
 }: MaskedCameraProps) => {
   const device = useCameraDevice(cameraFace)
   const { t } = useTranslation()
-
+  const safeAreaInsets = useSafeAreaInsets()
   const { Spacing, ColorPalette } = useTheme()
   const { hasPermission, requestPermission } = useCameraPermission()
   const [isActive, setIsActive] = useState(false)
@@ -52,6 +52,7 @@ const MaskedCamera = ({
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: Spacing.lg,
+      marginBottom: safeAreaInsets.bottom,
     },
     instructionText: {
       backgroundColor: 'transparent',

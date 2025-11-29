@@ -30,10 +30,12 @@ const VerificationMethodSelectionScreen = ({ navigation }: VerificationMethodSel
       const { sha256, id, prompts } = await evidence.createVerificationRequest()
 
       await Promise.allSettled([
-        VerificationVideoCache.removeMediaAndClearCache(store.bcsc.videoPath, logger),
+        removeFileSafely(store.bcsc.videoPath, logger),
         removeFileSafely(store.bcsc.photoPath, logger),
         removeFileSafely(store.bcsc.videoThumbnailPath, logger),
       ])
+
+      VerificationVideoCache.clearCache()
 
       dispatch({ type: BCDispatchAction.RESET_SEND_VIDEO })
       dispatch({ type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST, payload: [{ sha256, id }] })
