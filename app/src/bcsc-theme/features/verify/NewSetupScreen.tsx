@@ -69,7 +69,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
   })
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper scrollViewContainerStyle={{ flexGrow: 1 }}>
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
         {t('BCSC.NewSetup.Title')}
       </ThemedText>

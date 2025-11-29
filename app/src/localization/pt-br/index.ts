@@ -410,7 +410,8 @@ const translation = {
       "Dismiss": "Dismiss (PT-BR)",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number (PT-BR)",
+      "InputLabel": "Enter serial number (PT-BR)",
+      "InputTitle": "Enter your card's serial number manually (PT-BR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (PT-BR)",
       "EmptySerialError": "Required (PT-BR)",
       "CharCountError": "Cannot exceed 15 characters (PT-BR)",
