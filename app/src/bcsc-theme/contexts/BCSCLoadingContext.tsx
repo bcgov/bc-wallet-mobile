@@ -1,3 +1,4 @@
+import { testIdWithKey } from '@bifold/core'
 import { createContext, PropsWithChildren, useContext, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
@@ -63,7 +64,9 @@ export const BCSCLoadingProvider = ({ children }: PropsWithChildren) => {
   return (
     <BCSCLoadingContext.Provider value={loadingContext}>
       {/** When loading make children invisible (still mounted) **/}
-      <View style={isLoading ? styles.hidden : styles.visible}>{children}</View>
+      <View style={isLoading ? styles.hidden : styles.visible} testID={testIdWithKey('BCSCLoadingProviderChildren')}>
+        {children}
+      </View>
 
       {/** Mount LoadingScreenContent component when loading **/}
       {isLoading ? <LoadingScreenContent message={loadingMessage ?? undefined} /> : null}
