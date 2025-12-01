@@ -13,9 +13,9 @@ jobs:
     name: Lint+Format+Types
     steps:
       - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Cache app node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .yarn/cache
           # Cache will be invalidated if yarn.lock changes
@@ -35,7 +35,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Cache bcsc-core build output
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: packages/bcsc-core/lib
           # Cache will be invalidated if any source file changes
@@ -68,9 +68,9 @@ jobs:
     name: Testing + Coverage
     steps:
       - name: Checkout bc-wallet-mobile
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -78,7 +78,7 @@ jobs:
         uses: ./.github/workflows/actions/setup-node
 
       - name: Cache app node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .yarn/cache
           # Cache will be invalidated if yarn.lock changes
