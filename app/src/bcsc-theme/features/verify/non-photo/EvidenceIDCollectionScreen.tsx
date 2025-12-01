@@ -16,9 +16,9 @@ import {
 } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Keyboard, TextInput, View } from 'react-native'
+import { Keyboard, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 
 type EvidenceCollectionFormState = {
@@ -49,7 +49,6 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [openDatePicker, setOpenDatePicker] = useState(false)
-  const birthdateInputRef = useRef<TextInput | null>(null)
   const { cardType } = route.params
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
@@ -306,7 +305,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               label={t('BCSC.EvidenceIDCollection.BirthDateLabel')}
               value={formState.birthDate}
               onChange={() => {
-                birthdateInputRef.current?.focus
+                // no-op to disable manual input
               }}
               onFocus={() => {
                 Keyboard.dismiss()
