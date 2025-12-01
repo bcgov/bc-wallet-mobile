@@ -81,3 +81,6 @@ export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
 
 // File chunking constants
 export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB
+
+// Styling contants
+export const HEADER_TITLE_MAX_WIDTH = '68%'

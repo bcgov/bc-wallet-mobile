@@ -1,7 +1,8 @@
-import { HelpCentreUrl } from '@/constants'
+import { HEADER_TITLE_MAX_WIDTH, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
+import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
@@ -38,6 +39,8 @@ const OnboardingStack = (): JSX.Element => {
         headerShadowVisible: false,
         headerBackTestID: testIdWithKey('Back'),
         headerBackAccessibilityLabel: t('Global.Back'),
+        headerTitleContainerStyle: { maxWidth: HEADER_TITLE_MAX_WIDTH },
+        headerLeft: createHeaderBackButton,
         header: createHeaderWithoutBanner,
       }}
     >

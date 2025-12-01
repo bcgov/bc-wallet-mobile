@@ -5,7 +5,7 @@ import { createVerifyWebviewHeaderBackButton } from '@/bcsc-theme/components/Web
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl } from '@/constants'
+import { HEADER_TITLE_MAX_WIDTH, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
@@ -53,6 +53,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 
+import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
@@ -83,6 +84,8 @@ const VerifyStack = () => {
         headerShown: true,
         title: '',
         headerShadowVisible: false,
+        headerTitleContainerStyle: { maxWidth: HEADER_TITLE_MAX_WIDTH },
+        headerLeft: createHeaderBackButton,
         header: createHeaderWithBanner(handleManageDevices),
       }}
     >
