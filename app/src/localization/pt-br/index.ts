@@ -575,6 +575,12 @@ const translation = {
         "Description2": "Your video was {{videoLengthSeconds}} seconds. (PT-BR)",
         "ButtonText": "Retake (PT-BR)",
         "CancelButtonText": "Cancel (PT-BR)",
+      },
+      "UploadProgress": {
+        "PreparingVideo": "Preparing your photo and video for verification (PT-BR)",
+        "PreparingDocuments": "Preparing additional documents (PT-BR)",
+        "UploadingInformation": "Uploading your documents securely (PT-BR)",
+        "FinalizingVerification": "Finalizing your request (PT-BR)"
       }
     },
     "MismatchedSerial": {
