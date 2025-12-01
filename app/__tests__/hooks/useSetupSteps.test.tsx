@@ -1,5 +1,5 @@
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
-import { useSetupSteps } from '@/hooks/useSetupSteps'
+import { useSetupSteps } from '@/bcsc-theme/features/verify/_hooks/useSetupSteps'
 import { initialState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 
