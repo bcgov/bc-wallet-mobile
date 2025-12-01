@@ -581,7 +581,7 @@ const translation = {
         "PreparingVideo": "Preparing your photo and video for verification",
         "PreparingDocuments": "Preparing additional documents",
         "UploadingInformation": "Uploading your documents securely",
-        "FinalizingVerification": "Finalizing your verification request"
+        "FinalizingVerification": "Finalizing your request"
       }
     },
     "MismatchedSerial": {
