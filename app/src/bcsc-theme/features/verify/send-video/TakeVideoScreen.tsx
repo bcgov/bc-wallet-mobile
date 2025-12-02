@@ -17,6 +17,8 @@ import {
   useMicrophonePermission,
 } from 'react-native-vision-camera'
 
+const MIN_PROMPT_DURATION_SECONDS = 2
+
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
 }
@@ -44,6 +46,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [promptTimestamp, setPromptTimestamp] = useState(0)
   const [exceedsMaxDuration, setExceedsMaxDuration] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -52,7 +55,6 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const promptOpacity = useRef(new Animated.Value(1)).current
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
   const safeAreaInsets = useSafeAreaInsets()
-
   const isLastPrompt = useMemo(() => {
     if (prompt === '') {
       return true // Recording finished, treat as last prompt
@@ -211,10 +213,11 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const onPressNextPrompt = async () => {
     const currentIndex = prompts.indexOf(prompt)
     if (currentIndex === prompts.length - 1) {
-      await cameraRef.current?.stopRecording()
-    } else {
-      setPrompt(prompts[currentIndex + 1])
+      return cameraRef.current?.stopRecording()
     }
+
+    setPromptTimestamp(elapsedTime)
+    setPrompt(prompts[currentIndex + 1])
   }
 
   const onInitialized = () => {
@@ -370,6 +373,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 onPress={onPressNextPrompt}
                 testID={'StartRecordingButton'}
                 accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
+                disabled={elapsedTime - promptTimestamp < MIN_PROMPT_DURATION_SECONDS}
               />
             </View>
           </View>
