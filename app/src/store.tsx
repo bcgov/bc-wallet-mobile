@@ -160,6 +160,7 @@ enum BCSCDispatchAction {
   UPDATE_USER_ADDRESS_METADATA = 'bcsc/updateUserMetadataAddress',
   CLEAR_USER_METADATA = 'bcsc/clearUserMetadata',
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
+  REMOVE_INCOMPLETE_EVIDENCE = 'bcsc/removeIncompleteEvidence',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateRegistrationAccessToken',
@@ -562,6 +563,18 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       )
 
       const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.REMOVE_INCOMPLETE_EVIDENCE: {
+      // Remove evidence entries that don't have at least 1 photo or are missing document number
+      const completeEvidence = state.bcsc.additionalEvidenceData.filter(
+        (item) => item.metadata.length >= 1 && Boolean(item.documentNumber)
+      )
+
+      const bcsc = { ...state.bcsc, additionalEvidenceData: completeEvidence }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

@@ -45,15 +45,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const factoryReset = useFactoryReset()
 
-  const {
-    step,
-    handleCheckStatus,
-    handleCancelVerification,
-    getVerificationStep1Subtext,
-    getVerificationStep2Subtext,
-    getVerificationStep3Subtext,
-    getVerificationStep5Subtext,
-  } = useSetupStepsModel(navigation)
+  const { steps, stepActions, handleCheckStatus, handleCancelVerification } = useSetupStepsModel(navigation)
 
   const styles = StyleSheet.create({
     itemSeparator: {
@@ -89,12 +81,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
       <SetupStep
         title={t('BCSC.Steps.Step1')}
-        subtext={getVerificationStep1Subtext()}
-        isComplete={step.nickname.completed}
-        isFocused={step.nickname.focused}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.NicknameAccount)
-        }}
+        subtext={steps.nickname.subtext}
+        isComplete={steps.nickname.completed}
+        isFocused={steps.nickname.focused}
+        onPress={stepActions.nickname}
       />
 
       <View style={styles.itemSeparator} />
@@ -103,27 +93,14 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
       <SetupStep
         title={t('BCSC.Steps.Step2')}
-        subtext={getVerificationStep2Subtext()}
-        isComplete={step.id.completed}
-        isFocused={step.id.focused}
-        onPress={() => {
-          if (step.id.nonBcscNeedsAdditionalCard) {
-            navigation.navigate(BCSCScreens.EvidenceTypeList)
-            return
-          }
-          if (step.id.nonPhotoBcscNeedsAdditionalCard) {
-            navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
-            return
-          }
-          if (!step.id.completed) {
-            navigation.navigate(BCSCScreens.IdentitySelection)
-            return
-          }
-        }}
+        subtext={steps.id.subtext}
+        isComplete={steps.id.completed}
+        isFocused={steps.id.focused}
+        onPress={stepActions.id}
       >
         {
           // show additional text if a second card is required
-          step.id.nonBcscNeedsAdditionalCard || step.id.nonPhotoBcscNeedsAdditionalCard ? (
+          steps.id.nonBcscNeedsAdditionalCard || steps.id.nonPhotoBcscNeedsAdditionalCard ? (
             <View>
               <View style={styles.addSecondIdTextContainer}>
                 <ThemedText style={{ fontWeight: 'bold', color: ColorPalette.brand.text }}>
@@ -148,12 +125,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
       <SetupStep
         title={t('BCSC.Steps.Step3')}
-        subtext={[getVerificationStep3Subtext()]}
-        isComplete={step.address.completed}
-        isFocused={step.address.focused}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.ResidentialAddress)
-        }}
+        subtext={steps.address.subtext}
+        isComplete={steps.address.completed}
+        isFocused={steps.address.focused}
+        onPress={stepActions.address}
       />
 
       <View style={styles.itemSeparator} />
@@ -161,20 +136,20 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
       <SetupStep
         title={t('BCSC.Steps.Step4')}
-        subtext={[]}
-        isComplete={step.email.completed}
-        isFocused={step.email.focused}
-        onPress={() => navigation.navigate(BCSCScreens.EnterEmail, { cardType: store.bcsc.cardType })}
+        subtext={steps.email.subtext}
+        isComplete={steps.email.completed}
+        isFocused={steps.email.focused}
+        onPress={stepActions.email}
       >
         {
           <View style={styles.contentEmailContainer}>
-            {step.email.completed ? (
+            {steps.email.completed ? (
               <>
                 <ThemedText style={{ color: TextTheme.normal.color, flex: 1 }}>
                   {t('BCSC.Steps.StoredEmail', { email: store.bcsc.email })}
                 </ThemedText>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate(BCSCScreens.EnterEmail, { cardType: store.bcsc.cardType })}
+                  onPress={stepActions.email}
                   testID={testIdWithKey('EditEmail')}
                   accessibilityLabel={t('BCSC.Steps.EditEmail')}
                   hitSlop={hitSlop}
@@ -187,7 +162,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
             ) : (
               <ThemedText
                 style={{
-                  color: step.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
+                  color: steps.email.focused ? ColorPalette.brand.text : TextTheme.normal.color,
                 }}
               >
                 {t('BCSC.Steps.EmailAddress')}
@@ -203,12 +178,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
 
       <SetupStep
         title={t('BCSC.Steps.Step5')}
-        subtext={[getVerificationStep5Subtext()]}
-        isComplete={step.verify.completed}
-        isFocused={step.verify.focused}
-        onPress={() => {
-          navigation.navigate(BCSCScreens.VerificationMethodSelection)
-        }}
+        subtext={steps.verify.subtext}
+        isComplete={steps.verify.completed}
+        isFocused={steps.verify.focused}
+        onPress={stepActions.verify}
       />
 
       {store.bcsc.pendingVerification ? (
@@ -258,7 +231,10 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <Button
           title={t('BCSC.Steps.ResetData')}
           onPress={async () => {
-            const result = await factoryReset()
+            const result = await factoryReset({
+              completedNewSetup: true,
+              completedOnboarding: true,
+            })
 
             if (!result.success) {
               logger.error('Factory reset failed', result.error)
