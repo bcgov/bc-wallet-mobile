@@ -18,7 +18,8 @@ import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { View } from 'react-native'
+import { Keyboard, View } from 'react-native'
+import DatePicker from 'react-native-date-picker'
 
 type EvidenceCollectionFormState = {
   documentNumber: string
@@ -47,6 +48,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
+  const [openDatePicker, setOpenDatePicker] = useState(false)
   const { cardType } = route.params
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
@@ -281,11 +283,34 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
               subtext={t('BCSC.EvidenceIDCollection.MiddleNamesSubtext')}
             />
 
+            <DatePicker
+              modal
+              open={openDatePicker}
+              mode="date"
+              title={t('BCSC.EvidenceIDCollection.BirthDatePickerLabel')}
+              date={formState.birthDate ? new Date(formState.birthDate) : new Date()}
+              onConfirm={(date) => {
+                setOpenDatePicker(false)
+                handleChange('birthDate', date.toISOString().split('T')[0])
+              }}
+              onCancel={() => {
+                setOpenDatePicker(false)
+              }}
+              testID={testIdWithKey('BirthDatePicker')}
+              accessibilityLabel={t('BCSC.EvidenceIDCollection.BirthDatePickerAccessibilityLabel')}
+            />
+
             <InputWithValidation
               id={'birthDate'}
               label={t('BCSC.EvidenceIDCollection.BirthDateLabel')}
               value={formState.birthDate}
-              onChange={(value) => handleChange('birthDate', value)}
+              onChange={() => {
+                // no-op to disable manual input
+              }}
+              onFocus={() => {
+                Keyboard.dismiss()
+                setOpenDatePicker(true)
+              }}
               error={formErrors.birthDate}
               subtext={t('BCSC.EvidenceIDCollection.BirthDateSubtext')}
             />
