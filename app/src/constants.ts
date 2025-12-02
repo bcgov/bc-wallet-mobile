@@ -1,3 +1,5 @@
+import { ViewStyle } from 'react-native'
+
 export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
@@ -83,3 +85,6 @@ export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
 
 // File chunking constants
 export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB
+
+// Styling contants
+export const DEFAULT_HEADER_TITLE_CONTAINER_STYLE: ViewStyle = { flexShrink: 1, maxWidth: '68%' }

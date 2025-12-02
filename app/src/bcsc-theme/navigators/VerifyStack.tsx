@@ -4,7 +4,7 @@ import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/Settin
 import { createVerifyWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -50,6 +50,7 @@ import VideoInstructionsScreen from '../features/verify/send-video/VideoInstruct
 import VideoReviewScreen from '../features/verify/send-video/VideoReviewScreen'
 import VideoTooLongScreen from '../features/verify/send-video/VideoTooLongScreen'
 
+import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
@@ -71,6 +72,8 @@ const VerifyStack = () => {
         headerShown: true,
         title: '',
         headerShadowVisible: false,
+        headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
+        headerLeft: createHeaderBackButton,
         header: createHeaderWithoutBanner,
       }}
     >
