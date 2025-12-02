@@ -10,12 +10,7 @@ import {
 import { BCSCCardType } from '@bcsc-theme/types/cards'
 import Config from 'react-native-config'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import {
-  EvidenceType,
-  VerificationPhotoUploadPayload,
-  VerificationPrompt,
-  VerificationVideoUploadPayload,
-} from './bcsc-theme/api/hooks/useEvidenceApi'
+import { EvidenceType, VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
@@ -82,7 +77,7 @@ export interface BCSCState {
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
   prompts?: VerificationPrompt[]
-  videoMetadata?: VerificationVideoUploadPayload
+  videoDuration?: number
   photoMetadata?: VerificationPhotoUploadPayload
   refreshToken?: string
   photoPath?: string
@@ -465,8 +460,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.SAVE_VIDEO: {
-      const { videoPath, videoMetadata } = (action.payload ?? []).pop()
-      const bcsc = { ...state.bcsc, videoPath, videoMetadata }
+      const { videoPath, videoDuration } = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, videoPath, videoDuration }
       const newState = { ...state, bcsc }
       return newState
     }
@@ -482,7 +477,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         photoPath: undefined,
         photoMetadata: undefined,
         videoPath: undefined,
-        videoMetadata: undefined,
+        videoDuration: undefined,
         videoThumbnailPath: undefined,
         prompts: undefined,
       }

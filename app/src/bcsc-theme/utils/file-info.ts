@@ -1,7 +1,9 @@
+import { DEFAULT_SELFIE_VIDEO_FILENAME, VIDEO_MP4_MIME_TYPE } from '@/constants'
 import readFileInChunks from '@/utils/read-file'
 import { BifoldLogger } from '@bifold/core'
 import { hashBase64 } from 'react-native-bcsc-core'
 import RNFS from 'react-native-fs'
+import { VerificationPrompt, VerificationVideoUploadPayload } from '../api/hooks/useEvidenceApi'
 
 export interface PhotoMetadata {
   label: string
@@ -24,8 +26,7 @@ export const getFileInfo = async (filePath: string) => {
 }
 
 export const getPhotoMetadata = async (filePath: string, logger: BifoldLogger): Promise<PhotoMetadata> => {
-  const fileInfo = await getFileInfo(filePath)
-  const jpegBytes = await readFileInChunks(filePath, logger)
+  const [fileInfo, jpegBytes] = await Promise.all([getFileInfo(filePath), readFileInChunks(filePath, logger)])
   const jpegBase64 = jpegBytes.toString('base64')
   const photoSHA = await hashBase64(jpegBase64)
 
@@ -39,6 +40,32 @@ export const getPhotoMetadata = async (filePath: string, logger: BifoldLogger): 
     file_path: filePath, // Include the file path for reference
   }
   return photoMetadata
+}
+
+/**
+ * Generates metadata for a video file to be used in verification uploads.
+ *
+ * @param {Buffer} buffer - The video file buffer.
+ * @param {number} duration - The duration of the video in seconds.
+ * @param {VerificationPrompt[]} prompts - The list of verification prompts associated with the video.
+ * @param {number} mtime - The modification time of the video file in milliseconds since epoch.
+ * @returns {*} {Promise<VerificationVideoUploadPayload>} - The generated video metadata.
+ */
+export const getVideoMetadata = async (
+  buffer: Buffer,
+  duration: number,
+  prompts: VerificationPrompt[],
+  mtime: number
+): Promise<VerificationVideoUploadPayload> => {
+  return {
+    content_type: VIDEO_MP4_MIME_TYPE,
+    content_length: buffer.byteLength,
+    date: Math.floor(mtime / 1000),
+    sha256: await hashBase64(buffer.toString('base64')),
+    duration: duration,
+    filename: DEFAULT_SELFIE_VIDEO_FILENAME,
+    prompts: prompts.map(({ id }, i) => ({ id, prompted_at: i })),
+  }
 }
 
 /**
@@ -62,6 +89,7 @@ export const removeFileSafely = async (path: string | undefined, logger: BifoldL
       return
     }
 
+    logger.debug(`Removing file at path: ${path}`)
     await RNFS.unlink(path)
   } catch (error) {
     logger.error('Error removing file safely', error as Error)
