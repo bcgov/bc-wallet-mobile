@@ -76,10 +76,12 @@ export const CROP_DELAY_MS = 11000
 // Date time constants
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
 
-// BCSC Video Resolution
+// BCSC Video constants
 export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
 export const SELFIE_VIDEO_FRAME_RATE = 24
 export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
+export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
+export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
 
 // File chunking constants
 export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB
