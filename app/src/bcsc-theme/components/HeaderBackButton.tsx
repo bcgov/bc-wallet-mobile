@@ -1,6 +1,6 @@
-import { selectOS } from '@/utils/os-utils'
 import { ButtonLocation, IconButton } from '@bifold/core'
 import { HeaderBackButtonProps } from '@react-navigation/elements'
+import { Platform } from 'react-native'
 
 /**
  * Shared Header Back Button component that navigates back on press.
@@ -11,7 +11,7 @@ export const HeaderBackButton = (props: HeaderBackButtonProps) => {
   return (
     <IconButton
       buttonLocation={ButtonLocation.Left}
-      icon={selectOS({ ios: 'chevron-back', android: 'arrow-left' })}
+      icon={Platform.select({ ios: 'chevron-back', android: 'arrow-left', default: 'arrow-left' })}
       accessibilityLabel={String(props.accessibilityLabel)}
       testID={String(props.testID)}
       onPress={() => props.onPress?.()}
