@@ -13,7 +13,7 @@ jest.mock('@/bcsc-theme/utils/file-info')
 jest.mock('@/bcsc-theme/utils/serviceHoursFormatter')
 jest.mock('@/bcsc-theme/features/verify/send-video/VideoReviewScreen', () => ({
   VerificationVideoCache: {
-    removeMediaAndClearCache: jest.fn(),
+    clearCache: jest.fn(),
   },
 }))
 jest.mock('@bifold/core', () => {
@@ -90,8 +90,7 @@ describe('useVerificationMethodModel', () => {
       }
 
       mockEvidenceApi.createVerificationRequest.mockResolvedValue(mockVerificationRequest)
-      const removeMediaMock = jest.mocked(VerificationVideoCache.removeMediaAndClearCache)
-      removeMediaMock.mockResolvedValue(undefined)
+      const clearCacheMock = jest.mocked(VerificationVideoCache.clearCache)
       const removeFileSafelyMock = jest.mocked(removeFileSafely)
       removeFileSafelyMock.mockResolvedValue(undefined)
 
@@ -102,9 +101,10 @@ describe('useVerificationMethodModel', () => {
       })
 
       expect(mockEvidenceApi.createVerificationRequest).toHaveBeenCalledTimes(1)
-      expect(removeMediaMock).toHaveBeenCalledWith(mockStore.bcsc.videoPath, mockLogger)
+      expect(removeFileSafelyMock).toHaveBeenCalledWith(mockStore.bcsc.videoPath, mockLogger)
       expect(removeFileSafelyMock).toHaveBeenCalledWith(mockStore.bcsc.photoPath, mockLogger)
       expect(removeFileSafelyMock).toHaveBeenCalledWith(mockStore.bcsc.videoThumbnailPath, mockLogger)
+      expect(clearCacheMock).toHaveBeenCalledTimes(1)
 
       expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
       expect(mockDispatch).toHaveBeenCalledWith({
@@ -127,8 +127,6 @@ describe('useVerificationMethodModel', () => {
       })
 
       mockEvidenceApi.createVerificationRequest.mockReturnValue(requestPromise)
-      const removeMediaMock = jest.mocked(VerificationVideoCache.removeMediaAndClearCache)
-      removeMediaMock.mockResolvedValue(undefined)
       const removeFileSafelyMock = jest.mocked(removeFileSafely)
       removeFileSafelyMock.mockResolvedValue(undefined)
 
@@ -176,10 +174,8 @@ describe('useVerificationMethodModel', () => {
       }
 
       mockEvidenceApi.createVerificationRequest.mockResolvedValue(mockVerificationRequest)
-      const removeMediaMock = jest.mocked(VerificationVideoCache.removeMediaAndClearCache)
-      removeMediaMock.mockRejectedValue(new Error('Failed to remove media'))
       const removeFileSafelyMock = jest.mocked(removeFileSafely)
-      removeFileSafelyMock.mockResolvedValue(undefined)
+      removeFileSafelyMock.mockRejectedValue(new Error('Failed to remove file'))
 
       const { result } = renderHook(() => useVerificationMethodModel({ navigation: mockNavigation }))
 
@@ -188,6 +184,7 @@ describe('useVerificationMethodModel', () => {
       })
 
       // Should still proceed with dispatch and navigation even if file cleanup fails
+      // (Promise.allSettled is used so rejections don't stop the flow)
       expect(mockDispatch).toHaveBeenCalled()
       expect(mockNavigation.navigate).toHaveBeenCalled()
     })

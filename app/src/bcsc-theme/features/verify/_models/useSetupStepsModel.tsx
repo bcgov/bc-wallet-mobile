@@ -68,7 +68,10 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         text: t('BCSC.Steps.DeleteVerifyRequest'),
         onPress: async () => {
           try {
-            await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId!)
+            if (!store.bcsc.verificationRequestId) {
+              return
+            }
+            await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId)
           } catch (error) {
             logger.error(`Error cancelling verification request: ${error}`)
           } finally {
