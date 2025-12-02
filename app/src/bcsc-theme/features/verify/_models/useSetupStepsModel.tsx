@@ -1,5 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { useSetupSteps } from '@/bcsc-theme/features/verify/_hooks/useSetupSteps'
+import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
