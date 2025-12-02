@@ -576,6 +576,12 @@ const translation = {
         "Description2": "Your video was {{videoLengthSeconds}} seconds. (FR)",
         "ButtonText": "Retake (FR)",
         "CancelButtonText": "Cancel (FR)",
+      },
+      "UploadProgress": {
+        "PreparingVideo": "Preparing your photo and video for verification (FR)",
+        "PreparingDocuments": "Preparing additional documents (FR)",
+        "UploadingInformation": "Uploading your documents securely (FR)",
+        "FinalizingVerification": "Finalizing your request (FR)"
       }
     },
     "MismatchedSerial": {
@@ -738,8 +744,10 @@ const translation = {
       "LastNameError": "Please enter a last name (FR)",
       "LastNameSubtext": "Also known as surname or family name (FR)",
       "BirthDateLabel": "Birth date (FR)",
-      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format (FR)",
+      "BirthDateSubtext": "Enter your birth date (FR)",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (FR)",
+      "BirthDatePickerLabel": "Select birth date (FR)",
+      "BirthDatePickerAccessibilityLabel": "Birth date picker (FR)",
       "MiddleNamesLabel": "Middle names (FR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (FR)",
       "MiddleNamesError": "Please enter up to two middle names (FR)",

@@ -1,4 +1,4 @@
-import { HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
@@ -6,6 +6,7 @@ import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
+import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
@@ -64,6 +65,8 @@ const MainStack: React.FC = () => {
           title: '',
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
+          headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
+          headerLeft: createHeaderBackButton,
           header: createHeaderWithBanner(handleManageDevices),
         }}
       >
