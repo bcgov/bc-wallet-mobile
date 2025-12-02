@@ -5,7 +5,7 @@ import { createVerifyWebviewHeaderBackButton } from '@/bcsc-theme/components/Web
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { HEADER_TITLE_MAX_WIDTH, HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
@@ -84,7 +84,7 @@ const VerifyStack = () => {
         headerShown: true,
         title: '',
         headerShadowVisible: false,
-        headerTitleContainerStyle: { maxWidth: HEADER_TITLE_MAX_WIDTH },
+        headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
         headerLeft: createHeaderBackButton,
         header: createHeaderWithBanner(handleManageDevices),
       }}

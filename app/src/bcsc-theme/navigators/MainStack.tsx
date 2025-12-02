@@ -1,4 +1,4 @@
-import { HEADER_TITLE_MAX_WIDTH, HelpCentreUrl } from '@/constants'
+import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
@@ -65,7 +65,7 @@ const MainStack: React.FC = () => {
           title: '',
           headerBackTestID: testIdWithKey('Back'),
           headerShadowVisible: false,
-          headerTitleContainerStyle: { maxWidth: HEADER_TITLE_MAX_WIDTH },
+          headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
           headerLeft: createHeaderBackButton,
           header: createHeaderWithBanner(handleManageDevices),
         }}
