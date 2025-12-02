@@ -8,7 +8,7 @@ import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { BCState } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React, { useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -58,11 +58,21 @@ const Account: React.FC = () => {
     loadIdTokenMetadata()
   }, [loadBcscServiceClient, loadIdTokenMetadata])
 
+  useFocusEffect(
+    useCallback(() => {
+      logger.info('Account screen focused, refreshing ID token metadata...')
+      refreshIdTokenMetadata()
+      // ignoring refreshIdTokenMetadata dependency to avoid infinite loop
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [logger])
+  )
+
   // Refresh user data when returning to this screen from the BCSC Account webview
   useEffect(() => {
+    // This AppState listener handles state transitions for enterting/ exiting the background
     const appListener = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'active' && openedWebview.current) {
-        logger.info('Returning from webview, refreshing user and device metadata...')
+        logger.info('Returning from background, refreshing user and device metadata...')
         openedWebview.current = false
         refreshIdTokenMetadata()
       }
