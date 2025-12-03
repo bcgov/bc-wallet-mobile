@@ -5,7 +5,7 @@ import deviceInfo from 'react-native-device-info'
 
 describe('UpdateDeviceRegistrationSystemCheck', () => {
   describe('runCheck', () => {
-    it('should return true when appversion is the same', async () => {
+    it('should return true when app version is the same', async () => {
       const mockAppVersion = '1.0.0'
       const mockUtils = {
         dispatch: jest.fn(),
@@ -24,7 +24,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false when appversion is different', async () => {
+    it('should return false when app version is different', async () => {
       const mockAppVersion = '1.0.0'
       const mockUtils = {
         dispatch: jest.fn(),
@@ -44,7 +44,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
     })
   })
   describe('onFail', () => {
-    it('should update registration and dispatch the new app version', () => {
+    it('should update registration and dispatch the new app version', async () => {
       const mockAppVersion = '1.0.0'
       const mockUtils = {
         dispatch: jest.fn(),
@@ -55,7 +55,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
 
       const systemCheck = new UpdateDeviceRegistrationSystemCheck(mockAppVersion, updateRegistrationMock, mockUtils)
 
-      systemCheck.onFail()
+      await systemCheck.onFail()
 
       expect(mockUtils.dispatch).toHaveBeenCalledWith({ type: BCDispatchAction.UPDATE_APP_VERSION })
       expect(updateRegistrationMock).toHaveBeenCalled()

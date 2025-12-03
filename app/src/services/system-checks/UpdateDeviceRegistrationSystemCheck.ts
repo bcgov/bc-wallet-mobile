@@ -1,7 +1,7 @@
 import { RegistrationResponseData } from '@/bcsc-theme/api/hooks/useRegistrationApi'
 import { BCDispatchAction } from '@/store'
 import { getVersion } from 'react-native-device-info'
-import { SystemCheckUtils } from './system-checks'
+import { SystemCheckStrategy, SystemCheckUtils } from './system-checks'
 
 type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
 
@@ -14,7 +14,7 @@ type UpdateRegistrationFunction = () => Promise<RegistrationResponseData>
  * @class UpdateDeviceRegistrationSystemCheck
  * @implements {SystemCheckStrategy}
  */
-export class UpdateDeviceRegistrationSystemCheck {
+export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy {
   private readonly lastAppVersion: string
   private readonly updateRegistration: UpdateRegistrationFunction
   private readonly utils: SystemCheckUtils
@@ -41,8 +41,8 @@ export class UpdateDeviceRegistrationSystemCheck {
    */
   async onFail() {
     try {
-      this.utils.dispatch({ type: BCDispatchAction.UPDATE_APP_VERSION })
       await this.updateRegistration()
+      this.utils.dispatch({ type: BCDispatchAction.UPDATE_APP_VERSION })
     } catch (error) {
       this.utils.logger.error(
         'UpdateDeviceRegistrationSystemCheck: Failed to update device registration',
