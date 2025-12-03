@@ -4,8 +4,7 @@ import React from 'react'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import NicknameAccountScreen from '../../src/bcsc-theme/features/account/NicknameAccountScreen'
 
-jest.mock('../../src/bcsc-theme/hooks/useBCSCApiClient')
-jest.mock('../../src/bcsc-theme/api/hooks/useApi')
+
 
 describe('NicknameAccount', () => {
 
