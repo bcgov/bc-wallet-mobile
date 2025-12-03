@@ -117,3 +117,13 @@ jest.mock('./src/bcsc-theme/contexts/BCSCAccountContext', () => ({
   })),
   BCSCAccountProvider: jest.fn(({ children }) => children),
 }))
+
+jest.mock('react-native-webview', () => {
+  const { View } = jest.requireActual('react-native')
+  
+  return {
+    WebView: jest.fn((props) => {
+      return global.React.createElement(View, { testID: 'mocked-webview', ...props })
+    }),
+  }
+})
