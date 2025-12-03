@@ -1,0 +1,25 @@
+import { render } from '@testing-library/react-native'
+import React from 'react'
+
+import { BasicAppContext } from '../../__mocks__/helpers/app'
+import EditNicknameScreen from '../../src/bcsc-theme/features/account/EditNicknameScreen'
+
+jest.mock('../../src/bcsc-theme/hooks/useBCSCApiClient')
+jest.mock('../../src/bcsc-theme/api/hooks/useApi')
+
+describe('EditNickname', () => {
+
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('renders correctly', () => {
+    const tree = render(
+      <BasicAppContext>
+        <EditNicknameScreen/>
+      </BasicAppContext>
+    )
+
+    expect(tree).toMatchSnapshot()
+  })
+})
