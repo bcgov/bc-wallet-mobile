@@ -3,6 +3,19 @@ import { useSetupSteps } from '@/hooks/useSetupSteps'
 import { initialState } from '@/store'
 import { renderHook } from '@testing-library/react-native'
 
+// Mock react-i18next
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, params?: Record<string, string>) => {
+      // Return key with params for testing
+      if (params) {
+        return `${key}:${JSON.stringify(params)}`
+      }
+      return key
+    },
+  }),
+}))
+
 describe('useSetupSteps Hook', () => {
   describe('Init', () => {
     it('all steps should not be focused and completed', () => {
@@ -61,6 +74,36 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.id.focused).toBe(false)
     })
 
+    it('NonPhoto Card: should not show needs additional card when only cardType is set (user backed out before serial)', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.NonPhoto
+      // Note: serial is NOT set - simulates user selecting card type but backing out
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      // Should NOT show "needs additional card" because user hasn't even entered the serial yet
+      expect(hook.result.current.id.nonPhotoBcscNeedsAdditionalCard).toBe(false)
+      expect(hook.result.current.id.completed).toBe(false)
+      expect(hook.result.current.id.focused).toBe(true)
+    })
+
+    it('Other Card: should not show needs additional card when only cardType is set (user backed out before evidence)', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.nicknames = ['test']
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Other
+      // Note: no evidence data - simulates user selecting card type but backing out
+
+      const hook = renderHook(() => useSetupSteps(store))
+
+      // Should NOT show "needs additional card" because user hasn't even submitted their first ID yet
+      expect(hook.result.current.id.nonBcscNeedsAdditionalCard).toBe(false)
+      expect(hook.result.current.id.completed).toBe(false)
+      expect(hook.result.current.id.focused).toBe(true)
+    })
+
     it('Non-Photo Card: should be completed when serial, email, and photo ID provided', () => {
       const store = structuredClone(initialState)
       store.bcsc.nicknames = ['test']
@@ -86,6 +129,8 @@ describe('useSetupSteps Hook', () => {
           evidenceType: {
             has_photo: true,
           },
+          metadata: [{ uri: 'photo1.jpg' }], // At least 1 photo required
+          documentNumber: 'DL123456', // Document number required
         },
       ] as any[]
 
@@ -119,6 +164,8 @@ describe('useSetupSteps Hook', () => {
           evidenceType: {
             has_photo: false,
           },
+          metadata: [{ uri: 'photo1.jpg' }], // At least 1 photo required
+          documentNumber: 'PASS123456', // Document number required
         },
       ] as any[]
 
@@ -133,11 +180,15 @@ describe('useSetupSteps Hook', () => {
           evidenceType: {
             has_photo: false,
           },
+          metadata: [{ uri: 'photo1.jpg' }],
+          documentNumber: 'PASS123456',
         },
         {
           evidenceType: {
             has_photo: true,
           },
+          metadata: [{ uri: 'photo2.jpg' }],
+          documentNumber: 'DL789012',
         },
       ] as any[]
 
@@ -233,6 +284,8 @@ describe('useSetupSteps Hook', () => {
           evidenceType: {
             has_photo: true,
           },
+          metadata: [{ uri: 'photo1.jpg' }], // At least 1 photo required
+          documentNumber: 'DL123456', // Document number required
         },
       ] as any[]
 
@@ -420,6 +473,134 @@ describe('useSetupSteps Hook', () => {
 
       expect(hook.result.current.verify.completed).toBe(true)
       expect(hook.result.current.verify.focused).toBe(false)
+    })
+  })
+
+  describe('currentStep property', () => {
+    it('should return nickname when nickname step is focused', () => {
+      const store = structuredClone(initialState)
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.currentStep).toBe('nickname')
+    })
+
+    it('should return id when id step is focused', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.currentStep).toBe('id')
+    })
+
+    it('should return address when address step is focused', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.currentStep).toBe('address')
+    })
+
+    it('should return email when email step is focused', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      store.bcsc.deviceCode = 'ABCDEFGH'
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.currentStep).toBe('email')
+    })
+
+    it('should return verify when verify step is focused', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      store.bcsc.deviceCode = 'ABCDEFGH'
+      store.bcsc.email = 'test@email.com'
+      store.bcsc.emailConfirmed = true
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.currentStep).toBe('verify')
+    })
+
+    it('should return null when all steps are completed', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      store.bcsc.deviceCode = 'ABCDEFGH'
+      store.bcsc.email = 'test@email.com'
+      store.bcsc.emailConfirmed = true
+      store.bcsc.verified = true
+      store.bcsc.pendingVerification = false
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.currentStep).toBe(null)
+    })
+  })
+
+  describe('allCompleted property', () => {
+    it('should be false when no steps are completed', () => {
+      const store = structuredClone(initialState)
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.allCompleted).toBe(false)
+    })
+
+    it('should be false when some steps are completed', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.allCompleted).toBe(false)
+    })
+
+    it('should be true when all steps are completed', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      store.bcsc.deviceCode = 'ABCDEFGH'
+      store.bcsc.email = 'test@email.com'
+      store.bcsc.emailConfirmed = true
+      store.bcsc.verified = true
+      store.bcsc.pendingVerification = false
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.allCompleted).toBe(true)
+    })
+  })
+
+  describe('subtext property', () => {
+    it('should return default subtext for nickname when not completed', () => {
+      const store = structuredClone(initialState)
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.nickname.subtext).toEqual(['BCSC.NicknameAccount.AccountName'])
+    })
+
+    it('should return nickname in subtext when completed', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'MyAccount'
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.nickname.subtext[0]).toContain('MyAccount')
+    })
+
+    it('should return scan/photos subtext for id when not completed', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.id.subtext).toEqual(['BCSC.Steps.ScanOrTakePhotos'])
+    })
+
+    it('should return serial number in subtext when id is completed with BCSC card', () => {
+      const store = structuredClone(initialState)
+      store.bcsc.selectedNickname = 'test'
+      store.bcsc.cardType = BCSCCardType.Combined
+      store.bcsc.serial = '123456789'
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.id.subtext[0]).toContain('123456789')
+    })
+
+    it('should have empty subtext for email step (custom children rendering)', () => {
+      const store = structuredClone(initialState)
+      const hook = renderHook(() => useSetupSteps(store))
+      expect(hook.result.current.email.subtext).toEqual([])
     })
   })
 })

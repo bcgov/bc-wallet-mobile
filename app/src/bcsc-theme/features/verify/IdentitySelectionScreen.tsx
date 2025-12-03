@@ -1,7 +1,7 @@
 import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native'
+import { Image, Pressable, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -27,31 +27,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
-  const { width } = useWindowDimensions()
 
   const styles = StyleSheet.create({
-    heading: {
-      marginBottom: Spacing.sm,
-    },
-    description: {
-      marginBottom: Spacing.md,
-    },
-    pageBreakSlot: {
-      position: 'relative',
-      flex: 1,
-      height: 8,
-      marginTop: 8,
-    },
-    pageBreak: {
-      position: 'absolute',
-      width,
-      height: 8,
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      left: -Spacing.md,
-    },
-    checkButton: {
-      marginVertical: Spacing.md,
-    },
     checkButtonText: {
       color: ColorPalette.brand.primary,
     },
@@ -116,38 +93,34 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
 
   return (
-    <ScreenWrapper>
-      <ThemedText variant={'headingThree'} style={styles.heading}>
-        {t('BCSC.ChooseYourID.WhatCardDoYou')}
-      </ThemedText>
-      <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
-      {cardButtons}
-      <View style={styles.pageBreakSlot}>
-        <View style={styles.pageBreak} />
+    <ScreenWrapper scrollViewContainerStyle={{ gap: Spacing.md }}>
+      <View style={{ gap: Spacing.md }}>
+        <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.WhatCardDoYou')}</ThemedText>
+        <ThemedText>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
       </View>
-      <ThemedText variant={'headingThree'} style={styles.heading}>
-        {t('BCSC.ChooseYourID.DontHaveOne')}
-      </ThemedText>
-      <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
-      <Pressable
-        onPress={onCheckForServicesCard}
-        testID={'CheckForServicesCard'}
-        accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
-        style={styles.checkButton}
-      >
-        <ThemedText variant={'bold'} style={styles.checkButtonText}>
-          {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
-          <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
-        </ThemedText>
-      </Pressable>
-      <TileButton
-        onPress={onPressOtherID}
-        testIDKey={'OtherID'}
-        accessibilityLabel={t('BCSC.ChooseYourID.OtherID')}
-        actionText={t('BCSC.ChooseYourID.OtherIDActionText')}
-        description={t('BCSC.ChooseYourID.OtherIDDescription')}
-        style={{ marginBottom: Spacing.md }}
-      />
+      <View>{cardButtons}</View>
+      <View style={{ gap: Spacing.md }}>
+        <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.DontHaveOne')}</ThemedText>
+        <ThemedText>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
+        <Pressable
+          onPress={onCheckForServicesCard}
+          testID={'CheckForServicesCard'}
+          accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
+        >
+          <ThemedText variant={'bold'} style={styles.checkButtonText}>
+            {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
+            <Icon size={20} color={ColorPalette.brand.primary} name={'help-circle-outline'} />
+          </ThemedText>
+        </Pressable>
+        <TileButton
+          onPress={onPressOtherID}
+          testIDKey={'OtherID'}
+          accessibilityLabel={t('BCSC.ChooseYourID.OtherID')}
+          actionText={t('BCSC.ChooseYourID.OtherIDActionText')}
+          description={t('BCSC.ChooseYourID.OtherIDDescription')}
+          style={{ marginBottom: Spacing.md }}
+        />
+      </View>
     </ScreenWrapper>
   )
 }

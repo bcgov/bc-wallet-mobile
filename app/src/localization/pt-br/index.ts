@@ -129,7 +129,7 @@ const translation = {
     "Title": "BC Services Card (PT-BR)",
     "LocaleStringFormat": "pt-BR",
     "Screens": {
-      "Settings": "Menu (PT-BR)",
+      "Settings": "Settings (PT-BR)",
       "SetupTypes": "BC Services Card (PT-BR)",
       "SetupSteps": "Setup Steps (PT-BR)",
       "VerificationMethodSelection": "Choose How to Verify (PT-BR)",
@@ -410,7 +410,8 @@ const translation = {
       "Dismiss": "Dismiss (PT-BR)",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number (PT-BR)",
+      "InputLabel": "Enter serial number (PT-BR)",
+      "InputTitle": "Enter your card's serial number manually (PT-BR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (PT-BR)",
       "EmptySerialError": "Required (PT-BR)",
       "CharCountError": "Cannot exceed 15 characters (PT-BR)",
