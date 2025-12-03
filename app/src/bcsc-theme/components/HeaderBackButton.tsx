@@ -11,7 +11,7 @@ export const HeaderBackButton = (props: HeaderBackButtonProps) => {
   return (
     <IconButton
       buttonLocation={ButtonLocation.Left}
-      icon={Platform.select({ ios: 'chevron-back', android: 'arrow-left', default: 'arrow-left' })}
+      icon={Platform.select({ ios: 'arrow-back-ios', android: 'arrow-left', default: 'arrow-left' })}
       accessibilityLabel={String(props.accessibilityLabel)}
       testID={String(props.testID)}
       onPress={() => props.onPress?.()}

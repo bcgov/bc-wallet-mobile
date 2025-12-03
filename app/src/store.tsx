@@ -9,6 +9,7 @@ import {
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
 import Config from 'react-native-config'
+import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { EvidenceType, VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
@@ -60,6 +61,7 @@ export interface NonBCSCUserMetadata {
 }
 
 export interface BCSCState {
+  appVersion: string
   completedNewSetup: boolean
   verified: boolean
   // used during verification, use IAS ID token cardType for everything else
@@ -127,6 +129,7 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  UPDATE_APP_VERSION = 'bcsc/updateAppVersion',
   ADD_NICKNAME = 'bcsc/addNickname',
   UPDATE_NICKNAME = 'bcsc/updateNickname',
   SELECT_ACCOUNT = 'bcsc/selectAccount',
@@ -229,6 +232,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 const bcscState: BCSCState = {
+  appVersion: getVersion(),
   completedNewSetup: false,
   verified: false,
   cardType: BCSCCardType.None,
@@ -339,6 +343,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         newState.dismissPersonCredentialOffer
       )
 
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_APP_VERSION: {
+      const bcsc = { ...state.bcsc, appVersion: getVersion() }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.ADD_NICKNAME: {
