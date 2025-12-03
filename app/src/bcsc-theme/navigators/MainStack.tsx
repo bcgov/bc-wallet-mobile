@@ -1,13 +1,12 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useCallback, useMemo } from 'react'
+import { createStackNavigator } from '@react-navigation/stack'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
 import { createHeaderBackButton } from '../components/HeaderBackButton'
-import { createHeaderWithBanner, createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createMainHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
 import TransferQRDisplayScreen from '../features/account-transfer/TransferQRDisplayScreen'
@@ -31,7 +30,6 @@ import { MainSettingsScreen } from '../features/settings/MainSettingsScreen'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { MainLoadingScreen } from '../features/splash-loading/MainLoadingScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
-import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
 import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
@@ -41,19 +39,10 @@ const MainStack: React.FC = () => {
   const { currentStep } = useTour()
   const theme = useTheme()
   const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
-  const client = useBCSCApiClient()
   const Stack = createStackNavigator<BCSCMainStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
   useSystemChecks(SystemCheckScope.MAIN_STACK)
-
-  const handleManageDevices = useCallback(() => {
-    navigation.navigate(BCSCScreens.MainWebView, {
-      url: client.endpoints.accountDevices,
-      title: t('BCSC.Screens.ManageDevices'),
-    })
-  }, [client.endpoints.accountDevices, navigation, t])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
@@ -67,16 +56,10 @@ const MainStack: React.FC = () => {
           headerShadowVisible: false,
           headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
           headerLeft: createHeaderBackButton,
-          header: createHeaderWithBanner(handleManageDevices),
+          header: createHeaderWithoutBanner,
         }}
       >
-        <Stack.Screen
-          name={BCSCScreens.MainLoading}
-          component={MainLoadingScreen}
-          options={{
-            header: createHeaderWithoutBanner,
-          }}
-        />
+        <Stack.Screen name={BCSCScreens.MainLoading} component={MainLoadingScreen} />
         <Stack.Screen
           name={BCSCStacks.Tab}
           component={BCSCTabStack}
