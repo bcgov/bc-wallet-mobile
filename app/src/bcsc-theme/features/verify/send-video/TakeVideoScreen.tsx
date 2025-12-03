@@ -1,5 +1,11 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { hitSlop, MAX_SELFIE_VIDEO_DURATION_SECONDS, SELFIE_VIDEO_FRAME_RATE, VIDEO_RESOLUTION_480P } from '@/constants'
+import {
+  hitSlop,
+  MAX_SELFIE_VIDEO_DURATION_SECONDS,
+  MIN_PROMPT_DURATION_SECONDS,
+  SELFIE_VIDEO_FRAME_RATE,
+  VIDEO_RESOLUTION_480P,
+} from '@/constants'
 import { BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -16,8 +22,6 @@ import {
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
-
-const MIN_PROMPT_DURATION_SECONDS = 2
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -158,6 +162,9 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [])
 
   const startRecording = useCallback(async () => {
+    setElapsedTime(0)
+    setPromptTimestamp(0)
+    setRecordingInProgress(false)
     for (let i = 2; i >= 0; i--) {
       await new Promise((resolve) =>
         setTimeout(() => {
