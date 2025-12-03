@@ -6,6 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Platform, StyleSheet, useWindowDimensions } from 'react-native'
+import * as PushNotifications from '../../../utils/PushNotificationsHelper'
 import { WebViewContent } from '../webview/WebViewContent'
 
 interface TermsOfUseScreenProps {
@@ -34,7 +35,19 @@ export const TermsOfUseScreen = ({ navigation }: TermsOfUseScreenProps): JSX.Ele
     <Button
       title={t('BCSC.Onboarding.AcceptAndContinueButton')}
       buttonType={ButtonType.Primary}
-      onPress={() => navigation.navigate(BCSCScreens.OnboardingNotifications)}
+      onPress={async () => {
+        const status = await PushNotifications.status()
+
+        // if permission is granted or blocked, skip notification screen
+        if (
+          status === PushNotifications.NotificationPermissionStatus.GRANTED ||
+          status === PushNotifications.NotificationPermissionStatus.BLOCKED
+        ) {
+          return navigation.navigate(BCSCScreens.OnboardingSecureApp)
+        }
+
+        navigation.navigate(BCSCScreens.OnboardingNotifications)
+      }}
       testID={testIdWithKey('AcceptAndContinue')}
       accessibilityLabel={t('BCSC.Onboarding.AcceptAndContinueButton')}
       disabled={!webViewIsLoaded}
