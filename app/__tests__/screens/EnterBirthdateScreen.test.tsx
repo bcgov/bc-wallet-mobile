@@ -13,6 +13,12 @@ describe('EnterBirthdate', () => {
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
+    jest.useFakeTimers()
+    jest.setSystemTime(new Date('2025-12-03T00:00:00.000Z'))
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   it('renders correctly', () => {
