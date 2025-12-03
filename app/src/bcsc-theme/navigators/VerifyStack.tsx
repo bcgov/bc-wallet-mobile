@@ -1,15 +1,12 @@
-import { createHeaderWithBanner } from '@/bcsc-theme/components/HeaderWithBanner'
+import { createHeaderWithoutBanner } from '@/bcsc-theme/components/HeaderWithBanner'
 import { createVerifyHelpHeaderButton } from '@/bcsc-theme/components/HelpHeaderButton'
 import { createVerifySettingsHeaderButton } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { createVerifyWebviewHeaderBackButton } from '@/bcsc-theme/components/WebViewBackButton'
-import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { getDefaultModalOptions } from '@/bcsc-theme/navigators/stack-utils'
 import { BCSCModals, BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
-import { useNavigation } from '@react-navigation/native'
-import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useCallback } from 'react'
+import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import Developer from '../../screens/Developer'
 import AccountSetupSelectionScreen from '../features/account-transfer/AccountSetupSelectionScreen'
@@ -65,16 +62,7 @@ const VerifyStack = () => {
   const Stack = createStackNavigator<BCSCVerifyStackParams>()
   const theme = useTheme()
   const { t } = useTranslation()
-  const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
-  const client = useBCSCApiClient()
   const defaultStackOptions = useDefaultStackOptions(theme)
-
-  const handleManageDevices = useCallback(() => {
-    navigation.navigate(BCSCScreens.VerifyWebView, {
-      url: client.endpoints.accountDevices,
-      title: t('BCSC.Screens.ManageDevices'),
-    })
-  }, [client.endpoints.accountDevices, navigation, t])
 
   return (
     <Stack.Navigator
@@ -86,7 +74,7 @@ const VerifyStack = () => {
         headerShadowVisible: false,
         headerTitleContainerStyle: DEFAULT_HEADER_TITLE_CONTAINER_STYLE,
         headerLeft: createHeaderBackButton,
-        header: createHeaderWithBanner(handleManageDevices),
+        header: createHeaderWithoutBanner,
       }}
     >
       <Stack.Screen
