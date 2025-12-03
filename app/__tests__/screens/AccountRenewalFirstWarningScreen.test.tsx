@@ -5,8 +5,7 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import {AccountRenewalFirstWarningScreen} from '../../src/bcsc-theme/features/account/AccountRenewalFirstWarningScreen'
 
-jest.mock('../../src/bcsc-theme/hooks/useBCSCApiClient')
-jest.mock('../../src/bcsc-theme/api/hooks/useApi')
+
 
 describe('AccountRenewalFirstWarning', () => {
   let mockNavigation: any
