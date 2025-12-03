@@ -44,13 +44,14 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
 
   const styles = StyleSheet.create({
     image: {
-      width: width - Spacing.md * 2,
-      height: (width - Spacing.md * 2) * twoThirds,
-      marginBottom: Spacing.md,
+      width: width - Spacing.md * 6,
+      height: (width - Spacing.md * 6) * twoThirds,
+      padding: Spacing.lg,
+      alignSelf: 'center',
+      marginVertical: Spacing.lg,
     },
     error: {
       color: ColorPalette.semantic.error,
-      marginBottom: Spacing.sm,
     },
   })
 
@@ -90,8 +91,10 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   )
 
   return (
-    <ScreenWrapper keyboardActive controls={controls}>
-      <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
+    <ScreenWrapper keyboardActive controls={controls} scrollViewContainerStyle={{ gap: Spacing.md }}>
+      <ThemedText variant={'headingFour'}>{t('BCSC.ManualSerial.InputTitle')}</ThemedText>
+      <ThemedText>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
+
       <LimitedTextInput
         defaultValue={serial}
         label={t('BCSC.ManualSerial.InputLabel')}
@@ -109,7 +112,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
           {errorState.description}
         </ThemedText>
       ) : null}
-      <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.ManualSerial.InputSubText')}</ThemedText>
+      <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
     </ScreenWrapper>
   )
 }

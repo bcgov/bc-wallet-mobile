@@ -129,7 +129,7 @@ const translation = {
     "Title": "BC Services Card (FR)",
     "LocaleStringFormat": "fr-CA",
     "Screens": {
-      "Settings": "Menu",
+      "Settings": "Settings (FR)",
       "SetupTypes": "BC Services Card (FR)",
       "SetupSteps": "Setup Steps (FR)",
       "VerificationMethodSelection": "Choose How to Verify (FR)",
@@ -410,7 +410,8 @@ const translation = {
       "Dismiss": "Dismiss (FR)",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number (FR)",
+      "InputLabel": "Enter serial number (FR)",
+      "InputTitle": "Enter your card's serial number manually (FR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (FR)",
       "EmptySerialError": "Required (FR)",
       "CharCountError": "Cannot exceed 15 characters (FR)",
