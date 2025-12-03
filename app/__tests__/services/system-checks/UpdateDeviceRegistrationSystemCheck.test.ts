@@ -24,7 +24,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
       expect(result).toBe(true)
     })
 
-    it('should return false when appversion is different', async () => {
+    it('should return false when app version is different', async () => {
       const mockAppVersion = '1.0.0'
       const mockUtils = {
         dispatch: jest.fn(),
