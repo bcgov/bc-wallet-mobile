@@ -1,6 +1,6 @@
-From f22d655b99f143e0080adfea23ec4472355e3b9a Mon Sep 17 00:00:00 2001
+From fbe9fcd1763a40da87b70c4040cfa5d571b29268 Mon Sep 17 00:00:00 2001
 From: Bryce McMath <bryce.j.mcmath@gmail.com>
-Date: Tue, 2 Dec 2025 15:30:47 -0800
+Date: Tue, 2 Dec 2025 16:03:59 -0800
 Subject: [PATCH] chore: android app to bcsc dev
 
 Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
@@ -127,7 +127,7 @@ index f552ceb7..12914cd9 100644
          targetSdkVersion rootProject.ext.targetSdkVersion
          versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1
 diff --git a/app/android/app/google-services.json b/app/android/app/google-services.json
-index a3a58790..a237cc51 100644
+index a3a58790..8643db07 100644
 --- a/app/android/app/google-services.json
 +++ b/app/android/app/google-services.json
 @@ -1,33 +1,34 @@
@@ -148,7 +148,7 @@ index a3a58790..a237cc51 100644
 +        "mobilesdk_app_id": "1:209333430748:android:1c4641260a97bfe5",
          "android_client_info": {
 -          "package_name": "ca.bc.gov.BCWallet"
-+          "package_name": "ca.bc.gov.id.servicescard"
++          "package_name": "ca.bc.gov.id.servicescard.dev"
          }
        },
        "oauth_client": [
