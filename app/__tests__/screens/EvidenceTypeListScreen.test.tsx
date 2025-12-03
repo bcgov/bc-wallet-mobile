@@ -5,8 +5,7 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import EvidenceTypeListScreen from '../../src/bcsc-theme/features/verify/non-photo/EvidenceTypeListScreen'
 
-jest.mock('../../src/bcsc-theme/hooks/useBCSCApiClient')
-jest.mock('../../src/bcsc-theme/api/hooks/useApi')
+
 
 describe('EvidenceTypeList', () => {
   let mockNavigation: any

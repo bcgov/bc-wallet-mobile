@@ -4,8 +4,7 @@ import React from 'react'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import TransferSuccessScreen from '../../src/bcsc-theme/features/account-transfer/TransferSuccessScreen'
 
-jest.mock('../../src/bcsc-theme/hooks/useBCSCApiClient')
-jest.mock('../../src/bcsc-theme/api/hooks/useApi')
+
 
 describe('TransferSuccess', () => {
 

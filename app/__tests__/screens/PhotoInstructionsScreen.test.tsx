@@ -5,8 +5,7 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import PhotoInstructionsScreen from '../../src/bcsc-theme/features/verify/PhotoInstructionsScreen'
 
-jest.mock('../../src/bcsc-theme/hooks/useBCSCApiClient')
-jest.mock('../../src/bcsc-theme/api/hooks/useApi')
+
 
 describe('PhotoInstructions', () => {
   let mockNavigation: any
