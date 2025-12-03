@@ -1,6 +1,7 @@
 import {
   Button,
   ButtonType,
+  ScreenWrapper,
   testIdWithKey,
   ThemedText,
   TOKENS,
@@ -11,9 +12,8 @@ import {
 } from '@bifold/core'
 import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
@@ -30,7 +30,7 @@ type EnterBirthdateScreenProps = {
 const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation }: EnterBirthdateScreenProps) => {
   const today = new Date()
   const { t } = useTranslation()
-  const { ColorPalette, themeName, Spacing } = useTheme()
+  const { themeName, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
   const [date, setDate] = useState(store.bcsc.birthdate ?? today)
   const [loading, setLoading] = useState(false)
@@ -40,20 +40,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    scrollView: {
-      flex: 1,
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      margin: Spacing.md,
-      marginTop: 'auto',
-      position: 'relative',
-    },
     lineBreak: {
       height: 8,
       backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -114,46 +100,44 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     }
   }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger, store.bcsc.cardType])
 
+  const controls = (
+    <Button
+      title={t('Global.Done')}
+      accessibilityLabel={t('Global.Done')}
+      testID={testIdWithKey('Done')}
+      onPress={() => {
+        if (pickerState === 'spinning') {
+          return
+        }
+        onSubmit()
+      }}
+      buttonType={ButtonType.Primary}
+      disabled={loading}
+    >
+      {loading && <ButtonLoading />}
+    </Button>
+  )
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <ThemedText style={{ marginBottom: Spacing.sm }}>
-          {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
-        </ThemedText>
-        <View style={styles.lineBreak} />
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.Birthdate.Heading')}
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <DatePicker
-            theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
-            locale={t('BCSC.LocaleStringFormat')}
-            mode={'date'}
-            date={date}
-            onDateChange={onDateChange}
-            onStateChange={setPickerState}
-          />
-        </View>
-      </ScrollView>
-      <View style={styles.controlsContainer}>
-        <Button
-          title={t('Global.Done')}
-          accessibilityLabel={t('Global.Done')}
-          testID={testIdWithKey('Done')}
-          onPress={() => {
-            if (pickerState === 'spinning') {
-              return
-            }
-            onSubmit()
-          }}
-          buttonType={ButtonType.Primary}
-          disabled={loading}
-        >
-          {loading && <ButtonLoading />}
-        </Button>
+    <ScreenWrapper controls={controls}>
+      <ThemedText style={{ marginBottom: Spacing.sm }}>
+        {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
+      </ThemedText>
+      <View style={styles.lineBreak} />
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.Birthdate.Heading')}
+      </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Birthdate.Paragraph')}</ThemedText>
+      <View style={{ flex: 1, alignItems: 'center' }}>
+        <DatePicker
+          theme={themeName === BCThemeNames.BCSC ? 'dark' : 'light'}
+          locale={t('BCSC.LocaleStringFormat')}
+          mode={'date'}
+          date={date}
+          onDateChange={onDateChange}
+          onStateChange={setPickerState}
+        />
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

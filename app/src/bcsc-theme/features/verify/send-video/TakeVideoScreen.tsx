@@ -1,22 +1,27 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { hitSlop } from '@/constants'
+import {
+  hitSlop,
+  MAX_SELFIE_VIDEO_DURATION_SECONDS,
+  MIN_PROMPT_DURATION_SECONDS,
+  SELFIE_VIDEO_FRAME_RATE,
+  VIDEO_RESOLUTION_480P,
+} from '@/constants'
 import { BCState } from '@/store'
-import { Button, ButtonType, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   Camera,
   CameraRuntimeError,
   useCameraDevice,
+  useCameraFormat,
   useCameraPermission,
   useMicrophonePermission,
 } from 'react-native-vision-camera'
-
-const maxVideoDurationSeconds = 30
 
 type TakeVideoScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.TakeVideo>
@@ -31,10 +36,21 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const { hasPermission: hasCameraPermission, requestPermission: requestCameraPermission } = useCameraPermission()
   const { hasPermission: hasMicrophonePermission, requestPermission: requestMicrophonePermission } =
     useMicrophonePermission()
+
+  // Video format for 480p at 24fps to reduce file size
+  const format = useCameraFormat(device, [
+    {
+      videoResolution: VIDEO_RESOLUTION_480P,
+      videoAspectRatio: VIDEO_RESOLUTION_480P.width / VIDEO_RESOLUTION_480P.height,
+    },
+    { fps: SELFIE_VIDEO_FRAME_RATE },
+  ])
+
   const [isActive, setIsActive] = useState(false)
   const [prompt, setPrompt] = useState('3')
   const [recordingInProgress, setRecordingInProgress] = useState(false)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [promptTimestamp, setPromptTimestamp] = useState(0)
   const [exceedsMaxDuration, setExceedsMaxDuration] = useState(false)
   const cameraRef = useRef<Camera>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -42,7 +58,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   const elapsedTimeRef = useRef(0)
   const promptOpacity = useRef(new Animated.Value(1)).current
   const prompts = useMemo(() => store.bcsc.prompts?.map(({ prompt }) => prompt) || [], [store.bcsc.prompts])
-
+  const safeAreaInsets = useSafeAreaInsets()
   const isLastPrompt = useMemo(() => {
     if (prompt === '') {
       return true // Recording finished, treat as last prompt
@@ -95,11 +111,18 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
           alignItems: 'center',
           flex: 1,
         },
+        buttonContainer: {
+          marginBottom: safeAreaInsets.bottom,
+        },
       }),
-    [ColorPalette.notification.popupOverlay, Spacing]
+    [ColorPalette.notification.popupOverlay, Spacing.lg, Spacing.md, Spacing.sm, Spacing.xl, safeAreaInsets.bottom]
   )
 
   const handleCancel = () => {
+    if (cameraRef.current) {
+      cameraRef.current.cancelRecording()
+    }
+
     navigation.goBack()
   }
 
@@ -121,7 +144,7 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
       const elapsed = Math.floor((currentTime - startTime) / 1000)
 
       // Check if we've exceeded the max duration, but only trigger once
-      if (elapsed > maxVideoDurationSeconds && !exceedsMaxDurationRef.current) {
+      if (elapsed > MAX_SELFIE_VIDEO_DURATION_SECONDS && !exceedsMaxDurationRef.current) {
         exceedsMaxDurationRef.current = true
         setExceedsMaxDuration(true) // Trigger re-render for UI
       }
@@ -139,6 +162,9 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }, [])
 
   const startRecording = useCallback(async () => {
+    setElapsedTime(0)
+    setPromptTimestamp(0)
+    setRecordingInProgress(false)
     for (let i = 2; i >= 0; i--) {
       await new Promise((resolve) =>
         setTimeout(() => {
@@ -152,11 +178,26 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
     setPrompt(prompts[0])
     startTimer() // Start the timer when recording begins
 
-    cameraRef.current?.startRecording({
+    if (!cameraRef.current) {
+      logger.error('Camera reference is null, cannot start recording')
+      return
+    }
+
+    const snapshot = await cameraRef.current.takeSnapshot()
+
+    cameraRef.current.startRecording({
       fileType: 'mp4',
+      videoCodec: 'h265',
       onRecordingError: (error) => {
-        logger.debug(`Recording error: ${error.message}`)
         stopTimer() // Stop timer on error
+
+        // If recording was canceled, do not show an alert
+        if (error.code === 'capture/recording-canceled') {
+          logger.debug('Video recording canceled')
+          return
+        }
+
+        logger.debug(`Recording error (${error.code}): ${error.message}`)
         Alert.alert(
           t('BCSC.SendVideo.TakeVideo.RecordingError'),
           t('BCSC.SendVideo.TakeVideo.RecordingErrorDescription')
@@ -166,26 +207,24 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
         logger.info(`Recording finished, duration: ${video.duration}`)
         stopTimer() // Stop timer when manually stopping recording
         setPrompt('')
-        const snapshot = await cameraRef.current!.takeSnapshot()
         if (exceedsMaxDurationRef.current) {
           navigation.navigate(BCSCScreens.VideoTooLong, { videoLengthSeconds: elapsedTimeRef.current })
-        } else {
-          navigation.navigate(BCSCScreens.VideoReview, {
-            videoPath: video.path,
-            videoThumbnailPath: snapshot.path,
-          })
+          return
         }
+
+        navigation.navigate(BCSCScreens.VideoReview, { videoPath: video.path, videoThumbnailPath: snapshot.path })
       },
     })
-  }, [logger, startTimer, stopTimer, navigation, prompts, t])
+  }, [prompts, startTimer, logger, stopTimer, t, navigation])
 
   const onPressNextPrompt = async () => {
     const currentIndex = prompts.indexOf(prompt)
     if (currentIndex === prompts.length - 1) {
-      await cameraRef.current?.stopRecording()
-    } else {
-      setPrompt(prompts[currentIndex + 1])
+      return cameraRef.current?.stopRecording()
     }
+
+    setPromptTimestamp(elapsedTime)
+    setPrompt(prompts[currentIndex + 1])
   }
 
   const onInitialized = () => {
@@ -279,12 +318,13 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top']}>
       <View style={styles.pageContainer}>
         <Camera
           ref={cameraRef}
           style={styles.camera}
           device={device}
+          format={format}
           isActive={isActive}
           video={true}
           onInitialized={onInitialized}
@@ -333,17 +373,20 @@ const TakeVideoScreen = ({ navigation }: TakeVideoScreenProps) => {
                 </ThemedText>
               </View>
             </View>
-            <Button
-              buttonType={ButtonType.Primary}
-              title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
-              onPress={onPressNextPrompt}
-              testID={'StartRecordingButton'}
-              accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
-            />
+            <View style={styles.buttonContainer}>
+              <Button
+                buttonType={ButtonType.Primary}
+                title={isLastPrompt ? t('BCSC.SendVideo.TakeVideo.Done') : t('BCSC.SendVideo.TakeVideo.ShowNextPrompt')}
+                onPress={onPressNextPrompt}
+                testID={'StartRecordingButton'}
+                accessibilityLabel={t('BCSC.SendVideo.TakeVideo.StartRecordingButton')}
+                disabled={elapsedTime - promptTimestamp < MIN_PROMPT_DURATION_SECONDS}
+              />
+            </View>
           </View>
         ) : null}
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

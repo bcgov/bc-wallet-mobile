@@ -17,9 +17,6 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
   const { t } = useTranslation()
 
   const styles = StyleSheet.create({
-    contentContainer: {
-      flexGrow: 1,
-    },
     controlsContainer: {
       position: 'absolute',
       gap: Spacing.md,
@@ -40,7 +37,7 @@ const PhotoReview: React.FC<PhotoReviewProps> = ({ photoPath, onAccept, onRetake
     }
   }
   return (
-    <View style={styles.contentContainer}>
+    <View>
       <Image source={{ uri: `file://${photoPath}` }} style={{ height: '100%', width: 'auto', resizeMode: 'cover' }} />
       <SafeAreaView style={styles.controlsContainer} edges={['bottom', 'left', 'right']}>
         <Button

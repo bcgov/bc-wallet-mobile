@@ -97,36 +97,46 @@ describe('getNotificationTokens', () => {
   })
 
   describe('when FCM token fails', () => {
-    it('throws error when FCM token is null', async () => {
+    it('returns dummy token when FCM token is null', async () => {
       setPlatformOS('ios')
       mockGetToken.mockResolvedValue(null)
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
-      await expect(getNotificationTokens(mockLogger)).rejects.toThrow(
-        'FCM token fetch failed: FCM token is null or undefined'
-      )
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to retrieve notification tokens: FCM token fetch failed: FCM token is null or undefined'
-      )
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(result).toEqual({
+        fcmDeviceToken: 'missing_token_due_to_fetch_failure',
+        deviceToken: 'mock_apns_token',
+      })
+      expect(mockLogger.error).toHaveBeenCalledWith('FCM token fetch failed: FCM token is null or undefined')
     })
 
-    it('throws error when FCM token is undefined', async () => {
+    it('returns dummy token when FCM token is undefined', async () => {
       setPlatformOS('ios')
       mockGetToken.mockResolvedValue(undefined)
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
-      await expect(getNotificationTokens(mockLogger)).rejects.toThrow(
-        'FCM token fetch failed: FCM token is null or undefined'
-      )
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(result).toEqual({
+        fcmDeviceToken: 'missing_token_due_to_fetch_failure',
+        deviceToken: 'mock_apns_token',
+      })
     })
 
-    it('throws error when FCM token fetch throws exception', async () => {
+    it('returns dummy token when FCM token fetch throws exception', async () => {
       setPlatformOS('ios')
       const mockError = new Error('FCM service unavailable')
       mockGetToken.mockRejectedValue(mockError)
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
-      await expect(getNotificationTokens(mockLogger)).rejects.toThrow('FCM token fetch failed: FCM service unavailable')
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(result).toEqual({
+        fcmDeviceToken: 'missing_token_due_to_fetch_failure',
+        deviceToken: 'mock_apns_token',
+      })
+      expect(mockLogger.error).toHaveBeenCalledWith('FCM token fetch failed: FCM service unavailable')
     })
 
     it('succeeds with null deviceToken when APNS token is null on iOS', async () => {
@@ -157,14 +167,17 @@ describe('getNotificationTokens', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith('APNS token fetch failed: APNS service unavailable')
     })
 
-    it('throws error when FCM fails even if APNS succeeds', async () => {
+    it('returns dummy FCM token when FCM fails even if APNS succeeds', async () => {
       setPlatformOS('ios')
       mockGetToken.mockResolvedValue(null)
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
-      await expect(getNotificationTokens(mockLogger)).rejects.toThrow(
-        'FCM token fetch failed: FCM token is null or undefined'
-      )
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(result).toEqual({
+        fcmDeviceToken: 'missing_token_due_to_fetch_failure',
+        deviceToken: 'mock_apns_token',
+      })
     })
 
     it('handles non-Error exceptions (string messages)', async () => {
@@ -172,7 +185,13 @@ describe('getNotificationTokens', () => {
       mockGetToken.mockRejectedValue('String error message')
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
-      await expect(getNotificationTokens(mockLogger)).rejects.toThrow('FCM token fetch failed: String error message')
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(result).toEqual({
+        fcmDeviceToken: 'missing_token_due_to_fetch_failure',
+        deviceToken: 'mock_apns_token',
+      })
+      expect(mockLogger.error).toHaveBeenCalledWith('FCM token fetch failed: String error message')
     })
   })
 
@@ -208,14 +227,17 @@ describe('getNotificationTokens', () => {
   })
 
   describe('edge cases with empty strings', () => {
-    it('treats empty string FCM token as invalid', async () => {
+    it('treats empty string FCM token as invalid and returns dummy token', async () => {
       setPlatformOS('ios')
       mockGetToken.mockResolvedValue('')
       mockGetAPNSToken.mockResolvedValue('mock_apns_token')
 
-      await expect(getNotificationTokens(mockLogger)).rejects.toThrow(
-        'FCM token fetch failed: FCM token is null or undefined'
-      )
+      const result = await getNotificationTokens(mockLogger)
+
+      expect(result).toEqual({
+        fcmDeviceToken: 'missing_token_due_to_fetch_failure',
+        deviceToken: 'mock_apns_token',
+      })
     })
 
     it('succeeds with null deviceToken when APNS token is empty string on iOS', async () => {

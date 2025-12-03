@@ -1,54 +1,54 @@
-From 9054961cd1c760b4598ffcb762e8d07e79d27151 Mon Sep 17 00:00:00 2001
+From fbe9fcd1763a40da87b70c4040cfa5d571b29268 Mon Sep 17 00:00:00 2001
 From: Bryce McMath <bryce.j.mcmath@gmail.com>
-Date: Fri, 7 Nov 2025 15:43:46 -0800
+Date: Tue, 2 Dec 2025 16:03:59 -0800
 Subject: [PATCH] chore: android app to bcsc dev
 
 Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
 ---
- app/android/app/BUCK                          |   4 +--
- app/android/app/build.gradle                  |   4 +--
- app/android/app/google-services.json          |  30 ++++++++++--------
- app/android/app/src/main/AndroidManifest.xml  |   4 +--
- .../src/main/ic_launcher_mono-playstore.png   | Bin 0 -> 18297 bytes
- .../java/ca/bc/gov/BCWallet/MainActivity.kt   |   2 +-
- .../ca/bc/gov/BCWallet/MainApplication.kt     |   2 +-
- .../app/src/main/res/layout/launch_screen.xml |   2 +-
- .../res/mipmap-anydpi-v26/ic_launcher.xml     |   6 ----
- .../mipmap-anydpi-v26/ic_launcher_mono.xml    |   5 +++
- .../ic_launcher_mono_round.xml                |   5 +++
- .../mipmap-anydpi-v26/ic_launcher_round.xml   |   6 ----
- .../src/main/res/mipmap-hdpi/ic_launcher.png  | Bin 2306 -> 0 bytes
- .../mipmap-hdpi/ic_launcher_foreground.png    | Bin 3269 -> 0 bytes
- .../res/mipmap-hdpi/ic_launcher_mono.webp     | Bin 0 -> 1186 bytes
- .../ic_launcher_mono_foreground.webp          | Bin 0 -> 1148 bytes
- .../mipmap-hdpi/ic_launcher_mono_round.webp   | Bin 0 -> 2562 bytes
- .../res/mipmap-hdpi/ic_launcher_round.png     | Bin 4262 -> 0 bytes
- .../src/main/res/mipmap-mdpi/ic_launcher.png  | Bin 1603 -> 0 bytes
- .../mipmap-mdpi/ic_launcher_foreground.png    | Bin 2176 -> 0 bytes
- .../res/mipmap-mdpi/ic_launcher_mono.webp     | Bin 0 -> 1008 bytes
- .../ic_launcher_mono_foreground.webp          | Bin 0 -> 746 bytes
- .../mipmap-mdpi/ic_launcher_mono_round.webp   | Bin 0 -> 1778 bytes
- .../res/mipmap-mdpi/ic_launcher_round.png     | Bin 2670 -> 0 bytes
- .../src/main/res/mipmap-xhdpi/ic_launcher.png | Bin 3163 -> 0 bytes
- .../mipmap-xhdpi/ic_launcher_foreground.png   | Bin 4373 -> 0 bytes
- .../res/mipmap-xhdpi/ic_launcher_mono.webp    | Bin 0 -> 1612 bytes
- .../ic_launcher_mono_foreground.webp          | Bin 0 -> 1538 bytes
- .../mipmap-xhdpi/ic_launcher_mono_round.webp  | Bin 0 -> 3456 bytes
- .../res/mipmap-xhdpi/ic_launcher_round.png    | Bin 5956 -> 0 bytes
- .../main/res/mipmap-xxhdpi/ic_launcher.png    | Bin 4765 -> 0 bytes
- .../mipmap-xxhdpi/ic_launcher_foreground.png  | Bin 6808 -> 0 bytes
- .../res/mipmap-xxhdpi/ic_launcher_mono.webp   | Bin 0 -> 2304 bytes
- .../ic_launcher_mono_foreground.webp          | Bin 0 -> 2458 bytes
- .../mipmap-xxhdpi/ic_launcher_mono_round.webp | Bin 0 -> 5252 bytes
- .../res/mipmap-xxhdpi/ic_launcher_round.png   | Bin 9125 -> 0 bytes
- .../main/res/mipmap-xxxhdpi/ic_launcher.png   | Bin 6282 -> 0 bytes
- .../mipmap-xxxhdpi/ic_launcher_foreground.png | Bin 9598 -> 0 bytes
- .../res/mipmap-xxxhdpi/ic_launcher_mono.webp  | Bin 0 -> 3176 bytes
- .../ic_launcher_mono_foreground.webp          | Bin 0 -> 3586 bytes
- .../ic_launcher_mono_round.webp               | Bin 0 -> 7468 bytes
- .../res/mipmap-xxxhdpi/ic_launcher_round.png  | Bin 12903 -> 0 bytes
- .../app/src/main/res/values/strings.xml       |   2 +-
- 43 files changed, 37 insertions(+), 35 deletions(-)
+ app/android/app/BUCK                           |   4 ++--
+ app/android/app/build.gradle                   |   4 ++--
+ app/android/app/google-services.json           |  17 +++++++++--------
+ app/android/app/src/main/AndroidManifest.xml   |   4 ++--
+ .../src/main/ic_launcher_mono-playstore.png    | Bin 0 -> 18297 bytes
+ .../java/ca/bc/gov/BCWallet/MainActivity.kt    |   2 +-
+ .../java/ca/bc/gov/BCWallet/MainApplication.kt |   2 +-
+ .../app/src/main/res/layout/launch_screen.xml  |   2 +-
+ .../main/res/mipmap-anydpi-v26/ic_launcher.xml |   6 ------
+ .../res/mipmap-anydpi-v26/ic_launcher_mono.xml |   5 +++++
+ .../ic_launcher_mono_round.xml                 |   5 +++++
+ .../mipmap-anydpi-v26/ic_launcher_round.xml    |   6 ------
+ .../src/main/res/mipmap-hdpi/ic_launcher.png   | Bin 2306 -> 0 bytes
+ .../res/mipmap-hdpi/ic_launcher_foreground.png | Bin 3269 -> 0 bytes
+ .../main/res/mipmap-hdpi/ic_launcher_mono.webp | Bin 0 -> 1186 bytes
+ .../ic_launcher_mono_foreground.webp           | Bin 0 -> 1148 bytes
+ .../mipmap-hdpi/ic_launcher_mono_round.webp    | Bin 0 -> 2562 bytes
+ .../main/res/mipmap-hdpi/ic_launcher_round.png | Bin 4262 -> 0 bytes
+ .../src/main/res/mipmap-mdpi/ic_launcher.png   | Bin 1603 -> 0 bytes
+ .../res/mipmap-mdpi/ic_launcher_foreground.png | Bin 2176 -> 0 bytes
+ .../main/res/mipmap-mdpi/ic_launcher_mono.webp | Bin 0 -> 1008 bytes
+ .../ic_launcher_mono_foreground.webp           | Bin 0 -> 746 bytes
+ .../mipmap-mdpi/ic_launcher_mono_round.webp    | Bin 0 -> 1778 bytes
+ .../main/res/mipmap-mdpi/ic_launcher_round.png | Bin 2670 -> 0 bytes
+ .../src/main/res/mipmap-xhdpi/ic_launcher.png  | Bin 3163 -> 0 bytes
+ .../mipmap-xhdpi/ic_launcher_foreground.png    | Bin 4373 -> 0 bytes
+ .../res/mipmap-xhdpi/ic_launcher_mono.webp     | Bin 0 -> 1612 bytes
+ .../ic_launcher_mono_foreground.webp           | Bin 0 -> 1538 bytes
+ .../mipmap-xhdpi/ic_launcher_mono_round.webp   | Bin 0 -> 3456 bytes
+ .../res/mipmap-xhdpi/ic_launcher_round.png     | Bin 5956 -> 0 bytes
+ .../src/main/res/mipmap-xxhdpi/ic_launcher.png | Bin 4765 -> 0 bytes
+ .../mipmap-xxhdpi/ic_launcher_foreground.png   | Bin 6808 -> 0 bytes
+ .../res/mipmap-xxhdpi/ic_launcher_mono.webp    | Bin 0 -> 2304 bytes
+ .../ic_launcher_mono_foreground.webp           | Bin 0 -> 2458 bytes
+ .../mipmap-xxhdpi/ic_launcher_mono_round.webp  | Bin 0 -> 5252 bytes
+ .../res/mipmap-xxhdpi/ic_launcher_round.png    | Bin 9125 -> 0 bytes
+ .../main/res/mipmap-xxxhdpi/ic_launcher.png    | Bin 6282 -> 0 bytes
+ .../mipmap-xxxhdpi/ic_launcher_foreground.png  | Bin 9598 -> 0 bytes
+ .../res/mipmap-xxxhdpi/ic_launcher_mono.webp   | Bin 0 -> 3176 bytes
+ .../ic_launcher_mono_foreground.webp           | Bin 0 -> 3586 bytes
+ .../mipmap-xxxhdpi/ic_launcher_mono_round.webp | Bin 0 -> 7468 bytes
+ .../res/mipmap-xxxhdpi/ic_launcher_round.png   | Bin 12903 -> 0 bytes
+ .../app/src/main/res/values/strings.xml        |   2 +-
+ 43 files changed, 29 insertions(+), 30 deletions(-)
  create mode 100644 app/android/app/src/main/ic_launcher_mono-playstore.png
  delete mode 100644 app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
  create mode 100644 app/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_mono.xml
@@ -127,12 +127,11 @@ index f552ceb7..12914cd9 100644
          targetSdkVersion rootProject.ext.targetSdkVersion
          versionCode System.getenv("VERSION_CODE") ? System.getenv("VERSION_CODE").toInteger() : 1
 diff --git a/app/android/app/google-services.json b/app/android/app/google-services.json
-index a3a58790..d1ffc681 100644
+index a3a58790..8643db07 100644
 --- a/app/android/app/google-services.json
 +++ b/app/android/app/google-services.json
-@@ -1,36 +1,40 @@
+@@ -1,33 +1,34 @@
  {
-+
    "project_info": {
 -    "project_number": "1008044298583",
 -    "project_id": "bc-wallet-mobile",
@@ -140,7 +139,7 @@ index a3a58790..d1ffc681 100644
 +    "project_number": "209333430748",
 +    "firebase_url": "https://bcsc-app-test-fcm.firebaseio.com",
 +    "project_id": "bcsc-app-test-fcm",
-+    "storage_bucket": "bcsc-app-test-fcm.appspot.com"
++    "storage_bucket": "bcsc-app-test-fcm.firebasestorage.app"
    },
    "client": [
      {
@@ -166,24 +165,14 @@ index a3a58790..d1ffc681 100644
          }
        ],
        "services": {
-+        "analytics_service": {
-+          "status": 1
-+        },
          "appinvite_service": {
--          "other_platform_oauth_client": [
--            {
+           "other_platform_oauth_client": [
+             {
 -              "client_id": "1008044298583-12lpkisi403oa5bc5hs0800o48cl4nhj.apps.googleusercontent.com",
--              "client_type": 3
--            }
--          ]
-+          "status": 1,
-+          "other_platform_oauth_client": []
-+        },
-+        "ads_service": {
-+          "status": 2
-         }
-       }
-     }
++              "client_id": "209333430748-f89kks1sr4an87kmkilim6e1jj2gd0nc.apps.googleusercontent.com",
+               "client_type": 3
+             }
+           ]
 diff --git a/app/android/app/src/main/AndroidManifest.xml b/app/android/app/src/main/AndroidManifest.xml
 index cd4c656c..dc895efe 100644
 --- a/app/android/app/src/main/AndroidManifest.xml

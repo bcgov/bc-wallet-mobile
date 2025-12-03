@@ -2,12 +2,10 @@ import PhotoReview from '@/bcsc-theme/components/PhotoReview'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import { getPhotoMetadata } from '@bcsc-theme/utils/file-info'
-import { TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, TOKENS, useServices, useStore } from '@bifold/core'
 import { CommonActions, RouteProp } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 
 type PhotoReviewScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.PhotoReview>
@@ -15,7 +13,6 @@ type PhotoReviewScreenProps = {
 }
 
 const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
-  const { ColorPalette } = useTheme()
   const [, dispatch] = useStore<BCState>()
   const { photoPath, forLiveCall } = route.params
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
@@ -25,17 +22,9 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
     throw new Error(t('BCSC.PhotoReview.PathRequired'))
   }
 
-  const styles = StyleSheet.create({
-    pageContainer: {
-      position: 'relative',
-      flexGrow: 1,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-  })
-
   const onPressUse = async () => {
     try {
-      const photoMetadata = await getPhotoMetadata(photoPath)
+      const photoMetadata = await getPhotoMetadata(photoPath, logger)
 
       dispatch({ type: BCDispatchAction.SAVE_PHOTO, payload: [{ photoPath, photoMetadata }] })
 
@@ -74,9 +63,9 @@ const PhotoReviewScreen = ({ navigation, route }: PhotoReviewScreenProps) => {
   }
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['top', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'left', 'right']}>
       <PhotoReview photoPath={photoPath} onAccept={onPressUse} onRetake={onPressRetake} />
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

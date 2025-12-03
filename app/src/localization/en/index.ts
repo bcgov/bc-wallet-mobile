@@ -130,7 +130,7 @@ const translation = {
     "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
     "Screens": {
-      "Settings": "Menu",
+      "Settings": "Settings",
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",
@@ -158,7 +158,9 @@ const translation = {
       "ContactUs": "Contact us",
       "Feedback": "Feedback",
       "Accessibility": "Accessibility",
+      "AnalyticsOptIn": "Analytics Opt-In Placeholder (FR)",
       "TermsOfUse": "Terms of use",
+      "Analytics": "Analytics",
     },
     "Services": {
       "CatalogueTitle": "Services",
@@ -340,6 +342,11 @@ const translation = {
       "CarouselServicesHeader": "Access services online",
       "CarouselProveHeader": "Prove who you are online",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license",
+      "CarouselServicesContent": "It's accepted by many government services.",
+      "CarouselProveBodyContentA": "Log in using just this app. No username or password needed.",
+      "CarouselProveBodyContentB": "Access services from any device by approving login in this app.",
+      "CarouselCannotUseBodyContentA": "It's not a place to store a digital copy of your BC Services Card.",
+      "CarouselCannotUseBodyContentB": "It's your account to access services online only.",
       "PrivacyPolicyTitle": "Privacy",
       "PrivacyPolicyHeaderSetup": "App Setup",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App",
@@ -361,7 +368,12 @@ const translation = {
       "SecureAppBiometricsTitle": "TODO: Android title",
       "SecureAppBiometricsSubtext": "TODO: Android subtext",
       "SecureAppPINTitle": "Create a PIN",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us."
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us.",
+      "AnalyticsTitle": "Enable Analytics?",
+      "AnalyticsHeader": "Help us improve your BC Services Card experience",
+      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings.",
+      "AcceptAnalytics": "Enable Analytics",
+      "DenyAnalytics":  "Skip",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have?",
@@ -399,7 +411,8 @@ const translation = {
       "Dismiss": "Dismiss",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number",
+      "InputLabel": "Enter serial number",
+      "InputTitle": "Enter your card's serial number manually",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card.",
       "EmptySerialError": "Required",
       "CharCountError": "Cannot exceed 15 characters",
@@ -458,7 +471,6 @@ const translation = {
     },
     "EnterEmail": {
       "ErrorTitle": "Error submitting email",
-      "EmailError": "Please enter a valid email address",
       "EmailSkip": "Are you sure you don't want to provide it?",
       "EmailSkipMessage": "It is less secure without it as we can't notify you of logins or changes to your account.",
       "EmailSkipButton": "Provide email address",
@@ -469,6 +481,7 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code",
+      "EmailError": "Please enter a valid email address (name@host.com).",
       "CodeError": "Please enter a six digit verification code",
       "ErrorResendingCode": "Error resending code",
       "CodeResent": "Code resent",
@@ -564,6 +577,12 @@ const translation = {
         "Description2": "Your video was {{videoLengthSeconds}} seconds.",
         "ButtonText": "Retake",
         "CancelButtonText": "Cancel",
+      },
+      "UploadProgress": {
+        "PreparingVideo": "Preparing your photo and video for verification",
+        "PreparingDocuments": "Preparing additional documents",
+        "UploadingInformation": "Uploading your documents securely",
+        "FinalizingVerification": "Finalizing your request"
       }
     },
     "MismatchedSerial": {
@@ -726,8 +745,10 @@ const translation = {
       "LastNameError": "Please enter a last name",
       "LastNameSubtext": "Also known as surname or family name",
       "BirthDateLabel": "Birth date",
-      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format",
+      "BirthDateSubtext": "Enter your birth date",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
+      "BirthDatePickerLabel": "Select birth date",
+      "BirthDatePickerAccessibilityLabel": "Birth date picker",
       "MiddleNamesLabel": "Middle names",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
       "MiddleNamesError": "Please enter up to two middle names",

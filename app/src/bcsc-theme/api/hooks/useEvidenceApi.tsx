@@ -1,4 +1,5 @@
-import { BCState } from '@/store'
+import { VIDEO_MP4_MIME_TYPE } from '@/constants'
+import { BCDispatchAction, BCState } from '@/store'
 import { useStore } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { createPreVerificationJWT } from 'react-native-bcsc-core'
@@ -92,7 +93,7 @@ export interface EvidenceMetadataPayload {
 }
 
 const useEvidenceApi = (apiClient: BCSCApiClient) => {
-  const [store] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
 
   const _getDeviceCode = useCallback(() => {
     const code = store.bcsc.deviceCode
@@ -243,10 +244,16 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
             skipBearerAuth: true,
           }
         )
+
+        dispatch({
+          type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST,
+          payload: [{ id: undefined, sha256: undefined }],
+        })
+
         return data
       })
     },
-    [_getDeviceCode, apiClient]
+    [_getDeviceCode, apiClient, dispatch]
   )
 
   const createEmailVerification = useCallback(
@@ -316,8 +323,8 @@ const useEvidenceApi = (apiClient: BCSCApiClient) => {
         const { data } = await apiClient.put<any>(url, binaryData, {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'video/mp4',
-            Accept: 'video/mp4',
+            'Content-Type': VIDEO_MP4_MIME_TYPE,
+            Accept: VIDEO_MP4_MIME_TYPE,
           },
           skipBearerAuth: true,
         })

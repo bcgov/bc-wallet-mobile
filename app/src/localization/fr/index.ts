@@ -129,7 +129,7 @@ const translation = {
     "Title": "BC Services Card (FR)",
     "LocaleStringFormat": "fr-CA",
     "Screens": {
-      "Settings": "Menu",
+      "Settings": "Settings (FR)",
       "SetupTypes": "BC Services Card (FR)",
       "SetupSteps": "Setup Steps (FR)",
       "VerificationMethodSelection": "Choose How to Verify (FR)",
@@ -157,7 +157,9 @@ const translation = {
       "ContactUs": "Contact us (FR)",
       "Feedback": "Feedback (FR)",
       "Accessibility": "Accessibility (FR)",
+      "AnalyticsOptIn": "Analytics Opt-In Placeholder (FR)",
       "TermsOfUse": "Terms of use (FR)",
+      "Analytics": "Analytics (FR)",
     },
     "Services": {
       "CatalogueTitle": "Services (FR)",
@@ -339,6 +341,11 @@ const translation = {
       "CarouselServicesHeader": "Access services online (FR)",
       "CarouselProveHeader": "Prove who you are online (FR)",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license (FR)",
+      "CarouselServicesContent": "It's accepted by many government services. (FR)",
+      "CarouselProveBodyContentA": "Log in using just this app. No username or password needed. (FR)",
+      "CarouselProveBodyContentB": "Access services from any device by approving login in this app. (FR)",
+      "CarouselCannotUseBodyContentA": "It's not a place to store a digital copy of your BC Services Card. (FR)",
+      "CarouselCannotUseBodyContentB": "It's your account to access services online only. (FR)",
       "PrivacyPolicyTitle": "Privacy (FR)",
       "PrivacyPolicyHeaderSetup": "App Setup (FR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (FR)",
@@ -360,7 +367,12 @@ const translation = {
       "SecureAppBiometricsTitle": "TODO: Android title (FR)",
       "SecureAppBiometricsSubtext": "TODO: Android subtext (FR)",
       "SecureAppPINTitle": "Create a PIN (FR)",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (FR)"
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (FR)",
+      "AnalyticsTitle": "Enable Analytics? (FR)",
+      "AnalyticsHeader": "Help us improve your BC Services Card experience (FR)",
+      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (FR)",
+      "AcceptAnalytics": "Enable Analytics (FR)",
+      "DenyAnalytics":  "Skip (FR)",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (FR)",
@@ -398,7 +410,8 @@ const translation = {
       "Dismiss": "Dismiss (FR)",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number (FR)",
+      "InputLabel": "Enter serial number (FR)",
+      "InputTitle": "Enter your card's serial number manually (FR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (FR)",
       "EmptySerialError": "Required (FR)",
       "CharCountError": "Cannot exceed 15 characters (FR)",
@@ -457,7 +470,6 @@ const translation = {
     },
     "EnterEmail": {
       "ErrorTitle": "Error submitting email (FR)",
-      "EmailError": "Please enter a valid email address (FR)",
       "EmailSkip": "Are you sure you don't want to provide it? (FR)",
       "EmailSkipMessage": "It is less secure without it as we can't notify you of logins or changes to your account. (FR)",
       "EmailSkipButton": "Provide email address (FR)",
@@ -468,6 +480,7 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code (FR)",
+      "EmailError": "Please enter a valid email address (name@host.com). (FR)",
       "CodeError": "Please enter a six digit verification code (FR)",
       "ErrorResendingCode": "Error resending code (FR)",
       "CodeResent": "Code resent (FR)",
@@ -563,6 +576,12 @@ const translation = {
         "Description2": "Your video was {{videoLengthSeconds}} seconds. (FR)",
         "ButtonText": "Retake (FR)",
         "CancelButtonText": "Cancel (FR)",
+      },
+      "UploadProgress": {
+        "PreparingVideo": "Preparing your photo and video for verification (FR)",
+        "PreparingDocuments": "Preparing additional documents (FR)",
+        "UploadingInformation": "Uploading your documents securely (FR)",
+        "FinalizingVerification": "Finalizing your request (FR)"
       }
     },
     "MismatchedSerial": {
@@ -725,8 +744,10 @@ const translation = {
       "LastNameError": "Please enter a last name (FR)",
       "LastNameSubtext": "Also known as surname or family name (FR)",
       "BirthDateLabel": "Birth date (FR)",
-      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format (FR)",
+      "BirthDateSubtext": "Enter your birth date (FR)",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (FR)",
+      "BirthDatePickerLabel": "Select birth date (FR)",
+      "BirthDatePickerAccessibilityLabel": "Birth date picker (FR)",
       "MiddleNamesLabel": "Middle names (FR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (FR)",
       "MiddleNamesError": "Please enter up to two middle names (FR)",

@@ -3,6 +3,7 @@ import {
   LockoutReason,
   SafeAreaModal,
   Screens,
+  ScreenWrapper,
   testIdWithKey,
   TOKENS,
   useAuth,
@@ -15,7 +16,6 @@ import { useNavigation } from '@react-navigation/native'
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 import { BCThemeNames } from '@/constants'
@@ -307,7 +307,7 @@ const Developer: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false}>
       <SafeAreaModal
         visible={remoteLoggingWarningModalVisible}
         transparent={false}
@@ -541,7 +541,7 @@ const Developer: React.FC = () => {
           />
         </SectionRow>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

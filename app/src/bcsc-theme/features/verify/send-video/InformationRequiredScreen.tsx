@@ -1,16 +1,17 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { useLoadingScreen } from '@/bcsc-theme/contexts/BCSCLoadingContext'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { getVideoMetadata } from '@/bcsc-theme/utils/file-info'
 import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, TOKENS, useAnimatedComponents, useServices, useStore, useTheme } from '@bifold/core'
+import readFileInChunks from '@/utils/read-file'
+import { Button, ButtonType, ScreenWrapper, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-import { Buffer } from 'buffer'
-import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
+import { StyleSheet } from 'react-native'
 import RNFS from 'react-native-fs'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import TakeMediaButton from './components/TakeMediaButton'
+import { VerificationVideoCache } from './VideoReviewScreen'
 
 type InformationRequiredScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.InformationRequired>
@@ -20,42 +21,54 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
   const { Spacing } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const [store, dispatch] = useStore<BCState>()
-  const [loading, setLoading] = useState(false)
-  const uploadedBoth = useMemo(
-    () => store.bcsc.photoPath && store.bcsc.videoPath && store.bcsc.videoThumbnailPath,
-    [store.bcsc.photoPath, store.bcsc.videoPath, store.bcsc.videoThumbnailPath]
-  )
-  const { ButtonLoading } = useAnimatedComponents()
   const { evidence } = useApi()
   const { t } = useTranslation()
+  const loadingScreen = useLoadingScreen()
+
+  const uploadedBoth = store.bcsc.photoPath && store.bcsc.videoPath && store.bcsc.videoThumbnailPath
+  const prompts = store.bcsc.prompts
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      justifyContent: 'space-between',
-    },
     controlsContainer: {
       padding: Spacing.md,
     },
   })
 
+  // TODO (MD): Split this into smaller functions for better readability and testability (MVC pattern?)
   const onPressSend = async () => {
     try {
-      setLoading(true)
-      // Fetch photo and convert into bytes
-      const jpegBytes = await RNFS.readFile(store.bcsc.photoPath!, 'base64')
-      const photoBytes = new Uint8Array(Buffer.from(jpegBytes, 'base64'))
-      logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
+      loadingScreen.startLoading(t('BCSC.SendVideo.UploadProgress.PreparingVideo'))
 
-      // Fetch video and convert into bytes
-      const videoBase64 = await RNFS.readFile(store.bcsc.videoPath!, 'base64')
-      const videoBytes = new Uint8Array(Buffer.from(videoBase64, 'base64'))
+      if (!store.bcsc.photoPath || !store.bcsc.videoPath || !store.bcsc.videoDuration) {
+        throw new Error('Error - missing photo or video data')
+      }
+
+      if (!prompts || prompts.length === 0) {
+        throw new Error('Error - missing video prompts data')
+      }
+
+      // Fetch photo and video then convert into bytes
+      const [photoBytes, videoBytes, videoStats] = await Promise.all([
+        readFileInChunks(store.bcsc.photoPath, logger),
+        VerificationVideoCache.getCache(logger),
+        RNFS.stat(store.bcsc.videoPath),
+      ])
+
+      if (!videoBytes) {
+        throw new Error('Error - cache missing video data')
+      }
+
+      const videoMetadata = await getVideoMetadata(videoBytes, store.bcsc.videoDuration, prompts, videoStats.mtime)
+
+      logger.debug(`Selfie photo bytes length: ${photoBytes.length}`)
       logger.debug(`Selfie video bytes length: ${videoBytes.length}`)
 
       // Process additional evidence data
       const additionalEvidence = store.bcsc.additionalEvidenceData
       const evidenceUploadPromises: Promise<any>[] = []
       const evidenceUploadUris: string[] = []
+
+      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.PreparingDocuments'))
 
       // Process each piece of additional evidence
       for (const evidenceItem of additionalEvidence) {
@@ -77,9 +90,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
           )
 
           if (matchingResponse) {
-            // Read the image file and convert to bytes
-            const imageBase64 = await RNFS.readFile(metadataItem.file_path, 'base64')
-            const imageBytes = new Uint8Array(Buffer.from(imageBase64, 'base64'))
+            // Read the image file
+            const imageBytes = await readFileInChunks(metadataItem.file_path, logger)
             logger.debug(`Evidence metadata ${metadataItem.label}: ${imageBytes.length}`)
 
             // Add upload promise
@@ -91,11 +103,14 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         }
       }
 
+      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.UploadingInformation'))
+
       // Send photo and video metadata to API
       const [photoMetadataResponse, videoMetadataResponse] = await Promise.all([
         evidence.uploadPhotoEvidenceMetadata(store.bcsc.photoMetadata!),
-        evidence.uploadVideoEvidenceMetadata(store.bcsc.videoMetadata!),
+        evidence.uploadVideoEvidenceMetadata(videoMetadata),
       ])
+
       logger.debug(`Photo/ Video metadata responded`)
 
       // Upload all binaries in parallel (photo, video, and additional evidence)
@@ -108,6 +123,8 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
 
       // Combine all upload URIs for final verification request
       const allUploadUris = [photoMetadataResponse.upload_uri, videoMetadataResponse.upload_uri, ...evidenceUploadUris]
+
+      loadingScreen.updateLoadingMessage(t('BCSC.SendVideo.UploadProgress.FinalizingVerification'))
 
       // Send final verification request
       await evidence.sendVerificationRequest(store.bcsc.verificationRequestId!, {
@@ -124,48 +141,51 @@ const InformationRequiredScreen = ({ navigation }: InformationRequiredScreenProp
         })
       )
     } catch (error) {
+      // TODO (MD): Handle this error properly (show user feedback etc...)
       logger.error('Error during sending information to Service BC', error as Error)
     } finally {
-      setLoading(false)
+      loadingScreen.stopLoading()
     }
   }
 
+  const controls = (
+    <Button
+      buttonType={ButtonType.Primary}
+      title={t('BCSC.SendVideo.InformationRequired.ButtonText')}
+      onPress={onPressSend}
+      testID={'SendToServiceBCNow'}
+      accessibilityLabel={t('BCSC.SendVideo.InformationRequired.ButtonText')}
+      disabled={!uploadedBoth || loadingScreen.isLoading}
+    />
+  )
+
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View>
-        <TakeMediaButton
-          onPress={() => {
-            navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
-          }}
-          title={t('BCSC.SendVideo.InformationRequired.Heading1')}
-          actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel')}
-          thumbnailUri={store.bcsc.photoPath && `file://${store.bcsc.photoPath}`}
-          style={{ borderBottomWidth: 0 }}
-        />
-        <TakeMediaButton
-          onPress={() => {
-            navigation.navigate(BCSCScreens.VideoInstructions)
-          }}
-          title={t('BCSC.SendVideo.InformationRequired.Heading2')}
-          actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel2')}
-          thumbnailUri={
-            store.bcsc.videoPath && store.bcsc.videoThumbnailPath && `file://${store.bcsc.videoThumbnailPath}`
-          }
-        />
-      </View>
-      <View style={styles.controlsContainer}>
-        <Button
-          buttonType={ButtonType.Primary}
-          title={t('BCSC.SendVideo.InformationRequired.ButtonText')}
-          onPress={onPressSend}
-          testID={'SendToServiceBCNow'}
-          accessibilityLabel={t('BCSC.SendVideo.InformationRequired.ButtonText')}
-          disabled={!uploadedBoth || loading}
-        >
-          {loading && <ButtonLoading />}
-        </Button>
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper
+      padded={false}
+      edges={['bottom']}
+      controls={controls}
+      controlsContainerStyle={styles.controlsContainer}
+    >
+      <TakeMediaButton
+        onPress={() => {
+          navigation.navigate(BCSCScreens.PhotoInstructions, { forLiveCall: false })
+        }}
+        title={t('BCSC.SendVideo.InformationRequired.Heading1')}
+        actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel')}
+        thumbnailUri={store.bcsc.photoPath && `file://${store.bcsc.photoPath}`}
+        style={{ borderBottomWidth: 0 }}
+      />
+      <TakeMediaButton
+        onPress={() => {
+          navigation.navigate(BCSCScreens.VideoInstructions)
+        }}
+        title={t('BCSC.SendVideo.InformationRequired.Heading2')}
+        actionLabel={t('BCSC.SendVideo.InformationRequired.ActionLabel2')}
+        thumbnailUri={
+          store.bcsc.videoPath && store.bcsc.videoThumbnailPath && `file://${store.bcsc.videoThumbnailPath}`
+        }
+      />
+    </ScreenWrapper>
   )
 }
 

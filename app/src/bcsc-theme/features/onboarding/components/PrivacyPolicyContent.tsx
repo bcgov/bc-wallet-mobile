@@ -1,41 +1,26 @@
 import { CardButton } from '@/bcsc-theme/components/CardButton'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { ThemedText, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
-import { ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { StyleSheet, View } from 'react-native'
 
 interface PrivacyPolicyContentProps {
-  onPress?: () => void
   onLearnMore: () => void
 }
 
 /**
  * Privacy Policy content that informs users about the app's privacy practices.
  *
- * onPress: optional function to be called when the Continue button is pressed,
- * if not provided, the Continue button will not be displayed.
  * onLearnMore: function to be called when the Learn More button is pressed.
  *
  * @returns {*} {JSX.Element} The PrivacyPolicyContent component.
  */
 export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
-  onPress,
   onLearnMore,
 }: PrivacyPolicyContentProps): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    scrollContainer: {
-      padding: theme.Spacing.md,
-      gap: theme.Spacing.lg,
-    },
-    buttonContainer: {
-      padding: theme.Spacing.md,
-    },
     sectionContainer: {
       gap: theme.Spacing.sm,
     },
@@ -46,34 +31,20 @@ export const PrivacyPolicyContent: React.FC<PrivacyPolicyContentProps> = ({
   })
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentA')}</ThemedText>
+    <>
+      <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentA')}</ThemedText>
 
-        <View style={styles.sectionContainer}>
-          <ThemedText variant="headingFour">{t('BCSC.Onboarding.PrivacyPolicyHeaderSetup')}</ThemedText>
-          <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentB')}</ThemedText>
-        </View>
+      <View style={styles.sectionContainer}>
+        <ThemedText variant="headingFour">{t('BCSC.Onboarding.PrivacyPolicyHeaderSetup')}</ThemedText>
+        <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentB')}</ThemedText>
+      </View>
 
-        <View style={styles.sectionContainer}>
-          <ThemedText variant="headingFour">{t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp')}</ThemedText>
-          <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentC')}</ThemedText>
-        </View>
+      <View style={styles.sectionContainer}>
+        <ThemedText variant="headingFour">{t('BCSC.Onboarding.PrivacyPolicyHeaderSecuringApp')}</ThemedText>
+        <ThemedText style={styles.contentText}>{t('BCSC.Onboarding.PrivacyPolicyContentC')}</ThemedText>
+      </View>
 
-        <CardButton title={t('BCSC.Onboarding.LearnMore')} onPress={onLearnMore} endIcon="open-in-new" />
-      </ScrollView>
-
-      {onPress ? (
-        <View style={styles.buttonContainer}>
-          <Button
-            title={t('Global.Continue')}
-            buttonType={ButtonType.Primary}
-            onPress={onPress}
-            testID={testIdWithKey('Continue')}
-            accessibilityLabel={t('Global.Continue')}
-          />
-        </View>
-      ) : null}
-    </SafeAreaView>
+      <CardButton title={t('BCSC.Onboarding.LearnMore')} onPress={onLearnMore} endIcon="open-in-new" />
+    </>
   )
 }

@@ -129,7 +129,7 @@ const translation = {
     "Title": "BC Services Card (PT-BR)",
     "LocaleStringFormat": "pt-BR",
     "Screens": {
-      "Settings": "Menu (PT-BR)",
+      "Settings": "Settings (PT-BR)",
       "SetupTypes": "BC Services Card (PT-BR)",
       "SetupSteps": "Setup Steps (PT-BR)",
       "VerificationMethodSelection": "Choose How to Verify (PT-BR)",
@@ -157,7 +157,9 @@ const translation = {
       "ContactUs": "Contact us (PT-BR)",
       "Feedback": "Feedback (PT-BR)",
       "Accessibility": "Accessibility (PT-BR)",
+      "AnalyticsOptIn": "Analytics Opt-In Placeholder (PT-BR)",
       "TermsOfUse": "Terms of use (PT-BR)",
+      "Analytics": "Analytics (PR-BR)",
     },
     "Services": {
       "CatalogueTitle": "Services (PT-BR)",
@@ -339,6 +341,11 @@ const translation = {
       "CarouselServicesHeader": "Access services online (PT-BR)",
       "CarouselProveHeader": "Prove who you are online (PT-BR)",
       "CarouselCannotUseHeader": "Cannot use as a health card or driver's license (PT-BR)",
+      "CarouselServicesContent": "It's accepted by many government services. (PT-BR)",
+      "CarouselProveBodyContentA": "Log in using just this app. No username or password needed. (PT-BR)",
+      "CarouselProveBodyContentB": "Access services from any device by approving login in this app. (PT-BR)",
+      "CarouselCannotUseBodyContentA": "It's not a place to store a digital copy of your BC Services Card. (PT-BR)",
+      "CarouselCannotUseBodyContentB": "It's your account to access services online only. (PT-BR)",
       "PrivacyPolicyTitle": "Privacy (PT-BR)",
       "PrivacyPolicyHeaderSetup": "App Setup (PT-BR)",
       "PrivacyPolicyHeaderSecuringApp": "Securing the App (PT-BR)",
@@ -360,7 +367,12 @@ const translation = {
       "SecureAppBiometricsTitle": "TODO: Android title (PT-BR)",
       "SecureAppBiometricsSubtext": "TODO: Android subtext (PT-BR)",
       "SecureAppPINTitle": "Create a PIN (PT-BR)",
-      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)"
+      "SecureAppPINSubtext": "The PIN you create is confidential. It never leaves this device or is shared with us. (PT-BR)",
+      "AnalyticsTitle": "Enable Analytics? (PT-BR)",
+      "AnalyticsHeader": "Help us improve your BC Services Card experience (PT-BR)",
+      "AnalyticsContent": "With your permission, we'll collect analytics about [TBD] to help our team find bugs and add new features. Opt-out anytime in settings. (PR-BR)",
+      "AcceptAnalytics": "Enable Analytics (PT-BR)",
+      "DenyAnalytics":  "Skip (PT-BR)",
     },
     "ChooseYourID": {
       "WhatCardDoYou": "What BC Services Card do you have? (PT-BR)",
@@ -398,7 +410,8 @@ const translation = {
       "Dismiss": "Dismiss (PT-BR)",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number (PT-BR)",
+      "InputLabel": "Enter serial number (PT-BR)",
+      "InputTitle": "Enter your card's serial number manually (PT-BR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (PT-BR)",
       "EmptySerialError": "Required (PT-BR)",
       "CharCountError": "Cannot exceed 15 characters (PT-BR)",
@@ -457,7 +470,6 @@ const translation = {
     },
     "EnterEmail": {
       "ErrorTitle": "Error submitting email (PT-BR)",
-      "EmailError": "Please enter a valid email address (PT-BR)",
       "EmailSkip": "Are you sure you don't want to provide it? (PT-BR)",
       "EmailSkipMessage": "It is less secure without it as we can't notify you of logins or changes to your account. (PT-BR)",
       "EmailSkipButton": "Provide email address (PT-BR)",
@@ -468,6 +480,7 @@ const translation = {
     },
     "EmailConfirmation": {
       "ErrorTitle": "Error verifying confirmation code (PT-BR)",
+      "EmailError": "Please enter a valid email address (name@host.com). (PT-BR)",
       "CodeError": "Please enter a six digit verification code (PT-BR)",
       "ErrorResendingCode": "Error resending code (PT-BR)",
       "CodeResent": "Code resent (PT-BR)",
@@ -563,6 +576,12 @@ const translation = {
         "Description2": "Your video was {{videoLengthSeconds}} seconds. (PT-BR)",
         "ButtonText": "Retake (PT-BR)",
         "CancelButtonText": "Cancel (PT-BR)",
+      },
+      "UploadProgress": {
+        "PreparingVideo": "Preparing your photo and video for verification (PT-BR)",
+        "PreparingDocuments": "Preparing additional documents (PT-BR)",
+        "UploadingInformation": "Uploading your documents securely (PT-BR)",
+        "FinalizingVerification": "Finalizing your request (PT-BR)"
       }
     },
     "MismatchedSerial": {
@@ -725,8 +744,10 @@ const translation = {
       "LastNameError": "Please enter a last name (PT-BR)",
       "LastNameSubtext": "Also known as surname or family name (PT-BR)",
       "BirthDateLabel": "Birth date (PT-BR)",
-      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format (PT-BR)",
+      "BirthDateSubtext": "Enter your birth date (PT-BR)",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (PT-BR)",
+      "BirthDatePickerLabel": "Select birth date (PT-BR)",
+      "BirthDatePickerAccessibilityLabel": "Birth date picker (PT-BR)",
       "MiddleNamesLabel": "Middle names (PT-BR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (PT-BR)",
       "MiddleNamesError": "Please enter up to two middle names (PT-BR)",

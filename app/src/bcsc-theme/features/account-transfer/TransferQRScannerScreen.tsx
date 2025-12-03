@@ -8,6 +8,7 @@ import {
   MaskType,
   QrCodeScanError,
   ScanCamera,
+  ScreenWrapper,
   SVGOverlay,
   ThemedText,
   useStore,
@@ -19,7 +20,6 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native'
 import { createDeviceSignedJWT, getAccount } from 'react-native-bcsc-core'
-import { SafeAreaView } from 'react-native-safe-area-context'
 import uuid from 'react-native-uuid'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 import { useCameraPermission } from 'react-native-vision-camera'
@@ -170,11 +170,11 @@ const TransferQRScannerScreen: React.FC = () => {
 
   if (!hasPermission) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenWrapper padded={false} scrollable={false}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ThemedText style={{ color: 'white' }}>{t('BCSC.CameraDisclosure.CameraPermissionRequired')}</ThemedText>
         </View>
-      </SafeAreaView>
+      </ScreenWrapper>
     )
   }
   return (
