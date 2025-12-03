@@ -106,10 +106,14 @@ export const AppBannerSection: React.FC<AppBannerSectionProps> = ({
     }
   }
 
+  if (!showBanner) {
+    return null
+  }
+
   // If more details are needed we might need to push the banner down to accommodate the extra information
   return (
     <TouchableOpacity
-      style={[{ ...styles.container, backgroundColor: bannerColor(type) }, !showBanner && { display: 'none' }]}
+      style={[{ ...styles.container, backgroundColor: bannerColor(type) }]}
       testID={testIdWithKey(`button-${type}`)}
       onPress={() => {
         if (dismissible) {
