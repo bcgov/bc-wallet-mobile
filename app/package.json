@@ -126,6 +126,7 @@
     "react-native-svg": "~15.0.0",
     "react-native-tcp-socket": "~6.0.6",
     "react-native-toast-message": "~2.1.10",
+    "react-native-url-polyfill": "^3.0.0",
     "react-native-uuid": "~2.0.3",
     "react-native-vector-icons": "~10.0.3",
     "react-native-video": "~6.18.0",

@@ -15,6 +15,7 @@ export enum BCSCModals {
   InternetDisconnected = 'BCSCNoInternet',
   MandatoryUpdate = 'BCSCMandatoryUpdate',
   DeviceInvalidated = 'BCSCDeviceInvalidated',
+  HelloWorld = 'BCSCHelloWorld',
 }
 
 export enum BCSCScreens {
@@ -94,6 +95,7 @@ export enum BCSCScreens {
   AccountRenewalInformation = 'BCSCAccountRenewalInformation',
   AccountRenewalFirstWarning = 'BCSCAccountRenewalFirstWarning',
   AccountRenewalFinalWarning = 'BCSCAccountRenewalFinalWarning',
+  HelloWorld = 'BCSCHelloWorld',
 }
 
 export type BCSCStartupStackParams = {
@@ -108,7 +110,6 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
-
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
 }
@@ -198,8 +199,8 @@ export type BCSCMainStackParams = {
   [BCSCScreens.AccountRenewalInformation]: undefined
   [BCSCScreens.AccountRenewalFirstWarning]: undefined
   [BCSCScreens.AccountRenewalFinalWarning]: undefined
-
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
   [BCSCModals.DeviceInvalidated]: undefined
+  [BCSCModals.HelloWorld]: undefined
 }

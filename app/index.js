@@ -1,5 +1,6 @@
 // organize-imports-ignore
 import 'fast-text-encoding' // polyfill for TextEncoder and TextDecoder
+import 'react-native-url-polyfill/auto'
 import 'react-native-gesture-handler'
 import '@formatjs/intl-getcanonicallocales/polyfill'
 import '@formatjs/intl-locale/polyfill'

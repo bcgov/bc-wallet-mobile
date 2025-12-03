@@ -15,6 +15,14 @@ interface FilterServiceClientsResult {
 
 export interface ServiceClientsFilter {
   /**
+   * A string to filter service clients by their full name (case insensitive).
+   * This is typically used when we have a specific service title from a deep link.
+   *
+   * @type {string}
+   */
+  fullNameFilter?: string
+
+  /**
    * A string to filter service clients by their name (case insensitive, partial match).
    *
    * Note: This filter could be upgraded to support more advanced matching (eg: fuzzy matching, word boundaries, etc.)
@@ -24,6 +32,7 @@ export interface ServiceClientsFilter {
    * @type {string}
    */
   partialNameFilter?: string
+
   /**
    * Filter service clients based on the user's card process type.
    *
@@ -34,12 +43,14 @@ export interface ServiceClientsFilter {
    * @type {BCSCCardProcess | null}
    */
   cardProcessFilter?: BCSCCardProcess | null
+
   /**
    * Filter service clients that require a BC Address on file
    *
    * @type {boolean}
    */
   requireBCAddressFilter?: boolean
+
   /**
    * An optional list of service client ref ids to filter by
    * if provided, only service clients with these IDs will be included
@@ -63,7 +74,6 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
   const navigation = useNavigation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
-
   const filteringDoneRef = useRef(false)
 
   const {
@@ -96,6 +106,8 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
 
   // Apply filters to the service clients (these filters are memoized to avoid unnecessary recalculations)
   const filteredServiceClients = useMemo(() => {
+    // console.log('***** useFilterServiceClients serviceClients', serviceClients)
+
     if (!serviceClients || filter.cardProcessFilter === null) {
       return []
     }
@@ -117,15 +129,28 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
     // Filter services based on the provided IDs
     if (filter.serviceClientIdsFilter) {
       const idsSet = new Set(filter.serviceClientIdsFilter)
+      // console.log('***** idsSet', idsSet)
       serviceClientsCopy = serviceClientsCopy.filter((service) => idsSet.has(service.client_ref_id))
+      // console.log('***** filteredServiceClients', serviceClientsCopy)
+    }
+
+    if (filter.fullNameFilter) {
+      serviceClientsCopy = _queryServiceClientsByName(serviceClientsCopy, filter.fullNameFilter)
     }
 
     // Sort services by their listing order, then alphabetically by name
     return _sortServiceClients(serviceClientsCopy)
-  }, [serviceClients, filter.cardProcessFilter, filter.requireBCAddressFilter, filter.serviceClientIdsFilter])
+  }, [
+    serviceClients,
+    filter.fullNameFilter,
+    filter.cardProcessFilter,
+    filter.requireBCAddressFilter,
+    filter.serviceClientIdsFilter,
+  ])
 
   // Further filter services based on the partial name filter
   const queriedServiceClients = useMemo(() => {
+    // console.log('***** filteredServiceClients', filteredServiceClients, filter.nameContains)
     const newServiceClients = _queryServiceClientsByName(filteredServiceClients, filter.partialNameFilter)
 
     filteringDoneRef.current = true
@@ -135,6 +160,7 @@ export const useFilterServiceClients = (filter: ServiceClientsFilter): FilterSer
 
   return {
     serviceClients: queriedServiceClients,
+    // Flag loading as complete only when the API finished and post-filter work ran.
     isLoading: isLoading || !filteringDoneRef.current,
   }
 }
