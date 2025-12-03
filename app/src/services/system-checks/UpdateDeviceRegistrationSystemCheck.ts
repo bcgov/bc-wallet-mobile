@@ -40,8 +40,11 @@ export class UpdateDeviceRegistrationSystemCheck implements SystemCheckStrategy 
    * @returns {*} {Promise<void>} - A promise that resolves when the device registration update process is complete.
    */
   async onFail() {
+    this.utils.logger.info('UpdateDeviceRegistrationSystemCheck: Updating device registration due to version change')
+
     try {
       await this.updateRegistration()
+
       this.utils.dispatch({ type: BCDispatchAction.UPDATE_APP_VERSION })
     } catch (error) {
       this.utils.logger.error(
