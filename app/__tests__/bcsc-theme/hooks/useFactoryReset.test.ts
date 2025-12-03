@@ -6,6 +6,8 @@ import { DispatchAction } from '@bifold/core'
 import { act, renderHook } from '@testing-library/react-native'
 import * as BcscCore from 'react-native-bcsc-core'
 
+jest.unmock('@/bcsc-theme/api/hooks/useFactoryReset')
+
 jest.mock('@/bcsc-theme/api/hooks/useApi')
 jest.mock('@bifold/core')
 
