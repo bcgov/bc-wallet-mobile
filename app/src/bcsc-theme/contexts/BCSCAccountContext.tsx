@@ -15,7 +15,6 @@ export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
 export interface BCSCAccountContextType {
   account: BCSCAccount | null
   isLoadingAccount: boolean
-  // TODO (MD): should we include idToken?
 }
 
 export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(null)
@@ -45,6 +44,8 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       return {
         account: null,
         isLoadingAccount: isLoading,
+        idToken: null,
+        refreshIdTokenMetadata: () => {},
       }
     }
 
@@ -82,5 +83,5 @@ export const useAccount = () => {
     throw new Error('useAccount: account is null')
   }
 
-  return context.account
+  return { account: context.account }
 }

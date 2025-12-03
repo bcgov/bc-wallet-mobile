@@ -4,6 +4,7 @@ import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DeviceEventEmitter } from 'react-native'
 import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
+import { BCSCIdTokenProvider } from '../contexts/BCSCIDTokenContext'
 import { LoadingScreenContent } from '../features/splash-loading/LoadingScreenContent'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
@@ -79,7 +80,9 @@ const BCSCRootStack: React.FC = () => {
     // <AgentProvider agent={agent}>
     // <OpenIDCredentialRecordProvider>
     <BCSCAccountProvider>
-      <BCSCMainStack />
+      <BCSCIdTokenProvider>
+        <BCSCMainStack />
+      </BCSCIdTokenProvider>
     </BCSCAccountProvider>
     // </OpenIDCredentialRecordProvider>
     // </AgentProvider>

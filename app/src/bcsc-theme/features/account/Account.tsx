@@ -2,6 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
+import { useIdToken } from '@/bcsc-theme/contexts/BCSCIDTokenContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
@@ -32,7 +33,8 @@ const Account: React.FC = () => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
-  const account = useAccount()
+  const { account } = useAccount()
+  const { idToken, refreshIdToken } = useIdToken()
 
   const openedWebview = useRef(false)
 
@@ -40,29 +42,16 @@ const Account: React.FC = () => {
     onError: (error) => logger.error('Error loading BCSC client metadata', error as Error),
   })
 
-  const {
-    load: loadIdTokenMetadata,
-    data: idTokenMetadata,
-    refresh: refreshIdTokenMetadata,
-  } = useDataLoader(
-    // refresh the cache to get latest device count when returning from a webview
-    () => token.getCachedIdTokenMetadata({ refreshCache: true }),
-    {
-      onError: (error) => logger.error('Error loading ID token metadata', error as Error),
-    }
-  )
-
   // Initial data load
   useEffect(() => {
     loadBcscServiceClient()
-    loadIdTokenMetadata()
-  }, [loadBcscServiceClient, loadIdTokenMetadata])
+  }, [loadBcscServiceClient])
 
   useFocusEffect(
     useCallback(() => {
       logger.info('Account screen focused, refreshing ID token metadata...')
-      refreshIdTokenMetadata()
-      // ignoring refreshIdTokenMetadata dependency to avoid infinite loop
+      refreshIdToken()
+      // ignoring refreshIdToken dependency to avoid infinite loop
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [logger])
   )
@@ -74,13 +63,13 @@ const Account: React.FC = () => {
       if (nextAppState === 'active' && openedWebview.current) {
         logger.info('Returning from background, refreshing user and device metadata...')
         openedWebview.current = false
-        refreshIdTokenMetadata()
+        refreshIdToken()
       }
     })
 
     // cleanup event listener on unmount
     return () => appListener.remove()
-  }, [logger, refreshIdTokenMetadata])
+  }, [logger, refreshIdToken])
 
   const handleMyDevicesPress = useCallback(async () => {
     try {
@@ -159,8 +148,8 @@ const Account: React.FC = () => {
           <SectionButton
             onPress={handleMyDevicesPress}
             title={
-              typeof idTokenMetadata?.bcsc_devices_count === 'number'
-                ? t('BCSC.Account.AccountInfo.MyDevicesCount', { count: idTokenMetadata.bcsc_devices_count })
+              typeof idToken?.bcsc_devices_count === 'number'
+                ? t('BCSC.Account.AccountInfo.MyDevicesCount', { count: idToken.bcsc_devices_count })
                 : t('BCSC.Account.AccountInfo.MyDevices')
             }
           />
