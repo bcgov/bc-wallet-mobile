@@ -64,6 +64,12 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     },
   })
 
+  // Clean up any incomplete evidence entries when the screen mounts
+  // This handles the case where user selected a card but backed out before completing
+  useEffect(() => {
+    dispatch({ type: BCDispatchAction.REMOVE_INCOMPLETE_EVIDENCE, payload: [] })
+  }, [dispatch])
+
   useEffect(() => {
     load()
   }, [load])

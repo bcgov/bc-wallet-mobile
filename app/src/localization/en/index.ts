@@ -130,7 +130,7 @@ const translation = {
     "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
     "Screens": {
-      "Settings": "Menu",
+      "Settings": "Settings",
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",
@@ -411,7 +411,8 @@ const translation = {
       "Dismiss": "Dismiss",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number",
+      "InputLabel": "Enter serial number",
+      "InputTitle": "Enter your card's serial number manually",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card.",
       "EmptySerialError": "Required",
       "CharCountError": "Cannot exceed 15 characters",
