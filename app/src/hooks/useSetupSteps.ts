@@ -7,13 +7,13 @@ import { useTranslation } from 'react-i18next'
 /**
  * Validates that an evidence item is fully completed.
  * An evidence is complete when:
- * - It has 2 photos (front and back of the card)
+ * - It has at least 1 photo | NOTE: Some evidence types may only require a photo (e.g. passport)
  * - It has a document number entered
  */
 const isEvidenceComplete = (evidence: AdditionalEvidenceData): boolean => {
-  const hasBothPhotos = evidence.metadata.length >= 1
+  const hasRequiredPhotos = evidence.metadata.length >= 1
   const hasDocumentNumber = Boolean(evidence.documentNumber)
-  return hasBothPhotos && hasDocumentNumber
+  return hasRequiredPhotos && hasDocumentNumber
 }
 
 /**
@@ -74,7 +74,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
     const isNonBCSCCards = store.bcsc.cardType === BCSCCardType.Other
 
-    // Count of fully validated evidence cards (both photos taken + document number entered)
+    // Count of fully validated evidence cards (at least 1 photo taken + document number entered)
     const completedEvidenceCount = store.bcsc.additionalEvidenceData.filter(isEvidenceComplete).length
 
     // Check if user has any completed photo ID evidence
@@ -129,7 +129,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
       }
 
       // If the user has added additional evidence, add each to the list
-      for (const evidence of store.bcsc.additionalEvidenceData) {
+      for (const evidence of store.bcsc.additionalEvidenceData.filter(isEvidenceComplete)) {
         cards.push(
           t('BCSC.Steps.GetVerificationStep2Subtext2', {
             evidenceType: evidence.evidenceType.evidence_type,

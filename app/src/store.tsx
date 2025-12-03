@@ -564,7 +564,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     }
 
     case BCSCDispatchAction.REMOVE_INCOMPLETE_EVIDENCE: {
-      // Remove evidence entries that don't have at least 1 photo or are missing document number
+      // Remove evidence entries that don't have at least 1 photo and have a document number
       const completeEvidence = state.bcsc.additionalEvidenceData.filter(
         (item) => item.metadata.length >= 1 && Boolean(item.documentNumber)
       )
