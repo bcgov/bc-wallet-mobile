@@ -1,5 +1,6 @@
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { SECURE_APP_LEARN_MORE_URL } from '@/constants'
+import { ScreenWrapper, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { PrivacyPolicyContent } from '../onboarding/components/PrivacyPolicyContent'
@@ -17,6 +18,7 @@ export const SettingsPrivacyPolicyScreen: React.FC<SettingsPrivacyPolicyScreenPr
   navigation,
 }: SettingsPrivacyPolicyScreenProps): JSX.Element => {
   const { t } = useTranslation()
+  const theme = useTheme()
 
   const handleLearnMore = () => {
     navigation.navigate(BCSCScreens.MainWebView, {
@@ -25,5 +27,13 @@ export const SettingsPrivacyPolicyScreen: React.FC<SettingsPrivacyPolicyScreenPr
     })
   }
 
-  return <PrivacyPolicyContent onLearnMore={handleLearnMore} />
+  const scrollContentStyle = {
+    gap: theme.Spacing.lg,
+  }
+
+  return (
+    <ScreenWrapper scrollViewContainerStyle={scrollContentStyle}>
+      <PrivacyPolicyContent onLearnMore={handleLearnMore} />
+    </ScreenWrapper>
+  )
 }

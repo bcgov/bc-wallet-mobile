@@ -1,18 +1,33 @@
 import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import FirstTutorial from '@assets/img/FirstTutorial.jpg'
+import SecondTutorial from '@assets/img/SecondTutorial.jpg'
+import ThirdTutorial from '@assets/img/ThirdTutorial.jpg'
+import { ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Animated, ScrollView, StyleSheet, TouchableOpacity, useWindowDimensions, View } from 'react-native'
+import {
+  Animated,
+  Image,
+  ImageSourcePropType,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from 'react-native'
 import { Directions, FlingGestureHandler, State } from 'react-native-gesture-handler'
-import { SafeAreaView } from 'react-native-safe-area-context'
-
-// TODO (MD): Waiting on final content, replace mock content with real carousel text
-const mockCarouselContent =
-  'Lorem ipsum dolor sit amet consectetur adipiscing elit quisque faucibus ex sapien vitae pellentesque sem placerat in id cursus mi pretium tellus duis convallis tempus.'
 
 interface IntroCarouselScreenProps {
   navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingIntroCarousel>
+}
+
+type CarouselPageData = {
+  key: string
+  headerContent: string
+  bodyContentA: string
+  bodyContentB?: string
+  image: ImageSourcePropType
 }
 
 /**
@@ -75,20 +90,47 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
     carouselPage: {
       width: screenWidth,
     },
+    carouselImageContainer: {
+      alignItems: 'center',
+    },
+    carouselImage: {
+      width: screenWidth,
+      height: 300,
+      resizeMode: 'contain',
+    },
   })
 
-  const carouselPageData = [
-    { key: 'access', headerKey: 'BCSC.Onboarding.CarouselServicesHeader' },
-    { key: 'prove', headerKey: 'BCSC.Onboarding.CarouselProveHeader' },
-    { key: 'cannot', headerKey: 'BCSC.Onboarding.CarouselCannotUseHeader' },
+  const carouselPageData: CarouselPageData[] = [
+    {
+      key: 'access',
+      headerContent: 'BCSC.Onboarding.CarouselServicesHeader',
+      bodyContentA: 'BCSC.Onboarding.CarouselServicesContent',
+      image: FirstTutorial,
+    },
+    {
+      key: 'prove',
+      headerContent: 'BCSC.Onboarding.CarouselProveHeader',
+      bodyContentA: 'BCSC.Onboarding.CarouselProveBodyContentA',
+      bodyContentB: 'BCSC.Onboarding.CarouselProveBodyContentB',
+      image: SecondTutorial,
+    },
+    {
+      key: 'cannot',
+      headerContent: 'BCSC.Onboarding.CarouselCannotUseHeader',
+      bodyContentA: 'BCSC.Onboarding.CarouselCannotUseBodyContentA',
+      bodyContentB: 'BCSC.Onboarding.CarouselCannotUseBodyContentB',
+      image: ThirdTutorial,
+    },
   ]
 
-  const renderCarouselPage = (pageData: { key: string; headerKey: string }) => (
+  const renderCarouselPage = (pageData: CarouselPageData) => (
     <View key={pageData.key} style={[styles.contentContainer, styles.carouselPage]}>
-      {/* TODO (md): replace with image */}
-      <View style={{ height: 240, borderWidth: 5, borderStyle: 'dotted', borderColor: 'white' }} />
-      <ThemedText variant={'headingThree'}>{t(pageData.headerKey)}</ThemedText>
-      <ThemedText>{mockCarouselContent}</ThemedText>
+      <View style={styles.carouselImageContainer}>
+        <Image source={pageData.image} style={styles.carouselImage} />
+      </View>
+      <ThemedText variant={'headingThree'}>{t(pageData.headerContent)}</ThemedText>
+      <ThemedText>{t(pageData.bodyContentA)}</ThemedText>
+      {pageData.bodyContentB ? <ThemedText>{t(pageData.bodyContentB)}</ThemedText> : null}
     </View>
   )
 
@@ -126,7 +168,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'bottom', 'left', 'right']}>
       <FlingGestureHandler
         direction={Directions.LEFT}
         onHandlerStateChange={(event) => {
@@ -177,7 +219,7 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
                 {carouselPages.map((page, index) => (
                   <View
                     key={`carousel-circle-${page.key}`}
-                    style={[styles.carouselCircle, carouselIndex === index && styles.carouselCircleHighlighted]}
+                    style={[styles.carouselCircle, carouselIndex >= index && styles.carouselCircleHighlighted]}
                   />
                 ))}
               </View>
@@ -195,6 +237,6 @@ export const IntroCarouselScreen = ({ navigation }: IntroCarouselScreenProps): J
           </View>
         </FlingGestureHandler>
       </FlingGestureHandler>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }

@@ -1,8 +1,7 @@
-import { ThemedText, useStore, useTheme } from '@bifold/core'
+import { ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Image, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image, Pressable, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
@@ -28,39 +27,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const [, dispatch] = useStore<BCState>()
-  const { width } = useWindowDimensions()
 
   const styles = StyleSheet.create({
-    scrollView: {
-      flex: 1,
-      paddingHorizontal: Spacing.md,
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    heading: {
-      marginTop: Spacing.md,
-      marginBottom: Spacing.sm,
-    },
-    description: {
-      marginBottom: Spacing.md,
-    },
-    pageBreakSlot: {
-      position: 'relative',
-      flex: 1,
-      height: 8,
-      marginTop: 8,
-    },
-    pageBreak: {
-      position: 'absolute',
-      width,
-      height: 8,
-      backgroundColor: ColorPalette.brand.secondaryBackground,
-      left: -Spacing.md,
-    },
-    checkButton: {
-      marginVertical: Spacing.md,
-      flexWrap: 'wrap',
-      flex: 1,
-    },
     checkButtonText: {
       color: ColorPalette.brand.primary,
     },
@@ -82,7 +50,7 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [dispatch, navigation])
 
   const onCheckForServicesCard = useCallback(() => {
-    // TODO: Implement
+    // TODO: Implement (KE)
   }, [])
 
   const onPressOtherID = useCallback(() => {
@@ -125,25 +93,19 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [onPressCombinedCard, onPressPhotoCard, onPressNoPhotoCard, t, Spacing])
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['bottom', 'left', 'right']}>
-      <ScrollView style={styles.scrollView}>
-        <ThemedText variant={'headingThree'} style={styles.heading}>
-          {t('BCSC.ChooseYourID.WhatCardDoYou')}
-        </ThemedText>
-        <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
-        {cardButtons}
-        <View style={styles.pageBreakSlot}>
-          <View style={styles.pageBreak} />
-        </View>
-        <ThemedText variant={'headingThree'} style={styles.heading}>
-          {t('BCSC.ChooseYourID.DontHaveOne')}
-        </ThemedText>
-        <ThemedText style={styles.description}>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
+    <ScreenWrapper scrollViewContainerStyle={{ gap: Spacing.md }}>
+      <View style={{ gap: Spacing.md }}>
+        <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.WhatCardDoYou')}</ThemedText>
+        <ThemedText>{t('BCSC.ChooseYourID.SomePeopleStillCallIt')}</ThemedText>
+      </View>
+      <View>{cardButtons}</View>
+      <View style={{ gap: Spacing.md }}>
+        <ThemedText variant={'headingThree'}>{t('BCSC.ChooseYourID.DontHaveOne')}</ThemedText>
+        <ThemedText>{t('BCSC.ChooseYourID.CheckBefore')}</ThemedText>
         <Pressable
           onPress={onCheckForServicesCard}
           testID={'CheckForServicesCard'}
           accessibilityLabel={t('BCSC.ChooseYourID.CheckForServicesCard')}
-          style={styles.checkButton}
         >
           <ThemedText variant={'bold'} style={styles.checkButtonText}>
             {t('BCSC.ChooseYourID.CheckIfIHave') + ' '}
@@ -158,8 +120,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
           description={t('BCSC.ChooseYourID.OtherIDDescription')}
           style={{ marginBottom: Spacing.md }}
         />
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </ScreenWrapper>
   )
 }
 

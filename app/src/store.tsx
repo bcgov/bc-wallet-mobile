@@ -11,12 +11,7 @@ import { BCSCCardType } from '@bcsc-theme/types/cards'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import {
-  EvidenceType,
-  VerificationPhotoUploadPayload,
-  VerificationPrompt,
-  VerificationVideoUploadPayload,
-} from './bcsc-theme/api/hooks/useEvidenceApi'
+import { EvidenceType, VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
@@ -84,7 +79,7 @@ export interface BCSCState {
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
   prompts?: VerificationPrompt[]
-  videoMetadata?: VerificationVideoUploadPayload
+  videoDuration?: number
   photoMetadata?: VerificationPhotoUploadPayload
   refreshToken?: string
   photoPath?: string
@@ -98,6 +93,7 @@ export interface BCSCState {
   registrationAccessToken?: string
   completedOnboarding: boolean
   bannerMessages: BCSCBannerMessage[]
+  analyticsOptIn: boolean
 }
 
 export interface AdditionalEvidenceData {
@@ -162,12 +158,15 @@ enum BCSCDispatchAction {
   UPDATE_USER_ADDRESS_METADATA = 'bcsc/updateUserMetadataAddress',
   CLEAR_USER_METADATA = 'bcsc/clearUserMetadata',
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
+  REMOVE_INCOMPLETE_EVIDENCE = 'bcsc/removeIncompleteEvidence',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateRegistrationAccessToken',
   UPDATE_COMPLETED_ONBOARDING = 'bcsc/updateOnboardingCompleted',
   ADD_BANNER_MESSAGE = 'bcsc/addBannerMessage',
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
+  RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
+  UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
 }
 
 enum ModeDispatchAction {
@@ -254,6 +253,7 @@ const bcscState: BCSCState = {
   additionalEvidenceData: [],
   completedOnboarding: false,
   bannerMessages: [],
+  analyticsOptIn: false,
 }
 
 export enum BCLocalStorageKeys {
@@ -471,14 +471,27 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.SAVE_VIDEO: {
-      const { videoPath, videoMetadata } = (action.payload ?? []).pop()
-      const bcsc = { ...state.bcsc, videoPath, videoMetadata }
+      const { videoPath, videoDuration } = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, videoPath, videoDuration }
       const newState = { ...state, bcsc }
       return newState
     }
     case BCSCDispatchAction.SAVE_VIDEO_THUMBNAIL: {
       const videoThumbnailPath = (action.payload ?? []).pop()
       const bcsc = { ...state.bcsc, videoThumbnailPath }
+      const newState = { ...state, bcsc }
+      return newState
+    }
+    case BCSCDispatchAction.RESET_SEND_VIDEO: {
+      const bcsc = {
+        ...state.bcsc,
+        photoPath: undefined,
+        photoMetadata: undefined,
+        videoPath: undefined,
+        videoDuration: undefined,
+        videoThumbnailPath: undefined,
+        prompts: undefined,
+      }
       const newState = { ...state, bcsc }
       return newState
     }
@@ -555,6 +568,18 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       )
 
       const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.REMOVE_INCOMPLETE_EVIDENCE: {
+      // Remove evidence entries that don't have at least 1 photo and have a document number
+      const completeEvidence = state.bcsc.additionalEvidenceData.filter(
+        (item) => item.metadata.length >= 1 && Boolean(item.documentNumber)
+      )
+
+      const bcsc = { ...state.bcsc, additionalEvidenceData: completeEvidence }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -643,6 +668,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const bcsc = { ...state.bcsc, bannerMessages }
       const newState = { ...state, bcsc }
 
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.UPDATE_ANALYTICS_OPT_IN: {
+      const analyticsOptIn = (action?.payload || []).pop() ?? false
+      const bcsc = { ...state.bcsc, analyticsOptIn }
+      const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }

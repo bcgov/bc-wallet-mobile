@@ -4,16 +4,20 @@ exports[`TakeVideoScreen renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
     {
-      "bottom": "additive",
-      "left": "additive",
-      "right": "additive",
+      "bottom": "off",
+      "left": "off",
+      "right": "off",
       "top": "additive",
     }
   }
   style={
-    {
-      "flex": 1,
-    }
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
   }
 >
   <View
@@ -28,6 +32,13 @@ exports[`TakeVideoScreen renders correctly 1`] = `
       device={
         {
           "id": "mock-device",
+        }
+      }
+      format={
+        {
+          "fps": 24,
+          "videoHeight": 480,
+          "videoWidth": 640,
         }
       }
       isActive={false}

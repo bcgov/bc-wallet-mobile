@@ -1,3 +1,5 @@
+import { ViewStyle } from 'react-native'
+
 export const autoDisableRemoteLoggingIntervalInMinutes = 60
 export const surveyMonkeyUrl = 'https://www.surveymonkey.com/r/7BMHJL8'
 export const surveyMonkeyExitUrl = 'https://www.surveymonkey.com/survey-thanks'
@@ -50,6 +52,8 @@ export const CONTACT_US_GOVERNMENT_WEBSITE_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-services-card/contact-us'
 export const GET_BCSC_CARD_URL =
   'https://www2.gov.bc.ca/gov/content/governments/government-id/bc-services-card/your-card/get-a-card'
+export const ANALYTICS_URL =
+  'https://www2.gov.bc.ca/gov/content/governments/services-for-government/service-experience-digital-delivery/web-content-development-guides/analytics'
 
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',
@@ -57,6 +61,7 @@ export enum HelpCentreUrl {
   ACCEPTED_IDENTITY_DOCUMENTS = 'https://id.gov.bc.ca/static/help/accepted-id.html?fromapp=1',
   VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-options-app',
   VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-inperson',
+  QUICK_SETUP_OF_ADDITIONAL_DEVICES = 'https://id.gov.bc.ca/static/help/setup_qrcode.html?fromapp=1',
 }
 
 export const formStringLengths = {
@@ -70,3 +75,17 @@ export const CROP_DELAY_MS = 11000
 
 // Date time constants
 export const ACCOUNT_EXPIRATION_DATE_FORMAT = 'MMMM D, YYYY'
+
+// BCSC Video constants
+export const VIDEO_RESOLUTION_480P = { width: 640, height: 480 } // standard definition video resolution
+export const SELFIE_VIDEO_FRAME_RATE = 24
+export const MAX_SELFIE_VIDEO_DURATION_SECONDS = 30
+export const DEFAULT_SELFIE_VIDEO_FILENAME = 'selfieVideo.mp4'
+export const VIDEO_MP4_MIME_TYPE = 'video/mp4'
+export const MIN_PROMPT_DURATION_SECONDS = 2
+
+// File chunking constants
+export const DEFAULT_CHUNK_SIZE = 1024 * 1024 // 1 MB
+
+// Styling contants
+export const DEFAULT_HEADER_TITLE_CONTAINER_STYLE: ViewStyle = { flexShrink: 1, maxWidth: '68%' }

@@ -1,10 +1,9 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import SerialHighlightImage from '@assets/img/highlight_serial_barcode.png'
-import { Button, ButtonType, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Image, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image, StyleSheet, useWindowDimensions, View } from 'react-native'
 
 const SERIAL_HIGHLIGHT_IMAGE = Image.resolveAssetSource(SerialHighlightImage).uri
 
@@ -18,41 +17,28 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
   navigation,
 }: SerialInstructionsScreenProps) => {
   const { t } = useTranslation()
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { width } = useWindowDimensions()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-    },
-    scrollView: {
-      flex: 1,
-      padding: Spacing.md,
-    },
-    controlsContainer: {
-      margin: Spacing.md,
-      marginTop: 'auto',
-      position: 'relative',
-    },
     image: {
-      width: width - Spacing.md * 2,
-      height: (width - Spacing.md * 2) * twoThirds,
+      width: width - Spacing.md * 6,
+      height: (width - Spacing.md * 6) * twoThirds,
+      padding: Spacing.lg,
+      alignSelf: 'center',
       marginBottom: Spacing.lg,
     },
   })
 
   return (
-    <SafeAreaView style={styles.pageContainer} edges={['bottom', 'left', 'right']}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
-        <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-          {t('BCSC.Instructions.Heading')}
-        </ThemedText>
-        <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Instructions.Paragraph')}</ThemedText>
-      </ScrollView>
-      <View style={styles.controlsContainer}>
+    <ScreenWrapper scrollViewContainerStyle={{ gap: Spacing.sm, flexGrow: 1 }}>
+      <Image source={{ uri: SERIAL_HIGHLIGHT_IMAGE }} style={styles.image} resizeMode={'contain'} />
+      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
+        {t('BCSC.Instructions.Heading')}
+      </ThemedText>
+      <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Instructions.Paragraph')}</ThemedText>
+
+      <View style={{ marginTop: 'auto', gap: Spacing.md }}>
         <Button
           title={t('BCSC.Instructions.ScanBarcode')}
           accessibilityLabel={t('BCSC.Instructions.ScanBarcode')}
@@ -60,17 +46,15 @@ const SerialInstructionsScreen: React.FC<SerialInstructionsScreenProps> = ({
           onPress={() => navigation.navigate(BCSCScreens.ScanSerial)}
           buttonType={ButtonType.Primary}
         />
-        <View style={{ marginTop: Spacing.md }}>
-          <Button
-            title={t('BCSC.Instructions.EnterManually')}
-            accessibilityLabel={t('BCSC.Instructions.EnterManually')}
-            testID={testIdWithKey('EnterManually')}
-            onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
-            buttonType={ButtonType.Secondary}
-          />
-        </View>
+        <Button
+          title={t('BCSC.Instructions.EnterManually')}
+          accessibilityLabel={t('BCSC.Instructions.EnterManually')}
+          testID={testIdWithKey('EnterManually')}
+          onPress={() => navigation.navigate(BCSCScreens.ManualSerial)}
+          buttonType={ButtonType.Secondary}
+        />
       </View>
-    </SafeAreaView>
+    </ScreenWrapper>
   )
 }
 

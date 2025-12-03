@@ -1,31 +1,21 @@
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import BulletPointWithText from '@/components/BulletPointWithText'
 import { BCState } from '@/store'
-import { Button, ButtonType, ThemedText, useStore, useTheme } from '@bifold/core'
+import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { Image, ScrollView, StyleSheet, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Image, StyleSheet } from 'react-native'
 
 type StartCallScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.StartCall>
 }
 
 const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
-  const { ColorPalette, Spacing } = useTheme()
+  const { Spacing } = useTheme()
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
 
   const styles = StyleSheet.create({
-    pageContainer: {
-      flex: 1,
-      justifyContent: 'space-between',
-      backgroundColor: ColorPalette.brand.primaryBackground,
-      padding: Spacing.md,
-    },
-    contentContainer: {
-      flex: 1,
-    },
     // At smaller sizes the Image tag will ignore exif tags, which provide orientation
     // (along with other metadata.) Image is rendered at a larger size to pick up the
     // exif data, then scaled down and given negative margin to fit in the button
@@ -36,9 +26,6 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
       overflow: 'hidden',
       transform: [{ scale: 0.333 }], // scale to match thumbnailHeight
       margin: -100, // -height * scale
-    },
-    controlsContainer: {
-      marginTop: 'auto',
     },
     bulletContainer: {
       flexDirection: 'row',
@@ -52,27 +39,26 @@ const StartCallScreen = ({ navigation }: StartCallScreenProps) => {
     navigation.navigate(BCSCScreens.LiveCall)
   }
 
+  const controls = (
+    <Button
+      buttonType={ButtonType.Primary}
+      title={t('BCSC.VideoCall.StartCall')}
+      accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
+      onPress={onPressStart}
+    />
+  )
+
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.pageContainer}>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
-        <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
-        <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
-          {t('BCSC.VideoCall.StartVideoCallDescription')}
-        </ThemedText>
-        <ThemedText style={{ marginTop: Spacing.lg }}>{t('BCSC.VideoCall.YouShould')}</ThemedText>
-        <BulletPointWithText translationKey={'BCSC.VideoTips.PrivatePlace'} />
-        <BulletPointWithText translationKey={'BCSC.VideoTips.OnlyPerson'} />
-        <BulletPointWithText translationKey={'BCSC.VideoTips.RemoveGlasses'} />
-      </ScrollView>
-      <View style={styles.controlsContainer}>
-        <Button
-          buttonType={ButtonType.Primary}
-          title={t('BCSC.VideoCall.StartCall')}
-          accessibilityLabel={t('BCSC.VideoCall.StartVideoCall')}
-          onPress={onPressStart}
-        />
-      </View>
-    </SafeAreaView>
+    <ScreenWrapper controls={controls}>
+      <Image source={{ uri: `file://${store.bcsc.photoPath}` }} resizeMode={'contain'} style={styles.image} />
+      <ThemedText variant={'headingThree'} style={{ marginTop: Spacing.xxl }}>
+        {t('BCSC.VideoCall.StartVideoCallDescription')}
+      </ThemedText>
+      <ThemedText style={{ marginTop: Spacing.lg }}>{t('BCSC.VideoCall.YouShould')}</ThemedText>
+      <BulletPointWithText translationKey={'BCSC.VideoTips.PrivatePlace'} />
+      <BulletPointWithText translationKey={'BCSC.VideoTips.OnlyPerson'} />
+      <BulletPointWithText translationKey={'BCSC.VideoTips.RemoveGlasses'} />
+    </ScreenWrapper>
   )
 }
 

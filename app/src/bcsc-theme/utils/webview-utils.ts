@@ -14,7 +14,7 @@ export const createTermsOfUseWebViewJavascriptInjection = (colorPalette: IColorP
     document.addEventListener('DOMContentLoaded', function() {
       const style = document.createElement('style');
 
-      document.querySelectorAll('footer, header, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
+      document.querySelectorAll('footer, header, h1, nav[aria-label="breadcrumb"]').forEach(el => el.remove());
       document.body.style.backgroundColor = '${colorPalette.brand.primaryBackground}';
       document.body.style.color = '${colorPalette.brand.secondary}';
 
