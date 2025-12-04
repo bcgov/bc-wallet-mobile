@@ -10,7 +10,7 @@ import { useBCSCApiClient } from './useBCSCApiClient'
 type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login_uri'>
 
 // The result type is a tuple of [quickLoginUrl, quickLoginError]
-type QuickLoginURLResult = { success: true; url: string } | { success: false; error: string }
+type QuickLoginURLResult = { success: true; url?: string; error?: string }
 
 // Represents a stub service client with an empty client_ref_id
 export const STUB_SERVICE_CLIENT: ClientMetadataStub = { client_ref_id: '' }

@@ -2,13 +2,8 @@ import { Linking } from 'react-native'
 
 export type DeepLinkPayload = {
   rawUrl: string
-  scheme?: string
   host?: string
   path?: string
-  query?: Record<string, string>
-  fragment?: string
-  decodedPath?: string
-  serviceUrl?: string
   serviceTitle?: string
   pairingCode?: string
 }
@@ -72,25 +67,12 @@ export class DeepLinkService {
 
   private parseUrl(rawUrl: string): DeepLinkPayload {
     try {
-      const { protocol, hostname, pathname, hash, searchParams } = new URL(rawUrl)
-      const query: Record<string, string> = {}
-
-      searchParams.forEach((value, key) => {
-        query[key] = value
-      })
-
-      const payload: DeepLinkPayload = {
-        rawUrl,
-        scheme: protocol.replace(':', ''),
-        host: hostname,
-        path: pathname,
-        fragment: hash.replace('#', '') || undefined,
-        query: Object.keys(query).length ? query : undefined,
-      }
-
+      const url = new URL(rawUrl)
       return {
-        ...payload,
-        ...this.extractPairingMetadata(payload),
+        rawUrl,
+        host: url.host,
+        path: url.pathname,
+        ...this.extractPairingMetadata(url),
       }
     } catch {
       // If URL parsing fails (invalid input or missing polyfill), surface raw data only.
@@ -98,35 +80,30 @@ export class DeepLinkService {
     }
   }
 
-  private extractPairingMetadata(payload: DeepLinkPayload): Partial<DeepLinkPayload> {
-    if (payload.host !== 'pair' || !payload.path) {
+  private extractPairingMetadata(url: URL): Partial<DeepLinkPayload> {
+    if (url.host !== 'pair' || !url.pathname) {
       return {}
     }
 
-    const rawPath = payload.path.startsWith('/') ? payload.path.slice(1) : payload.path
+    const rawPath = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname
 
     try {
       const decodedPath = decodeURIComponent(rawPath)
-      const result: Partial<DeepLinkPayload> = {
-        decodedPath,
-        serviceUrl: decodedPath,
-      }
+      const nestedUrl = new URL(decodedPath)
+      const segments = nestedUrl.pathname.split('/').filter(Boolean)
+      const expectedSegmentCount = 3
 
-      const url = new URL(decodedPath)
-      const segments = url.pathname.split('/').filter(Boolean)
-
-      if (segments[0] === 'device' && segments.length >= 3) {
+      if (segments[0] === 'device' && segments.length >= expectedSegmentCount) {
         const serviceTitle = decodeURIComponent(segments[1].replace(/\+/g, ' '))
         const pairingCode = segments[2]
 
         return {
-          ...result,
           serviceTitle,
           pairingCode,
         }
       }
 
-      return result
+      return {}
     } catch {
       return {}
     }

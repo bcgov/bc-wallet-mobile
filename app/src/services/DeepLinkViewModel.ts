@@ -38,6 +38,10 @@ export class DeepLinkViewModel {
     return this.pendingDeepLink !== null
   }
 
+  public getPendingDeepLink(): DeepLinkPayload | null {
+    return this.pendingDeepLink
+  }
+
   public consumePendingDeepLink(): DeepLinkPayload | null {
     if (!this.pendingDeepLink) {
       return null
