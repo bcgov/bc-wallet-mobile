@@ -81,5 +81,5 @@ export const useAccount = () => {
     throw new Error('useAccount: account is null')
   }
 
-  return { account: context.account }
+  return context.account
 }

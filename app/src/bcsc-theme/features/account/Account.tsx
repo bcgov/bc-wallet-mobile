@@ -33,7 +33,7 @@ const Account: React.FC = () => {
   const { t } = useTranslation()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const getQuickLoginURL = useQuickLoginURL()
-  const { account } = useAccount()
+  const account = useAccount()
   const { idToken, refreshIdToken } = useIdToken()
 
   const openedWebview = useRef(false)
