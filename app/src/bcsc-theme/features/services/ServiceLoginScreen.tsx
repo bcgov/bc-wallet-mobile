@@ -1,13 +1,10 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
-import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { useDeepLinkViewModel } from '@/contexts/DeepLinkViewModelContext'
 import { BCState, Mode } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
-import { useCallback, useEffect, useReducer } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -15,19 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button, ButtonType, testIdWithKey } from '@bifold/core'
 import { TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { useServiceLoginState } from './hooks/useServiceLoginState'
 
 type ServiceLoginScreenProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ServiceLogin>
-type MergeFunction = (current: LocalState, next: Partial<LocalState>) => LocalState
-type LocalState = {
-  serviceTitle?: string
-  pairingCode?: string
-  authenticationUrl?: string
-  claimsDescription?: string
-  privacyPolicyUri?: string
-  serviceInitiateLoginUri?: string
-  service?: ClientMetadata
-  serviceClientUri?: string
-}
 
 const RenderState = {
   Loading: 1,
@@ -44,35 +31,21 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   navigation,
   route,
 }: ServiceLoginScreenProps) => {
-  const { serviceClient } = route.params ?? {}
+  const { serviceClient, serviceTitle, pairingCode } = route.params ?? {}
   const serviceClientId = serviceClient?.client_ref_id
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
-  const viewModel = useDeepLinkViewModel()
   const { pairing, metadata } = useApi()
   const getQuickLoginURL = useQuickLoginURL()
-  const merge: MergeFunction = (current, next) => ({ ...current, ...next })
-  const [state, dispatch] = useReducer(merge, {
-    authenticationUrl: undefined,
-    serviceTitle: undefined,
-    claimsDescription: undefined,
-    privacyPolicyUri: undefined,
-    pairingCode: undefined,
-    service: undefined,
-    serviceInitiateLoginUri: undefined,
-    serviceClientUri: undefined,
-  })
-  const {
-    data: serviceClients,
-    load,
-    isLoading,
-  } = useDataLoader<ClientMetadata[]>(() => metadata.getClientMetadata(), {
-    onError: (error) => {
-      logger.error('ServiceLoginScreen: Error loading services', error as Error)
-    },
+  const { state, isLoading, serviceHydrated } = useServiceLoginState({
+    serviceClientId,
+    serviceTitle,
+    pairingCode,
+    metadata,
+    logger,
   })
 
   const styles = StyleSheet.create({
@@ -126,70 +99,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     },
   })
 
-  useEffect(() => {
-    load()
-  }, [load])
-
-  // Service lookup
-  useEffect(() => {
-    if (isLoading || (!state.serviceTitle && !serviceClientId)) {
-      return
-    }
-
-    const pendingServiceTitle = state.serviceTitle
-
-    let client: ClientMetadata[] | undefined
-
-    if (pendingServiceTitle) {
-      // Find the client service by name.
-      client = serviceClients?.filter((service) =>
-        service.client_name.toLowerCase().includes(pendingServiceTitle.toLocaleLowerCase())
-      )
-    }
-
-    if (serviceClientId) {
-      // Find the client service by id.
-      client = serviceClients?.filter((service) => service.client_ref_id === serviceClientId)
-    }
-
-    if (!client || client.length === 0) {
-      return
-    }
-
-    const result = client.pop()
-    logger.info(`ServiceLoginScreen: Found service client for ${result?.client_name}`)
-
-    dispatch({
-      serviceTitle: result?.client_name,
-      claimsDescription: result?.claims_description,
-      privacyPolicyUri: result?.policy_uri,
-      serviceInitiateLoginUri: result?.initiate_login_uri,
-      serviceClientUri: result?.client_uri,
-      service: result,
-    })
-  }, [isLoading, logger, serviceClientId, serviceClients, state.service, state.serviceTitle])
-
-  // Pending deep link processing
-  useEffect(() => {
-    if (serviceClientId) {
-      // this is not a deep link flow
-      return
-    }
-
-    const hasLoginData = Boolean(state.authenticationUrl || state.pairingCode || state.serviceTitle)
-    if (!hasLoginData && viewModel.hasPendingDeepLink) {
-      const pending = viewModel.getPendingDeepLink()
-      logger.info(`ServiceLoginScreen: Found pending deep link for ${pending?.serviceTitle}`)
-
-      if (pending) {
-        dispatch({
-          serviceTitle: pending.serviceTitle, // used to lookup service client
-          pairingCode: pending.pairingCode, // used for pairing login
-        })
-      }
-    }
-  }, [state.authenticationUrl, serviceClientId, logger, state.pairingCode, state.serviceTitle, viewModel])
-
   const onContinueWithPairingCode = useCallback(async () => {
     const code = state.pairingCode
     if (!code) {
@@ -233,14 +142,14 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
   }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.authenticationUrl, state.pairingCode, t])
 
-  // move
+  //  move outside of main fn so it's not re-created on each render
   const ServiceLoginLoadingView = () => (
     <SafeAreaView edges={['bottom']} style={{ flex: 1, justifyContent: 'center' }}>
       <ActivityIndicator size="large" />
     </SafeAreaView>
   )
 
-  //  move
+  //  move outside of main fn so it's not re-created on each render
   const ServiceLoginUnavailableView = () => (
     <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.screenContainer}>
@@ -251,6 +160,11 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
           <TouchableOpacity
             onPress={() => {
+              if (!state.serviceClientUri) {
+                logger.error('ServiceLoginScreen: No service client URI available for navigation')
+                return
+              }
+
               Linking.openURL(state.serviceClientUri)
             }}
           >
@@ -270,7 +184,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       </ScrollView>
     </SafeAreaView>
   )
-  //  move
+  //  move outside of main fn so it's not re-created on each render
   const ServiceLoginDefaultView = () => (
     <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.screenContainer}>
@@ -298,6 +212,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
               <TouchableOpacity
                 onPress={() => {
                   try {
+                    // eslint-disable-next-line react/prop-types
                     navigation.navigate(BCSCScreens.MainWebView, {
                       url: state.privacyPolicyUri!,
                       title: t('BCSC.Services.PrivacyPolicy'),
@@ -336,16 +251,17 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
             accessibilityLabel={'Cancel'}
             testID={testIdWithKey('ServiceLoginCancel')}
             buttonType={ButtonType.Tertiary}
-            onPress={() => navigation.goBack()}
+            onPress={() => {
+              // eslint-disable-next-line react/prop-types
+              navigation.goBack()
+            }}
           />
         </View>
       </ScrollView>
     </SafeAreaView>
   )
 
-  const serviceHydrated = Boolean(state.service)
   const renderState = (() => {
-    console.log('***** ServiceLoginScreen renderState =', state)
     if (isLoading || !serviceHydrated) {
       return RenderState.Loading
     }

@@ -1,3 +1,4 @@
+import { useDeepLinkViewModel } from '@/contexts/DeepLinkViewModelContext'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
@@ -14,8 +15,12 @@ import { getDefaultModalOptions } from './stack-utils'
 const DeepLinkStack = (): JSX.Element => {
   const { t } = useTranslation()
   const theme = useTheme()
+  const viewModel = useDeepLinkViewModel()
   const Stack = createStackNavigator<BCSCOnboardingStackParams>()
   const defaultStackOptions = useDefaultStackOptions(theme)
+
+  // Get the pending deep link data without consuming it yet
+  const pendingDeepLink = viewModel.getPendingDeepLink()
 
   return (
     <Stack.Navigator
@@ -33,6 +38,14 @@ const DeepLinkStack = (): JSX.Element => {
       <Stack.Screen
         name={BCSCScreens.ServiceLogin}
         component={ServiceLoginScreen}
+        initialParams={
+          pendingDeepLink
+            ? {
+                serviceTitle: pendingDeepLink.serviceTitle,
+                pairingCode: pendingDeepLink.pairingCode,
+              }
+            : undefined
+        }
         options={{
           ...getDefaultModalOptions(t('HelloWorld')),
           gestureEnabled: true,
