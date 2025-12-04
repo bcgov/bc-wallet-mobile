@@ -49,9 +49,7 @@ exports[`OnboardingOptInAnalytics renders correctly 1`] = `
         source={
           [
             {
-              "height": undefined,
-              "uri": undefined,
-              "width": undefined,
+              "uri": "mock-notification-image",
             },
           ]
         }
