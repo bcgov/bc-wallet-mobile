@@ -1,10 +1,10 @@
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
-import { CommonActions } from '@react-navigation/native'
+import { CommonActions, useFocusEffect } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { BackHandler, StyleSheet } from 'react-native'
 
 type SuccessfullySentScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.SuccessfullySent>
@@ -18,6 +18,12 @@ const SuccessfullySentScreen = ({ navigation }: SuccessfullySentScreenProps) => 
       justifyContent: 'center',
       alignItems: 'center',
     },
+  })
+
+  // Disable hardware back button on Android
+  useFocusEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+    return subscription.remove
   })
 
   const controls = (

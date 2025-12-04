@@ -5,7 +5,6 @@ import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, ThemedText, useStore, useTheme } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
-
 import React, { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
@@ -47,7 +46,9 @@ const AccountSetupSelectionScreen: React.FC = () => {
     <ScreenWrapper padded={false} scrollable={false} style={styles.container}>
       <View style={styles.contentContainer}>
         <GenericCardImage />
-        <ThemedText variant={'headingFour'}>{t('BCSC.AccountSetup.Title')}</ThemedText>
+        <ThemedText variant={'headingFour'} style={{ textAlign: 'center' }}>
+          {t('BCSC.AccountSetup.Title')}
+        </ThemedText>
       </View>
 
       {store.bcsc.nicknames.length > 0 ? (

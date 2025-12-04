@@ -2,54 +2,75 @@ import { MediaCache } from '@/bcsc-theme/utils/media-cache'
 import { MockLogger } from '@bifold/core'
 
 describe('MediaCache', () => {
-  describe('setCachedMedia', () => {
+  describe('setCache', () => {
     it('should set the cache', async () => {
       const mediaCache = new MediaCache()
       const mockMediaBuffer = Buffer.from('mock media data')
 
-      mediaCache.setCachedMedia(mockMediaBuffer)
+      mediaCache.setCache(mockMediaBuffer)
 
       expect(mediaCache.cachedMedia).toBe(mockMediaBuffer)
     })
+
+    it('should set the cache with a promise', async () => {
+      const mediaCache = new MediaCache()
+      const mockMediaBuffer = Buffer.from('mock media data')
+      const mockMediaPromise = Promise.resolve(mockMediaBuffer)
+
+      mediaCache.setCache(mockMediaPromise)
+
+      expect(mediaCache.cachedMedia).toBeNull()
+    })
+
+    it('should set the cache to null', async () => {
+      const mediaCache = new MediaCache()
+
+      mediaCache.setCache(null)
+
+      expect(mediaCache.cachedMedia).toBeNull()
+    })
   })
 
-  describe('removeMediaAndClearCache', () => {
+  describe('clearCache', () => {
     it('should remove media and clear cache', async () => {
-      const mediaCache: any = new MediaCache()
+      const mediaCache = new MediaCache()
       const mockMediaBuffer = Buffer.from('mock media data')
 
-      mediaCache.setCachedMedia(mockMediaBuffer)
-
-      mediaCache.removeFileSafely = jest.fn().mockResolvedValue(undefined)
+      mediaCache.setCache(mockMediaBuffer)
 
       expect(mediaCache.cachedMedia).toBe(mockMediaBuffer)
+
+      mediaCache.clearCache()
+
+      expect(mediaCache.cachedMedia).toBeNull()
     })
   })
 
-  describe('getCachedMedia', () => {
+  describe('getCache', () => {
     it('should get cached media', async () => {
       const mockLogger = new MockLogger()
-      const mediaCache: any = new MediaCache()
+      const mediaCache = new MediaCache()
       const mockMediaBuffer = Buffer.from('mock media data')
 
       mediaCache.cachedMedia = mockMediaBuffer
 
-      const cachedMedia = await mediaCache.getCachedMedia('mock/path', mockLogger)
+      const cachedMedia = await mediaCache.getCache(mockLogger)
 
       expect(cachedMedia).toBe(mockMediaBuffer)
     })
 
-    it('should read media from disk if not cached', async () => {
+    it('should await cached media promise and return media', async () => {
       const mockLogger = new MockLogger()
-      const mediaCache: any = new MediaCache()
+      const mediaCache = new MediaCache()
       const mockMediaBuffer = Buffer.from('mock media data')
+      const mockMediaPromise = Promise.resolve(mockMediaBuffer)
 
-      mediaCache.readFileInChunks = jest.fn().mockResolvedValue(mockMediaBuffer)
+      mediaCache.setCache(mockMediaPromise)
 
-      const media = await mediaCache.getCachedMedia('mock/path', mockLogger)
+      const cachedMedia = await mediaCache.getCache(mockLogger)
 
-      expect(media).toBe(mockMediaBuffer)
-      expect(mediaCache.readFileInChunks).toHaveBeenCalledWith('mock/path', mockLogger)
+      expect(cachedMedia).toBe(mockMediaBuffer)
+      expect(mediaCache.cachedMedia).toBe(mockMediaBuffer)
     })
   })
 })

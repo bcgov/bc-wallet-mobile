@@ -9,13 +9,9 @@ import {
 
 import { BCSCCardType } from '@bcsc-theme/types/cards'
 import Config from 'react-native-config'
+import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
-import {
-  EvidenceType,
-  VerificationPhotoUploadPayload,
-  VerificationPrompt,
-  VerificationVideoUploadPayload,
-} from './bcsc-theme/api/hooks/useEvidenceApi'
+import { EvidenceType, VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
 import { PhotoMetadata } from './bcsc-theme/utils/file-info'
@@ -65,6 +61,7 @@ export interface NonBCSCUserMetadata {
 }
 
 export interface BCSCState {
+  appVersion: string
   completedNewSetup: boolean
   verified: boolean
   // used during verification, use IAS ID token cardType for everything else
@@ -82,7 +79,7 @@ export interface BCSCState {
   deviceCodeExpiresAt?: Date
   pendingVerification?: boolean
   prompts?: VerificationPrompt[]
-  videoMetadata?: VerificationVideoUploadPayload
+  videoDuration?: number
   photoMetadata?: VerificationPhotoUploadPayload
   refreshToken?: string
   photoPath?: string
@@ -132,6 +129,7 @@ enum RemoteDebuggingDispatchAction {
 }
 
 enum BCSCDispatchAction {
+  UPDATE_APP_VERSION = 'bcsc/updateAppVersion',
   ADD_NICKNAME = 'bcsc/addNickname',
   UPDATE_NICKNAME = 'bcsc/updateNickname',
   SELECT_ACCOUNT = 'bcsc/selectAccount',
@@ -160,6 +158,7 @@ enum BCSCDispatchAction {
   UPDATE_USER_ADDRESS_METADATA = 'bcsc/updateUserMetadataAddress',
   CLEAR_USER_METADATA = 'bcsc/clearUserMetadata',
   UPDATE_EVIDENCE_DOCUMENT_NUMBER = 'bcsc/updateEvidenceDocumentNumber',
+  REMOVE_INCOMPLETE_EVIDENCE = 'bcsc/removeIncompleteEvidence',
   CLEAR_ADDITIONAL_EVIDENCE = 'bcsc/clearAdditionalEvidence',
   CLEAR_BCSC = 'bcsc/clearBCSC',
   UPDATE_REGISTRATION_ACCESS_TOKEN = 'bcsc/updateRegistrationAccessToken',
@@ -233,6 +232,7 @@ const dismissPersonCredentialOfferState: DismissPersonCredentialOffer = {
 }
 
 const bcscState: BCSCState = {
+  appVersion: getVersion(),
   completedNewSetup: false,
   verified: false,
   cardType: BCSCCardType.None,
@@ -343,6 +343,12 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         newState.dismissPersonCredentialOffer
       )
 
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_APP_VERSION: {
+      const bcsc = { ...state.bcsc, appVersion: getVersion() }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.ADD_NICKNAME: {
@@ -465,8 +471,8 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       return newState
     }
     case BCSCDispatchAction.SAVE_VIDEO: {
-      const { videoPath, videoMetadata } = (action.payload ?? []).pop()
-      const bcsc = { ...state.bcsc, videoPath, videoMetadata }
+      const { videoPath, videoDuration } = (action.payload ?? []).pop()
+      const bcsc = { ...state.bcsc, videoPath, videoDuration }
       const newState = { ...state, bcsc }
       return newState
     }
@@ -482,7 +488,7 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         photoPath: undefined,
         photoMetadata: undefined,
         videoPath: undefined,
-        videoMetadata: undefined,
+        videoDuration: undefined,
         videoThumbnailPath: undefined,
         prompts: undefined,
       }
@@ -562,6 +568,18 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       )
 
       const bcsc = { ...state.bcsc, additionalEvidenceData: updatedEvidenceData }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+
+    case BCSCDispatchAction.REMOVE_INCOMPLETE_EVIDENCE: {
+      // Remove evidence entries that don't have at least 1 photo and have a document number
+      const completeEvidence = state.bcsc.additionalEvidenceData.filter(
+        (item) => item.metadata.length >= 1 && Boolean(item.documentNumber)
+      )
+
+      const bcsc = { ...state.bcsc, additionalEvidenceData: completeEvidence }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

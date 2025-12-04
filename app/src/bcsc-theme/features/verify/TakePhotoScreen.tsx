@@ -1,10 +1,8 @@
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-
-import { StackNavigationProp } from '@react-navigation/stack'
-
 import MaskedCamera from '@/bcsc-theme/components/MaskedCamera'
+import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { MaskType, ScreenWrapper } from '@bifold/core'
 import { RouteProp } from '@react-navigation/native'
+import { StackNavigationProp } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 
 type PhotoInstructionsScreenProps = {
@@ -24,11 +22,11 @@ const TakePhotoScreen = ({ navigation, route }: PhotoInstructionsScreenProps) =>
   }
 
   return (
-    <ScreenWrapper padded={false} scrollable={false} edges={['top', 'bottom', 'left', 'right']}>
+    <ScreenWrapper padded={false} scrollable={false} edges={['top']}>
       <MaskedCamera
         navigation={navigation}
         cameraFace="front"
-        cameraLabel={t('BCSC.SendVideo.TakePhoto.CameraInstructions')}
+        cameraInstructions={t('BCSC.SendVideo.TakePhoto.CameraInstructions')}
         maskType={MaskType.OVAL}
         onPhotoTaken={handlePhotoTaken}
       />

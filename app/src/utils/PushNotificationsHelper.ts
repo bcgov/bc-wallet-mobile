@@ -4,22 +4,51 @@ import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messag
 import { Platform } from 'react-native'
 import { Config } from 'react-native-config'
 import { checkNotifications, PermissionStatus, requestNotifications, RESULTS } from 'react-native-permissions'
-
 import { BCLocalStorageKeys } from '../store'
 
-const enum NotificationPermissionStatus {
+const REQUEST_NOTIFICATIONS_TIMEOUT_MS = 2000
+
+export const enum NotificationPermissionStatus {
   DENIED = 'denied',
   GRANTED = 'granted',
   UNKNOWN = 'unknown',
+  BLOCKED = 'blocked',
 }
 
 /**
  * Permissions Section
  */
 
+/**
+ * Requests device notification permissions
+ *
+ * TODO (MD): Workaround for a known React Native issue where `requestNotifications` may hang indefinitely
+ * on Android if the user previously denied the permission prompt `twice`. Update to standard implementation
+ * when using React Native version 0.81.x or later.
+ *
+ * @see
+ * Issue: https://github.com/facebook/react-native/pull/53898
+ * Fixed in: https://github.com/reactwg/react-native-releases/issues/1151 V0.81.x
+ * Commit: https://github.com/facebook/react-native/commit/447a7a3527e3e38e4c3ceb330d12d77afe7bc0b4
+ *
+ * @example previously:
+ * const { status } = await requestNotifications()
+ * return status
+ */
 const requestNotificationPermission = async (): Promise<PermissionStatus> => {
-  const { status } = await requestNotifications()
-  return status
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      resolve(NotificationPermissionStatus.BLOCKED)
+    }, REQUEST_NOTIFICATIONS_TIMEOUT_MS)
+
+    requestNotifications()
+      .then(({ status }) => {
+        resolve(status)
+      })
+      .finally(() => {
+        clearTimeout(timeout)
+      })
+  })
 }
 
 const formatPermissionIos = (permission: FirebaseMessagingTypes.AuthorizationStatus): NotificationPermissionStatus => {
@@ -41,7 +70,7 @@ const formatPermissionAndroid = (permission: PermissionStatus): NotificationPerm
       return NotificationPermissionStatus.GRANTED
     case RESULTS.DENIED:
       return NotificationPermissionStatus.DENIED
-    case RESULTS.BLOCKED:
+    case RESULTS.BLOCKED: // TODO (MD): Return BLOCKED status when using react-native V0.81.x
       return NotificationPermissionStatus.DENIED
     default:
       return NotificationPermissionStatus.UNKNOWN
@@ -56,6 +85,7 @@ const requestPermission = async (): Promise<NotificationPermissionStatus> => {
   }
 
   const { status } = await checkNotifications()
+
   if (status !== RESULTS.GRANTED) {
     const result = await requestNotificationPermission()
 
@@ -216,7 +246,7 @@ const status = async (): Promise<NotificationPermissionStatus> => {
 }
 
 const setup = async (): Promise<NotificationPermissionStatus> => {
-  return await requestPermission()
+  return requestPermission()
 }
 
 const activate = async (agent: Agent): Promise<void> => {
