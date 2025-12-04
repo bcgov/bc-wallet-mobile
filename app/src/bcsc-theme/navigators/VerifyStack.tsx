@@ -182,7 +182,7 @@ const VerifyStack = () => {
       <Stack.Screen
         name={BCSCScreens.SuccessfullySent}
         component={SuccessfullySentScreen}
-        options={{ headerShown: false }}
+        options={{ headerShown: false, gestureEnabled: false }}
       />
       <Stack.Screen
         name={BCSCScreens.VerificationSuccess}
