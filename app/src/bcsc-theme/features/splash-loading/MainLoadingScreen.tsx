@@ -6,16 +6,16 @@ import { StackNavigationProp } from '@react-navigation/stack'
 import { useContext } from 'react'
 import { LoadingScreenContent } from './LoadingScreenContent'
 
-interface MainStackSplashScreenProps {
+interface MainStackLoadingScreenProps {
   navigation: StackNavigationProp<BCSCMainStackParams, BCSCScreens.MainLoading | BCSCStacks.Tab>
 }
 
 /**
- * Renders the Main Stack Splash Screen, which checks the account status and navigates accordingly.
+ * Renders the Main Stack Loading Screen, which checks the account status and navigates accordingly.
  *
- * @returns {*} {JSX.Element} The MainStackSplashScreen component.
+ * @returns {*} {JSX.Element} The MainLoadingScreen component.
  */
-export const MainLoadingScreen = ({ navigation }: MainStackSplashScreenProps) => {
+export const MainLoadingScreen = ({ navigation }: MainStackLoadingScreenProps) => {
   const context = useContext(BCSCAccountContext)
 
   const loadingAccount = !context || context.isLoadingAccount || !context.account

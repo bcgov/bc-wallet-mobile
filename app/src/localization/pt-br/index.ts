@@ -129,7 +129,7 @@ const translation = {
     "Title": "BC Services Card (PT-BR)",
     "LocaleStringFormat": "pt-BR",
     "Screens": {
-      "Settings": "Menu (PT-BR)",
+      "Settings": "Settings (PT-BR)",
       "SetupTypes": "BC Services Card (PT-BR)",
       "SetupSteps": "Setup Steps (PT-BR)",
       "VerificationMethodSelection": "Choose How to Verify (PT-BR)",
@@ -410,7 +410,8 @@ const translation = {
       "Dismiss": "Dismiss (PT-BR)",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number (PT-BR)",
+      "InputLabel": "Enter serial number (PT-BR)",
+      "InputTitle": "Enter your card's serial number manually (PT-BR)",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card. (PT-BR)",
       "EmptySerialError": "Required (PT-BR)",
       "CharCountError": "Cannot exceed 15 characters (PT-BR)",
@@ -575,6 +576,12 @@ const translation = {
         "Description2": "Your video was {{videoLengthSeconds}} seconds. (PT-BR)",
         "ButtonText": "Retake (PT-BR)",
         "CancelButtonText": "Cancel (PT-BR)",
+      },
+      "UploadProgress": {
+        "PreparingVideo": "Preparing your photo and video for verification (PT-BR)",
+        "PreparingDocuments": "Preparing additional documents (PT-BR)",
+        "UploadingInformation": "Uploading your documents securely (PT-BR)",
+        "FinalizingVerification": "Finalizing your request (PT-BR)"
       }
     },
     "MismatchedSerial": {
@@ -737,8 +744,10 @@ const translation = {
       "LastNameError": "Please enter a last name (PT-BR)",
       "LastNameSubtext": "Also known as surname or family name (PT-BR)",
       "BirthDateLabel": "Birth date (PT-BR)",
-      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format (PT-BR)",
+      "BirthDateSubtext": "Enter your birth date (PT-BR)",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD) (PT-BR)",
+      "BirthDatePickerLabel": "Select birth date (PT-BR)",
+      "BirthDatePickerAccessibilityLabel": "Birth date picker (PT-BR)",
       "MiddleNamesLabel": "Middle names (PT-BR)",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed (PT-BR)",
       "MiddleNamesError": "Please enter up to two middle names (PT-BR)",

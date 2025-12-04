@@ -43,24 +43,26 @@ const Home: React.FC<HomeProps> = ({ navigation }) => {
   }
 
   return (
-    <TabScreenWrapper>
+    <>
       <NotificationBannerContainer onManageDevices={handleManageDevices} />
-      <HomeHeader name={account.fullname_formatted} cardSize={GENERIC_CARD_SIZE_SMALL} />
-      <View style={styles.buttonsContainer}>
-        <SectionButton
-          title={t('BCSC.Home.WhereToUseTitle')}
-          description={t('BCSC.Home.WhereToUseDescription')}
-          style={{ marginBottom: Spacing.md }}
-          onPress={handleWhereToUsePress}
-        />
-        <SectionButton
-          title={t('BCSC.Home.LogInFromComputerTitle')}
-          description={t('BCSC.Home.LogInFromComputerDescription')}
-          onPress={handlePairingCodePress}
-        />
-      </View>
-      <SavedServices />
-    </TabScreenWrapper>
+      <TabScreenWrapper>
+        <HomeHeader name={account.fullname_formatted} cardSize={GENERIC_CARD_SIZE_SMALL} />
+        <View style={styles.buttonsContainer}>
+          <SectionButton
+            title={t('BCSC.Home.WhereToUseTitle')}
+            description={t('BCSC.Home.WhereToUseDescription')}
+            style={{ marginBottom: Spacing.md }}
+            onPress={handleWhereToUsePress}
+          />
+          <SectionButton
+            title={t('BCSC.Home.LogInFromComputerTitle')}
+            description={t('BCSC.Home.LogInFromComputerDescription')}
+            onPress={handlePairingCodePress}
+          />
+        </View>
+        <SavedServices />
+      </TabScreenWrapper>
+    </>
   )
 }
 

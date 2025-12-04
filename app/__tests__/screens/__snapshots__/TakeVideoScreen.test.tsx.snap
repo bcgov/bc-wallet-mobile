@@ -4,9 +4,9 @@ exports[`TakeVideoScreen renders correctly 1`] = `
 <RNCSafeAreaView
   edges={
     {
-      "bottom": "additive",
-      "left": "additive",
-      "right": "additive",
+      "bottom": "off",
+      "left": "off",
+      "right": "off",
       "top": "additive",
     }
   }

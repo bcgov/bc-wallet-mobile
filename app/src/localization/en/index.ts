@@ -130,7 +130,7 @@ const translation = {
     "FullTitle": "BC Services Card App",
     "LocaleStringFormat": "en-CA",
     "Screens": {
-      "Settings": "Menu",
+      "Settings": "Settings",
       "SetupTypes": "BC Services Card",
       "SetupSteps": "Setup Steps",
       "VerificationMethodSelection": "Choose How to Verify",
@@ -411,7 +411,8 @@ const translation = {
       "Dismiss": "Dismiss",
     },
     "ManualSerial": {
-      "InputLabel": "Serial number",
+      "InputLabel": "Enter serial number",
+      "InputTitle": "Enter your card's serial number manually",
       "InputSubText": "Enter the letter and numbers by the barcode on the back of your card.",
       "EmptySerialError": "Required",
       "CharCountError": "Cannot exceed 15 characters",
@@ -576,6 +577,12 @@ const translation = {
         "Description2": "Your video was {{videoLengthSeconds}} seconds.",
         "ButtonText": "Retake",
         "CancelButtonText": "Cancel",
+      },
+      "UploadProgress": {
+        "PreparingVideo": "Preparing your photo and video for verification",
+        "PreparingDocuments": "Preparing additional documents",
+        "UploadingInformation": "Uploading your documents securely",
+        "FinalizingVerification": "Finalizing your request"
       }
     },
     "MismatchedSerial": {
@@ -738,8 +745,10 @@ const translation = {
       "LastNameError": "Please enter a last name",
       "LastNameSubtext": "Also known as surname or family name",
       "BirthDateLabel": "Birth date",
-      "BirthDateSubtext": "Enter your birth date in YYYY-MM-DD format",
+      "BirthDateSubtext": "Enter your birth date",
       "BirthDateError": "Please enter a valid birth date (YYYY-MM-DD)",
+      "BirthDatePickerLabel": "Select birth date",
+      "BirthDatePickerAccessibilityLabel": "Birth date picker",
       "MiddleNamesLabel": "Middle names",
       "MiddleNamesSubtext": "Additional given names. Only up to 2 are needed",
       "MiddleNamesError": "Please enter up to two middle names",

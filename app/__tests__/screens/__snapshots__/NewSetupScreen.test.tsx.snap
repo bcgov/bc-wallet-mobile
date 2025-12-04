@@ -26,7 +26,9 @@ exports[`NewSetupScreen Rendering should render correctly 1`] = `
         {
           "padding": 16,
         },
-        undefined,
+        {
+          "flexGrow": 1,
+        },
       ]
     }
     showsVerticalScrollIndicator={false}

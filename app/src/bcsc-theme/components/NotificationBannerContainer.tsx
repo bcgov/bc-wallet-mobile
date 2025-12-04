@@ -3,8 +3,7 @@ import { SafeAreaModal, useStore } from '@bifold/core'
 import { useCallback, useRef, useState } from 'react'
 import { View } from 'react-native'
 import { ReviewDevices } from '../features/settings/components/ReviewDevices'
-import { BCSCBanner } from './AppBanner'
-import { NotificationBanner } from './NotificationBanner'
+import { AppBanner, BCSCBanner } from './AppBanner'
 
 interface NotificationBannerContainerProps {
   onManageDevices: () => void
@@ -17,7 +16,7 @@ interface NotificationBannerContainerProps {
  * @returns {*} {JSX.Element} The NotificationBannerContainer component.
  */
 export const NotificationBannerContainer = ({ onManageDevices }: NotificationBannerContainerProps) => {
-  const [, dispatch] = useStore<BCState>()
+  const [store, dispatch] = useStore<BCState>()
   const [devicesModalVisible, setDevicesModalVisible] = useState(false)
   const devicesModalShouldAnimate = useRef(true)
 
@@ -53,7 +52,15 @@ export const NotificationBannerContainer = ({ onManageDevices }: NotificationBan
         />
       </SafeAreaModal>
 
-      <NotificationBanner onPressBanner={handleBannerPress} />
+      <AppBanner
+        messages={store.bcsc.bannerMessages.map((banner) => ({
+          id: banner.id,
+          title: banner.title,
+          type: banner.type,
+          dismissible: banner.dismissible,
+          onPress: () => handleBannerPress(banner.id),
+        }))}
+      />
     </View>
   )
 }
