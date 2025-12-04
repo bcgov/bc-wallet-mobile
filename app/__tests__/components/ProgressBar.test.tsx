@@ -5,6 +5,14 @@ import { BasicAppContext } from '../../__mocks__/helpers/app'
 import ProgressBar from '../../src/components/ProgressBar'
 
 describe('ProgressBar Component', () => {
+  beforeAll(() => {
+    jest.useFakeTimers()
+  })
+
+  afterAll(() => {
+    jest.useRealTimers()
+  })
+
   test('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
