@@ -3,9 +3,8 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
+import { BCSCLoadingProvider } from '../../src/bcsc-theme/contexts/BCSCLoadingContext'
 import InformationRequiredScreen from '../../src/bcsc-theme/features/verify/send-video/InformationRequiredScreen'
-
-
 
 describe('InformationRequired', () => {
   let mockNavigation: any
@@ -23,7 +22,9 @@ describe('InformationRequired', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <InformationRequiredScreen navigation={mockNavigation as never} />
+        <BCSCLoadingProvider>
+          <InformationRequiredScreen navigation={mockNavigation as never} />
+        </BCSCLoadingProvider>
       </BasicAppContext>
     )
 
