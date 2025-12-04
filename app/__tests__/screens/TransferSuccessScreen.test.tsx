@@ -4,10 +4,7 @@ import React from 'react'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import TransferSuccessScreen from '../../src/bcsc-theme/features/account-transfer/TransferSuccessScreen'
 
-
-
 describe('TransferSuccess', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -20,7 +17,7 @@ describe('TransferSuccess', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <TransferSuccessScreen/>
+        <TransferSuccessScreen />
       </BasicAppContext>
     )
 

@@ -5,8 +5,6 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import PendingReviewScreen from '../../src/bcsc-theme/features/verify/send-video/PendingReviewScreen'
 
-
-
 describe('PendingReview', () => {
   let mockNavigation: any
 

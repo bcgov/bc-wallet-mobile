@@ -2,12 +2,9 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {MainWebViewScreen} from '../../src/bcsc-theme/features/webview/MainWebViewScreen'
-
-
+import { MainWebViewScreen } from '../../src/bcsc-theme/features/webview/MainWebViewScreen'
 
 describe('MainWebView', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()

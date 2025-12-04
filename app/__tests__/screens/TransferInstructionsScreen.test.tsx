@@ -5,7 +5,6 @@ import { BasicAppContext } from '../../__mocks__/helpers/app'
 import TransferInstructionsScreen from '../../src/bcsc-theme/features/account-transfer/TransferInstructionsScreen'
 
 describe('TransferInstructions', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()

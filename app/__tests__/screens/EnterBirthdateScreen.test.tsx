@@ -5,8 +5,6 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import EnterBirthdateScreen from '../../src/bcsc-theme/features/verify/EnterBirthdateScreen'
 
-
-
 describe('EnterBirthdate', () => {
   let mockNavigation: any
 

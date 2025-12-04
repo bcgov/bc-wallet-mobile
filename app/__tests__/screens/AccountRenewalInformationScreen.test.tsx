@@ -3,9 +3,7 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {AccountRenewalInformationScreen} from '../../src/bcsc-theme/features/account/AccountRenewalInformationScreen'
-
-
+import { AccountRenewalInformationScreen } from '../../src/bcsc-theme/features/account/AccountRenewalInformationScreen'
 
 describe('AccountRenewalInformation', () => {
   let mockNavigation: any

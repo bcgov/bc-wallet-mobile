@@ -4,10 +4,7 @@ import React from 'react'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import EditNicknameScreen from '../../src/bcsc-theme/features/account/EditNicknameScreen'
 
-
-
 describe('EditNickname', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -20,7 +17,7 @@ describe('EditNickname', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <EditNicknameScreen/>
+        <EditNicknameScreen />
       </BasicAppContext>
     )
 
