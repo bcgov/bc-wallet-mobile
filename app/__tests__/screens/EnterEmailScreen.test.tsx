@@ -28,6 +28,7 @@ describe('EnterEmailScreen', () => {
     mockNavigation = useNavigation()
 
     jest.spyOn(Alert, 'alert')
+    jest.spyOn(console, 'log').mockImplementation(() => {})
     jest.useFakeTimers()
   })
 
