@@ -231,7 +231,8 @@ const remoteDebuggingState: RemoteDebuggingState = {
 const developerState: Developer = {
   enableProxy: false,
   environment: __DEV__ ? iasEnvironments[2] : iasEnvironments[0],
-  iasApiBaseUrl: __DEV__ ? IasBaseApiUrl.SIT : IasBaseApiUrl.PROD,
+  //TODO (TL): Set this iasAPIBaseUrl to default to prod when we are ready for a release
+  iasApiBaseUrl: __DEV__ ? IasBaseApiUrl.SIT : IasBaseApiUrl.SIT,
   remoteDebugging: remoteDebuggingState,
   enableAppToAppPersonFlow: false,
 }
