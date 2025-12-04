@@ -1,0 +1,367 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TakePhoto renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "additive",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    style={
+      {
+        "backgroundColor": "black",
+        "flex": 1,
+        "position": "relative",
+      }
+    }
+  >
+    <Camera
+      device={
+        {
+          "id": "mock-device",
+        }
+      }
+      isActive={false}
+      onError={[Function]}
+      onInitialized={[Function]}
+      photo={true}
+      style={
+        {
+          "flex": 1,
+        }
+      }
+      torch="off"
+    />
+    <RNSVGSvgView
+      bbHeight="1334"
+      bbWidth="750"
+      focusable={false}
+      height={1334}
+      style={
+        [
+          {
+            "backgroundColor": "transparent",
+            "borderWidth": 0,
+          },
+          {
+            "position": "absolute",
+          },
+          {
+            "flex": 0,
+            "height": 1334,
+            "width": 750,
+          },
+        ]
+      }
+      width={750}
+    >
+      <RNSVGGroup
+        fill={
+          {
+            "payload": 4278190080,
+            "type": 0,
+          }
+        }
+      >
+        <RNSVGDefs>
+          <RNSVGMask
+            fill={
+              {
+                "payload": 4278190080,
+                "type": 0,
+              }
+            }
+            height="100%"
+            maskContentUnits={1}
+            maskUnits={0}
+            name="overlayMask"
+            width="100%"
+            x="0%"
+            y="0%"
+          >
+            <RNSVGRect
+              fill={
+                {
+                  "payload": 4294967295,
+                  "type": 0,
+                }
+              }
+              height="1334"
+              propList={
+                [
+                  "fill",
+                ]
+              }
+              width="750"
+              x="0"
+              y="0"
+            />
+            <RNSVGEllipse
+              cx="375"
+              cy="657"
+              fill={
+                {
+                  "payload": 4278190080,
+                  "type": 0,
+                }
+              }
+              propList={
+                [
+                  "fill",
+                  "stroke",
+                ]
+              }
+              rx="337.5"
+              ry="373.52000000000004"
+              stroke={
+                {
+                  "payload": 4284506208,
+                  "type": 0,
+                }
+              }
+            />
+          </RNSVGMask>
+        </RNSVGDefs>
+        <RNSVGRect
+          fill={
+            {
+              "payload": 4278190080,
+              "type": 0,
+            }
+          }
+          fillOpacity={0.6}
+          height="1334"
+          mask="overlayMask"
+          propList={
+            [
+              "fill",
+              "fillOpacity",
+            ]
+          }
+          width="750"
+          x="0"
+          y="0"
+        />
+        <RNSVGEllipse
+          cx="375"
+          cy="657"
+          fill={
+            {
+              "payload": 0,
+              "type": 0,
+            }
+          }
+          propList={
+            [
+              "fill",
+              "stroke",
+            ]
+          }
+          rx="337.5"
+          ry="373.52000000000004"
+          stroke={
+            {
+              "payload": 4284506208,
+              "type": 0,
+            }
+          }
+        />
+      </RNSVGGroup>
+    </RNSVGSvgView>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "backgroundColor": "transparent",
+          "flex": 1,
+          "fontWeight": "normal",
+          "justifyContent": "center",
+          "left": 0,
+          "paddingHorizontal": 16,
+          "position": "absolute",
+          "right": 0,
+          "top": 24,
+          "zIndex": 5,
+        }
+      }
+    >
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 26,
+              "fontWeight": "bold",
+            },
+            {
+              "color": "white",
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        BCSC.SendVideo.TakePhoto.CameraInstructions
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            {
+              "color": "white",
+              "textAlign": "center",
+            },
+          ]
+        }
+      />
+    </View>
+    <View
+      style={
+        {
+          "alignItems": "center",
+          "bottom": 30,
+          "flex": 1,
+          "flexDirection": "row",
+          "justifyContent": "space-between",
+          "paddingHorizontal": 24,
+          "position": "absolute",
+        }
+      }
+    >
+      <View
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "flex": 1,
+            "opacity": 1,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "color": "#FFFFFF",
+              },
+            ]
+          }
+        >
+          Global.Cancel
+        </Text>
+      </View>
+      <View
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "alignItems": "center",
+            "backgroundColor": "white",
+            "borderRadius": 35,
+            "height": 70,
+            "justifyContent": "center",
+            "opacity": 1,
+            "width": 70,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "borderRadius": 30,
+              "borderWidth": 2,
+              "height": 64,
+              "width": 64,
+            }
+          }
+        />
+      </View>
+      <View
+        style={
+          {
+            "flex": 1,
+          }
+        }
+      />
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;
