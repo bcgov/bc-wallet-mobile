@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { BCSCOnboardingStackParams, BCSCScreens } from '../types/navigators'
-import { getDefaultModalOptions } from './stack-utils'
 
 /**
  * Renders the onboarding stack. These screens are shown to the user only **once**, when they first install the app.
@@ -47,8 +46,7 @@ const DeepLinkStack = (): JSX.Element => {
             : undefined
         }
         options={{
-          ...getDefaultModalOptions(t('HelloWorld')),
-          gestureEnabled: true,
+          gestureEnabled: false,
         }}
       />
     </Stack.Navigator>

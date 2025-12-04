@@ -86,14 +86,14 @@ const BCSCRootStack: React.FC = () => {
 
   // Otherwise, show the main stack (app)
   if (hasPendingDeepLink) {
-    return <DeepLinkStack />
+    return <DeepLinkStack key="deep-link-stack" />
   }
 
   return (
     // <AgentProvider agent={agent}>
     // <OpenIDCredentialRecordProvider>
     <BCSCAccountProvider>
-      <BCSCMainStack />
+      <BCSCMainStack key="main-stack" />
     </BCSCAccountProvider>
     // </OpenIDCredentialRecordProvider>
     // </AgentProvider>
