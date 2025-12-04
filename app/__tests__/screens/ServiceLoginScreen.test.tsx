@@ -3,9 +3,7 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {ServiceLoginScreen} from '../../src/bcsc-theme/features/services/ServiceLoginScreen'
-
-
+import { ServiceLoginScreen } from '../../src/bcsc-theme/features/services/ServiceLoginScreen'
 
 describe('ServiceLogin', () => {
   let mockNavigation: any

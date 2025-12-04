@@ -5,7 +5,6 @@ import { BasicAppContext } from '../../__mocks__/helpers/app'
 import TransferQRDisplayScreen from '../../src/bcsc-theme/features/account-transfer/TransferQRDisplayScreen'
 
 describe('TransferQRDisplay', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -18,7 +17,7 @@ describe('TransferQRDisplay', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <TransferQRDisplayScreen/>
+        <TransferQRDisplayScreen />
       </BasicAppContext>
     )
 

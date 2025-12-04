@@ -3,7 +3,7 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {VerifySettingsScreen} from '../../src/bcsc-theme/features/settings/VerifySettingsScreen'
+import { VerifySettingsScreen } from '../../src/bcsc-theme/features/settings/VerifySettingsScreen'
 
 describe('VerifySettings', () => {
   let mockNavigation: any

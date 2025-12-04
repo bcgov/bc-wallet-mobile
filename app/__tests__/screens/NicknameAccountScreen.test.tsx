@@ -4,10 +4,7 @@ import React from 'react'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import NicknameAccountScreen from '../../src/bcsc-theme/features/account/NicknameAccountScreen'
 
-
-
 describe('NicknameAccount', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()

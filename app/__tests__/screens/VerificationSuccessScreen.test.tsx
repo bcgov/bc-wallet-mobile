@@ -5,7 +5,6 @@ import { BasicAppContext } from '../../__mocks__/helpers/app'
 import VerificationSuccessScreen from '../../src/bcsc-theme/features/verify/VerificationSuccessScreen'
 
 describe('VerificationSuccess', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
