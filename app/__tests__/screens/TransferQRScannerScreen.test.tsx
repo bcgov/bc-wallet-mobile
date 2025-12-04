@@ -22,7 +22,6 @@ jest.mock('../../src/bcsc-theme/api/hooks/useApi', () => ({
 }))
 
 describe('TransferQRScanner', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -35,7 +34,7 @@ describe('TransferQRScanner', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <TransferQRScannerScreen/>
+        <TransferQRScannerScreen />
       </BasicAppContext>
     )
 

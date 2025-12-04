@@ -3,9 +3,7 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {SecureAppScreen} from '../../src/bcsc-theme/features/onboarding/SecureAppScreen'
-
-
+import { SecureAppScreen } from '../../src/bcsc-theme/features/onboarding/SecureAppScreen'
 
 describe('SecureApp', () => {
   let mockNavigation: any

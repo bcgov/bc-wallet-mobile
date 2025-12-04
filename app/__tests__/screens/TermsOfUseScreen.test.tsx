@@ -3,9 +3,7 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {TermsOfUseScreen} from '../../src/bcsc-theme/features/onboarding/TermsOfUseScreen'
-
-
+import { TermsOfUseScreen } from '../../src/bcsc-theme/features/onboarding/TermsOfUseScreen'
 
 describe('TermsOfUse', () => {
   let mockNavigation: any

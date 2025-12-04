@@ -3,7 +3,7 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {NotificationsScreen} from '../../src/bcsc-theme/features/onboarding/NotificationsScreen'
+import { NotificationsScreen } from '../../src/bcsc-theme/features/onboarding/NotificationsScreen'
 
 jest.mock('@assets/img/notifications.png', () => ({ uri: 'mock-notification-image' }))
 

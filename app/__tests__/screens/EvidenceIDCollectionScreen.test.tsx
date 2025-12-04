@@ -40,7 +40,10 @@ describe('EvidenceIDCollection', () => {
 
     const tree = render(
       <BasicAppContext>
-        <EvidenceIDCollectionScreen navigation={mockNavigation as never} route={{ params: { cardType: mockEvidenceType } } as never} />
+        <EvidenceIDCollectionScreen
+          navigation={mockNavigation as never}
+          route={{ params: { cardType: mockEvidenceType } } as never}
+        />
       </BasicAppContext>
     )
 

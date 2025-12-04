@@ -5,8 +5,6 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import CallBusyOrClosedScreen from '../../src/bcsc-theme/features/verify/live-call/CallBusyOrClosedScreen'
 
-
-
 describe('CallBusyOrClosed', () => {
   let mockNavigation: any
 
@@ -23,7 +21,7 @@ describe('CallBusyOrClosed', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <CallBusyOrClosedScreen navigation={mockNavigation as never} route={{ params: {} } as never}/>
+        <CallBusyOrClosedScreen navigation={mockNavigation as never} route={{ params: {} } as never} />
       </BasicAppContext>
     )
 

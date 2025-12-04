@@ -4,10 +4,7 @@ import React from 'react'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import AccountSetupSelectionScreen from '../../src/bcsc-theme/features/account-transfer/AccountSetupSelectionScreen'
 
-
-
 describe('AccountSetupSelection', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()

@@ -5,8 +5,6 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import PhotoInstructionsScreen from '../../src/bcsc-theme/features/verify/PhotoInstructionsScreen'
 
-
-
 describe('PhotoInstructions', () => {
   let mockNavigation: any
 
@@ -23,7 +21,10 @@ describe('PhotoInstructions', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <PhotoInstructionsScreen navigation={mockNavigation as never} route={{ key: 'PhotoInstructions', name: 'PhotoInstructions', params: { forLiveCall: true } } as never} />
+        <PhotoInstructionsScreen
+          navigation={mockNavigation as never}
+          route={{ key: 'PhotoInstructions', name: 'PhotoInstructions', params: { forLiveCall: true } } as never}
+        />
       </BasicAppContext>
     )
 

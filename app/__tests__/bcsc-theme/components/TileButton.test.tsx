@@ -17,7 +17,7 @@ describe('TileButton Component', () => {
     jest.resetAllMocks()
     jest.useFakeTimers()
   })
-  
+
   afterEach(() => {
     jest.useRealTimers()
   })

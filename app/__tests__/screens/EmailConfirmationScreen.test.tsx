@@ -5,8 +5,6 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import EmailConfirmationScreen from '../../src/bcsc-theme/features/verify/email/EmailConfirmationScreen'
 
-
-
 describe('EmailConfirmation', () => {
   let mockNavigation: any
 

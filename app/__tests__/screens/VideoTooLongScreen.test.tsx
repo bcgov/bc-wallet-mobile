@@ -21,7 +21,7 @@ describe('VideoTooLong', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <VideoTooLongScreen navigation={mockNavigation as never} route={{ params: {videoLengthSeconds: 60 } }} />
+        <VideoTooLongScreen navigation={mockNavigation as never} route={{ params: { videoLengthSeconds: 60 } }} />
       </BasicAppContext>
     )
 

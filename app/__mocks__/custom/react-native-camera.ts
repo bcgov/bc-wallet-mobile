@@ -26,4 +26,4 @@ const useCameraPermission = jest.fn(() => ({
   hasPermission: true,
   requestPermission: jest.fn(),
 }))
-export { Camera, useCameraDevice, useCameraFormat, useCodeScanner, useCameraPermission }
+export { Camera, useCameraDevice, useCameraFormat, useCameraPermission, useCodeScanner }

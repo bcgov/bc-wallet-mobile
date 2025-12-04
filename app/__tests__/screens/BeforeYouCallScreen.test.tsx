@@ -5,8 +5,6 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import BeforeYouCallScreen from '../../src/bcsc-theme/features/verify/live-call/BeforeYouCallScreen'
 
-
-
 describe('BeforeYouCall', () => {
   let mockNavigation: any
 

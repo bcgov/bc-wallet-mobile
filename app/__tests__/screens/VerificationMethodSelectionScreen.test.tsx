@@ -5,8 +5,6 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import VerificationMethodSelectionScreen from '../../src/bcsc-theme/features/verify/VerificationMethodSelectionScreen'
 
-
-
 describe('VerificationMethodSelection', () => {
   let mockNavigation: any
 

@@ -2,12 +2,9 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {AccountRenewalFinalWarningScreen} from '../../src/bcsc-theme/features/account/AccountRenewalFinalWarningScreen'
-
-
+import { AccountRenewalFinalWarningScreen } from '../../src/bcsc-theme/features/account/AccountRenewalFinalWarningScreen'
 
 describe('AccountRenewalFinalWarning', () => {
-
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -20,8 +17,7 @@ describe('AccountRenewalFinalWarning', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        
-        <AccountRenewalFinalWarningScreen/>
+        <AccountRenewalFinalWarningScreen />
       </BasicAppContext>
     )
 

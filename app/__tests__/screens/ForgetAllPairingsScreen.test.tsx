@@ -3,9 +3,7 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import {ForgetAllPairingsScreen} from '../../src/bcsc-theme/features/settings/ForgetAllPairingsScreen'
-
-
+import { ForgetAllPairingsScreen } from '../../src/bcsc-theme/features/settings/ForgetAllPairingsScreen'
 
 describe('ForgetAllPairings', () => {
   let mockNavigation: any

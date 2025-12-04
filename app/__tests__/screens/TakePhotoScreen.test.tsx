@@ -26,10 +26,22 @@ describe('TakePhoto', () => {
     jest.useRealTimers()
   })
 
-    it('renders correctly', () => {
+  it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <TakePhotoScreen navigation={mockNavigation as never} route={{ params: { deviceSide: 'front', cameraLabel: 'Test camera', cameraInstructions: 'Please take a photo', forLiveCall: false } } as any} />
+        <TakePhotoScreen
+          navigation={mockNavigation as never}
+          route={
+            {
+              params: {
+                deviceSide: 'front',
+                cameraLabel: 'Test camera',
+                cameraInstructions: 'Please take a photo',
+                forLiveCall: false,
+              },
+            } as any
+          }
+        />
       </BasicAppContext>
     )
 
