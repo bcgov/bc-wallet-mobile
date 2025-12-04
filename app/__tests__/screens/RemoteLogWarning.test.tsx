@@ -7,8 +7,13 @@ import RemoteLogWarning from '../../src/screens/RemoteLogWarning'
 jest.mock('react-native-splash-screen', () => ({}))
 
 describe('RemoteLogWarning Screen', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
   afterEach(() => {
     jest.clearAllMocks()
+    jest.useRealTimers()
   })
 
   test('screen renders correctly', () => {

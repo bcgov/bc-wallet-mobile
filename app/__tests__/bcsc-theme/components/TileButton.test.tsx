@@ -15,6 +15,11 @@ describe('TileButton Component', () => {
 
   beforeEach(() => {
     jest.resetAllMocks()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   test('renders correctly', () => {

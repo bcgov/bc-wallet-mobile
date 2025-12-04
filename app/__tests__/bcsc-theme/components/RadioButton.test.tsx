@@ -15,6 +15,11 @@ describe('RadioButton Component', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   describe('Rendering', () => {

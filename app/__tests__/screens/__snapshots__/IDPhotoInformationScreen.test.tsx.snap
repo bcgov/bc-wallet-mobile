@@ -1,0 +1,427 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IDPhotoInformation renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      [
+        {
+          "padding": 16,
+        },
+        undefined,
+      ]
+    }
+    showsVerticalScrollIndicator={false}
+  >
+    <View>
+      <RCTImageView
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        internal_analyticTag={null}
+        resizeMode="cover"
+        source={
+          [
+            {
+              "height": undefined,
+              "uri": undefined,
+              "width": undefined,
+            },
+          ]
+        }
+        style={
+          {
+            "height": 250,
+            "marginBottom": 16,
+            "overflow": "hidden",
+            "width": "100%",
+          }
+        }
+      />
+      <View
+        style={
+          {
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 26,
+                "fontWeight": "bold",
+              },
+              {
+                "marginBottom": 16,
+              },
+            ]
+          }
+        >
+          BCSC.IDPhotoInformation.Heading
+        </Text>
+        <View
+          style={
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "margin": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 8,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰝥
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            <span>
+              BCSC.IDPhotoInformation.IDPhotoInstructionsBullet1
+            </span>
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "margin": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 8,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰝥
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            <span>
+              BCSC.IDPhotoInformation.IDPhotoInstructionsBullet2
+            </span>
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "margin": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 8,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰝥
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            <span>
+              BCSC.IDPhotoInformation.IDPhotoInstructionsBullet3
+            </span>
+          </Text>
+        </View>
+        <View
+          style={
+            {
+              "alignContent": "center",
+              "alignItems": "flex-start",
+              "flexDirection": "row",
+              "marginVertical": 8,
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "margin": 8,
+              }
+            }
+          >
+            <Text
+              allowFontScaling={false}
+              selectable={false}
+              style={
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontSize": 8,
+                  },
+                  undefined,
+                  {
+                    "fontFamily": "Material Design Icons",
+                    "fontStyle": "normal",
+                    "fontWeight": "normal",
+                  },
+                  {},
+                ]
+              }
+            >
+              󰝥
+            </Text>
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                {
+                  "flexShrink": 1,
+                },
+              ]
+            }
+          >
+            <span>
+              BCSC.IDPhotoInformation.IDPhotoInstructionsBullet4
+            </span>
+          </Text>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      [
+        {
+          "gap": 16,
+        },
+        {
+          "paddingBottom": 16,
+          "paddingHorizontal": 16,
+        },
+        undefined,
+      ]
+    }
+  >
+    <View
+      accessibilityLabel="BCSC.IDPhotoInformation.TakePhoto"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "backgroundColor": "#003366",
+          "borderRadius": 4,
+          "opacity": 1,
+          "padding": 16,
+        }
+      }
+      testID="com.ariesbifold:id/IDPhotoInformationTakePhoto"
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              [
+                {
+                  "color": "#FFFFFF",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "bold",
+                  "textAlign": "center",
+                },
+                false,
+                false,
+                false,
+              ],
+            ]
+          }
+        >
+          BCSC.IDPhotoInformation.TakePhoto
+        </Text>
+      </View>
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;

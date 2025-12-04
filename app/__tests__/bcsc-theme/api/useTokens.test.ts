@@ -60,10 +60,12 @@ describe('useTokenApi', () => {
         debug: jest.fn(),
       },
     } as any
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
     jest.clearAllMocks()
+    jest.useRealTimers()
   })
 
   describe('deviceToken', () => {

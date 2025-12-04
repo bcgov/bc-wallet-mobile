@@ -1,0 +1,588 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmailConfirmation renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {
+            "flexGrow": 1,
+          },
+          undefined,
+        ]
+      }
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <View
+          style={
+            [
+              {
+                "padding": 16,
+              },
+              undefined,
+            ]
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 26,
+                  "fontWeight": "bold",
+                },
+                {
+                  "marginBottom": 16,
+                },
+              ]
+            }
+          >
+            BCSC.EmailConfirmation.VerifyYourEmail
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                undefined,
+              ]
+            }
+          >
+            BCSC.EmailConfirmation.EnterTheSixDigitCode
+             
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                  },
+                  undefined,
+                ]
+              }
+            />
+          </Text>
+          <View
+            style={
+              [
+                {
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                },
+                {
+                  "marginBottom": 16,
+                  "marginTop": 24,
+                },
+              ]
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              onLayout={[Function]}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "alignSelf": "center",
+                      "backgroundColor": "#FFFFFF",
+                      "borderRadius": 8,
+                      "color": "#FFFFFF",
+                      "fontSize": 32,
+                      "height": 60,
+                      "lineHeight": 60,
+                      "textAlign": "center",
+                      "textAlignVertical": "center",
+                      "width": 50,
+                    },
+                    false,
+                  ],
+                ]
+              }
+            />
+            <Text
+              maxFontSizeMultiplier={2}
+              onLayout={[Function]}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "alignSelf": "center",
+                      "backgroundColor": "#FFFFFF",
+                      "borderRadius": 8,
+                      "color": "#FFFFFF",
+                      "fontSize": 32,
+                      "height": 60,
+                      "lineHeight": 60,
+                      "textAlign": "center",
+                      "textAlignVertical": "center",
+                      "width": 50,
+                    },
+                    false,
+                  ],
+                ]
+              }
+            />
+            <Text
+              maxFontSizeMultiplier={2}
+              onLayout={[Function]}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "alignSelf": "center",
+                      "backgroundColor": "#FFFFFF",
+                      "borderRadius": 8,
+                      "color": "#FFFFFF",
+                      "fontSize": 32,
+                      "height": 60,
+                      "lineHeight": 60,
+                      "textAlign": "center",
+                      "textAlignVertical": "center",
+                      "width": 50,
+                    },
+                    false,
+                  ],
+                ]
+              }
+            />
+            <Text
+              maxFontSizeMultiplier={2}
+              onLayout={[Function]}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "alignSelf": "center",
+                      "backgroundColor": "#FFFFFF",
+                      "borderRadius": 8,
+                      "color": "#FFFFFF",
+                      "fontSize": 32,
+                      "height": 60,
+                      "lineHeight": 60,
+                      "textAlign": "center",
+                      "textAlignVertical": "center",
+                      "width": 50,
+                    },
+                    false,
+                  ],
+                ]
+              }
+            />
+            <Text
+              maxFontSizeMultiplier={2}
+              onLayout={[Function]}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "alignSelf": "center",
+                      "backgroundColor": "#FFFFFF",
+                      "borderRadius": 8,
+                      "color": "#FFFFFF",
+                      "fontSize": 32,
+                      "height": 60,
+                      "lineHeight": 60,
+                      "textAlign": "center",
+                      "textAlignVertical": "center",
+                      "width": 50,
+                    },
+                    false,
+                  ],
+                ]
+              }
+            />
+            <Text
+              maxFontSizeMultiplier={2}
+              onLayout={[Function]}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "alignSelf": "center",
+                      "backgroundColor": "#FFFFFF",
+                      "borderRadius": 8,
+                      "color": "#FFFFFF",
+                      "fontSize": 32,
+                      "height": 60,
+                      "lineHeight": 60,
+                      "textAlign": "center",
+                      "textAlignVertical": "center",
+                      "width": 50,
+                    },
+                    false,
+                  ],
+                ]
+              }
+            />
+            <TextInput
+              autoCapitalize="characters"
+              autoComplete="sms-otp"
+              autoCorrect={false}
+              blurOnSubmit={false}
+              caretHidden={true}
+              clearButtonMode="never"
+              disableFullscreenUI={true}
+              keyboardType="number-pad"
+              maxLength={6}
+              onBlur={[Function]}
+              onChangeText={[Function]}
+              onFocus={[Function]}
+              onPressOut={[Function]}
+              spellCheck={false}
+              style={
+                {
+                  "bottom": 0,
+                  "fontSize": 1,
+                  "left": 0,
+                  "opacity": 0.015,
+                  "position": "absolute",
+                  "right": 0,
+                  "top": 0,
+                }
+              }
+              textContentType="oneTimeCode"
+              underlineColorAndroid="transparent"
+              value=""
+            />
+          </View>
+        </View>
+        <View
+          style={
+            [
+              [
+                {
+                  "gap": 16,
+                },
+                {
+                  "paddingBottom": 16,
+                  "paddingHorizontal": 16,
+                },
+                undefined,
+              ],
+              {
+                "marginTop": "auto",
+              },
+            ]
+          }
+        >
+          <View
+            accessibilityLabel="Global.Continue"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="ContinueButton"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "color": "#FFFFFF",
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 18,
+                        "fontWeight": "bold",
+                        "textAlign": "center",
+                      },
+                      false,
+                      false,
+                      false,
+                    ],
+                  ]
+                }
+              >
+                Global.Continue
+              </Text>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="BCSC.EmailConfirmation.ResendCode"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "borderColor": "#003366",
+                "borderRadius": 4,
+                "borderWidth": 2,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="ResendCodeButton"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "color": "#003366",
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 18,
+                        "fontWeight": "bold",
+                        "textAlign": "center",
+                      },
+                      false,
+                      false,
+                      false,
+                    ],
+                  ]
+                }
+              >
+                BCSC.EmailConfirmation.ResendCode
+              </Text>
+            </View>
+          </View>
+          <View
+            accessibilityLabel="BCSC.EmailConfirmation.GoToEmail"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "borderColor": "#003366",
+                "borderRadius": 4,
+                "borderWidth": 2,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="GoToEmailButton"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "color": "#003366",
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 18,
+                        "fontWeight": "bold",
+                        "textAlign": "center",
+                      },
+                      false,
+                      false,
+                      false,
+                    ],
+                  ]
+                }
+              >
+                BCSC.EmailConfirmation.GoToEmail
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+</RNCSafeAreaView>
+`;

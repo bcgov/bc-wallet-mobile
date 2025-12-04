@@ -3,7 +3,16 @@ import { renderHook } from '@testing-library/react-native'
 import React from 'react'
 import { BasicAppContext } from '../../../__mocks__/helpers/app'
 
+jest.unmock('@/bcsc-theme/hooks/useBCSCApiClient')
+
 describe('BCSC API Client Hooks', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
   describe('useBCSCApiClient', () => {
     it('should throw if used outside of BCSCApiClientProvider', () => {
       try {

@@ -5,6 +5,13 @@ import EmptyList from '@bcwallet-theme/components/EmptyList'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 
 describe('EmptyList Component', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
   test('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
