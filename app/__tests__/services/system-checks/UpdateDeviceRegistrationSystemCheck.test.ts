@@ -7,7 +7,7 @@ describe('UpdateDeviceRegistrationSystemCheck', () => {
   beforeEach(() => {
     jest.useFakeTimers()
   })
-  
+
   afterEach(() => {
     jest.useRealTimers()
   })

@@ -8,7 +8,7 @@ describe('EmptyList Component', () => {
   beforeEach(() => {
     jest.useFakeTimers()
   })
-  
+
   afterEach(() => {
     jest.useRealTimers()
   })
