@@ -2,7 +2,7 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import SectionButton from '@/bcsc-theme/components/SectionButton'
 import TabScreenWrapper from '@/bcsc-theme/components/TabScreenWrapper'
 import { useAccount } from '@/bcsc-theme/contexts/BCSCAccountContext'
-import { useIdToken } from '@/bcsc-theme/contexts/BCSCIDTokenContext'
+import { useIdToken } from '@/bcsc-theme/contexts/BCSCIdTokenContext'
 import { useBCSCApiClient } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
@@ -27,7 +27,7 @@ type AccountNavigationProp = StackNavigationProp<BCSCMainStackParams>
 const Account: React.FC = () => {
   const { Spacing } = useTheme()
   const [store] = useStore<BCState>()
-  const { metadata, token } = useApi()
+  const { metadata } = useApi()
   const client = useBCSCApiClient()
   const navigation = useNavigation<AccountNavigationProp>()
   const { t } = useTranslation()
@@ -51,7 +51,6 @@ const Account: React.FC = () => {
     useCallback(() => {
       logger.info('Account screen focused, refreshing ID token metadata...')
       refreshIdToken()
-      // ignoring refreshIdToken dependency to avoid infinite loop
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [logger])
   )

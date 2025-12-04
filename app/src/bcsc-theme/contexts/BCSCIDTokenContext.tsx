@@ -4,13 +4,13 @@ import useApi from '../api/hooks/useApi'
 import useDataLoader from '../hooks/useDataLoader'
 import { IdToken } from '../utils/id-token'
 
-export interface BCSCDataContextType<T> {
+export interface BCSCIdTokenContextType<T> {
   isLoading: boolean
   data: T | null
   refreshData: () => void
 }
 
-export const BCSCIdTokenContext = createContext<BCSCDataContextType<IdToken> | null>(null)
+export const BCSCIdTokenContext = createContext<BCSCIdTokenContextType<IdToken> | null>(null)
 
 /**
  * Provides the BCSCIdTokenContext to child components, managing the loading of ID token data.
@@ -39,14 +39,14 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
         isLoading: isLoading,
         data: null,
         refreshData: () => {},
-      } as BCSCDataContextType<IdToken>
+      } as BCSCIdTokenContextType<IdToken>
     }
 
     return {
       isLoading: false,
       data: data,
       refreshData: refresh,
-    } as BCSCDataContextType<IdToken>
+    } as BCSCIdTokenContextType<IdToken>
   }, [data, isLoading, refresh])
 
   return <BCSCIdTokenContext.Provider value={contextValue}>{children}</BCSCIdTokenContext.Provider>
