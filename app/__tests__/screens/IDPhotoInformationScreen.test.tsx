@@ -5,7 +5,7 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import IDPhotoInformationScreen from '../../src/bcsc-theme/features/verify/non-photo/IDPhotoInformationScreen'
 
-
+jest.mock('@assets/img/credential-scan.png', () => 1)
 
 describe('IDPhotoInformation', () => {
   let mockNavigation: any

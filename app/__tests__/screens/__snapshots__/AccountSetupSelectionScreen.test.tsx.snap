@@ -59,7 +59,9 @@ exports[`AccountSetupSelection renders correctly 1`] = `
             "fontSize": 21,
             "fontWeight": "bold",
           },
-          undefined,
+          {
+            "textAlign": "center",
+          },
         ]
       }
     >

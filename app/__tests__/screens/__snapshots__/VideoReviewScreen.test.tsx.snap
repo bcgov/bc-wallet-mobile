@@ -203,7 +203,7 @@ exports[`VideoReview renders correctly 1`] = `
         {
           "busy": undefined,
           "checked": undefined,
-          "disabled": true,
+          "disabled": false,
           "expanded": undefined,
           "selected": undefined,
         }
@@ -228,7 +228,7 @@ exports[`VideoReview renders correctly 1`] = `
       onStartShouldSetResponder={[Function]}
       style={
         {
-          "backgroundColor": "#757575",
+          "backgroundColor": "#003366",
           "borderRadius": 4,
           "opacity": 1,
           "padding": 16,
@@ -245,42 +245,6 @@ exports[`VideoReview renders correctly 1`] = `
           }
         }
       >
-        <View
-          collapsable={false}
-          style={
-            {
-              "transform": [
-                {
-                  "rotate": "0deg",
-                },
-              ],
-            }
-          }
-        >
-          <Text
-            allowFontScaling={false}
-            selectable={false}
-            style={
-              [
-                {
-                  "color": undefined,
-                  "fontSize": 25,
-                },
-                {
-                  "color": "#FFFFFF",
-                },
-                {
-                  "fontFamily": "Material Icons",
-                  "fontStyle": "normal",
-                  "fontWeight": "normal",
-                },
-                {},
-              ]
-            }
-          >
-            
-          </Text>
-        </View>
         <Text
           maxFontSizeMultiplier={2}
           style={
@@ -299,13 +263,7 @@ exports[`VideoReview renders correctly 1`] = `
                   "fontWeight": "bold",
                   "textAlign": "center",
                 },
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
+                false,
                 false,
                 false,
               ],
