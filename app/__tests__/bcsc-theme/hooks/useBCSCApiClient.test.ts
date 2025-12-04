@@ -9,7 +9,7 @@ describe('BCSC API Client Hooks', () => {
   beforeEach(() => {
     jest.useFakeTimers()
   })
-  
+
   afterEach(() => {
     jest.useRealTimers()
   })
