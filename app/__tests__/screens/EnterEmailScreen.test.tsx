@@ -28,10 +28,12 @@ describe('EnterEmailScreen', () => {
     mockNavigation = useNavigation()
 
     jest.spyOn(Alert, 'alert')
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
+    jest.useRealTimers()
   })
 
   describe('Rendering', () => {

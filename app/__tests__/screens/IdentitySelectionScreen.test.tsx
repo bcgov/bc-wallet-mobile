@@ -13,6 +13,11 @@ describe('IdentitySelection', () => {
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   it('renders correctly', () => {
