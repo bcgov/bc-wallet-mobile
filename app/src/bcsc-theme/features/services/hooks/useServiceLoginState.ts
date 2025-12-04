@@ -93,37 +93,32 @@ export const useServiceLoginState = ({
       return
     }
 
-    const pendingServiceTitle = state.serviceTitle
+    const client = serviceClients?.find((service) => {
+      if (serviceClientId) {
+        logger.info(`ServiceLoginScreen: Searching for service by ID: ${serviceClientId}`)
+        return service.client_ref_id === serviceClientId
+      }
+      if (state.serviceTitle) {
+        logger.info(`ServiceLoginScreen: Searching for service by title: ${state.serviceTitle}`)
+        return service.client_name.toLowerCase().includes(state.serviceTitle.toLowerCase())
+      }
+      return false
+    })
 
-    let client: ClientMetadata[] | undefined
-
-    if (pendingServiceTitle) {
-      logger.info(`ServiceLoginScreen: Searching for service by title: ${pendingServiceTitle}`)
-      client = serviceClients?.filter((service) =>
-        service.client_name.toLowerCase().includes(pendingServiceTitle.toLocaleLowerCase())
-      )
-    }
-
-    if (serviceClientId) {
-      logger.info(`ServiceLoginScreen: Searching for service by ID: ${serviceClientId}`)
-      client = serviceClients?.filter((service) => service.client_ref_id === serviceClientId)
-    }
-
-    if (!client || client.length === 0) {
+    if (!client) {
       logger.info(`ServiceLoginScreen: No matching service found`)
       return
     }
 
-    const result = client.pop()
-    logger.info(`ServiceLoginScreen: Found service client for ${result?.client_name}`)
+    logger.info(`ServiceLoginScreen: Found service client for ${client.client_name}`)
 
     dispatch({
-      serviceTitle: result?.client_name,
-      claimsDescription: result?.claims_description,
-      privacyPolicyUri: result?.policy_uri,
-      serviceInitiateLoginUri: result?.initiate_login_uri,
-      serviceClientUri: result?.client_uri,
-      service: result,
+      serviceTitle: client.client_name,
+      claimsDescription: client.claims_description,
+      privacyPolicyUri: client.policy_uri,
+      serviceInitiateLoginUri: client.initiate_login_uri,
+      serviceClientUri: client.client_uri,
+      service: client,
     })
   }, [isLoading, logger, serviceClientId, serviceClients, state.serviceTitle])
 

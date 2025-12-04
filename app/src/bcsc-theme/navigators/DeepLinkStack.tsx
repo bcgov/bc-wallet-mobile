@@ -20,7 +20,7 @@ const DeepLinkStack = (): JSX.Element => {
   const defaultStackOptions = useDefaultStackOptions(theme)
 
   // Get the pending deep link data without consuming it yet
-  const pendingDeepLink = viewModel.getPendingDeepLink()
+  const { serviceTitle, pairingCode } = viewModel.getPendingDeepLink() ?? {}
 
   return (
     <Stack.Navigator
@@ -39,10 +39,10 @@ const DeepLinkStack = (): JSX.Element => {
         name={BCSCScreens.ServiceLogin}
         component={ServiceLoginScreen}
         initialParams={
-          pendingDeepLink
+          serviceTitle || pairingCode
             ? {
-                serviceTitle: pendingDeepLink.serviceTitle,
-                pairingCode: pendingDeepLink.pairingCode,
+                serviceTitle,
+                pairingCode,
               }
             : undefined
         }
