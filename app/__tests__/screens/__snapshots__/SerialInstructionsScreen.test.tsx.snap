@@ -26,7 +26,10 @@ exports[`SerialInstructions renders correctly 1`] = `
         {
           "padding": 16,
         },
-        undefined,
+        {
+          "flexGrow": 1,
+          "gap": 8,
+        },
       ]
     }
     showsVerticalScrollIndicator={false}
@@ -53,10 +56,12 @@ exports[`SerialInstructions renders correctly 1`] = `
         }
         style={
           {
-            "height": 481.06,
+            "alignSelf": "center",
+            "height": 438.18,
             "marginBottom": 24,
             "overflow": "hidden",
-            "width": 718,
+            "padding": 24,
+            "width": 654,
           }
         }
       />
@@ -96,179 +101,173 @@ exports[`SerialInstructions renders correctly 1`] = `
       >
         BCSC.Instructions.Paragraph
       </Text>
+      <View
+        style={
+          {
+            "gap": 16,
+            "marginTop": "auto",
+          }
+        }
+      >
+        <View
+          accessibilityLabel="BCSC.Instructions.ScanBarcode"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#003366",
+              "borderRadius": 4,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/ScanBarcode"
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#FFFFFF",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.Instructions.ScanBarcode
+            </Text>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="BCSC.Instructions.EnterManually"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": false,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "borderColor": "#003366",
+              "borderRadius": 4,
+              "borderWidth": 2,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/EnterManually"
+        >
+          <View
+            style={
+              {
+                "alignItems": "center",
+                "flexDirection": "row",
+                "justifyContent": "center",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  [
+                    {
+                      "color": "#003366",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "bold",
+                      "textAlign": "center",
+                    },
+                    false,
+                    false,
+                    false,
+                  ],
+                ]
+              }
+            >
+              BCSC.Instructions.EnterManually
+            </Text>
+          </View>
+        </View>
+      </View>
     </View>
   </RCTScrollView>
-  <View
-    style={
-      [
-        {
-          "gap": 16,
-        },
-        {
-          "paddingBottom": 16,
-          "paddingHorizontal": 16,
-        },
-        undefined,
-      ]
-    }
-  >
-    <View
-      accessibilityLabel="BCSC.Instructions.ScanBarcode"
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": false,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={true}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
-      style={
-        {
-          "backgroundColor": "#003366",
-          "borderRadius": 4,
-          "opacity": 1,
-          "padding": 16,
-        }
-      }
-      testID="com.ariesbifold:id/ScanBarcode"
-    >
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "color": "#FFFFFF",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-                false,
-              ],
-            ]
-          }
-        >
-          BCSC.Instructions.ScanBarcode
-        </Text>
-      </View>
-    </View>
-    <View
-      accessibilityLabel="BCSC.Instructions.EnterManually"
-      accessibilityRole="button"
-      accessibilityState={
-        {
-          "busy": undefined,
-          "checked": undefined,
-          "disabled": false,
-          "expanded": undefined,
-          "selected": undefined,
-        }
-      }
-      accessibilityValue={
-        {
-          "max": undefined,
-          "min": undefined,
-          "now": undefined,
-          "text": undefined,
-        }
-      }
-      accessible={true}
-      collapsable={false}
-      focusable={true}
-      onClick={[Function]}
-      onResponderGrant={[Function]}
-      onResponderMove={[Function]}
-      onResponderRelease={[Function]}
-      onResponderTerminate={[Function]}
-      onResponderTerminationRequest={[Function]}
-      onStartShouldSetResponder={[Function]}
-      style={
-        {
-          "borderColor": "#003366",
-          "borderRadius": 4,
-          "borderWidth": 2,
-          "opacity": 1,
-          "padding": 16,
-        }
-      }
-      testID="com.ariesbifold:id/EnterManually"
-    >
-      <View
-        style={
-          {
-            "alignItems": "center",
-            "flexDirection": "row",
-            "justifyContent": "center",
-          }
-        }
-      >
-        <Text
-          maxFontSizeMultiplier={2}
-          style={
-            [
-              {
-                "color": "#313132",
-                "fontFamily": "BCSans-Regular",
-                "fontSize": 18,
-                "fontWeight": "normal",
-              },
-              [
-                {
-                  "color": "#003366",
-                  "fontFamily": "BCSans-Regular",
-                  "fontSize": 18,
-                  "fontWeight": "bold",
-                  "textAlign": "center",
-                },
-                false,
-                false,
-                false,
-              ],
-            ]
-          }
-        >
-          BCSC.Instructions.EnterManually
-        </Text>
-      </View>
-    </View>
-  </View>
 </RNCSafeAreaView>
 `;

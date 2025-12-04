@@ -28,5 +28,7 @@ describe('LiveCall', () => {
     )
 
     expect(tree).toMatchSnapshot()
+    
+    tree.unmount()
   })
 })
