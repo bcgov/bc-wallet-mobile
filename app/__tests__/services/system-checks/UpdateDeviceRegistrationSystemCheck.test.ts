@@ -4,6 +4,13 @@ import { MockLogger } from '@bifold/core'
 import deviceInfo from 'react-native-device-info'
 
 describe('UpdateDeviceRegistrationSystemCheck', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+  
+  afterEach(() => {
+    jest.useRealTimers()
+  })
   describe('runCheck', () => {
     it('should return true when app version is the same', async () => {
       const mockAppVersion = '1.0.0'
