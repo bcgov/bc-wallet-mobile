@@ -110,8 +110,15 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
+  [BCSCScreens.ServiceLogin]: {
+    serviceClientId?: string
+    serviceClient?: ClientMetadata
+    serviceTitle?: string
+    pairingCode?: string
+  }
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
+  [BCSCModals.HelloWorld]: undefined
 }
 
 export type BCSCVerifyStackParams = {
@@ -188,7 +195,12 @@ export type BCSCMainStackParams = {
   [BCSCScreens.TransferAccountQRDisplay]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined
   [BCSCScreens.TransferAccountQRInformation]: undefined
-  [BCSCScreens.ServiceLogin]: { serviceClient: ClientMetadata }
+  [BCSCScreens.ServiceLogin]: {
+    serviceClientId?: string
+    serviceClient?: ClientMetadata
+    serviceTitle?: string
+    pairingCode?: string
+  }
   [BCSCScreens.MainSettings]: undefined
   [BCSCScreens.MainPrivacyPolicy]: undefined
   [BCSCScreens.MainContactUs]: undefined
