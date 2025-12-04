@@ -10,6 +10,11 @@ describe('OnboardingWebView', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   it('renders correctly', () => {

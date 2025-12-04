@@ -13,6 +13,11 @@ describe('NewSetupScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockNavigation = useNavigation()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   describe('Rendering', () => {
