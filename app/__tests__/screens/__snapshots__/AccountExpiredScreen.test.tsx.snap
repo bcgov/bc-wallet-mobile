@@ -1,0 +1,369 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AccountExpired renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    accessibilityState={
+      {
+        "busy": undefined,
+        "checked": undefined,
+        "disabled": undefined,
+        "expanded": undefined,
+        "selected": undefined,
+      }
+    }
+    accessibilityValue={
+      {
+        "max": undefined,
+        "min": undefined,
+        "now": undefined,
+        "text": undefined,
+      }
+    }
+    accessible={true}
+    collapsable={false}
+    focusable={true}
+    onClick={[Function]}
+    onResponderGrant={[Function]}
+    onResponderMove={[Function]}
+    onResponderRelease={[Function]}
+    onResponderTerminate={[Function]}
+    onResponderTerminationRequest={[Function]}
+    onStartShouldSetResponder={[Function]}
+    style={
+      {
+        "backgroundColor": "#F8BB47",
+        "flexDirection": "row",
+        "opacity": 1,
+        "padding": 16,
+      }
+    }
+    testID="com.ariesbifold:id/button-warning"
+  >
+    <Text
+      allowFontScaling={false}
+      selectable={false}
+      style={
+        [
+          {
+            "color": "#FFFFFF",
+            "fontSize": 24,
+          },
+          {
+            "marginRight": 16,
+          },
+          {
+            "fontFamily": "Material Design Icons",
+            "fontStyle": "normal",
+            "fontWeight": "normal",
+          },
+          {},
+        ]
+      }
+      testID="com.ariesbifold:id/icon-warning"
+    >
+      󰀦
+    </Text>
+    <View
+      style={
+        {
+          "flex": 1,
+          "gap": 8,
+        }
+      }
+    >
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "bold",
+            },
+            {
+              "color": "#FFFFFF",
+            },
+          ]
+        }
+        testID="com.ariesbifold:id/text-warning"
+      >
+        BCSC.AccountExpired.StaticBannerTitle
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "color": "#FFFFFF",
+              "lineHeight": 24,
+            },
+          ]
+        }
+        testID="com.ariesbifold:id/description-warning"
+      >
+        BCSC.AccountExpired.StaticBannerDescription
+      </Text>
+    </View>
+  </View>
+  <RCTScrollView
+    contentContainerStyle={
+      {
+        "gap": 24,
+        "padding": 16,
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          {
+            "padding": 16,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "justifyContent": "center",
+            }
+          }
+        >
+          <View
+            style={
+              {
+                "alignSelf": "center",
+                "backgroundColor": "#FFFFFF",
+                "borderRadius": 8,
+                "margin": 24,
+                "padding": 8,
+              }
+            }
+          >
+            <
+              height={45}
+              width={72}
+            />
+          </View>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 26,
+                  "fontWeight": "bold",
+                },
+                [
+                  {
+                    "fontSize": 20,
+                  },
+                ],
+              ]
+            }
+          >
+            Doe, John
+          </Text>
+        </View>
+      </View>
+      <View
+        style={
+          {
+            "gap": 16,
+          }
+        }
+      >
+        <View
+          accessibilityLabel="BCSC.AccountExpired.RenewButton"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D9EAF7",
+              "borderRadius": 4,
+              "borderWidth": 1,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/CardButton-BCSC.AccountExpired.RenewButton"
+        >
+          <View
+            style={
+              {
+                "gap": 8,
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontSize": 20,
+                      "fontWeight": "bold",
+                    },
+                  ]
+                }
+              >
+                BCSC.AccountExpired.RenewButton
+              </Text>
+            </View>
+          </View>
+        </View>
+        <View
+          accessibilityLabel="BCSC.AccountExpired.RemoveButton"
+          accessibilityRole="button"
+          accessibilityState={
+            {
+              "busy": undefined,
+              "checked": undefined,
+              "disabled": undefined,
+              "expanded": undefined,
+              "selected": undefined,
+            }
+          }
+          accessibilityValue={
+            {
+              "max": undefined,
+              "min": undefined,
+              "now": undefined,
+              "text": undefined,
+            }
+          }
+          accessible={true}
+          collapsable={false}
+          focusable={true}
+          onClick={[Function]}
+          onResponderGrant={[Function]}
+          onResponderMove={[Function]}
+          onResponderRelease={[Function]}
+          onResponderTerminate={[Function]}
+          onResponderTerminationRequest={[Function]}
+          onStartShouldSetResponder={[Function]}
+          style={
+            {
+              "backgroundColor": "#FFFFFF",
+              "borderColor": "#D9EAF7",
+              "borderRadius": 4,
+              "borderWidth": 1,
+              "opacity": 1,
+              "padding": 16,
+            }
+          }
+          testID="com.ariesbifold:id/CardButton-BCSC.AccountExpired.RemoveButton"
+        >
+          <View
+            style={
+              {
+                "gap": 8,
+              }
+            }
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "space-between",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "color": "#003366",
+                      "fontSize": 20,
+                      "fontWeight": "bold",
+                    },
+                  ]
+                }
+              >
+                BCSC.AccountExpired.RemoveButton
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</RNCSafeAreaView>
+`;

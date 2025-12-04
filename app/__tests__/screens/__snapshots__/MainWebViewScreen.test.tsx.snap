@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`MainWebView renders correctly 1`] = `
+<View
+  allowsBackForwardNavigationGestures={true}
+  bounces={false}
+  domStorageEnabled={true}
+  javaScriptEnabled={true}
+  mixedContentMode="compatibility"
+  onError={[Function]}
+  onHttpError={[Function]}
+  onMessage={[Function]}
+  originWhitelist={
+    [
+      "*",
+    ]
+  }
+  renderLoading={[Function]}
+  sharedCookiesEnabled={true}
+  source={
+    {
+      "headers": {
+        "Authorization": "Bearer undefined",
+      },
+      "uri": "https://example.com",
+    }
+  }
+  startInLoadingState={true}
+  testID="mocked-webview"
+  thirdPartyCookiesEnabled={true}
+  userAgent="Single App"
+/>
+`;

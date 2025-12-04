@@ -1,0 +1,507 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VideoInstructions renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      [
+        {
+          "padding": 16,
+        },
+        undefined,
+      ]
+    }
+    showsVerticalScrollIndicator={false}
+  >
+    <View>
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontSize": 112,
+            },
+            {
+              "alignSelf": "center",
+              "marginBottom": 40,
+              "marginTop": 16,
+            },
+            {
+              "fontFamily": "Material Design Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        󰕧
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 32,
+              "fontWeight": "bold",
+            },
+            {
+              "marginBottom": 24,
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        BCSC.SendVideo.VideoInstructions.Heading1
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            {
+              "marginBottom": 32,
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        BCSC.SendVideo.VideoInstructions.Heading2
+      </Text>
+      <View
+        style={
+          {
+            "borderBottomColor": "#313132",
+            "borderBottomWidth": 1,
+            "width": "100%",
+          }
+        }
+      />
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            {
+              "marginVertical": 32,
+            },
+          ]
+        }
+      >
+        BCSC.SendVideo.VideoInstructions.Heading3
+      </Text>
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginRight": 4,
+              },
+            ]
+          }
+        >
+          •
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.SendVideo.VideoInstructions.Bullet1
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginRight": 4,
+              },
+            ]
+          }
+        >
+          •
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.SendVideo.VideoInstructions.Bullet2
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginRight": 4,
+              },
+            ]
+          }
+        >
+          •
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.SendVideo.VideoInstructions.Bullet3
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginRight": 4,
+              },
+            ]
+          }
+        >
+          •
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.SendVideo.VideoInstructions.Bullet4
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginRight": 4,
+              },
+            ]
+          }
+        >
+          •
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.SendVideo.VideoInstructions.Bullet5
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "flexDirection": "row",
+            "marginBottom": 16,
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "marginRight": 4,
+              },
+            ]
+          }
+        >
+          •
+        </Text>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              undefined,
+            ]
+          }
+        >
+          BCSC.SendVideo.VideoInstructions.Bullet6
+        </Text>
+      </View>
+      <Text
+        allowFontScaling={false}
+        selectable={false}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontSize": 32,
+            },
+            {
+              "alignSelf": "center",
+              "marginVertical": 24,
+            },
+            {
+              "fontFamily": "Material Design Icons",
+              "fontStyle": "normal",
+              "fontWeight": "normal",
+            },
+            {},
+          ]
+        }
+      >
+        󰀦
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 21,
+              "fontWeight": "bold",
+            },
+            {
+              "marginBottom": 40,
+              "textAlign": "center",
+            },
+          ]
+        }
+      >
+        BCSC.SendVideo.VideoInstructions.Heading4
+      </Text>
+      <View
+        accessibilityLabel="BCSC.SendVideo.VideoInstructions.StartRecordingButton"
+        accessibilityRole="button"
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": false,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        accessibilityValue={
+          {
+            "max": undefined,
+            "min": undefined,
+            "now": undefined,
+            "text": undefined,
+          }
+        }
+        accessible={true}
+        collapsable={false}
+        focusable={true}
+        onClick={[Function]}
+        onResponderGrant={[Function]}
+        onResponderMove={[Function]}
+        onResponderRelease={[Function]}
+        onResponderTerminate={[Function]}
+        onResponderTerminationRequest={[Function]}
+        onStartShouldSetResponder={[Function]}
+        style={
+          {
+            "backgroundColor": "#003366",
+            "borderRadius": 4,
+            "opacity": 1,
+            "padding": 16,
+          }
+        }
+        testID="StartRecordingButton"
+      >
+        <View
+          style={
+            {
+              "alignItems": "center",
+              "flexDirection": "row",
+              "justifyContent": "center",
+            }
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                [
+                  {
+                    "color": "#FFFFFF",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "textAlign": "center",
+                  },
+                  false,
+                  false,
+                  false,
+                ],
+              ]
+            }
+          >
+            BCSC.SendVideo.VideoInstructions.StartRecordingButton
+          </Text>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</RNCSafeAreaView>
+`;
