@@ -47,15 +47,15 @@ export const BCSCIdTokenProvider = ({ children }: PropsWithChildren) => {
       data: data,
       refreshData: refresh,
     } as BCSCDataContextType<IdToken>
-  }, [data, isLoading])
+  }, [data, isLoading, refresh])
 
   return <BCSCIdTokenContext.Provider value={contextValue}>{children}</BCSCIdTokenContext.Provider>
 }
 
 /**
- * Hook to access the BCSC account context.
+ * Hook to access the BCSC ID token context.
  *
- * @returns {{ idToken: IdToken }} The account data and loading state.
+ * @returns {{ idToken: IdToken, isLoading: boolean, refreshIdToken: () => void }} The token data and loading state.
  */
 export const useIdToken = () => {
   const context = useContext(BCSCIdTokenContext)
@@ -72,5 +72,5 @@ export const useIdToken = () => {
     throw new Error('useIdToken: ID token is null')
   }
 
-  return { idToken: context.data, refreshIdToken: context.refreshData }
+  return { idToken: context.data, isLoading: context.isLoading, refreshIdToken: context.refreshData }
 }

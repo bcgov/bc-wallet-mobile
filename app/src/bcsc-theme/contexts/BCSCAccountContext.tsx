@@ -44,8 +44,6 @@ export const BCSCAccountProvider = ({ children }: PropsWithChildren) => {
       return {
         account: null,
         isLoadingAccount: isLoading,
-        idToken: null,
-        refreshIdTokenMetadata: () => {},
       }
     }
 

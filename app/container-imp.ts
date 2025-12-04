@@ -333,7 +333,7 @@ export class AppContainer implements Container {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
         const data = await this.storage.getValueForKey(key)
         if (data != null) {
-          // Checks both undefined and null with loose equality
+          // Checks for both undefined and null before casting
           updateVal(data as Type)
         }
       }
