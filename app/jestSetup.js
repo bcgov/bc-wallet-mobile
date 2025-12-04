@@ -123,7 +123,7 @@ jest.mock('react-native-webview', () => {
 
   return {
     WebView: jest.fn((props) => {
-      return global.React.createElement(View, { testID: 'mocked-webview', ...props })
+      return globalThis.React.createElement(View, { testID: 'mocked-webview', ...props })
     }),
   }
 })
