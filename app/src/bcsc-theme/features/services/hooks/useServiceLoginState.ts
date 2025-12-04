@@ -18,6 +18,7 @@ type MergeFunction = (current: LocalState, next: Partial<LocalState>) => LocalSt
 
 type Logger = {
   info: (message: string) => void
+  debug: (message: string) => void
   error: (message: string, error?: Error) => void
 }
 
@@ -78,28 +79,21 @@ export const useServiceLoginState = ({
   })
 
   useEffect(() => {
-    logger.info('ServiceLoginScreen: Loading metadata')
     load()
-  }, [load, logger])
+  }, [load])
 
   useEffect(() => {
-    logger.info(
-      `ServiceLoginScreen: Service lookup - isLoading: ${isLoading}, serviceTitle: ${
-        state.serviceTitle
-      }, serviceClientId: ${serviceClientId}, serviceClients count: ${serviceClients?.length ?? 0}`
-    )
-
     if (isLoading || (!state.serviceTitle && !serviceClientId)) {
       return
     }
 
     const client = serviceClients?.find((service) => {
       if (serviceClientId) {
-        logger.info(`ServiceLoginScreen: Searching for service by ID: ${serviceClientId}`)
+        logger.debug(`ServiceLoginScreen: Searching for service by ID: ${serviceClientId}`)
         return service.client_ref_id === serviceClientId
       }
       if (state.serviceTitle) {
-        logger.info(`ServiceLoginScreen: Searching for service by title: ${state.serviceTitle}`)
+        logger.debug(`ServiceLoginScreen: Searching for service by title: ${state.serviceTitle}`)
         return service.client_name.toLowerCase().includes(state.serviceTitle.toLowerCase())
       }
       return false
@@ -123,7 +117,7 @@ export const useServiceLoginState = ({
   }, [isLoading, logger, serviceClientId, serviceClients, state.serviceTitle])
 
   useEffect(() => {
-    logger.info(
+    logger.debug(
       `ServiceLoginScreen: Pending deep link check - serviceClientId: ${serviceClientId}, pendingConsumedRef: ${
         pendingConsumedRef.current
       }, hasLoginData: ${Boolean(
