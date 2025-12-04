@@ -5,6 +5,7 @@ import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 import {OnboardingOptInAnalyticsScreen} from '../../src/bcsc-theme/features/onboarding/OnboardingOptInAnalyticsScreen'
 
+jest.mock('@assets/img/notifications.png', () => ({ uri: 'mock-notification-image' }))
 
 
 describe('OnboardingOptInAnalytics', () => {
