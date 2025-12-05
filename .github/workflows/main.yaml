@@ -424,16 +424,41 @@ jobs:
           keytool -list -v -keystore release.keystore -alias ${PLAY_STORE_JKS_ALIAS} -storepass:env PLAY_STORE_JKS_PASSWD | \
           grep "SHA1"
 
+      - name: Configure Gradle memory settings
+        working-directory: app/android
+        run: |
+          echo "Configuring Gradle for maximum memory usage..."
+          cat >> gradle.properties << EOF
+
+          # Memory optimizations for CI
+          org.gradle.jvmargs=-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError -XX:+UseParallelGC
+          org.gradle.parallel=false
+          org.gradle.configureondemand=false
+          org.gradle.daemon=false
+          org.gradle.caching=false
+
+          # Kotlin compiler memory
+          kotlin.daemon.jvmargs=-Xmx3072m
+
+          # Android build optimizations
+          android.enableR8.fullMode=false
+          android.enableD8.desugaring=true
+          EOF
+
+          echo "Contents of gradle.properties:"
+          cat gradle.properties
+
       - name: Android release build
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
-        timeout-minutes: 15
+        timeout-minutes: 45
         env:
           PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
           PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
-          GRADLE_OPTS: "-Xmx4096m -Dorg.gradle.jvmargs='-Xmx4096m'"
+          GRADLE_OPTS: "-Xmx6144m -XX:MaxMetaspaceSize=1024m"
+          _JAVA_OPTIONS: "-Xmx6144m"
         run: |
           echo "=========================================="
           echo "Build started at $(date)"
