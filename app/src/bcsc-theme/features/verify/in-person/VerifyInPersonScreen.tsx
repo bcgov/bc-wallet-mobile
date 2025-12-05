@@ -1,4 +1,5 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { BC_SERVICE_LOCATION_URL } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
 import {
@@ -102,7 +103,12 @@ const VerifyInPersonScreen = ({ navigation }: VerifyInPersonScreenProps) => {
       <Link
         linkText={t('BCSC.VerifyIdentity.WhereToGoLink')}
         testID={testIdWithKey('ServiceBCLink')}
-        onPress={() => null} // TODO: Add link to service BC (KE)
+        onPress={() => {
+          navigation.navigate(BCSCScreens.VerifyWebView, {
+            title: t('BCSC.Screens.HelpCentre'),
+            url: BC_SERVICE_LOCATION_URL,
+          })
+        }}
         style={{ marginBottom: Spacing.md }}
       />
       <ThemedText variant={'bold'}>{t('BCSC.VerifyIdentity.WhatToBring')}</ThemedText>
