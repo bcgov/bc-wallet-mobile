@@ -15,7 +15,6 @@ export interface BCSCAccount extends Omit<UserInfoResponseData, 'picture'> {
 export interface BCSCAccountContextType {
   account: BCSCAccount | null
   isLoadingAccount: boolean
-  // TODO (MD): should we include idToken?
 }
 
 export const BCSCAccountContext = createContext<BCSCAccountContextType | null>(null)
