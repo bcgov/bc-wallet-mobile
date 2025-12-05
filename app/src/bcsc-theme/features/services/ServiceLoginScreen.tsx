@@ -56,6 +56,7 @@ const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }:
         <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginProof')}</ThemedText>
 
         <TouchableOpacity
+          testID={testIdWithKey('GoToServiceClient')}
           onPress={async () => {
             if (!state.serviceClientUri) {
               logger.error('ServiceLoginScreen: No service client URI available for navigation')
@@ -121,6 +122,7 @@ const ServiceLoginDefaultView = ({
 
           {state.privacyPolicyUri ? (
             <TouchableOpacity
+              testID={testIdWithKey('ReadPrivacyPolicy')}
               onPress={() => {
                 try {
                   navigation.navigate(BCSCScreens.MainWebView, {

@@ -1,3 +1,4 @@
+import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 import React from 'react'
@@ -117,6 +118,15 @@ describe('ServiceLoginScreen snapshots', () => {
       </BasicAppContext>
     )
 
+    const cancelButton = tree.getByTestId(testIdWithKey('ServiceLoginCancel'))
+    expect(cancelButton).toBeDefined()
+
+    const continueButton = tree.getByTestId(testIdWithKey('ServiceLoginContinue'))
+    expect(continueButton).toBeDefined()
+
+    const privacyPolicyLink = tree.getByTestId(testIdWithKey('ReadPrivacyPolicy'))
+    expect(privacyPolicyLink).toBeDefined()
+
     expect(tree).toMatchSnapshot()
   })
 
@@ -138,6 +148,13 @@ describe('ServiceLoginScreen snapshots', () => {
       </BasicAppContext>
     )
 
+    const cancelButton = tree.getByTestId(testIdWithKey('ServiceLoginCancel'))
+    expect(cancelButton).toBeDefined()
+
+    const continueButton = tree.getByTestId(testIdWithKey('ServiceLoginContinue'))
+    expect(continueButton).toBeDefined()
+
+    expect(tree.queryByTestId(testIdWithKey('ReadPrivacyPolicy'))).toBeNull()
     expect(tree).toMatchSnapshot()
   })
 })

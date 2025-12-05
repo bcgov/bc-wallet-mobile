@@ -203,6 +203,7 @@ exports[`ServiceLoginScreen snapshots renders default state for deep link 1`] = 
                 "opacity": 1,
               }
             }
+            testID="com.ariesbifold:id/ReadPrivacyPolicy"
           >
             <View
               style={
@@ -675,6 +676,7 @@ exports[`ServiceLoginScreen snapshots renders default state for quick login, wit
                 "opacity": 1,
               }
             }
+            testID="com.ariesbifold:id/ReadPrivacyPolicy"
           >
             <View
               style={
@@ -1459,6 +1461,7 @@ exports[`ServiceLoginScreen snapshots renders unavailable state 1`] = `
               "opacity": 1,
             }
           }
+          testID="com.ariesbifold:id/GoToServiceClient"
         >
           <View
             style={
