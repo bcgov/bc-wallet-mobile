@@ -49,10 +49,26 @@ const MainStack: React.FC = () => {
   useSystemChecks(SystemCheckScope.MAIN_STACK)
   const deepLinkViewModel = useDeepLinkViewModel()
 
+  // Consume any cold-start deep link once and use it to seed the initial route
+  const pendingDeepLink = useMemo(() => deepLinkViewModel.consumePendingDeepLink(), [deepLinkViewModel])
+  const deepLinkInitialParams = useMemo(() => {
+    if (!pendingDeepLink?.serviceTitle && !pendingDeepLink?.pairingCode) {
+      return undefined
+    }
+
+    return {
+      serviceTitle: pendingDeepLink.serviceTitle,
+      pairingCode: pendingDeepLink.pairingCode,
+    }
+  }, [pendingDeepLink])
+  const initialRouteName = deepLinkInitialParams ? BCSCScreens.ServiceLogin : BCSCScreens.MainSplash
+
   useEffect(() => {
-    return deepLinkViewModel.onNavigationRequest(({ screen, params }) => {
+    const unsubscribe = deepLinkViewModel.onNavigationRequest(({ screen, params }) => {
       navigation.navigate(screen, params)
     })
+
+    return unsubscribe
   }, [deepLinkViewModel, navigation])
 
   const handleManageDevices = useCallback(() => {
@@ -65,7 +81,7 @@ const MainStack: React.FC = () => {
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
-        initialRouteName={BCSCScreens.MainSplash}
+        initialRouteName={initialRouteName}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
@@ -168,6 +184,7 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCScreens.ServiceLogin}
           component={ServiceLoginScreen}
+          initialParams={deepLinkInitialParams}
           options={() => ({
             headerShown: true,
           })}

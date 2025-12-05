@@ -1,4 +1,3 @@
-import { useHasPendingDeepLink } from '@/hooks/useHasPendingDeepLink'
 import { BCState } from '@/store'
 import { BifoldError, DispatchAction, EventTypes, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import React, { useEffect } from 'react'
@@ -9,7 +8,6 @@ import { BCSCAccountProvider } from '../contexts/BCSCAccountContext'
 import { useBCSCApiClientState } from '../hooks/useBCSCApiClient'
 import useInitializeBCSC from '../hooks/useInitializeBCSC'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import DeepLinkStack from './DeepLinkStack'
 import BCSCMainStack from './MainStack'
 import BCSCOnboardingStack from './OnboardingStack'
 import VerifyStack from './VerifyStack'
@@ -21,7 +19,6 @@ const BCSCRootStack: React.FC = () => {
   const [loadState] = useServices([TOKENS.LOAD_STATE])
   const initializeBCSC = useInitializeBCSC()
   const { isClientReady } = useBCSCApiClientState()
-  const hasPendingDeepLink = useHasPendingDeepLink()
   useSystemChecks(SystemCheckScope.STARTUP)
 
   const LoadingView = () => (
@@ -82,11 +79,6 @@ const BCSCRootStack: React.FC = () => {
   // Show identity verification stack (setup steps) if user unverified
   if (!store.bcsc.verified || store.bcsc.selectedNickname === undefined) {
     return <VerifyStack />
-  }
-
-  // Otherwise, show the main stack (app)
-  if (hasPendingDeepLink) {
-    return <DeepLinkStack key="deep-link-stack" />
   }
 
   return (

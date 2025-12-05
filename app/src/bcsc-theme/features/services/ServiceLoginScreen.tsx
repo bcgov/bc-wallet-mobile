@@ -1,6 +1,7 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
+import { useDeepLinkViewModel } from '@/contexts/DeepLinkViewModelContext'
 import { BCState, Mode } from '@/store'
 import { ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
@@ -79,6 +80,7 @@ type ServiceLoginDefaultViewProps = {
   logger: any
   navigation: ServiceLoginScreenProps['navigation']
   onContinue: () => Promise<void>
+  onCancel: () => void
 }
 
 const ServiceLoginDefaultView = ({
@@ -90,6 +92,7 @@ const ServiceLoginDefaultView = ({
   logger,
   navigation,
   onContinue,
+  onCancel,
 }: ServiceLoginDefaultViewProps) => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.screenContainer}>
@@ -155,9 +158,7 @@ const ServiceLoginDefaultView = ({
           accessibilityLabel={'Cancel'}
           testID={testIdWithKey('ServiceLoginCancel')}
           buttonType={ButtonType.Tertiary}
-          onPress={() => {
-            navigation.goBack()
-          }}
+          onPress={onCancel}
         />
       </View>
     </ScrollView>
@@ -179,6 +180,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const viewModel = useDeepLinkViewModel()
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
   const { pairing, metadata } = useApi()
   const getQuickLoginURL = useQuickLoginURL()
@@ -284,6 +286,24 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     }
   }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.authenticationUrl, state.pairingCode, t])
 
+  const onCancel = useCallback(() => {
+    // For deep-link cold start, clear the pending deep link so RootStack switches stacks
+    if (viewModel.hasPendingDeepLink) {
+      viewModel.consumePendingDeepLink()
+      return
+    }
+
+    // If the app already has history, go back
+    if (navigation.canGoBack()) {
+      navigation.goBack()
+      return
+    }
+
+    // No pending deep link and no back stack (e.g., deep link navigated directly onto main stack)
+    navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+    logger.info('ServiceLoginScreen: Cancel pressed without history, redirecting to Home tab')
+  }, [logger, navigation, viewModel])
+
   const renderState = (() => {
     if (isLoading || !serviceHydrated) {
       return RenderState.Loading
@@ -314,6 +334,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
           logger={logger}
           navigation={navigation}
           onContinue={onContinue}
+          onCancel={onCancel}
         />
       )
   }
