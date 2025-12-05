@@ -178,7 +178,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   route,
 }: ServiceLoginScreenProps) => {
   const { serviceClientId, serviceTitle, pairingCode } = route.params ?? {}
-  console.log('SERVICE LOGIN PARAMS', serviceClientId, serviceTitle, pairingCode)
   // const serviceClientId = serviceClient?.client_ref_id
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
@@ -315,8 +314,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   }, [logger, navigation, viewModel])
 
   const renderState = (() => {
-    console.log('SERVICE LOGIN STATE', state)
-
     if (isLoading || !serviceHydrated) {
       return RenderState.Loading
     }
