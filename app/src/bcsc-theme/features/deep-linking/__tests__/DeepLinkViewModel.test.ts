@@ -87,6 +87,22 @@ describe('DeepLinkViewModel', () => {
     expect(navEvents[0]).toMatchObject({ params: { serviceTitle: 'Ready Title', pairingCode: 'READY' } })
   })
 
+  it('parses pairing metadata when URL.pathname is unavailable', () => {
+    const viewModel = new DeepLinkViewModel(mockService as any, logger as any)
+    const navEvents: any[] = []
+
+    viewModel.onNavigationRequest((event) => navEvents.push(event))
+    viewModel.initialize()
+
+    capturedHandler?.(buildPayload('/https%3A%2F%2Fidsit.gov.bc.ca%2Fdevice/BC+Parks+Discover+Camping/HHFBYS'))
+
+    expect(navEvents).toHaveLength(1)
+    expect(navEvents[0]).toMatchObject({
+      params: { serviceTitle: 'BC Parks Discover Camping', pairingCode: 'HHFBYS' },
+    })
+    expect(logger.warn).not.toHaveBeenCalled()
+  })
+
   it('consumes and clears pending deep link state', () => {
     const viewModel = new DeepLinkViewModel(mockService as any, logger as any)
     const pendingStates: boolean[] = []
