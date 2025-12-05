@@ -4,21 +4,9 @@ import {
 } from '@/bcsc-theme/components/SettingsHeaderButton'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
 import { fireEvent, render } from '@testing-library/react-native'
 import { BasicAppContext } from '../../../__mocks__/helpers/app'
-
-// Mock useNavigation
-jest.mock('@react-navigation/native', () => {
-  const actual = jest.requireActual('@react-navigation/native')
-  return {
-    ...actual,
-    useNavigation: jest.fn(() => ({
-      navigate: jest.fn(),
-    })),
-  }
-})
-
-import { useNavigation } from '@react-navigation/native'
 
 describe('MainSettingsHeaderButton', () => {
   beforeEach(() => {
@@ -39,10 +27,7 @@ describe('MainSettingsHeaderButton', () => {
 
   it('should navigate to MainSettings screen on press', async () => {
     const MainSettingsHeaderButton = createMainSettingsHeaderButton()
-    const mockNavigate = jest.fn()
-    ;(useNavigation as jest.Mock).mockReturnValue({
-      navigate: mockNavigate,
-    })
+    const navigation = useNavigation()
 
     const { getByTestId } = render(
       <BasicAppContext>
@@ -51,9 +36,10 @@ describe('MainSettingsHeaderButton', () => {
     )
 
     const button = getByTestId(testIdWithKey('SettingsMenuButton'))
+
     fireEvent.press(button)
 
-    expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.MainSettings)
+    expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.MainSettings)
   })
 })
 
@@ -76,10 +62,7 @@ describe('VerifySettingsHeaderButton', () => {
 
   it('should navigate to VerifySettings screen on press', async () => {
     const VerifySettingsHeaderButton = createVerifySettingsHeaderButton()
-    const mockNavigate = jest.fn()
-    ;(useNavigation as jest.Mock).mockReturnValue({
-      navigate: mockNavigate,
-    })
+    const navigation = useNavigation()
 
     const { getByTestId } = render(
       <BasicAppContext>
@@ -88,8 +71,9 @@ describe('VerifySettingsHeaderButton', () => {
     )
 
     const button = getByTestId(testIdWithKey('SettingsMenuButton'))
+
     fireEvent.press(button)
 
-    expect(mockNavigate).toHaveBeenCalledWith(BCSCScreens.VerifySettings)
+    expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerifySettings)
   })
 })
