@@ -55,6 +55,8 @@ export const GET_BCSC_CARD_URL =
 export const ANALYTICS_URL =
   'https://www2.gov.bc.ca/gov/content/governments/services-for-government/service-experience-digital-delivery/web-content-development-guides/analytics'
 
+export const BC_SERVICE_LOCATION_URL = 'https://www2.gov.bc.ca/gov/content?id=FD6DB5BA2A5248038EEF54D9F9F37C4D'
+
 export enum HelpCentreUrl {
   HOME = 'https://id.gov.bc.ca/static/help/topics.html?fromapp=1',
   HOW_TO_SETUP = 'https://id.gov.bc.ca/static/help/setup_app.html?fromapp=1',
