@@ -427,14 +427,58 @@ jobs:
       - name: Android release build
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
+        timeout-minutes: 15
         env:
           PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
           PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
+          GRADLE_OPTS: "-Xmx4096m -Dorg.gradle.jvmargs='-Xmx4096m'"
         run: |
-          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
-          ./gradlew bundleRelease assembleRelease --no-parallel
+          echo "=========================================="
+          echo "Build started at $(date)"
+          echo "Build type: ${{ matrix.build_type }}"
+          echo "=========================================="
+
+          echo ""
+          echo "[$(date)] Step 1: Creating JavaScript bundle..."
+          cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --verbose
+          BUNDLE_EXIT=$?
+          echo "[$(date)] Bundle step completed with exit code: $BUNDLE_EXIT"
+
+          if [ $BUNDLE_EXIT -ne 0 ]; then
+            echo "ERROR: React Native bundle failed"
+            exit 1
+          fi
+
+          cd android
+
+          echo ""
+          echo "[$(date)] Step 2: Running Gradle bundleRelease..."
+          ./gradlew bundleRelease --no-daemon --no-parallel --stacktrace --info 2>&1 | tee -a build.log
+          BUNDLE_RELEASE_EXIT=$?
+          echo "[$(date)] bundleRelease completed with exit code: $BUNDLE_RELEASE_EXIT"
+
+          if [ $BUNDLE_RELEASE_EXIT -ne 0 ]; then
+            echo "ERROR: Gradle bundleRelease failed"
+            exit 1
+          fi
+
+          echo ""
+          echo "[$(date)] Step 3: Running Gradle assembleRelease..."
+          ./gradlew assembleRelease --no-daemon --no-parallel --stacktrace --info 2>&1 | tee -a build.log
+          ASSEMBLE_RELEASE_EXIT=$?
+          echo "[$(date)] assembleRelease completed with exit code: $ASSEMBLE_RELEASE_EXIT"
+
+          if [ $ASSEMBLE_RELEASE_EXIT -ne 0 ]; then
+            echo "ERROR: Gradle assembleRelease failed"
+            exit 1
+          fi
+
+          echo ""
+          echo "=========================================="
+          echo "Build completed successfully at $(date)"
+          echo "=========================================="
 
       - name: List Artifacts
         run: |
