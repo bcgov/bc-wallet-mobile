@@ -16,38 +16,57 @@ on:
 
 jobs:
   check-secrets:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Check secrets
-        shell: bash
-        run: |
-          required_env_vars=(
-            "CERTIFICATE"
-            "KEYCHIAN_PASSWD"
-            "PROVISIONING_PROFILE"
-            "PLAY_STORE_JKS_BASE64"
-            "PLAY_STORE_JKS_ALIAS"
-            "PLAY_STORE_JKS_PASSWD"
-            "PLAY_STORE_JKS_BASE64_SADEV"
-            "PLAY_STORE_JKS_ALIAS_SADEV"
-            "PLAY_STORE_JKS_PASSWD_SADEV"
-          )
-          for var in "${required_env_vars[@]}"; do
-            if [ -z "${!var}" ]; then
-              echo "error: $var is not set."
-              exit 1
-            fi
-          done
-        env:
-          CERTIFICATE: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
-          KEYCHIAN_PASSWD: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
-          PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
-          PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
-          PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
-          PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
-          PLAY_STORE_JKS_BASE64_SADEV: ${{ secrets.PLAY_STORE_JKS_BASE64_SADEV }}
-          PLAY_STORE_JKS_ALIAS_SADEV: ${{ secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
-          PLAY_STORE_JKS_PASSWD_SADEV: ${{ secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+  runs-on: ubuntu-22.04
+  outputs:
+    secrets_present: ${{ steps.check.outputs.present }}
+  steps:
+    - name: Check secrets
+      id: check
+      shell: bash
+      env:
+        IS_FORK: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true }}
+        CERTIFICATE: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_BASE64 }}
+        KEYCHIAN_PASSWD: ${{ secrets.APPLE_APP_STORE_BUILD_CERTIFICATE_PASSWD }}
+        PROVISIONING_PROFILE: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+        PLAY_STORE_JKS_BASE64: ${{ secrets.PLAY_STORE_JKS_BASE64 }}
+        PLAY_STORE_JKS_ALIAS: ${{ secrets.PLAY_STORE_JKS_ALIAS }}
+        PLAY_STORE_JKS_PASSWD: ${{ secrets.PLAY_STORE_JKS_PASSWD }}
+        PLAY_STORE_JKS_BASE64_SADEV: ${{ secrets.PLAY_STORE_JKS_BASE64_SADEV }}
+        PLAY_STORE_JKS_ALIAS_SADEV: ${{ secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
+        PLAY_STORE_JKS_PASSWD_SADEV: ${{ secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
+      run: |
+        # If this is a fork, secrets are not available — mark as not present but don't fail
+        if [ "${IS_FORK}" = "true" ]; then
+          echo "Forked PR detected — secrets will not be available in this run."
+          echo "present=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        required_env_vars=(
+          "CERTIFICATE"
+          "KEYCHIAN_PASSWD"
+          "PROVISIONING_PROFILE"
+          "PLAY_STORE_JKS_BASE64"
+          "PLAY_STORE_JKS_ALIAS"
+          "PLAY_STORE_JKS_PASSWD"
+          "PLAY_STORE_JKS_BASE64_SADEV"
+          "PLAY_STORE_JKS_ALIAS_SADEV"
+          "PLAY_STORE_JKS_PASSWD_SADEV"
+        )
+
+        missing=false
+        for var in "${required_env_vars[@]}"; do
+          if [ -z "${!var}" ]; then
+            echo "warning: $var is not set."
+            missing=true
+          fi
+        done
+
+        if [ "$missing" = "true" ]; then
+          echo "present=false" >> $GITHUB_OUTPUT
+        else
+          echo "present=true" >> $GITHUB_OUTPUT
+        fi
   check-vars:
     runs-on: ubuntu-22.04
     steps:
@@ -495,7 +514,7 @@ jobs:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-summary:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - early-exit-check
       - build-android
