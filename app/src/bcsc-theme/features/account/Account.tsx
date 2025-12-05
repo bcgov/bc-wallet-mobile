@@ -93,9 +93,11 @@ const Account: React.FC = () => {
 
       const quickLoginResult = await getQuickLoginURL(bcscServiceClient)
 
-      if (quickLoginResult.success) {
+      if (quickLoginResult.success && quickLoginResult.url) {
         await Linking.openURL(quickLoginResult.url)
         openedWebview.current = true
+      } else if (!quickLoginResult.success && quickLoginResult.error) {
+        logger.error(`Error opening All Account Details: ${quickLoginResult.error}`)
       }
     } catch (error) {
       logger.error(`Error opening All Account Details: ${error}`)

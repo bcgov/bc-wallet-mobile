@@ -33,7 +33,7 @@ import { MainSplashScreen } from '../features/splash/MainSplashScreen'
 import { MainWebViewScreen } from '../features/webview/MainWebViewScreen'
 import { useBCSCApiClient } from '../hooks/useBCSCApiClient'
 import { SystemCheckScope, useSystemChecks } from '../hooks/useSystemChecks'
-import { BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
+import { BCSCMainStackParams, BCSCModals, BCSCScreens, BCSCStacks } from '../types/navigators'
 import { getDefaultModalOptions } from './stack-utils'
 import BCSCTabStack from './TabStack'
 
@@ -65,7 +65,14 @@ const MainStack: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = deepLinkViewModel.onNavigationRequest(({ screen, params }) => {
-      navigation.navigate(screen, params)
+      if (screen === BCSCScreens.ServiceLogin) {
+        navigation.navigate(BCSCScreens.ServiceLogin, params as BCSCMainStackParams[BCSCScreens.ServiceLogin])
+        return
+      }
+
+      if (screen === BCSCStacks.Tab) {
+        navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+      }
     })
 
     return unsubscribe
