@@ -442,7 +442,7 @@ jobs:
       - name: Android release build
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
-        timeout-minutes: 120
+        timeout-minutes: 20
         env:
           PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
           PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
