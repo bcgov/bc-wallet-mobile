@@ -1,9 +1,11 @@
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
+import { REPORT_SUSPICIOUS_URL } from '@/constants'
 import { BCState, Mode } from '@/store'
 import {
   Button,
   ButtonType,
+  Link,
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
@@ -111,7 +113,17 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
           {/* TODO (MD): Find out what action should happen when user reports suspicious activity */}
           <ThemedText variant={'bold'}>
-            {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
+            {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
+            <Link
+              linkText={t('BCSC.Services.ReportSuspicious')}
+              testID={testIdWithKey('ReportSuspiciousLink')}
+              onPress={() => {
+                navigation.navigate(BCSCScreens.MainWebView, {
+                  title: t('BCSC.Screens.HelpCentre'),
+                  url: REPORT_SUSPICIOUS_URL,
+                })
+              }}
+            />
           </ThemedText>
         </View>
       </ScreenWrapper>
@@ -162,7 +174,17 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
         </View>
 
         <ThemedText variant={'bold'}>
-          {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
+          {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
+          <Link
+            linkText={t('BCSC.Services.ReportSuspicious')}
+            testID={testIdWithKey('ReportSuspiciousLink')}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.MainWebView, {
+                title: t('BCSC.Screens.HelpCentre'),
+                url: REPORT_SUSPICIOUS_URL,
+              })
+            }}
+          />
         </ThemedText>
       </View>
       <View style={styles.buttonsContainer}>
