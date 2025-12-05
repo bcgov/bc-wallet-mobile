@@ -163,7 +163,7 @@ const Services: React.FC = () => {
             description={service.client_description}
             onPress={() => {
               navigation.navigate(BCSCScreens.ServiceLogin, {
-                serviceClient: service,
+                serviceClientId: service.client_ref_id,
               })
             }}
           />

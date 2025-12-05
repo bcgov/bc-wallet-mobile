@@ -61,7 +61,7 @@ const SavedServices: React.FC = () => {
             title={serviceClient.client_name}
             onPress={() => {
               navigation.navigate(BCSCScreens.ServiceLogin, {
-                serviceClient: serviceClient,
+                serviceClientId: serviceClient.client_ref_id,
               })
             }}
             onRemove={() => {

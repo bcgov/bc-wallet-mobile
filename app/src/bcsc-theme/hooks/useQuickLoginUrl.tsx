@@ -9,7 +9,7 @@ import { useBCSCApiClient } from './useBCSCApiClient'
 // Only a subset of the ClientMetadata is needed for this hook
 type ClientMetadataStub = Pick<ClientMetadata, 'client_ref_id' | 'initiate_login_uri'>
 
-// The result type is a tuple of [quickLoginUrl, quickLoginError]
+// Discriminated union for clearer guarantees
 type QuickLoginURLResult = { success: true; url: string } | { success: false; error: string }
 
 // Represents a stub service client with an empty client_ref_id
