@@ -1,5 +1,5 @@
-import { DeepLinkViewModel } from '@/services/DeepLinkViewModel'
 import React, { createContext, useContext } from 'react'
+import { DeepLinkViewModel } from './DeepLinkViewModel'
 
 const DeepLinkViewModelContext = createContext<DeepLinkViewModel | null>(null)
 

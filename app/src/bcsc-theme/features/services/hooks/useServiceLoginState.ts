@@ -1,7 +1,7 @@
 import { ClientMetadata } from '@/bcsc-theme/api/hooks/useMetadataApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { useDeepLinkViewModel } from '@/contexts/DeepLinkViewModelContext'
 import { useEffect, useReducer, useRef } from 'react'
+import { useDeepLinkViewModel } from '../../deep-linking'
 
 export type LocalState = {
   serviceTitle?: string

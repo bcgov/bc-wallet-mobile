@@ -1,5 +1,5 @@
-import { useDeepLinkViewModel } from '@/contexts/DeepLinkViewModelContext'
 import { useEffect, useState } from 'react'
+import { useDeepLinkViewModel } from './DeepLinkViewModelContext'
 
 export const useHasPendingDeepLink = () => {
   const viewModel = useDeepLinkViewModel()

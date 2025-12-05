@@ -1,8 +1,8 @@
-import { useDeepLinkViewModel } from '@/contexts/DeepLinkViewModelContext'
 import { testIdWithKey, useDefaultStackOptions, useTheme } from '@bifold/core'
 import { createStackNavigator } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
+import { useDeepLinkViewModel } from '../features/deep-linking'
 import { ServiceLoginScreen } from '../features/services/ServiceLoginScreen'
 import { BCSCOnboardingStackParams, BCSCScreens } from '../types/navigators'
 

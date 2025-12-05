@@ -1,6 +1,6 @@
 import { AbstractBifoldLogger } from '@bifold/core'
-import { BCSCScreens } from '../bcsc-theme/types/navigators'
-import { DeepLinkPayload, DeepLinkService } from './deep-linking'
+import { BCSCScreens } from '../../types/navigators'
+import { DeepLinkPayload, DeepLinkService } from './services/deep-linking'
 
 type DeepLinkNavigationEvent = {
   screen: string

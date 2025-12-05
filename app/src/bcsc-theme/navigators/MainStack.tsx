@@ -1,5 +1,4 @@
 import { HelpCentreUrl } from '@/constants'
-import { useDeepLinkViewModel } from '@/contexts/DeepLinkViewModelContext'
 import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
@@ -19,6 +18,7 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { useDeepLinkViewModel } from '../features/deep-linking'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'

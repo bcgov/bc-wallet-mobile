@@ -1,4 +1,4 @@
-import { useDeepLinkViewModel } from '@/contexts/DeepLinkViewModelContext'
+import { useDeepLinkViewModel } from '@/bcsc-theme/features/deep-linking'
 import { useNavigation } from '@react-navigation/native'
 import React from 'react'
 import { Button, StyleSheet, Text, View } from 'react-native'
