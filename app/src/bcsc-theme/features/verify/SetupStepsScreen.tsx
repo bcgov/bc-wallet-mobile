@@ -231,10 +231,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
         <Button
           title={t('BCSC.Steps.ResetData')}
           onPress={async () => {
-            const result = await factoryReset({
-              completedNewSetup: true,
-              completedOnboarding: true,
-            })
+            const result = await factoryReset()
 
             if (!result.success) {
               logger.error('Factory reset failed', result.error)
