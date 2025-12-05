@@ -5,6 +5,8 @@ import { DeepLinkViewModel } from '../DeepLinkViewModel'
 import { DeepLinkViewModelProvider, useDeepLinkViewModel } from '../DeepLinkViewModelContext'
 
 describe('DeepLinkViewModelContext', () => {
+  const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
   const createViewModel = () =>
     new DeepLinkViewModel(
       { subscribe: jest.fn(), init: jest.fn() } as any,
@@ -38,5 +40,9 @@ describe('DeepLinkViewModelContext', () => {
     )
 
     expect(screen.getByTestId('probe').props.children).toBe('ok')
+  })
+
+  afterAll(() => {
+    consoleErrorSpy.mockRestore()
   })
 })

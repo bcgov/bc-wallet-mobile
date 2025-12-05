@@ -1,5 +1,5 @@
 import { Linking } from 'react-native'
-import { DeepLinkService } from '../deep-linking'
+import { DeepLinkService } from '../services/deep-linking'
 
 jest.mock('react-native', () => ({
   Linking: {
