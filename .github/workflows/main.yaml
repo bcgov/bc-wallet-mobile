@@ -434,7 +434,7 @@ jobs:
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
-          ./gradlew bundleRelease assembleRelease --no-parallel
+          ./gradlew bundleRelease assembleRelease --no-daemon --no-parallel
 
       - name: List Artifacts
         run: |
