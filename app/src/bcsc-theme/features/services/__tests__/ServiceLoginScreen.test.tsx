@@ -1,9 +1,9 @@
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
-import { render } from '@testing-library/react-native'
+import { fireEvent, render } from '@testing-library/react-native'
 import React from 'react'
 import { BasicAppContext } from '../../../../../__mocks__/helpers/app'
-import { BCSCScreens } from '../../../types/navigators'
+import { BCSCScreens, BCSCStacks } from '../../../types/navigators'
 import { ServiceLoginScreen } from '../ServiceLoginScreen'
 
 jest.mock('../hooks/useServiceLoginState', () => ({
@@ -19,11 +19,13 @@ jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
   useQuickLoginURL: () => jest.fn(),
 }))
 
+const mockDeepLinkViewModel = {
+  hasPendingDeepLink: false,
+  consumePendingDeepLink: jest.fn(),
+}
+
 jest.mock('../../deep-linking', () => ({
-  useDeepLinkViewModel: () => ({
-    hasPendingDeepLink: false,
-    consumePendingDeepLink: jest.fn(),
-  }),
+  useDeepLinkViewModel: () => mockDeepLinkViewModel,
 }))
 
 const mockUseServiceLoginState = jest.requireMock('../hooks/useServiceLoginState').useServiceLoginState as jest.Mock
@@ -37,6 +39,8 @@ const baseRoute = {
 describe('ServiceLoginScreen snapshots', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockDeepLinkViewModel.hasPendingDeepLink = false
+    mockDeepLinkViewModel.consumePendingDeepLink = jest.fn()
   })
 
   it('renders loading state', () => {
@@ -156,5 +160,62 @@ describe('ServiceLoginScreen snapshots', () => {
 
     expect(tree.queryByTestId(testIdWithKey('ReadPrivacyPolicy'))).toBeNull()
     expect(tree).toMatchSnapshot()
+  })
+
+  it('cancels to Home when no back stack or pending deep link', () => {
+    mockUseServiceLoginState.mockReturnValue({
+      state: {
+        serviceTitle: 'BC Parks',
+        claimsDescription: 'Name, Email',
+        serviceInitiateLoginUri: 'https://example.com/login',
+      },
+      isLoading: false,
+      serviceHydrated: true,
+    })
+    const navigation = useNavigation()
+    navigation.canGoBack = jest.fn().mockReturnValue(false)
+
+    const tree = render(
+      <BasicAppContext>
+        <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
+      </BasicAppContext>
+    )
+
+    fireEvent.press(tree.getByTestId(testIdWithKey('ServiceLoginCancel')))
+
+    expect(navigation.goBack).not.toHaveBeenCalled()
+    expect(navigation.navigate).toHaveBeenCalledWith(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+    expect(navigation.navigate).toHaveBeenCalledTimes(1)
+  })
+
+  it('clears pending deep link on cancel when present', () => {
+    mockDeepLinkViewModel.hasPendingDeepLink = true
+    const consumePendingDeepLink = jest.fn()
+    mockDeepLinkViewModel.consumePendingDeepLink = consumePendingDeepLink
+
+    mockUseServiceLoginState.mockReturnValue({
+      state: {
+        serviceTitle: 'BC Parks',
+        claimsDescription: 'Name, Email',
+        serviceInitiateLoginUri: 'https://example.com/login',
+      },
+      isLoading: false,
+      serviceHydrated: true,
+    })
+
+    const navigation = useNavigation()
+    navigation.canGoBack = jest.fn().mockReturnValue(false)
+
+    const tree = render(
+      <BasicAppContext>
+        <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
+      </BasicAppContext>
+    )
+
+    fireEvent.press(tree.getByTestId(testIdWithKey('ServiceLoginCancel')))
+
+    expect(consumePendingDeepLink).toHaveBeenCalledTimes(1)
+    expect(navigation.goBack).not.toHaveBeenCalled()
+    expect(navigation.navigate).not.toHaveBeenCalled()
   })
 })

@@ -270,9 +270,13 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return
     }
 
+    console.log('Generating quick login URL for service:', state.service.client_name)
     const result = await getQuickLoginURL(state.service)
+    console.log('Generating quick login URL for service:', result)
 
     if (result.success) {
+      logger.debug(`ServiceLoginScreen: Quick login URL generated ${result.url}`)
+
       try {
         await Linking.openURL(result.url)
         return
@@ -283,19 +287,20 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       }
     }
 
+    logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
     Alert.alert(t('BCSC.Services.LoginErrorTitle'), result.error)
   }, [getQuickLoginURL, logger, state.service, t])
 
   const onContinue = useCallback(async () => {
     if (state.pairingCode) {
       await onContinueWithPairingCode()
-    } else if (state.authenticationUrl) {
+    } else if (state.service) {
       await onContinueWithQuickLoginUrl()
     } else {
       logger.error('ServiceLoginScreen: No authentication method available')
       Alert.alert(t('BCSC.Services.LoginErrorTitle'), t('BCSC.Services.LoginErrorMessage'))
     }
-  }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.authenticationUrl, state.pairingCode, t])
+  }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.service, state.pairingCode, t])
 
   const onCancel = useCallback(() => {
     // For deep-link cold start, clear the pending deep link so RootStack switches stacks
