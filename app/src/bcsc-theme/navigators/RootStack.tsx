@@ -63,12 +63,12 @@ const BCSCRootStack: React.FC = () => {
 
   // Show loading screen if state or wallet secret not loaded yet
   if (!store.stateLoaded || initializeBCSC.loading || !isClientReady) {
-    return <LoadingView />
+    return <LoadingView key="loading-view" />
   }
 
   // Show onboarding stack if onboarding not completed yet
   if (!store.bcsc.completedOnboarding) {
-    return <BCSCOnboardingStack />
+    return <BCSCOnboardingStack key="onboarding-stack" />
   }
 
   // Show startup stack if agent isn't initialized or user hasn't authenticated yet (biometrics/PIN)
@@ -78,7 +78,7 @@ const BCSCRootStack: React.FC = () => {
 
   // Show identity verification stack (setup steps) if user unverified
   if (!store.bcsc.verified || store.bcsc.selectedNickname === undefined) {
-    return <VerifyStack />
+    return <VerifyStack key="verify-stack" />
   }
 
   return (
