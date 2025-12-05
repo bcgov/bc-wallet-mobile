@@ -110,4 +110,18 @@ describe('DeepLinkService', () => {
       expect.objectContaining({ serviceTitle: 'My Service', pairingCode: 'CODE123' })
     )
   })
+
+  it('clears handlers on destroy', async () => {
+    const handler = jest.fn()
+    const service = new DeepLinkService()
+    service.subscribe(handler)
+    await service.init()
+
+    service.destroy()
+
+    const eventHandler = mockLinking.addEventListener.mock.calls[0]?.[1]
+    eventHandler?.({ url: pairingUrl })
+
+    expect(handler).not.toHaveBeenCalled()
+  })
 })

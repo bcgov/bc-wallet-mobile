@@ -40,6 +40,7 @@ export class DeepLinkService {
     this.subscription = undefined
     this.initialized = false
     this.initialUrl = null
+    this.handlers.clear()
   }
 
   public subscribe(handler: DeepLinkHandler): () => void {

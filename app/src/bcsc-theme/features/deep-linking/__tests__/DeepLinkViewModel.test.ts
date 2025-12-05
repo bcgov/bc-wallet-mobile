@@ -69,6 +69,24 @@ describe('DeepLinkViewModel', () => {
     expect(pendingStates).toEqual([false])
   })
 
+  it('uses pre-parsed pairing metadata without re-decoding', () => {
+    const viewModel = new DeepLinkViewModel(mockService as any, logger as any)
+    const navEvents: any[] = []
+
+    viewModel.onNavigationRequest((event) => navEvents.push(event))
+    viewModel.initialize()
+
+    capturedHandler?.({
+      rawUrl: 'ca.bc.gov.iddev.servicescard://pair/ignored',
+      host: 'pair',
+      serviceTitle: 'Ready Title',
+      pairingCode: 'READY',
+    })
+
+    expect(navEvents).toHaveLength(1)
+    expect(navEvents[0]).toMatchObject({ params: { serviceTitle: 'Ready Title', pairingCode: 'READY' } })
+  })
+
   it('consumes and clears pending deep link state', () => {
     const viewModel = new DeepLinkViewModel(mockService as any, logger as any)
     const pendingStates: boolean[] = []
