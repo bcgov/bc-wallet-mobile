@@ -80,18 +80,14 @@ export class DeepLinkViewModel {
       let pairingCode = parsedPairingCode
 
       if ((!serviceTitle || !pairingCode) && path) {
-        try {
-          const rawPath = path.startsWith('/') ? path.slice(1) : path
-          const decodedUrl = decodeURIComponent(rawPath)
-          const urlObj = new URL(decodedUrl)
-          const segments = urlObj.pathname.split('/').filter(Boolean)
+        const parsed = this.parsePairingFromPath(path)
 
-          if (segments[0] === 'device' && segments.length >= 3) {
-            serviceTitle = decodeURIComponent(segments[1].replaceAll('+', ' '))
-            pairingCode = segments[2]
-          }
-        } catch (e) {
-          this.logger.warn(`[DeepLinkViewModel] Failed to parse pairing URL: ${e}`)
+        if (parsed.serviceTitle) {
+          serviceTitle = parsed.serviceTitle
+        }
+
+        if (parsed.pairingCode) {
+          pairingCode = parsed.pairingCode
         }
       }
 
@@ -115,6 +111,28 @@ export class DeepLinkViewModel {
     }
 
     // Add more routes here
+  }
+
+  private parsePairingFromPath(path: string): { serviceTitle?: string; pairingCode?: string } {
+    const rawPath = path.startsWith('/') ? path.slice(1) : path
+
+    try {
+      const decodedPath = decodeURIComponent(rawPath)
+      const manualPath = decodedPath.replace(/^https?:\/\//, '')
+      const segments = manualPath.split('/').filter(Boolean)
+      const deviceIndex = segments.indexOf('device')
+
+      if (deviceIndex !== -1 && segments.length >= deviceIndex + 3) {
+        const serviceTitle = decodeURIComponent(segments[deviceIndex + 1].replace(/\+/g, ' '))
+        const pairingCode = segments[deviceIndex + 2]
+
+        return { serviceTitle, pairingCode }
+      }
+    } catch (e) {
+      this.logger.warn(`[DeepLinkViewModel] Failed to parse pairing URL: ${e}`)
+    }
+
+    return {}
   }
 
   private emitNavigation(event: DeepLinkNavigationEvent) {
