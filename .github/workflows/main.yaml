@@ -376,16 +376,17 @@ jobs:
           yarn install --immutable && \
           git status
 
-      - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
-        run: |
-          echo "Patching for Single App build"
-          git config user.email "github-action@users.noreply.github.com"
-          git config user.name "GitHub Actions"
-          git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
+      # TEMPORARILY DISABLED FOR DEBUGGING
+      # - name: Patch for Single App build
+      #   if: matrix.build_type == 'single-app'
+      #   run: |
+      #     echo "Patching for Single App build"
+      #     git config user.email "github-action@users.noreply.github.com"
+      #     git config user.name "GitHub Actions"
+      #     git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
 
-        # Actual environment variables are not being picked up
-        # by the build so they're put into an .env file.
+      # Actual environment variables are not being picked up
+      # by the build so they're put into an .env file.
       - name: Create environment settings
         working-directory: app
         env:
@@ -410,6 +411,20 @@ jobs:
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
 
+      - name: Monitor system resources (before build)
+        run: |
+          echo "=== Available Memory ==="
+          free -h
+          echo ""
+          echo "=== Disk Usage ==="
+          df -h
+          echo ""
+          echo "=== CPU Info ==="
+          nproc
+          echo ""
+          echo "=== Java Version ==="
+          java -version
+
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access
         # to org and repo secrets.
@@ -427,14 +442,37 @@ jobs:
       - name: Android release build
         if: github.event.pull_request.head.repo.fork != true
         working-directory: app/android
+        timeout-minutes: 120
         env:
           PLAY_STORE_JKS_ALIAS: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_ALIAS || secrets.PLAY_STORE_JKS_ALIAS_SADEV }}
           PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
+          GRADLE_OPTS: "-Xmx4096m -Dorg.gradle.jvmargs='-Xmx4096m' -Dorg.gradle.daemon.idletimeout=60000"
         run: |
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
-          ./gradlew bundleRelease assembleRelease --no-daemon --no-parallel
+          ./gradlew bundleRelease assembleRelease --no-daemon --no-parallel --stacktrace --info 2>&1 | tee build.log
+
+      - name: Monitor system resources (after build)
+        if: always()
+        run: |
+          echo "=== Available Memory ==="
+          free -h
+          echo ""
+          echo "=== Disk Usage ==="
+          df -h
+          echo ""
+          echo "=== Java Process Memory ==="
+          ps aux | grep java || echo "No Java processes found"
+
+      - name: Save build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.build_type }}
+          path: app/android/build.log
+          if-no-files-found: warn
+          retention-days: 7
 
       - name: List Artifacts
         run: |
