@@ -1,25 +1,172 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
-import { BCSCMainStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { REPORT_SUSPICIOUS_URL } from '@/constants'
+import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { BCState, Mode } from '@/store'
-import {
-  Button,
-  ButtonType,
-  Link,
-  ScreenWrapper,
-  testIdWithKey,
-  ThemedText,
-  TOKENS,
-  useServices,
-  useStore,
-  useTheme,
-} from '@bifold/core'
+import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Linking, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { useDeepLinkViewModel } from '../deep-linking'
+
 import Icon from 'react-native-vector-icons/MaterialIcons'
+import { LocalState, useServiceLoginState } from './hooks/useServiceLoginState'
 
 type ServiceLoginScreenProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ServiceLogin>
+
+const RenderState = {
+  Loading: 'Loading',
+  Unavailable: 'Unavailable',
+  Default: 'Default',
+} as const
+
+const ServiceLoginLoadingView = () => (
+  <SafeAreaView edges={['bottom']} style={{ flex: 1, justifyContent: 'center' }}>
+    <ActivityIndicator size="large" />
+  </SafeAreaView>
+)
+
+type ServiceLoginUnavailableViewProps = {
+  state: LocalState
+  styles: ReturnType<typeof StyleSheet.create>
+  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
+  t: (key: string) => string
+  logger: any
+}
+
+const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }: ServiceLoginUnavailableViewProps) => (
+  <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+    <ScrollView contentContainerStyle={styles.screenContainer}>
+      <View style={styles.contentContainer}>
+        <ThemedText variant={'headingThree'}>{state.serviceTitle}</ThemedText>
+        <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginInstructions')}</ThemedText>
+        <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginProof')}</ThemedText>
+
+        <TouchableOpacity
+          onPress={async () => {
+            if (!state.serviceClientUri) {
+              logger.error('ServiceLoginScreen: No service client URI available for navigation')
+              return
+            }
+
+            try {
+              await Linking.openURL(state.serviceClientUri)
+            } catch (error) {
+              logger.error('ServiceLoginScreen: Failed to open service client URL', error as Error)
+              Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
+            }
+          }}
+        >
+          <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
+            <ThemedText style={styles.infoHeader} ellipsizeMode="tail">
+              {t('BCSC.Services.Goto')} {state.serviceTitle}
+            </ThemedText>
+            <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
+          </View>
+        </TouchableOpacity>
+
+        <ThemedText variant={'bold'}>
+          {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
+        </ThemedText>
+      </View>
+    </ScrollView>
+  </SafeAreaView>
+)
+
+type ServiceLoginDefaultViewProps = {
+  state: LocalState
+  styles: ReturnType<typeof StyleSheet.create>
+  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
+  Spacing: ReturnType<typeof useTheme>['Spacing']
+  t: (key: string) => string
+  logger: any
+  navigation: ServiceLoginScreenProps['navigation']
+  onContinue: () => Promise<void>
+  onCancel: () => void
+}
+
+const ServiceLoginDefaultView = ({
+  state,
+  styles,
+  ColorPalette,
+  Spacing,
+  t,
+  logger,
+  navigation,
+  onContinue,
+  onCancel,
+}: ServiceLoginDefaultViewProps) => (
+  <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+    <ScrollView contentContainerStyle={styles.screenContainer}>
+      <View style={styles.contentContainer}>
+        <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
+          {`${t('BCSC.Services.WantToLogin')}\n`}
+          <ThemedText variant={'headingThree'}>{state.serviceTitle}?</ThemedText>
+        </ThemedText>
+
+        <ThemedText style={styles.descriptionText}>{t('BCSC.Services.RequestedInformation')}</ThemedText>
+
+        <View style={styles.cardsContainer}>
+          <View style={styles.infoContainer}>
+            <ThemedText style={[styles.infoHeader, { marginBottom: Spacing.sm }]}>
+              {t('BCSC.Services.FromAccountPrefix')}
+              <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
+                {' '}
+                {t('BCSC.Services.FromAccount')}
+              </ThemedText>
+            </ThemedText>
+            <ThemedText>{state.claimsDescription}</ThemedText>
+          </View>
+
+          {state.privacyPolicyUri ? (
+            <TouchableOpacity
+              onPress={() => {
+                try {
+                  navigation.navigate(BCSCScreens.MainWebView, {
+                    url: state.privacyPolicyUri!,
+                    title: t('BCSC.Services.PrivacyPolicy'),
+                  })
+                } catch (error) {
+                  logger.error(
+                    `ServiceLoginScreen: Error navigating to the service client privacy policy webview: ${error}`
+                  )
+                }
+              }}
+            >
+              <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
+                <ThemedText style={styles.infoHeader}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
+                <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
+              </View>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
+        <ThemedText variant={'bold'}>
+          {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
+        </ThemedText>
+      </View>
+      <View style={styles.buttonsContainer}>
+        <View style={styles.continueButtonContainer}>
+          <Button
+            title="Continue"
+            accessibilityLabel={'Continue'}
+            testID={testIdWithKey('ServiceLoginContinue')}
+            buttonType={ButtonType.Primary}
+            onPress={onContinue}
+          />
+        </View>
+        <Button
+          title="Cancel"
+          accessibilityLabel={'Cancel'}
+          testID={testIdWithKey('ServiceLoginCancel')}
+          buttonType={ButtonType.Tertiary}
+          onPress={onCancel}
+        />
+      </View>
+    </ScrollView>
+  </SafeAreaView>
+)
 
 /**
  * Renders the service details screen component, which displays information about a specific serviceClient.
@@ -30,19 +177,29 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   navigation,
   route,
 }: ServiceLoginScreenProps) => {
-  const { serviceClient } = route.params
+  const { serviceClientId, serviceTitle, pairingCode } = route.params ?? {}
+  // const serviceClientId = serviceClient?.client_ref_id
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
-  const getQuickLoginURL = useQuickLoginURL()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
-
+  const viewModel = useDeepLinkViewModel()
   const isBCSCMode = store.mode === Mode.BCSC // isDarkMode? or isBCSCMode?
-  const privacyPolicyUri = serviceClient.policy_uri
+  const { pairing, metadata } = useApi()
+  const getQuickLoginURL = useQuickLoginURL()
+  const { state, isLoading, serviceHydrated } = useServiceLoginState({
+    serviceClientId,
+    serviceTitle,
+    pairingCode,
+    metadata,
+    logger,
+  })
 
   const styles = StyleSheet.create({
     screenContainer: {
       flexGrow: 1,
+      padding: Spacing.md,
+      justifyContent: 'space-between',
     },
     cardsContainer: {
       gap: Spacing.md,
@@ -89,131 +246,105 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
     },
   })
 
-  // render an alternative screen if the serviceClient does not support OIDC login
-  if (!serviceClient.initiate_login_uri) {
-    return (
-      <ScreenWrapper edges={['bottom']} scrollViewContainerStyle={styles.screenContainer}>
-        <View style={styles.contentContainer}>
-          <ThemedText variant={'headingThree'}>{serviceClient.client_name}</ThemedText>
-          <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginInstructions')}</ThemedText>
-          <ThemedText style={styles.descriptionText}>{t('BCSC.Services.NoLoginProof')}</ThemedText>
+  const onContinueWithPairingCode = useCallback(async () => {
+    const code = state.pairingCode
+    if (!code) {
+      logger.error('ServiceLoginScreen: No pairing code found in state')
+      return
+    }
 
-          <TouchableOpacity
-            onPress={() => {
-              Linking.openURL(serviceClient.client_uri)
-            }}
-          >
-            <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-              <ThemedText style={styles.infoHeader} ellipsizeMode="tail">
-                {t('BCSC.Services.Goto')} {serviceClient.client_name}
-              </ThemedText>
-              <Icon style={styles.infoIcon} name="open-in-new" size={30} color={ColorPalette.brand.primary} />
-            </View>
-          </TouchableOpacity>
+    try {
+      await pairing.loginByPairingCode(code)
+    } catch (error) {
+      logger.error('ServiceLoginScreen: Error logging in by pairing code', error as Error)
+      Alert.alert(t('BCSC.Services.LoginErrorTitle'), (error as Error).message)
+    }
+  }, [state.pairingCode, pairing, logger, t])
 
-          {/* TODO (MD): Find out what action should happen when user reports suspicious activity */}
-          <ThemedText variant={'bold'}>
-            {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
-            <Link
-              linkText={t('BCSC.Services.ReportSuspicious')}
-              testID={testIdWithKey('ReportSuspiciousLink')}
-              onPress={() => {
-                navigation.navigate(BCSCScreens.MainWebView, {
-                  title: t('BCSC.Screens.HelpCentre'),
-                  url: REPORT_SUSPICIOUS_URL,
-                })
-              }}
-            />
-          </ThemedText>
-        </View>
-      </ScreenWrapper>
-    )
-  }
+  const onContinueWithQuickLoginUrl = useCallback(async () => {
+    if (!state.service) {
+      logger.error('ServiceLoginScreen: No service context available for quick login')
+      Alert.alert(t('BCSC.Services.LoginErrorTitle'), t('BCSC.Services.LoginErrorMessage'))
+      return
+    }
 
-  return (
-    <ScreenWrapper edges={['bottom']} scrollViewContainerStyle={styles.screenContainer}>
-      <View style={styles.contentContainer}>
-        <ThemedText variant={'headingThree'} style={{ fontWeight: 'normal' }}>
-          {`${t('BCSC.Services.WantToLogin')}\n`}
-          <ThemedText variant={'headingThree'}>{serviceClient.client_name}?</ThemedText>
-        </ThemedText>
+    const result = await getQuickLoginURL(state.service)
 
-        <ThemedText style={styles.descriptionText}>{t('BCSC.Services.RequestedInformation')}</ThemedText>
+    if (result.success) {
+      try {
+        await Linking.openURL(result.url)
+        return
+      } catch (error) {
+        logger.error('ServiceLoginScreen: Failed to open quick login URL', error as Error)
+        Alert.alert(t('BCSC.Services.OpenUrlErrorTitle'), t('BCSC.Services.OpenUrlErrorMessage'))
+        return
+      }
+    }
 
-        <View style={styles.cardsContainer}>
-          <View style={styles.infoContainer}>
-            <ThemedText style={[styles.infoHeader, { marginBottom: Spacing.sm }]}>
-              {t('BCSC.Services.FromAccountPrefix')}
-              <ThemedText variant={'bold'} style={{ color: ColorPalette.brand.primary }}>
-                {' '}
-                {t('BCSC.Services.FromAccount')}
-              </ThemedText>
-            </ThemedText>
-            <ThemedText>{serviceClient.claims_description}</ThemedText>
-          </View>
+    Alert.alert(t('BCSC.Services.LoginErrorTitle'), result.error)
+  }, [getQuickLoginURL, logger, state.service, t])
 
-          {privacyPolicyUri ? (
-            <TouchableOpacity
-              onPress={() => {
-                try {
-                  navigation.navigate(BCSCScreens.MainWebView, {
-                    url: privacyPolicyUri,
-                    title: t('BCSC.Services.PrivacyPolicy'),
-                  })
-                } catch (error) {
-                  logger.error(`Error navigating to the service client privacy policy webview: ${error}`)
-                }
-              }}
-            >
-              <View style={[styles.infoContainer, styles.privacyNoticeContainer]}>
-                <ThemedText style={styles.infoHeader}>{t('BCSC.Services.PrivacyNotice')}</ThemedText>
-                <Icon name="open-in-new" size={30} color={ColorPalette.brand.primary} />
-              </View>
-            </TouchableOpacity>
-          ) : null}
-        </View>
+  const onContinue = useCallback(async () => {
+    if (state.pairingCode) {
+      await onContinueWithPairingCode()
+    } else if (state.authenticationUrl) {
+      await onContinueWithQuickLoginUrl()
+    } else {
+      logger.error('ServiceLoginScreen: No authentication method available')
+      Alert.alert(t('BCSC.Services.LoginErrorTitle'), t('BCSC.Services.LoginErrorMessage'))
+    }
+  }, [logger, onContinueWithPairingCode, onContinueWithQuickLoginUrl, state.authenticationUrl, state.pairingCode, t])
 
-        <ThemedText variant={'bold'}>
-          {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
-          <Link
-            linkText={t('BCSC.Services.ReportSuspicious')}
-            testID={testIdWithKey('ReportSuspiciousLink')}
-            onPress={() => {
-              navigation.navigate(BCSCScreens.MainWebView, {
-                title: t('BCSC.Screens.HelpCentre'),
-                url: REPORT_SUSPICIOUS_URL,
-              })
-            }}
-          />
-        </ThemedText>
-      </View>
-      <View style={styles.buttonsContainer}>
-        <View style={styles.continueButtonContainer}>
-          <Button
-            title="Continue"
-            accessibilityLabel={'Continue'}
-            testID={testIdWithKey('ServiceLoginContinue')}
-            buttonType={ButtonType.Primary}
-            onPress={async () => {
-              const generateQuickLogin = await getQuickLoginURL(serviceClient)
+  const onCancel = useCallback(() => {
+    // For deep-link cold start, clear the pending deep link so RootStack switches stacks
+    if (viewModel.hasPendingDeepLink) {
+      viewModel.consumePendingDeepLink()
+      return
+    }
 
-              if (generateQuickLogin.success) {
-                Linking.openURL(generateQuickLogin.url)
-                return
-              }
+    // If the app already has history, go back
+    if (navigation.canGoBack()) {
+      navigation.goBack()
+      return
+    }
 
-              Alert.alert(t('BCSC.Services.LoginErrorTitle'), generateQuickLogin.error)
-            }}
-          />
-        </View>
-        <Button
-          title="Cancel"
-          accessibilityLabel={'Cancel'}
-          testID={testIdWithKey('ServiceLoginCancel')}
-          buttonType={ButtonType.Tertiary}
-          onPress={() => navigation.goBack()}
+    // No pending deep link and no back stack (e.g., deep link navigated directly onto main stack)
+    navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+    logger.info('ServiceLoginScreen: Cancel pressed without history, redirecting to Home tab')
+  }, [logger, navigation, viewModel])
+
+  const renderState = (() => {
+    if (isLoading || !serviceHydrated) {
+      return RenderState.Loading
+    }
+
+    if (!state.serviceInitiateLoginUri && !state.pairingCode) {
+      return RenderState.Unavailable
+    }
+
+    return RenderState.Default
+  })()
+
+  switch (renderState) {
+    case RenderState.Loading:
+      return <ServiceLoginLoadingView />
+    case RenderState.Unavailable:
+      return (
+        <ServiceLoginUnavailableView state={state} styles={styles} ColorPalette={ColorPalette} t={t} logger={logger} />
+      )
+    default:
+      return (
+        <ServiceLoginDefaultView
+          state={state}
+          styles={styles}
+          ColorPalette={ColorPalette}
+          Spacing={Spacing}
+          t={t}
+          logger={logger}
+          navigation={navigation}
+          onContinue={onContinue}
+          onCancel={onCancel}
         />
-      </View>
-    </ScreenWrapper>
-  )
+      )
+  }
 }

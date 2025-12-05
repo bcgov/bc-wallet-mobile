@@ -1,6 +1,5 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
-import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
@@ -109,6 +108,12 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
+  // TODO(JL): needed?
+  [BCSCScreens.ServiceLogin]: {
+    serviceClientId?: string
+    serviceTitle?: string
+    pairingCode?: string
+  }
   [BCSCScreens.OnboardingOptInAnalytics]: undefined
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
@@ -188,7 +193,11 @@ export type BCSCMainStackParams = {
   [BCSCScreens.TransferAccountQRDisplay]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined
   [BCSCScreens.TransferAccountQRInformation]: undefined
-  [BCSCScreens.ServiceLogin]: { serviceClient: ClientMetadata }
+  [BCSCScreens.ServiceLogin]: {
+    serviceClientId?: string
+    serviceTitle?: string
+    pairingCode?: string
+  }
   [BCSCScreens.MainSettings]: undefined
   [BCSCScreens.MainPrivacyPolicy]: undefined
   [BCSCScreens.MainContactUs]: undefined

@@ -1,7 +1,8 @@
 import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants'
-import { testIdWithKey, useDefaultStackOptions, useTheme, useTour } from '@bifold/core'
-import { createStackNavigator } from '@react-navigation/stack'
-import { useMemo } from 'react'
+import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme, useTour } from '@bifold/core'
+import { useNavigation } from '@react-navigation/native'
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
+import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
@@ -18,6 +19,7 @@ import { AccountRenewalFirstWarningScreen } from '../features/account/AccountRen
 import { AccountRenewalInformationScreen } from '../features/account/AccountRenewalInformationScreen'
 import EditNicknameScreen from '../features/account/EditNicknameScreen'
 import RemoveAccountConfirmationScreen from '../features/account/RemoveAccountConfirmationScreen'
+import { useDeepLinkViewModel } from '../features/deep-linking'
 import { DeviceInvalidated } from '../features/modal/DeviceInvalidated'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
@@ -42,12 +44,54 @@ const MainStack: React.FC = () => {
   const Stack = createStackNavigator<BCSCMainStackParams>()
   const hideElements = useMemo(() => (currentStep === undefined ? 'auto' : 'no-hide-descendants'), [currentStep])
   const defaultStackOptions = useDefaultStackOptions(theme)
+  const deepLinkViewModel = useDeepLinkViewModel()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
+  // Consume any cold-start deep link once and use it to seed the initial route
+  const pendingDeepLink = useMemo(() => deepLinkViewModel.consumePendingDeepLink(), [deepLinkViewModel])
+  const deepLinkInitialParams = useMemo(() => {
+    if (!pendingDeepLink) {
+      return undefined
+    }
+
+    const { serviceTitle, pairingCode } = pendingDeepLink
+
+    if (!serviceTitle || !pairingCode) {
+      logger?.error(
+        `[MainStack] Pending deep link missing fields: serviceTitle=${serviceTitle ?? 'missing'}, pairingCode=${
+          pairingCode ?? 'missing'
+        }`
+      )
+      return undefined
+    }
+
+    return {
+      serviceTitle,
+      pairingCode,
+    }
+  }, [logger, pendingDeepLink])
+  const initialRouteName = deepLinkInitialParams ? BCSCScreens.ServiceLogin : BCSCScreens.MainLoading
   useSystemChecks(SystemCheckScope.MAIN_STACK)
+
+  useEffect(() => {
+    const unsubscribe = deepLinkViewModel.onNavigationRequest(({ screen, params }) => {
+      if (screen === BCSCScreens.ServiceLogin) {
+        navigation.navigate(BCSCScreens.ServiceLogin, params as BCSCMainStackParams[BCSCScreens.ServiceLogin])
+        return
+      }
+
+      if (screen === BCSCStacks.Tab) {
+        navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })
+      }
+    })
+
+    return unsubscribe
+  }, [deepLinkViewModel, navigation])
 
   return (
     <View style={{ flex: 1 }} importantForAccessibility={hideElements}>
       <Stack.Navigator
-        initialRouteName={BCSCScreens.MainLoading}
+        initialRouteName={initialRouteName}
         screenOptions={{
           ...defaultStackOptions,
           headerShown: false,
@@ -145,6 +189,7 @@ const MainStack: React.FC = () => {
         <Stack.Screen
           name={BCSCScreens.ServiceLogin}
           component={ServiceLoginScreen}
+          initialParams={deepLinkInitialParams}
           options={() => ({
             headerShown: true,
           })}
