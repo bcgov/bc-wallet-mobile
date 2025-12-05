@@ -432,28 +432,16 @@ jobs:
 
           # Memory optimizations for CI
           org.gradle.jvmargs=-Xmx6144m -XX:MaxMetaspaceSize=1024m -XX:+HeapDumpOnOutOfMemoryError -XX:+UseParallelGC
-
-          # Disable parallel builds to reduce memory contention
           org.gradle.parallel=false
-
-          # Disable on-demand configuration
           org.gradle.configureondemand=false
-
-          # Disable daemon to avoid long-running processes
           org.gradle.daemon=false
-
-          # Disable caching to avoid stale artifacts in CI
           org.gradle.caching=false
 
           # Kotlin compiler memory
-          # Allocate 3GB for Kotlin daemon compilation
           kotlin.daemon.jvmargs=-Xmx3072m
 
           # Android build optimizations
-          # Disable full R8 mode to reduce memory usage during compilation
           android.enableR8.fullMode=false
-
-          # Enable D8 desugaring (default behavior)
           android.enableD8.desugaring=true
           EOF
 
@@ -473,7 +461,7 @@ jobs:
           _JAVA_OPTIONS: "-Xmx6144m"
         run: |
           ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
-          ./gradlew bundleRelease assembleRelease
+          ./gradlew bundleRelease assembleRelease --no-daemon --no-parallel
 
       - name: List Artifacts
         run: |
