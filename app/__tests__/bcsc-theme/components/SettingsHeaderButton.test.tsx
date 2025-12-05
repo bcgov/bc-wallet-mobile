@@ -6,6 +6,7 @@ import { BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { testIdWithKey } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { fireEvent, render } from '@testing-library/react-native'
+import { BasicAppContext } from '../../../__mocks__/helpers/app'
 
 describe('MainSettingsHeaderButton', () => {
   beforeEach(() => {
@@ -15,7 +16,11 @@ describe('MainSettingsHeaderButton', () => {
   it('renders the main settings menu button', () => {
     const MainSettingsHeaderButton = createMainSettingsHeaderButton()
 
-    const { getByTestId } = render(<MainSettingsHeaderButton />)
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <MainSettingsHeaderButton />
+      </BasicAppContext>
+    )
 
     expect(getByTestId(testIdWithKey('SettingsMenuButton'))).toBeTruthy()
   })
@@ -24,7 +29,11 @@ describe('MainSettingsHeaderButton', () => {
     const MainSettingsHeaderButton = createMainSettingsHeaderButton()
     const navigation = useNavigation()
 
-    const { getByTestId } = render(<MainSettingsHeaderButton />)
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <MainSettingsHeaderButton />
+      </BasicAppContext>
+    )
 
     const button = getByTestId(testIdWithKey('SettingsMenuButton'))
 
@@ -42,7 +51,11 @@ describe('VerifySettingsHeaderButton', () => {
   it('renders the verify settings menu button', () => {
     const VerifySettingsHeaderButton = createVerifySettingsHeaderButton()
 
-    const { getByTestId } = render(<VerifySettingsHeaderButton />)
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <VerifySettingsHeaderButton />
+      </BasicAppContext>
+    )
 
     expect(getByTestId(testIdWithKey('SettingsMenuButton'))).toBeTruthy()
   })
@@ -51,7 +64,11 @@ describe('VerifySettingsHeaderButton', () => {
     const VerifySettingsHeaderButton = createVerifySettingsHeaderButton()
     const navigation = useNavigation()
 
-    const { getByTestId } = render(<VerifySettingsHeaderButton />)
+    const { getByTestId } = render(
+      <BasicAppContext>
+        <VerifySettingsHeaderButton />
+      </BasicAppContext>
+    )
 
     const button = getByTestId(testIdWithKey('SettingsMenuButton'))
 
