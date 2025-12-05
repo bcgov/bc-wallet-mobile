@@ -8,7 +8,6 @@ import {
   initLanguages,
   initStoredLanguage,
   MainContainer,
-  NavContainer,
   NetworkProvider,
   StoreProvider,
   ThemeProvider,
@@ -27,6 +26,7 @@ import { container } from 'tsyringe'
 
 import Root from '@/Root'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
+import { NavigationContainerProvider } from '@/contexts/NavigationContainerContext'
 import { localization } from '@/localization'
 import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
@@ -50,6 +50,7 @@ const App = () => {
   const { t } = useTranslation()
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
   const [surveyVisible, setSurveyVisible] = useState(false)
+  // TODO (MD): Investigate if we need to inject the Analytics into this navigation call + container.
   const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()
 
   if (!isTablet()) {
@@ -76,7 +77,7 @@ const App = () => {
             themes={themes}
             defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
           >
-            <NavContainer navigationRef={navigationRef}>
+            <NavigationContainerProvider>
               <AnimatedComponentsProvider value={animatedComponents}>
                 <AuthProvider>
                   <NetworkProvider>
@@ -94,7 +95,7 @@ const App = () => {
                   </NetworkProvider>
                 </AuthProvider>
               </AnimatedComponentsProvider>
-            </NavContainer>
+            </NavigationContainerProvider>
           </ThemeProvider>
         </StoreProvider>
       </ContainerProvider>
