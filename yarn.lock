@@ -5799,14 +5799,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@react-native-async-storage/async-storage@npm:~1.22.3":
-  version: 1.22.3
-  resolution: "@react-native-async-storage/async-storage@npm:1.22.3"
+"@react-native-async-storage/async-storage@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@react-native-async-storage/async-storage@npm:2.2.0"
   dependencies:
     merge-options: "npm:^3.0.4"
   peerDependencies:
-    react-native: ^0.0.0-0 || >=0.60 <1.0
-  checksum: 10c0/df52428aa6c6cd943f8bf4ad10b0df94b916e7d77cec8e9d6ccf454300341b986938c627ac76a81462c8be77f039a7e8237d7266338465c31629b30986026b67
+    react-native: ^0.0.0-0 || >=0.65 <1.0
+  checksum: 10c0/84900eba46a40225c4ac9bf5eb58885200dc1e789d873ecda46a2a213870cc7110536ed1fd7a74b873071f3603c093958fbd84c635d6f6d4f94bfbb616ffa0ef
   languageName: node
   linkType: hard
 
@@ -6733,6 +6733,60 @@ __metadata:
   dependencies:
     "@sinonjs/commons": "npm:^3.0.0"
   checksum: 10c0/2e2fb6cc57f227912814085b7b01fede050cd4746ea8d49a1e44d5a0e56a804663b0340ae2f11af7559ea9bf4d087a11f2f646197a660ea3cb04e19efc04aa63
+  languageName: node
+  linkType: hard
+
+"@snowplow/browser-plugin-screen-tracking@npm:4.6.8":
+  version: 4.6.8
+  resolution: "@snowplow/browser-plugin-screen-tracking@npm:4.6.8"
+  dependencies:
+    "@snowplow/browser-tracker-core": "npm:4.6.8"
+    "@snowplow/tracker-core": "npm:4.6.8"
+    tslib: "npm:^2.3.1"
+    uuid: "npm:^10.0.0"
+  peerDependencies:
+    "@snowplow/browser-tracker": ~4.6.8
+  checksum: 10c0/d07d7df33f4277e7e736ea944370b25b2f923a254ca0b38d07f89da2ddf7c0a0d84c8a25e3c8f589959a820279881b0f80e46f2682b816deca10fa713a53f3d0
+  languageName: node
+  linkType: hard
+
+"@snowplow/browser-tracker-core@npm:4.6.8":
+  version: 4.6.8
+  resolution: "@snowplow/browser-tracker-core@npm:4.6.8"
+  dependencies:
+    "@snowplow/tracker-core": "npm:4.6.8"
+    sha1: "npm:^1.1.1"
+    tslib: "npm:^2.3.1"
+    uuid: "npm:^10.0.0"
+  checksum: 10c0/fd3dceca0ccf4b8822f6bb5adffcc7eddc291c4b9577f7d5de7b0682a585b248462406359d4ec842276901910f6fe2f50f7e44cfffb9dc95f64bbca7311ab2fd
+  languageName: node
+  linkType: hard
+
+"@snowplow/react-native-tracker@npm:^4.6.8":
+  version: 4.6.8
+  resolution: "@snowplow/react-native-tracker@npm:4.6.8"
+  dependencies:
+    "@snowplow/browser-plugin-screen-tracking": "npm:4.6.8"
+    "@snowplow/browser-tracker-core": "npm:4.6.8"
+    "@snowplow/tracker-core": "npm:4.6.8"
+    tslib: "npm:^2.3.1"
+    uuid: "npm:^10.0.0"
+  peerDependencies:
+    "@react-native-async-storage/async-storage": ~2.0.0
+    react: "*"
+    react-native: "*"
+    react-native-get-random-values: ^1.11.0
+  checksum: 10c0/658cb6eb41b3b0d6ac69ad85ecf49327b73df12e5a089429b70fd475a218ea80697d7dc2a04c62aecca88fdd37f6ce4d0a81fb6e755bddc4bbe05ddc1ad28d9d
+  languageName: node
+  linkType: hard
+
+"@snowplow/tracker-core@npm:4.6.8":
+  version: 4.6.8
+  resolution: "@snowplow/tracker-core@npm:4.6.8"
+  dependencies:
+    tslib: "npm:^2.3.1"
+    uuid: "npm:^10.0.0"
+  checksum: 10c0/7f5248a37a5fedf4f7b1c25c08ac564c2d956d31ce68ee78de4844ecd39c2e009f4851ad34f4ed1da98f19b17064c709d1da5ce6fa73ec260cc5e6c3d04132ef
   languageName: node
   linkType: hard
 
@@ -10860,7 +10914,7 @@ __metadata:
     "@hyperledger/indy-vdr-react-native": "npm:0.2.2"
     "@hyperledger/indy-vdr-shared": "npm:0.2.2"
     "@pexip/infinity-api": "npm:~19.1.2"
-    "@react-native-async-storage/async-storage": "npm:~1.22.3"
+    "@react-native-async-storage/async-storage": "npm:^2.2.0"
     "@react-native-clipboard/clipboard": "npm:~1.16.3"
     "@react-native-community/netinfo": "npm:~11.3.3"
     "@react-native-firebase/app": "npm:~14.12.0"
@@ -10874,6 +10928,7 @@ __metadata:
     "@react-navigation/devtools": "npm:~6.0.27"
     "@react-navigation/native": "npm:~6.0.16"
     "@react-navigation/stack": "npm:~6.3.29"
+    "@snowplow/react-native-tracker": "npm:^4.6.8"
     "@storybook/addon-actions": "npm:~5.3.21"
     "@storybook/addon-knobs": "npm:~5.3.21"
     "@storybook/addon-links": "npm:~5.3.21"
@@ -10939,7 +10994,7 @@ __metadata:
     react-native-encrypted-storage: "npm:~4.0.3"
     react-native-fs: "npm:~2.20.0"
     react-native-gesture-handler: "npm:~2.18.1"
-    react-native-get-random-values: "npm:~1.8.0"
+    react-native-get-random-values: "npm:^2.0.0"
     react-native-gifted-chat: "npm:*"
     react-native-inappbrowser-reborn: "npm:~3.7.0"
     react-native-incall-manager: "npm:~4.2.1"
@@ -11822,7 +11877,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"charenc@npm:0.0.2":
+"charenc@npm:0.0.2, charenc@npm:>= 0.0.1":
   version: 0.0.2
   resolution: "charenc@npm:0.0.2"
   checksum: 10c0/a45ec39363a16799d0f9365c8dd0c78e711415113c6f14787a22462ef451f5013efae8a28f1c058f81fc01f2a6a16955f7a5fd0cd56247ce94a45349c89877d8
@@ -13113,7 +13168,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"crypt@npm:0.0.2":
+"crypt@npm:0.0.2, crypt@npm:>= 0.0.1":
   version: 0.0.2
   resolution: "crypt@npm:0.0.2"
   checksum: 10c0/adbf263441dd801665d5425f044647533f39f4612544071b1471962209d235042fb703c27eea2795c7c53e1dfc242405173003f83cf4f4761a633d11f9653f18
@@ -24732,14 +24787,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-get-random-values@npm:~1.8.0":
-  version: 1.8.0
-  resolution: "react-native-get-random-values@npm:1.8.0"
+"react-native-get-random-values@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "react-native-get-random-values@npm:2.0.0"
   dependencies:
     fast-base64-decode: "npm:^1.0.0"
   peerDependencies:
-    react-native: ">=0.56"
-  checksum: 10c0/1a220a1f27afc163db78147d7cb097dfa9b2eab9976465bf1a2f6f10429d773204651b14e03eee7950eb8295596f67fc286f68c3b2fd259d7128f540024f20de
+    react-native: ">=0.81"
+  checksum: 10c0/fd2e10ab3bca54bff8f5844e3314b797e02822e86663bc2dafe00a511b8a8e1c05d96aa0b8dc1ffad428387d44bbf458ce770a429858433d36f58a16e6e52986
   languageName: node
   linkType: hard
 
@@ -26634,6 +26689,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sha1@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "sha1@npm:1.1.1"
+  dependencies:
+    charenc: "npm:>= 0.0.1"
+    crypt: "npm:>= 0.0.1"
+  checksum: 10c0/1bb36c89c112c741c265cca66712f883ae01d5c55b71aec80635fe2ad5d0c976a1a8a994dda774ae9f93b2da99fd111238758a8bf985adc400bd86f0e4452865
+  languageName: node
+  linkType: hard
+
 "sha3@npm:~2.1.0":
   version: 2.1.4
   resolution: "sha3@npm:2.1.4"
@@ -28295,7 +28360,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.6.3":
+"tslib@npm:^2.3.1, tslib@npm:^2.6.3":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
@@ -29283,6 +29348,15 @@ __metadata:
   bin:
     uuid: ./bin/uuid
   checksum: 10c0/1c13950df865c4f506ebfe0a24023571fa80edf2e62364297a537c80af09c618299797bbf2dbac6b1f8ae5ad182ba474b89db61e0e85839683991f7e08795347
+  languageName: node
+  linkType: hard
+
+"uuid@npm:^10.0.0":
+  version: 10.0.0
+  resolution: "uuid@npm:10.0.0"
+  bin:
+    uuid: dist/bin/uuid
+  checksum: 10c0/eab18c27fe4ab9fb9709a5d5f40119b45f2ec8314f8d4cf12ce27e4c6f4ffa4a6321dc7db6c515068fa373c075b49691ba969f0010bf37f44c37ca40cd6bf7fe
   languageName: node
   linkType: hard
 
