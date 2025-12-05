@@ -155,7 +155,7 @@ export class DeepLinkService {
       const expectedSegmentCount = deviceIndex !== -1 ? deviceIndex + 3 : 3
 
       if (deviceIndex !== -1 && segments.length >= expectedSegmentCount) {
-        const serviceTitle = decodeURIComponent(segments[deviceIndex + 1].replace(/\+/g, ' '))
+        const serviceTitle = decodeURIComponent(segments[deviceIndex + 1].replaceAll('+', ' '))
         const pairingCode = segments[deviceIndex + 2]
 
         return {

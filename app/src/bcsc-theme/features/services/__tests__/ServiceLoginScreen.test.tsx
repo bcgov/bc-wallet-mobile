@@ -98,12 +98,33 @@ describe('ServiceLoginScreen snapshots', () => {
     expect(tree).toMatchSnapshot()
   })
 
-  it('renders default state for quick login', () => {
+  it('renders default state for quick login, with privacy policy', () => {
     mockUseServiceLoginState.mockReturnValue({
       state: {
         serviceTitle: 'BC Parks',
         claimsDescription: 'Name, Email',
         privacyPolicyUri: 'https://example.com/privacy',
+        serviceInitiateLoginUri: 'https://example.com/login',
+      },
+      isLoading: false,
+      serviceHydrated: true,
+    })
+
+    const navigation = useNavigation()
+    const tree = render(
+      <BasicAppContext>
+        <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
+      </BasicAppContext>
+    )
+
+    expect(tree).toMatchSnapshot()
+  })
+
+  it('renders default state for quick login, without privacy policy', () => {
+    mockUseServiceLoginState.mockReturnValue({
+      state: {
+        serviceTitle: 'BC Parks',
+        claimsDescription: 'Name, Email',
         serviceInitiateLoginUri: 'https://example.com/login',
       },
       isLoading: false,

@@ -15,6 +15,26 @@ import { LocalState, useServiceLoginState } from './hooks/useServiceLoginState'
 
 type ServiceLoginScreenProps = StackScreenProps<BCSCMainStackParams, BCSCScreens.ServiceLogin>
 
+type ServiceLoginDefaultViewProps = {
+  state: LocalState
+  styles: ReturnType<typeof StyleSheet.create>
+  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
+  Spacing: ReturnType<typeof useTheme>['Spacing']
+  t: (key: string) => string
+  logger: any
+  navigation: ServiceLoginScreenProps['navigation']
+  onContinue: () => Promise<void>
+  onCancel: () => void
+}
+
+type ServiceLoginUnavailableViewProps = {
+  state: LocalState
+  styles: ReturnType<typeof StyleSheet.create>
+  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
+  t: (key: string) => string
+  logger: any
+}
+
 const RenderState = {
   Loading: 'Loading',
   Unavailable: 'Unavailable',
@@ -26,14 +46,6 @@ const ServiceLoginLoadingView = () => (
     <ActivityIndicator size="large" />
   </SafeAreaView>
 )
-
-type ServiceLoginUnavailableViewProps = {
-  state: LocalState
-  styles: ReturnType<typeof StyleSheet.create>
-  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
-  t: (key: string) => string
-  logger: any
-}
 
 const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }: ServiceLoginUnavailableViewProps) => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
@@ -73,18 +85,6 @@ const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }:
     </ScrollView>
   </SafeAreaView>
 )
-
-type ServiceLoginDefaultViewProps = {
-  state: LocalState
-  styles: ReturnType<typeof StyleSheet.create>
-  ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
-  Spacing: ReturnType<typeof useTheme>['Spacing']
-  t: (key: string) => string
-  logger: any
-  navigation: ServiceLoginScreenProps['navigation']
-  onContinue: () => Promise<void>
-  onCancel: () => void
-}
 
 const ServiceLoginDefaultView = ({
   state,

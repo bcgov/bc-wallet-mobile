@@ -121,10 +121,19 @@ export class DeepLinkViewModel {
       const manualPath = decodedPath.replace(/^https?:\/\//, '')
       const segments = manualPath.split('/').filter(Boolean)
       const deviceIndex = segments.indexOf('device')
+      const deviceRouteSegmentCount = 3
+      const serviceTitleOffset = 1
+      const pairingCodeOffset = 2
 
-      if (deviceIndex !== -1 && segments.length >= deviceIndex + 3) {
-        const serviceTitle = decodeURIComponent(segments[deviceIndex + 1].replace(/\+/g, ' '))
-        const pairingCode = segments[deviceIndex + 2]
+      if (deviceIndex === -1) {
+        return {}
+      }
+
+      const requiredSegments = deviceIndex + deviceRouteSegmentCount
+
+      if (segments.length >= requiredSegments) {
+        const serviceTitle = decodeURIComponent(segments[deviceIndex + serviceTitleOffset].replaceAll('+', ' '))
+        const pairingCode = segments[deviceIndex + pairingCodeOffset]
 
         return { serviceTitle, pairingCode }
       }
