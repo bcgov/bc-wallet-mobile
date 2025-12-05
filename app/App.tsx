@@ -27,7 +27,10 @@ import { container } from 'tsyringe'
 
 import Root from '@/Root'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
+import { DeepLinkViewModelProvider } from '@/contexts/DeepLinkViewModelContext'
 import { localization } from '@/localization'
+import { DeepLinkViewModel } from '@/services/DeepLinkViewModel'
+import { DeepLinkService } from '@/services/deep-linking'
 import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
 import BCLogger from '@/utils/logger'
@@ -52,6 +55,11 @@ const App = () => {
   const [surveyVisible, setSurveyVisible] = useState(false)
   const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()
 
+  const deepLinkViewModel = useMemo(() => {
+    const service = new DeepLinkService()
+    return new DeepLinkViewModel(service, BCLogger)
+  }, [])
+
   if (!isTablet()) {
     Orientation.lockToPortrait()
   }
@@ -66,6 +74,10 @@ const App = () => {
     SplashScreen.hide()
   }, [])
 
+  useEffect(() => {
+    deepLinkViewModel.initialize()
+  }, [deepLinkViewModel])
+
   return (
     <ErrorBoundaryWrapper logger={BCLogger}>
       <ContainerProvider value={bcwContainer}>
@@ -75,23 +87,25 @@ const App = () => {
             defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
           >
             <NavContainer navigationRef={navigationRef}>
-              <AnimatedComponentsProvider value={animatedComponents}>
-                <AuthProvider>
-                  <NetworkProvider>
-                    <ErrorModal enableReport />
-                    <WebDisplay
-                      destinationUrl={surveyMonkeyUrl}
-                      exitUrl={surveyMonkeyExitUrl}
-                      visible={surveyVisible}
-                      onClose={() => setSurveyVisible(false)}
-                    />
-                    <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                      <Root />
-                    </TourProvider>
-                    <Toast topOffset={15} config={toastConfig} />
-                  </NetworkProvider>
-                </AuthProvider>
-              </AnimatedComponentsProvider>
+              <DeepLinkViewModelProvider viewModel={deepLinkViewModel}>
+                <AnimatedComponentsProvider value={animatedComponents}>
+                  <AuthProvider>
+                    <NetworkProvider>
+                      <ErrorModal enableReport />
+                      <WebDisplay
+                        destinationUrl={surveyMonkeyUrl}
+                        exitUrl={surveyMonkeyExitUrl}
+                        visible={surveyVisible}
+                        onClose={() => setSurveyVisible(false)}
+                      />
+                      <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                        <Root />
+                      </TourProvider>
+                      <Toast topOffset={15} config={toastConfig} />
+                    </NetworkProvider>
+                  </AuthProvider>
+                </AnimatedComponentsProvider>
+              </DeepLinkViewModelProvider>
             </NavContainer>
           </ThemeProvider>
         </StoreProvider>
