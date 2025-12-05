@@ -69,54 +69,48 @@ export class DeepLinkViewModel {
   }
 
   private handleDeepLink(payload: DeepLinkPayload) {
-    const { host, path } = payload
+    const { host, path, serviceTitle: parsedServiceTitle, pairingCode: parsedPairingCode } = payload
     this.logger.info(`[DeepLinkViewModel] Received: ${path} ${JSON.stringify(payload)}`)
 
     // --- BUSINESS LOGIC ---
 
     // Handle Pairing: ca.bc.gov.iddev.servicescard://pair/<encoded-url>
-    if (host === 'pair' && path) {
-      try {
-        // 1. Remove leading slash if present (e.g. /https%3A...)
-        const rawPath = path.startsWith('/') ? path.slice(1) : path
+    if (host === 'pair') {
+      let serviceTitle = parsedServiceTitle
+      let pairingCode = parsedPairingCode
 
-        // 2. Decode the full URL (e.g. https://idsit.gov.bc.ca/device/BC+Parks+Discover+Camping/MDLAHC)
-        const decodedUrl = decodeURIComponent(rawPath)
+      if ((!serviceTitle || !pairingCode) && path) {
+        try {
+          const rawPath = path.startsWith('/') ? path.slice(1) : path
+          const decodedUrl = decodeURIComponent(rawPath)
+          const urlObj = new URL(decodedUrl)
+          const segments = urlObj.pathname.split('/').filter(Boolean)
 
-        // 3. Parse the decoded URL to extract segments
-        // We can use the URL class again since it's a valid http(s) URL now
-        const urlObj = new URL(decodedUrl)
-        const segments = urlObj.pathname.split('/').filter(Boolean)
-
-        // Expected format: /device/<serviceTitle>/<pairingCode>
-        // segments[0] = 'device'
-        // segments[1] = 'BC+Parks+Discover+Camping' (Service Title)
-        // segments[2] = 'MDLAHC' (Pairing Code)
-
-        if (segments[0] === 'device' && segments.length >= 3) {
-          const serviceTitle = decodeURIComponent(segments[1].replace(/\+/g, ' '))
-          const pairingCode = segments[2]
-
-          this.logger.info(`[DeepLinkViewModel] Pairing: ${serviceTitle} ${pairingCode}`)
-
-          // If we have listeners (app is ready), emit immediately
-          if (this.navigationListeners.size > 0) {
-            this.logger.info(`[DeepLinkViewModel] Emitting navigation to ${BCSCScreens.ServiceLogin}`)
-            this.emitNavigation({
-              screen: BCSCScreens.ServiceLogin,
-              params: { serviceTitle, pairingCode },
-            })
-          } else {
-            // Otherwise buffer it
-            this.logger.info(`[DeepLinkViewModel] Buffering pairing link`)
-            this.pendingDeepLink = payload
-            this.notifyPendingStateChange()
+          if (segments[0] === 'device' && segments.length >= 3) {
+            serviceTitle = decodeURIComponent(segments[1].replace(/\+/g, ' '))
+            pairingCode = segments[2]
           }
-
-          return
+        } catch (e) {
+          this.logger.warn(`[DeepLinkViewModel] Failed to parse pairing URL: ${e}`)
         }
-      } catch (e) {
-        this.logger.warn(`[DeepLinkViewModel] Failed to parse pairing URL: ${e}`)
+      }
+
+      if (serviceTitle && pairingCode) {
+        this.logger.info(`[DeepLinkViewModel] Pairing: ${serviceTitle} ${pairingCode}`)
+
+        if (this.navigationListeners.size > 0) {
+          this.logger.info(`[DeepLinkViewModel] Emitting navigation to ${BCSCScreens.ServiceLogin}`)
+          this.emitNavigation({
+            screen: BCSCScreens.ServiceLogin,
+            params: { serviceTitle, pairingCode },
+          })
+        } else {
+          this.logger.info(`[DeepLinkViewModel] Buffering pairing link`)
+          this.pendingDeepLink = payload
+          this.notifyPendingStateChange()
+        }
+
+        return
       }
     }
 
