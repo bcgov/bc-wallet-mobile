@@ -270,15 +270,18 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return
     }
 
-    console.log('Generating quick login URL for service:', state.service.client_name)
     const result = await getQuickLoginURL(state.service)
-    console.log('Generating quick login URL for service:', result)
 
     if (result.success) {
-      logger.debug(`ServiceLoginScreen: Quick login URL generated ${result.url}`)
+      logger.debug('ServiceLoginScreen: Generated quick login URL successfully, opening URL')
 
       try {
         await Linking.openURL(result.url)
+        navigation.reset({
+          index: 0,
+          routes: [{ name: BCSCStacks.Tab, params: { screen: BCSCScreens.Home } }],
+        })
+
         return
       } catch (error) {
         logger.error('ServiceLoginScreen: Failed to open quick login URL', error as Error)
@@ -289,7 +292,7 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
 
     logger.debug(`ServiceLoginScreen: Error generating quick login URL ${result.error}`)
     Alert.alert(t('BCSC.Services.LoginErrorTitle'), result.error)
-  }, [getQuickLoginURL, logger, state.service, t])
+  }, [getQuickLoginURL, logger, state.service, navigation, t])
 
   const onContinue = useCallback(async () => {
     if (state.pairingCode) {
