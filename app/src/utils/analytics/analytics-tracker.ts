@@ -1,143 +1,137 @@
-import { getTracker, newTracker, PlatformContextRetriever, removeTracker } from '@snowplow/react-native-tracker'
-import { Dimensions, Platform } from 'react-native'
-import {
-  getBatteryLevel,
-  getBuildNumber,
-  getCarrier,
-  getFreeDiskStorage,
-  getManufacturer,
-  getModel,
-  getPowerState,
-  getSystemVersion,
-  getTotalDiskCapacity,
-  getTotalMemory,
-  getUsedMemory,
-  getVersion,
-  isLandscape,
-  isLowBatteryLevel,
-} from 'react-native-device-info'
-import { AnalyticsTracker } from './analytics-tracker.interface'
+import { getTracker, newTracker, ReactNativeTracker, removeTracker, TimingProps } from '@snowplow/react-native-tracker'
+import { getBuildNumber, getBundleId, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
+import { BCError } from '../bc-error'
+import { CreateTrackerOptions, CustomAnalyticsEvent } from './analytics-tracker.interface'
+import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
 
-const ANALYTICS_SINGLEAPP_NAMESPACE = 'singleapp'
+export const ANALYTICS_SINGLEAPP_NAMESPACE = 'SINGLEAPP_CLIENT'
+export const ANALYTICS_SINGLEAPP_ENDPOINT = 'localhost:9090'
 
-export class Analytics {
+/**
+ * AnalyticsTracker class to manage analytics tracking.
+ *
+ * @see self hosted snowplow micro: https://docs.snowplow.io/docs/testing/snowplow-micro/basic-usage/
+ *
+ * @class
+ * @example
+ * const analyticsTracker = new AnalyticsTracker('myNamespace', 'https://endpoint.com')
+ *
+ * await analyticsTracker.initializeTracker({ enableAutomaticTracking: true })
+ *
+ * analyticsTracker.trackErrorEvent(new Error('Test error'))
+ */
+export class AnalyticsTracker {
+  constructor(private namespace: string, private endpoint: string) {}
+
   /**
-   * Returns the analytics tracker instance
+   * Retrieves the tracker instance for the specified namespace.
    *
-   * @throws {Error} If the analytics tracker is not initialized
-   * @returns {*} {AnalyticsTracker} The analytics tracker instance
+   * @returns {*} {ReactNativeTracker} The tracker instance.
    */
-  static get tracker(): AnalyticsTracker {
-    const tracker = getTracker(ANALYTICS_SINGLEAPP_NAMESPACE)
+  private get tracker(): ReactNativeTracker {
+    const tracker = getTracker(this.namespace)
 
     if (!tracker) {
-      throw new Error('Analytics tracker not initialized')
+      throw new Error(`Tracker with namespace '${this.namespace}' does not exist`)
     }
 
-    return {
-      trackErrorEvent: (error: Error) => {
-        tracker.trackSelfDescribingEvent({
-          schema: 'iglu:com.example/error_event/jsonschema/1-0-0 TODO: (MD)',
-          data: {
-            message: error.message,
-            name: error.name,
-            stack: error.stack,
-          },
-        })
-      },
-      trackTimingEvent: tracker.trackTimingEvent,
-      trackStructuredEvent: tracker.trackStructuredEvent,
-      trackScreenViewEvent: tracker.trackScreenViewEvent,
-      trackListItemViewEvent: tracker.trackListItemViewEvent,
-      trackDeepLinkReceivedEvent: tracker.trackDeepLinkReceivedEvent,
-      trackMessageNotificationEvent: tracker.trackMessageNotificationEvent,
-    }
+    return tracker
   }
 
   /**
-   * Configures the analytics tracker
+   * Checks if Analytics has an initialized tracker.
    *
-   * @param {Object} config - Configuration object
-   * @param {boolean} config.enableAnalytics - Whether to enable analytics tracking
+   * @return {*} {boolean}
+   */
+  hasTracker(): boolean {
+    return Boolean(getTracker(this.namespace))
+  }
+
+  /**
+   * Initializes the analytics tracker with the provided options.
+   *
+   * @param {CreateTrackerOptions} options - Options for tracker initialization.
    * @returns {*} {Promise<void>}
    */
-  async configureTracker(config: { enableAnalytics: boolean }): Promise<void> {
-    const existingTracker = getTracker(ANALYTICS_SINGLEAPP_NAMESPACE)
+  async initializeTracker(options: CreateTrackerOptions): Promise<void> {
+    const existingTracker = getTracker(this.namespace)
 
     if (existingTracker) {
-      removeTracker(ANALYTICS_SINGLEAPP_NAMESPACE)
+      removeTracker(this.namespace)
     }
 
     await newTracker({
-      //userId
-      //networkUserId
-      //ipAddress
-      namespace: ANALYTICS_SINGLEAPP_NAMESPACE,
-      endpoint: 'collector.example.com',
-      appId: 'TODO',
+      namespace: this.namespace,
+      endpoint: this.endpoint,
+      appId: getBundleId(),
       appVersion: getVersion(),
       appBuild: getBuildNumber(),
+      userId: getUniqueId(),
+      ipAddress: await getIpAddress(),
       devicePlatform: 'mob',
-      deepLinkContext: config.enableAnalytics,
-      screenContext: config.enableAnalytics,
-      lifecycleAutotracking: config.enableAnalytics,
-      screenEngagementAutotracking: config.enableAnalytics,
+      deepLinkContext: options.enableAutomaticTracking,
+      screenContext: options.enableAutomaticTracking,
+      lifecycleAutotracking: options.enableAutomaticTracking,
+      screenEngagementAutotracking: options.enableAutomaticTracking,
       installAutotracking: true,
       useAsyncStorageForEventStore: true,
       timezone: 'America/Vancouver',
       language: 'en',
-      platformContextRetriever: this.getPlatformContextRetriever(config.enableAnalytics),
+      platformContext: options.enableAutomaticTracking,
+      platformContextProperties: getPlatformContextProperties(options.enableAutomaticTracking),
+      platformContextRetriever: getPlatformContextRetriever(options.enableAutomaticTracking),
     })
   }
 
-  private getPlatformContextRetriever(enableAnalytics: boolean): PlatformContextRetriever | undefined {
-    if (!enableAnalytics) {
-      return
-    }
+  /**
+   * Tracks an error event.
+   *
+   * @param {Error} error - The error to be tracked.
+   * @returns {*} {void}
+   */
+  trackErrorEvent(error: Error): void {
+    const errorContext =
+      error instanceof BCError
+        ? [
+            {
+              schema: 'TODO (MD)',
+              data: {
+                id: error.id,
+                code: error.code,
+                description: error.description,
+                cause: error.cause ?? null,
+              },
+            },
+          ]
+        : undefined
 
-    return {
-      getOsType: async () => Platform.OS,
-      getOsVersion: async () => getSystemVersion(),
-      getDeviceModel: async () => getModel(),
-      getDeviceManufacturer: getManufacturer,
-      getCarrier: getCarrier,
-      // getNetworkType?: () => Promise<'mobile' | 'wifi' | 'offline' | undefined>;
-      // getNetworkTechnology?: () => Promise<string | undefined>;
-      // getAppleIdfa?: () => Promise<string | undefined>;
-      // getAppleIdfv?: () => Promise<string | undefined>;
-      getAvailableStorage: getFreeDiskStorage,
-      getTotalStorage: getTotalDiskCapacity,
-      getPhysicalMemory: getTotalMemory,
-      getAppAvailableMemory: async () => {
-        const [totalMemory, usedMemory] = await Promise.all([getTotalMemory(), getUsedMemory()])
-        return totalMemory - usedMemory
+    this.tracker.trackSelfDescribingEvent(
+      {
+        schema: 'iglu:com.snowplowanalytics.snowplow/application_error/jsonschema/1-0-0',
+        data: {
+          programmingLanguage: 'JAVASCRIPT', // Typescript is not an option
+          message: error.message,
+          stackTrace: error.stack ?? null,
+          exceptionName: error.name,
+        },
       },
-      getBatteryLevel: getBatteryLevel,
-      getBatteryState: async () => {
-        const powerState = await getPowerState()
-        if (powerState.batteryState === 'unknown') {
-          return undefined
-        }
-        return powerState.batteryState
-      },
-      getLowPowerMode: async () => {
-        const batteryLevel = await getBatteryLevel()
-        return isLowBatteryLevel(batteryLevel)
-      },
-      isPortrait: async () => {
-        const landscapeMode = await isLandscape()
-        return !landscapeMode
-      },
-      getResolution: async () => {
-        return `${Dimensions.get('window').width}x${Dimensions.get('window').height}`
-      },
-      // getScale?: () => Promise<number | undefined>;
-      // getLanguage?: () => Promise<string | undefined>;
-      // getAndroidIdfa?: () => Promise<string | undefined>;
-      // getAppSetId?: () => Promise<string | undefined>;
-      // getAppSetIdScope?: () => Promise<string | undefined>;
-    }
+      errorContext
+    )
+  }
+
+  trackCustomEvent(customEvent: CustomAnalyticsEvent): void {
+    return this.tracker.trackStructuredEvent(customEvent)
+  }
+
+  trackTimingEvent(timingEvent: TimingProps): void {
+    return this.tracker.trackTimingEvent(timingEvent)
   }
 }
 
-Analytics.tracker.trackErrorEvent(new Error('Analytics module loaded'))
+// const namespace = await AnalyticsTracker.initializeTracker({
+//   namespace: ANALYTICS_SINGLEAPP_NAMESPACE,
+//   endpoint: 'TODO',
+//   enableAutomaticTracking: true,
+// })
+
+export const Analytics = new AnalyticsTracker(ANALYTICS_SINGLEAPP_NAMESPACE, ANALYTICS_SINGLEAPP_ENDPOINT)

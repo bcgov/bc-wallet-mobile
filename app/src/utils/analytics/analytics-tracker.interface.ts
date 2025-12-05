@@ -1,33 +1,23 @@
-import { ReactNativeTracker } from '@snowplow/react-native-tracker'
-
-export type AnalyticsTracker = Pick<
-  ReactNativeTracker,
-  | 'trackTimingEvent'
-  | 'trackStructuredEvent'
-  | 'trackScreenViewEvent'
-  | 'trackListItemViewEvent'
-  | 'trackDeepLinkReceivedEvent'
-  | 'trackMessageNotificationEvent'
-> & {
-  trackErrorEvent: (error: Error) => void
-}
-
-export interface ConfigureAnalyticsTrackerParams {
-  enableAnalytics: boolean
+export interface CreateTrackerOptions {
+  // namespace: string
+  // endpoint: string
+  enableAutomaticTracking: boolean
 }
 
 // Structured event categories for `trackStructuredEvent`
-export enum AnalyticsEventCategory {
+export enum CustomAnalyticsCategory {
   MEDIA = 'media',
 }
 
-export const AnalyticsStructuredEvent = {
-  CAPTURE_PHOTO: {
-    category: AnalyticsEventCategory.MEDIA,
-    action: 'capture_photo',
-  },
-  RECORD_VIDEO: {
-    category: AnalyticsEventCategory.MEDIA,
-    action: 'record_video',
-  },
-} as const
+export enum CustomAnalyticsAction {
+  CAPTURE_PHOTO = 'capture_photo',
+  RECORD_VIDEO = 'record_video',
+}
+
+export interface CustomAnalyticsEvent {
+  category: CustomAnalyticsCategory
+  action: CustomAnalyticsAction
+  label?: string
+  property?: string
+  value?: number
+}
