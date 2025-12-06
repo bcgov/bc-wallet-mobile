@@ -42,8 +42,11 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
 
           // Track the screen view event only if the route has changed
           if (currentRouteName && previousRouteName !== currentRouteName) {
+            // TODO (MD): add ref to check if this has already been tracked
             Analytics.trackScreenEvent(currentRouteName, previousRouteName)
           }
+
+          routeNameRef.current = currentRouteName
         }}
       >
         {children}

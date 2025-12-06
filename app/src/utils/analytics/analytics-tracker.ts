@@ -1,11 +1,11 @@
 import { getTracker, newTracker, ReactNativeTracker, removeTracker, TimingProps } from '@snowplow/react-native-tracker'
+import Config from 'react-native-config'
 import { getBuildNumber, getBundleId, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
 import { AlertEvent, BCErrorCode } from '../error/bc-error-code'
 import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
 
 export const ANALYTICS_SINGLEAPP_NAMESPACE = 'singleapp_client'
-// export const ANALYTICS_SINGLEAPP_ENDPOINT = 'http://10.0.0.61:9090'
-export const ANALYTICS_SINGLEAPP_ENDPOINT = 'localhost:9090'
+export const ANALYTICS_SINGLEAPP_ENDPOINT = __DEV__ ? 'localhost:9090' : Config.SNOWPLOW_COLLECTOR_ENDPOINT
 export const ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0'
 export const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0'
 
@@ -98,7 +98,7 @@ export class AnalyticsTracker {
       endpoint: this.endpoint,
       protocol: 'http',
       eventMethod: 'post',
-      postPath: 'tp2',
+      // postPath: 'tp2',
       appId: getBundleId(),
       appVersion: getVersion(),
       appBuild: getBuildNumber(),
@@ -130,8 +130,6 @@ export class AnalyticsTracker {
     if (!this.trackingEnabled) {
       return
     }
-
-    console.log(`Tracking screen view: ${screenName}, previous: ${previousScreenName}`)
 
     this.tracker.trackScreenViewEvent({
       name: screenName,

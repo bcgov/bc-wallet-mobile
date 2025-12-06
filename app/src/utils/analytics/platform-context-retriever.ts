@@ -2,7 +2,6 @@ import NetInfo from '@react-native-community/netinfo'
 import { PlatformContextProperty, PlatformContextRetriever } from '@snowplow/react-native-tracker'
 import { Dimensions, PixelRatio, Platform } from 'react-native'
 import {
-  getAndroidId,
   getBatteryLevel,
   getCarrier,
   getFreeDiskStorage,
@@ -51,7 +50,7 @@ export const getPlatformContextRetriever = (enable: boolean): PlatformContextRet
     getScale: _getScale,
     getLanguage: _getLanguage,
     // getAndroidIdfa?: () => Promise<string | undefined>;
-    getAppSetId: getAndroidId,
+    // getAppSetId: getAndroidId,
     // getAppSetIdScope?: () => Promise<string | undefined>;
   }
 }
@@ -86,7 +85,7 @@ export const getPlatformContextProperties = (enable: boolean): PlatformContextPr
     PlatformContextProperty.Language,
     // PlatformContextProperty.AndroidIdfa,
     PlatformContextProperty.SystemAvailableMemory,
-    PlatformContextProperty.AppSetId,
+    // PlatformContextProperty.AppSetId,
     // PlatformContextProperty.AppSetIdScope,
   ]
 }
@@ -117,7 +116,10 @@ const _isPortrait = async () => {
 }
 
 const _getResolution = async () => {
-  return `${Dimensions.get('window').width}x${Dimensions.get('window').height}`
+  const width = Dimensions.get('window').width
+  const height = Dimensions.get('window').height
+
+  return `${Math.floor(width)}x${Math.floor(height)}`
 }
 
 const _getScale = async () => {
