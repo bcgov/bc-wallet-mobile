@@ -643,7 +643,6 @@ jobs:
           REPORT_PROJECT: ${{ matrix.report-project }}
           ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
           ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
-ix.report-project }}
 
       - name: Upload smoke-test results to Allure
         if: always()
