@@ -180,7 +180,6 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
   route,
 }: ServiceLoginScreenProps) => {
   const { serviceClientId, serviceTitle, pairingCode } = route.params ?? {}
-  // const serviceClientId = serviceClient?.client_ref_id
   const { t } = useTranslation()
   const [store] = useStore<BCState>()
   const { Spacing, ColorPalette, TextTheme } = useTheme()
