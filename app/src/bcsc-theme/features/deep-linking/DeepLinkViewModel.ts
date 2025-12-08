@@ -69,48 +69,46 @@ export class DeepLinkViewModel {
   }
 
   private handleDeepLink(payload: DeepLinkPayload) {
-    const { host, path, serviceTitle: parsedServiceTitle, pairingCode: parsedPairingCode } = payload
+    const { path } = payload
     this.logger.info(`[DeepLinkViewModel] Received: ${path ?? 'no-path'} ${JSON.stringify(payload)}`)
 
     // --- BUSINESS LOGIC ---
 
-    // Handle Pairing: ca.bc.gov.iddev.servicescard://pair/<encoded-url>
-    if (host === 'pair') {
-      let serviceTitle = parsedServiceTitle
-      let pairingCode = parsedPairingCode
-
-      if ((!serviceTitle || !pairingCode) && path) {
-        const parsed = this.parsePairingFromPath(path)
-
-        if (parsed.serviceTitle) {
-          serviceTitle = parsed.serviceTitle
-        }
-
-        if (parsed.pairingCode) {
-          pairingCode = parsed.pairingCode
-        }
-      }
-
-      if (serviceTitle && pairingCode) {
-        this.logger.info(`[DeepLinkViewModel] Pairing: ${serviceTitle} ${pairingCode}`)
-
-        if (this.navigationListeners.size > 0) {
-          this.logger.info(`[DeepLinkViewModel] Emitting navigation to ${BCSCScreens.ServiceLogin}`)
-          this.emitNavigation({
-            screen: BCSCScreens.ServiceLogin,
-            params: { serviceTitle, pairingCode },
-          })
-        } else {
-          this.logger.info(`[DeepLinkViewModel] Buffering pairing link`)
-          this.pendingDeepLink = payload
-          this.notifyPendingStateChange()
-        }
-
-        return
-      }
+    if (this.handlePairing(payload)) {
+      return
     }
 
-    // Add more routes here
+    // Add more routes here as needed.
+  }
+
+  private handlePairing(payload: DeepLinkPayload): boolean {
+    if (payload.host !== 'pair') {
+      return false
+    }
+
+    const parsedFromPath = payload.path ? this.parsePairingFromPath(payload.path) : {}
+    const serviceTitle = payload.serviceTitle ?? parsedFromPath.serviceTitle
+    const pairingCode = payload.pairingCode ?? parsedFromPath.pairingCode
+
+    if (!serviceTitle || !pairingCode) {
+      return false
+    }
+
+    this.logger.info(`[DeepLinkViewModel] Pairing: ${serviceTitle} ${pairingCode}`)
+
+    if (this.navigationListeners.size > 0) {
+      this.logger.info(`[DeepLinkViewModel] Emitting navigation to ${BCSCScreens.ServiceLogin}`)
+      this.emitNavigation({
+        screen: BCSCScreens.ServiceLogin,
+        params: { serviceTitle, pairingCode },
+      })
+    } else {
+      this.logger.info(`[DeepLinkViewModel] Buffering pairing link`)
+      this.pendingDeepLink = payload
+      this.notifyPendingStateChange()
+    }
+
+    return true
   }
 
   private parsePairingFromPath(path: string): { serviceTitle?: string; pairingCode?: string } {
