@@ -6,7 +6,6 @@ import { useDeepLinkViewModel } from '../../deep-linking'
 export type LocalState = {
   serviceTitle?: string
   pairingCode?: string
-  authenticationUrl?: string
   claimsDescription?: string
   privacyPolicyUri?: string
   serviceInitiateLoginUri?: string
@@ -43,7 +42,6 @@ export type UseServiceLoginStateResult = {
 const merge: MergeFunction = (current, next) => ({ ...current, ...next })
 
 const initialState: LocalState = {
-  authenticationUrl: undefined,
   serviceTitle: undefined,
   claimsDescription: undefined,
   privacyPolicyUri: undefined,
@@ -120,9 +118,9 @@ export const useServiceLoginState = ({
     logger.debug(
       `ServiceLoginScreen: Pending deep link check - serviceClientId: ${serviceClientId}, pendingConsumedRef: ${
         pendingConsumedRef.current
-      }, hasLoginData: ${Boolean(
-        state.authenticationUrl || state.pairingCode || state.serviceTitle
-      )}, hasPendingDeepLink: ${viewModel.hasPendingDeepLink}`
+      }, hasLoginData: ${Boolean(state.pairingCode || state.serviceTitle)}, hasPendingDeepLink: ${
+        viewModel.hasPendingDeepLink
+      }`
     )
 
     if (serviceClientId) {
@@ -133,7 +131,7 @@ export const useServiceLoginState = ({
       return
     }
 
-    const hasLoginData = Boolean(state.authenticationUrl || state.pairingCode || state.serviceTitle)
+    const hasLoginData = Boolean(state.pairingCode || state.serviceTitle)
     if (hasLoginData) {
       return
     }
@@ -154,7 +152,7 @@ export const useServiceLoginState = ({
       serviceTitle: pending.serviceTitle,
       pairingCode: pending.pairingCode,
     })
-  }, [serviceClientId, state.authenticationUrl, logger, state.pairingCode, state.serviceTitle, viewModel])
+  }, [serviceClientId, logger, state.pairingCode, state.serviceTitle, viewModel])
 
   return {
     state,
