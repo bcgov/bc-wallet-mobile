@@ -15,6 +15,7 @@ export type DeepLinkHandler = (payload: DeepLinkPayload) => void
  * can react to deep-link events without touching platform primitives directly.
  */
 export class DeepLinkService {
+  private static readonly MIN_SEGMENTS = 3
   private readonly handlers = new Set<DeepLinkHandler>()
   private subscription?: { remove(): void }
   private initialized = false
@@ -147,7 +148,8 @@ export class DeepLinkService {
       }
 
       const deviceIndex = segments.indexOf('device')
-      const expectedSegmentCount = deviceIndex !== -1 ? deviceIndex + 3 : 3
+      const expectedSegmentCount =
+        deviceIndex === -1 ? DeepLinkService.MIN_SEGMENTS : deviceIndex + DeepLinkService.MIN_SEGMENTS
 
       if (deviceIndex !== -1 && segments.length >= expectedSegmentCount) {
         const serviceTitle = decodeURIComponent(segments[deviceIndex + 1].replaceAll('+', ' '))
