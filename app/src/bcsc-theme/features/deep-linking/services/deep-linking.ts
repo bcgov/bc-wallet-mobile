@@ -46,16 +46,11 @@ export class DeepLinkService {
   public subscribe(handler: DeepLinkHandler): () => void {
     this.handlers.add(handler)
 
-    // If we have an initial URL that hasn't been handled by this handler yet,
-    // we might want to replay it. For now, we rely on the fact that init()
-    // emits it to all current handlers. If subscribe happens AFTER init(),
-    // we might miss it.
-    //
-    // To fix the race condition completely:
+    // Replay any initial URL to new subscribers if it has not been consumed yet
+    // so late subscribers do not miss deep links discovered during init().
     if (this.initialUrl) {
-      // Optional: decide if we want to replay this for every new subscriber
-      // or just rely on the ViewModel being ready before init() is called.
-      // For this implementation, we'll assume the ViewModel subscribes BEFORE init().
+      handler(this.parseUrl(this.initialUrl))
+      this.initialUrl = null
     }
 
     return () => this.handlers.delete(handler)
