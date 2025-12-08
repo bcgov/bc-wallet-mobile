@@ -2,7 +2,7 @@ import { DEFAULT_HEADER_TITLE_CONTAINER_STYLE, HelpCentreUrl } from '@/constants
 import { testIdWithKey, TOKENS, useDefaultStackOptions, useServices, useTheme, useTour } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import Developer from '../../screens/Developer'
@@ -48,7 +48,7 @@ const MainStack: React.FC = () => {
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   // Consume any cold-start deep link once and use it to seed the initial route
-  const pendingDeepLink = useMemo(() => deepLinkViewModel.consumePendingDeepLink(), [deepLinkViewModel])
+  const [pendingDeepLink] = useState(() => deepLinkViewModel.consumePendingDeepLink())
   const deepLinkInitialParams = useMemo(() => {
     if (!pendingDeepLink) {
       return undefined
