@@ -1,4 +1,5 @@
 import { BCDispatchAction, BCState } from '@/store'
+import { Analytics } from '@/utils/analytics/analytics-tracker'
 import analytics from '@assets/img/analytics.png'
 import { Button, ButtonType, ScreenWrapper, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { useTranslation } from 'react-i18next'
@@ -40,6 +41,7 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
   const handleAcceptPressed = () => {
     logger.info('User accepted analytics opt-in')
     dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
+    Analytics.initializeTracker({ startTracking: true })
     onPress()
   }
   const handleDeniedPressed = () => {

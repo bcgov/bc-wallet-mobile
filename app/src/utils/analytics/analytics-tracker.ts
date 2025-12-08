@@ -1,20 +1,27 @@
-import { getTracker, newTracker, ReactNativeTracker, removeTracker, TimingProps } from '@snowplow/react-native-tracker'
+import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
+import { getTracker, newTracker, ReactNativeTracker, removeTracker } from '@snowplow/react-native-tracker'
 import Config from 'react-native-config'
 import { getBuildNumber, getBundleId, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
-import { AlertEvent, BCErrorCode } from '../error/bc-error-code'
 import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
 
 export const ANALYTICS_SINGLEAPP_NAMESPACE = 'singleapp_client'
-export const ANALYTICS_SINGLEAPP_ENDPOINT = __DEV__ ? 'localhost:9090' : Config.SNOWPLOW_COLLECTOR_ENDPOINT
+export const ANALYTICS_SINGLEAPP_ENDPOINT = __DEV__ ? 'localhost:9090' : String(Config.SNOWPLOW_COLLECTOR_ENDPOINT)
 export const ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0'
 export const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0'
 
-export interface CreateTrackerOptions {
-  enableAutomaticTracking: boolean
+interface InitializeTrackerOptions {
+  startTracking: boolean
+}
+
+interface AnalyticsError {
+  code: string
+  message: string
 }
 
 /**
  * AnalyticsTracker class to track analytics events.
+ *
+ * TODO (MD): Implement the `trackTimingEvent` method to track timing events.
  *
  * @see self hosted snowplow micro: https://docs.snowplow.io/docs/testing/snowplow-micro/basic-usage/
  *
@@ -22,11 +29,11 @@ export interface CreateTrackerOptions {
  * @example
  * const analyticsTracker = new AnalyticsTracker('myNamespace', 'https://endpoint.com')
  *
- * await analyticsTracker.initializeTracker({ enableAutomaticTracking: true })
+ * await analyticsTracker.initializeTracker({ startTracking: true })
  *
- * analyticsTracker.startTracking()
+ * analyticsTracker.trackErrorEvent()
  *
- * analyticsTracker.trackErrorEvent(new Error('Test error'))
+ * analyticsTracker.trackScreenEvent('HomeScreen', 'LoginScreen')
  */
 export class AnalyticsTracker {
   private namespace: string
@@ -48,28 +55,21 @@ export class AnalyticsTracker {
     const tracker = getTracker(this.namespace)
 
     if (!tracker) {
-      throw new Error(`Tracker with namespace '${this.namespace}' does not exist`)
+      throw new Error(
+        `Analytics tracker '${this.namespace}' has not been initialized. Did you forget to call initializeTracker()?`
+      )
     }
 
     return tracker
   }
 
   /**
-   * Enables analytics tracking.
+   * Checks if tracking is enabled and a tracker exists.
    *
-   * @returns {*} {void}
+   * @returns {*} {boolean}
    */
-  enableTracking(): void {
-    this.trackingEnabled = true
-  }
-
-  /**
-   * Stops analytics tracking.
-   *
-   * @returns {*} {void}
-   */
-  disableTracking(): void {
-    this.trackingEnabled = false
+  private canTrack(): boolean {
+    return this.trackingEnabled && this.hasTracker()
   }
 
   /**
@@ -84,9 +84,12 @@ export class AnalyticsTracker {
   /**
    * Initializes the analytics tracker with the provided options.
    *
+   * @param {InitializeTrackerOptions} options - The initialization options.
    * @returns {*} {Promise<void>}
    */
-  async initializeTracker(): Promise<void> {
+  async initializeTracker(options: InitializeTrackerOptions): Promise<void> {
+    this.trackingEnabled = options.startTracking
+
     const existingTracker = getTracker(this.namespace)
 
     if (existingTracker) {
@@ -96,20 +99,19 @@ export class AnalyticsTracker {
     await newTracker({
       namespace: this.namespace,
       endpoint: this.endpoint,
-      protocol: 'http',
+      protocol: __DEV__ ? 'http' : 'https',
       eventMethod: 'post',
-      // postPath: 'tp2',
       appId: getBundleId(),
       appVersion: getVersion(),
       appBuild: getBuildNumber(),
       userId: getUniqueId(),
-      ipAddress: await getIpAddress(),
+      ipAddress: await getIpAddress().catch(() => ''),
       devicePlatform: 'mob',
       deepLinkContext: false,
-      screenContext: false,
+      screenContext: false, // Tracked manually via trackScreenEvent
       lifecycleAutotracking: this.trackingEnabled,
       screenEngagementAutotracking: false,
-      installAutotracking: true,
+      installAutotracking: this.trackingEnabled,
       useAsyncStorageForEventStore: true,
       timezone: 'America/Vancouver',
       language: 'en',
@@ -127,7 +129,12 @@ export class AnalyticsTracker {
    * @returns {*} {void}
    */
   trackScreenEvent(screenName: string, previousScreenName?: string): void {
-    if (!this.trackingEnabled) {
+    if (!this.canTrack()) {
+      return
+    }
+
+    // Avoid tracking if the screen name hasn't changed
+    if (screenName === previousScreenName) {
       return
     }
 
@@ -142,59 +149,67 @@ export class AnalyticsTracker {
    *
    * Note: This uses the `idim` snowplow `mobile_error` schema.
    *
-   * @param {BCErrorCode} errorCode - The error code.
-   * @param {string} errorMessage - The error message.
+   * @param {AnalyticsError} error - The error to track.
    * @returns {*} {void}
    */
-  trackErrorEvent(errorCode: BCErrorCode, errorMessage: string): void {
-    if (!this.trackingEnabled) {
+  trackErrorEvent(error: AnalyticsError): void {
+    if (!this.canTrack()) {
       return
     }
 
     this.tracker.trackSelfDescribingEvent({
       schema: ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA,
       data: {
-        errorCode: errorCode,
-        body: errorMessage,
+        errorCode: error.code,
+        body: error.message,
       },
     })
   }
 
   /**
-   * Tracks an alert event.
+   * Tracks an alert display event.
    *
-   * @param {AlertEvent} alertEvent - The alert event.
-   * @param {string} alertName - The name of the alert.
-   * @param {string} [alertAction] - The action associated with the alert.
+   * Note: This uses the `idim` snowplow `action` schema.
+   *
+   * @param {AlertEvent} alertEvent - The alert event to track.
    * @returns {*} {void}
    */
-  trackAlertEvent(alertEvent: AlertEvent, alertName: string, alertAction?: string): void {
-    if (!this.trackingEnabled) {
+  trackAlertDisplayEvent(alertEvent: AlertEvent): void {
+    if (!this.canTrack()) {
       return
     }
 
     this.tracker.trackSelfDescribingEvent({
       schema: ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
       data: {
-        action: alertEvent,
-        text: alertName,
-        message: alertAction,
+        action: AlertInteractionEvent.ALERT_DISPLAY,
+        text: alertEvent,
       },
     })
   }
 
   /**
-   * Tracks a timing event.
+   * Tracks an alert action event.
    *
-   * @param {TimingProps} timingEvent - The timing event properties.
+   * Note: This uses the `idim` snowplow `action` schema.
+   *
+   * @param {AlertEvent} alertEvent - The alert event to track.
+   * @param {string} actionLabel - The action label taken on the alert (e.g., 'ok' button pressed).
    * @returns {*} {void}
    */
-  trackTimingEvent(timingEvent: TimingProps): void {
-    if (!this.trackingEnabled) {
+  trackAlertActionEvent(alertEvent: AlertEvent, actionLabel: string): void {
+    if (!this.canTrack()) {
       return
     }
 
-    return this.tracker.trackTimingEvent(timingEvent)
+    this.tracker.trackSelfDescribingEvent({
+      schema: ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
+      data: {
+        action: AlertInteractionEvent.ALERT_ACTION,
+        text: alertEvent,
+        message: actionLabel,
+      },
+    })
   }
 }
 

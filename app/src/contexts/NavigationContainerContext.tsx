@@ -32,9 +32,8 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
           setNavigationReady(true)
         }}
         onStateChange={async () => {
-          if (Analytics.hasTracker() === false) {
-            Analytics.enableTracking()
-            await Analytics.initializeTracker()
+          if (!Analytics.hasTracker()) {
+            await Analytics.initializeTracker({ startTracking: false })
           }
 
           const previousRouteName = routeNameRef.current
@@ -46,6 +45,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
             Analytics.trackScreenEvent(currentRouteName, previousRouteName)
           }
 
+          // Save the current route name for later comparison
           routeNameRef.current = currentRouteName
         }}
       >

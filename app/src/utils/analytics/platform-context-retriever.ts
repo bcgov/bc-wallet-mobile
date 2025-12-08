@@ -33,7 +33,7 @@ export const getPlatformContextRetriever = (enable: boolean): PlatformContextRet
     getOsVersion: async () => getSystemVersion(),
     getDeviceModel: async () => getModel(),
     getDeviceManufacturer: getManufacturer,
-    getCarrier: getCarrier,
+    getCarrier: _getCarrier,
     getNetworkType: _getNetworkType,
     getNetworkTechnology: _getNetworkTechnology,
     // getAppleIdfa?: () => Promise<string | undefined>;
@@ -91,6 +91,11 @@ export const getPlatformContextProperties = (enable: boolean): PlatformContextPr
 }
 
 // Helper functions for platform context retriever
+
+const _getCarrier = async () => {
+  const carrier = await getCarrier()
+  return carrier || undefined
+}
 
 const _getAppAvailableMemory = async () => {
   const [totalMemory, usedMemory] = await Promise.all([getTotalMemory(), getUsedMemory()])
