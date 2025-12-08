@@ -27,7 +27,7 @@ type SetupStepsScreenProps = {
 }
 
 /**
- * The SetupStepsScreen component displays the steps required for setting up identity verification for BCSC.
+ * The SetupStepsScreen component displays the steps required for setting up identity verification for BCSC
  *
  * Currently this supports several flows:
  *    1. BCSC card with photo
