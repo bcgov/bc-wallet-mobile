@@ -209,14 +209,13 @@ jobs:
           git status && \
           git diff ios/Podfile.lock
 
-      - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
-        run: |
-          echo "Patching for Single App build"
-          git config user.email "github-action@users.noreply.github.com"
-          git config user.name "GitHub Actions"
-          git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
-
+      # - name: Patch for Single App build
+      #   if: matrix.build_type == 'single-app'
+      #   run: |
+      #     echo "Patching for Single App build"
+      #     git config user.email "github-action@users.noreply.github.com"
+      #     git config user.name "GitHub Actions"
+      #     git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
       - name: Bump Build No.
         working-directory: app/ios
         env:
@@ -376,16 +375,16 @@ jobs:
           yarn install --immutable && \
           git status
 
-      - name: Patch for Single App build
-        if: matrix.build_type == 'single-app'
-        run: |
-          echo "Patching for Single App build"
-          git config user.email "github-action@users.noreply.github.com"
-          git config user.name "GitHub Actions"
-          git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
+      # - name: Patch for Single App build
+      #   if: matrix.build_type == 'single-app'
+      #   run: |
+      #     echo "Patching for Single App build"
+      #     git config user.email "github-action@users.noreply.github.com"
+      #     git config user.name "GitHub Actions"
+      #     git am < ./patch/0001-chore-android-app-to-bcsc-dev.patch
 
-        # Actual environment variables are not being picked up
-        # by the build so they're put into an .env file.
+      # Actual environment variables are not being picked up
+      # by the build so they're put into an .env file.
       - name: Create environment settings
         working-directory: app
         env:
@@ -636,6 +635,15 @@ jobs:
           APP_FILE_NAME: ${{ matrix.app-file-name }}
           TEST_SCOPE: "-t @bc_wallet -t @SmokeTest"
           REPORT_PROJECT: ${{ matrix.report-project }}
+
+      - name: Upload smoke-test results to Allure
+        if: always()
+        uses: ./.github/workflows/actions/run-send-gen-test-results-secure
+        with:
+          REPORT_PROJECT: ${{ matrix.report-project }}
+          ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
+          ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
+ix.report-project }}
 
       - name: Upload smoke-test results to Allure
         if: always()
