@@ -146,4 +146,58 @@ describe('DeepLinkService', () => {
       })
     )
   })
+
+  it('returns rawUrl when custom scheme has no separator', async () => {
+    const handler = jest.fn()
+    const service = new DeepLinkService()
+    service.subscribe(handler)
+    await service.init()
+
+    const eventHandler = mockLinking.addEventListener.mock.calls[0]?.[1]
+    eventHandler?.({ url: 'no-separator-here' })
+
+    expect(handler).toHaveBeenCalledWith({ rawUrl: 'no-separator-here' })
+  })
+
+  it('returns rawUrl when custom scheme remainder is empty', async () => {
+    const handler = jest.fn()
+    const service = new DeepLinkService()
+    service.subscribe(handler)
+    await service.init()
+
+    const eventHandler = mockLinking.addEventListener.mock.calls[0]?.[1]
+    eventHandler?.({ url: 'app://' })
+
+    expect(handler).toHaveBeenCalledWith({ rawUrl: 'app://', host: '', path: '' })
+  })
+
+  it('returns base payload for non-pair hosts without pairing metadata', async () => {
+    const handler = jest.fn()
+    const service = new DeepLinkService()
+    service.subscribe(handler)
+    await service.init()
+
+    const eventHandler = mockLinking.addEventListener.mock.calls[0]?.[1]
+    eventHandler?.({ url: 'myapp://other/path/segment' })
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({ rawUrl: 'myapp://other/path/segment', host: 'other', path: '/path/segment' })
+    )
+    expect(handler).toHaveBeenCalledWith(expect.not.objectContaining({ pairingCode: expect.any(String) }))
+  })
+
+  it('ignores pairing extraction when device segment is missing or too short', async () => {
+    const handler = jest.fn()
+    const service = new DeepLinkService()
+    service.subscribe(handler)
+    await service.init()
+
+    const eventHandler = mockLinking.addEventListener.mock.calls[0]?.[1]
+    eventHandler?.({ url: 'myapp://pair/https%3A%2F%2Fexample.com%2Fno-device%2Fonlyone' })
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({ rawUrl: 'myapp://pair/https%3A%2F%2Fexample.com%2Fno-device%2Fonlyone', host: 'pair' })
+    )
+    expect(handler).toHaveBeenCalledWith(expect.not.objectContaining({ pairingCode: expect.any(String) }))
+  })
 })
