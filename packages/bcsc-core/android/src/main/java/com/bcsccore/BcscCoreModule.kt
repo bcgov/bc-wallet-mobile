@@ -1,6 +1,7 @@
 package com.bcsccore
 
 // Android imports
+import android.bluetooth.BluetoothAdapter
 import android.os.Build
 import android.provider.Settings
 import android.security.keystore.KeyProperties
@@ -786,6 +787,7 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
         .claim("device_model", Build.MODEL)
         .claim("device_id", getDeviceIdSync()) // Use proper device ID
         .claim("device_token", actualDeviceToken)
+        .claim("device_name", getDeviceName())
         .claim("mobile_id_version", getAppVersion())
         .claim("mobile_id_build", getAppBuildNumber())
         .claim("has_other_accounts", false) // This could be made dynamic
@@ -1464,19 +1466,21 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
    */
   private fun getDeviceName(): String {
     return try {
-      // Try to get the user-set device name from Settings.Global
-      val deviceName = android.provider.Settings.Global.getString(
-        reactApplicationContext.contentResolver,
-        android.provider.Settings.Global.DEVICE_NAME
-      )
-
-      // Fall back to Build.MODEL if device name is not set
-      deviceName?.takeIf { it.isNotEmpty() } ?: Build.MODEL
+      if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+        val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+        val name = bluetoothAdapter?.name
+        name ?: getDeviceModel()
+      } else {
+        getDeviceModel()
+      }
     } catch (e: Exception) {
       Log.w(NAME, "Could not get device name: ${e.message}")
-      // Final fallback to Build.MODEL
-      Build.MODEL
+      getDeviceModel()
     }
+  }
+
+  private fun getDeviceModel(): String {
+    return Build.MODEL ?: "Android"
   }
 
   /**
