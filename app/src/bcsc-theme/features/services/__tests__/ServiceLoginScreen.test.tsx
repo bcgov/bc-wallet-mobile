@@ -10,10 +10,13 @@ jest.mock('../hooks/useServiceLoginState', () => ({
   useServiceLoginState: jest.fn(),
 }))
 
-jest.mock('@/bcsc-theme/api/hooks/useApi', () => () => ({
-  pairing: { loginByPairingCode: jest.fn() },
-  metadata: {},
-}))
+jest.mock('@/bcsc-theme/api/hooks/useApi', () => {
+  const pairing = { loginByPairingCode: jest.fn() }
+  return () => ({
+    pairing,
+    metadata: {},
+  })
+})
 
 jest.mock('@/bcsc-theme/hooks/useQuickLoginUrl', () => ({
   useQuickLoginURL: () => jest.fn(),
@@ -37,10 +40,16 @@ const baseRoute = {
 } as any
 
 describe('ServiceLoginScreen snapshots', () => {
+  const getPairingMock = () => {
+    const api = jest.requireMock('@/bcsc-theme/api/hooks/useApi')
+    return api().pairing as { loginByPairingCode: jest.Mock }
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
     mockDeepLinkViewModel.hasPendingDeepLink = false
     mockDeepLinkViewModel.consumePendingDeepLink = jest.fn()
+    getPairingMock().loginByPairingCode.mockReset()
   })
 
   it('renders loading state', () => {
@@ -217,5 +226,39 @@ describe('ServiceLoginScreen snapshots', () => {
     expect(consumePendingDeepLink).toHaveBeenCalledTimes(1)
     expect(navigation.goBack).not.toHaveBeenCalled()
     expect(navigation.navigate).not.toHaveBeenCalled()
+  })
+
+  it('navigates to PairingConfirmation when pairing code succeeds', async () => {
+    mockUseServiceLoginState.mockReturnValue({
+      state: {
+        serviceTitle: 'BC Parks',
+        claimsDescription: 'Name, Email',
+        pairingCode: 'CODE123',
+        serviceInitiateLoginUri: 'https://example.com/login',
+      },
+      isLoading: false,
+      serviceHydrated: true,
+    })
+
+    const navigation = useNavigation()
+    const pairing = getPairingMock()
+    pairing.loginByPairingCode.mockResolvedValue({
+      client_ref_id: 'service-123',
+      client_name: 'BC Parks',
+    })
+
+    const tree = render(
+      <BasicAppContext>
+        <ServiceLoginScreen navigation={navigation as never} route={baseRoute} />
+      </BasicAppContext>
+    )
+
+    await fireEvent.press(tree.getByTestId(testIdWithKey('ServiceLoginContinue')))
+
+    expect(pairing.loginByPairingCode).toHaveBeenCalledWith('CODE123')
+    expect(navigation.navigate).toHaveBeenCalledWith(BCSCScreens.PairingConfirmation, {
+      serviceId: 'service-123',
+      serviceName: 'BC Parks',
+    })
   })
 })
