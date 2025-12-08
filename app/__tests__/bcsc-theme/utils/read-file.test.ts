@@ -110,7 +110,7 @@ describe('readFileInChunks', () => {
 
       const result = await readFileInChunks(mockFilePath, mockLogger as any)
 
-      expect(result.length).toBe(0)
+      expect(result).toHaveLength(0)
       expect(mockLogger.warn).toHaveBeenCalledWith(`File is empty: ${mockFilePath}`)
       expect(RNFS.read).not.toHaveBeenCalled()
     })
@@ -142,7 +142,7 @@ describe('readFileInChunks', () => {
 
       const result = await readFileInChunks(mockFilePath, mockLogger as any, chunkSize)
 
-      expect(result.length).toBe(chunkSize)
+      expect(result).toHaveLength(chunkSize)
       expect(RNFS.read).toHaveBeenCalledTimes(1)
     })
   })
@@ -213,7 +213,7 @@ describe('readFileInChunks', () => {
 
       const result = await readFileInChunks(mockFilePath, mockLogger as any, customChunkSize)
 
-      expect(result.length).toBe(1000)
+      expect(result).toHaveLength(1000)
       expect(RNFS.read).toHaveBeenCalledTimes(Math.ceil(1000 / customChunkSize))
     })
 

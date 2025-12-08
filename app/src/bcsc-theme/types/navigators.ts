@@ -108,12 +108,6 @@ export type BCSCOnboardingStackParams = {
   [BCSCScreens.OnboardingNotifications]: undefined
   [BCSCScreens.OnboardingSecureApp]: undefined
   [BCSCScreens.OnboardingCreatePIN]: undefined
-  // TODO(JL): needed?
-  [BCSCScreens.ServiceLogin]: {
-    serviceClientId?: string
-    serviceTitle?: string
-    pairingCode?: string
-  }
   [BCSCScreens.OnboardingOptInAnalytics]: undefined
   [BCSCModals.InternetDisconnected]: undefined
   [BCSCModals.MandatoryUpdate]: undefined
