@@ -505,22 +505,6 @@ jobs:
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS_FILE} && \
           GOOGLE_API_CREDENTIALS="$PWD/${GOOGLE_API_CREDENTIALS_FILE}" npx @bcgov/gpublish
 
-      - name: Clean up build artifacts
-        if: always()
-        run: |
-          echo "=== Disk space before cleanup ==="
-          df -h
-          echo "Cleaning up to free space..."
-          rm -rf app/android/app/build
-          rm -rf app/android/build
-          rm -rf ~/.gradle/caches
-          rm -rf ~/.gradle/wrapper
-          rm -rf app/.metro-cache
-          rm -rf app/node_modules/.cache
-          sudo rm -rf /tmp/* || true
-          echo "=== Disk space after cleanup ==="
-          df -h
-
       # TODO: Change this to a Teams integration
       # - name: Send notification for Android failure
       #   if: failure() && github.ref_name == 'main' && github.event.pull_request.head.repo.fork != true
