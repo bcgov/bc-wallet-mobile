@@ -2,8 +2,9 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useStore } from '@bifold/core'
+import { useFocusEffect } from '@react-navigation/native'
 import { useTranslation } from 'react-i18next'
-import { StyleSheet } from 'react-native'
+import { BackHandler, StyleSheet } from 'react-native'
 
 const VerificationSuccessScreen = () => {
   const { t } = useTranslation()
@@ -16,6 +17,12 @@ const VerificationSuccessScreen = () => {
       justifyContent: 'center',
       alignItems: 'center',
     },
+  })
+
+  // Disable hardware back button on Android
+  useFocusEffect(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true)
+    return subscription.remove
   })
 
   const handleUpdateRegistration = async () => {
