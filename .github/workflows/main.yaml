@@ -350,6 +350,7 @@ jobs:
     env:
       APP_VERSION: ${{ matrix.app_version }}
       ANDROID_PACKAGE_NAME: ${{ matrix.android_package_name }}
+      GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
       - uses: actions/checkout@v4
 
@@ -359,17 +360,6 @@ jobs:
           df -h
           echo "=== Largest directories ==="
           du -sh /* 2>/dev/null | sort -hr | head -20 || true
-
-      - name: Free up disk space
-        run: |
-          echo "Removing unnecessary system files to free disk space..."
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo docker image prune --all --force || true
-          sudo apt-get clean
-          echo "=== Disk space after cleanup ==="
-          df -h
 
       - uses: actions/setup-python@v5
         with:
@@ -392,6 +382,24 @@ jobs:
         run: |
           yarn install --immutable && \
           git status
+
+      - name: Free up disk space
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          echo "Removing unnecessary system files to free disk space..."
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/microsoft /opt/google
+          sudo rm -rf /opt/az
+          sudo rm -rf /usr/local/julia*
+          sudo docker image prune --all --force || true
+          sudo docker system prune -af || true
+          sudo docker builder prune -af || true
+          sudo apt-get clean
+          echo "=== Disk space after cleanup ==="
+          df -h
 
       - name: Patch for Single App build
         if: matrix.build_type == 'single-app'
@@ -450,7 +458,12 @@ jobs:
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
         run: |
-          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
+          # Fix permissions for gradle cache
+          sudo mkdir -p /mnt/gradle-cache
+          sudo chown -R $USER:$USER /mnt/gradle-cache
+
+          # Build
+          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --verbose ) && \
           ./gradlew bundleRelease assembleRelease --no-parallel
 
       - name: List Artifacts
