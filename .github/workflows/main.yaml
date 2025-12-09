@@ -216,7 +216,6 @@ jobs:
           git config user.email "github-action@users.noreply.github.com"
           git config user.name "GitHub Actions"
           git am < ./patch/0002-chore-ios-app-to-bcsc-dev.patch
-
       - name: Bump Build No.
         working-directory: app/ios
         env:
@@ -351,8 +350,16 @@ jobs:
     env:
       APP_VERSION: ${{ matrix.app_version }}
       ANDROID_PACKAGE_NAME: ${{ matrix.android_package_name }}
+      GRADLE_USER_HOME: /mnt/gradle-cache
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check initial disk space
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          echo "=== Largest directories ==="
+          du -sh /* 2>/dev/null | sort -hr | head -20 || true
 
       - uses: actions/setup-python@v5
         with:
@@ -375,6 +382,24 @@ jobs:
         run: |
           yarn install --immutable && \
           git status
+
+      - name: Free up disk space
+        run: |
+          echo "=== Disk space before cleanup ==="
+          df -h
+          echo "Removing unnecessary system files to free disk space..."
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/microsoft /opt/google
+          sudo rm -rf /opt/az
+          sudo rm -rf /usr/local/julia*
+          sudo docker image prune --all --force || true
+          sudo docker system prune -af || true
+          sudo docker builder prune -af || true
+          sudo apt-get clean
+          echo "=== Disk space after cleanup ==="
+          df -h
 
       - name: Patch for Single App build
         if: matrix.build_type == 'single-app'
@@ -448,7 +473,12 @@ jobs:
           VERSION_NAME: ${{ env.APP_VERSION }}
           GRADLE_OPTS: "-Xmx4096m -Dorg.gradle.jvmargs='-Xmx4096m' -Dorg.gradle.daemon.idletimeout=60000"
         run: |
-          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle  --verbose ) && \
+          # Fix permissions for gradle cache
+          sudo mkdir -p /mnt/gradle-cache
+          sudo chown -R $USER:$USER /mnt/gradle-cache
+
+          # Build
+          ( cd ../ && npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --verbose ) && \
           ./gradlew bundleRelease assembleRelease --no-parallel
 
       - name: List Artifacts
@@ -489,15 +519,6 @@ jobs:
           # and had to add `/android` to the path.
           echo "${GOOGLE_API_CREDENTIALS_BASE64}" | base64 -d >${GOOGLE_API_CREDENTIALS_FILE} && \
           GOOGLE_API_CREDENTIALS="$PWD/${GOOGLE_API_CREDENTIALS_FILE}" npx @bcgov/gpublish
-
-      - name: Clean up build artifacts
-        if: always()
-        run: |
-          echo "Cleaning up to free space for next matrix build..."
-          rm -rf app/android/app/build
-          rm -rf app/android/build
-          rm -rf ~/.gradle/caches
-          rm -rf app/.metro-cache
 
       # TODO: Change this to a Teams integration
       # - name: Send notification for Android failure
