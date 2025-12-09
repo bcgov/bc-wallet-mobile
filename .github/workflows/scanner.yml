@@ -1,4 +1,6 @@
 name: Virus Scanner
+permissions:
+  contents: read
 
 on:
   push:
