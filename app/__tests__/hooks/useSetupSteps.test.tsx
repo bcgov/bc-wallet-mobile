@@ -386,7 +386,7 @@ describe('useSetupSteps Hook', () => {
       expect(hook.result.current.verify.completed).toBe(true)
     })
 
-    it('should be focused when pendingVerification is true', () => {
+    it('should be completed when pendingVerification is true', () => {
       const store = structuredClone(initialState)
 
       store.bcsc.nicknames = ['test']
@@ -401,8 +401,8 @@ describe('useSetupSteps Hook', () => {
 
       const hook = renderHook(() => useSetupSteps(store))
 
-      expect(hook.result.current.verify.focused).toBe(true)
-      expect(hook.result.current.verify.completed).toBe(false)
+      expect(hook.result.current.verify.focused).toBe(false)
+      expect(hook.result.current.verify.completed).toBe(true)
     })
   })
 

@@ -98,7 +98,7 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const step2Completed = bcscRegistered || nonPhotoBcscRegistered || nonBcscRegistered
     const step3Completed = Boolean(store.bcsc.deviceCode)
     const step4Completed = Boolean(emailAddress && emailConfirmed)
-    const step5Completed = Boolean(store.bcsc.verified && !store.bcsc.pendingVerification)
+    const step5Completed = Boolean(store.bcsc.verified || store.bcsc.pendingVerification)
 
     // ---- Step focus states ----
     const step1Focused = !step1Completed
