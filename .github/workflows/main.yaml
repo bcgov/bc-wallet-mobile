@@ -665,11 +665,3 @@ jobs:
           REPORT_PROJECT: ${{ matrix.report-project }}
           ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
           ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
-
-      - name: Upload smoke-test results to Allure
-        if: always()
-        uses: ./.github/workflows/actions/run-send-gen-test-results-secure
-        with:
-          REPORT_PROJECT: ${{ matrix.report-project }}
-          ADMIN_USER: ${{ secrets.ALLURE_USERNAME }}
-          ADMIN_PW: ${{ secrets.ALLURE_PASSWD }}
