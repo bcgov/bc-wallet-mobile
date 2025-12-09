@@ -136,6 +136,7 @@ const MaskedCamera = ({
       if (cameraRef.current && isActive) {
         const photo = await cameraRef.current.takePhoto({
           flash: 'off',
+          enableShutterSound: false,
         })
 
         onPhotoTaken(photo.path)
