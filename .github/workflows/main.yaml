@@ -435,20 +435,6 @@ jobs:
           echo "REMOTE_LOGGING_URL=${REMOTE_LOGGING_URL}" >>.env
           echo "INDY_VDR_PROXY_URL=${INDY_VDR_PROXY_URL}" >>.env
 
-      - name: Monitor system resources (before build)
-        run: |
-          echo "=== Available Memory ==="
-          free -h
-          echo ""
-          echo "=== Disk Usage ==="
-          df -h
-          echo ""
-          echo "=== CPU Info ==="
-          nproc
-          echo ""
-          echo "=== Java Version ==="
-          java -version
-
       - name: Create release keystore
         # This step will not work in a `fork` because it will not have access
         # to org and repo secrets.
@@ -471,7 +457,6 @@ jobs:
           PLAY_STORE_JKS_PASSWD: ${{ matrix.build_type == 'bc-wallet' && secrets.PLAY_STORE_JKS_PASSWD || secrets.PLAY_STORE_JKS_PASSWD_SADEV }}
           VERSION_CODE: ${{ env.APP_BUILD_NUMBER }}
           VERSION_NAME: ${{ env.APP_VERSION }}
-          GRADLE_OPTS: "-Xmx4096m -Dorg.gradle.jvmargs='-Xmx4096m' -Dorg.gradle.daemon.idletimeout=60000"
         run: |
           # Fix permissions for gradle cache
           sudo mkdir -p /mnt/gradle-cache
@@ -531,7 +516,7 @@ jobs:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build-summary:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs:
       - early-exit-check
       - build-android
