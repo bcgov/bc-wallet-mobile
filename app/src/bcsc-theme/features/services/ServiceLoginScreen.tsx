@@ -2,7 +2,17 @@ import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useQuickLoginURL } from '@/bcsc-theme/hooks/useQuickLoginUrl'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { BCState, Mode } from '@/store'
-import { Button, ButtonType, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  Link,
+  testIdWithKey,
+  ThemedText,
+  TOKENS,
+  useServices,
+  useStore,
+  useTheme,
+} from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +20,7 @@ import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, TouchableOpa
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useDeepLinkViewModel } from '../deep-linking'
 
+import { REPORT_SUSPICIOUS_URL } from '@/constants'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 import { LocalState, useServiceLoginState } from './hooks/useServiceLoginState'
 
@@ -33,6 +44,7 @@ type ServiceLoginUnavailableViewProps = {
   ColorPalette: ReturnType<typeof useTheme>['ColorPalette']
   t: (key: string) => string
   logger: any
+  navigation: ServiceLoginScreenProps['navigation']
 }
 
 const RenderState = {
@@ -47,7 +59,14 @@ const ServiceLoginLoadingView = () => (
   </SafeAreaView>
 )
 
-const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }: ServiceLoginUnavailableViewProps) => (
+const ServiceLoginUnavailableView = ({
+  state,
+  styles,
+  ColorPalette,
+  t,
+  logger,
+  navigation,
+}: ServiceLoginUnavailableViewProps) => (
   <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.screenContainer}>
       <View style={styles.contentContainer}>
@@ -80,7 +99,17 @@ const ServiceLoginUnavailableView = ({ state, styles, ColorPalette, t, logger }:
         </TouchableOpacity>
 
         <ThemedText variant={'bold'}>
-          {t('BCSC.Services.ReportSuspiciousPrefix')} <ThemedText>{t('BCSC.Services.ReportSuspicious')}</ThemedText>
+          {t('BCSC.Services.ReportSuspiciousPrefix')}{' '}
+          <Link
+            linkText={t('BCSC.Services.ReportSuspicious')}
+            testID={testIdWithKey('ReportSuspiciousLink')}
+            onPress={() => {
+              navigation.navigate(BCSCScreens.MainWebView, {
+                title: t('BCSC.Screens.HelpCentre'),
+                url: REPORT_SUSPICIOUS_URL,
+              })
+            }}
+          />
         </ThemedText>
       </View>
     </ScrollView>
@@ -344,7 +373,14 @@ export const ServiceLoginScreen: React.FC<ServiceLoginScreenProps> = ({
       return <ServiceLoginLoadingView />
     case RenderState.Unavailable:
       return (
-        <ServiceLoginUnavailableView state={state} styles={styles} ColorPalette={ColorPalette} t={t} logger={logger} />
+        <ServiceLoginUnavailableView
+          state={state}
+          styles={styles}
+          ColorPalette={ColorPalette}
+          t={t}
+          logger={logger}
+          navigation={navigation}
+        />
       )
     default:
       return (
