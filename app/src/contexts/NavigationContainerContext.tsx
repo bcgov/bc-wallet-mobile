@@ -20,6 +20,7 @@ export const NavigationContainerContext = createContext<NavigationContainerConte
 export const NavigationContainerProvider = ({ children }: PropsWithChildren) => {
   const [navigationReady, setNavigationReady] = useState(false)
   const { NavigationTheme } = useTheme()
+  const screenTransitionKeyRef = useRef<string>('')
   const routeNameRef = useRef<string | undefined>()
 
   return (
@@ -32,20 +33,19 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
           setNavigationReady(true)
         }}
         onStateChange={async () => {
-          if (!Analytics.hasTracker()) {
-            await Analytics.initializeTracker({ startTracking: false })
-          }
-
           const previousRouteName = routeNameRef.current
           const currentRouteName = navigationRef.current?.getCurrentRoute()?.name
 
+          const screenTransitionKey = `${previousRouteName}->${currentRouteName}`
+
           // Track the screen view event only if the route has changed
-          if (currentRouteName && previousRouteName !== currentRouteName) {
+          if (currentRouteName && screenTransitionKeyRef.current !== screenTransitionKey) {
             // TODO (MD): add ref to check if this has already been tracked
             Analytics.trackScreenEvent(currentRouteName, previousRouteName)
+
+            screenTransitionKeyRef.current = screenTransitionKey
           }
 
-          // Save the current route name for later comparison
           routeNameRef.current = currentRouteName
         }}
       >

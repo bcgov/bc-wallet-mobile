@@ -9,12 +9,20 @@ export const ANALYTICS_SINGLEAPP_ENDPOINT = __DEV__ ? 'localhost:9090' : String(
 export const ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0'
 export const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0'
 
+const AnalyticsClient = {
+  newTracker,
+  getTracker,
+  removeTracker,
+}
+
+type AnalyticsClient = typeof AnalyticsClient
+
 interface InitializeTrackerOptions {
   startTracking: boolean
 }
 
 interface AnalyticsError {
-  code: string
+  code: string // TODO (MD): Use AlertEvent or ErrorEvent codes
   message: string
 }
 
@@ -38,11 +46,13 @@ interface AnalyticsError {
 export class AnalyticsTracker {
   private namespace: string
   private endpoint: string
-  private trackingEnabled: boolean
+  private client: AnalyticsClient
+  trackingEnabled: boolean
 
-  constructor(namespace: string, endpoint: string) {
+  constructor(namespace: string, endpoint: string, client = AnalyticsClient) {
     this.namespace = namespace
     this.endpoint = endpoint
+    this.client = client
     this.trackingEnabled = false
   }
 
@@ -52,7 +62,7 @@ export class AnalyticsTracker {
    * @returns {*} {ReactNativeTracker} The tracker instance.
    */
   private get tracker(): ReactNativeTracker {
-    const tracker = getTracker(this.namespace)
+    const tracker = this.client.getTracker(this.namespace)
 
     if (!tracker) {
       throw new Error(
@@ -78,7 +88,7 @@ export class AnalyticsTracker {
    * @returns {*} {boolean}
    */
   hasTracker(): boolean {
-    return Boolean(getTracker(this.namespace))
+    return Boolean(this.client.getTracker(this.namespace))
   }
 
   /**
@@ -90,13 +100,13 @@ export class AnalyticsTracker {
   async initializeTracker(options: InitializeTrackerOptions): Promise<void> {
     this.trackingEnabled = options.startTracking
 
-    const existingTracker = getTracker(this.namespace)
+    const existingTracker = this.client.getTracker(this.namespace)
 
     if (existingTracker) {
-      removeTracker(this.namespace)
+      return
     }
 
-    await newTracker({
+    await this.client.newTracker({
       namespace: this.namespace,
       endpoint: this.endpoint,
       protocol: __DEV__ ? 'http' : 'https',
@@ -120,6 +130,7 @@ export class AnalyticsTracker {
       platformContextRetriever: getPlatformContextRetriever(this.trackingEnabled),
     })
   }
+  //
 
   /**
    * Tracks a screen view event.
@@ -176,6 +187,7 @@ export class AnalyticsTracker {
    */
   trackAlertDisplayEvent(alertEvent: AlertEvent): void {
     if (!this.canTrack()) {
+      console.log({ tracking: this.trackingEnabled, hasTracker: this.hasTracker() })
       return
     }
 
@@ -212,6 +224,3 @@ export class AnalyticsTracker {
     })
   }
 }
-
-// Export a singleton instance of AnalyticsTracker for the single app
-export const Analytics = new AnalyticsTracker(ANALYTICS_SINGLEAPP_NAMESPACE, ANALYTICS_SINGLEAPP_ENDPOINT)

@@ -38,11 +38,11 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
     },
   })
 
-  const handleAcceptPressed = () => {
+  const handleAcceptPressed = async () => {
     logger.info('User accepted analytics opt-in')
     dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
-    Analytics.initializeTracker({ startTracking: true })
     onPress()
+    await Analytics.initializeTracker({ startTracking: true })
   }
   const handleDeniedPressed = () => {
     logger.info('User denied analytics opt-in')

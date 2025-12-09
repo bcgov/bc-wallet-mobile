@@ -14,6 +14,9 @@ type AlertAction = AlertButton & { text: string }
 /**
  * Displays an alert based on the specified AlertEvent and tracks the event using Analytics.
  *
+ * TODO (MD): Consider encapsulating this functionality into a context provider.
+ * This will allow an easier transition into custom alert components in the future.
+ *
  * Note: This function assumes that the i18n translation files
  * contain the necessary entries for the alert titles and bodies.
  *
