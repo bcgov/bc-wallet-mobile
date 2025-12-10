@@ -1,7 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { DropdownWithValidation } from '@/bcsc-theme/components/DropdownWithValidation'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCScreens } from '@/bcsc-theme/types/navigators'
-import { getProvinceCode, isCanadianPostalCode, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
+import { isCanadianPostalCode, PROVINCE_OPTIONS, ProvinceCode } from '@/bcsc-theme/utils/address-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   Button,
@@ -24,11 +25,16 @@ import Toast from 'react-native-toast-message'
 type ResidentialAddressFormState = {
   streetAddress: string
   city: string
-  province: string
+  province: ProvinceCode | null
   postalCode: string
 }
 
-type ResidentialAddressFormErrors = Partial<ResidentialAddressFormState>
+type ResidentialAddressFormErrors = {
+  streetAddress?: string
+  city?: string
+  province?: string
+  postalCode?: string
+}
 
 /**
  * Screen for collecting residential address information from the user.
@@ -46,7 +52,7 @@ export const ResidentialAddressScreen = () => {
   const [formState, setFormState] = useState<ResidentialAddressFormState>({
     streetAddress: store.bcsc.userMetadata?.address?.streetAddress ?? '',
     city: store.bcsc.userMetadata?.address?.city ?? '',
-    province: store.bcsc.userMetadata?.address?.province ?? '',
+    province: (store.bcsc.userMetadata?.address?.province as ProvinceCode) ?? null,
     postalCode: store.bcsc.userMetadata?.address?.postalCode ?? '',
   })
   const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
@@ -55,10 +61,13 @@ export const ResidentialAddressScreen = () => {
    * Handles changes to the form fields.
    *
    * @param {keyof ResidentialAddressFormState} field - The field being updated.
-   * @param {string} value - The new value for the field.
+   * @param {ResidentialAddressFormState[keyof ResidentialAddressFormState]} value - The new value for the field.
    * @returns {*} {void}
    */
-  const handleChange = (field: keyof ResidentialAddressFormState, value: string) => {
+  const handleChange = <K extends keyof ResidentialAddressFormState>(
+    field: K,
+    value: ResidentialAddressFormState[K]
+  ) => {
     setFormState((prev) => ({ ...prev, [field]: value }))
     // clear field-specific error on change
     setFormErrors((prev) => ({ ...prev, [field]: undefined }))
@@ -80,7 +89,7 @@ export const ResidentialAddressScreen = () => {
     if (!values.city) {
       errors.city = t('BCSC.Address.CityRequired')
     }
-    if (!getProvinceCode(values.province)) {
+    if (!values.province) {
       errors.province = t('BCSC.Address.ProvinceInvalid')
     }
     if (!isCanadianPostalCode(values.postalCode)) {
@@ -110,7 +119,7 @@ export const ResidentialAddressScreen = () => {
           streetAddress: formState.streetAddress.trim(),
           postalCode: formState.postalCode.trim(),
           city: formState.city.trim(),
-          province: getProvinceCode(formState.province.trim()),
+          province: formState.province,
           country: 'CA',
         },
       ],
@@ -142,7 +151,7 @@ export const ResidentialAddressScreen = () => {
       address: {
         streetAddress: formState.streetAddress,
         city: formState.city,
-        province: getProvinceCode(formState.province) as ProvinceCode, // field has already been validated,
+        province: formState.province as ProvinceCode, // field has already been validated
         postalCode: formState.postalCode,
       },
     })
@@ -184,12 +193,10 @@ export const ResidentialAddressScreen = () => {
   }
 
   return (
-    <ScreenWrapper keyboardActive={true} scrollViewContainerStyle={{ gap: Spacing.xl }}>
-      <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
-        {t('BCSC.Address.Heading')}
-      </ThemedText>
+    <ScreenWrapper keyboardActive={true} scrollViewContainerStyle={{ gap: Spacing.lg }}>
+      <ThemedText variant={'headingThree'}>{t('BCSC.Address.Heading')}</ThemedText>
 
-      <ThemedText style={{ marginBottom: Spacing.sm }}>{t('BCSC.Address.Paragraph')}</ThemedText>
+      <ThemedText>{t('BCSC.Address.Paragraph')}</ThemedText>
 
       <InputWithValidation
         id={'streetAddress1'}
@@ -209,12 +216,14 @@ export const ResidentialAddressScreen = () => {
         subtext={t('BCSC.Address.CitySubtext')}
       />
 
-      <InputWithValidation
+      <DropdownWithValidation
         id={'province'}
         label={t('BCSC.Address.ProvinceLabel')}
         value={formState.province}
+        options={PROVINCE_OPTIONS}
         onChange={(value) => handleChange('province', value)}
         error={formErrors.province}
+        placeholder={t('BCSC.Address.ProvinceSubtext')}
         subtext={t('BCSC.Address.ProvinceSubtext')}
       />
 

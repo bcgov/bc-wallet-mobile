@@ -762,7 +762,7 @@ const translation = {
       "CitySubtext": "The city of your current address (PT-BR)",
       "CityRequired": "Please enter a city (PT-BR)",
       "ProvinceLabel": "Province or Territory (PT-BR)",
-      "ProvinceSubtext": "Province or territory. For example, BC or British Columbia (PT-BR)",
+      "ProvinceSubtext": "Select a province or territory (PT-BR)",
       "ProvinceInvalid": "Please enter a valid Canadian province or territory (PT-BR)",
       "PostalCodeLabel": "Postal Code (PT-BR)",
       "PostalCodeSubtext": "Your postal code in format A1A 2B2 (PT-BR)",
