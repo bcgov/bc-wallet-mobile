@@ -14,6 +14,11 @@ describe('TransferQRInformationScreen', () => {
   beforeEach(() => {
     mockNavigation = useNavigation()
     jest.clearAllMocks()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   describe('Render tests', () => {

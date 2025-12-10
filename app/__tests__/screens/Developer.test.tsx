@@ -12,10 +12,12 @@ describe('Developer Screen', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {
       return null
     })
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
     jest.clearAllMocks()
+    jest.useRealTimers()
   })
 
   test('screen renders correctly', () => {

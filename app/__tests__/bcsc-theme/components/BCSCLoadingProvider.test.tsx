@@ -57,10 +57,14 @@ describe('useLoadingScreen hook', () => {
 
     const { result } = renderHook(() => useContext(BCSCLoadingContext), { wrapper })
 
-    result.current?.startLoading('Loading data...')
+    act(() => {
+      result.current?.startLoading('Loading data...')
+    })
     expect(result.current?.isLoading).toBe(true)
 
-    result.current?.stopLoading()
+    act(() => {
+      result.current?.stopLoading()
+    })
     expect(result.current?.isLoading).toBe(false)
   })
 })

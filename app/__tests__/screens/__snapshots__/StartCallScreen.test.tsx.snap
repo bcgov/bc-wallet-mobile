@@ -1,0 +1,381 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StartCall renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <RCTScrollView
+    contentContainerStyle={
+      [
+        {
+          "padding": 16,
+        },
+        undefined,
+      ]
+    }
+    showsVerticalScrollIndicator={false}
+  >
+    <View>
+      <RCTImageView
+        accessibilityState={
+          {
+            "busy": undefined,
+            "checked": undefined,
+            "disabled": undefined,
+            "expanded": undefined,
+            "selected": undefined,
+          }
+        }
+        internal_analyticTag={null}
+        resizeMode="contain"
+        source={
+          [
+            {
+              "uri": "file://undefined",
+            },
+          ]
+        }
+        style={
+          {
+            "alignSelf": "center",
+            "aspectRatio": 0.7692307692307692,
+            "height": 300,
+            "margin": -100,
+            "overflow": "hidden",
+            "transform": [
+              {
+                "scale": 0.333,
+              },
+            ],
+            "width": undefined,
+          }
+        }
+      />
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 26,
+              "fontWeight": "bold",
+            },
+            {
+              "marginTop": 40,
+            },
+          ]
+        }
+      >
+        BCSC.VideoCall.StartVideoCallDescription
+      </Text>
+      <Text
+        maxFontSizeMultiplier={2}
+        style={
+          [
+            {
+              "color": "#313132",
+              "fontFamily": "BCSans-Regular",
+              "fontSize": 18,
+              "fontWeight": "normal",
+            },
+            {
+              "marginTop": 24,
+            },
+          ]
+        }
+      >
+        BCSC.VideoCall.YouShould
+      </Text>
+      <View
+        style={
+          {
+            "alignContent": "center",
+            "alignItems": "flex-start",
+            "flexDirection": "row",
+            "marginVertical": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "margin": 8,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 8,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰝥
+          </Text>
+        </View>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "flexShrink": 1,
+              },
+            ]
+          }
+        >
+          <span>
+            BCSC.VideoTips.PrivatePlace
+          </span>
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignContent": "center",
+            "alignItems": "flex-start",
+            "flexDirection": "row",
+            "marginVertical": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "margin": 8,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 8,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰝥
+          </Text>
+        </View>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "flexShrink": 1,
+              },
+            ]
+          }
+        >
+          <span>
+            BCSC.VideoTips.OnlyPerson
+          </span>
+        </Text>
+      </View>
+      <View
+        style={
+          {
+            "alignContent": "center",
+            "alignItems": "flex-start",
+            "flexDirection": "row",
+            "marginVertical": 8,
+          }
+        }
+      >
+        <View
+          style={
+            {
+              "margin": 8,
+            }
+          }
+        >
+          <Text
+            allowFontScaling={false}
+            selectable={false}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontSize": 8,
+                },
+                undefined,
+                {
+                  "fontFamily": "Material Design Icons",
+                  "fontStyle": "normal",
+                  "fontWeight": "normal",
+                },
+                {},
+              ]
+            }
+          >
+            󰝥
+          </Text>
+        </View>
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              {
+                "flexShrink": 1,
+              },
+            ]
+          }
+        >
+          <span>
+            BCSC.VideoTips.RemoveGlasses
+          </span>
+        </Text>
+      </View>
+    </View>
+  </RCTScrollView>
+  <View
+    style={
+      [
+        {
+          "gap": 16,
+        },
+        {
+          "paddingBottom": 16,
+          "paddingHorizontal": 16,
+        },
+        undefined,
+      ]
+    }
+  >
+    <View
+      accessibilityLabel="BCSC.VideoCall.StartVideoCall"
+      accessibilityRole="button"
+      accessibilityState={
+        {
+          "busy": undefined,
+          "checked": undefined,
+          "disabled": false,
+          "expanded": undefined,
+          "selected": undefined,
+        }
+      }
+      accessibilityValue={
+        {
+          "max": undefined,
+          "min": undefined,
+          "now": undefined,
+          "text": undefined,
+        }
+      }
+      accessible={true}
+      collapsable={false}
+      focusable={true}
+      onClick={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        {
+          "backgroundColor": "#003366",
+          "borderRadius": 4,
+          "opacity": 1,
+          "padding": 16,
+        }
+      }
+    >
+      <View
+        style={
+          {
+            "alignItems": "center",
+            "flexDirection": "row",
+            "justifyContent": "center",
+          }
+        }
+      >
+        <Text
+          maxFontSizeMultiplier={2}
+          style={
+            [
+              {
+                "color": "#313132",
+                "fontFamily": "BCSans-Regular",
+                "fontSize": 18,
+                "fontWeight": "normal",
+              },
+              [
+                {
+                  "color": "#FFFFFF",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "bold",
+                  "textAlign": "center",
+                },
+                false,
+                false,
+                false,
+              ],
+            ]
+          }
+        >
+          BCSC.VideoCall.StartCall
+        </Text>
+      </View>
+    </View>
+  </View>
+</RNCSafeAreaView>
+`;

@@ -1,0 +1,349 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NicknameAccount renders correctly 1`] = `
+<RNCSafeAreaView
+  edges={
+    {
+      "bottom": "additive",
+      "left": "additive",
+      "right": "additive",
+      "top": "off",
+    }
+  }
+  style={
+    [
+      {
+        "backgroundColor": "#F2F2F2",
+        "flex": 1,
+      },
+      undefined,
+    ]
+  }
+>
+  <View
+    onLayout={[Function]}
+    style={
+      [
+        {
+          "flex": 1,
+        },
+        {
+          "paddingBottom": 0,
+        },
+      ]
+    }
+  >
+    <RCTScrollView
+      contentContainerStyle={
+        [
+          {
+            "flexGrow": 1,
+          },
+          undefined,
+        ]
+      }
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      <View>
+        <View
+          style={
+            [
+              {
+                "padding": 16,
+              },
+              undefined,
+            ]
+          }
+        >
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 26,
+                  "fontWeight": "bold",
+                },
+                {
+                  "marginBottom": 16,
+                },
+              ]
+            }
+          >
+            BCSC.NicknameAccount.AccountName
+          </Text>
+          <Text
+            maxFontSizeMultiplier={2}
+            style={
+              [
+                {
+                  "color": "#313132",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 18,
+                  "fontWeight": "normal",
+                },
+                undefined,
+              ]
+            }
+          >
+            BCSC.NicknameAccount.CreateAccountName
+          </Text>
+          <View
+            style={
+              {
+                "margin": 8,
+              }
+            }
+          >
+            <View
+              accessible={true}
+              style={
+                {
+                  "flexDirection": "row",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "paddingLeft": 8,
+                    },
+                  ]
+                }
+              >
+                •
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "flex": 1,
+                      "paddingLeft": 8,
+                    },
+                  ]
+                }
+              >
+                BCSC.NicknameAccount.AccountNameDescription1
+              </Text>
+            </View>
+            <View
+              accessible={true}
+              style={
+                {
+                  "flexDirection": "row",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "paddingLeft": 8,
+                    },
+                  ]
+                }
+              >
+                •
+              </Text>
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    {
+                      "flex": 1,
+                      "paddingLeft": 8,
+                    },
+                  ]
+                }
+              >
+                BCSC.NicknameAccount.AccountNameDescription2
+              </Text>
+            </View>
+          </View>
+          <View
+            style={
+              {
+                "marginVertical": 10,
+                "width": "100%",
+              }
+            }
+          >
+            <Text
+              maxFontSizeMultiplier={2}
+              style={
+                [
+                  {
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 18,
+                    "fontWeight": "normal",
+                  },
+                  {
+                    "marginBottom": 5,
+                  },
+                ]
+              }
+            >
+              BCSC.NicknameAccount.AccountName
+            </Text>
+            <TextInput
+              accessibilityLabel="BCSC.NicknameAccount.AccountName"
+              defaultValue=""
+              maxFontSizeMultiplier={2}
+              maxLength={30}
+              onBlur={[Function]}
+              onChangeText={[Function]}
+              onFocus={[Function]}
+              selectionColor="#313132"
+              style={
+                [
+                  {
+                    "backgroundColor": "#D3D3D3",
+                    "borderColor": "#D3D3D3",
+                    "borderRadius": 4,
+                    "borderWidth": 1,
+                    "color": "#313132",
+                    "fontFamily": "BCSans-Regular",
+                    "fontSize": 16,
+                    "padding": 10,
+                  },
+                  false,
+                ]
+              }
+              testID="com.ariesbifold:id/NameInput"
+            />
+          </View>
+        </View>
+        <View
+          style={
+            [
+              [
+                {
+                  "gap": 16,
+                },
+                {
+                  "paddingBottom": 16,
+                  "paddingHorizontal": 16,
+                },
+                undefined,
+              ],
+              {
+                "marginTop": "auto",
+              },
+            ]
+          }
+        >
+          <View
+            accessibilityLabel="BCSC.NicknameAccount.SaveAndContinue"
+            accessibilityRole="button"
+            accessibilityState={
+              {
+                "busy": undefined,
+                "checked": undefined,
+                "disabled": false,
+                "expanded": undefined,
+                "selected": undefined,
+              }
+            }
+            accessibilityValue={
+              {
+                "max": undefined,
+                "min": undefined,
+                "now": undefined,
+                "text": undefined,
+              }
+            }
+            accessible={true}
+            collapsable={false}
+            focusable={true}
+            onClick={[Function]}
+            onResponderGrant={[Function]}
+            onResponderMove={[Function]}
+            onResponderRelease={[Function]}
+            onResponderTerminate={[Function]}
+            onResponderTerminationRequest={[Function]}
+            onStartShouldSetResponder={[Function]}
+            style={
+              {
+                "backgroundColor": "#003366",
+                "borderRadius": 4,
+                "opacity": 1,
+                "padding": 16,
+              }
+            }
+            testID="com.ariesbifold:id/SaveAndContinue"
+          >
+            <View
+              style={
+                {
+                  "alignItems": "center",
+                  "flexDirection": "row",
+                  "justifyContent": "center",
+                }
+              }
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "color": "#FFFFFF",
+                        "fontFamily": "BCSans-Regular",
+                        "fontSize": 18,
+                        "fontWeight": "bold",
+                        "textAlign": "center",
+                      },
+                      false,
+                      false,
+                      false,
+                    ],
+                  ]
+                }
+              >
+                BCSC.NicknameAccount.SaveAndContinue
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </RCTScrollView>
+  </View>
+</RNCSafeAreaView>
+`;
