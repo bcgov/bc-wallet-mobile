@@ -92,125 +92,123 @@ describe('useSetupStepsModel', () => {
     })
   })
 
-  describe('stepActions', () => {
-    describe('nickname action', () => {
-      it('should navigate to NicknameAccount screen', () => {
-        const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+  describe('stepActions.nickname', () => {
+    it('should navigate to NicknameAccount screen', () => {
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
 
-        result.current.stepActions.nickname()
+      result.current.stepActions.nickname()
 
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.NicknameAccount)
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.NicknameAccount)
+    })
+  })
+
+  describe('stepActions.id', () => {
+    it('should navigate to IdentitySelection when id step is not completed', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          ...mockSteps.id,
+          completed: false,
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
       })
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+
+      result.current.stepActions.id()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.IdentitySelection)
     })
 
-    describe('id action', () => {
-      it('should navigate to IdentitySelection when id step is not completed', () => {
-        const useSetupStepsMock = jest.mocked(useSetupSteps)
-        useSetupStepsMock.mockReturnValue({
-          ...mockSteps,
-          id: {
-            ...mockSteps.id,
-            completed: false,
-            nonBcscNeedsAdditionalCard: false,
-            nonPhotoBcscNeedsAdditionalCard: false,
-          },
-        })
-
-        const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
-
-        result.current.stepActions.id()
-
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.IdentitySelection)
+    it('should navigate to EvidenceTypeList when nonBcscNeedsAdditionalCard is true', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          ...mockSteps.id,
+          completed: false,
+          nonBcscNeedsAdditionalCard: true,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
       })
 
-      it('should navigate to EvidenceTypeList when nonBcscNeedsAdditionalCard is true', () => {
-        const useSetupStepsMock = jest.mocked(useSetupSteps)
-        useSetupStepsMock.mockReturnValue({
-          ...mockSteps,
-          id: {
-            ...mockSteps.id,
-            completed: false,
-            nonBcscNeedsAdditionalCard: true,
-            nonPhotoBcscNeedsAdditionalCard: false,
-          },
-        })
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
 
-        const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+      result.current.stepActions.id()
 
-        result.current.stepActions.id()
-
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EvidenceTypeList)
-      })
-
-      it('should navigate to AdditionalIdentificationRequired when nonPhotoBcscNeedsAdditionalCard is true', () => {
-        const useSetupStepsMock = jest.mocked(useSetupSteps)
-        useSetupStepsMock.mockReturnValue({
-          ...mockSteps,
-          id: {
-            ...mockSteps.id,
-            completed: false,
-            nonBcscNeedsAdditionalCard: false,
-            nonPhotoBcscNeedsAdditionalCard: true,
-          },
-        })
-
-        const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
-
-        result.current.stepActions.id()
-
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AdditionalIdentificationRequired)
-      })
-
-      it('should not navigate when id step is completed', () => {
-        const useSetupStepsMock = jest.mocked(useSetupSteps)
-        useSetupStepsMock.mockReturnValue({
-          ...mockSteps,
-          id: {
-            ...mockSteps.id,
-            completed: true,
-            nonBcscNeedsAdditionalCard: false,
-            nonPhotoBcscNeedsAdditionalCard: false,
-          },
-        })
-
-        const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
-
-        result.current.stepActions.id()
-
-        expect(mockNavigation.navigate).not.toHaveBeenCalled()
-      })
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EvidenceTypeList)
     })
 
-    describe('address action', () => {
-      it('should navigate to ResidentialAddress screen', () => {
-        const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
-
-        result.current.stepActions.address()
-
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.ResidentialAddress)
+    it('should navigate to AdditionalIdentificationRequired when nonPhotoBcscNeedsAdditionalCard is true', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          ...mockSteps.id,
+          completed: false,
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: true,
+        },
       })
+
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+
+      result.current.stepActions.id()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.AdditionalIdentificationRequired)
     })
 
-    describe('email action', () => {
-      it('should navigate to EnterEmail screen with cardType', () => {
-        const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+    it('should not navigate when id step is completed', () => {
+      const useSetupStepsMock = jest.mocked(useSetupSteps)
+      useSetupStepsMock.mockReturnValue({
+        ...mockSteps,
+        id: {
+          ...mockSteps.id,
+          completed: true,
+          nonBcscNeedsAdditionalCard: false,
+          nonPhotoBcscNeedsAdditionalCard: false,
+        },
+      })
 
-        result.current.stepActions.email()
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
 
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterEmail, {
-          cardType: mockStore.bcsc.cardType,
-        })
+      result.current.stepActions.id()
+
+      expect(mockNavigation.navigate).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('stepActions.address', () => {
+    it('should navigate to ResidentialAddress screen', () => {
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+
+      result.current.stepActions.address()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.ResidentialAddress)
+    })
+  })
+
+  describe('stepActions.email', () => {
+    it('should navigate to EnterEmail screen with cardType', () => {
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+
+      result.current.stepActions.email()
+
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.EnterEmail, {
+        cardType: mockStore.bcsc.cardType,
       })
     })
+  })
 
-    describe('verify action', () => {
-      it('should navigate to VerificationMethodSelection screen', () => {
-        const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
+  describe('stepActions.verify', () => {
+    it('should navigate to VerificationMethodSelection screen', () => {
+      const { result } = renderHook(() => useSetupStepsModel(mockNavigation))
 
-        result.current.stepActions.verify()
+      result.current.stepActions.verify()
 
-        expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
-      })
+      expect(mockNavigation.navigate).toHaveBeenCalledWith(BCSCScreens.VerificationMethodSelection)
     })
   })
 

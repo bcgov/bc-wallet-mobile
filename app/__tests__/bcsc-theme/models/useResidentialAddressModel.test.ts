@@ -102,7 +102,7 @@ describe('useResidentialAddressModel', () => {
         },
       } as any
       const bifoldMock = jest.mocked(Bifold)
-      bifoldMock.useStore.mockReturnValue([storeWithoutAddress as any, mockDispatch])
+      bifoldMock.useStore.mockReturnValue([storeWithoutAddress, mockDispatch])
 
       const { result } = renderHook(() => useResidentialAddressModel({ navigation: mockNavigation }))
       expect(result.current.formState).toEqual({ streetAddress: '', city: '', province: null, postalCode: '' })
