@@ -13,40 +13,29 @@ describe('Analytics Tracker', () => {
   })
 
   describe('initializeTracker', () => {
-    it('should remove existing tracker before initializing a new one', async () => {
+    it('should initialize tracker', async () => {
       const mockNewTracker = jest.fn()
-      const mockRemoveTracker = jest.fn()
       const mockAnalyticsClient = {
         newTracker: mockNewTracker,
-        getTracker: jest.fn(),
-        removeTracker: mockRemoveTracker,
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
 
       // First initialization
-      await analytics.initializeTracker({ startTracking: true })
-      expect(mockRemoveTracker).not.toHaveBeenCalled()
+      await analytics.initializeTracker()
       expect(mockNewTracker).toHaveBeenCalledTimes(1)
-
-      mockAnalyticsClient.getTracker = jest.fn().mockReturnValue({})
-
-      // Second initialization
-      await analytics.initializeTracker({ startTracking: true })
-      expect(mockRemoveTracker).toHaveBeenCalledWith('namespace')
-      expect(mockNewTracker).toHaveBeenCalledTimes(2)
     })
   })
 
   describe('hasTracker', () => {
     it('should return true if tracker exists', async () => {
       const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue({}),
-        removeTracker: jest.fn(),
+        newTracker: jest.fn().mockReturnValue({}),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
+
+      await analytics.initializeTracker()
 
       expect(analytics.hasTracker()).toBe(true)
     })
@@ -60,8 +49,6 @@ describe('Analytics Tracker', () => {
     it('should return false if tracking not enabled', async () => {
       const mockAnalyticsClient = {
         newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue(undefined),
-        removeTracker: jest.fn(),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
@@ -75,30 +62,9 @@ describe('Analytics Tracker', () => {
       const mockTrackScreenView = jest.fn()
       const mockAnalyticsClient = {
         newTracker: jest.fn(),
-        getTracker: jest.fn(),
-        removeTracker: jest.fn(),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = true
-
-      analytics.trackScreenEvent('HomeScreen')
-
-      expect(mockTrackScreenView).not.toHaveBeenCalled()
-    })
-
-    it('should not track when tracking disabled', async () => {
-      const mockTrackScreenView = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue({
-          trackScreenViewEvent: mockTrackScreenView,
-        }),
-        removeTracker: jest.fn(),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = false
 
       analytics.trackScreenEvent('HomeScreen')
 
@@ -109,14 +75,9 @@ describe('Analytics Tracker', () => {
       const mockTrackScreenView = jest.fn()
       const mockAnalyticsClient = {
         newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue({
-          trackScreenViewEvent: mockTrackScreenView,
-        }),
-        removeTracker: jest.fn(),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = true
 
       analytics.trackScreenEvent('HomeScreen', 'HomeScreen')
 
@@ -126,15 +87,14 @@ describe('Analytics Tracker', () => {
     it('should track when tracking enabled and valid screen names', async () => {
       const mockTrackScreenView = jest.fn()
       const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue({
+        newTracker: jest.fn().mockResolvedValue({
           trackScreenViewEvent: mockTrackScreenView,
         }),
-        removeTracker: jest.fn(),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = true
+
+      await analytics.initializeTracker()
 
       analytics.trackScreenEvent('HomeScreen', 'NewScreen')
 
@@ -150,30 +110,9 @@ describe('Analytics Tracker', () => {
       const mockTrackError = jest.fn()
       const mockAnalyticsClient = {
         newTracker: jest.fn(),
-        getTracker: jest.fn(),
-        removeTracker: jest.fn(),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = true
-
-      analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
-
-      expect(mockTrackError).not.toHaveBeenCalled()
-    })
-
-    it('should not track when tracking disabled', async () => {
-      const mockTrackError = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue({
-          trackSelfDescribingEvent: mockTrackError,
-        }),
-        removeTracker: jest.fn(),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = false
 
       analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
 
@@ -183,15 +122,14 @@ describe('Analytics Tracker', () => {
     it('should track when tracking enabled and valid error', async () => {
       const mockTrackError = jest.fn()
       const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue({
+        newTracker: jest.fn().mockResolvedValue({
           trackSelfDescribingEvent: mockTrackError,
         }),
-        removeTracker: jest.fn(),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = true
+
+      await analytics.initializeTracker()
 
       analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
 
@@ -209,29 +147,9 @@ describe('Analytics Tracker', () => {
         const mockTrackAlert = jest.fn()
         const mockAnalyticsClient = {
           newTracker: jest.fn(),
-          getTracker: jest.fn(),
-          removeTracker: jest.fn(),
         }
 
         const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-        analytics.trackingEnabled = true
-
-        analytics.trackAlertDisplayEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN)
-
-        expect(mockTrackAlert).not.toHaveBeenCalled()
-      })
-      it('should not track when tracking disabled', async () => {
-        const mockTrackAlert = jest.fn()
-        const mockAnalyticsClient = {
-          newTracker: jest.fn(),
-          getTracker: jest.fn().mockReturnValue({
-            trackSelfDescribingEvent: mockTrackAlert,
-          }),
-          removeTracker: jest.fn(),
-        }
-
-        const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-        analytics.trackingEnabled = false
 
         analytics.trackAlertDisplayEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN)
 
@@ -241,15 +159,14 @@ describe('Analytics Tracker', () => {
       it('should track when tracking enabled and valid alert event', async () => {
         const mockTrackAlert = jest.fn()
         const mockAnalyticsClient = {
-          newTracker: jest.fn(),
-          getTracker: jest.fn().mockReturnValue({
+          newTracker: jest.fn().mockResolvedValue({
             trackSelfDescribingEvent: mockTrackAlert,
           }),
-          removeTracker: jest.fn(),
         }
 
         const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-        analytics.trackingEnabled = true
+
+        await analytics.initializeTracker()
 
         analytics.trackAlertDisplayEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN)
 
@@ -269,30 +186,9 @@ describe('Analytics Tracker', () => {
       const mockTrackAlert = jest.fn()
       const mockAnalyticsClient = {
         newTracker: jest.fn(),
-        getTracker: jest.fn(),
-        removeTracker: jest.fn(),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = true
-
-      analytics.trackAlertActionEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN, 'ok')
-
-      expect(mockTrackAlert).not.toHaveBeenCalled()
-    })
-
-    it('should not track when tracking disabled', async () => {
-      const mockTrackAlert = jest.fn()
-      const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue({
-          trackSelfDescribingEvent: mockTrackAlert,
-        }),
-        removeTracker: jest.fn(),
-      }
-
-      const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = false
 
       analytics.trackAlertActionEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN, 'ok')
 
@@ -302,15 +198,14 @@ describe('Analytics Tracker', () => {
     it('should track when tracking enabled and valid alert event', async () => {
       const mockTrackAlert = jest.fn()
       const mockAnalyticsClient = {
-        newTracker: jest.fn(),
-        getTracker: jest.fn().mockReturnValue({
+        newTracker: jest.fn().mockResolvedValue({
           trackSelfDescribingEvent: mockTrackAlert,
         }),
-        removeTracker: jest.fn(),
       }
 
       const analytics = new AnalyticsTracker('namespace', 'endpoint', mockAnalyticsClient)
-      analytics.trackingEnabled = true
+
+      await analytics.initializeTracker()
 
       analytics.trackAlertActionEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN, 'ok')
 

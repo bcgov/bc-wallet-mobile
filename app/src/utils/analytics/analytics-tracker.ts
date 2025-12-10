@@ -1,5 +1,5 @@
 import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
-import { getTracker, newTracker, ReactNativeTracker, removeTracker } from '@snowplow/react-native-tracker'
+import { newTracker, ReactNativeTracker } from '@snowplow/react-native-tracker'
 import Config from 'react-native-config'
 import { getBuildNumber, getBundleId, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
 import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
@@ -11,8 +11,6 @@ export const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/j
 
 const AnalyticsClient = {
   newTracker,
-  getTracker,
-  removeTracker,
 }
 
 type AnalyticsClient = typeof AnalyticsClient
