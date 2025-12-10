@@ -47,6 +47,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
     postalCode: store.bcsc.userMetadata?.address?.postalCode ?? '',
   })
   const [formErrors, setFormErrors] = useState<ResidentialAddressFormErrors>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   /**
    * Handles changes to the form fields.
@@ -139,59 +140,73 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
       throw new Error(t('BCSC.Address.MissingPrerequisiteAttributes'))
     }
 
-    // TODO (MD): Handle if this request fails, but is not a registration error. ie: failed network request
-    const deviceAuth = await authorization.authorizeDeviceWithUnknownBCSC({
-      firstName: store.bcsc.userMetadata.name.first,
-      lastName: store.bcsc.userMetadata.name.last,
-      birthdate: store.bcsc.birthdate.toISOString().split('T')[0],
-      middleNames: store.bcsc.userMetadata.name.middle,
-      address: {
-        streetAddress: formState.streetAddress,
-        city: formState.city,
-        province: formState.province as ProvinceCode, // field has already been validated
-        postalCode: formState.postalCode,
-      },
-    })
+    try {
+      setIsSubmitting(true)
 
-    // device previously registered, but no deviceCode found in store
-    if (deviceAuth === null && !store.bcsc.deviceCode) {
-      logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found')
-      throw new Error(t('BCSC.Address.NoDeviceCodeFound'))
-    }
+      const deviceAuth = await authorization.authorizeDeviceWithUnknownBCSC({
+        firstName: store.bcsc.userMetadata.name.first,
+        lastName: store.bcsc.userMetadata.name.last,
+        birthdate: store.bcsc.birthdate.toISOString().split('T')[0],
+        middleNames: store.bcsc.userMetadata.name.middle,
+        address: {
+          streetAddress: formState.streetAddress,
+          city: formState.city,
+          province: formState.province as ProvinceCode, // field has already been validated
+          postalCode: formState.postalCode,
+        },
+      })
 
-    Toast.show({
-      type: ToastType.Success,
-      text1: 'Address saved',
-      bottomOffset: Spacing.lg,
-      autoHide: true,
-      visibilityTime: 1500,
-    })
+      // device previously registered, but no deviceCode found in store
+      if (deviceAuth === null && !store.bcsc.deviceCode) {
+        logger.error('ResidentialAddressScreen.handleSubmit -> invalid state detected, no deviceCode found')
+        throw new Error(t('BCSC.Address.NoDeviceCodeFound'))
+      }
 
-    // device has already been registered
-    if (deviceAuth === null) {
-      logger.info(`Device has already been registered`)
+      Toast.show({
+        type: ToastType.Success,
+        text1: t('BCSC.Address.AddressSaved'),
+        bottomOffset: Spacing.lg,
+        autoHide: true,
+        visibilityTime: 1500,
+      })
+
+      // device has already been registered
+      if (deviceAuth === null) {
+        logger.info(`Device has already been registered`)
+        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
+        return
+      }
+
+      logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
+
+      // QUESTION (MD): What is the correct value for expiresAt?
+      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
+      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
+      dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
+      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
+      dispatch({
+        type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
+        payload: [deviceAuth.verification_options.split(' ')],
+      })
+
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
-      return
+    } catch (error) {
+      logger.error('ResidentialAddressScreen.handleSubmit -> device authorization failed', { error })
+      Toast.show({
+        type: 'error',
+        text1: t('BCSC.Address.AuthorizationErrorTitle'),
+        text2: t('BCSC.Address.AuthorizationErrorMessage'),
+        position: 'bottom',
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-
-    logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
-
-    // QUESTION (MD): What is the correct value for expiresAt?
-    const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
-    dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
-    dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
-    dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
-    dispatch({
-      type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-      payload: [deviceAuth.verification_options.split(' ')],
-    })
-
-    navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
   }, [formState, validateForm, dispatch, store.bcsc, navigation, logger, t, authorization, Spacing.lg])
 
   return {
     formState,
     formErrors,
+    isSubmitting,
     handleChange,
     handleSubmit,
   }

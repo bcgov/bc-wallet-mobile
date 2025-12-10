@@ -770,6 +770,9 @@ const translation = {
       "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format",
       "MissingPrerequisiteAttributes": "Missing prerequisite user attributes",
       "NoDeviceCodeFound": "Device previously registered, but no deviceCode found in store",
+      "AddressSaved": "Address saved",
+      "AuthorizationErrorTitle": "Authorization failed",
+      "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again.",
     },
     "Account": {
       "RemoveAccount": "Remove account",

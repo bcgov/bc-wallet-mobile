@@ -2,7 +2,15 @@ import { DropdownWithValidation } from '@/bcsc-theme/components/DropdownWithVali
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { PROVINCE_OPTIONS } from '@/bcsc-theme/utils/address-utils'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
+import {
+  Button,
+  ButtonType,
+  ScreenWrapper,
+  testIdWithKey,
+  ThemedText,
+  useAnimatedComponents,
+  useTheme,
+} from '@bifold/core'
 import { StackScreenProps } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
@@ -19,8 +27,9 @@ type ResidentialAddressScreenProps = StackScreenProps<BCSCVerifyStackParams, BCS
 export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScreenProps) => {
   const { t } = useTranslation()
   const { Spacing } = useTheme()
+  const { ButtonLoading } = useAnimatedComponents()
 
-  const { formState, formErrors, handleChange, handleSubmit } = useResidentialAddressModel({ navigation })
+  const { formState, formErrors, isSubmitting, handleChange, handleSubmit } = useResidentialAddressModel({ navigation })
 
   return (
     <ScreenWrapper keyboardActive={true} scrollViewContainerStyle={{ gap: Spacing.lg }}>
@@ -74,7 +83,10 @@ export const ResidentialAddressScreen = ({ navigation }: ResidentialAddressScree
             testID={testIdWithKey('ResidentialAddressContinue')}
             buttonType={ButtonType.Primary}
             onPress={handleSubmit}
-          />
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <ButtonLoading />}
+          </Button>
         </View>
       </View>
     </ScreenWrapper>

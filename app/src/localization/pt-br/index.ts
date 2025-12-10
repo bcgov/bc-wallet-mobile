@@ -769,6 +769,9 @@ const translation = {
       "PostalCodeInvalid": "Please enter a valid postal code in A1A 2B2 format (PT-BR)",
       "MissingPrerequisiteAttributes": "Missing prerequisite user attributes (PT-BR)",
       "NoDeviceCodeFound": "Device previously registered, but no deviceCode found in store (PT-BR)",
+      "AddressSaved": "Address saved (PT-BR)",
+      "AuthorizationErrorTitle": "Authorization failed (PT-BR)",
+      "AuthorizationErrorMessage": "Unable to authorize device. Please check your connection and try again. (PT-BR)",
     },
     "Account": {
       "RemoveAccount": "Remove account (PT-BR)",
