@@ -1,7 +1,7 @@
 import { AlertEvent } from '@/events/alertEvents'
-import { Analytics } from '@/utils/analytics/analytics-tracker'
 import i18n from 'i18next'
 import { Alert, AlertButton } from 'react-native'
+import { Analytics } from './analytics/analytics-singleton'
 
 const ALERT_ACTION_OK: AlertAction = { text: i18n.t('Alerts.Actions.DefaultOK'), onPress: () => {} }
 

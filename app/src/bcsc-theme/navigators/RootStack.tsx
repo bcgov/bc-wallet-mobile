@@ -1,4 +1,5 @@
 import { BCState } from '@/store'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { BifoldError, DispatchAction, EventTypes, TOKENS, useServices, useStore } from '@bifold/core'
 import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,7 +16,7 @@ import VerifyStack from './VerifyStack'
 const BCSCRootStack: React.FC = () => {
   const { t } = useTranslation()
   const [store, dispatch] = useStore<BCState>()
-  const [loadState] = useServices([TOKENS.LOAD_STATE])
+  const [loadState, logger] = useServices([TOKENS.LOAD_STATE, TOKENS.UTIL_LOGGER])
   const initializeBCSC = useInitializeBCSC()
   const { isClientReady } = useBCSCApiClientState()
   useSystemChecks(SystemCheckScope.STARTUP)
@@ -33,6 +34,17 @@ const BCSCRootStack: React.FC = () => {
       DeviceEventEmitter.emit(EventTypes.ERROR_ADDED, bifoldError)
     }
   }, [dispatch, loadState, t, store.stateLoaded])
+
+  useEffect(() => {
+    const asyncEffect = async () => {
+      if (store.bcsc.analyticsOptIn && !Analytics.hasTracker()) {
+        logger.info('Initializing analytics tracker')
+        await Analytics.initializeTracker()
+      }
+    }
+
+    asyncEffect()
+  }, [store.bcsc.analyticsOptIn])
 
   /**
    * ONBOARDING PATCH

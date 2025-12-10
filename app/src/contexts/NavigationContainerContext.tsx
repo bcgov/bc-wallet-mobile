@@ -1,4 +1,4 @@
-import { Analytics } from '@/utils/analytics/analytics-tracker'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
 import { NavigationContainer } from '@react-navigation/native'
 import { navigationRef } from 'App'

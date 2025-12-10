@@ -17,10 +17,6 @@ const AnalyticsClient = {
 
 type AnalyticsClient = typeof AnalyticsClient
 
-interface InitializeTrackerOptions {
-  startTracking: boolean
-}
-
 interface AnalyticsError {
   code: string // TODO (MD): Use AlertEvent or ErrorEvent codes
   message: string
@@ -37,16 +33,18 @@ interface AnalyticsError {
  * @example
  * const analyticsTracker = new AnalyticsTracker('myNamespace', 'https://endpoint.com')
  *
- * await analyticsTracker.initializeTracker({ startTracking: true })
+ * await analyticsTracker.initializeTracker()
  *
- * analyticsTracker.trackErrorEvent()
- *
+ * analyticsTracker.trackErrorEvent({code: 'NETWORK_ERROR', message: 'Failed to fetch data'})
  * analyticsTracker.trackScreenEvent('HomeScreen', 'LoginScreen')
+ * analyticsTracker.trackAlertDisplayEvent(AlertEvent.SAMPLE_EVENT)
+ * analyticsTracker.trackAlertActionEvent(AlertEvent.SAMPLE_EVENT, 'OK')
  */
 export class AnalyticsTracker {
   private namespace: string
   private endpoint: string
   private client: AnalyticsClient
+  private tracker?: ReactNativeTracker
   trackingEnabled: boolean
 
   constructor(namespace: string, endpoint: string, client = AnalyticsClient) {
@@ -57,56 +55,21 @@ export class AnalyticsTracker {
   }
 
   /**
-   * Retrieves the tracker instance for the specified namespace.
-   *
-   * @returns {*} {ReactNativeTracker} The tracker instance.
-   */
-  private get tracker(): ReactNativeTracker {
-    const tracker = this.client.getTracker(this.namespace)
-
-    if (!tracker) {
-      throw new Error(
-        `Analytics tracker '${this.namespace}' has not been initialized. Did you forget to call initializeTracker()?`
-      )
-    }
-
-    return tracker
-  }
-
-  /**
-   * Checks if tracking is enabled and a tracker exists.
-   *
-   * @returns {*} {boolean}
-   */
-  private canTrack(): boolean {
-    return this.trackingEnabled && this.hasTracker()
-  }
-
-  /**
    * Checks if Analytics has an initialized tracker.
    *
    * @returns {*} {boolean}
    */
   hasTracker(): boolean {
-    return Boolean(this.client.getTracker(this.namespace))
+    return Boolean(this.tracker)
   }
 
   /**
    * Initializes the analytics tracker with the provided options.
    *
-   * @param {InitializeTrackerOptions} options - The initialization options.
    * @returns {*} {Promise<void>}
    */
-  async initializeTracker(options: InitializeTrackerOptions): Promise<void> {
-    this.trackingEnabled = options.startTracking
-
-    const existingTracker = this.client.getTracker(this.namespace)
-
-    if (existingTracker) {
-      return
-    }
-
-    await this.client.newTracker({
+  async initializeTracker(): Promise<void> {
+    this.tracker = await this.client.newTracker({
       namespace: this.namespace,
       endpoint: this.endpoint,
       protocol: __DEV__ ? 'http' : 'https',
@@ -130,7 +93,6 @@ export class AnalyticsTracker {
       platformContextRetriever: getPlatformContextRetriever(this.trackingEnabled),
     })
   }
-  //
 
   /**
    * Tracks a screen view event.
@@ -140,7 +102,7 @@ export class AnalyticsTracker {
    * @returns {*} {void}
    */
   trackScreenEvent(screenName: string, previousScreenName?: string): void {
-    if (!this.canTrack()) {
+    if (!this.tracker) {
       return
     }
 
@@ -164,7 +126,7 @@ export class AnalyticsTracker {
    * @returns {*} {void}
    */
   trackErrorEvent(error: AnalyticsError): void {
-    if (!this.canTrack()) {
+    if (!this.tracker) {
       return
     }
 
@@ -186,8 +148,7 @@ export class AnalyticsTracker {
    * @returns {*} {void}
    */
   trackAlertDisplayEvent(alertEvent: AlertEvent): void {
-    if (!this.canTrack()) {
-      console.log({ tracking: this.trackingEnabled, hasTracker: this.hasTracker() })
+    if (!this.tracker) {
       return
     }
 
@@ -210,7 +171,7 @@ export class AnalyticsTracker {
    * @returns {*} {void}
    */
   trackAlertActionEvent(alertEvent: AlertEvent, actionLabel: string): void {
-    if (!this.canTrack()) {
+    if (!this.tracker) {
       return
     }
 
