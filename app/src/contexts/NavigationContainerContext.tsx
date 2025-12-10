@@ -13,8 +13,6 @@ export const NavigationContainerContext = createContext<NavigationContainerConte
 /**
  * NavigationContainerProvider component that wraps the app's navigation container.
  *
- * TODO (MD): Move this code into Bifold? Putting here now to unblock analytics implementation.
- *
  * @returns {*} {JSX.Element}
  */
 export const NavigationContainerProvider = ({ children }: PropsWithChildren) => {
@@ -27,7 +25,7 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
     () => ({
       isNavigationReady: navigationReady,
     }),
-    []
+    [navigationReady]
   )
 
   return (
@@ -47,7 +45,6 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
 
           // Track the screen view event only if the route has changed
           if (currentRouteName && screenTransitionKeyRef.current !== screenTransitionKey) {
-            // TODO (MD): add ref to check if this has already been tracked
             Analytics.trackScreenEvent(currentRouteName, previousRouteName)
 
             screenTransitionKeyRef.current = screenTransitionKey
@@ -62,6 +59,13 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
   )
 }
 
+/**
+ * Hook to access the NavigationContainerContext.
+ *
+ * TODO (MD): Use this hook in `useSystemChecks` to delay system checks until navigation is ready.
+ *
+ * @returns {*} {NavigationContainerContextType}
+ */
 export const useNavigationContainer = () => {
   const context = useContext(NavigationContainerContext)
 
