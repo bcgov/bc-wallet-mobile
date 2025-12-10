@@ -331,9 +331,10 @@ export class AppContainer implements Container {
     this._container.registerInstance(TOKENS.UTIL_PROOF_TEMPLATE, getProofRequestTemplates)
     this._container.registerInstance(TOKENS.LOAD_STATE, async (dispatch: React.Dispatch<ReducerAction<unknown>>) => {
       const loadState = async <Type>(key: LocalStorageKeys | BCLocalStorageKeys, updateVal: (val: Type) => void) => {
-        const data = (await this.storage.getValueForKey(key)) as Type
-        if (data) {
-          updateVal(data)
+        const data = await this.storage.getValueForKey(key)
+        if (data != null) {
+          // Checks for both undefined and null before casting
+          updateVal(data as Type)
         }
       }
 

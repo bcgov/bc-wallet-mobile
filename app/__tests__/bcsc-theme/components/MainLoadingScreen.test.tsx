@@ -5,6 +5,8 @@ import { testIdWithKey } from '@bifold/core'
 import { CommonActions } from '@react-navigation/native'
 import { render } from '@testing-library/react-native'
 
+jest.unmock('@/bcsc-theme/contexts/BCSCAccountContext')
+
 describe('MainLoadingScreen Component', () => {
   beforeAll(() => {
     jest.useFakeTimers()

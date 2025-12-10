@@ -17,6 +17,7 @@ const navigation = {
     index: jest.fn(),
   })),
   goBack: jest.fn(),
+  canGoBack: jest.fn(),
   pop: jest.fn(),
   reset: jest.fn(),
   isFocused: () => true,

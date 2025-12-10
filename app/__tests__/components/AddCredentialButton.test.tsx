@@ -5,6 +5,14 @@ import AddCredentialButton from '@bcwallet-theme/components/AddCredentialButton'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
 
 describe('AddCredentialButton Component', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    jest.useFakeTimers()
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
+  })
   test('renders correctly', () => {
     const tree = render(
       <BasicAppContext>

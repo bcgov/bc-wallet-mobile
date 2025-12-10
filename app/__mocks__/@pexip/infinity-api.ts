@@ -1,0 +1,7 @@
+export const requestToken = jest.fn()
+export const refreshToken = jest.fn()
+export const callsWebrtcParticipant = jest.fn()
+export const newCandidate = jest.fn()
+export const disconnectCall = jest.fn()
+export const withPin = jest.fn((fetcher: any) => fetcher)
+export const withToken = jest.fn((fetcher: any) => fetcher)

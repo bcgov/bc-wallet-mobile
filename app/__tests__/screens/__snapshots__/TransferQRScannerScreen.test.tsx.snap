@@ -1,0 +1,228 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TransferQRScanner renders correctly 1`] = `
+<View
+  style={
+    {
+      "flex": 1,
+    }
+  }
+>
+  <View
+    style={
+      [
+        {
+          "bottom": 0,
+          "left": 0,
+          "position": "absolute",
+          "right": 0,
+          "top": 0,
+        },
+        {
+          "transform": [
+            {
+              "rotate": "0deg",
+            },
+          ],
+        },
+      ]
+    }
+  />
+  <View
+    pointerEvents="none"
+  >
+    <RNSVGSvgView
+      bbHeight="1334"
+      bbWidth="750"
+      focusable={false}
+      height={1334}
+      style={
+        [
+          {
+            "backgroundColor": "transparent",
+            "borderWidth": 0,
+          },
+          {
+            "position": "absolute",
+          },
+          {
+            "flex": 0,
+            "height": 1334,
+            "width": 750,
+          },
+        ]
+      }
+      width={750}
+    >
+      <RNSVGGroup
+        fill={
+          {
+            "payload": 4278190080,
+            "type": 0,
+          }
+        }
+      >
+        <RNSVGDefs>
+          <RNSVGMask
+            fill={
+              {
+                "payload": 4278190080,
+                "type": 0,
+              }
+            }
+            height="100%"
+            maskContentUnits={1}
+            maskUnits={0}
+            name="overlayMask"
+            width="100%"
+            x="0%"
+            y="0%"
+          >
+            <RNSVGRect
+              fill={
+                {
+                  "payload": 4294967295,
+                  "type": 0,
+                }
+              }
+              height="1334"
+              propList={
+                [
+                  "fill",
+                ]
+              }
+              width="750"
+              x="0"
+              y="0"
+            />
+            <RNSVGRect
+              fill={
+                {
+                  "payload": 4278190080,
+                  "type": 0,
+                }
+              }
+              height="675"
+              propList={
+                [
+                  "fill",
+                  "stroke",
+                  "strokeWidth",
+                ]
+              }
+              stroke={
+                {
+                  "payload": 4294967295,
+                  "type": 0,
+                }
+              }
+              strokeWidth="2"
+              width="675"
+              x="37.5"
+              y="217"
+            />
+          </RNSVGMask>
+        </RNSVGDefs>
+        <RNSVGRect
+          fill={
+            {
+              "payload": 4278190080,
+              "type": 0,
+            }
+          }
+          fillOpacity={0.6}
+          height="1334"
+          mask="overlayMask"
+          propList={
+            [
+              "fill",
+              "fillOpacity",
+            ]
+          }
+          width="750"
+          x="0"
+          y="0"
+        />
+        <RNSVGRect
+          fill={
+            {
+              "payload": 0,
+              "type": 0,
+            }
+          }
+          height="675"
+          propList={
+            [
+              "fill",
+              "stroke",
+              "strokeWidth",
+            ]
+          }
+          stroke={
+            {
+              "payload": 4294967295,
+              "type": 0,
+            }
+          }
+          strokeWidth="2"
+          width="675"
+          x="37.5"
+          y="217"
+        />
+      </RNSVGGroup>
+    </RNSVGSvgView>
+  </View>
+  <View
+    style={
+      {
+        "alignItems": "center",
+        "alignSelf": "center",
+        "flexDirection": "row",
+        "marginHorizontal": 40,
+        "paddingTop": 30,
+      }
+    }
+  >
+    <Text
+      allowFontScaling={false}
+      selectable={false}
+      style={
+        [
+          {
+            "color": undefined,
+            "fontSize": 40,
+          },
+          {
+            "color": "#FFFFFF",
+            "padding": 16,
+          },
+          {
+            "fontFamily": "Material Design Icons",
+            "fontStyle": "normal",
+            "fontWeight": "normal",
+          },
+          {},
+        ]
+      }
+    >
+      󰐳
+    </Text>
+    <Text
+      maxFontSizeMultiplier={2}
+      style={
+        [
+          {
+            "color": "#313132",
+            "fontFamily": "BCSans-Regular",
+            "fontSize": 20,
+            "fontWeight": "bold",
+          },
+          undefined,
+        ]
+      }
+    >
+      BCSC.Scan.WillScanAutomatically
+    </Text>
+  </View>
+</View>
+`;

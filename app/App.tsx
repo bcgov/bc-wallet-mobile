@@ -1,3 +1,12 @@
+import Root from '@/Root'
+import { DeepLinkService, DeepLinkViewModel, DeepLinkViewModelProvider } from '@/bcsc-theme/features/deep-linking'
+import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
+import { NavigationContainerProvider } from '@/contexts/NavigationContainerContext'
+import { localization } from '@/localization'
+import { initialState, Mode, reducer } from '@/store'
+import { themes } from '@/theme'
+import { appLogger } from '@/utils/logger'
+import tours from '@bcwallet-theme/features/tours'
 import {
   animatedComponents,
   AnimatedComponentsProvider,
@@ -16,24 +25,15 @@ import {
 } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
 import { createNavigationContainerRef } from '@react-navigation/native'
+import WebDisplay from '@screens/WebDisplay'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import Config from 'react-native-config'
 import { isTablet } from 'react-native-device-info'
 import Orientation from 'react-native-orientation-locker'
 import SplashScreen from 'react-native-splash-screen'
 import Toast from 'react-native-toast-message'
 import { container } from 'tsyringe'
-
-import Root from '@/Root'
-import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
-import { NavigationContainerProvider } from '@/contexts/NavigationContainerContext'
-import { localization } from '@/localization'
-import { initialState, Mode, reducer } from '@/store'
-import { themes } from '@/theme'
-import { appLogger } from '@/utils/logger'
-import tours from '@bcwallet-theme/features/tours'
-import WebDisplay from '@screens/WebDisplay'
-import Config from 'react-native-config'
 import { AppContainer } from './container-imp'
 
 initLanguages(localization)
@@ -48,9 +48,14 @@ export const navigationRef = createNavigationContainerRef()
 
 const App = () => {
   const { t } = useTranslation()
+  const logger = appLogger
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
   const [surveyVisible, setSurveyVisible] = useState(false)
   const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()
+  const deepLinkViewModel = useMemo(() => {
+    const service = new DeepLinkService()
+    return new DeepLinkViewModel(service, logger)
+  }, [logger])
 
   if (!isTablet()) {
     Orientation.lockToPortrait()
@@ -66,7 +71,9 @@ const App = () => {
     SplashScreen.hide()
   }, [])
 
-  const logger = appLogger
+  useEffect(() => {
+    deepLinkViewModel.initialize()
+  }, [deepLinkViewModel])
 
   return (
     <ErrorBoundaryWrapper logger={logger}>
@@ -77,23 +84,25 @@ const App = () => {
             defaultThemeName={Config.BUILD_TARGET === Mode.BCSC ? BCThemeNames.BCSC : BCThemeNames.BCWallet}
           >
             <NavigationContainerProvider>
-              <AnimatedComponentsProvider value={animatedComponents}>
-                <AuthProvider>
-                  <NetworkProvider>
-                    <ErrorModal enableReport />
-                    <WebDisplay
-                      destinationUrl={surveyMonkeyUrl}
-                      exitUrl={surveyMonkeyExitUrl}
-                      visible={surveyVisible}
-                      onClose={() => setSurveyVisible(false)}
-                    />
-                    <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
-                      <Root />
-                    </TourProvider>
-                    <Toast topOffset={15} config={toastConfig} />
-                  </NetworkProvider>
-                </AuthProvider>
-              </AnimatedComponentsProvider>
+              <DeepLinkViewModelProvider viewModel={deepLinkViewModel}>
+                <AnimatedComponentsProvider value={animatedComponents}>
+                  <AuthProvider>
+                    <NetworkProvider>
+                      <ErrorModal enableReport />
+                      <WebDisplay
+                        destinationUrl={surveyMonkeyUrl}
+                        exitUrl={surveyMonkeyExitUrl}
+                        visible={surveyVisible}
+                        onClose={() => setSurveyVisible(false)}
+                      />
+                      <TourProvider tours={tours} overlayColor={'black'} overlayOpacity={0.7}>
+                        <Root />
+                      </TourProvider>
+                      <Toast topOffset={15} config={toastConfig} />
+                    </NetworkProvider>
+                  </AuthProvider>
+                </AnimatedComponentsProvider>
+              </DeepLinkViewModelProvider>
             </NavigationContainerProvider>
           </ThemeProvider>
         </StoreProvider>
