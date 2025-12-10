@@ -72,6 +72,10 @@
         <category android:name="android.intent.category.BROWSABLE" />
         <data android:scheme="didcomm" />
         <data android:scheme="bcwallet" />
+        <data android:scheme="ca.bc.gov.id.servicescard" />
+        <data android:scheme="ca.bc.gov.id.servicescard.dev" />
+        <data android:scheme="ca.bc.gov.id.servicescard.qa" />
+        <data android:scheme="ca.bc.gov.id.servicescard.test" />
       </intent-filter>
     </activity>
   </application>

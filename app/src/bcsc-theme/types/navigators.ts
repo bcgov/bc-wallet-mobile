@@ -1,6 +1,5 @@
 import { NavigatorScreenParams } from '@react-navigation/native'
 import { EvidenceType } from '../api/hooks/useEvidenceApi'
-import { ClientMetadata } from '../api/hooks/useMetadataApi'
 import { BCSCCardType } from './cards'
 
 export enum BCSCStacks {
@@ -188,7 +187,11 @@ export type BCSCMainStackParams = {
   [BCSCScreens.TransferAccountQRDisplay]: undefined
   [BCSCScreens.TransferAccountSuccess]: undefined
   [BCSCScreens.TransferAccountQRInformation]: undefined
-  [BCSCScreens.ServiceLogin]: { serviceClient: ClientMetadata }
+  [BCSCScreens.ServiceLogin]: {
+    serviceClientId?: string
+    serviceTitle?: string
+    pairingCode?: string
+  }
   [BCSCScreens.MainSettings]: undefined
   [BCSCScreens.MainPrivacyPolicy]: undefined
   [BCSCScreens.MainContactUs]: undefined
