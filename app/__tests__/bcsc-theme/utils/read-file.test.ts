@@ -52,7 +52,7 @@ describe('readFileInChunks', () => {
       })
 
       // Mock RNFS.read to return chunks
-      ;(RNFS.read as jest.Mock).mockImplementation((path, length, offset) => {
+      ;(RNFS.read as jest.Mock).mockImplementation((_path, length, offset) => {
         const chunk = testBuffer.subarray(offset, offset + length)
         return Promise.resolve(chunk.toString('base64'))
       })
@@ -73,7 +73,7 @@ describe('readFileInChunks', () => {
         size: testData.length,
         mtime: new Date(),
       })
-      ;(RNFS.read as jest.Mock).mockImplementation((path, length, offset) => {
+      ;(RNFS.read as jest.Mock).mockImplementation((_path, length, offset) => {
         const chunk = testData.subarray(offset, offset + length)
         return Promise.resolve(chunk.toString('base64'))
       })
@@ -110,7 +110,7 @@ describe('readFileInChunks', () => {
 
       const result = await readFileInChunks(mockFilePath, mockLogger as any)
 
-      expect(result.length).toBe(0)
+      expect(result).toHaveLength(0)
       expect(mockLogger.warn).toHaveBeenCalledWith(`File is empty: ${mockFilePath}`)
       expect(RNFS.read).not.toHaveBeenCalled()
     })
@@ -142,7 +142,7 @@ describe('readFileInChunks', () => {
 
       const result = await readFileInChunks(mockFilePath, mockLogger as any, chunkSize)
 
-      expect(result.length).toBe(chunkSize)
+      expect(result).toHaveLength(chunkSize)
       expect(RNFS.read).toHaveBeenCalledTimes(1)
     })
   })
@@ -206,14 +206,14 @@ describe('readFileInChunks', () => {
         size: testBuffer.length,
         mtime: new Date(),
       })
-      ;(RNFS.read as jest.Mock).mockImplementation((path, length, offset) => {
+      ;(RNFS.read as jest.Mock).mockImplementation((_path, length, offset) => {
         const chunk = testBuffer.subarray(offset, offset + length)
         return Promise.resolve(chunk.toString('base64'))
       })
 
       const result = await readFileInChunks(mockFilePath, mockLogger as any, customChunkSize)
 
-      expect(result.length).toBe(1000)
+      expect(result).toHaveLength(1000)
       expect(RNFS.read).toHaveBeenCalledTimes(Math.ceil(1000 / customChunkSize))
     })
 
