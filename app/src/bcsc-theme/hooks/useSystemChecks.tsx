@@ -1,5 +1,6 @@
 import { useEventListener } from '@/hooks/useEventListener'
 import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
+import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
 import { DeviceCountSystemCheck } from '@/services/system-checks/DeviceCountSystemCheck'
 import { DeviceInvalidatedSystemCheck } from '@/services/system-checks/DeviceInvalidatedSystemCheck'
 import { InternetStatusSystemCheck } from '@/services/system-checks/InternetStatusSystemCheck'
@@ -8,6 +9,7 @@ import { runSystemChecks, SystemCheckNavigation, SystemCheckStrategy } from '@/s
 import { UpdateAppSystemCheck } from '@/services/system-checks/UpdateAppSystemCheck'
 import { UpdateDeviceRegistrationSystemCheck } from '@/services/system-checks/UpdateDeviceRegistrationSystemCheck'
 import { BCState } from '@/store'
+import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
 import { navigationRef } from 'App'
@@ -81,7 +83,10 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
 
           const serverStatus = await configApi.getServerStatus()
 
-          const startupChecks: SystemCheckStrategy[] = [new ServerStatusSystemCheck(serverStatus, utils)]
+          const startupChecks: SystemCheckStrategy[] = [
+            new AnalyticsSystemCheck(store.bcsc.analyticsOptIn, Analytics),
+            new ServerStatusSystemCheck(serverStatus, utils),
+          ]
 
           // Only run update check for BCSC builds (ie: bundleId ca.bc.gov.id.servicescard)
           if (isBCServicesCardBundle) {
