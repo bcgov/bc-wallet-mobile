@@ -189,7 +189,11 @@ export const DropdownWithValidation = <T extends string | number>({
       <Modal visible={isOpen} transparent animationType="slide" onRequestClose={handleClose}>
         <Pressable style={styles.modalOverlay} onPress={handleClose}>
           <SafeAreaView>
-            <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <Pressable
+              style={styles.modalContent}
+              onPress={(e) => e.stopPropagation()}
+              testID={testIdWithKey(`${id}-modal-content`)}
+            >
               <View style={styles.modalHeader}>
                 <View style={{ width: 32 }} />
                 <ThemedText style={styles.modalTitle}>{subtext}</ThemedText>

@@ -206,6 +206,37 @@ describe('DropdownWithValidation Component', () => {
       expect(closeButton).toBeTruthy()
     })
 
+    test('does not close modal when modal content is pressed', async () => {
+      const { getByTestId, getByText } = render(
+        <BasicAppContext>
+          <DropdownWithValidation {...defaultProps} />
+        </BasicAppContext>
+      )
+
+      // Open modal
+      const dropdownButton = getByTestId('com.ariesbifold:id/test-dropdown-input')
+      fireEvent.press(dropdownButton)
+
+      await waitFor(() => {
+        expect(getByText('Option 1')).toBeTruthy()
+      })
+
+      // Press on modal content (should stop propagation and NOT close modal)
+      const modalContent = getByTestId('com.ariesbifold:id/test-dropdown-modal-content')
+      const mockEvent = { stopPropagation: jest.fn() }
+      fireEvent.press(modalContent, mockEvent)
+
+      // Verify stopPropagation was called
+      expect(mockEvent.stopPropagation).toHaveBeenCalled()
+
+      // Modal should still be open - options should still be visible
+      await waitFor(() => {
+        expect(getByText('Option 1')).toBeTruthy()
+        expect(getByText('Option 2')).toBeTruthy()
+        expect(getByText('Option 3')).toBeTruthy()
+      })
+    })
+
     test('displays subtext as modal title', async () => {
       const { getByTestId, getAllByText } = render(
         <BasicAppContext>
