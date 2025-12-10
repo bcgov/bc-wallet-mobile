@@ -27,9 +27,13 @@ const mockDeepLinkViewModel = {
   consumePendingDeepLink: jest.fn(),
 }
 
-jest.mock('../../deep-linking', () => ({
-  useDeepLinkViewModel: () => mockDeepLinkViewModel,
-}))
+jest.mock('../../deep-linking', () => {
+  const actual = jest.requireActual('../../deep-linking')
+  return {
+    ...actual,
+    useDeepLinkViewModel: () => mockDeepLinkViewModel,
+  }
+})
 
 const mockUseServiceLoginState = jest.requireMock('../hooks/useServiceLoginState').useServiceLoginState as jest.Mock
 
