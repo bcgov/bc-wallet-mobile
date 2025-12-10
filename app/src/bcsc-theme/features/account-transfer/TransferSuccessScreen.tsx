@@ -1,3 +1,4 @@
+import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
@@ -10,6 +11,7 @@ import { StyleSheet } from 'react-native'
 const TransferSuccessScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { t } = useTranslation()
+  const factoryReset = useFactoryReset()
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -19,13 +21,23 @@ const TransferSuccessScreen: React.FC = () => {
   })
 
   const controls = (
-    <Button
-      testID={testIdWithKey(t('BCSC.TransferSuccess.ButtonText'))}
-      accessibilityLabel={t('BCSC.TransferSuccess.ButtonText')}
-      title={t('BCSC.TransferSuccess.ButtonText')}
-      buttonType={ButtonType.Primary}
-      onPress={() => navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })}
-    />
+    <>
+      <Button
+        testID={testIdWithKey(t('BCSC.TransferSuccess.ButtonText'))}
+        accessibilityLabel={t('BCSC.TransferSuccess.ButtonText')}
+        title={t('BCSC.TransferSuccess.ButtonText')}
+        buttonType={ButtonType.Primary}
+        onPress={() => navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })}
+      />
+      <Button
+        testID={testIdWithKey(t('BCSC.Account.RemoveAcount'))}
+        buttonType={ButtonType.Critical}
+        title={t('BCSC.Account.RemoveAccount')}
+        onPress={() => {
+          navigation.navigate(BCSCScreens.RemoveAccountConfirmation)
+        }}
+      />
+    </>
   )
 
   return (
