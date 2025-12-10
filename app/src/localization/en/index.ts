@@ -817,6 +817,11 @@ const translation = {
   "HelpCentre": {
     "Title": "Help Centre"
   },
+	"Alerts": {
+		"Actions": {
+			"DefaultOK": "OK"
+		}
+	}
 }
 
 export default translation
