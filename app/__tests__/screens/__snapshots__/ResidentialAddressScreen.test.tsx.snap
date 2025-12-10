@@ -53,7 +53,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                 "padding": 16,
               },
               {
-                "gap": 32,
+                "gap": 24,
               },
             ]
           }
@@ -68,9 +68,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   "fontSize": 26,
                   "fontWeight": "bold",
                 },
-                {
-                  "marginBottom": 16,
-                },
+                undefined,
               ]
             }
           >
@@ -86,9 +84,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
                   "fontSize": 18,
                   "fontWeight": "normal",
                 },
-                {
-                  "marginBottom": 8,
-                },
+                undefined,
               ]
             }
           >
@@ -249,26 +245,102 @@ exports[`ResidentialAddress renders correctly 1`] = `
             >
               BCSC.Address.ProvinceLabel
             </Text>
-            <TextInput
-              onChange={[Function]}
+            <View
+              accessibilityLabel="BCSC.Address.ProvinceLabel, BCSC.Address.ProvinceSubtext"
+              accessibilityRole="combobox"
+              accessibilityState={
+                {
+                  "busy": undefined,
+                  "checked": undefined,
+                  "disabled": undefined,
+                  "expanded": false,
+                  "selected": undefined,
+                }
+              }
+              accessibilityValue={
+                {
+                  "max": undefined,
+                  "min": undefined,
+                  "now": undefined,
+                  "text": undefined,
+                }
+              }
+              accessible={true}
+              collapsable={false}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
               style={
-                [
-                  {
-                    "backgroundColor": "#D3D3D3",
-                    "borderColor": "#D3D3D3",
-                    "borderRadius": 4,
-                    "borderWidth": 1,
-                    "color": "#313132",
-                    "fontFamily": "BCSans-Regular",
-                    "fontSize": 16,
-                    "padding": 10,
-                  },
-                  undefined,
-                ]
+                {
+                  "alignItems": "center",
+                  "backgroundColor": "#D3D3D3",
+                  "borderColor": "#D3D3D3",
+                  "borderRadius": 4,
+                  "borderWidth": 1,
+                  "color": "#313132",
+                  "flexDirection": "row",
+                  "fontFamily": "BCSans-Regular",
+                  "fontSize": 16,
+                  "justifyContent": "space-between",
+                  "padding": 10,
+                  "paddingHorizontal": 16,
+                }
               }
               testID="com.ariesbifold:id/province-input"
-              value=""
-            />
+            >
+              <Text
+                maxFontSizeMultiplier={2}
+                style={
+                  [
+                    {
+                      "color": "#313132",
+                      "fontFamily": "BCSans-Regular",
+                      "fontSize": 18,
+                      "fontWeight": "normal",
+                    },
+                    [
+                      {
+                        "flex": 1,
+                        "fontSize": 16,
+                      },
+                      {
+                        "color": "#606060",
+                      },
+                    ],
+                  ]
+                }
+              >
+                BCSC.Address.ProvinceSubtext
+              </Text>
+              <Text
+                allowFontScaling={false}
+                selectable={false}
+                style={
+                  [
+                    {
+                      "color": "#606060",
+                      "fontSize": 24,
+                    },
+                    undefined,
+                    {
+                      "fontFamily": "Material Icons",
+                      "fontStyle": "normal",
+                      "fontWeight": "normal",
+                    },
+                    {},
+                  ]
+                }
+              >
+                
+              </Text>
+            </View>
             <Text
               maxFontSizeMultiplier={2}
               style={
