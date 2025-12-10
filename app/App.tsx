@@ -50,7 +50,6 @@ const App = () => {
   const { t } = useTranslation()
   const bifoldContainer = new MainContainer(container.createChildContainer()).init()
   const [surveyVisible, setSurveyVisible] = useState(false)
-  // TODO (MD): Investigate if we need to inject the Analytics into this navigation call + container.
   const bcwContainer = new AppContainer(bifoldContainer, t, navigationRef.navigate, setSurveyVisible).init()
 
   if (!isTablet()) {
