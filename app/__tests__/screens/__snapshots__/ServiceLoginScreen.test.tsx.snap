@@ -212,7 +212,11 @@ exports[`ServiceLogin renders correctly 1`] = `
           BCSC.Services.ReportSuspiciousPrefix
            
           <Text
+            accessibilityLabel="BCSC.Services.ReportSuspicious"
+            accessibilityRole="link"
+            accessible={true}
             maxFontSizeMultiplier={2}
+            onPress={[Function]}
             style={
               [
                 {
@@ -221,9 +225,17 @@ exports[`ServiceLogin renders correctly 1`] = `
                   "fontSize": 18,
                   "fontWeight": "normal",
                 },
-                undefined,
+                [
+                  {
+                    "alignSelf": "flex-start",
+                    "color": "#1A5A96",
+                    "textDecorationLine": "underline",
+                  },
+                  {},
+                ],
               ]
             }
+            testID="com.ariesbifold:id/ReportSuspiciousLink"
           >
             BCSC.Services.ReportSuspicious
           </Text>
