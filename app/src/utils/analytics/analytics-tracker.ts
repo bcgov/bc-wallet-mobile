@@ -39,9 +39,9 @@ interface AnalyticsError {
  * analyticsTracker.trackAlertActionEvent(AlertEvent.SAMPLE_EVENT, 'OK')
  */
 export class AnalyticsTracker {
-  private namespace: string
-  private endpoint: string
-  private client: AnalyticsClient
+  private readonly namespace: string
+  private readonly endpoint: string
+  private readonly client: AnalyticsClient
   private tracker?: ReactNativeTracker
   trackingEnabled: boolean
 

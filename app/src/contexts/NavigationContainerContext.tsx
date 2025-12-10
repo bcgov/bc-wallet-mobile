@@ -2,7 +2,7 @@ import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
 import { NavigationContainer } from '@react-navigation/native'
 import { navigationRef } from 'App'
-import { createContext, PropsWithChildren, useContext, useRef, useState } from 'react'
+import { createContext, PropsWithChildren, useContext, useMemo, useRef, useState } from 'react'
 
 export interface NavigationContainerContextType {
   isNavigationReady: boolean
@@ -23,8 +23,15 @@ export const NavigationContainerProvider = ({ children }: PropsWithChildren) => 
   const screenTransitionKeyRef = useRef<string>('')
   const routeNameRef = useRef<string | undefined>()
 
+  const navigationContext = useMemo(
+    () => ({
+      isNavigationReady: navigationReady,
+    }),
+    []
+  )
+
   return (
-    <NavigationContainerContext.Provider value={{ isNavigationReady: navigationReady }}>
+    <NavigationContainerContext.Provider value={navigationContext}>
       <NavigationContainer
         ref={navigationRef}
         theme={NavigationTheme}

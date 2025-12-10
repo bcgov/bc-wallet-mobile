@@ -5,8 +5,8 @@ import { SystemCheckStrategy } from './system-checks'
  * System check to ensure analytics tracker is initialized.
  */
 export class AnalyticsSystemCheck implements SystemCheckStrategy {
-  private analyticsEnabled: boolean
-  private analyticsTracker: AnalyticsTracker
+  private readonly analyticsEnabled: boolean
+  private readonly analyticsTracker: AnalyticsTracker
 
   constructor(analyticsEnabled: boolean, analyticsTracker: AnalyticsTracker) {
     this.analyticsEnabled = analyticsEnabled

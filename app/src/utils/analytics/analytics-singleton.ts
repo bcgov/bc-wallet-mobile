@@ -6,8 +6,8 @@ declare global {
 
 // Hot-reload safe singleton instance of AnalyticsTracker
 export const Analytics =
-  global.__ANALYTICS_TRACKER_SINGLETON__ ??
-  (global.__ANALYTICS_TRACKER_SINGLETON__ = new AnalyticsTracker(
+  globalThis.__ANALYTICS_TRACKER_SINGLETON__ ??
+  (globalThis.__ANALYTICS_TRACKER_SINGLETON__ = new AnalyticsTracker(
     ANALYTICS_SINGLEAPP_NAMESPACE,
     ANALYTICS_SINGLEAPP_ENDPOINT
   ))
