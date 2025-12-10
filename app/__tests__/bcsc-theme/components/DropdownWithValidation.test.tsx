@@ -2,7 +2,7 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import React from 'react'
 
 import { BasicAppContext } from '../../../__mocks__/helpers/app'
-import { DropdownWithValidation, DropdownOption } from '../../../src/bcsc-theme/components/DropdownWithValidation'
+import { DropdownOption, DropdownWithValidation } from '../../../src/bcsc-theme/components/DropdownWithValidation'
 
 describe('DropdownWithValidation Component', () => {
   const defaultOptions: DropdownOption<string>[] = [
