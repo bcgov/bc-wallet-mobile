@@ -1,3 +1,4 @@
+import { navigationRef } from '@/contexts/NavigationContainerContext'
 import { useEventListener } from '@/hooks/useEventListener'
 import { AccountExpirySystemCheck } from '@/services/system-checks/AccountExpirySystemCheck'
 import { AnalyticsSystemCheck } from '@/services/system-checks/AnalyticsSystemCheck'
@@ -12,7 +13,6 @@ import { BCState } from '@/store'
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import NetInfo from '@react-native-community/netinfo'
-import { navigationRef } from 'App'
 import { useContext, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getBundleId } from 'react-native-device-info'
@@ -84,7 +84,7 @@ export const useSystemChecks = (scope: SystemCheckScope) => {
           const serverStatus = await configApi.getServerStatus()
 
           const startupChecks: SystemCheckStrategy[] = [
-            new AnalyticsSystemCheck(store.bcsc.analyticsOptIn, Analytics),
+            new AnalyticsSystemCheck(store.bcsc.analyticsOptIn, Analytics, logger),
             new ServerStatusSystemCheck(serverStatus, utils),
           ]
 

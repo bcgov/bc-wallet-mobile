@@ -1,8 +1,9 @@
 import { Analytics } from '@/utils/analytics/analytics-singleton'
 import { useTheme } from '@bifold/core'
-import { NavigationContainer } from '@react-navigation/native'
-import { navigationRef } from 'App'
+import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native'
 import { createContext, PropsWithChildren, useContext, useMemo, useRef, useState } from 'react'
+
+export const navigationRef = createNavigationContainerRef()
 
 export interface NavigationContainerContextType {
   isNavigationReady: boolean

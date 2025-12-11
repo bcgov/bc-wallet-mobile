@@ -1,7 +1,7 @@
 import Root from '@/Root'
 import { DeepLinkService, DeepLinkViewModel, DeepLinkViewModelProvider } from '@/bcsc-theme/features/deep-linking'
 import { BCThemeNames, surveyMonkeyExitUrl, surveyMonkeyUrl } from '@/constants'
-import { NavigationContainerProvider } from '@/contexts/NavigationContainerContext'
+import { NavigationContainerProvider, navigationRef } from '@/contexts/NavigationContainerContext'
 import { localization } from '@/localization'
 import { initialState, Mode, reducer } from '@/store'
 import { themes } from '@/theme'
@@ -24,7 +24,6 @@ import {
   TourProvider,
 } from '@bifold/core'
 import messaging from '@react-native-firebase/messaging'
-import { createNavigationContainerRef } from '@react-navigation/native'
 import WebDisplay from '@screens/WebDisplay'
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -43,8 +42,6 @@ messaging().setBackgroundMessageHandler(async () => {})
 
 // Do nothing with push notifications received while the app is in the foreground
 messaging().onMessage(async () => {})
-
-export const navigationRef = createNavigationContainerRef()
 
 const App = () => {
   const { t } = useTranslation()
