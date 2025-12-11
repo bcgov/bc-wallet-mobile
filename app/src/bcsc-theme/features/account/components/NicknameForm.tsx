@@ -99,7 +99,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
         limit={formStringLengths.maximumLength}
         handleChangeText={handleChangeText}
         accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
-        autoComplete="name"
+        autoCorrect={false}
         testID={testIdWithKey('NameInput')}
       />
       {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}
