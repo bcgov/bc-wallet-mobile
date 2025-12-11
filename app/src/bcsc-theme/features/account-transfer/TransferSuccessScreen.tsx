@@ -1,4 +1,3 @@
-import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
 import { BCSCMainStackParams, BCSCScreens, BCSCStacks } from '@/bcsc-theme/types/navigators'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey } from '@bifold/core'
@@ -11,7 +10,6 @@ import { StyleSheet } from 'react-native'
 const TransferSuccessScreen: React.FC = () => {
   const navigation = useNavigation<StackNavigationProp<BCSCMainStackParams>>()
   const { t } = useTranslation()
-  const factoryReset = useFactoryReset()
 
   const styles = StyleSheet.create({
     contentContainer: {
