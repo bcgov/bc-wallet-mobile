@@ -223,6 +223,24 @@ export const connect = async (
     participantUuid,
   })
 
+  const closePeerConnection = () => {
+    logger.info('Closing peer connection...')
+    if (disconnectTimeout) {
+      clearTimeout(disconnectTimeout)
+      disconnectTimeout = null
+    }
+    peerConnection.close()
+    logger.info('Peer connection closed')
+  }
+
+  const releaseLocalStream = () => {
+    logger.info('Releasing local stream tracks...')
+    localStream.getTracks().forEach((track) => {
+      track.stop()
+    })
+    logger.info('Local stream tracks released')
+  }
+
   return {
     localStream,
     callUuid,
@@ -231,6 +249,8 @@ export const connect = async (
     disconnectPexip,
     stopPexipKeepAlive,
     setAppInitiatedDisconnect,
+    closePeerConnection,
+    releaseLocalStream,
   }
 }
 
