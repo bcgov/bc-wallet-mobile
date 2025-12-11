@@ -111,6 +111,13 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     }
 
     try {
+      connection?.releaseLocalStream()
+      connection?.closePeerConnection()
+    } catch (error) {
+      logger.error('Error closing peer connection:', error as Error)
+    }
+
+    try {
       if (!session || !clientCallId) {
         throw new Error('Missing required parameters to end call')
       }
@@ -130,6 +137,8 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       logger.error('Failed to end video session:', error as Error)
     }
 
+    setLocalStream(null)
+    setRemoteStream(null)
     setSession(null)
     setClientCallId(null)
     setConnection(null)
