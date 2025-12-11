@@ -28,7 +28,7 @@ const TransferSuccessScreen: React.FC = () => {
         onPress={() => navigation.navigate(BCSCStacks.Tab, { screen: BCSCScreens.Home })}
       />
       <Button
-        testID={testIdWithKey(t('BCSC.Account.RemoveAcount'))}
+        testID={testIdWithKey(t('BCSC.Account.RemoveAccount'))}
         buttonType={ButtonType.Critical}
         title={t('BCSC.Account.RemoveAccount')}
         onPress={() => {
