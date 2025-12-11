@@ -1,11 +1,26 @@
 export type ProvinceCode = 'AB' | 'BC' | 'MB' | 'NB' | 'NL' | 'NT' | 'NS' | 'NU' | 'ON' | 'PE' | 'QC' | 'SK' | 'YT'
 
-// Maps province names to ProvinceCodes
-//
-// TODO (MD): Currently this map is used to coerce the user's address text input into a value which
-// can be used by IAS to generate tokens. I think the better approach would be to use some type of
-// react-native select/dropdown component which would have a pre-populated list of values.
-// This would also make it easier to populate different localizations ie: french
+/**
+ * List of Canadian provinces and territories with their codes and display names.
+ * Used for dropdown selection in address forms.
+ */
+export const PROVINCE_OPTIONS: { label: string; value: ProvinceCode }[] = [
+  { label: 'Alberta (AB)', value: 'AB' },
+  { label: 'British Columbia (BC)', value: 'BC' },
+  { label: 'Manitoba (MB)', value: 'MB' },
+  { label: 'New Brunswick (NB)', value: 'NB' },
+  { label: 'Newfoundland and Labrador (NL)', value: 'NL' },
+  { label: 'Northwest Territories (NT)', value: 'NT' },
+  { label: 'Nova Scotia (NS)', value: 'NS' },
+  { label: 'Nunavut (NU)', value: 'NU' },
+  { label: 'Ontario (ON)', value: 'ON' },
+  { label: 'Prince Edward Island (PE)', value: 'PE' },
+  { label: 'Quebec (QC)', value: 'QC' },
+  { label: 'Saskatchewan (SK)', value: 'SK' },
+  { label: 'Yukon (YT)', value: 'YT' },
+]
+
+// Maps province names to ProvinceCodes (kept for backwards compatibility with text input validation)
 const ProvinceCodeMap = {
   AB: 'AB',
   ALB: 'AB',
