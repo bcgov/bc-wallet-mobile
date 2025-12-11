@@ -5,6 +5,9 @@ import { BasicAppContext } from '../../__mocks__/helpers/app'
 import { ResidentialAddressScreen } from '../../src/bcsc-theme/features/verify/ResidentialAddressScreen'
 
 describe('ResidentialAddress', () => {
+  let mockNavigation: any
+  let mockRoute: any
+
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
@@ -17,7 +20,7 @@ describe('ResidentialAddress', () => {
   it('renders correctly', () => {
     const tree = render(
       <BasicAppContext>
-        <ResidentialAddressScreen />
+        <ResidentialAddressScreen navigation={mockNavigation as never} route={mockRoute as never} />
       </BasicAppContext>
     )
 
