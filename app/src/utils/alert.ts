@@ -45,12 +45,10 @@ export const showAlert = (
     return {
       ...action,
       onPress: () => {
-        if (action.onPress) {
-          action.onPress()
+        action.onPress?.()
 
-          // Track the alert action event when a button is pressed
-          Analytics.trackAlertActionEvent(event, action.text)
-        }
+        // Track the alert action event when a button is pressed
+        Analytics.trackAlertActionEvent(event, action.text)
       },
     }
   })

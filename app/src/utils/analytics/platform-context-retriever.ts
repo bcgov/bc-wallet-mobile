@@ -33,22 +33,22 @@ export const getPlatformContextRetriever = (enable: boolean): PlatformContextRet
     getOsVersion: async () => getSystemVersion(),
     getDeviceModel: async () => getModel(),
     getDeviceManufacturer: getManufacturer,
-    getCarrier: _getCarrier,
-    getNetworkType: _getNetworkType,
-    getNetworkTechnology: _getNetworkTechnology,
+    getCarrier: safeAsync(_getCarrier),
+    getNetworkType: safeAsync(_getNetworkType),
+    getNetworkTechnology: safeAsync(_getNetworkTechnology),
+    getAvailableStorage: safeAsync(getFreeDiskStorage),
+    getTotalStorage: safeAsync(getTotalDiskCapacity),
+    getPhysicalMemory: safeAsync(getTotalMemory),
+    getAppAvailableMemory: safeAsync(_getAppAvailableMemory),
+    getBatteryLevel: safeAsync(getBatteryLevel),
+    getBatteryState: safeAsync(_getBatteryState),
+    getLowPowerMode: safeAsync(_getLowPowerMode),
+    isPortrait: safeAsync(_isPortrait),
+    getResolution: safeAsync(_getResolution),
+    getScale: safeAsync(_getScale),
+    getLanguage: safeAsync(_getLanguage),
     // getAppleIdfa?: () => Promise<string | undefined>;
     // getAppleIdfv?: () => Promise<string | undefined>;
-    getAvailableStorage: getFreeDiskStorage,
-    getTotalStorage: getTotalDiskCapacity,
-    getPhysicalMemory: getTotalMemory,
-    getAppAvailableMemory: _getAppAvailableMemory,
-    getBatteryLevel: getBatteryLevel,
-    getBatteryState: _getBatteryState,
-    getLowPowerMode: _getLowPowerMode,
-    isPortrait: _isPortrait,
-    getResolution: _getResolution,
-    getScale: _getScale,
-    getLanguage: _getLanguage,
     // getAndroidIdfa?: () => Promise<string | undefined>;
     // getAppSetId: getAndroidId,
     // getAppSetIdScope?: () => Promise<string | undefined>;
@@ -70,11 +70,8 @@ export const getPlatformContextProperties = (enable: boolean): PlatformContextPr
     PlatformContextProperty.Carrier,
     PlatformContextProperty.NetworkType,
     PlatformContextProperty.NetworkTechnology,
-    // PlatformContextProperty.AppleIdfa,
-    // PlatformContextProperty.AppleIdfv,
     PlatformContextProperty.PhysicalMemory,
     PlatformContextProperty.AppAvailableMemory,
-    PlatformContextProperty.BatteryLevel,
     PlatformContextProperty.BatteryLevel,
     PlatformContextProperty.LowPowerMode,
     PlatformContextProperty.AvailableStorage,
@@ -83,8 +80,10 @@ export const getPlatformContextProperties = (enable: boolean): PlatformContextPr
     PlatformContextProperty.Resolution,
     PlatformContextProperty.Scale,
     PlatformContextProperty.Language,
-    // PlatformContextProperty.AndroidIdfa,
     PlatformContextProperty.SystemAvailableMemory,
+    // PlatformContextProperty.AppleIdfa,
+    // PlatformContextProperty.AppleIdfv,
+    // PlatformContextProperty.AndroidIdfa,
     // PlatformContextProperty.AppSetId,
     // PlatformContextProperty.AppSetIdScope,
   ]
@@ -92,6 +91,15 @@ export const getPlatformContextProperties = (enable: boolean): PlatformContextPr
 
 // Helper functions for platform context retriever
 
+const safeAsync = <T>(fn: () => Promise<T>): (() => Promise<T | undefined>) => {
+  return async () => {
+    try {
+      return await fn()
+    } catch {
+      return undefined
+    }
+  }
+}
 const _getCarrier = async () => {
   const carrier = await getCarrier()
   return carrier || undefined
@@ -142,7 +150,6 @@ const _getNetworkType = async () => {
       return 'mobile'
     case 'wifi':
     case 'ethernet':
-    case 'vpn':
       return 'wifi'
     case 'none':
     case 'unknown':

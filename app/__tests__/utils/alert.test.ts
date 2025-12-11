@@ -28,7 +28,7 @@ describe('showAlert', () => {
   it('should call onPress and track analytics event when button is pressed', () => {
     const renderAlertMock = jest.fn()
     const onPressMock = jest.fn()
-    const alertActionAnalticsSpy = jest.spyOn(Analytics, 'trackAlertActionEvent')
+    const alertActionAnalyticsSpy = jest.spyOn(Analytics, 'trackAlertActionEvent')
     const translationSpy = jest.spyOn(i18n, 't')
 
     translationSpy.mockReturnValue('Translated Text')
@@ -39,7 +39,7 @@ describe('showAlert', () => {
     alertButtons[0].onPress()
 
     expect(onPressMock).toHaveBeenCalledTimes(1)
-    expect(alertActionAnalticsSpy).toHaveBeenCalledWith('test_event', 'Confirm')
+    expect(alertActionAnalyticsSpy).toHaveBeenCalledWith('test_event', 'Confirm')
   })
 
   it('should track alert display event', () => {

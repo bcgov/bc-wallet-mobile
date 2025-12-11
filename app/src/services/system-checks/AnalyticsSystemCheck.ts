@@ -1,4 +1,5 @@
 import { AnalyticsTracker } from '@/utils/analytics/analytics-tracker'
+import { BifoldLogger } from '@bifold/core'
 import { SystemCheckStrategy } from './system-checks'
 
 /**
@@ -7,10 +8,12 @@ import { SystemCheckStrategy } from './system-checks'
 export class AnalyticsSystemCheck implements SystemCheckStrategy {
   private readonly analyticsEnabled: boolean
   private readonly analyticsTracker: AnalyticsTracker
+  private readonly logger: BifoldLogger
 
-  constructor(analyticsEnabled: boolean, analyticsTracker: AnalyticsTracker) {
+  constructor(analyticsEnabled: boolean, analyticsTracker: AnalyticsTracker, logger: BifoldLogger) {
     this.analyticsEnabled = analyticsEnabled
     this.analyticsTracker = analyticsTracker
+    this.logger = logger
   }
 
   /**
@@ -32,6 +35,16 @@ export class AnalyticsSystemCheck implements SystemCheckStrategy {
       return
     }
 
-    await this.analyticsTracker.initializeTracker()
+    try {
+      await this.analyticsTracker.initializeTracker()
+    } catch (error) {
+      this.logger.error(
+        'Failed to initialize analytics tracker',
+        {
+          file: 'AnalyticsSystemCheck.ts',
+        },
+        error as Error
+      )
+    }
   }
 }

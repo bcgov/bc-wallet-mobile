@@ -41,7 +41,17 @@ export const OnboardingOptInAnalyticsContent: React.FC<OnboardingOptInAnalyticsC
   const handleAcceptPressed = async () => {
     logger.info('User accepted analytics opt-in')
     onPress()
-    await Analytics.initializeTracker()
+    try {
+      await Analytics.initializeTracker()
+    } catch (error) {
+      logger.error(
+        'Failed to initialize analytics tracker on opt-in',
+        {
+          file: 'OnboardingOptInAnalyticsContent.tsx',
+        },
+        error as Error
+      )
+    }
     dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
   }
   const handleDeniedPressed = () => {

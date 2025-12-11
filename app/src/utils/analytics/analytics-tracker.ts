@@ -1,11 +1,10 @@
 import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
 import { newTracker, ReactNativeTracker } from '@snowplow/react-native-tracker'
-import Config from 'react-native-config'
 import { getBuildNumber, getBundleId, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
 import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
 
 export const ANALYTICS_SINGLEAPP_NAMESPACE = 'singleapp_client'
-export const ANALYTICS_SINGLEAPP_ENDPOINT = __DEV__ ? 'localhost:9090' : String(Config.SNOWPLOW_COLLECTOR_ENDPOINT)
+export const ANALYTICS_SINGLEAPP_ENDPOINT = __DEV__ ? 'localhost:9090' : '' // TODO (MD): Add production endpoint
 export const ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0'
 export const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0'
 
