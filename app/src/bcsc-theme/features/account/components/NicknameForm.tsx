@@ -1,7 +1,3 @@
-import React, { useCallback, useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { StyleSheet, View } from 'react-native'
-
 import BulletPoint from '@/bcsc-theme/components/BulletPoint'
 import { formStringLengths } from '@/constants'
 import { BCState } from '@/store'
@@ -16,6 +12,9 @@ import {
   useStore,
   useTheme,
 } from '@bifold/core'
+import React, { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { StyleSheet, View } from 'react-native'
 import { getNicknameValidationErrorKey } from '../../../utils/account-utils'
 
 interface NicknameFormProps {
@@ -100,6 +99,7 @@ const NicknameForm: React.FC<NicknameFormProps> = ({ onSubmit, isRenaming }) => 
         limit={formStringLengths.maximumLength}
         handleChangeText={handleChangeText}
         accessibilityLabel={t('BCSC.NicknameAccount.AccountName')}
+        autoComplete="name"
         testID={testIdWithKey('NameInput')}
       />
       {error && <ThemedText variant={'inlineErrorText'}>{error}</ThemedText>}

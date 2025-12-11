@@ -35,6 +35,8 @@ const EmailTextInput: React.FC<Props> = ({ handleChangeEmail, ...textInputProps 
         onBlur={() => setFocused(false)}
         value={value}
         onChangeText={onChangeText}
+        keyboardType="email-address"
+        autoComplete="email"
         {...textInputProps}
       />
     </View>
