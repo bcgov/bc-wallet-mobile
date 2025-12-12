@@ -1,34 +1,70 @@
 import {
-  Barcode,
-  BarcodeDecoderStrategy,
   BCServicesComboCardDecoded,
-  DecodedBarcodeKind,
+  DecodedCodeKind,
+  DecoderStrategy,
   DriversLicenseBarcode,
-} from './barcode-decoder-strategy'
+  ScanableCode,
+} from './DecoderStrategy'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
+
+const BCSC_SERIAL_LENGTH = 9
 
 /**
  * Decoder for BC Services Combo Card barcodes (PDF-417)
  */
-export class BCComboCardBarcodeDecoder implements BarcodeDecoderStrategy {
-  canDecode(barcode: Barcode): barcode is DriversLicenseBarcode {
-    return (
-      barcode.type === 'pdf-417' && typeof barcode.value === 'string' && this.parseBcscSerial(barcode.value) !== null
-    )
+export class BCComboCardBarcodeDecoder implements DecoderStrategy {
+  driversLicenseDecoder: DriversLicenseBarcodeDecoder
+
+  constructor() {
+    this.driversLicenseDecoder = new DriversLicenseBarcodeDecoder()
   }
 
-  decodeBarcode(barcode: DriversLicenseBarcode): BCServicesComboCardDecoded {
-    const driversLicenseDecoder = new DriversLicenseBarcodeDecoder()
-    const decodedDriversLicense = driversLicenseDecoder.decodeBarcode(barcode)
+  canDecode(barcode: ScanableCode): barcode is DriversLicenseBarcode {
+    return this.driversLicenseDecoder.canDecode(barcode) && this.parseBcscSerial(barcode.value) !== null
+  }
+
+  decode(barcode: DriversLicenseBarcode): BCServicesComboCardDecoded {
+    const decodedDriversLicense = this.driversLicenseDecoder.decode(barcode)
+    const bcscSerial = this.parseBcscSerial(barcode.value)
+
+    if (!bcscSerial) {
+      throw new Error(
+        'Failed to parse BCSC serial from combo card barcode. Did you forget to check if it can be decoded?'
+      )
+    }
 
     return {
-      ...decodedDriversLicense,
-      kind: DecodedBarcodeKind.BCServicesComboCardCardBarcode,
-      bcscSerial: decodedDriversLicense.licenseNumber,
+      kind: DecodedCodeKind.BCServicesComboCardCardBarcode,
+      bcscSerial: bcscSerial,
+      licenseNumber: decodedDriversLicense.licenseNumber,
+      firstName: decodedDriversLicense.firstName,
+      middleNames: decodedDriversLicense.middleNames,
+      lastName: decodedDriversLicense.lastName,
+      birthDate: decodedDriversLicense.birthDate,
+      expiryDate: decodedDriversLicense.expiryDate,
+      streetAddress: decodedDriversLicense.streetAddress,
+      postalCode: decodedDriversLicense.postalCode,
+      city: decodedDriversLicense.city,
+      province: decodedDriversLicense.province,
     }
   }
 
   private parseBcscSerial(value: string): string | null {
-    return 'TODO'
+    const rawSerial = value.split(' ').at(-1)
+
+    if (!rawSerial) {
+      return null
+    }
+
+    const bcscSerial = rawSerial.replace('?', '').slice(-BCSC_SERIAL_LENGTH)
+
+    // BCSC serials start with a letter followed by numbers
+    if (/^[A-Za-z][0-9]+$/.test(bcscSerial) === false) {
+      return null
+    }
+
+    console.log({ bcscSerial })
+
+    return bcscSerial
   }
 }

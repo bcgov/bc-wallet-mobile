@@ -1,12 +1,13 @@
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
-import React, { useCallback, useState } from 'react'
+import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { StackNavigationProp } from '@react-navigation/stack'
 
+import { decodeScannedCode, ScanableCode } from '@/bcsc-theme/utils/barcode/DecoderStrategy'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 
 const maxSerialNumberLength = 15
@@ -38,35 +39,41 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     },
   })
 
-  const validateSerial = useCallback(() => {
-    // TODO: update this validation logic
-    // once we know the serial number format
-    if (serial.length < 1) {
-      return false
-    }
-    if (serial.length > maxSerialNumberLength) {
-      return false
-    }
-    return true
-  }, [serial])
+  // const validateSerial = useCallback(() => {
+  //   // TODO: update this validation logic
+  //   // once we know the serial number format
+  //   if (serial.length < 1) {
+  //     return false
+  //   }
+  //   if (serial.length > maxSerialNumberLength) {
+  //     return false
+  //   }
+  //   return true
+  // }, [serial])
 
-  const onCodeScanned = (val: any) => {
+  const onCodeScanned = (code: ScanableCode[]) => {
     // the scanner might pick up multiple codes
     // we will take the first valid one
+    //
 
-    interface ScannedCode {
-      value: string
-      [key: string]: unknown
-    }
-    for (const code of val as ScannedCode[]) {
-      setSerial(code.value)
+    console.log({ code })
+    const decodedCode = decodeScannedCode(code[0])
 
-      if (validateSerial()) {
-        dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [code.value] })
-        navigation.navigate(BCSCScreens.EnterBirthdate)
-        return
-      }
+    if (!decodedCode) {
+      return
     }
+
+    console.log({ decodedCode })
+
+    // for (const code of val) {
+    //   // setSerial(code.value)
+    //   // TODO (MD): Reimplement this logic
+    //   // if (validateSerial()) {
+    //   //   dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [code.value] })
+    //   //   navigation.navigate(BCSCScreens.EnterBirthdate)
+    //   //   return
+    //   // }
+    // }
   }
 
   return (

@@ -1,32 +1,35 @@
 import {
-  Barcode,
-  BarcodeDecoderStrategy,
-  DecodedBarcodeKind,
+  DecodedCodeKind,
+  DecoderStrategy,
   DriversLicenseBarcode,
   DriversLicenseDecodedBarcode,
-} from './barcode-decoder-strategy'
+  ScanableCode,
+} from './DecoderStrategy'
+
+const CURRENT_MILLENNIUM = 2000
 
 /**
  * Decoder for Driver's License barcodes (PDF-417)
  */
-export class DriversLicenseBarcodeDecoder implements BarcodeDecoderStrategy {
-  canDecode(barcode: Barcode): barcode is DriversLicenseBarcode {
+export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
+  canDecode(barcode: ScanableCode): barcode is DriversLicenseBarcode {
     return barcode.type === 'pdf-417' && typeof barcode.value === 'string'
   }
 
-  decodeBarcode(barcode: DriversLicenseBarcode): DriversLicenseDecodedBarcode {
+  decode(barcode: DriversLicenseBarcode): DriversLicenseDecodedBarcode {
     const names = this.parseLicenseNames(barcode.value)
     const address = this.parseLicenseAddress(barcode.value)
-    const birthdate = this.parseLicenseBirthdate(barcode.value)
+    const dates = this.parseLicenseDates(barcode.value)
     const licenseNumber = this.parseLicenseNumber(barcode.value)
 
     return {
-      kind: DecodedBarcodeKind.DriversLicenseBarcode,
+      kind: DecodedCodeKind.DriversLicenseBarcode,
       licenseNumber: licenseNumber,
       firstName: names.firstName,
       middleNames: names.middleNames,
       lastName: names.lastName,
-      birthDate: birthdate,
+      birthDate: dates.birthDate,
+      expiryDate: dates.expiryDate,
       streetAddress: address.streetAddress,
       postalCode: address.postalCode,
       city: address.city,
@@ -40,7 +43,11 @@ export class DriversLicenseBarcodeDecoder implements BarcodeDecoderStrategy {
     const firstName = nameSection.split('$')[1].split(' ')[0]
     const middleNames = nameSection.split(' ').slice(1).join(' ')
     const lastName = nameSection.split(',')[0]
-    return { firstName, middleNames, lastName }
+    return {
+      firstName: firstName.toLowerCase().trim(),
+      middleNames: middleNames.toLowerCase().trim(),
+      lastName: lastName.toLowerCase().trim(),
+    }
   }
 
   private parseLicenseAddress(value: string): {
@@ -53,20 +60,36 @@ export class DriversLicenseBarcodeDecoder implements BarcodeDecoderStrategy {
 
     const streetAddress = addressSection.split('$')[0]
     const city = addressSection.split('$')[1].split(' ')[0]
-    const province = addressSection.split(' ')[1]
-    const postalCode = addressSection.split(' ').slice(2).join('')
-    return { streetAddress, city, province, postalCode }
+    const province = addressSection.split('$')[1].split(' ')[1]
+    const postalCode = addressSection.split('$')[1].split(' ').slice(2).join(' ')
+    return {
+      streetAddress: streetAddress.toLowerCase().trim(),
+      city: city.toLowerCase().trim(),
+      province: province.toLowerCase().trim(),
+      postalCode: postalCode.trim(),
+    }
   }
 
-  private parseLicenseBirthdate(value: string): Date {
+  private parseLicenseDates(value: string): { expiryDate: Date; birthDate: Date } {
     const licenseSection = value.split('^')[3]
     const rawBirthdate = licenseSection.split('=')[1]
-    return new Date(`${rawBirthdate.slice(0, 8)}`)
+
+    const birthYear = parseInt(rawBirthdate.slice(4, 8))
+    const birthMonth = parseInt(rawBirthdate.slice(8, 10)) - 1 // Months are zero-indexed
+    const birthDay = parseInt(rawBirthdate.slice(10, 12))
+
+    const expiryYear = parseInt(rawBirthdate.slice(0, 2)) + CURRENT_MILLENNIUM // TODO (MD): Handle century rollover
+    const expiryMonth = parseInt(rawBirthdate.slice(2, 4)) - 1 // Months are zero-indexed
+
+    return {
+      expiryDate: new Date(expiryYear, expiryMonth, birthDay),
+      birthDate: new Date(birthYear, birthMonth, birthDay),
+    }
   }
 
   private parseLicenseNumber(value: string): string {
     const licenseSection = value.split('^')[3]
     const rawLicenseNumber = licenseSection.split('=')[0]
-    return rawLicenseNumber.slice(8)
+    return rawLicenseNumber.slice(8).trim()
   }
 }

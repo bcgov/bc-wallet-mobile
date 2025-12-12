@@ -20,7 +20,6 @@ import {
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera'
-import { BarcodeParser } from '../utils/barcode-parser'
 
 const overlayTint: ColorValue = 'rgba(0, 0, 0, 0.4)'
 
@@ -79,10 +78,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const codeScanner = useCodeScanner({
     codeTypes,
     onCodeScanned: (codes, frame) => {
-      console.log('Codes scanned:', codes)
       if (codes.length > 0) {
-        const barcodeParser = new BarcodeParser(codes[0])
-        console.log(barcodeParser.getBCDriversLicenseMetadata())
         onCodeScanned(codes, frame)
       }
     },

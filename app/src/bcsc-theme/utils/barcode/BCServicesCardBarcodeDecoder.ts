@@ -1,16 +1,16 @@
 import {
-  Barcode,
-  BarcodeDecoderStrategy,
   BCServicesCardBarcode,
   BCServicesCardDecodedBarcode,
-  DecodedBarcodeKind,
-} from './barcode-decoder-strategy'
+  DecodedCodeKind,
+  DecoderStrategy,
+  ScanableCode,
+} from './DecoderStrategy'
 
 /**
  * Decoder for BC Services Card barcodes (Code 39)
  */
-export class BCServicesCardBarcodeDecoder implements BarcodeDecoderStrategy {
-  canDecode(barcode: Barcode): barcode is BCServicesCardBarcode {
+export class BCServicesCardBarcodeDecoder implements DecoderStrategy {
+  canDecode(barcode: ScanableCode): barcode is BCServicesCardBarcode {
     return (
       barcode.type === 'code-39' &&
       typeof barcode.value === 'string' &&
@@ -19,9 +19,9 @@ export class BCServicesCardBarcodeDecoder implements BarcodeDecoderStrategy {
     )
   }
 
-  decodeBarcode(barcode: BCServicesCardBarcode): BCServicesCardDecodedBarcode {
+  decode(barcode: BCServicesCardBarcode): BCServicesCardDecodedBarcode {
     return {
-      kind: DecodedBarcodeKind.BCServicesCardBarcode,
+      kind: DecodedCodeKind.BCServicesCardBarcode,
       bcscSerial: barcode.value,
     }
   }
