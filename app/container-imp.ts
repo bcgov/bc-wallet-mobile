@@ -344,7 +344,8 @@ export class AppContainer implements Container {
       let tours = initialState.tours
       let onboarding = initialState.onboarding
       let personCredOfferDissmissed = initialState.dismissPersonCredentialOffer
-      let { environment, remoteDebugging, enableProxy, enableAppToAppPersonFlow } = initialState.developer
+      let { environment, remoteDebugging, enableProxy, enableAppToAppPersonFlow, iasApiBaseUrl } =
+        initialState.developer
       let bcsc = initialState.bcsc
       let mode = initialState.mode
 
@@ -363,6 +364,7 @@ export class AppContainer implements Container {
           (val) => (personCredOfferDissmissed = val)
         ),
         loadState<IASEnvironment>(BCLocalStorageKeys.Environment, (val) => (environment = val)),
+        loadState<string>(BCLocalStorageKeys.IASApiBaseUrl, (val) => (iasApiBaseUrl = val)),
         loadState<RemoteDebuggingState>(BCLocalStorageKeys.RemoteDebugging, (val) => (remoteDebugging = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableProxy, (val) => (enableProxy = val)),
         loadState<boolean>(BCLocalStorageKeys.EnableAppToAppPersonFlow, (val) => (enableAppToAppPersonFlow = val)),
@@ -403,6 +405,7 @@ export class AppContainer implements Container {
         developer: {
           ...initialState.developer,
           environment,
+          iasApiBaseUrl,
           remoteDebugging: {
             enabledAt: remoteDebugging.enabledAt ? new Date(remoteDebugging.enabledAt) : undefined,
             sessionId: remoteDebugging.sessionId,

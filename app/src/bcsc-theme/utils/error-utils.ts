@@ -117,3 +117,13 @@ export const isNetworkError = (error: unknown): boolean => {
 
   return false
 }
+
+/**
+ * Determines if the provided error is a 404 Not Found error.
+ *
+ * @param {unknown} error - The error to check
+ * @returns {*} {boolean} True if the error is a 404 error, false otherwise.
+ */
+export const is404Error = (error: unknown): boolean => {
+  return (error as any)?.response?.status === 404
+}

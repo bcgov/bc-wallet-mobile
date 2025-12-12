@@ -1,4 +1,4 @@
-import { formatIasAxiosResponseError } from '@/bcsc-theme/utils/error-utils'
+import { formatIasAxiosResponseError, is404Error } from '@/bcsc-theme/utils/error-utils'
 import { AxiosError } from 'axios'
 
 describe('Error Utils', () => {
@@ -108,6 +108,81 @@ describe('Error Utils', () => {
       expect(formattedError.message).toContain('currently unavailable')
       expect(formattedError.message).toContain('after 2 minutes')
       expect(formattedError.name).toBe('IASAxiosError')
+    })
+  })
+
+  describe('is404Error', () => {
+    it('should return true for an error with 404 status', () => {
+      const mockError = {
+        response: {
+          status: 404,
+        },
+      }
+
+      expect(is404Error(mockError)).toBe(true)
+    })
+
+    it('should return false for an error with non-404 status', () => {
+      const mockError = {
+        response: {
+          status: 400,
+        },
+      }
+
+      expect(is404Error(mockError)).toBe(false)
+    })
+
+    it('should return false for an error without response', () => {
+      const mockError = {
+        name: 'NetworkError',
+      }
+
+      expect(is404Error(mockError)).toBe(false)
+    })
+
+    it('should return false for an error with null response', () => {
+      const mockError = {
+        response: null,
+      }
+
+      expect(is404Error(mockError)).toBe(false)
+    })
+
+    it('should return false for an error with undefined response', () => {
+      const mockError = {
+        response: undefined,
+      }
+
+      expect(is404Error(mockError)).toBe(false)
+    })
+
+    it('should return false for null error', () => {
+      expect(is404Error(null)).toBe(false)
+    })
+
+    it('should return false for undefined error', () => {
+      expect(is404Error(undefined)).toBe(false)
+    })
+
+    it('should return false for non-object error', () => {
+      expect(is404Error('error string')).toBe(false)
+      expect(is404Error(123)).toBe(false)
+    })
+
+    it('should handle AxiosError with 404 status', () => {
+      const mockError: Partial<AxiosError> = {
+        name: 'AxiosError',
+        message: 'Request failed with status code 404',
+        response: {
+          status: 404,
+          statusText: 'Not Found',
+          data: {},
+          headers: {},
+          config: {} as any,
+        },
+      }
+
+      expect(is404Error(mockError)).toBe(true)
     })
   })
 })

@@ -15,6 +15,14 @@ const useInitializeBCSC = () => {
   const [loading, setLoading] = useState(false)
   const initializationInProgressRef = useRef(false)
 
+  // Reset initialization flag when environment changes to allow re-initialization
+  useEffect(() => {
+    logger.info('Environment changed, resetting initialization flag', {
+      iasApiBaseUrl: store.developer.iasApiBaseUrl,
+    })
+    initializationInProgressRef.current = false
+  }, [store.developer.iasApiBaseUrl, logger])
+
   useEffect(() => {
     if (!store.stateLoaded || !isClientReady || !client || initializationInProgressRef.current) {
       return
@@ -46,8 +54,11 @@ const useInitializeBCSC = () => {
         // if there is a valid token the user will be logged in
         dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
       } catch (error) {
+        logger.error('Error initializing BCSC', {
+          error,
+          errorMessage: (error as Error)?.message,
+        })
         initializationInProgressRef.current = false
-        logger.error(`Error initializing BCSC`, error as Error)
       } finally {
         setLoading(false)
       }
