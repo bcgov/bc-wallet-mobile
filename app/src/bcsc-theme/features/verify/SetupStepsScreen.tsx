@@ -1,5 +1,5 @@
 import { useFactoryReset } from '@/bcsc-theme/api/hooks/useFactoryReset'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { hitSlop } from '@/constants'
 import { BCState } from '@/store'
 import { BCSCScreens, BCSCVerifyStackParams } from '@bcsc-theme/types/navigators'
@@ -15,7 +15,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -75,6 +75,13 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
     },
   })
 
+  useEffect(() => {
+    console.log('___________________________')
+    console.log('______ Card Process _______')
+    console.log('___________________________')
+    console.log(store.bcsc.cardProcess)
+  }, [])
+
   return (
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
       {/* SETUP STEP 1: Nickname Account */}
@@ -110,7 +117,7 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               </View>
               {
                 // QUESTION (MD): Do we want the same for the non bcsc card verification?
-                store.bcsc.cardType === BCSCCardType.NonPhoto ? (
+                store.bcsc.cardProcess !== BCSCCardProcess.BCSCPhoto ? (
                   <ThemedText>{t('BCSC.Steps.AdditionalIdentificationRequired')}</ThemedText>
                 ) : null
               }

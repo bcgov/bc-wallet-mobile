@@ -35,17 +35,14 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   })
 
   const onPressCombinedCard = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Combined] })
     navigation.navigate(BCSCScreens.SerialInstructions)
   }, [dispatch, navigation])
 
   const onPressPhotoCard = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Photo] })
     navigation.navigate(BCSCScreens.SerialInstructions)
   }, [dispatch, navigation])
 
   const onPressNoPhotoCard = useCallback(() => {
-    dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.NonPhoto] })
     navigation.navigate(BCSCScreens.SerialInstructions)
   }, [dispatch, navigation])
 

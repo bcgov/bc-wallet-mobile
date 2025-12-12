@@ -16,7 +16,7 @@ import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
@@ -76,13 +76,18 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       })
       dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
       dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
+      dispatch({ type: BCDispatchAction.UPDATE_CARD_PROCESS, payload: [deviceAuth.process] })
       dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
       dispatch({
         type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
         payload: [deviceAuth.verification_options.split(' ')],
       })
 
-      if (store.bcsc.cardType === BCSCCardType.NonPhoto) {
+      console.log('___________________________')
+      console.log('______ Card Process _______')
+      console.log('___________________________')
+      console.log(deviceAuth.process)
+      if (deviceAuth.process !== BCSCCardProcess.BCSCPhoto) {
         navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
       } else {
         navigation.dispatch(
@@ -98,7 +103,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     } finally {
       setLoading(false)
     }
-  }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger, store.bcsc.cardType])
+  }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger])
 
   const controls = (
     <Button

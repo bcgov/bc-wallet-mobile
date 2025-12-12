@@ -64,8 +64,6 @@ export interface BCSCState {
   appVersion: string
   completedNewSetup: boolean
   verified: boolean
-  // used during verification, use IAS ID token cardType for everything else
-  cardType: BCSCCardType
   serial: string
   birthdate?: Date
   nicknames: string[]
@@ -74,6 +72,7 @@ export interface BCSCState {
   emailConfirmed?: boolean
   deviceCode?: string
   userCode?: string
+  cardProcess?: string // tracks the type of verification required for the given card data (e.g., photo, non-photo, etc.)
   // only needed for non-bcsc cards and deleted after verification
   userMetadata?: NonBCSCUserMetadata
   deviceCodeExpiresAt?: Date
@@ -141,6 +140,7 @@ enum BCSCDispatchAction {
   UPDATE_EMAIL = 'bcsc/updateEmail',
   UPDATE_DEVICE_CODE = 'bcsc/updateDeviceCode',
   UPDATE_USER_CODE = 'bcsc/updateUserCode',
+  UPDATE_CARD_PROCESS = 'bcsc/updateCardProcess',
   UPDATE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateDeviceCodeExpiresAt',
   UPDATE_PENDING_VERIFICATION = 'bcsc/updatePendingVerification',
   UPDATE_REFRESH_TOKEN = 'bcsc/updateRefreshToken',
@@ -235,9 +235,9 @@ const bcscState: BCSCState = {
   appVersion: getVersion(),
   completedNewSetup: false,
   verified: false,
-  cardType: BCSCCardType.None,
   serial: '',
   birthdate: undefined,
+  cardProcess: undefined,
   nicknames: [],
   selectedNickname: undefined,
   bookmarks: [],
@@ -433,6 +433,13 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_DEVICE_CODE: {
       const deviceCode = (action?.payload || []).pop() ?? ''
       const bcsc = { ...state.bcsc, deviceCode }
+      const newState = { ...state, bcsc }
+      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
+      return newState
+    }
+    case BCSCDispatchAction.UPDATE_CARD_PROCESS: {
+      const process = (action?.payload || []).pop() ?? ''
+      const bcsc = { ...state.bcsc, cardProcess: process }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
