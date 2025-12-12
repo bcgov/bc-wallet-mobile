@@ -238,10 +238,12 @@ export const connect = async (
       logger.warn('No local stream to release')
       return
     }
+
     logger.info('Releasing local stream tracks...')
     localStream.getTracks().forEach((track) => {
       track.stop()
     })
+
     logger.info('Local stream tracks released')
   }
 
