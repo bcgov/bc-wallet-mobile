@@ -5,6 +5,7 @@ import { Image, Pressable, StyleSheet, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { HelpCentreUrl } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import ComboCardImage from '@assets/img/combo_card.png'
 import NoPhotoCardImage from '@assets/img/no_photo_card.png'
@@ -47,8 +48,8 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
   }, [dispatch, navigation])
 
   const onCheckForServicesCard = useCallback(() => {
-    // TODO: Implement (KE)
-  }, [])
+    navigation.navigate(BCSCScreens.VerifyWebView, { title: '', url: HelpCentreUrl.HELP_CHECK_BCSC })
+  }, [navigation])
 
   const onPressOtherID = useCallback(() => {
     dispatch({ type: BCDispatchAction.UPDATE_CARD_TYPE, payload: [BCSCCardType.Other] })

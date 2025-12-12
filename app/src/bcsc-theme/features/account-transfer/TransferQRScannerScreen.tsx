@@ -140,7 +140,6 @@ const TransferQRScannerScreen: React.FC = () => {
           const deviceToken = await token.deviceToken({
             client_id: account.clientID,
             device_code: store.bcsc.deviceCode,
-            attestation: qrToken,
             client_assertion: jwt,
           })
 

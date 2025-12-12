@@ -7,7 +7,7 @@ import {
   ReducerAction,
 } from '@bifold/core'
 
-import { BCSCCardType } from '@bcsc-theme/types/cards'
+import { BCSCCardProcess, BCSCCardType } from '@bcsc-theme/types/cards'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
 import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
@@ -72,7 +72,7 @@ export interface BCSCState {
   emailConfirmed?: boolean
   deviceCode?: string
   userCode?: string
-  cardProcess?: string // tracks the type of verification required for the given card data (e.g., photo, non-photo, etc.)
+  cardProcess: BCSCCardProcess // tracks the type of verification required for the given card data (e.g., photo, non-photo, etc.)
   // only needed for non-bcsc cards and deleted after verification
   userMetadata?: NonBCSCUserMetadata
   deviceCodeExpiresAt?: Date
@@ -237,7 +237,7 @@ const bcscState: BCSCState = {
   verified: false,
   serial: '',
   birthdate: undefined,
-  cardProcess: undefined,
+  cardProcess: BCSCCardProcess.NonBCSC,
   nicknames: [],
   selectedNickname: undefined,
   bookmarks: [],

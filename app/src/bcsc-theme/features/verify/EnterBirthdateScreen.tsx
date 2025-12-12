@@ -83,10 +83,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         payload: [deviceAuth.verification_options.split(' ')],
       })
 
-      console.log('___________________________')
-      console.log('______ Card Process _______')
-      console.log('___________________________')
-      console.log(deviceAuth.process)
       if (deviceAuth.process !== BCSCCardProcess.BCSCPhoto) {
         navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
       } else {
