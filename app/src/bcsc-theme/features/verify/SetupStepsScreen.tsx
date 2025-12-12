@@ -15,7 +15,7 @@ import {
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, TouchableOpacity, View } from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
@@ -74,13 +74,6 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
       justifyContent: 'space-between',
     },
   })
-
-  useEffect(() => {
-    console.log('___________________________')
-    console.log('______ Card Process _______')
-    console.log('___________________________')
-    console.log(store.bcsc.cardProcess)
-  }, [])
 
   return (
     <ScreenWrapper padded={false} edges={['bottom', 'left', 'right']}>
