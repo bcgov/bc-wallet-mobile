@@ -52,7 +52,7 @@ describe('readFileInChunks', () => {
       })
 
       // Mock RNFS.read to return chunks
-      ;(RNFS.read as jest.Mock).mockImplementation((path, length, offset) => {
+      ;(RNFS.read as jest.Mock).mockImplementation((_path, length, offset) => {
         const chunk = testBuffer.subarray(offset, offset + length)
         return Promise.resolve(chunk.toString('base64'))
       })
@@ -73,7 +73,7 @@ describe('readFileInChunks', () => {
         size: testData.length,
         mtime: new Date(),
       })
-      ;(RNFS.read as jest.Mock).mockImplementation((path, length, offset) => {
+      ;(RNFS.read as jest.Mock).mockImplementation((_path, length, offset) => {
         const chunk = testData.subarray(offset, offset + length)
         return Promise.resolve(chunk.toString('base64'))
       })
@@ -206,7 +206,7 @@ describe('readFileInChunks', () => {
         size: testBuffer.length,
         mtime: new Date(),
       })
-      ;(RNFS.read as jest.Mock).mockImplementation((path, length, offset) => {
+      ;(RNFS.read as jest.Mock).mockImplementation((_path, length, offset) => {
         const chunk = testBuffer.subarray(offset, offset + length)
         return Promise.resolve(chunk.toString('base64'))
       })
