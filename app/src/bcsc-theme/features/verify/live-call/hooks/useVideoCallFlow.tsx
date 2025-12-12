@@ -121,7 +121,7 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       logger.error('Error closing peer connection:', error as Error)
     }
 
-    // Clear stream state immediately after releasing
+    // Clear stream state after releasing local streams and closing peer connections
     // to prevent stale references
     setLocalStream(null)
     setRemoteStream(null)
