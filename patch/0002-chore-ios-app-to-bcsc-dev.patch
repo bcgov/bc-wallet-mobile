@@ -1,16 +1,16 @@
-From 5646e441013957a527e0abaf9edccccc323478a0 Mon Sep 17 00:00:00 2001
-From: Bryce McMath <bryce.j.mcmath@gmail.com>
-Date: Tue, 2 Dec 2025 15:31:51 -0800
+From 14272f0347f19b5e44bcc1a3bf51a53c015202f7 Mon Sep 17 00:00:00 2001
+From: "Jason C. Leach" <jason.leach@fullboar.ca>
+Date: Fri, 12 Dec 2025 07:16:47 -0800
 Subject: [PATCH] chore: ios app to bcsc dev
 
-Signed-off-by: Bryce McMath <bryce.j.mcmath@gmail.com>
+Signed-off-by: Jason C. Leach <jason.leach@fullboar.ca>
 ---
  app/ios/AriesBifold.xcodeproj/project.pbxproj |  18 +++++++++---------
  .../xcschemes/AriesBifold.xcscheme            |   6 +++---
- app/ios/AriesBifold/Info.plist                |   4 ++--
+ app/ios/AriesBifold/Info.plist                |  11 ++++++-----
  app/ios/GoogleService-Info.plist              |  14 ++++++++------
  .../AppIcon.appiconset/iTunesArtwork.png      | Bin 40899 -> 26160 bytes
- 5 files changed, 22 insertions(+), 20 deletions(-)
+ 5 files changed, 26 insertions(+), 23 deletions(-)
 
 diff --git a/app/ios/AriesBifold.xcodeproj/project.pbxproj b/app/ios/AriesBifold.xcodeproj/project.pbxproj
 index 7cbd6bc4..276ca261 100644
@@ -116,7 +116,7 @@ index bc517c67..05d5afce 100644
           </BuildableReference>
        </BuildableProductRunnable>
 diff --git a/app/ios/AriesBifold/Info.plist b/app/ios/AriesBifold/Info.plist
-index 94cbcab0..c13867e9 100644
+index 68fbab7d..197fbaa5 100644
 --- a/app/ios/AriesBifold/Info.plist
 +++ b/app/ios/AriesBifold/Info.plist
 @@ -5,7 +5,7 @@
@@ -128,7 +128,21 @@ index 94cbcab0..c13867e9 100644
  	<key>CFBundleExecutable</key>
  	<string>$(EXECUTABLE_NAME)</string>
  	<key>CFBundleIdentifier</key>
-@@ -73,7 +73,7 @@
+@@ -38,9 +38,10 @@
+ 			<key>CFBundleURLSchemes</key>
+ 			<array>
+ 				<string>ca.bc.gov.id.servicescard</string>
+-				<string>ca.bc.gov.id.servicescard.dev</string>
+-				<string>ca.bc.gov.id.servicescard.qa</string>
+-				<string>ca.bc.gov.id.servicescard.test</string>
++				<string>ca.bc.gov.iddev.servicescard</string>
++				<string>ca.bc.gov.idqa.servicescard</string>
++				<string>ca.bc.gov.idtest.servicescard</string>
++				<string>ca.bc.gov.idsit.servicescard</string>
+ 			</array>
+ 		</dict>
+ 	</array>
+@@ -85,7 +86,7 @@
  	<key>NSFaceIDUsageDescription</key>
  	<string>$(PRODUCT_NAME) wants to use your FaceID/TouchID to authenticate your identity</string>
  	<key>NSLocationWhenInUseUsageDescription</key>
@@ -1165,4 +1179,5 @@ zE5;uz@q;CPxcP)1afz7#;E%|UII8gff+hGQ_R&|$993CA9Q?O!%dX8?n_U0+KT9K=
 A=l}o!
 
 -- 
-2.50.1
+2.51.2
+
