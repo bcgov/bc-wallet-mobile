@@ -114,6 +114,7 @@ exports[`ResidentialAddress renders correctly 1`] = `
               BCSC.Address.StreetAddressLabel
             </Text>
             <TextInput
+              autoCorrect={false}
               onChange={[Function]}
               style={
                 [

@@ -218,6 +218,7 @@ exports[`NicknameAccount renders correctly 1`] = `
             </Text>
             <TextInput
               accessibilityLabel="BCSC.NicknameAccount.AccountName"
+              autoCorrect={false}
               defaultValue=""
               maxFontSizeMultiplier={2}
               maxLength={30}

@@ -1,5 +1,5 @@
 import { testIdWithKey, ThemedText, useTheme } from '@bifold/core'
-import { StyleProp, TextInput, TextStyle, View } from 'react-native'
+import { StyleProp, TextInput, TextInputProps, TextStyle, View } from 'react-native'
 
 // NOTE (MD): This is a first pass at this component, I assume eventually we will need to modify this to
 // accept number inputs as well.
@@ -16,6 +16,7 @@ type InputWithValidationProps = {
   inputProps?: StyleProp<TextStyle>
   subtextProps?: StyleProp<TextStyle>
   errorProps?: StyleProp<TextStyle>
+  textInputProps?: TextInputProps
 }
 
 /**
@@ -53,6 +54,7 @@ export const InputWithValidation: React.FC<InputWithValidationProps> = (props: I
         }}
         onFocus={props.onFocus}
         testID={testIdWithKey(`${props.id}-input`)}
+        {...props.textInputProps}
       />
 
       {props.error ? (
