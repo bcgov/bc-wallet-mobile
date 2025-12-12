@@ -98,7 +98,6 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       return
     }
     cleanupCompletedRef.current = true
-    stopAllMedia()
     connection?.setAppInitiatedDisconnect(true)
     connection?.stopPexipKeepAlive()
     clearIntervalIfExists(backendKeepAliveTimerRef)
@@ -116,6 +115,11 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
     } catch (error) {
       logger.error('Error closing peer connection:', error as Error)
     }
+
+    // Clear stream state immediately after releasing
+    // to prevent stale references
+    setLocalStream(null)
+    setRemoteStream(null)
 
     try {
       if (!session || !clientCallId) {
@@ -137,13 +141,11 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
       logger.error('Failed to end video session:', error as Error)
     }
 
-    setLocalStream(null)
-    setRemoteStream(null)
     setSession(null)
     setClientCallId(null)
     setConnection(null)
     setVideoCallError(null)
-  }, [video, stopAllMedia, clientCallId, session, connection, logger, t])
+  }, [video, clientCallId, session, connection, logger, t])
 
   const startBackendKeepAlive = useCallback(() => {
     clearIntervalIfExists(backendKeepAliveTimerRef)
