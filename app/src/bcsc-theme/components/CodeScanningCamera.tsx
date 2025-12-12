@@ -16,9 +16,11 @@ import {
   CodeScannerFrame,
   CodeType,
   useCameraDevice,
+  useCameraFormat,
   useCameraPermission,
   useCodeScanner,
 } from 'react-native-vision-camera'
+import { BarcodeParser } from '../utils/barcode-parser'
 
 const overlayTint: ColorValue = 'rgba(0, 0, 0, 0.4)'
 
@@ -61,13 +63,31 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   const camera = useRef<Camera>(null)
   const [torchEnabled, setTorchEnabled] = useState(false)
   const { width } = useWindowDimensions()
-
   const { hasPermission, requestPermission } = useCameraPermission()
   const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null)
   const focusOpacity = useRef(new Animated.Value(0)).current
-
   const focusScale = useRef(new Animated.Value(1)).current
-  const device = useCameraDevice(cameraType)
+  const device = useCameraDevice(cameraType, { physicalDevices: ['ultra-wide-angle-camera'] })
+  const format = useCameraFormat(device, [
+    {
+      videoResolution: 'max',
+      fps: 'max',
+      autoFocusSystem: 'phase-detection',
+      videoHdr: false,
+    },
+  ])
+  const codeScanner = useCodeScanner({
+    codeTypes,
+    onCodeScanned: (codes, frame) => {
+      console.log('Codes scanned:', codes)
+      if (codes.length > 0) {
+        const barcodeParser = new BarcodeParser(codes[0])
+        console.log(barcodeParser.getBCDriversLicenseMetadata())
+        onCodeScanned(codes, frame)
+      }
+    },
+  })
+
   useEffect(() => {
     if (!hasPermission) {
       requestPermission()
@@ -94,15 +114,6 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
   }
 
   const scanAreaDimensions = getScanAreaDimensions()
-
-  const codeScanner = useCodeScanner({
-    codeTypes,
-    onCodeScanned: (codes, frame) => {
-      if (codes.length > 0) {
-        onCodeScanned(codes, frame)
-      }
-    },
-  })
 
   useEffect(() => {
     if (autoRequestPermission && !hasPermission) {
@@ -222,21 +233,18 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
     })
   }
 
-  const focus = (point: { x: number; y: number }) => {
-    const c = camera.current
-    if (c) {
-      c.focus(point)
-    }
-  }
-
-  const handleFocusTap = (e: GestureResponderEvent): void => {
+  const handleFocusTap = async (e: GestureResponderEvent): Promise<void> => {
     if (!device?.supportsFocus) {
       return
     }
+
     const { locationX: x, locationY: y } = e.nativeEvent
     const tapPoint = { x, y }
     drawFocusTap(tapPoint)
-    focus(tapPoint)
+
+    if (camera.current) {
+      camera.current.focus(tapPoint)
+    }
   }
 
   if (!device || !hasPermission) {
@@ -263,6 +271,7 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         ref={camera}
         style={styles.camera}
         device={device}
+        format={format}
         isActive={hasPermission}
         codeScanner={codeScanner}
         torch={torchEnabled ? 'on' : 'off'}

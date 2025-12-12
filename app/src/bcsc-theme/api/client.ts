@@ -1,6 +1,7 @@
 import { RemoteLogger } from '@bifold/remote-logs'
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { jwtDecode } from 'jwt-decode'
+import merge from 'lodash.merge'
 import { getRefreshTokenRequestBody } from 'react-native-bcsc-core'
 import { formatAxiosErrorForLogger, formatIasAxiosResponseError } from '../utils/error-utils'
 import { TokenResponse } from './hooks/useTokens'
@@ -132,16 +133,17 @@ class BCSCApiClient {
       skipBearerAuth: true,
     })
 
-    this.config = {
+    this.config = merge(this.config, {
       pairDeviceWithQRCodeSupported: response.data['pair_device_with_qrcode_supported'],
       maximumAccountsPerDevice: response.data['maximum_accounts_per_device'],
       allowedIdentificationProcesses: response.data['allowed_identification_processes'],
       credentialFlowsSupported: response.data['credential_flows_supported'],
       multipleAccountsSupported: response.data['multiple_accounts_supported'],
       attestationTimeToLive: response.data['attestation_time_to_live'],
-    }
+    })
 
-    this.endpoints = {
+    // Use values from response, otherwise fallback to existing endpoints
+    this.endpoints = merge(this.endpoints, {
       attestation: response.data['attestation_endpoint'],
       issuer: response.data['issuer'],
       authorization: response.data['authorization_endpoint'],
@@ -159,7 +161,7 @@ class BCSCApiClient {
       barcodes: response.data['barcodes_endpoint'],
       accountDevices: response.data['account_devices_endpoint'],
       account: response.data['account_endpoint'],
-    }
+    })
   }
 
   private async ensureValidTokens(): Promise<TokenResponse> {
