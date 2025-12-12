@@ -48,7 +48,7 @@ module.exports = (async () => {
       getTransformOptions: async () => ({
         transform: {
           experimentalImportSupport: false,
-          inlineRequires: process.env.LOAD_STORYBOOK !== 'true',
+          inlineRequires: 'true',
         },
       }),
       minifierPath: 'metro-minify-terser',
