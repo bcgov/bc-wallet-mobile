@@ -111,6 +111,11 @@ const useVideoCallFlow = (leaveCall: () => Promise<void>): VideoCallFlow => {
 
     try {
       connection?.releaseLocalStream()
+    } catch (error) {
+      logger.error('Error releasing local stream:', error as Error)
+    }
+
+    try {
       connection?.closePeerConnection()
     } catch (error) {
       logger.error('Error closing peer connection:', error as Error)

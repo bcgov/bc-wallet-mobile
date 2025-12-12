@@ -225,6 +225,8 @@ export const connect = async (
 
   const closePeerConnection = () => {
     logger.info('Closing peer connection...')
+    // Prevent stale disconnect callbacks from firing
+    disconnectHandled = true
     if (disconnectTimeout) {
       clearTimeout(disconnectTimeout)
       disconnectTimeout = null
