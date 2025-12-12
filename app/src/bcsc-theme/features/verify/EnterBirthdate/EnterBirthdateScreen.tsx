@@ -4,24 +4,18 @@ import {
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
-  TOKENS,
   useAnimatedComponents,
-  useServices,
-  useStore,
   useTheme,
 } from '@bifold/core'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 
-import useApi from '@/bcsc-theme/api/hooks/useApi'
-import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
-import { BCDispatchAction, BCState } from '@/store'
-import { CommonActions } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
+import { useEnterBirthdateViewModel } from './EnterBirthdateViewModel'
 
 type EnterBirthdateScreenProps = {
   navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.EnterBirthdate>
@@ -31,13 +25,16 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const today = new Date()
   const { t } = useTranslation()
   const { themeName, Spacing } = useTheme()
-  const [store, dispatch] = useStore<BCState>()
-  const [date, setDate] = useState(store.bcsc.birthdate ?? today)
-  const [loading, setLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
-  const { authorization } = useApi()
+
+  // Load view model
+  const vm = useEnterBirthdateViewModel(navigation)
+
+  // UI State management
+  // Q: (Al) Should this be in the ViewModel? should this stuff be pulled into a new 'view' hook?
+  const [loading, setLoading] = useState(false)
   const [pickerState, setPickerState] = useState<'idle' | 'spinning'>('idle')
-  const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const [date, setDate] = useState(vm.initialDate ?? today)
 
   const styles = StyleSheet.create({
     lineBreak: {
@@ -57,49 +54,16 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     setDate(realDate)
   }
 
-  const onSubmit = useCallback(async () => {
+  const handleSubmit = async () => {
     try {
       setLoading(true)
-      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [date] })
-      const deviceAuth = await authorization.authorizeDevice(store.bcsc.serial, date)
-
-      // device already authorized
-      if (deviceAuth === null) {
-        navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
-        return
-      }
-
-      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
-      dispatch({
-        type: BCDispatchAction.UPDATE_EMAIL,
-        payload: [{ email: deviceAuth.verified_email, emailConfirmed: !!deviceAuth.verified_email }],
-      })
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_CARD_PROCESS, payload: [deviceAuth.process] })
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
-      dispatch({
-        type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-        payload: [deviceAuth.verification_options.split(' ')],
-      })
-
-      if (deviceAuth.process !== BCSCCardProcess.BCSCPhoto) {
-        navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
-      } else {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: BCSCScreens.SetupSteps }],
-          })
-        )
-      }
+      await vm.authorizeDevice(vm.serial, date)
     } catch (error) {
-      logger.error(`Error during BCSC verification: ${error}`)
       navigation.navigate(BCSCScreens.MismatchedSerial)
     } finally {
       setLoading(false)
     }
-  }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger])
+  }
 
   const controls = (
     <Button
@@ -110,7 +74,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         if (pickerState === 'spinning') {
           return
         }
-        onSubmit()
+        handleSubmit()
       }}
       buttonType={ButtonType.Primary}
       disabled={loading}
@@ -121,7 +85,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   return (
     <ScreenWrapper controls={controls}>
       <ThemedText style={{ marginBottom: Spacing.sm }}>
-        {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
+        {t('BCSC.Birthdate.CardSerialNumber', { serial: vm.serial })}
       </ThemedText>
       <View style={styles.lineBreak} />
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
