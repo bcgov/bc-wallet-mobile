@@ -292,13 +292,14 @@ const CodeScanningCamera: React.FC<CodeScanningCameraProps> = ({
         />
       )}
       {/* scan area cutout */}
+      {/*
       <View style={styles.overlayContainer} pointerEvents="none">
         <View style={styles.overlayTop} />
         <View style={styles.overlayBottom} />
         <View style={styles.overlayLeft} />
         <View style={styles.overlayRight} />
         <View style={styles.overlayOpening} />
-      </View>
+      </View> /*}
       {/* reuse qrscannertorch from bifold */}
       <View style={styles.torchContainer}>
         <QRScannerTorch active={torchEnabled} onPress={toggleTorch} />

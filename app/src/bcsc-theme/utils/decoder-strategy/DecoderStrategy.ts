@@ -16,7 +16,10 @@ export interface ScanableCode {
   value?: string
 }
 
-export type DecodedCode = BCServicesCardDecodedBarcode | DriversLicenseDecodedBarcode | BCServicesComboCardDecoded
+export type DecodedCode =
+  | BCServicesCardDecodedBarcode
+  | DriversLicenseDecodedBarcode
+  | BCServicesComboCardDecodedBarcode
 
 // Interface for code decoding strategies
 export interface DecoderStrategy {
@@ -67,7 +70,7 @@ export interface DriversLicenseDecodedBarcode {
   postalCode: string
 }
 
-export interface BCServicesComboCardDecoded {
+export interface BCServicesComboCardDecodedBarcode {
   kind: DecodedCodeKind.BCServicesComboCardCardBarcode
   bcscSerial: string
   licenseNumber: string
@@ -89,10 +92,10 @@ export interface BCServicesComboCardDecoded {
  */
 export const getDecoderStrategies = (): DecoderStrategy[] => {
   return [
-    new BCServicesCardBarcodeDecoder(),
     // Note: Attempt combo card decoding before drivers license decoding
     new BCComboCardBarcodeDecoder(),
     new DriversLicenseBarcodeDecoder(),
+    new BCServicesCardBarcodeDecoder(),
   ]
 }
 

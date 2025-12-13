@@ -1,5 +1,5 @@
 import {
-  BCServicesComboCardDecoded,
+  BCServicesComboCardDecodedBarcode,
   DecodedCodeKind,
   DecoderStrategy,
   DriversLicenseBarcode,
@@ -7,7 +7,7 @@ import {
 } from './DecoderStrategy'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
 
-const BCSC_SERIAL_LENGTH = 9
+const BCSC_SERIAL_LENGTH = 9 // QUESTION: Is this always 9 characters long?
 
 /**
  * Decoder for BC Services Combo Card barcodes (PDF-417)
@@ -23,7 +23,7 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
     return this.driversLicenseDecoder.canDecode(barcode) && this.parseBcscSerial(barcode.value) !== null
   }
 
-  decode(barcode: DriversLicenseBarcode): BCServicesComboCardDecoded {
+  decode(barcode: DriversLicenseBarcode): BCServicesComboCardDecodedBarcode {
     const decodedDriversLicense = this.driversLicenseDecoder.decode(barcode)
     const bcscSerial = this.parseBcscSerial(barcode.value)
 
@@ -62,8 +62,6 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
     if (/^[A-Za-z][0-9]+$/.test(bcscSerial) === false) {
       return null
     }
-
-    console.log({ bcscSerial })
 
     return bcscSerial
   }

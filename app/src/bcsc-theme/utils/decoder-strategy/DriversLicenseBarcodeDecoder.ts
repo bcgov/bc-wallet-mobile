@@ -13,7 +13,12 @@ const CURRENT_MILLENNIUM = 2000
  */
 export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
   canDecode(barcode: ScanableCode): barcode is DriversLicenseBarcode {
-    return barcode.type === 'pdf-417' && typeof barcode.value === 'string'
+    return (
+      barcode.type === 'pdf-417' &&
+      typeof barcode.value === 'string' &&
+      barcode.value.startsWith('%') &&
+      barcode.value.endsWith('?')
+    )
   }
 
   decode(barcode: DriversLicenseBarcode): DriversLicenseDecodedBarcode {
@@ -65,7 +70,7 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
     return {
       streetAddress: streetAddress.toLowerCase().trim(),
       city: city.toLowerCase().trim(),
-      province: province.toLowerCase().trim(),
+      province: province.trim(),
       postalCode: postalCode.trim(),
     }
   }
