@@ -1,5 +1,6 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
+import useBCSCSecureActions from '@/bcsc-theme/hooks/useBCSCSecureActions'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
@@ -46,6 +47,7 @@ type EvidenceIDCollectionScreenProps = {
  */
 const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionScreenProps) => {
   const [store, dispatch] = useStore<BCState>()
+  const secureActions = useBCSCSecureActions()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { t } = useTranslation()
   const [openDatePicker, setOpenDatePicker] = useState(false)
@@ -53,15 +55,15 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
 
   const [formState, setFormState] = useState<EvidenceCollectionFormState>({
     documentNumber: '', // make the user re-enter every time
-    firstName: store.bcsc.userMetadata?.name?.first ?? '',
-    middleNames: store.bcsc.userMetadata?.name?.middle ?? '',
-    lastName: store.bcsc.userMetadata?.name?.last ?? '',
-    birthDate: store.bcsc.birthdate?.toISOString().split('T')[0] ?? '',
+    firstName: store.bcscSecure.userMetadata?.name?.first ?? '',
+    middleNames: store.bcscSecure.userMetadata?.name?.middle ?? '',
+    lastName: store.bcscSecure.userMetadata?.name?.last ?? '',
+    birthDate: store.bcscSecure.birthdate?.toISOString().split('T')[0] ?? '',
   })
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
   const additionalEvidenceRequired =
-    store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1
+    store.bcsc.cardType === BCSCCardType.Other && store.bcscSecure.additionalEvidenceData?.length === 1
 
   /**
    * Handles changes to the form fields.
@@ -188,12 +190,9 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
       })
     }
 
-    dispatch({
-      type: BCDispatchAction.UPDATE_EVIDENCE_DOCUMENT_NUMBER,
-      payload: [{ evidenceType: route.params.cardType, documentNumber: formState.documentNumber }],
-    })
+    secureActions.updateEvidenceDocumentNumber(route.params.cardType, formState.documentNumber)
 
-    const hasPhotoEvidence = store.bcsc.additionalEvidenceData.some((item) => {
+    const hasPhotoEvidence = store.bcscSecure.additionalEvidenceData?.some((item) => {
       return item.evidenceType.has_photo
     })
 

@@ -1,6 +1,5 @@
 import { RadioGroup } from '@/bcsc-theme/components/RadioGroup'
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import {
   Button,
   ButtonType,
@@ -9,7 +8,6 @@ import {
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
-  useStore,
   useTheme,
 } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -20,13 +18,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons'
 
 const iconSize = 40
 
-type NewSetupScreenProps = {
-  navigation: StackNavigationProp<BCSCVerifyStackParams, BCSCScreens.NewSetup>
+type SetupTypesScreenProps = {
+  navigation: StackNavigationProp<BCSCOnboardingStackParams, BCSCScreens.OnboardingSetupTypes>
 }
 
-const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
+const SetupTypesScreen = ({ navigation }: SetupTypesScreenProps) => {
   const { ColorPalette, Spacing } = useTheme()
-  const [, dispatch] = useStore<BCState>()
   const { t } = useTranslation()
   const [myOwnId, setMyOwnId] = useState<boolean>(true)
   const [otherPersonPresent, setOtherPersonPresent] = useState<boolean>()
@@ -165,8 +162,7 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
           buttonType={ButtonType.Primary}
           title={t('Global.Continue')}
           onPress={() => {
-            dispatch({ type: BCDispatchAction.UPDATE_COMPLETED_NEW_SETUP, payload: [true] })
-            navigation.navigate(BCSCScreens.SetupSteps)
+            navigation.navigate(BCSCScreens.OnboardingIntroCarousel)
           }}
           testID={testIdWithKey('Continue')}
           accessibilityLabel={t('Global.Continue')}
@@ -186,4 +182,4 @@ const NewSetupScreen = ({ navigation }: NewSetupScreenProps) => {
   )
 }
 
-export default NewSetupScreen
+export default SetupTypesScreen

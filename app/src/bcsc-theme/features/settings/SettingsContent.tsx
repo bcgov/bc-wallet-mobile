@@ -118,7 +118,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
   return (
     <TabScreenWrapper edges={['bottom', 'left', 'right']}>
       <View style={styles.container}>
-        {store.bcsc.verified ? (
+        {store.bcscSecure.verified ? (
           <>
             <View style={styles.sectionContainer}>
               <SettingsActionCard

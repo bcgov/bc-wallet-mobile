@@ -78,7 +78,10 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
     try {
       setLoading(true)
       await evidence.sendEmailVerificationCode(code, id)
-      dispatch({ type: BCDispatchAction.UPDATE_EMAIL, payload: [{ email: store.bcsc.email, emailConfirmed: true }] })
+      dispatch({
+        type: BCDispatchAction.UPDATE_EMAIL,
+        payload: [{ email: store.bcscSecure.email, emailConfirmed: true }],
+      })
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
@@ -97,7 +100,7 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
 
     try {
       setResendLoading(true)
-      const { email_address_id } = await evidence.createEmailVerification(store.bcsc.email!)
+      const { email_address_id } = await evidence.createEmailVerification(store.bcscSecure.email!)
       setId(email_address_id)
       Toast.show({
         type: ToastType.Success,
@@ -164,7 +167,8 @@ const EmailConfirmationScreen = ({ navigation, route }: EmailConfirmationScreenP
         {t('BCSC.EmailConfirmation.VerifyYourEmail')}
       </ThemedText>
       <ThemedText>
-        {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')} <ThemedText variant={'bold'}>{store.bcsc.email}</ThemedText>
+        {t('BCSC.EmailConfirmation.EnterTheSixDigitCode')}{' '}
+        <ThemedText variant={'bold'}>{store.bcscSecure.email}</ThemedText>
       </ThemedText>
       <CodeField
         {...props}

@@ -35,7 +35,7 @@ const ManualSerialScreen: React.FC<ManualSerialScreenProps> = ({ navigation }: M
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-  const [serial, setSerial] = useState(store.bcsc.serial ?? '')
+  const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
   const { width } = useWindowDimensions()
   const [errorState, setErrorState] = useState<ErrorState>({
     visible: false,

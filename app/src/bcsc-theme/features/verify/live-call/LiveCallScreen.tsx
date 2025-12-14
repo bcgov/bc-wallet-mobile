@@ -46,11 +46,14 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
   // check if verified, save token if so, and then navigate accordingly
   const leaveCall = useCallback(async () => {
     try {
-      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
+      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
         throw new Error(t('BCSC.VideoCall.DeviceCodeError'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
+      const { refresh_token } = await token.checkDeviceCodeStatus(
+        store.bcscSecure.deviceCode,
+        store.bcscSecure.userCode
+      )
 
       if (refresh_token) {
         dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
@@ -78,7 +81,7 @@ const LiveCallScreen = ({ navigation }: LiveCallScreenProps) => {
         })
       )
     }
-  }, [store.bcsc.deviceCode, store.bcsc.userCode, token, dispatch, navigation, logger, t])
+  }, [store.bcscSecure.deviceCode, store.bcscSecure.userCode, token, dispatch, navigation, logger, t])
 
   // we pass the leaveCall function to the hook so it can use it when the other side disconnects as well
   const {

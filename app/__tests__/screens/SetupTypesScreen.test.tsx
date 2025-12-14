@@ -4,10 +4,10 @@ import React from 'react'
 
 import { useNavigation } from '../../__mocks__/custom/@react-navigation/core'
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import NewSetupScreen from '../../src/bcsc-theme/features/verify/NewSetupScreen'
+import SetupTypesScreen from '../../src/bcsc-theme/features/onboarding/SetupTypesScreen'
 import { BCSCScreens } from '../../src/bcsc-theme/types/navigators'
 
-describe('NewSetupScreen', () => {
+describe('SetupTypesScreen', () => {
   let mockNavigation: any
 
   beforeEach(() => {
@@ -24,7 +24,7 @@ describe('NewSetupScreen', () => {
     it('should render correctly', () => {
       const tree = render(
         <BasicAppContext>
-          <NewSetupScreen navigation={mockNavigation} />
+          <SetupTypesScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
 
@@ -34,7 +34,7 @@ describe('NewSetupScreen', () => {
     it('should have My own ID selected by default when screen loads', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <NewSetupScreen navigation={mockNavigation} />
+          <SetupTypesScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
 
@@ -50,7 +50,7 @@ describe('NewSetupScreen', () => {
     it("should have Yes selected by default when Someone else's ID is clicked", () => {
       const { getByText, getByTestId } = render(
         <BasicAppContext>
-          <NewSetupScreen navigation={mockNavigation} />
+          <SetupTypesScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
 
@@ -68,7 +68,7 @@ describe('NewSetupScreen', () => {
     it("should display help information when Someone else's ID is selected and Yes is chosen", () => {
       const { getByText, queryByText } = render(
         <BasicAppContext>
-          <NewSetupScreen navigation={mockNavigation} />
+          <SetupTypesScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
 
@@ -97,7 +97,7 @@ describe('NewSetupScreen', () => {
     it("should display error when Someone else's ID is selected and No is chosen", () => {
       const { getByText, queryByText } = render(
         <BasicAppContext>
-          <NewSetupScreen navigation={mockNavigation} />
+          <SetupTypesScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
 
@@ -117,7 +117,7 @@ describe('NewSetupScreen', () => {
     it('should clear otherPersonPresent state when switching back to My own ID', () => {
       const { getByText, queryByText, getByTestId } = render(
         <BasicAppContext>
-          <NewSetupScreen navigation={mockNavigation} />
+          <SetupTypesScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
 
@@ -157,7 +157,7 @@ describe('NewSetupScreen', () => {
     it('should navigate to SetupSteps screen when Continue button is pressed', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <NewSetupScreen navigation={mockNavigation} />
+          <SetupTypesScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
 
@@ -176,7 +176,7 @@ describe('NewSetupScreen', () => {
     it('should navigate back when Cancel button is pressed', () => {
       const { getByTestId } = render(
         <BasicAppContext>
-          <NewSetupScreen navigation={mockNavigation} />
+          <SetupTypesScreen navigation={mockNavigation} />
         </BasicAppContext>
       )
 

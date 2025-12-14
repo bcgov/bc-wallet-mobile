@@ -34,13 +34,26 @@
     "!**/.*"
   ],
   "scripts": {
-    "example": "yarn workspace react-native-bcsc-core-example",
     "test": "jest",
     "typecheck": "tsc",
-    "lint": "eslint \"**/*.{js,ts,tsx}\"",
-    "clean": "del-cli android/build example/android/build example/android/app/build example/ios/build lib",
-    "prepare": "bob build",
-    "release": "release-it",
+    "lint": "yarn lint:ts && yarn lint:swift && yarn lint:kotlin && yarn lint:java",
+    "lint:ts": "eslint \"**/*.{js,ts,tsx}\"",
+    "lint:swift": "command -v swiftformat >/dev/null || { echo '⚠️  Install swiftformat: brew install swiftformat'; exit 1; } && swiftformat ios --lint --exclude Pods --config ../../.swiftformat",
+    "lint:kotlin": "command -v ktlint >/dev/null || { echo '⚠️  Install ktlint: brew install ktlint'; exit 1; } && ktlint 'android/src/**/*.kt'",
+    "lint:java": "yarn format:java:check",
+    "format": "yarn format:ts && yarn format:swift && yarn format:c && yarn format:kotlin && yarn format:java",
+    "format:check": "yarn format:ts:check && yarn format:swift:check && yarn format:c:check && yarn format:kotlin:check && yarn format:java:check",
+    "format:ts": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "format:ts:check": "prettier --check \"src/**/*.{ts,tsx}\"",
+    "format:swift": "command -v swiftformat >/dev/null || { echo '⚠️  Install swiftformat: brew install swiftformat'; exit 1; } && swiftformat ios --exclude Pods --config ../../.swiftformat",
+    "format:swift:check": "command -v swiftformat >/dev/null || { echo '⚠️  Install swiftformat: brew install swiftformat'; exit 1; } && swiftformat ios --lint --exclude Pods --config ../../.swiftformat",
+    "format:c": "command -v clang-format >/dev/null || { echo '⚠️  Install clang-format: brew install clang-format'; exit 1; } && find ios -path '*/Pods' -prune -o \\( -name '*.h' -o -name '*.m' \\) -print -exec clang-format -i -style=file:../../.clang-format {} +",
+    "format:c:check": "command -v clang-format >/dev/null || { echo '⚠️  Install clang-format: brew install clang-format'; exit 1; } && find ios -path '*/Pods' -prune -o \\( -name '*.h' -o -name '*.m' \\) -print -exec clang-format --dry-run -Werror -style=file:../../.clang-format {} +",
+    "format:kotlin": "command -v ktlint >/dev/null || { echo '⚠️  Install ktlint: brew install ktlint'; exit 1; } && ktlint -F 'android/src/**/*.kt'",
+    "format:kotlin:check": "command -v ktlint >/dev/null || { echo '⚠️  Install ktlint: brew install ktlint'; exit 1; } && ktlint 'android/src/**/*.kt'",
+    "format:java": "command -v google-java-format >/dev/null || { echo '⚠️  Install google-java-format: brew install google-java-format'; exit 1; } && find android/src -name '*.java' -exec google-java-format -i {} +",
+    "format:java:check": "command -v google-java-format >/dev/null || { echo '⚠️  Install google-java-format: brew install google-java-format'; exit 1; } && find android/src -name '*.java' -exec google-java-format --dry-run --set-exit-if-changed {} +",
+    "clean": "del-cli android/build lib",
     "build": "yarn run clean && bob build"
   },
   "keywords": [
@@ -90,9 +103,6 @@
     "react": "*",
     "react-native": "*"
   },
-  "workspaces": [
-    "example"
-  ],
   "packageManager": "yarn@4.0.2",
   "jest": {
     "preset": "react-native",

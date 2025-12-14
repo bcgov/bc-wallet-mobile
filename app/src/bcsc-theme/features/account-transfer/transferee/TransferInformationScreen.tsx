@@ -1,4 +1,4 @@
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCOnboardingStackParams, BCSCScreens } from '@/bcsc-theme/types/navigators'
 import { Spacing } from '@/bcwallet-theme/theme'
 import TwoPhones from '@assets/img/transfer-account-two-phones.png'
 import { Button, ButtonType, ScreenWrapper, ThemedText } from '@bifold/core'
@@ -13,7 +13,7 @@ const TWO_PHONES = Image.resolveAssetSource(TwoPhones)
 const TransferInformationScreen: React.FC = () => {
   const { t } = useTranslation()
 
-  const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
+  const navigation = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
 
   const styles = StyleSheet.create({
     contentContainer: {

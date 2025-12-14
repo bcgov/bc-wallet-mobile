@@ -108,8 +108,12 @@ describe('useVerificationMethodModel', () => {
 
       expect(mockDispatch).toHaveBeenCalledWith({ type: BCDispatchAction.RESET_SEND_VIDEO })
       expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VERIFICATION_REQUEST,
-        payload: [{ sha256: 'test-sha256', id: 'test-id' }],
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_ID,
+        payload: ['test-id'],
+      })
+      expect(mockDispatch).toHaveBeenCalledWith({
+        type: BCDispatchAction.UPDATE_SECURE_VERIFICATION_REQUEST_SHA,
+        payload: ['test-sha256'],
       })
       expect(mockDispatch).toHaveBeenCalledWith({
         type: BCDispatchAction.UPDATE_VIDEO_PROMPTS,

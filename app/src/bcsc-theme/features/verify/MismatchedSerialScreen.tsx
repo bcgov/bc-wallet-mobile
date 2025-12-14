@@ -28,10 +28,12 @@ const MismatchedSerialScreen = () => {
         {t('BCSC.MismatchedSerial.Heading')}
       </ThemedText>
       <ThemedText style={{ marginBottom: Spacing.lg }}>{t('BCSC.MismatchedSerial.Description1')}</ThemedText>
-      <ThemedText variant={'bold'}>{t('BCSC.MismatchedSerial.SerialNumber', { serial: store.bcsc.serial })}</ThemedText>
+      <ThemedText variant={'bold'}>
+        {t('BCSC.MismatchedSerial.SerialNumber', { serial: store.bcscSecure.serial })}
+      </ThemedText>
       <ThemedText variant={'bold'} style={{ marginBottom: Spacing.lg }}>
         {t('BCSC.MismatchedSerial.Birthdate', {
-          birthdate: store.bcsc.birthdate?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+          birthdate: store.bcscSecure.birthdate?.toLocaleString(t('BCSC.LocaleStringFormat'), {
             month: 'long',
             day: 'numeric',
             year: 'numeric',

@@ -1,6 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
-import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
+import { BCSCOnboardingStackParams } from '@/bcsc-theme/types/navigators'
 import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import {
@@ -27,7 +27,7 @@ import { useCameraPermission } from 'react-native-vision-camera'
 const TransferQRScannerScreen: React.FC = () => {
   const { deviceAttestation, authorization, token } = useApi()
   const { client } = useBCSCApiClientState()
-  const navigator = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
+  const navigator = useNavigation<StackNavigationProp<BCSCOnboardingStackParams>>()
   const [store, dispatch] = useStore<BCState>()
   const { ColorPalette, Spacing } = useTheme()
   const [isLoading, setIsLoading] = useState(false)
@@ -54,7 +54,7 @@ const TransferQRScannerScreen: React.FC = () => {
 
   const registerDevice = useCallback(async () => {
     // we already have a device code, no need to authorize again
-    if (store.bcsc.deviceCode) {
+    if (store.bcscSecure.deviceCode) {
       return
     }
     const deviceAuth = await authorization.authorizeDevice()
@@ -71,7 +71,7 @@ const TransferQRScannerScreen: React.FC = () => {
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
     dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
     dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
-  }, [store.bcsc.deviceCode, authorization, dispatch])
+  }, [store.bcscSecure.deviceCode, authorization, dispatch])
 
   useEffect(() => {
     registerDevice()
@@ -124,10 +124,10 @@ const TransferQRScannerScreen: React.FC = () => {
           jti: uuid.v4().toString(),
         })
 
-        if (store.bcsc.deviceCode) {
+        if (store.bcscSecure.deviceCode) {
           const response = await deviceAttestation.verifyAttestation({
             client_id: account.clientID,
-            device_code: store.bcsc.deviceCode,
+            device_code: store.bcscSecure.deviceCode,
             attestation: qrToken,
             client_assertion: jwt,
           })
@@ -139,7 +139,7 @@ const TransferQRScannerScreen: React.FC = () => {
 
           const deviceToken = await token.deviceToken({
             client_id: account.clientID,
-            device_code: store.bcsc.deviceCode,
+            device_code: store.bcscSecure.deviceCode,
             attestation: qrToken,
             client_assertion: jwt,
           })
@@ -149,9 +149,12 @@ const TransferQRScannerScreen: React.FC = () => {
             client.tokens = deviceToken
           }
 
-          dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [deviceToken.refresh_token] })
+          // TODO (bm): clean up old way below and implement nickname and app security selection
+          // flow after successful transfer, followed by account creation and login
 
-          navigator.navigate(BCSCScreens.VerificationSuccess)
+          // OLD WAY - IGNORE
+          // dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [deviceToken.refresh_token] })
+          // navigator.navigate(BCSCScreens.VerificationSuccess)
         } else {
           setScanError(new QrCodeScanError(t('BCSC.Scan.InvalidQrCode'), value, t('BCSC.Scan.NoDeviceCodeFound')))
         }
@@ -161,7 +164,7 @@ const TransferQRScannerScreen: React.FC = () => {
         setIsLoading(false)
       }
     },
-    [store.bcsc.deviceCode, deviceAttestation, client, dispatch, navigator, t, token, isLoading, scanError]
+    [store.bcscSecure.deviceCode, deviceAttestation, client, t, token, isLoading, scanError]
   )
 
   if (isLoading) {

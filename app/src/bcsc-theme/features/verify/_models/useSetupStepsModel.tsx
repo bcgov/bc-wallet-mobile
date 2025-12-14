@@ -27,20 +27,24 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
    * Check the status of a pending verification request
    */
   const handleCheckStatus = useCallback(async () => {
-    if (!store.bcsc.verificationRequestId) {
+    if (!store.bcscSecure.verificationRequestId) {
       throw new Error(t('BCSC.Steps.VerificationIDMissing'))
     }
 
-    const { status } = await evidence.getVerificationRequestStatus(store.bcsc.verificationRequestId)
+    const { status } = await evidence.getVerificationRequestStatus(store.bcscSecure.verificationRequestId)
 
     if (status === 'verified') {
-      if (!store.bcsc.deviceCode || !store.bcsc.userCode) {
+      if (!store.bcscSecure.deviceCode || !store.bcscSecure.userCode) {
         throw new Error(t('BCSC.Steps.DeviceCodeOrUserCodeMissing'))
       }
 
-      const { refresh_token } = await token.checkDeviceCodeStatus(store.bcsc.deviceCode, store.bcsc.userCode)
+      const { refresh_token } = await token.checkDeviceCodeStatus(
+        store.bcscSecure.deviceCode,
+        store.bcscSecure.userCode
+      )
 
       if (refresh_token) {
+        // TODO (bm): Store refresh token securely
         dispatch({ type: BCDispatchAction.UPDATE_REFRESH_TOKEN, payload: [refresh_token] })
       }
 
@@ -49,9 +53,9 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
       navigation.navigate(BCSCScreens.PendingReview)
     }
   }, [
-    store.bcsc.verificationRequestId,
-    store.bcsc.deviceCode,
-    store.bcsc.userCode,
+    store.bcscSecure.verificationRequestId,
+    store.bcscSecure.deviceCode,
+    store.bcscSecure.userCode,
     evidence,
     token,
     dispatch,
@@ -68,14 +72,16 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         text: t('BCSC.Steps.DeleteVerifyRequest'),
         onPress: async () => {
           try {
-            if (!store.bcsc.verificationRequestId) {
+            if (!store.bcscSecure.verificationRequestId) {
               return
             }
-            await evidence.cancelVerificationRequest(store.bcsc.verificationRequestId)
+            await evidence.cancelVerificationRequest(store.bcscSecure.verificationRequestId)
           } catch (error) {
             logger.error(`Error cancelling verification request: ${error}`)
           } finally {
-            dispatch({ type: BCDispatchAction.UPDATE_PENDING_VERIFICATION, payload: [false] })
+            // TODO (bm): Clear pendingVerification from state
+            // Clear verification request from secure state
+            // Note: pendingVerification is now managed via accountFlags.userSubmittedVerificationVideo
             navigation.navigate(BCSCScreens.VerificationMethodSelection)
           }
         },
@@ -86,7 +92,7 @@ const useSetupStepsModel = (navigation: StackNavigationProp<BCSCVerifyStackParam
         style: 'cancel',
       },
     ])
-  }, [store.bcsc.verificationRequestId, evidence, logger, dispatch, navigation, t])
+  }, [store.bcscSecure.verificationRequestId, evidence, logger, navigation, t])
 
   /**
    * Navigation actions for each step

@@ -6,8 +6,13 @@ import { createHeaderBackButton } from '../components/HeaderBackButton'
 import { createHeaderWithoutBanner } from '../components/HeaderWithBanner'
 import { createOnboardingHelpHeaderButton } from '../components/HelpHeaderButton'
 import { createMainWebviewHeaderBackButton } from '../components/WebViewBackButton'
+import TransferInformationScreen from '../features/account-transfer/transferee/TransferInformationScreen'
+import TransferInstructionsScreen from '../features/account-transfer/transferee/TransferInstructionsScreen'
+import TransferQRScannerScreen from '../features/account-transfer/transferee/TransferQRScannerScreen'
 import { InternetDisconnected } from '../features/modal/InternetDisconnected'
 import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
+import AccountSetupScreen from '../features/onboarding/AccountSetupScreen'
+import { CreatePINScreen } from '../features/onboarding/CreatePINScreen'
 import { IntroCarouselScreen } from '../features/onboarding/IntroCarousel'
 import { NotificationsScreen } from '../features/onboarding/NotificationsScreen'
 import { OnboardingOptInAnalyticsScreen } from '../features/onboarding/OnboardingOptInAnalyticsScreen'
@@ -31,7 +36,7 @@ const OnboardingStack = (): JSX.Element => {
 
   return (
     <Stack.Navigator
-      initialRouteName={BCSCScreens.OnboardingIntroCarousel}
+      initialRouteName={BCSCScreens.OnboardingAccountSetup}
       screenOptions={{
         ...defaultStackOptions,
         headerShown: false,
@@ -44,6 +49,7 @@ const OnboardingStack = (): JSX.Element => {
         header: createHeaderWithoutBanner,
       }}
     >
+      <Stack.Screen name={BCSCScreens.OnboardingAccountSetup} component={AccountSetupScreen} />
       <Stack.Screen name={BCSCScreens.OnboardingIntroCarousel} component={IntroCarouselScreen} />
       <Stack.Screen
         name={BCSCScreens.OnboardingPrivacyPolicy}
@@ -87,6 +93,14 @@ const OnboardingStack = (): JSX.Element => {
         }}
       />
       <Stack.Screen
+        name={BCSCScreens.OnboardingCreatePIN}
+        component={CreatePINScreen}
+        options={{
+          title: 'Create a PIN',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
         name={BCSCScreens.OnboardingWebView}
         component={OnboardingWebViewScreen}
         options={({ route }) => ({
@@ -95,6 +109,30 @@ const OnboardingStack = (): JSX.Element => {
           headerBackTestID: testIdWithKey('Back'),
           headerLeft: createMainWebviewHeaderBackButton(),
         })}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountInformation}
+        component={TransferInformationScreen}
+        options={{
+          title: 'Transfer Account Information',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountInstructions}
+        component={TransferInstructionsScreen}
+        options={{
+          title: 'Transfer Instructions',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name={BCSCScreens.TransferAccountQRScan}
+        component={TransferQRScannerScreen}
+        options={{
+          title: 'Scan QR Code',
+          headerShown: true,
+        }}
       />
 
       {/* React navigation docs suggest modals at bottom of stack */}

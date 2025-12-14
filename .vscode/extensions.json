@@ -1,3 +1,23 @@
 {
-  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+  "recommendations": [
+    // ===== JavaScript/TypeScript =====
+    "dbaeumer.vscode-eslint",           // ESLint integration
+    "esbenp.prettier-vscode",           // Prettier formatter
+    
+    // ===== Swift =====
+    "vknabel.vscode-swiftformat",       // SwiftFormat integration
+    
+    // ===== Objective-C / C =====
+    "xaver.clang-format",               // clang-format integration
+    
+    // ===== Kotlin =====
+    "mathiasfrohlich.kotlin",           // Kotlin syntax highlighting
+    "cstef.kotlin-formatter",           // ktlint format integration
+
+    // ===== Ruby =====
+    "shopify.ruby-lsp",                 // Ruby formatting & language support
+    
+    // ===== YAML =====
+    "redhat.vscode-yaml",               // YAML language support
+  ]
 }

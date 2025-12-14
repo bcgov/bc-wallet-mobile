@@ -58,7 +58,7 @@ const CallBusyOrClosedScreen = ({ navigation, route }: CallBusyOrClosedScreenPro
       </ThemedText>
       <ThemedText>
         {t('BCSC.VideoCall.CallBusyOrClosed.AddCardAgainReminder', {
-          date: store.bcsc.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
+          date: store.bcscSecure.deviceCodeExpiresAt?.toLocaleString(t('BCSC.LocaleStringFormat'), {
             month: 'long',
             day: 'numeric',
             year: 'numeric',

@@ -4,13 +4,15 @@ import { Platform } from 'react-native'
 import {
   AccountSecurityMethod,
   getAccount,
+  getAccountSecurityMethod,
   getDeviceId,
   getDynamicClientRegistrationBody,
   setAccount,
 } from 'react-native-bcsc-core'
 
+import useBCSCSecureActions from '@/bcsc-theme/hooks/useBCSCSecureActions'
 import { getNotificationTokens } from '@/bcsc-theme/utils/push-notification-tokens'
-import { BCDispatchAction, BCState } from '@/store'
+import { BCState } from '@/store'
 import { TOKENS, useServices, useStore } from '@bifold/core'
 import BCSCApiClient from '../client'
 import { withAccount } from './withAccountGuard'
@@ -55,8 +57,9 @@ export interface NonceResponseData {
 // The registration API is a special case because it gets called during initialization,
 // so its params are adjusted to account for an api client that may not be ready yet
 const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: boolean = true) => {
-  const [store, dispatch] = useStore<BCState>()
+  const [store] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
+  const { updateTokens } = useBCSCSecureActions()
 
   /**
    * Retrieves platform-specific attestation for device verification.
@@ -118,49 +121,52 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
    * @returns Promise resolving to registration response data or void if account exists
    * @throws Error if BCSC client is not ready or registration fails
    */
-  const register = useCallback(async () => {
-    if (!isClientReady || !apiClient) {
-      throw new Error('BCSC client not ready for registration')
-    }
+  const register = useCallback(
+    async (securityMethod: AccountSecurityMethod) => {
+      if (!isClientReady || !apiClient) {
+        throw new Error('BCSC client not ready for registration')
+      }
 
-    const account = await getAccount()
-    // If an account already exists, we don't need to register again
-    if (account) {
-      logger.info('Account already exists, skipping registration')
-      return
-    }
+      const account = await getAccount()
+      // If an account already exists, we don't need to register again
+      if (account) {
+        logger.info('Account already exists, skipping registration')
+        return
+      }
 
-    logger.info('No account found, proceeding with registration')
+      logger.info('No account found, proceeding with registration')
 
-    const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
-      getAttestation(),
-      getNotificationTokens(logger),
-    ])
+      const [attestation, { fcmDeviceToken, deviceToken }] = await Promise.all([
+        getAttestation(),
+        getNotificationTokens(logger),
+      ])
 
-    const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
-    logger.info('Generated dynamic client registration body')
+      const body = await getDynamicClientRegistrationBody(fcmDeviceToken, deviceToken, attestation)
+      logger.info('Generated dynamic client registration body')
 
-    const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
-      headers: { 'Content-Type': 'application/json' },
-      skipBearerAuth: true,
-    })
+      const { data } = await apiClient.post<RegistrationResponseData>(apiClient.endpoints.registration, body, {
+        headers: { 'Content-Type': 'application/json' },
+        skipBearerAuth: true,
+      })
 
-    logger.info('Completed registration request')
+      logger.info('Completed registration request')
 
-    dispatch({
-      type: BCDispatchAction.UPDATE_REGISTRATION_ACCESS_TOKEN,
-      payload: [{ registrationAccessToken: data.registration_access_token }],
-    })
+      await updateTokens({
+        registrationAccessToken: data.registration_access_token,
+      })
 
-    logger.info(`Storing new account information locally, ${data.client_id}, issuer: ${apiClient.endpoints.issuer}`)
-    await setAccount({
-      clientID: data.client_id,
-      issuer: apiClient.endpoints.issuer,
-      securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
-    })
+      logger.info(`Storing new account information locally, ${data.client_id}, issuer: ${apiClient.endpoints.issuer}`)
+      await setAccount({
+        clientID: data.client_id,
+        issuer: apiClient.endpoints.issuer,
+        securityMethod,
+        nickname: store.bcsc.selectedNickname,
+      })
 
-    return data
-  }, [isClientReady, apiClient, logger, dispatch, getAttestation])
+      return data
+    },
+    [isClientReady, apiClient, logger, store.bcsc.selectedNickname, getAttestation, updateTokens]
+  )
 
   /**
    * Updates an existing BCSC client registration with new nickname and attestation.
@@ -225,15 +231,16 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
 
         logger.info('Completed registration update request')
 
-        dispatch({
-          type: BCDispatchAction.UPDATE_REGISTRATION_ACCESS_TOKEN,
-          payload: [{ registrationAccessToken: updatedRegistrationData?.registration_access_token }],
+        await updateTokens({
+          registrationAccessToken: updatedRegistrationData.registration_access_token,
         })
+
+        const securityMethod = await getAccountSecurityMethod(account.id)
 
         await setAccount({
           clientID: updatedRegistrationData?.client_id,
           issuer: apiClient.endpoints.issuer,
-          securityMethod: AccountSecurityMethod.PinNoDeviceAuth,
+          securityMethod,
           nickname: selectedNickname,
           didPostNicknameToServer: true,
         })
@@ -241,7 +248,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         return updatedRegistrationData
       })
     },
-    [isClientReady, apiClient, logger, dispatch, getAttestation]
+    [isClientReady, apiClient, logger, getAttestation, updateTokens]
   )
 
   /**
@@ -260,7 +267,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
         throw new Error('BCSC client not ready for registration deletion')
       }
 
-      const registrationAccessToken = store.bcsc.registrationAccessToken
+      const registrationAccessToken = store.bcscSecure.registrationAccessToken
 
       const { status } = await apiClient.delete(`${apiClient.endpoints.registration}/${clientId}`, {
         skipBearerAuth: true,
@@ -272,7 +279,7 @@ const useRegistrationApi = (apiClient: BCSCApiClient | null, isClientReady: bool
       // 200 level status codes indicate success
       return { success: status > 199 && status < 300 }
     },
-    [isClientReady, apiClient, store.bcsc.registrationAccessToken]
+    [isClientReady, apiClient, store.bcscSecure.registrationAccessToken]
   )
 
   return useMemo(

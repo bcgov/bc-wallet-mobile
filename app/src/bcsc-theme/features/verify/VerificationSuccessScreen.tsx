@@ -1,5 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import StatusDetails from '@/bcsc-theme/components/StatusDetails'
+import { useBCSCSecureActions } from '@/bcsc-theme/hooks/useBCSCSecureActions'
 import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, TOKENS, useServices, useStore } from '@bifold/core'
 import { useFocusEffect } from '@react-navigation/native'
@@ -11,6 +12,7 @@ const VerificationSuccessScreen = () => {
   const [store, dispatch] = useStore<BCState>()
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const { registration } = useApi()
+  const { updateVerified } = useBCSCSecureActions()
 
   const styles = StyleSheet.create({
     contentContainer: {
@@ -27,7 +29,7 @@ const VerificationSuccessScreen = () => {
 
   const handleUpdateRegistration = async () => {
     try {
-      await registration.updateRegistration(store.bcsc.registrationAccessToken, store.bcsc.selectedNickname)
+      await registration.updateRegistration(store.bcscSecure.registrationAccessToken, store.bcsc.selectedNickname)
     } catch (error) {
       logger.error('Failed to update registration', { error })
       return
@@ -40,8 +42,8 @@ const VerificationSuccessScreen = () => {
       accessibilityLabel={t('BCSC.Verification.ButtonText')}
       title={t('BCSC.Verification.ButtonText')}
       buttonType={ButtonType.Primary}
-      onPress={() => {
-        dispatch({ type: BCDispatchAction.UPDATE_VERIFIED, payload: [true] })
+      onPress={async () => {
+        await updateVerified(true)
         dispatch({ type: BCDispatchAction.CLEAR_USER_METADATA })
         handleUpdateRegistration()
       }}

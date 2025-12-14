@@ -13,8 +13,9 @@ import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.soloader.SoLoader
 import org.wonday.orientation.OrientationActivityLifecycle
 
-class MainApplication : Application(), ReactApplication {
-
+class MainApplication :
+    Application(),
+    ReactApplication {
     override val reactNativeHost: ReactNativeHost =
         object : DefaultReactNativeHost(this) {
             override fun getPackages(): List<ReactPackage> =
@@ -22,12 +23,14 @@ class MainApplication : Application(), ReactApplication {
                     // Packages that cannot be autolinked yet can be added manually here, for example:
                     // add(MyReactNativePackage())
                 }
-            
+
             override fun getJSMainModuleName(): String = "index"
+
             override fun getUseDeveloperSupport(): Boolean = BuildConfig.DEBUG
+
             override val isNewArchEnabled: Boolean = BuildConfig.IS_NEW_ARCHITECTURE_ENABLED
             override val isHermesEnabled: Boolean = BuildConfig.IS_HERMES_ENABLED
-    }
+        }
 
     override val reactHost: ReactHost
         get() = getDefaultReactHost(this.applicationContext, reactNativeHost)

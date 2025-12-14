@@ -2,7 +2,7 @@ import { render } from '@testing-library/react-native'
 import React from 'react'
 
 import { BasicAppContext } from '../../__mocks__/helpers/app'
-import TransferInformationScreen from '../../src/bcsc-theme/features/account-transfer/TransferInformationScreen'
+import TransferInformationScreen from '../../src/bcsc-theme/features/account-transfer/transferee/TransferInformationScreen'
 
 describe('TransferInformation', () => {
   beforeEach(() => {

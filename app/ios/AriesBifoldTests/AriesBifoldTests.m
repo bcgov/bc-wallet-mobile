@@ -13,8 +13,7 @@
 
 @implementation RnDiffAppTests
 
-- (BOOL)findSubviewInView:(UIView *)view matching:(BOOL (^)(UIView *view))test
-{
+- (BOOL)findSubviewInView:(UIView *)view matching:(BOOL (^)(UIView *view))test {
   if (test(view)) {
     return YES;
   }
@@ -26,8 +25,7 @@
   return NO;
 }
 
-- (void)testRendersWelcomeScreen
-{
+- (void)testRendersWelcomeScreen {
   UIViewController *vc = [[[RCTSharedApplication() delegate] window] rootViewController];
   NSDate *date = [NSDate dateWithTimeIntervalSinceNow:TIMEOUT_SECONDS];
   BOOL foundElement = NO;

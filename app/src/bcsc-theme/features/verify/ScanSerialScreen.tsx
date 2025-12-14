@@ -19,7 +19,7 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-  const [serial, setSerial] = useState(store.bcsc.serial ?? '')
+  const [serial, setSerial] = useState(store.bcscSecure.serial ?? '')
 
   const styles = StyleSheet.create({
     screenContainer: {

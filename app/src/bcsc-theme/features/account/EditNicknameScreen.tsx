@@ -27,7 +27,7 @@ const EditNicknameScreen: React.FC = () => {
       })
 
       try {
-        await registration.updateRegistration(store.bcsc.registrationAccessToken, trimmedNickname)
+        await registration.updateRegistration(store.bcscSecure.registrationAccessToken, trimmedNickname)
       } catch (apiError) {
         logger.error('Failed to update registration', { error: apiError })
         throw apiError
@@ -42,7 +42,15 @@ const EditNicknameScreen: React.FC = () => {
 
       navigation.goBack()
     },
-    [dispatch, logger, navigation, registration, store.bcsc.registrationAccessToken, store.bcsc.selectedNickname, t]
+    [
+      dispatch,
+      logger,
+      navigation,
+      registration,
+      store.bcscSecure.registrationAccessToken,
+      store.bcsc.selectedNickname,
+      t,
+    ]
   )
 
   return <NicknameForm onSubmit={handleSubmit} isRenaming />

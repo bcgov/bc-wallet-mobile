@@ -1,0 +1,17 @@
+# Build outputs
+build/
+.gradle/
+*.iml
+
+# IDE files
+.idea/
+*.iws
+
+# Standalone Gradle files for IDE support only
+# These are generated/copied for VS Code Kotlin language server to resolve dependencies
+# The actual build uses app/android's Gradle configuration
+settings.gradle.kts
+local.properties
+gradle/
+gradlew
+gradlew.bat

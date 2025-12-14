@@ -16,6 +16,8 @@ import { StyleSheet, View } from 'react-native'
 import DatePicker from 'react-native-date-picker'
 
 import useApi from '@/bcsc-theme/api/hooks/useApi'
+import { DeviceVerificationOption } from '@/bcsc-theme/api/hooks/useAuthorizationApi'
+import useBCSCSecureActions from '@/bcsc-theme/hooks/useBCSCSecureActions'
 import { BCSCCardType } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCThemeNames } from '@/constants'
@@ -32,10 +34,11 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const { t } = useTranslation()
   const { themeName, Spacing } = useTheme()
   const [store, dispatch] = useStore<BCState>()
-  const [date, setDate] = useState(store.bcsc.birthdate ?? today)
+  const [date, setDate] = useState(store.bcscSecure.birthdate ?? today)
   const [loading, setLoading] = useState(false)
   const { ButtonLoading } = useAnimatedComponents()
   const { authorization } = useApi()
+  const secureActions = useBCSCSecureActions()
   const [pickerState, setPickerState] = useState<'idle' | 'spinning'>('idle')
   const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
@@ -61,7 +64,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     try {
       setLoading(true)
       dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [date] })
-      const deviceAuth = await authorization.authorizeDevice(store.bcsc.serial, date)
+      const deviceAuth = await authorization.authorizeDevice(store.bcscSecure.serial, date)
 
       // device already authorized
       if (deviceAuth === null) {
@@ -74,13 +77,12 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         type: BCDispatchAction.UPDATE_EMAIL,
         payload: [{ email: deviceAuth.verified_email, emailConfirmed: !!deviceAuth.verified_email }],
       })
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
-      dispatch({
-        type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-        payload: [deviceAuth.verification_options.split(' ')],
+      secureActions.updateDeviceCodes({
+        deviceCode: deviceAuth.device_code,
+        userCode: deviceAuth.user_code,
+        deviceCodeExpiresAt: expiresAt,
       })
+      secureActions.updateVerificationOptions(deviceAuth.verification_options.split(' ') as DeviceVerificationOption[])
 
       if (store.bcsc.cardType === BCSCCardType.NonPhoto) {
         navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
@@ -98,7 +100,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
     } finally {
       setLoading(false)
     }
-  }, [dispatch, date, navigation, authorization, store.bcsc.serial, logger, store.bcsc.cardType])
+  }, [dispatch, date, navigation, authorization, store.bcscSecure.serial, logger, store.bcsc.cardType, secureActions])
 
   const controls = (
     <Button
@@ -120,7 +122,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   return (
     <ScreenWrapper controls={controls}>
       <ThemedText style={{ marginBottom: Spacing.sm }}>
-        {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcsc.serial })}
+        {t('BCSC.Birthdate.CardSerialNumber', { serial: store.bcscSecure.serial })}
       </ThemedText>
       <View style={styles.lineBreak} />
       <ThemedText variant={'headingThree'} style={{ marginBottom: Spacing.md }}>
