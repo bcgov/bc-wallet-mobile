@@ -110,9 +110,9 @@ const SetupStepsScreen: React.FC<SetupStepsScreenProps> = ({ navigation }) => {
               </View>
               {
                 // QUESTION (MD): Do we want the same for the non bcsc card verification?
-                store.bcsc.cardProcess !== BCSCCardProcess.BCSCPhoto ? (
+                store.bcsc.cardProcess !== BCSCCardProcess.BCSCPhoto && (
                   <ThemedText>{t('BCSC.Steps.AdditionalIdentificationRequired')}</ThemedText>
-                ) : null
+                )
               }
             </View>
           ) : null

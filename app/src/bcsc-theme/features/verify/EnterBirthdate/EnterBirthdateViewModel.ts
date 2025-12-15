@@ -53,15 +53,15 @@ export const useEnterBirthdateViewModel = (
       logger.info(`Device authorized successfully, proceding to verification steps: ${deviceAuth.process}`)
 
       // Navigate based on card process
-      if (deviceAuth.process !== BCSCCardProcess.BCSCPhoto) {
-        navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
-      } else {
+      if (deviceAuth.process === BCSCCardProcess.BCSCPhoto) {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
             routes: [{ name: BCSCScreens.SetupSteps }],
           })
         )
+      } else {
+        navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)
       }
     },
     [dispatch, authorization, navigation, logger]

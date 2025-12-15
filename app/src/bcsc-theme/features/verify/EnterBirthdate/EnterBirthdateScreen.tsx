@@ -4,7 +4,9 @@ import {
   ScreenWrapper,
   testIdWithKey,
   ThemedText,
+  TOKENS,
   useAnimatedComponents,
+  useServices,
   useTheme,
 } from '@bifold/core'
 import { useState } from 'react'
@@ -26,6 +28,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const { t } = useTranslation()
   const { themeName, Spacing } = useTheme()
   const { ButtonLoading } = useAnimatedComponents()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
 
   // Load view model
   const vm = useEnterBirthdateViewModel(navigation)
@@ -58,6 +61,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       setLoading(true)
       await vm.authorizeDevice(vm.serial, date)
     } catch (error) {
+      logger.error('CSN and birthdate mismatch, card not found', { error })
       navigation.navigate(BCSCScreens.MismatchedSerial)
     } finally {
       setLoading(false)
