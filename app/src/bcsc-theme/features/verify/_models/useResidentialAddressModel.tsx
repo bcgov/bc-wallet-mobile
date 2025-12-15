@@ -179,15 +179,7 @@ const useResidentialAddressModel = ({ navigation }: useResidentialAddressModelPr
 
       logger.info(`Updating deviceCode: ${deviceAuth.device_code}`)
 
-      // QUESTION (MD): What is the correct value for expiresAt?
-      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
-      dispatch({
-        type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-        payload: [deviceAuth.verification_options.split(' ')],
-      })
+      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
 
       navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] }))
     } catch (error) {

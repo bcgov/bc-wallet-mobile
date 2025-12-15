@@ -69,18 +69,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
         return
       }
 
-      const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
-      dispatch({
-        type: BCDispatchAction.UPDATE_EMAIL,
-        payload: [{ email: deviceAuth.verified_email, emailConfirmed: !!deviceAuth.verified_email }],
-      })
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
-      dispatch({
-        type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-        payload: [deviceAuth.verification_options.split(' ')],
-      })
+      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
 
       if (store.bcsc.cardType === BCSCCardType.NonPhoto) {
         navigation.navigate(BCSCScreens.AdditionalIdentificationRequired)

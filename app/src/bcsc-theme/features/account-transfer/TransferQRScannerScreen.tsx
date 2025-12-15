@@ -1,7 +1,6 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useBCSCApiClientState } from '@/bcsc-theme/hooks/useBCSCApiClient'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { BCSC_EMAIL_NOT_PROVIDED } from '@/constants'
 import { BCDispatchAction, BCState } from '@/store'
 import {
   DismissiblePopupModal,
@@ -63,14 +62,7 @@ const TransferQRScannerScreen: React.FC = () => {
       return
     }
 
-    const expiresAt = new Date(Date.now() + deviceAuth.expires_in * 1000)
-    dispatch({
-      type: BCDispatchAction.UPDATE_EMAIL,
-      payload: [{ email: deviceAuth.verified_email || BCSC_EMAIL_NOT_PROVIDED, emailConfirmed: true }],
-    })
-    dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE, payload: [deviceAuth.device_code] })
-    dispatch({ type: BCDispatchAction.UPDATE_USER_CODE, payload: [deviceAuth.user_code] })
-    dispatch({ type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT, payload: [expiresAt] })
+    dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
   }, [store.bcsc.deviceCode, authorization, dispatch])
 
   useEffect(() => {

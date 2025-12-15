@@ -1,3 +1,4 @@
+import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import {
   DecodedCodeKind,
@@ -5,15 +6,15 @@ import {
   DriversLicenseDecodedBarcode,
   ScanableCode,
 } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
-import { BCState } from '@/store'
+import { BCDispatchAction, BCState } from '@/store'
 import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
-import React, { useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { StyleSheet, View } from 'react-native'
 import CodeScanningCamera from '../../components/CodeScanningCamera'
 
-const MIN_CAMERA_CAPTURE_ATTEMPTS = 40
+const MIN_CAMERA_CAPTURE_ATTEMPTS = 30
 
 const maxSerialNumberLength = 15
 
@@ -26,14 +27,16 @@ type ScanSerialScreenProps = {
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
+  const { authorization } = useApi()
   const [store, dispatch] = useStore<BCState>()
-  const [serial, setSerial] = useState(store.bcsc.serial ?? '')
+  // const [serial, setSerial] = useState(store.bcsc.serial ?? '')
   // const decodedCardMetadataRef = useRef<DecodedCode | null>(null)
 
-  const scanCompletedRef = useRef(false)
-  const cardSerialRef = useRef<string | null>()
-  const cardCaptureAttemptsRef = useRef(0)
+  const bcscSerialRef = useRef<string | null>()
   const licenseMetadataRef = useRef<DriversLicenseDecodedMetadata | null>(null)
+
+  const scanCompletedRef = useRef(false)
+  const cardScanCountRef = useRef(0)
 
   const styles = StyleSheet.create({
     screenContainer: {
@@ -53,23 +56,23 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
   })
 
   // Paths:
-  // 	1. Card has serial and license metadata (combo dual barcode or 2025+ combo card DL barcode)
-  // 		 Outcome: validate serial -> save serial and license -> navigate to setup steps verification
+  // 	1. Card has serial and license metadata (combo card both barcodes or 2025+ combo DL barcode)
+  // 		 Outcome: validate serial -> save serial and birthdate (from license) -> navigate to setup steps verification
   //
   //  2. Card has serial but no license metadata (BCSC card with single barcode)
   //  	 Outcome: validate serial -> save serial -> navigate to enter birthdate
   //
-  //  3. Card has only license metadata (DL card)
+  //  3. Card has only license metadata (DL card barcode)
   //  	 Outcome: navigate to manual serial entry with prefilled license metadata
   //
   //  4. Card has neither serial nor license metadata
   //  	 Outcome: continue scanning until max attempts reached
-  const onCodeScanned = (codes: ScanableCode[]) => {
+  const onCodeScanned = async (codes: ScanableCode[]) => {
     if (scanCompletedRef.current) {
       return
     }
 
-    cardCaptureAttemptsRef.current += 1
+    cardScanCountRef.current += 1
 
     for (const code of codes) {
       const decodedCode = decodeScannedCode(code)
@@ -79,59 +82,71 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
         return
       }
 
+      // Extract the decoded metadata
       switch (decodedCode.kind) {
         case DecodedCodeKind.BCServicesComboCardCardBarcode:
-          cardSerialRef.current = decodedCode.bcscSerial
+          bcscSerialRef.current = decodedCode.bcscSerial
           licenseMetadataRef.current = decodedCode
           break
         case DecodedCodeKind.DriversLicenseBarcode:
           licenseMetadataRef.current = decodedCode
           break
         case DecodedCodeKind.BCServicesCardBarcode:
-          cardSerialRef.current = decodedCode.bcscSerial
+          bcscSerialRef.current = decodedCode.bcscSerial
           break
       }
     }
 
-    if (!store.bcsc.userMetadata && !store.bcsc.serial && licenseMetadataRef.current && cardSerialRef.current) {
-      //dispatch({ type: 'BCSC_UPDATE_SERIAL', payload: [cardSerialRef.current] })
-      // dispatch({
-      //   type: BCDispatchAction.UPDATE_USER_NAME_METADATA,
-      //   payload: [
-      //     {
-      //       first: licenseMetadataRef.current.firstName,
-      //       middle: licenseMetadataRef.current.middleNames,
-      //       last: licenseMetadataRef.current.lastName,
-      //     },
-      //   ],
-      // })
-      // dispatch({
-      //   type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
-      //   payload: [
-      //     {
-      //       streetAddress: licenseMetadataRef.current.streetAddress,
-      //       city: licenseMetadataRef.current.city,
-      //       province: licenseMetadataRef.current.province,
-      //       postalCode: licenseMetadataRef.current.postalCode,
-      //     },
-      //   ],
-      // })
+    if (licenseMetadataRef.current && bcscSerialRef.current) {
+      scanCompletedRef.current = true
+
+      dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [bcscSerialRef.current] })
+      dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [licenseMetadataRef.current.birthDate] })
+      const deviceAuth = await authorization.authorizeDevice(
+        bcscSerialRef.current,
+        licenseMetadataRef.current.birthDate
+      )
+      if (deviceAuth) {
+        dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
+      }
+      navigation.reset({
+        index: 0,
+        routes: [{ name: BCSCScreens.SetupSteps }],
+      })
     }
 
-    if (cardCaptureAttemptsRef.current < MIN_CAMERA_CAPTURE_ATTEMPTS) {
-      console.log(cardCaptureAttemptsRef.current, Boolean(cardSerialRef.current), Boolean(licenseMetadataRef.current))
-      return
+    if (bcscSerialRef.current && cardScanCountRef.current >= MIN_CAMERA_CAPTURE_ATTEMPTS) {
+      scanCompletedRef.current = true
+
+      dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [bcscSerialRef.current] })
+      navigation.navigate(BCSCScreens.EnterBirthdate)
     }
 
-    // for (const code of val) {
-    //   // setSerial(code.value)
-    //   // TODO (MD): Reimplement this logic
-    //   // if (validateSerial()) {
-    //   //   dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [code.value] })
-    //   //   navigation.navigate(BCSCScreens.EnterBirthdate)
-    //   //   return
-    //   // }
-    // }
+    if (licenseMetadataRef.current && cardScanCountRef.current >= MIN_CAMERA_CAPTURE_ATTEMPTS) {
+      scanCompletedRef.current = true
+
+      dispatch({
+        type: BCDispatchAction.UPDATE_USER_NAME_METADATA,
+        payload: [
+          {
+            first: licenseMetadataRef.current.firstName,
+            middle: licenseMetadataRef.current.middleNames,
+            last: licenseMetadataRef.current.lastName,
+          },
+        ],
+      })
+      dispatch({
+        type: BCDispatchAction.UPDATE_USER_ADDRESS_METADATA,
+        payload: [
+          {
+            streetAddress: licenseMetadataRef.current.streetAddress,
+            city: licenseMetadataRef.current.city,
+            province: licenseMetadataRef.current.province,
+            postalCode: licenseMetadataRef.current.postalCode,
+          },
+        ],
+      })
+    }
   }
 
   return (
