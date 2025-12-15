@@ -25,10 +25,15 @@ runs:
   steps:
     - name: run-send-gen-test-results-secure
       working-directory: aries-mobile-test-harness
-      run: ./aries-mobile-tests/allure/send_results_secure.sh ${{ inputs.RESULTS_LOCATION }} ${{ inputs.ALLURE_SERVER }} -p ${{ inputs.REPORT_PROJECT }} ${{ inputs.ADMIN_USER }} ${{ inputs.ADMIN_PW }}
+      run: ./aries-mobile-tests/allure/send_results_secure.sh $RESULTS_LOCATION $ALLURE_SERVER -p $REPORT_PROJECT $ADMIN_USER $ADMIN_PW
       shell: bash
       env:
         NO_TTY: "1"
+        RESULTS_LOCATION: ${{ inputs.RESULTS_LOCATION }}
+        ALLURE_SERVER: ${{ inputs.ALLURE_SERVER }}
+        REPORT_PROJECT: ${{ inputs.REPORT_PROJECT }}
+        ADMIN_USER: ${{ inputs.ADMIN_USER }}
+        ADMIN_PW: ${{ inputs.ADMIN_PW }}
 branding:
   icon: "mic"
   color: "purple"
