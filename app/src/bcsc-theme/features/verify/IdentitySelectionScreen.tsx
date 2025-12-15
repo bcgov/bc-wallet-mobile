@@ -37,15 +37,15 @@ const IdentitySelectionScreen: React.FC<IdentitySelectionScreenProps> = ({
 
   const onPressCombinedCard = useCallback(() => {
     navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [dispatch, navigation])
+  }, [navigation])
 
   const onPressPhotoCard = useCallback(() => {
     navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [dispatch, navigation])
+  }, [navigation])
 
   const onPressNoPhotoCard = useCallback(() => {
     navigation.navigate(BCSCScreens.SerialInstructions)
-  }, [dispatch, navigation])
+  }, [navigation])
 
   const onCheckForServicesCard = useCallback(() => {
     navigation.navigate(BCSCScreens.VerifyWebView, { title: '', url: HelpCentreUrl.HELP_CHECK_BCSC })

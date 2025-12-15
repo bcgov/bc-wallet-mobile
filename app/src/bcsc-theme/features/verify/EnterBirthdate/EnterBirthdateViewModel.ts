@@ -64,7 +64,7 @@ export const useEnterBirthdateViewModel = (
         )
       }
     },
-    [dispatch, authorization, navigation]
+    [dispatch, authorization, navigation, logger]
   )
 
   return {
