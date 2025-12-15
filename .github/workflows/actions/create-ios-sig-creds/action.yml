@@ -27,8 +27,9 @@ runs:
       shell: bash
       env:
         CERTIFICATE: ${{ inputs.certificate }}
+        certificate_password: ${{ inputs.certificate_password }}
       run: |
-        scripts/makekc.sh ${{ inputs.certificate_password }}
+        scripts/makekc.sh $certificate_password
 
     - name: Build API AuthKey
       shell: bash
