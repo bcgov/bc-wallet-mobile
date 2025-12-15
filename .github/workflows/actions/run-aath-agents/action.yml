@@ -37,7 +37,9 @@ runs:
       run: git clone https://github.com/hyperledger/aries-agent-test-harness.git
       shell: bash
     - name: build-aath-agents
-      run: ./manage build ${{ inputs.BUILD_AGENTS }}
+      env:
+        BUILD_AGENTS: ${{ inputs.BUILD_AGENTS }}
+      run: ./manage build $BUILD_AGENTS
       shell: bash
       working-directory: aries-agent-test-harness
     - name: run-aath-agents
