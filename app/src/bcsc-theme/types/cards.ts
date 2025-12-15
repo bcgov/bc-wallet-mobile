@@ -10,5 +10,5 @@ export enum BCSCCardProcess {
   BCSCPhoto = 'IDIM L3 Remote BCSC Photo Identity Verification',
   BCSCNonPhoto = 'IDIM L3 Remote BCSC Non-Photo Identity Verification',
   NonBCSC = 'IDIM L3 Remote Non-BCSC Identity Verification',
-  NONE = 'N/A',
+  None = 'N/A',
 }
