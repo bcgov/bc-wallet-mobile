@@ -25,6 +25,7 @@ export const useEnterBirthdateViewModel = (
 
       // Device already authorized
       if (deviceAuth === null) {
+        logger.info('Device already authorized, navigating to SetupSteps screen')
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
@@ -48,6 +49,8 @@ export const useEnterBirthdateViewModel = (
         type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
         payload: [deviceAuth.verification_options.split(' ')],
       })
+
+      logger.info(`Device authorized successfully, proceding to verification steps: ${deviceAuth.process}`)
 
       // Navigate based on card process
       if (deviceAuth.process !== BCSCCardProcess.BCSCPhoto) {

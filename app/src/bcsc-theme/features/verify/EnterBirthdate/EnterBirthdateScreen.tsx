@@ -31,7 +31,6 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
   const vm = useEnterBirthdateViewModel(navigation)
 
   // UI State management
-  // Q: (Al) Should this be in the ViewModel? should this stuff be pulled into a new 'view' hook?
   const [loading, setLoading] = useState(false)
   const [pickerState, setPickerState] = useState<'idle' | 'spinning'>('idle')
   const [date, setDate] = useState(vm.initialDate ?? today)
@@ -82,6 +81,7 @@ const EnterBirthdateScreen: React.FC<EnterBirthdateScreenProps> = ({ navigation 
       {loading && <ButtonLoading />}
     </Button>
   )
+
   return (
     <ScreenWrapper controls={controls}>
       <ThemedText style={{ marginBottom: Spacing.sm }}>
