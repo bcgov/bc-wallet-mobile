@@ -56,8 +56,7 @@ export interface BCServicesCardDecodedBarcode {
   bcscSerial: string
 }
 
-export interface DriversLicenseDecodedBarcode {
-  kind: DecodedCodeKind.DriversLicenseBarcode
+export interface DriversLicenseMetadata {
   licenseNumber: string
   firstName: string
   middleNames: string
@@ -70,19 +69,13 @@ export interface DriversLicenseDecodedBarcode {
   postalCode: string
 }
 
-export interface BCServicesComboCardDecodedBarcode {
+export interface DriversLicenseDecodedBarcode extends DriversLicenseMetadata {
+  kind: DecodedCodeKind.DriversLicenseBarcode
+}
+
+export interface BCServicesComboCardDecodedBarcode extends DriversLicenseMetadata {
   kind: DecodedCodeKind.BCServicesComboCardCardBarcode
   bcscSerial: string
-  licenseNumber: string
-  firstName: string
-  middleNames: string
-  lastName: string
-  birthDate: Date
-  expiryDate: Date
-  streetAddress: string
-  city: string
-  province: string
-  postalCode: string
 }
 
 /**

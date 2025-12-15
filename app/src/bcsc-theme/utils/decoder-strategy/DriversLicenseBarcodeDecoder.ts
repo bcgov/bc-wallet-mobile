@@ -10,6 +10,13 @@ const CURRENT_MILLENNIUM = 2000
 
 /**
  * Decoder for Driver's License barcodes (PDF-417)
+ *
+ * @example
+ * // Example BC drivers license barcode:
+ * `"%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"`
+ *
+ * @class
+ * @implements {DecoderStrategy}
  */
 export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
   canDecode(barcode: ScanableCode): barcode is DriversLicenseBarcode {
@@ -22,6 +29,9 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
   }
 
   decode(barcode: DriversLicenseBarcode): DriversLicenseDecodedBarcode {
+    if (!this.canDecode(barcode)) {
+      throw new Error("Failed to decode driver's license barcode. Did you forget to check if it can be decoded?")
+    }
     const names = this.parseLicenseNames(barcode.value)
     const address = this.parseLicenseAddress(barcode.value)
     const dates = this.parseLicenseDates(barcode.value)

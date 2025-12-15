@@ -5,13 +5,13 @@ const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A =
   "%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=240919700906=?_%0AV8W3Y8                     M185 95BRNBLU9123456789                E$''C(R2S6L?"
 const BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B =
   '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=250419470429=?_%0AV8W3Y8                     X160 57WHIBLU9123456789                E$!(\\0CUPXD?'
-const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_A =
+const BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C =
   '%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00S00023254?'
 
 const VALID_BC_DL_BARCODES = [
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_A,
   BC_COMBO_CARD_DL_BARCODE_NO_BCSC_B,
-  BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_A,
+  BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
 ]
 
 describe('DriversLicenseBarcodeDecoder', () => {
@@ -92,6 +92,30 @@ describe('DriversLicenseBarcodeDecoder', () => {
         lastName: 'specimen',
         birthDate: new Date('1947-04-19'),
         expiryDate: new Date('2020-04-29'),
+        streetAddress: '910 government st',
+        postalCode: 'V8W 3Y8',
+        city: 'victoria',
+        province: 'BC',
+      })
+    })
+
+    it("should correctly decode a valid BC Driver's License barcode with BCSC serial", () => {
+      const decoder = new DriversLicenseBarcodeDecoder()
+      const barcode: DriversLicenseBarcode = {
+        type: 'pdf-417',
+        value: BC_COMBO_CARD_DL_BARCODE_WITH_BCSC_C,
+      }
+
+      const decoded = decoder.decode(barcode)
+
+      expect(decoded).toEqual({
+        kind: 'DriversLicenseBarcode',
+        licenseNumber: '9123456789',
+        firstName: 'test',
+        middleNames: 'card',
+        lastName: 'specimen',
+        birthDate: new Date('1982-01-19'),
+        expiryDate: new Date('2024-01-04'),
         streetAddress: '910 government st',
         postalCode: 'V8W 3Y8',
         city: 'victoria',

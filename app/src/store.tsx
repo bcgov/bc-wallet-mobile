@@ -10,7 +10,7 @@ import {
 import { BCSCCardType } from '@bcsc-theme/types/cards'
 import Config from 'react-native-config'
 import { getVersion } from 'react-native-device-info'
-import { DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
+import { DeviceAuthorizationResponse, DeviceVerificationOption } from './bcsc-theme/api/hooks/useAuthorizationApi'
 import { EvidenceType, VerificationPhotoUploadPayload, VerificationPrompt } from './bcsc-theme/api/hooks/useEvidenceApi'
 import { BCSCBannerMessage } from './bcsc-theme/components/AppBanner'
 import { ProvinceCode } from './bcsc-theme/utils/address-utils'
@@ -139,9 +139,6 @@ enum BCSCDispatchAction {
   UPDATE_SERIAL = 'bcsc/updateSerial',
   UPDATE_BIRTHDATE = 'bcsc/updateBirthdate',
   UPDATE_EMAIL = 'bcsc/updateEmail',
-  UPDATE_DEVICE_CODE = 'bcsc/updateDeviceCode',
-  UPDATE_USER_CODE = 'bcsc/updateUserCode',
-  UPDATE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateDeviceCodeExpiresAt',
   UPDATE_PENDING_VERIFICATION = 'bcsc/updatePendingVerification',
   UPDATE_REFRESH_TOKEN = 'bcsc/updateRefreshToken',
   UPDATE_VIDEO_PROMPTS = 'bcsc/updateVideoPrompts',
@@ -151,7 +148,6 @@ enum BCSCDispatchAction {
   ADD_BOOKMARK = 'bcsc/addBookmark',
   REMOVE_BOOKMARK = 'bcsc/removeBookmark',
   UPDATE_VERIFICATION_REQUEST = 'bcsc/updateVerificationRequest',
-  UPDATE_VERIFICATION_OPTIONS = 'bcsc/updateVerificationOptions',
   ADD_EVIDENCE_TYPE = 'bcsc/addEvidenceType',
   UPDATE_EVIDENCE_METADATA = 'bcsc/updateEvidenceMetadata',
   UPDATE_USER_NAME_METADATA = 'bcsc/updateUserMetadataName',
@@ -167,6 +163,7 @@ enum BCSCDispatchAction {
   REMOVE_BANNER_MESSAGE = 'bcsc/removeBannerMessage',
   RESET_SEND_VIDEO = 'bcsc/clearPhotoAndVideo',
   UPDATE_ANALYTICS_OPT_IN = 'bcsc/updateAnalyticsOptIn',
+  UPDATE_DEVICE_AUTHORIZATION = 'bcsc/updateDeviceAuthorization',
 }
 
 enum ModeDispatchAction {
@@ -423,16 +420,26 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
-    case BCSCDispatchAction.UPDATE_USER_CODE: {
-      const userCode = (action?.payload || []).pop() ?? ''
-      const bcsc = { ...state.bcsc, userCode }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.UPDATE_DEVICE_CODE: {
-      const deviceCode = (action?.payload || []).pop() ?? ''
-      const bcsc = { ...state.bcsc, deviceCode }
+    case BCSCDispatchAction.UPDATE_DEVICE_AUTHORIZATION: {
+      const deviceAuth: DeviceAuthorizationResponse | null = (action?.payload || []).pop() ?? null
+
+      if (!deviceAuth) {
+        return state
+      }
+
+      const bcsc = {
+        ...state.bcsc,
+        deviceCode: deviceAuth.device_code,
+        userCode: deviceAuth.user_code,
+        deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
+        verificationOptions: deviceAuth.verification_options.split(' ') as DeviceVerificationOption[],
+      }
+
+      if (deviceAuth.verified_email) {
+        bcsc.email = deviceAuth.verified_email
+        bcsc.emailConfirmed = true
+      }
+
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
@@ -448,13 +455,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
       const prompts: VerificationPrompt[] = (action?.payload || []).pop()
       const bcsc = { ...state.bcsc, prompts }
       const newState = { ...state, bcsc }
-      return newState
-    }
-    case BCSCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT: {
-      const deviceCodeExpiresAt = (action?.payload || []).pop() ?? undefined
-      const bcsc = { ...state.bcsc, deviceCodeExpiresAt }
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState
     }
     case BCSCDispatchAction.UPDATE_REFRESH_TOKEN: {
@@ -514,15 +514,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
     case BCSCDispatchAction.UPDATE_VERIFICATION_REQUEST: {
       const evidence = (action?.payload || []).pop() ?? undefined
       const bcsc = { ...state.bcsc, verificationRequestId: evidence?.id, verificationRequestSha: evidence?.sha256 }
-      const newState = { ...state, bcsc }
-
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-
-      return newState
-    }
-    case BCSCDispatchAction.UPDATE_VERIFICATION_OPTIONS: {
-      const verificationOptions = (action?.payload || []).pop()
-      const bcsc = { ...state.bcsc, verificationOptions }
       const newState = { ...state, bcsc }
 
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)

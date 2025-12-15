@@ -1,3 +1,4 @@
+import { isBCSCSerial } from './BCServicesCardBarcodeDecoder'
 import {
   BCServicesComboCardDecodedBarcode,
   DecodedCodeKind,
@@ -7,10 +8,19 @@ import {
 } from './DecoderStrategy'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
 
-const BCSC_SERIAL_LENGTH = 9 // QUESTION: Is this always 9 characters long?
+const BCSC_SERIAL_LENGTH = 9
 
 /**
  * Decoder for BC Services Combo Card barcodes (PDF-417)
+ *
+ * This decoder handles BC Services Combo Cards 2025 and later.
+ * These cards have a PDF-417 barcode that encodes both the driver's license and BCSC serial number in the same barcode.
+ * Note: It also includes a seperate Code 39 barcode for the BCSC serial number.
+ *
+ * Combo cards prior to 2025 have separate barcodes for the driver's license (PDF-417) and BCSC serial (Code 39).
+ *
+ * @class
+ * @implements {DecoderStrategy}
  */
 export class BCComboCardBarcodeDecoder implements DecoderStrategy {
   driversLicenseDecoder: DriversLicenseBarcodeDecoder
@@ -29,7 +39,7 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
 
     if (!bcscSerial) {
       throw new Error(
-        'Failed to parse BCSC serial from combo card barcode. Did you forget to check if it can be decoded?'
+        'Failed to decode BCSC serial from combo card barcode. Did you forget to check if it can be decoded?'
       )
     }
 
@@ -59,7 +69,7 @@ export class BCComboCardBarcodeDecoder implements DecoderStrategy {
     const bcscSerial = rawSerial.replace('?', '').slice(-BCSC_SERIAL_LENGTH)
 
     // BCSC serials start with a letter followed by numbers
-    if (/^[A-Za-z][0-9]+$/.test(bcscSerial) === false) {
+    if (!isBCSCSerial(bcscSerial)) {
       return null
     }
 
