@@ -50,7 +50,7 @@ export const useEnterBirthdateViewModel = (
         payload: [deviceAuth.verification_options.split(' ')],
       })
 
-      logger.info(`Device authorized successfully, proceding to verification steps: ${deviceAuth.process}`)
+      logger.info(`Device authorized successfully, proceeding to verification steps: ${deviceAuth.process}`)
 
       // Navigate based on card process
       if (deviceAuth.process === BCSCCardProcess.BCSCPhoto) {
