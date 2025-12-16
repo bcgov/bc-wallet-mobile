@@ -40,7 +40,7 @@ export const getPlatformContextRetriever = (enable: boolean): PlatformContextRet
     getTotalStorage: safeAsync(getTotalDiskCapacity),
     getPhysicalMemory: safeAsync(getTotalMemory),
     getAppAvailableMemory: safeAsync(_getAppAvailableMemory),
-    getBatteryLevel: safeAsync(getBatteryLevel),
+    getBatteryLevel: safeAsync(_getBatteryLevel),
     getBatteryState: safeAsync(_getBatteryState),
     getLowPowerMode: safeAsync(_getLowPowerMode),
     isPortrait: safeAsync(_isPortrait),
@@ -108,6 +108,11 @@ const _getCarrier = async () => {
 const _getAppAvailableMemory = async () => {
   const [totalMemory, usedMemory] = await Promise.all([getTotalMemory(), getUsedMemory()])
   return totalMemory - usedMemory
+}
+
+const _getBatteryLevel = async () => {
+  const batteryLevel = await getBatteryLevel()
+  return Math.round(batteryLevel * 100)
 }
 
 const _getBatteryState = async () => {

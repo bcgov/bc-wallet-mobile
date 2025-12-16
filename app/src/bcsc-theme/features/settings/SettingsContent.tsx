@@ -120,6 +120,7 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
     }
 
     try {
+      dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
       await Analytics.initializeTracker()
     } catch (error) {
       logger.error(
@@ -130,7 +131,6 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({
         error as Error
       )
     }
-    dispatch({ type: BCDispatchAction.UPDATE_ANALYTICS_OPT_IN, payload: [true] })
   }
 
   return (
