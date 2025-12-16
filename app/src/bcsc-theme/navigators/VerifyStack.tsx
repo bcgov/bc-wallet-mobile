@@ -14,7 +14,7 @@ import TransferInformationScreen from '../features/account-transfer/TransferInfo
 import TransferInstructionsScreen from '../features/account-transfer/TransferInstructionsScreen'
 import TransferQRScannerScreen from '../features/account-transfer/TransferQRScannerScreen'
 import NicknameAccountScreen from '../features/account/NicknameAccountScreen'
-import EnterBirthdateScreen from '../features/verify/EnterBirthdateScreen'
+
 import IdentitySelectionScreen from '../features/verify/IdentitySelectionScreen'
 import ManualSerialScreen from '../features/verify/ManualSerialScreen'
 import MismatchedSerialScreen from '../features/verify/MismatchedSerialScreen'
@@ -56,6 +56,7 @@ import { MandatoryUpdate } from '../features/modal/MandatoryUpdate'
 import { SettingsPrivacyPolicyScreen } from '../features/settings/SettingsPrivacyPolicyScreen'
 import { VerifyContactUsScreen } from '../features/settings/VerifyContactUsScreen'
 import { VerifySettingsScreen } from '../features/settings/VerifySettingsScreen'
+import EnterBirthdateScreen from '../features/verify/EnterBirthdate/EnterBirthdateScreen'
 import { VerifyWebViewScreen } from '../features/webview/VerifyWebViewScreen'
 
 const VerifyStack = () => {

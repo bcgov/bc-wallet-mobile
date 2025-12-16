@@ -1,9 +1,8 @@
 import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { EvidenceMetadataResponseData, EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import useDataLoader from '@/bcsc-theme/hooks/useDataLoader'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { getCardProcessForCardType } from '@/bcsc-theme/utils/card-utils'
 import { BCDispatchAction, BCState } from '@/store'
 import { ScreenWrapper, testIdWithKey, ThemedText, TOKENS, useServices, useStore, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
@@ -98,7 +97,8 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
     // filter data based on the selected card type (process)
     let cards: Record<string, EvidenceType[]> = {}
-    const selectedProcess = getCardProcessForCardType(store.bcsc.cardType)
+
+    const selectedProcess = store.bcsc.cardProcess
     data.processes.forEach((p) => {
       // only show card that matches the selected process
       if (p.process === selectedProcess) {
@@ -114,7 +114,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
     })
     const mappedData = mapEvidenceToSections(cards)
     setEvidenceSections(mappedData)
-  }, [data, store.bcsc.cardType, shouldAddEvidence])
+  }, [data, store.bcsc.cardProcess, shouldAddEvidence])
 
   const mapEvidenceToSections = (cards: Record<string, EvidenceType[]>): SectionData[] => {
     const mappedData: { title: string; data: EvidenceType[] }[] = []
@@ -143,7 +143,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
    */
   const getEvidenceHeadingAndDescription = useCallback(() => {
     const evidenceCount = store.bcsc.additionalEvidenceData.length
-    const isNonBCSCCard = store.bcsc.cardType === BCSCCardType.Other
+    const isNonBCSCCard = store.bcsc.cardProcess === BCSCCardProcess.NonBCSC
 
     if (evidenceCount === 1 && isNonBCSCCard) {
       // Choose your second ID
@@ -157,7 +157,7 @@ const EvidenceTypeListScreen: React.FC<EvidenceTypeListScreenProps> = ({ navigat
 
     // Choose your first ID
     return [t('BCSC.EvidenceTypeList.FirstID'), '']
-  }, [store.bcsc.additionalEvidenceData.length, store.bcsc.cardType, t])
+  }, [store.bcsc.additionalEvidenceData.length, store.bcsc.cardProcess, t])
 
   if (isLoading) {
     return <ActivityIndicator size={'large'} style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }} />

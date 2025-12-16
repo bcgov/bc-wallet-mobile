@@ -10,9 +10,9 @@ import { BCSCCardProcess, BCSCCardType } from '../types/cards'
 export function getCardProcessForCardType(cardType: BCSCCardType): BCSCCardProcess | null {
   switch (cardType) {
     case BCSCCardType.Combined:
-      return BCSCCardProcess.BCSC
+      return BCSCCardProcess.BCSCPhoto
     case BCSCCardType.Photo:
-      return BCSCCardProcess.BCSC
+      return BCSCCardProcess.BCSCPhoto
     case BCSCCardType.NonPhoto:
       return BCSCCardProcess.BCSCNonPhoto
     case BCSCCardType.Other:

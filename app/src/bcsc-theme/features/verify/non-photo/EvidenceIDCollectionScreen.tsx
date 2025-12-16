@@ -1,6 +1,6 @@
 import { EvidenceType } from '@/bcsc-theme/api/hooks/useEvidenceApi'
 import { InputWithValidation } from '@/bcsc-theme/components/InputWithValidation'
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
 import { BCDispatchAction, BCState } from '@/store'
 import {
@@ -61,7 +61,7 @@ const EvidenceIDCollectionScreen = ({ navigation, route }: EvidenceIDCollectionS
   const [formErrors, setFormErrors] = useState<EvidenceCollectionFormErrors>({})
 
   const additionalEvidenceRequired =
-    store.bcsc.cardType === BCSCCardType.Other && store.bcsc.additionalEvidenceData.length === 1
+    store.bcsc.cardProcess === BCSCCardProcess.NonBCSC && store.bcsc.additionalEvidenceData.length === 1
 
   /**
    * Handles changes to the form fields.
