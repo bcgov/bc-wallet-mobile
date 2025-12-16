@@ -80,12 +80,9 @@
     "@react-navigation/devtools": "~6.0.27",
     "@react-navigation/native": "~6.0.16",
     "@react-navigation/stack": "~6.3.29",
-<<<<<<< HEAD
-    "@snowplow/react-native-tracker": "^4.6.8",
     "axios": "~1.4.0",
-=======
+    "@snowplow/react-native-tracker": "^4.6.8",
     "axios": "~1.13.2",
->>>>>>> 66607bc29afb5146b2b1da2b36e255c129776eef
     "base-64": "~1.0.0",
     "buffer": "~6.0.3",
     "credo-ts-indy-vdr-proxy-client": "0.2.4",
