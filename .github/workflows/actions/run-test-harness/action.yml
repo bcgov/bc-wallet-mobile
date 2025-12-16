@@ -64,6 +64,7 @@ runs:
     - name: run-mobile-test-harness
       working-directory: aries-mobile-test-harness
       env:
+        REPORT_PROJECT: ${{ inputs.REPORT_PROJECT }}
         MOBILE_PLATFORM: ${{ inputs.MOBILE_PLATFORM }}
         APP_FILE_NAME: ${{ inputs.APP_FILE_NAME }}
         ISSUER_AGENT: ${{ inputs.ISSUER_AGENT }}
