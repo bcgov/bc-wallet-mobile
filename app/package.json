@@ -41,11 +41,11 @@
     "snowplow:stop": "docker ps -a -q --filter ancestor=snowplow/snowplow-micro:3.0.1 | xargs -r docker rm -f && echo 'Snowplow Micro analytics container stopped and removed'"
   },
   "dependencies": {
-    "@bifold/core": "2.11.7",
-    "@bifold/oca": "2.11.7",
-    "@bifold/react-native-attestation": "2.11.7",
-    "@bifold/remote-logs": "2.11.7",
-    "@bifold/verifier": "2.11.7",
+    "@bifold/core": "2.11.8",
+    "@bifold/oca": "2.11.8",
+    "@bifold/react-native-attestation": "2.11.8",
+    "@bifold/remote-logs": "2.11.8",
+    "@bifold/verifier": "2.11.8",
     "@credo-ts/anoncreds": "0.5.17",
     "@credo-ts/askar": "0.5.17",
     "@credo-ts/core": "0.5.17",
@@ -80,8 +80,12 @@
     "@react-navigation/devtools": "~6.0.27",
     "@react-navigation/native": "~6.0.16",
     "@react-navigation/stack": "~6.3.29",
+<<<<<<< HEAD
     "@snowplow/react-native-tracker": "^4.6.8",
     "axios": "~1.4.0",
+=======
+    "axios": "~1.13.2",
+>>>>>>> 66607bc29afb5146b2b1da2b36e255c129776eef
     "base-64": "~1.0.0",
     "buffer": "~6.0.3",
     "credo-ts-indy-vdr-proxy-client": "0.2.4",

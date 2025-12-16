@@ -1,4 +1,7 @@
-import { ANALYTICS_SINGLEAPP_ENDPOINT, ANALYTICS_SINGLEAPP_NAMESPACE, AnalyticsTracker } from './analytics-tracker'
+import { AnalyticsTracker } from './analytics-tracker'
+
+const ANALYTICS_SINGLEAPP_NAMESPACE = 'singleapp_client'
+const ANALYTICS_SINGLEAPP_ENDPOINT = __DEV__ ? 'localhost:9090' : '' // TODO (MD): Add production endpoint
 
 declare global {
   // eslint-disable-next-line no-var

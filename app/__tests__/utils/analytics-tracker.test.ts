@@ -1,9 +1,5 @@
 import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
-import {
-  ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
-  ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA,
-  AnalyticsTracker,
-} from '@/utils/analytics/analytics-tracker'
+import { AnalyticsTracker } from '@/utils/analytics/analytics-tracker'
 
 describe('Analytics Tracker', () => {
   it('should contstruct properly', () => {
@@ -134,7 +130,7 @@ describe('Analytics Tracker', () => {
       analytics.trackErrorEvent({ code: 'test', message: 'Test error' })
 
       expect(mockTrackError).toHaveBeenCalledWith({
-        schema: ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA,
+        schema: 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0',
         data: {
           errorCode: 'test',
           body: 'Test error',
@@ -171,7 +167,7 @@ describe('Analytics Tracker', () => {
         analytics.trackAlertDisplayEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN)
 
         expect(mockTrackAlert).toHaveBeenCalledWith({
-          schema: ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
+          schema: 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0',
           data: {
             action: AlertInteractionEvent.ALERT_DISPLAY,
             text: AlertEvent.ADD_CARD_CAMERA_BROKEN,
@@ -210,7 +206,7 @@ describe('Analytics Tracker', () => {
       analytics.trackAlertActionEvent(AlertEvent.ADD_CARD_CAMERA_BROKEN, 'ok')
 
       expect(mockTrackAlert).toHaveBeenCalledWith({
-        schema: ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA,
+        schema: 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0',
         data: {
           action: AlertInteractionEvent.ALERT_ACTION,
           text: AlertEvent.ADD_CARD_CAMERA_BROKEN,

@@ -1,12 +1,10 @@
 import { AlertEvent, AlertInteractionEvent } from '@/events/alertEvents'
-import { newTracker, ReactNativeTracker } from '@snowplow/react-native-tracker'
+import { newTracker, ReactNativeTracker, removeTracker } from '@snowplow/react-native-tracker'
 import { getBuildNumber, getBundleId, getIpAddress, getUniqueId, getVersion } from 'react-native-device-info'
 import { getPlatformContextProperties, getPlatformContextRetriever } from './platform-context-retriever'
 
-export const ANALYTICS_SINGLEAPP_NAMESPACE = 'singleapp_client'
-export const ANALYTICS_SINGLEAPP_ENDPOINT = __DEV__ ? 'localhost:9090' : '' // TODO (MD): Add production endpoint
-export const ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0'
-export const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0'
+const ANALYTICS_MOBILE_ERROR_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/mobile_error/jsonschema/1-0-0'
+const ANALYTICS_MOBILE_ALERT_EVENT_SCHEMA = 'iglu:ca.bc.gov.idim/action/jsonschema/1-0-0'
 
 const AnalyticsClient = {
   newTracker,
@@ -42,13 +40,11 @@ export class AnalyticsTracker {
   private readonly endpoint: string
   private readonly client: AnalyticsClient
   private tracker?: ReactNativeTracker
-  trackingEnabled: boolean
 
   constructor(namespace: string, endpoint: string, client = AnalyticsClient) {
     this.namespace = namespace
     this.endpoint = endpoint
     this.client = client
-    this.trackingEnabled = false
   }
 
   /**
@@ -58,6 +54,16 @@ export class AnalyticsTracker {
    */
   hasTracker(): boolean {
     return Boolean(this.tracker)
+  }
+
+  /**
+   * Stops tracking and removes the tracker instance.
+   *
+   * @returns {*} {void}
+   */
+  stopTracking(): void {
+    removeTracker(this.namespace)
+    this.tracker = undefined
   }
 
   /**
@@ -79,15 +85,15 @@ export class AnalyticsTracker {
       devicePlatform: 'mob',
       deepLinkContext: false,
       screenContext: false, // Tracked manually via trackScreenEvent
-      lifecycleAutotracking: this.trackingEnabled,
+      lifecycleAutotracking: true,
       screenEngagementAutotracking: false,
-      installAutotracking: this.trackingEnabled,
+      installAutotracking: true,
       useAsyncStorageForEventStore: true,
       timezone: 'America/Vancouver',
       language: 'en',
-      platformContext: this.trackingEnabled,
-      platformContextProperties: getPlatformContextProperties(this.trackingEnabled),
-      platformContextRetriever: getPlatformContextRetriever(this.trackingEnabled),
+      platformContext: true,
+      platformContextProperties: getPlatformContextProperties(true),
+      platformContextRetriever: getPlatformContextRetriever(true),
     })
   }
 
