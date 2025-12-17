@@ -138,13 +138,6 @@ enum BCSCDispatchAction {
   UPDATE_SERIAL = 'bcsc/updateSerial',
   UPDATE_BIRTHDATE = 'bcsc/updateBirthdate',
   UPDATE_EMAIL = 'bcsc/updateEmail',
-<<<<<<< HEAD
-=======
-  UPDATE_DEVICE_CODE = 'bcsc/updateDeviceCode',
-  UPDATE_USER_CODE = 'bcsc/updateUserCode',
-  UPDATE_CARD_PROCESS = 'bcsc/updateCardProcess',
-  UPDATE_DEVICE_CODE_EXPIRES_AT = 'bcsc/updateDeviceCodeExpiresAt',
->>>>>>> 9c67638bb2e57550f03b3ddf08982bf16dfd3165
   UPDATE_PENDING_VERIFICATION = 'bcsc/updatePendingVerification',
   UPDATE_REFRESH_TOKEN = 'bcsc/updateRefreshToken',
   UPDATE_VIDEO_PROMPTS = 'bcsc/updateVideoPrompts',
@@ -433,12 +426,14 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         return state
       }
 
+      // QUESTION (MD): Should we just track device authorization object in state?
       const bcsc = {
         ...state.bcsc,
         deviceCode: deviceAuth.device_code,
         userCode: deviceAuth.user_code,
         deviceCodeExpiresAt: new Date(Date.now() + deviceAuth.expires_in * 1000),
         verificationOptions: deviceAuth.verification_options.split(' ') as DeviceVerificationOption[],
+        cardProcess: deviceAuth.process,
       }
 
       if (deviceAuth.verified_email) {
@@ -446,13 +441,6 @@ const bcReducer = (state: BCState, action: ReducerAction<BCDispatchAction>): BCS
         bcsc.emailConfirmed = true
       }
 
-      const newState = { ...state, bcsc }
-      PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
-      return newState
-    }
-    case BCSCDispatchAction.UPDATE_CARD_PROCESS: {
-      const process = (action?.payload || []).pop() ?? ''
-      const bcsc = { ...state.bcsc, cardProcess: process }
       const newState = { ...state, bcsc }
       PersistentStorage.storeValueForKey<BCSCState>(BCLocalStorageKeys.BCSC, bcsc)
       return newState

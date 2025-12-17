@@ -260,20 +260,8 @@ describe('useResidentialAddressModel', () => {
         payload: expect.any(Array),
       })
       expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_DEVICE_CODE,
-        payload: ['new-device-code'],
-      })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_USER_CODE,
-        payload: ['new-user-code'],
-      })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_DEVICE_CODE_EXPIRES_AT,
-        payload: [expect.any(Date)],
-      })
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: BCDispatchAction.UPDATE_VERIFICATION_OPTIONS,
-        payload: [['video_call', 'back_check']],
+        type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION,
+        payload: [mockDeviceAuth],
       })
 
       expect(Toast.show).toHaveBeenCalledWith({
