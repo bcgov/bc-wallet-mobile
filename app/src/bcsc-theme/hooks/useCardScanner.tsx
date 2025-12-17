@@ -12,22 +12,25 @@ import {
   ScanableCode,
 } from '../utils/decoder-strategy/DecoderStrategy'
 
-// Paths:
-// 	1. Card has serial and license metadata (combo card both barcodes or 2025+ combo DL barcode)
-// 		 Outcome: validate serial -> save serial and birthdate (from license) ->? navigate to setup steps verification
-//
-//  2. Card has serial but no license metadata (BCSC card with single barcode)
-//  	 Outcome: validate serial -> save serial ->? navigate to enter birthdate
-//
-//  3. Card has only license metadata (DL card barcode)
-//  	 Outcome: navigate to manual serial entry with prefilled license metadata
-//
-//  4. Card has neither serial nor license metadata
-//  	 Outcome: continue scanning until max attempts reached
-
+/**
+ * Custom hook to handle card scanning logic for BCSC cards.
+ *
+ * Paths:
+ * 	1. Card has serial and license metadata (combo card both barcodes or 2025+ combo DL barcode)
+ * 		 Outcome: validate serial -> save serial and birthdate (from license) ->? navigate to setup steps verification
+ *
+ *  2. Card has serial but no license metadata (BCSC card with single barcode)
+ *  	 Outcome: validate serial -> save serial ->? navigate to enter birthdate
+ *
+ *  3. Card has only license metadata (DL card barcode)
+ *  	 Outcome: navigate to manual serial entry with prefilled license metadata
+ *
+ *  4. Card has neither serial nor license metadata
+ *  	 Outcome: unknown?
+ */
 export const useCardScanner = () => {
   const { authorization } = useApi()
-  const [_, dispatch] = useStore<BCState>()
+  const [, dispatch] = useStore<BCState>()
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const scanCompletedRef = useRef(false)
 
@@ -75,13 +78,18 @@ export const useCardScanner = () => {
     [dispatch, navigation]
   )
 
+  /**
+   * Handles the scanning of a card by processing the scanned barcodes.
+   *
+   * @param barcodes - An array of scanned barcodes.
+   * @param handleScannedCardData - A callback function to handle the scanned card data.
+   * @returns A promise that resolves when the scanning process is complete.
+   */
   const handleCardScan = useCallback(
     async (
       barcodes: ScanableCode[],
       handleScannedCardData: (bcscSerial: string | null, license: DriversLicenseMetadata | null) => Promise<void> | void
     ) => {
-      console.log(barcodes)
-
       if (scanCompletedRef.current) {
         return
       }
