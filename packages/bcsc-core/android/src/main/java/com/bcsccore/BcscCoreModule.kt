@@ -1,11 +1,14 @@
 package com.bcsccore
 
 // Android imports
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.bluetooth.BluetoothAdapter
 import android.os.Build
 import android.provider.Settings
 import android.security.keystore.KeyProperties
 import android.util.Log
+import androidx.core.app.NotificationCompat
 
 // React Native imports
 import com.facebook.react.bridge.Arguments
@@ -1554,6 +1557,52 @@ class BcscCoreModule(reactContext: ReactApplicationContext) :
       
     } catch (e: Exception) {
       Log.w(NAME, "removeAccountFromFile - Error removing account from file: ${e.message}", e)
+    }
+  }
+
+  /**
+   * Displays a local notification on the device.
+   * @param title The notification title
+   * @param message The notification body/message
+   */
+  @ReactMethod
+  override fun showLocalNotification(title: String, message: String, promise: Promise) {
+    Log.d(NAME, "showLocalNotification - title: $title, message: $message")
+    
+    try {
+      val notificationManager = reactApplicationContext.getSystemService(NotificationManager::class.java)
+      val channelId = "default_channel_id"
+      
+      // Create notification channel for Android O+
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        val channel = NotificationChannel(
+          channelId,
+          "Default Channel",
+          NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+          description = "Default notification channel"
+        }
+        notificationManager.createNotificationChannel(channel)
+      }
+      
+      // Build and display the notification
+      val notification = NotificationCompat.Builder(reactApplicationContext, channelId)
+        .setSmallIcon(android.R.drawable.ic_dialog_info) // Use default icon, or replace with your app's icon
+        .setContentTitle(title)
+        .setContentText(message)
+        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        .setAutoCancel(true)
+        .build()
+      
+      val notificationId = System.currentTimeMillis().toInt()
+      notificationManager.notify(notificationId, notification)
+      
+      Log.d(NAME, "showLocalNotification - Notification displayed with ID: $notificationId")
+      promise.resolve(null)
+      
+    } catch (e: Exception) {
+      Log.e(NAME, "showLocalNotification - Error displaying notification: ${e.message}", e)
+      promise.reject("E_NOTIFICATION_ERROR", "Failed to display notification: ${e.message}", e)
     }
   }
 

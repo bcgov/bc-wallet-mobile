@@ -1,6 +1,7 @@
 import CryptoKit
 import Foundation
 import React
+import UserNotifications
 
 
 enum AccountSecurityMethod: String {
@@ -1056,6 +1057,42 @@ class BcscCore: NSObject {
 
     resolve(hashString)
   }
+
+  /// Displays a local notification with the given title and message.
+  /// Used to show foreground push notifications since they are not auto-displayed.
+  /// - Parameters:
+  ///   - title: The notification title
+  ///   - message: The notification body message
+  ///   - resolve: Resolves when the notification is scheduled
+  ///   - reject: Rejects if there's an error scheduling the notification
+  @objc
+  func showLocalNotification(
+    _ title: String, message: String,
+    resolve: @escaping RCTPromiseResolveBlock,
+    reject: @escaping RCTPromiseRejectBlock
+  ) {
+    let content = UNMutableNotificationContent()
+    content.title = title
+    content.body = message
+    content.sound = .default
+
+    // Create a trigger to show immediately
+    let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
+    let request = UNNotificationRequest(
+      identifier: UUID().uuidString,
+      content: content,
+      trigger: trigger
+    )
+
+    UNUserNotificationCenter.current().add(request) { error in
+      if let error = error {
+        reject("E_NOTIFICATION_ERROR", "Failed to show notification: \(error.localizedDescription)", error)
+      } else {
+        resolve(nil)
+      }
+    }
+  }
+
   // Support for the new architecture (Fabric)
   #if RCT_NEW_ARCH_ENABLED
     @objc

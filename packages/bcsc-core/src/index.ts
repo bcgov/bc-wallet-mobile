@@ -299,3 +299,13 @@ export const getRegistrationToken = async (): Promise<TokenInfo | null> => {
 export const removeAccount = async (): Promise<void> => {
   return BcscCore.removeAccount();
 };
+
+/**
+ * Displays a local notification on the device (Android only for now).
+ * @param title The notification title
+ * @param message The notification body/message
+ * @returns A promise that resolves when the notification has been displayed.
+ */
+export const showLocalNotification = async (title: string, message: string): Promise<void> => {
+  return BcscCore.showLocalNotification(title, message);
+};
