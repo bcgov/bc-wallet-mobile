@@ -45,6 +45,7 @@
     "react": "18.3.1",
     "react-native": "0.73.11",
     "@types/react": "18.2.79",
+    "sha.js": "2.4.12",
     "@credo-ts/anoncreds@npm:0.5.15": "patch:@credo-ts/anoncreds@npm%3A0.5.17#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.17-9f101d8e96.patch",
     "@credo-ts/anoncreds@npm:0.5.17": "patch:@credo-ts/anoncreds@npm%3A0.5.17#~/.yarn/patches/@credo-ts-anoncreds-npm-0.5.17-9f101d8e96.patch",
     "@credo-ts/core@npm:0.5.15": "patch:@credo-ts/core@npm%3A0.5.17#~/.yarn/patches/@credo-ts-core-npm-0.5.17-c528a69dd8.patch",
