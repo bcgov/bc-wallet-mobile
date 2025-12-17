@@ -1,6 +1,6 @@
 import { CodeType } from 'react-native-vision-camera'
+import { BCComboCardBarcodeDecoder } from './BCComboCardBarcodeDecoder'
 import { BCServicesCardBarcodeDecoder } from './BCServicesCardBarcodeDecoder'
-import { BCComboCardBarcodeDecoder } from './BCServicesComboCardBarcodeDecoder'
 import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
 
 // Enum representing the kinds of decoded codes
@@ -81,7 +81,7 @@ export interface BCServicesComboCardDecodedBarcode extends DriversLicenseMetadat
 /**
  * Returns an array of code decoding strategies in the order they should be attempted.
  *
- * @returns An array of code decoding strategies.
+ * @returns An ordered array of code decoding strategies.
  */
 export const getDecoderStrategies = (): DecoderStrategy[] => {
   return [

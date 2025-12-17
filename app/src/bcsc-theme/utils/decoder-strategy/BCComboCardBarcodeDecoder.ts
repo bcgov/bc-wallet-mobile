@@ -11,13 +11,22 @@ import { DriversLicenseBarcodeDecoder } from './DriversLicenseBarcodeDecoder'
 const BCSC_SERIAL_LENGTH = 9
 
 /**
- * Decoder for BC Services Combo Card barcodes (PDF-417)
+ * Decoder for BC Services Combo Card PDF-417 barcodes.
  *
- * This decoder handles BC Services Combo Cards 2025 and later.
- * These cards have a PDF-417 barcode that encodes both the driver's license and BCSC serial number in the same barcode.
- * Note: It also includes a seperate Code 39 barcode for the BCSC serial number.
+ * BC Services Combo Cards issued in 2025 and later encode both the
+ * driver’s licence data and the BCSC serial number in a single
+ * PDF-417 barcode located on the bottom of the card.
  *
- * Combo cards prior to 2025 have separate barcodes for the driver's license (PDF-417) and BCSC serial (Code 39).
+ * These cards also include a separate Code 39 barcode containing
+ * only the BCSC serial number on the right side of the card.
+ *
+ * Combo Cards issued before 2025 use separate barcodes:
+ * 	- PDF-417 for the driver’s licence
+ * 	- Code 39 for the BCSC serial number
+ *
+ * @example
+ * // Example BC combo barcode:
+ * `%BCVICTORIA^SPECIMEN,$TEST CARD^910 GOVERNMENT ST$VICTORIA BC  V8W 3Y8^?;6360282222222=260119820104=?_%0AV8W3Y8                     M185 88BRNBLU                          00S00023254?`
  *
  * @class
  * @implements {DecoderStrategy}

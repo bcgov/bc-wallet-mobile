@@ -9,7 +9,10 @@ import {
 const CURRENT_MILLENNIUM = 2000
 
 /**
- * Decoder for Driver's License barcodes (PDF-417)
+ * Decoder for British Columbia Driver’s Licence PDF-417 barcodes.
+ *
+ * These barcodes encode driver’s licence and cardholder data
+ * in a single PDF-417 barcode located on the bottom of the card.
  *
  * @example
  * // Example BC drivers license barcode:

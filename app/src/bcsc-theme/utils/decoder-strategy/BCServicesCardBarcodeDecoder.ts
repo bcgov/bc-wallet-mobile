@@ -7,7 +7,13 @@ import {
 } from './DecoderStrategy'
 
 /**
- * Decoder for BC Services Card barcodes (Code 39)
+ * Decoder for BC Services Card Code 39 barcodes.
+ *
+ * These barcodes encode the BCSC serial number and are typically
+ * located on the right side of the card.
+ *
+ * @class
+ * @implements {DecoderStrategy}
  */
 export class BCServicesCardBarcodeDecoder implements DecoderStrategy {
   canDecode(barcode: ScanableCode): barcode is BCServicesCardBarcode {

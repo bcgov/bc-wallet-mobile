@@ -97,5 +97,15 @@ describe('BCServicesCardBarcodeDecoder', () => {
       const decoded = decoder.decode(barcode)
       expect(decoded).toEqual({ kind: DecodedCodeKind.BCServicesCardBarcode, bcscSerial: 'A12345678' })
     })
+
+    it('should throw an error when trying to decode an invalid BCSC serial', () => {
+      const decoder = new BCServicesCardBarcodeDecoder()
+      const barcode: BCServicesCardBarcode = {
+        type: 'code-39',
+        value: '123456789', // Missing leading letter
+      }
+
+      expect(() => decoder.decode(barcode)).toThrow()
+    })
   })
 })

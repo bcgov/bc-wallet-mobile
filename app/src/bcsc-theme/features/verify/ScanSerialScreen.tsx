@@ -1,9 +1,7 @@
-import useApi from '@/bcsc-theme/api/hooks/useApi'
 import { useCardScanner } from '@/bcsc-theme/hooks/useCardScanner'
 import { BCSCScreens, BCSCVerifyStackParams } from '@/bcsc-theme/types/navigators'
-import { DriversLicenseMetadata, ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
-import { BCDispatchAction, BCState } from '@/store'
-import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useStore, useTheme } from '@bifold/core'
+import { ScanableCode } from '@/bcsc-theme/utils/decoder-strategy/DecoderStrategy'
+import { Button, ButtonType, ScreenWrapper, testIdWithKey, ThemedText, useTheme } from '@bifold/core'
 import { StackNavigationProp } from '@react-navigation/stack'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
@@ -18,9 +16,7 @@ type ScanSerialScreenProps = {
 const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanSerialScreenProps) => {
   const { t } = useTranslation()
   const { ColorPalette, Spacing } = useTheme()
-  const { authorization } = useApi()
-  const [, dispatch] = useStore<BCState>()
-  const { scanCard } = useCardScanner()
+  const { scanCard, handleScanBCServicesCard, handleScanComboCard } = useCardScanner()
 
   const styles = StyleSheet.create({
     screenContainer: {
@@ -39,30 +35,16 @@ const ScanSerialScreen: React.FC<ScanSerialScreenProps> = ({ navigation }: ScanS
     },
   })
 
-  const handleScanBCServicesCard = async (bcscSerial: string) => {
-    dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [bcscSerial] })
-    navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.EnterBirthdate }] })
-  }
-
-  const handleScanComboCard = async (bcscSerial: string, license: DriversLicenseMetadata) => {
-    dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [bcscSerial] })
-    dispatch({ type: BCDispatchAction.UPDATE_BIRTHDATE, payload: [license.birthDate] })
-
-    try {
-      const deviceAuth = await authorization.authorizeDevice(bcscSerial, license.birthDate)
-      dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
-      navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
-    } catch (error) {
-      navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.MismatchedSerial }] })
-    }
-  }
-
-  const handleScanDriversLicense = async () => {
-    // TODO (MD): Notify the user that they need to scan a BCSC card or enter serial manually.
-  }
-
   const onCodeScanned = async (barcodes: ScanableCode[]) => {
-    await scanCard(barcodes, handleScanComboCard, handleScanBCServicesCard, handleScanDriversLicense)
+    await scanCard(barcodes, async (bcscSerial, license) => {
+      if (bcscSerial && license) {
+        return handleScanComboCard(bcscSerial, license)
+      }
+
+      if (bcscSerial) {
+        return handleScanBCServicesCard(bcscSerial)
+      }
+    })
   }
 
   return (
