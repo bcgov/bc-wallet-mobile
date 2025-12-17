@@ -2,13 +2,17 @@ import { getIdTokenMetadata } from '@/bcsc-theme/utils/id-token'
 import { useCallback, useMemo } from 'react'
 import { getDeviceCodeRequestBody } from 'react-native-bcsc-core'
 import BCSCApiClient from '../client'
-import { VerifyAttestationPayload } from './useDeviceAttestationApi'
 import { withAccount } from './withAccountGuard'
 
 export interface IdTokenMetadataConfig {
   refreshCache: boolean
 }
 
+export interface DeviceTokenPayload {
+  client_id: string
+  device_code: string
+  client_assertion: string
+}
 export interface TokenResponse {
   access_token: string
   expires_in: number
@@ -20,7 +24,7 @@ export interface TokenResponse {
 
 const useTokenApi = (apiClient: BCSCApiClient) => {
   const deviceToken = useCallback(
-    async (payload: VerifyAttestationPayload) => {
+    async (payload: DeviceTokenPayload) => {
       const { data } = await apiClient.post<TokenResponse>(
         apiClient.endpoints.token,
         {

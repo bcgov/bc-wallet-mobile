@@ -1,4 +1,4 @@
-import { BCSCCardType } from '@/bcsc-theme/types/cards'
+import { BCSCCardProcess } from '@/bcsc-theme/types/cards'
 import { formatAddressForDisplay } from '@/bcsc-theme/utils/address-utils'
 import { AdditionalEvidenceData, BCState } from '@/store'
 import { useMemo } from 'react'
@@ -69,10 +69,10 @@ export const useSetupSteps = (store: BCState): SetupStepsResult => {
     const hasSerial = Boolean(bcscSerialNumber)
 
     // Card types
-    const isCombinedCard = store.bcsc.cardType === BCSCCardType.Combined
-    const isPhotoCard = store.bcsc.cardType === BCSCCardType.Photo
-    const isNonPhotoCard = store.bcsc.cardType === BCSCCardType.NonPhoto
-    const isNonBCSCCards = store.bcsc.cardType === BCSCCardType.Other
+    const isCombinedCard = store.bcsc.cardProcess === BCSCCardProcess.BCSCPhoto
+    const isPhotoCard = store.bcsc.cardProcess === BCSCCardProcess.BCSCPhoto
+    const isNonPhotoCard = store.bcsc.cardProcess === BCSCCardProcess.BCSCNonPhoto
+    const isNonBCSCCards = store.bcsc.cardProcess === BCSCCardProcess.NonBCSC
 
     // Count of fully validated evidence cards (at least 1 photo taken + document number entered)
     const completedEvidenceCount = store.bcsc.additionalEvidenceData.filter(isEvidenceComplete).length

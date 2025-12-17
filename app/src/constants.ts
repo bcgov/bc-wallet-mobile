@@ -65,6 +65,7 @@ export enum HelpCentreUrl {
   VERIFICATION_METHODS = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-options-app',
   VERIFY_IN_PERSON = 'https://id.gov.bc.ca/static/help/verify_why.html?fromapp=1#section-inperson',
   QUICK_SETUP_OF_ADDITIONAL_DEVICES = 'https://id.gov.bc.ca/static/help/setup_qrcode.html?fromapp=1',
+  HELP_CHECK_BCSC = 'https://id.gov.bc.ca/static/help/cardhelp.html?fromapp=1',
 }
 
 export const formStringLengths = {
