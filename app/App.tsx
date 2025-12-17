@@ -47,11 +47,14 @@ messaging().setBackgroundMessageHandler(async () => {})
 // Without this handler, foreground notifications are silently ignored.
 messaging().onMessage(async (remoteMessage) => {
   if (remoteMessage.data) {
-    // TODO:(jl) Do we get messages with a data payload?
     appLogger.info(`FCM message payload: ${JSON.stringify(remoteMessage.data)}`)
   }
 
-  await showLocalNotification(remoteMessage.notification?.title, remoteMessage.notification?.body)
+  const title = remoteMessage.notification?.title
+  const message = remoteMessage.notification?.body
+  if (title && message) {
+    await showLocalNotification(title, message)
+  }
 })
 
 const App = () => {
