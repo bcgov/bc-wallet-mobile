@@ -46,5 +46,5 @@ export class BCServicesCardBarcodeDecoder implements DecoderStrategy {
  * @returns True if the serial number is valid, false otherwise.
  */
 export const isBCSCSerial = (serial: string): boolean => {
-  return /^[A-Za-z]+[0-9]+$/.test(serial) && serial.length <= 9
+  return /^[A-Za-z]+\d+$/.test(serial) && serial.length <= 9
 }

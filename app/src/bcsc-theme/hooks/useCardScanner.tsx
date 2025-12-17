@@ -1,5 +1,5 @@
 import { BCDispatchAction, BCState } from '@/store'
-import { useStore } from '@bifold/core'
+import { TOKENS, useServices, useStore } from '@bifold/core'
 import { useNavigation } from '@react-navigation/native'
 import { StackNavigationProp } from '@react-navigation/stack'
 import { useCallback, useMemo, useRef } from 'react'
@@ -14,6 +14,11 @@ import {
 
 /**
  * Custom hook to handle card scanning logic for BCSC cards.
+ *
+ * API:
+ * 	- scanCard: Function to handle the scanning of a card.
+ * 	- handleScanComboCard: Default function to handle combo card scanning (both BCSC serial and driver's license metadata).
+ * 	- handleScanBCServicesCard: Default function to handle BCSC card scanning (BCSC serial only).
  *
  * Paths:
  * 	1. Card has serial and license metadata (combo card both barcodes or 2025+ combo DL barcode)
@@ -31,6 +36,7 @@ import {
 export const useCardScanner = () => {
   const { authorization } = useApi()
   const [, dispatch] = useStore<BCState>()
+  const [logger] = useServices([TOKENS.UTIL_LOGGER])
   const navigation = useNavigation<StackNavigationProp<BCSCVerifyStackParams>>()
   const scanCompletedRef = useRef(false)
 
@@ -43,8 +49,9 @@ export const useCardScanner = () => {
    */
   const handleScanComboCard = useCallback(
     async (bcscSerial: string, license: DriversLicenseMetadata) => {
-      if (!license.birthDate) {
-        throw new Error('Birthdate is missing from license metadata')
+      if (!license.birthDate || isNaN(license.birthDate.getTime())) {
+        // Should never happen, probably a decoder error
+        throw new Error('handleScanComboCard: License birthdate is missing or invalid')
       }
 
       dispatch({ type: BCDispatchAction.UPDATE_SERIAL, payload: [bcscSerial] })
@@ -55,13 +62,15 @@ export const useCardScanner = () => {
         dispatch({ type: BCDispatchAction.UPDATE_DEVICE_AUTHORIZATION, payload: [deviceAuth] })
         navigation.reset({ index: 0, routes: [{ name: BCSCScreens.SetupSteps }] })
       } catch (error) {
+        logger.error('Device authorization failed during combo card scan', error as Error)
+        // TODO (MD): Use a different screen for device authorization errors. For now, use the mismatched serial screen.
         navigation.reset({
           index: 0,
           routes: [{ name: BCSCScreens.SetupSteps }, { name: BCSCScreens.MismatchedSerial }],
         })
       }
     },
-    [authorization, dispatch, navigation]
+    [authorization, dispatch, logger, navigation]
   )
 
   /**
@@ -81,6 +90,10 @@ export const useCardScanner = () => {
   /**
    * Handles the scanning of a card by processing the scanned barcodes.
    *
+   * Note: On iOS it make take multiple attempts to scan both barcodes on a combo card.
+   * The scanning process will stop after the first successful scan to prevent duplicate processing.
+   * We could improve this by setting a default minimum scan attempts or a timeout if needed.
+   *
    * @param barcodes - An array of scanned barcodes.
    * @param handleScannedCardData - A callback function to handle the scanned card data.
    * @returns A promise that resolves when the scanning process is complete.
@@ -90,6 +103,7 @@ export const useCardScanner = () => {
       barcodes: ScanableCode[],
       handleScannedCardData: (bcscSerial: string | null, license: DriversLicenseMetadata | null) => Promise<void> | void
     ) => {
+      // Prevent multiple scans from being processed
       if (scanCompletedRef.current) {
         return
       }
@@ -103,31 +117,31 @@ export const useCardScanner = () => {
         const decodedCode = decodeScannedCode(code)
 
         if (!decodedCode) {
-          // TODO (MD): What to do if we can't decode the barcode? Callback?
+          logger.warn(`Failed to decode scanned barcode`, { barcode: code })
           return
         }
+
+        logger.debug(`Decoded barcode metadata:`, { barcodeMetadata: decodedCode })
 
         // Extract the decoded metadata
         switch (decodedCode.kind) {
           case DecodedCodeKind.BCServicesComboCardCardBarcode:
-            scanCompletedRef.current = true
             bcscSerial = decodedCode.bcscSerial
             licenseMetadata = decodedCode
             break
           case DecodedCodeKind.DriversLicenseBarcode:
-            scanCompletedRef.current = true
             licenseMetadata = decodedCode
             break
           case DecodedCodeKind.BCServicesCardBarcode:
-            scanCompletedRef.current = true
             bcscSerial = decodedCode.bcscSerial
             break
         }
       }
 
+      scanCompletedRef.current = true
       await handleScannedCardData(bcscSerial, licenseMetadata)
     },
-    []
+    [logger]
   )
 
   return useMemo(

@@ -92,12 +92,12 @@ export class DriversLicenseBarcodeDecoder implements DecoderStrategy {
     const licenseSection = value.split('^')[3]
     const rawBirthdate = licenseSection.split('=')[1]
 
-    const birthYear = parseInt(rawBirthdate.slice(4, 8))
-    const birthMonth = parseInt(rawBirthdate.slice(8, 10)) - 1 // Months are zero-indexed
-    const birthDay = parseInt(rawBirthdate.slice(10, 12))
+    const birthYear = Number.parseInt(rawBirthdate.slice(4, 8))
+    const birthMonth = Number.parseInt(rawBirthdate.slice(8, 10)) - 1 // Months are zero-indexed
+    const birthDay = Number.parseInt(rawBirthdate.slice(10, 12))
 
-    const expiryYear = parseInt(rawBirthdate.slice(0, 2)) + CURRENT_MILLENNIUM // TODO (MD): Handle century rollover
-    const expiryMonth = parseInt(rawBirthdate.slice(2, 4)) - 1 // Months are zero-indexed
+    const expiryYear = Number.parseInt(rawBirthdate.slice(0, 2)) + CURRENT_MILLENNIUM // TODO (MD): Handle century rollover
+    const expiryMonth = Number.parseInt(rawBirthdate.slice(2, 4)) - 1 // Months are zero-indexed
 
     return {
       expiryDate: new Date(expiryYear, expiryMonth, birthDay),

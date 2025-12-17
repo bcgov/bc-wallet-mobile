@@ -41,6 +41,7 @@ describe('useCardScanner', () => {
 
       useApiMock.mockReturnValue(mockAuthorization)
       bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
 
@@ -70,6 +71,7 @@ describe('useCardScanner', () => {
 
       useApiMock.mockReturnValue(mockAuthorization)
       bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
 
@@ -106,6 +108,7 @@ describe('useCardScanner', () => {
 
       useApiMock.mockReturnValue(mockAuthorization)
       bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
 
@@ -145,6 +148,7 @@ describe('useCardScanner', () => {
 
       useApiMock.mockReturnValue(mockAuthorization)
       bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
 
@@ -182,6 +186,7 @@ describe('useCardScanner', () => {
       navigationMock.useNavigation = jest.fn().mockReturnValue({
         reset: mockNavigationReset,
       })
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
 
@@ -212,6 +217,66 @@ describe('useCardScanner', () => {
       })
     })
 
+    it('should throw error if license birthdate is invalid', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      const useApiMock = jest.mocked(useApi)
+
+      const mockDispatch = jest.fn()
+      const mockState: any = {}
+      const mockAuthorization: any = {
+        authorization: {
+          authorizeDevice: jest.fn(),
+        },
+      }
+
+      useApiMock.mockReturnValue(mockAuthorization)
+      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
+
+      const hook = renderHook(() => useCardScanner())
+
+      const handleScanComboCard = hook.result.current.handleScanComboCard
+
+      const mockBCSCSerial = 'S00023254'
+      const mockLicenseData: any = {
+        birthDate: new Date('Invalid Date'),
+      }
+
+      await expect(handleScanComboCard(mockBCSCSerial, mockLicenseData)).rejects.toThrow(
+        'handleScanComboCard: License birthdate is missing or invalid'
+      )
+    })
+
+    it('should throw error if license birthdate is missing', async () => {
+      const bifoldMock = jest.mocked(Bifold)
+      const useApiMock = jest.mocked(useApi)
+
+      const mockDispatch = jest.fn()
+      const mockState: any = {}
+      const mockAuthorization: any = {
+        authorization: {
+          authorizeDevice: jest.fn(),
+        },
+      }
+
+      useApiMock.mockReturnValue(mockAuthorization)
+      bifoldMock.useStore.mockReturnValue([mockState, mockDispatch])
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
+
+      const hook = renderHook(() => useCardScanner())
+
+      const handleScanComboCard = hook.result.current.handleScanComboCard
+
+      const mockBCSCSerial = 'S00023254'
+      const mockLicenseData: any = {
+        birthDate: undefined,
+      }
+
+      await expect(handleScanComboCard(mockBCSCSerial, mockLicenseData)).rejects.toThrow(
+        'handleScanComboCard: License birthdate is missing or invalid'
+      )
+    })
+
     it('should dispatch mismatched serial on failure', async () => {
       const useApiMock = jest.mocked(useApi)
       const bifoldMock = jest.mocked(Bifold)
@@ -231,6 +296,7 @@ describe('useCardScanner', () => {
       navigationMock.useNavigation = jest.fn().mockReturnValue({
         reset: mockNavigationReset,
       })
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn(), error: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
 
@@ -282,6 +348,7 @@ describe('useCardScanner', () => {
       navigationMock.useNavigation = jest.fn().mockReturnValue({
         reset: mockNavigationReset,
       })
+      bifoldMock.useServices.mockReturnValue([{ debug: jest.fn() } as any])
 
       const hook = renderHook(() => useCardScanner())
 
