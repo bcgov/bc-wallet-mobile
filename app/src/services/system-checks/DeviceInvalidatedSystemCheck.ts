@@ -18,6 +18,7 @@ export class DeviceInvalidatedSystemCheck implements SystemCheckStrategy {
   private readonly getIdToken: () => Promise<IdToken>
   private readonly navigation: SystemCheckNavigation
   private readonly utils: SystemCheckUtils
+  private caseType?: BCSCReason
 
   constructor(getIdToken: () => Promise<IdToken>, navigation: SystemCheckNavigation, utils: SystemCheckUtils) {
     this.getIdToken = getIdToken
@@ -41,8 +42,8 @@ export class DeviceInvalidatedSystemCheck implements SystemCheckStrategy {
     try {
       const idToken = await this.getIdToken()
 
-      if (idToken.bcsc_event === BCSCEvent.Cancel && idToken.bcsc_reason === BCSCReason.CanceledByAgent) {
-        // Device has been invalidated by the agent, user must re-authorize the device
+      if (idToken.bcsc_event === BCSCEvent.Cancel) {
+        this.caseType = idToken.bcsc_reason
         return false
       }
 
@@ -68,7 +69,7 @@ export class DeviceInvalidatedSystemCheck implements SystemCheckStrategy {
       return
     }
 
-    this.navigation.navigate(BCSCModals.DeviceInvalidated)
+    this.navigation.navigate(BCSCModals.DeviceInvalidated, { caseType: this.caseType })
   }
 
   /**
